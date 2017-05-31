@@ -38,10 +38,10 @@ import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
 import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
+import org.hibernate.query.spi.NavigablePath;
 
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;
 import static org.hibernate.envers.internal.tools.Tools.newHashSet;
@@ -233,7 +233,7 @@ public class AuditedPropertiesReader {
 			final Property property = propertyIter.next();
 			addPersistentProperty( property );
 			// See HHH-6636
-			if ( "embedded".equals( property.getPropertyAccessorName() ) && !PropertyPath.IDENTIFIER_MAPPER_PROPERTY.equals( property.getName() ) ) {
+			if ( "embedded".equals( property.getPropertyAccessorName() ) && !NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( property.getName() ) ) {
 				createPropertiesGroupMapping( property );
 			}
 		}

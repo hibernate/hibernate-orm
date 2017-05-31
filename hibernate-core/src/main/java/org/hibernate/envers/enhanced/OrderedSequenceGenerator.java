@@ -32,6 +32,6 @@ public class OrderedSequenceGenerator extends SequenceStyleGenerator {
 			QualifiedName sequenceName,
 			int initialValue,
 			int incrementSize) {
-		return new OrderedSequenceStructure( jdbcEnvironment, sequenceName, initialValue, incrementSize, type.getReturnedClass() );
+		return new OrderedSequenceStructure( jdbcEnvironment, sequenceName, initialValue, incrementSize, type.getJavaType() );
 	}
 }

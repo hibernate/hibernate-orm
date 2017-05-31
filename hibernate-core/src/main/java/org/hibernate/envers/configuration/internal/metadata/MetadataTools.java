@@ -302,7 +302,7 @@ public final class MetadataTools {
 	public static void addColumn(Element anyMapping, Column column) {
 		addColumn(
 				anyMapping,
-				column.getName(),
+				column.getName().getText(),
 				column.getLength(),
 				column.getScale(),
 				column.getPrecision(),
@@ -405,7 +405,7 @@ public final class MetadataTools {
 				if ( next.isFormula() ) {
 					throw new FormulaNotSupportedException();
 				}
-				return ( (Column) next ).getName();
+				return ( (Column) next ).getName().getText();
 			}
 
 			public void remove() {

@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.internal.entities;
 
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
@@ -30,21 +29,39 @@ public class RevisionTypeJavaDescriptor extends AbstractBasicJavaDescriptor<Revi
 
 	@Override
 	public String toString(RevisionType value) {
-		throw new NotYetImplementedException(  );
+		return value != null ? value.name() : null;
 	}
 
 	@Override
 	public RevisionType fromString(String string) {
-		throw new NotYetImplementedException(  );
+		return string == null ? null : RevisionType.valueOf( string );
 	}
 
 	@Override
 	public <X> X unwrap(RevisionType value, Class<X> type, WrapperOptions options) {
-		throw new NotYetImplementedException(  );
+		if ( value == null ) {
+			return null;
+		}
+		if ( RevisionType.class.isAssignableFrom( type ) ) {
+			return (X) value;
+		}
+		if ( Byte.class.isAssignableFrom( type ) ) {
+			return (X) value.getRepresentation();
+		}
+		throw unknownUnwrap( type );
 	}
 
 	@Override
 	public <X> RevisionType wrap(X value, WrapperOptions options) {
-		throw new NotYetImplementedException(  );
+		if ( value == null ) {
+			return null;
+		}
+		if ( RevisionType.class.isInstance( value ) ) {
+			return (RevisionType) value;
+		}
+		if ( Byte.class.isInstance( value ) ) {
+			return RevisionType.fromRepresentation( value );
+		}
+		throw unknownWrap( value.getClass() );
 	}
 }

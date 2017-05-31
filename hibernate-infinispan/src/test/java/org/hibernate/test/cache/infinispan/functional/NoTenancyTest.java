@@ -1,10 +1,8 @@
 package org.hibernate.test.cache.infinispan.functional;
 
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
-import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.test.cache.infinispan.functional.entities.Item;
 import org.infinispan.AdvancedCache;
-import org.infinispan.commons.util.CloseableIterable;
 import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.context.Flag;
 import org.junit.Test;
@@ -35,13 +33,16 @@ public class NoTenancyTest extends SingleNodeTest {
 					  assertNotNull(item2);
 					  assertEquals(item.getName(), item2.getName());
 				});
-
 		  }
+
 		  EntityRegionImpl region = (EntityRegionImpl) sessionFactory().getSecondLevelCacheRegion(Item.class.getName());
 		  AdvancedCache localCache = region.getCache().withFlags(Flag.CACHE_MODE_LOCAL);
 		  assertEquals(1, localCache.size());
 		  try (CloseableIterator iterator = localCache.keySet().iterator()) {
-			  assertEquals(sessionFactory().getClassMetadata(Item.class).getIdentifierType().getReturnedClass(), iterator.next().getClass());
+		  	assertEquals(
+		  			sessionFactory().getTypeConfiguration().findEntityPersister( Item.class ).getIdentifierType().getJavaType(),
+					iterator.next().getClass()
+			);
 		  }
 	 }
 }

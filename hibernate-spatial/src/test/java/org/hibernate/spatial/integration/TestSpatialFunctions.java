@@ -15,7 +15,7 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.spatial.HSMessageLogger;

@@ -125,7 +125,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		final Object version = Versioning.getVersion( getState(), getPersister() );
 		getSession().getPersistenceContext().addEntity(
 				getInstance(),
-				( getPersister().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
+				( getPersister().getHierarchy().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				getState(),
 				getEntityKey(),
 				version,

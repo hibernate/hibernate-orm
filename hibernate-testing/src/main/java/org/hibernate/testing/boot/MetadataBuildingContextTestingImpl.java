@@ -9,7 +9,9 @@ package org.hibernate.testing.boot;
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
+import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.type.internal.TypeDefinitionRegistryImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -27,6 +29,7 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 	private final InFlightMetadataCollector metadataCollector;
 	private final BootstrapContext bootstrapContext;
 	private final ObjectNameNormalizer objectNameNormalizer;
+	private final TypeDefinitionRegistryImpl typeDefinitionRegistry;
 
 	public MetadataBuildingContextTestingImpl() {
 		this( new StandardServiceRegistryBuilder().build() );
@@ -37,7 +40,7 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 		bootstrapContext = new BootstrapContextImpl(
 				serviceRegistry,
 				null,
-				options
+				buildingOptions
 		);
 		mappingDefaults = new MetadataBuilderImpl.MappingDefaultsImpl( serviceRegistry );
 		metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext,buildingOptions );
@@ -48,6 +51,17 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 				return MetadataBuildingContextTestingImpl.this;
 			}
 		};
+		this.typeDefinitionRegistry = new TypeDefinitionRegistryImpl( bootstrapContext.getTypeConfiguration() );
+	}
+
+	@Override
+	public TypeDefinition resolveTypeDefinition(String typeName) {
+		return typeDefinitionRegistry.resolve( typeName );
+	}
+
+	@Override
+	public void addTypeDefinition(TypeDefinition typeDefinition) {
+		typeDefinitionRegistry.register( typeDefinition );
 	}
 
 	@Override

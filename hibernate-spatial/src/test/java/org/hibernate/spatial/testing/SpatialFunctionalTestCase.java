@@ -14,7 +14,7 @@ import java.util.Map;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;

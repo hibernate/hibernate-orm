@@ -52,6 +52,7 @@ import org.jboss.logging.Logger;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
+import org.hibernate.type.descriptor.java.internal.LongJavaDescriptor;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -97,7 +98,7 @@ public class RevisionInfoConfigurationBuilder {
 		}
 
 		revisionInfoIdData = new PropertyData( "id", "id", "field" );
-		revisionInfoTimestampData = new RevisionTimestampData( "timestamp", "timestamp", "field", StandardSpiBasicTypes.LONG );
+		revisionInfoTimestampData = new RevisionTimestampData( "timestamp", "timestamp", "field", LongJavaDescriptor.INSTANCE );
 		modifiedEntityNamesData = new PropertyData( "modifiedEntityNames", "modifiedEntityNames", "field" );
 		revisionPropType = StandardSpiBasicTypes.INTEGER;
 	}
@@ -334,7 +335,7 @@ public class RevisionInfoConfigurationBuilder {
 							property.getName(),
 							property.getName(),
 							accessType,
-							persistentClass.getProperty( property.getName() ).getType()
+							persistentClass.getProperty( property.getName() ).getValueMapping().getJavaTypeDescriptor()
 					);
 					revisionTimestampFound.set();
 				}
@@ -453,7 +454,7 @@ public class RevisionInfoConfigurationBuilder {
 		final Element timestampProperty = MetadataTools.addProperty(
 				classMapping,
 				revisionInfoTimestampData.getName(),
-				revisionInfoTimestampData.getType().getName(),
+				revisionInfoTimestampData.getJavaTypeDescriptor().getTypeName(),
 				true,
 				false
 		);

@@ -6,8 +6,9 @@
  */
 package org.hibernate.envers.internal.entities;
 
-import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.internal.LocalDateJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
 
 /**
  * @author Chris Cranford
@@ -15,43 +16,35 @@ import org.hibernate.type.Type;
  */
 public class RevisionTimestampData extends PropertyData {
 
-	private Type type;
+	private JavaTypeDescriptor javaTypeDescriptor;
 
-	public RevisionTimestampData(String name, String beanName, String accessType, Type type) {
+	public RevisionTimestampData(String name, String beanName, String accessType, JavaTypeDescriptor javaTypeDescriptor) {
 		super( name, beanName, accessType );
-		this.type = type;
+		this.javaTypeDescriptor = javaTypeDescriptor;
 	}
 
-	public RevisionTimestampData(RevisionTimestampData old, Type type) {
-		this( old.getName(), old.getBeanName(), old.getAccessType(), type );
+	public RevisionTimestampData(RevisionTimestampData old, JavaTypeDescriptor javaTypeDescriptor) {
+		this( old.getName(), old.getBeanName(), old.getAccessType(), javaTypeDescriptor );
 	}
 
-	public Type getType() {
-		return type;
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return javaTypeDescriptor;
 	}
 
 	public boolean isTimestampDate() {
-		if ( type != null ) {
-			final String typename = type.getName();
-			return "date".equals( typename )
-					|| "time".equals( typename )
-					|| "timestamp".equals( typename );
-		}
-		return false;
+		// todo (6.0) - this shouldn't ever be the case
+		assert( javaTypeDescriptor != null );
+		return TemporalJavaDescriptor.class.isInstance( javaTypeDescriptor );
 	}
 
 	public boolean isTimestampLocalDateTime() {
-		if ( type != null ) {
-			final String typename = type.getName();
-			return "LocalDateTime".equals( typename );
-		}
-		return false;
+		return LocalDateJavaDescriptor.class.isInstance( javaTypeDescriptor );
 	}
 
 	@Override
 	public int hashCode() {
 		int result = super.hashCode();
-		result = 31 * result + ( type != null ? type.hashCode() : 0 );
+		result = 31 * result + javaTypeDescriptor.hashCode();
 		return result;
 	}
 
@@ -63,7 +56,16 @@ public class RevisionTimestampData extends PropertyData {
 		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-		final RevisionTimestampData that = (RevisionTimestampData) o;
-		return super.equals( o ) && EqualsHelper.equals( type, that.type );
+		if ( !super.equals( o ) ) {
+			return false;
+		}
+
+		RevisionTimestampData that = (RevisionTimestampData) o;
+
+		if ( !javaTypeDescriptor.equals( that.javaTypeDescriptor ) ) {
+			return false;
+		}
+
+		return true;
 	}
 }

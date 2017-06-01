@@ -43,6 +43,22 @@ public class ExceptionUtil {
 	}
 
 	/**
+	 * Get a specific cause.
+	 *
+	 * @param t exception
+	 * @param causeClass cause type
+	 *
+	 * @return exception root cause
+	 */
+	public static Throwable findCause(Throwable t, Class<? extends Throwable> causeClass) {
+		Throwable cause = t.getCause();
+		if ( cause != null && !causeClass.equals( cause.getClass() ) ) {
+			return ( cause != t ) ? findCause( cause, causeClass ) : null;
+		}
+		return cause;
+	}
+
+	/**
 	 * Was the given exception caused by a SQL lock timeout?
 	 *
 	 * @param e exception

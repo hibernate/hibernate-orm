@@ -79,7 +79,7 @@ See the <<chapters/query/native/Native.adoc#sql-composite-key-entity-association
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/ConstructorResult.html[`@ConstructorResult`] annotation is used in conjunction with the <<annotations-jpa-sqlresultsetmapping>> annotations to map columns of a given SELECT query to a certain object constructor.
 
-//TODO: Add example
+See the <<chapters/query/native/Native.adoc#sql-multiple-scalar-values-dto-NamedNativeQuery-example, Multiple scalar values `NamedNativeQuery` with `ConstructorResult`>> section for more info.
 
 [[annotations-jpa-convert]]
 ==== `@Convert`
@@ -235,7 +235,7 @@ See the <<chapters/domain/identifiers.adoc#identifiers-composite-nonaggregated,C
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/Index.html[`@Index`] annotation is used by the automated schema generation tool to create a database index.
 
-//TODO: Add example
+See the <<chapters/schema/Schema.adoc#schema-generation-columns-index, Columns index>> chapter for more info.
 
 [[annotations-jpa-inheritance]]
 ==== `@Inheritance`
@@ -255,8 +255,6 @@ See the <<chapters/domain/associations.adoc#associations-many-to-one-example,`@M
 ==== `@JoinColumns`
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/JoinColumns.html[`@JoinColumns`] annotation is used to group multiple <<annotations-jpa-joincolumn>> annotations, which are used when mapping entity association or an embeddable collection using a composite identifier
-
-//TODO: Add example
 
 [[annotations-jpa-jointable]]
 ==== `@JoinTable`
@@ -326,8 +324,6 @@ See the <<chapters/domain/collections.adoc#collections-map-value-type-entity-key
 ==== `@MapKeyJoinColumns`
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/MapKeyJoinColumns.html[`@MapKeyJoinColumns`] annotation is used to group several <<annotations-jpa-mapkeyjoincolumn>> mappings when the `java.util.Map` association key uses a composite identifier.
-
-//TODO: Add example
 
 [[annotations-jpa-mapkeytemporal]]
 ==== `@MapKeyTemporal`

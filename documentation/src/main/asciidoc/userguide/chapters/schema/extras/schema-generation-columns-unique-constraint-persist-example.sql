@@ -1,7 +1,7 @@
 insert
 into
     author
-    (firstName, lastName, id)
+    (first_name, last_name, id)
 values
     (?, ?, ?)
 

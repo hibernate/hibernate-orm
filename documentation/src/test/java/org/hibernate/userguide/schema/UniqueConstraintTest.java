@@ -6,6 +6,7 @@
  */
 package org.hibernate.userguide.schema;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
@@ -138,8 +139,10 @@ public class UniqueConstraintTest extends BaseEntityManagerFunctionalTestCase {
         @GeneratedValue
         private Long id;
 
+        @Column(name = "first_name")
         private String firstName;
 
+        @Column(name = "last_name")
         private String lastName;
 
         //Getter and setters omitted for brevity

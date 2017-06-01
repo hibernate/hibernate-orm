@@ -303,7 +303,7 @@ The http://docs.oracle.com/javaee/7/api/javax/persistence/MapKeyClass.html[`@Map
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/MapKeyColumn.html[`@MapKeyColumn`] annotation is used to specify the database column which stores the key of a `java.util.Map` association for which the map key is a basic type.
 
-//TODO: Add example
+See the <<chapters/domain/collections.adoc#collections-map-custom-key-type-mapping-example, `@MapKeyType` mapping section>> section for an example of `@MapKeyColumn` annotation usage.
 
 [[annotations-jpa-mapkeyenumerated]]
 ==== `@MapKeyEnumerated`

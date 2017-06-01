@@ -74,6 +74,7 @@ public class UnidirectionalMapTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Id
 		private Long id;
+
 		@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 		@JoinTable(
 				name = "phone_register",

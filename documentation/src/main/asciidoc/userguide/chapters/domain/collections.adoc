@@ -600,10 +600,15 @@ include::{extrasdir}/collections-map-custom-key-type-sql-example.sql[]
 ----
 
 The `call_register` records the call history for every `person`.
-However, the timestamp is stored as a Unix timestamp since epoch and we want to map all the calls
-by their associated `java.util.Date`.
+The `call_timestamp_epoch` column stores the phone call timestamp as a Unix timestamp since epoch.
 
-Therefore, the entity mapping looks as follows:
+[NOTE]
+====
+The `@MapKeyColumn` annotation is used to define the table column holding the key
+while the `@Column` mapping gives the value of the `java.util.Map` in question.
+====
+
+Since we want to map all the calls by their associated `java.util.Date`, not by their timestamp since epoch which is a number, the entity mapping looks as follows:
 
 [[collections-map-custom-key-type-mapping-example]]
 .@MapKeyType mapping example
@@ -612,11 +617,13 @@ Therefore, the entity mapping looks as follows:
 ----
 include::{sourcedir}/MapKeyTypeTest.java[tags=collections-map-custom-key-type-mapping-example,indent=0]
 ----
+====
+
+The associated `TimestampEpochType` looks as follows:
 
 ----
 include::{sourcedir}/type/TimestampEpochType.java[tags=collections-map-custom-key-type-mapping-example,indent=0]
 ----
-====
 
 The `TimestampEpochType` allows us to map a Unix timestamp since epoch to a `java.util.Date`.
 But, without the `@MapKeyType` Hibernate annotation, it would nt be possible to customize the `Map` key type.
@@ -625,8 +632,14 @@ But, without the `@MapKeyType` Hibernate annotation, it would nt be possible to 
 ===== Unidirectional maps
 
 A unidirectional map exposes a parent-child association from the parent-side only.
+
 The following example shows a unidirectional map which also uses a `@MapKeyTemporal` annotation.
 The map key is a timestamp and it's taken from the child entity table.
+
+[NOTE]
+====
+The `@MapKey` annotation is used to define the entity attribute used as a key of the `java.util.Map` in question.
+====
 
 [[collections-map-unidirectional-example]]
 .Unidirectional Map
@@ -646,6 +659,7 @@ include::{extrasdir}/collections-map-unidirectional-example.sql[]
 ===== Bidirectional maps
 
 Like most bidirectional associations, this relationship is owned by the child-side while the parent is the inverse side and can propagate its own state transitions to the child entities.
+
 In the following example, you can see that `@MapKeyEnumerated` was used so that the `Phone` enumeration becomes the map key.
 
 [[collections-map-bidirectional-example]]

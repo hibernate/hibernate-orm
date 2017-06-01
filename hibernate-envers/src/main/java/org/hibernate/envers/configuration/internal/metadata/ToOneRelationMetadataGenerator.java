@@ -7,6 +7,7 @@
 package org.hibernate.envers.configuration.internal.metadata;
 
 import org.hibernate.MappingException;
+import org.hibernate.envers.RelationTargetNotFoundAction;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.IdMappingData;
@@ -28,6 +29,7 @@ import org.dom4j.Element;
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public final class ToOneRelationMetadataGenerator {
 	private final AuditMetadataGenerator mainGenerator;
@@ -60,8 +62,11 @@ public final class ToOneRelationMetadataGenerator {
 
 		// Storing information about this relation
 		mainGenerator.getEntitiesConfigurations().get( entityName ).addToOneRelation(
-				propertyAuditingData.getName(), referencedEntityName, relMapper,
-				insertable, MappingTools.ignoreNotFound( value )
+				propertyAuditingData.getName(),
+				referencedEntityName,
+				relMapper,
+				insertable,
+				shouldIgnoreNotFoundRelation( propertyAuditingData, value )
 		);
 
 		// If the property isn't insertable, checking if this is not a "fake" bidirectional many-to-one relationship,
@@ -191,5 +196,18 @@ public final class ToOneRelationMetadataGenerator {
 						mainGenerator.getServiceRegistry()
 				)
 		);
+	}
+
+	private boolean shouldIgnoreNotFoundRelation(PropertyAuditingData propertyAuditingData, Value value) {
+		final RelationTargetNotFoundAction action = propertyAuditingData.getRelationTargetNotFoundAction();
+		if ( mainGenerator.getGlobalCfg().isGlobalLegacyRelationTargetNotFoundEnabled() ) {
+			// When legacy is enabled, the user must explicitly specify IGNORE for it to be ignored.
+			return MappingTools.ignoreNotFound( value )
+					|| RelationTargetNotFoundAction.IGNORE.equals( action );
+		}
+		else {
+			// When non-legacy is enabled, the situation is ignored when !ERROR
+			return !RelationTargetNotFoundAction.ERROR.equals( action );
+		}
 	}
 }

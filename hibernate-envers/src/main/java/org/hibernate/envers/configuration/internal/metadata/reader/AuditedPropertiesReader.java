@@ -36,6 +36,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.RelationTargetAuditMode;
+import org.hibernate.envers.RelationTargetNotFoundAction;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
 import org.hibernate.envers.internal.EnversMessageLogger;
@@ -61,6 +62,7 @@ import static org.hibernate.envers.internal.tools.Tools.newHashSet;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Lukasz Zuchowski (author at zuchos dot com)
+ * @author Chris Cranford
  */
 public class AuditedPropertiesReader {
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
@@ -579,6 +581,7 @@ public class AuditedPropertiesReader {
 		if ( aud != null ) {
 			propertyData.setStore( aud.modStore() );
 			propertyData.setRelationTargetAuditMode( aud.targetAuditMode() );
+			propertyData.setRelationTargetNotFoundAction( getRelationNotFoundAction( property, allClassAudited ) );
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );
 			if( aud.modifiedColumnName() != null && !"".equals( aud.modifiedColumnName() ) ) {
 				propertyData.setModifiedFlagName( aud.modifiedColumnName() );
@@ -607,6 +610,31 @@ public class AuditedPropertiesReader {
 		}
 		// no global setting enabled, use the annotation's value only.
 		return aud.withModifiedFlag();
+	}
+
+	private RelationTargetNotFoundAction getRelationNotFoundAction(XProperty property, Audited classAudited) {
+		final Audited propertyAudited = property.getAnnotation( Audited.class );
+
+		// if both places are null, return the DEFAULT
+		if ( classAudited == null && propertyAudited == null ) {
+			return RelationTargetNotFoundAction.DEFAULT;
+		}
+
+		// if only the property is annotated, return its value
+		if ( classAudited == null ) {
+			return propertyAudited.targetNotFoundAction();
+		}
+
+		// class is annotated, take its value by default.
+		RelationTargetNotFoundAction action = classAudited.targetNotFoundAction();
+		if ( propertyAudited != null ) {
+			// both places have audited, use the property value only if its not DEFAULT.
+			if ( !propertyAudited.targetNotFoundAction().equals( RelationTargetNotFoundAction.DEFAULT ) ) {
+				action = propertyAudited.targetNotFoundAction();
+			}
+		}
+
+		return action;
 	}
 
 	private void setPropertyRelationMappedBy(XProperty property, PropertyAuditingData propertyData) {
@@ -701,6 +729,11 @@ public class AuditedPropertiesReader {
 		@Override
 		public RelationTargetAuditMode targetAuditMode() {
 			return RelationTargetAuditMode.AUDITED;
+		}
+
+		@Override
+		public RelationTargetNotFoundAction targetNotFoundAction() {
+			return RelationTargetNotFoundAction.IGNORE;
 		}
 
 		@Override

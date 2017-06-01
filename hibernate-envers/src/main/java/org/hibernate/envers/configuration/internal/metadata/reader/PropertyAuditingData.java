@@ -14,6 +14,7 @@ import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.RelationTargetAuditMode;
+import org.hibernate.envers.RelationTargetNotFoundAction;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.mapping.Value;
 
@@ -31,6 +32,7 @@ public class PropertyAuditingData {
 	private String accessType;
 	private final List<AuditOverride> auditJoinTableOverrides = new ArrayList<>( 0 );
 	private RelationTargetAuditMode relationTargetAuditMode;
+	private RelationTargetNotFoundAction relationTargetNotFoundAction;
 	private String auditMappedBy;
 	private String relationMappedBy;
 	private String positionMappedBy;
@@ -55,6 +57,27 @@ public class PropertyAuditingData {
 				accessType,
 				store,
 				relationTargetAuditMode,
+				RelationTargetNotFoundAction.ERROR,
+				auditMappedBy,
+				positionMappedBy,
+				forceInsertable,
+				false,
+				null
+		);
+	}
+
+	public PropertyAuditingData(
+			String name, String accessType, ModificationStore store,
+			RelationTargetAuditMode relationTargetAuditMode,
+			RelationTargetNotFoundAction relationTargetNotFoundAction,
+			String auditMappedBy, String positionMappedBy,
+			boolean forceInsertable) {
+		this(
+				name,
+				accessType,
+				store,
+				relationTargetAuditMode,
+				relationTargetNotFoundAction,
 				auditMappedBy,
 				positionMappedBy,
 				forceInsertable,
@@ -68,6 +91,7 @@ public class PropertyAuditingData {
 			String accessType,
 			ModificationStore store,
 			RelationTargetAuditMode relationTargetAuditMode,
+			RelationTargetNotFoundAction relationTargetNotFoundAction,
 			String auditMappedBy,
 			String positionMappedBy,
 			boolean forceInsertable,
@@ -78,6 +102,7 @@ public class PropertyAuditingData {
 		this.accessType = accessType;
 		this.store = store;
 		this.relationTargetAuditMode = relationTargetAuditMode;
+		this.relationTargetNotFoundAction = relationTargetNotFoundAction;
 		this.auditMappedBy = auditMappedBy;
 		this.positionMappedBy = positionMappedBy;
 		this.forceInsertable = forceInsertable;
@@ -245,6 +270,14 @@ public class PropertyAuditingData {
 	 */
 	public void setRelationTargetAuditMode(RelationTargetAuditMode relationTargetAuditMode) {
 		this.relationTargetAuditMode = relationTargetAuditMode;
+	}
+
+	public RelationTargetNotFoundAction getRelationTargetNotFoundAction() {
+		return relationTargetNotFoundAction;
+	}
+
+	public void setRelationTargetNotFoundAction(RelationTargetNotFoundAction relationTargetNotFoundAction) {
+		this.relationTargetNotFoundAction = relationTargetNotFoundAction;
 	}
 
 	public boolean isSyntheic() {

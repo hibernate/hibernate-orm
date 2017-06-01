@@ -22,6 +22,7 @@ import org.hibernate.envers.internal.tools.query.Parameters;
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public class ToOneIdMapper extends AbstractToOneMapper {
 	private final IdMapper delegate;
@@ -101,19 +102,22 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			}
 			else {
 				final EntityInfo referencedEntity = getEntityInfo( enversService, referencedEntityName );
-				boolean ignoreNotFound = false;
-				if ( !referencedEntity.isAudited() ) {
-					final String referencingEntityName = enversService.getEntitiesConfigurations().getEntityNameForVersionsEntityName( (String) data.get( "$type$" ) );
-					if ( referencingEntityName == null && primaryKey == null ) {
-						// HHH-11215 - Fix for NPE when Embeddable with ManyToOne inside ElementCollection
-						// an embeddable in an element-collection
-						// todo: perhaps the mapper should account for this instead?
-						ignoreNotFound = true;
-					}
-					else {
-						ignoreNotFound = enversService.getEntitiesConfigurations().getRelationDescription( referencingEntityName, getPropertyData().getName() ).isIgnoreNotFound();
-					}
+
+				final String referencingEntityName = enversService.getEntitiesConfigurations()
+						.getEntityNameForVersionsEntityName( (String) data.get( "$type$" ) );
+
+				final boolean ignoreNotFound;
+				if ( referencingEntityName == null && primaryKey == null ) {
+					/// HHH-11215 - Fix for NPE when Embeddable with ManyToOne inside ElementCollection
+					// An embeddable in an element-collection
+					ignoreNotFound = true;
 				}
+				else {
+					ignoreNotFound = enversService.getEntitiesConfigurations()
+							.getRelationDescription( referencingEntityName, getPropertyData().getName() )
+							.isIgnoreNotFound();
+				}
+
 				if ( ignoreNotFound ) {
 					// Eagerly loading referenced entity to silence potential (in case of proxy)
 					// EntityNotFoundException or ObjectNotFoundException. Assigning null reference.

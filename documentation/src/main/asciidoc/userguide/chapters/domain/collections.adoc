@@ -611,7 +611,7 @@ while the `@Column` mapping gives the value of the `java.util.Map` in question.
 Since we want to map all the calls by their associated `java.util.Date`, not by their timestamp since epoch which is a number, the entity mapping looks as follows:
 
 [[collections-map-custom-key-type-mapping-example]]
-.@MapKeyType mapping example
+.`@MapKeyType` mapping example
 ====
 [source,java]
 ----
@@ -627,6 +627,71 @@ include::{sourcedir}/type/TimestampEpochType.java[tags=collections-map-custom-ke
 
 The `TimestampEpochType` allows us to map a Unix timestamp since epoch to a `java.util.Date`.
 But, without the `@MapKeyType` Hibernate annotation, it would nt be possible to customize the `Map` key type.
+
+[[collections-map-key-class]]
+===== Maps having an interface type as the key
+
+Considering you have the following `PhoneNumber` interface with an implementation given by the `MobilePhone` class type:
+
+[[collections-map-key-class-type-mapping-example]]
+.`PhoneNumber` interface and the `MobilePhone` class type
+====
+[source,java]
+----
+include::{sourcedir}/MapKeyClassTest.java[tags=collections-map-key-class-type-mapping-example,indent=0]
+----
+====
+
+If you want to use the `PhoneNumber` interface as a `java.util.Map` key, then you need to supply the
+http://docs.oracle.com/javaee/7/api/javax/persistence/MapKeyClass.html[`@MapKeyClass`] annotation as well.
+
+[[collections-map-key-class-mapping-example]]
+.`@MapKeyClass` mapping example
+====
+[source,java]
+----
+include::{sourcedir}/MapKeyClassTest.java[tags=collections-map-key-class-mapping-example,indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/collections-map-key-class-mapping-example.sql[]
+----
+====
+
+When inserting a `Person` with a `callRegister` containing 2 `MobilePhone` references,
+Hibernate generates the following SQL statements:
+
+[[collections-map-key-class-persist-example]]
+.`@MapKeyClass` persist example
+====
+[source,java]
+----
+include::{sourcedir}/MapKeyClassTest.java[tags=collections-map-key-class-persist-example,indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/collections-map-key-class-persist-example.sql[]
+----
+====
+
+When fetching a `Person` and accessing the `callRegister` `Map`,
+Hibernate generates the following SQL statements:
+
+[[collections-map-key-class-fetch-example]]
+.`@MapKeyClass` fetch example
+====
+[source,java]
+----
+include::{sourcedir}/MapKeyClassTest.java[tags=collections-map-key-class-fetch-example,indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/collections-map-key-class-fetch-example.sql[]
+----
+====
 
 [[collections-map-unidirectional]]
 ===== Unidirectional maps

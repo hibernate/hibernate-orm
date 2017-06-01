@@ -296,7 +296,7 @@ See the <<chapters/domain/collections.adoc#collections-map-unidirectional-exampl
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/MapKeyClass.html[`@MapKeyClass`] annotation is used to specify the type of the map key of a `java.util.Map` associations.
 
-//TODO: Add example
+See the <<chapters/domain/collections.adoc#collections-map-key-class, `@MapKeyClass` mapping>> section for more info.
 
 [[annotations-jpa-mapkeycolumn]]
 ==== `@MapKeyColumn`

@@ -110,7 +110,7 @@ public class MapKeyTypeTest extends BaseEntityManagerFunctionalTestCase {
 		@ElementCollection
 		@CollectionTable(
 			name = "call_register",
-			joinColumns = @JoinColumn(name = "phone_id")
+			joinColumns = @JoinColumn(name = "person_id")
 		)
 		@MapKeyColumn( name = "call_timestamp_epoch" )
 		@Column(name = "phone_number")
@@ -136,7 +136,7 @@ public class MapKeyTypeTest extends BaseEntityManagerFunctionalTestCase {
 		@ElementCollection
 		@CollectionTable(
 			name = "call_register",
-			joinColumns = @JoinColumn(name = "phone_id")
+			joinColumns = @JoinColumn(name = "person_id")
 		)
 		@MapKeyType(
 			@Type(

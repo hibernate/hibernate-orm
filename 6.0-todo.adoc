@@ -269,6 +269,46 @@ Unresolved/undecided design questions.
 	* `NonAggregatedCompositeEntityIdentifier`
 	* `DiscriminatorDescriptor`
 	* back-refs
+* consider allowing some Dialect decisions to be contextual, meaning giving it access to
+		information about the underlying database (DatabaseMetaData?) based on which it can
+		configure itself differently.  The idea is to help cut down on the explosion of
+		dialect classes just to handle some minor change in version X to version Y for
+		database Z - e.g. have just one OracleDialect that configures itself based on the
+		passed DatabaseMetadata.  I'd really love to see something like:
++
+----
+public interface DatabaseInformation {
+    // Similar to org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData
+    // 		Would be a good idea to "shadow extend", or at least learn from it.
+    //		Best option is to reuse it ("shadow extend", etc) and have the
+    //		existing code that uses it be able to continue to work as before.
+
+    // probably with default impls...
+
+	String getConnectionCatalogName();
+	String getConnectionSchemaName();
+	LinkedHashSet<TypeInfo> getTypeInfoSet();
+	Set<String> getExtraKeywords();
+	boolean supportsNamedParameters();
+	boolean supportsRefCursors();
+	...
+}
+----
++
+This is the best option IMO as it
+	* does not tie us to actually having around a JDBC Connection to access
+	 		the JDBC DatabaseMetaData
+	* allows us to mingle in settings from anywhere else we want (settings, etc)
+	* allows easy testing - no more mocking JDBC for testing boot code
+
+Ultimately the call to the Dialect is something like
++
+----
+Dialect dialect = ...;
+DatabaseInformation dbInfo = ...;
+dialect.initialize( dbInfo );
+----
+
 
 
 

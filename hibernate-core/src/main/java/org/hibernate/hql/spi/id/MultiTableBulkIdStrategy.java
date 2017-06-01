@@ -13,6 +13,9 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.sqm.tree.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 
 /**
  * Generalized strategy contract for handling multi-table bulk HQL operations.
@@ -48,6 +51,24 @@ public interface MultiTableBulkIdStrategy {
 	 * Handler for dealing with multi-table HQL bulk update statements.
 	 */
 	interface UpdateHandler {
+
+		// todo (6.0) : Ideally I think the best option is for this delegate to just handle execution of the "entire SQM delete"
+		//		i.e. the single HQL that needs to get split into multiple SQL operations...
+		//
+		//		something like:
+
+		int execute(SqmDeleteStatement sqmDeleteStatement, QueryParameterBindings parameterBindings);
+
+		// 		What is the proper return type?  for now returning the "number of rows affected" count..
+
+		//		Similarly, any other parameters to pass?  Does it need the Session e.g.?
+
+		// 		the parameter references in the tree still just refer back the the overall bindings
+		// 		regardless of which "split tree" they get split into.  Perfect! :)
+
+
+		// I'd remove thses ones below...
+
 		Queryable getTargetedQueryable();
 		String[] getSqlStatements();
 
@@ -58,16 +79,19 @@ public interface MultiTableBulkIdStrategy {
 	 * Build a handler capable of handling the bulk update indicated by the given walker.
 	 *
 	 * @param factory The SessionFactory
-	 * @param walker The AST walker, representing the update query
+	 * @param sqmUpdateStatement The SQM AST representing the update query
 	 *
 	 * @return The handler
 	 */
-	UpdateHandler buildUpdateHandler(SessionFactoryImplementor factory, HqlSqlWalker walker);
+	UpdateHandler buildUpdateHandler(SessionFactoryImplementor factory, SqmUpdateStatement sqmUpdateStatement);
 
 	/**
 	 * Handler for dealing with multi-table HQL bulk delete statements.
 	 */
 	interface DeleteHandler {
+
+		// todo (6.0) : same as discussions above in UpdateHandler
+
 		Queryable getTargetedQueryable();
 		String[] getSqlStatements();
 
@@ -78,9 +102,9 @@ public interface MultiTableBulkIdStrategy {
 	 * Build a handler capable of handling the bulk delete indicated by the given walker.
 	 *
 	 * @param factory The SessionFactory
-	 * @param walker The AST walker, representing the delete query
+	 * @param sqmDeleteStatement The SQM AST representing the delete query
 	 *
 	 * @return The handler
 	 */
-	DeleteHandler buildDeleteHandler(SessionFactoryImplementor factory, HqlSqlWalker walker);
+	DeleteHandler buildDeleteHandler(SessionFactoryImplementor factory, SqmDeleteStatement sqmDeleteStatement);
 }

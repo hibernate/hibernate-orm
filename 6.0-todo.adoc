@@ -17,6 +17,7 @@ This categorization follows the http://https://en.wikipedia.org/wiki/MoSCoW_meth
 * HHH-11697 - Remove QueryTranslator and friends in preference of new SQM-based "translation"
 * HHH-10755 - Fold hiberate-envers into hibernate-core
 * HHH-11444 - Rename groupId and artifactIds
+* HHH-11782 - Update MultiTableBulkIdStrategy to work with SQM AST
 
 
 == Must
@@ -277,11 +278,19 @@ Unresolved/undecided design questions.
 		passed DatabaseMetadata.  I'd really love to see something like:
 +
 ----
+package org.hibernate.boot.jdbc.spi;
+
+// suggestion for package ^^
+//		note new `boot` package `jdbc`..
+
 public interface DatabaseInformation {
     // Similar to org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData
-    // 		Would be a good idea to "shadow extend", or at least learn from it.
-    //		Best option is to reuse it ("shadow extend", etc) and have the
-    //		existing code that uses it be able to continue to work as before.
+    // 		and org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo
+    //
+    // 		Would be a good idea to keep those around for now and have
+    //		this interface extend them and possibly deprecate those..?
+    //		Keeping them, even if just for the short term, helps existing
+    //		code to keep working with no changes for what ever that term
 
     // probably with default impls...
 

@@ -475,6 +475,11 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public String getForUpdateString(final String aliases, final LockOptions lockOptions) {
 		LockMode lockMode = lockOptions.getLockMode();
+
+		if ( LockMode.OPTIMISTIC.equals( lockMode ) || LockMode.OPTIMISTIC_FORCE_INCREMENT.equals( lockMode ) ) {
+			return "";
+		}
+
 		final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
 		while ( itr.hasNext() ) {
 			// seek the highest lock mode

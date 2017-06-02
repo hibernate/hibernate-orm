@@ -6,9 +6,13 @@
  */
 package org.hibernate.jpa.test.cdi;
 
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
 import javax.persistence.EntityManagerFactory;
+
+import org.hibernate.bytecode.spi.ByteCodeHelper;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.junit4.ClassLoadingIsolater;

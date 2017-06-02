@@ -62,11 +62,20 @@ public class ConnectionLeakUtil {
 	}
 
 	private int countConnectionLeaks() {
-		try ( Connection connection = newConnection() ) {
+		Connection connection = null;
+		try {
+			connection = newConnection();
 			return connectionCounter.count( connection );
 		}
-		catch ( SQLException e ) {
-			throw new IllegalStateException( e );
+		finally {
+			try {
+				if ( connection != null ) {
+					connection.close();
+				}
+			}
+			catch (SQLException ex) {
+				// ignore
+			}
 		}
 	}
 

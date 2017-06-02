@@ -19,11 +19,4 @@ public class ConnectionLeakException extends RuntimeException {
 	public ConnectionLeakException(Throwable cause) {
 		super( cause );
 	}
-
-	public ConnectionLeakException(
-			String message,
-			Throwable cause,
-			boolean enableSuppression, boolean writableStackTrace) {
-		super( message, cause, enableSuppression, writableStackTrace );
-	}
 }

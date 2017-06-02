@@ -28,9 +28,12 @@ public class MySQLIdleConnectionCounter implements IdleConnectionCounter {
 
 	@Override
 	public int count(Connection connection) {
-		try ( Statement statement = connection.createStatement() ) {
-			try ( ResultSet resultSet = statement.executeQuery(
-					"SHOW PROCESSLIST" ) ) {
+		Statement statement = null;
+		try {
+			statement = connection.createStatement();
+			ResultSet resultSet = null;
+			try {
+				resultSet = statement.executeQuery( "SHOW PROCESSLIST" );
 				int count = 0;
 				while ( resultSet.next() ) {
 					String state = resultSet.getString( "command" );
@@ -40,9 +43,29 @@ public class MySQLIdleConnectionCounter implements IdleConnectionCounter {
 				}
 				return count;
 			}
+			finally {
+				try {
+					if ( resultSet != null ) {
+						resultSet.close();
+					}
+				}
+				catch (SQLException ex) {
+					// ignore
+				}
+			}
 		}
 		catch ( SQLException e ) {
 			throw new IllegalStateException( e );
+		}
+		finally {
+			try {
+				if ( statement != null ) {
+					statement.close();
+				}
+			}
+			catch (SQLException ex) {
+				// ignore
+			}
 		}
 	}
 }

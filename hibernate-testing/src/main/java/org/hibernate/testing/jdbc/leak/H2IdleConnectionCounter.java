@@ -28,19 +28,44 @@ public class H2IdleConnectionCounter implements IdleConnectionCounter {
 
 	@Override
 	public int count(Connection connection) {
-		try ( Statement statement = connection.createStatement() ) {
-			try ( ResultSet resultSet = statement.executeQuery(
+		Statement statement = null;
+		try {
+			statement = connection.createStatement();
+			ResultSet resultSet = null;
+			try {
+				resultSet = statement.executeQuery(
 					"select count(*) " +
 							"from information_schema.sessions " +
-							"where statement is null" ) ) {
+							"where statement is null"
+				);
 				while ( resultSet.next() ) {
 					return resultSet.getInt( 1 );
 				}
 				return 0;
 			}
+			finally {
+				try {
+					if ( resultSet != null ) {
+						resultSet.close();
+					}
+				}
+				catch (SQLException ex) {
+					// ignore
+				}
+			}
 		}
 		catch ( SQLException e ) {
 			throw new IllegalStateException( e );
+		}
+		finally {
+			try {
+				if ( statement != null ) {
+					statement.close();
+				}
+			}
+			catch (SQLException ex) {
+				// ignore
+			}
 		}
 	}
 }

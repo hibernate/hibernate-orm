@@ -62,7 +62,7 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 		CONNECTION_PROVIDER.stop();
 	}
 
-	@Test(timeout = 1000 * 10) //10 seconds
+	@Test(timeout = 1000 * 30) //30 seconds
 	@TestForIssue(jiraKey = "HHH-11617")
 	public void testStatementIsClosed() {
 

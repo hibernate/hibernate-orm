@@ -358,7 +358,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		}
 
 		if ( uniqueConstraintStrategy != UniqueConstraintSchemaUpdateStrategy.SKIP ) {
-			final Exporter<Constraint> exporter = dialect.getUniqueKeyExporter();
+			final Exporter<UniqueKey> exporter = dialect.getUniqueKeyExporter();
 
 			for(UniqueKey uniqueKey : table.getUniqueKeys()){
 				// Skip if index already exists. Most of the time, this
@@ -502,7 +502,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 			if ( tryToCreateSchemas
 					&& namespace.getSchemaName() != null
-					&& !existingDatabase.schemaExists( namespace.getName() ) ) {
+					&& !existingDatabase.schemaExists( namespace ) ) {
 				applySqlStrings(
 						false,
 						dialect.getCreateSchemaCommand( namespace.getSchemaName().render( dialect ) ),

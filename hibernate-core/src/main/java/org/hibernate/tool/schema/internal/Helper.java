@@ -13,7 +13,7 @@ import java.net.URL;
 import java.sql.SQLException;
 import java.util.Map;
 
-import org.hibernate.naming.NamespaceName;
+import org.hibernate.metamodel.model.relational.spi.Namespace;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -126,7 +126,7 @@ public class Helper {
 	public static DatabaseInformation buildDatabaseInformation(
 			ServiceRegistry serviceRegistry,
 			DdlTransactionIsolator ddlTransactionIsolator,
-			NamespaceName defaultNamespace) {
+			Namespace defaultNamespace) {
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		try {
 			return new DatabaseInformationImpl(

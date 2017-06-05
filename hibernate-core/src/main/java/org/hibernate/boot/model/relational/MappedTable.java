@@ -21,6 +21,7 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.metamodel.model.relational.internal.InflightTable;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.naming.Identifier;
+import org.hibernate.naming.QualifiedTableName;
 
 /**
  * Models any mapped "table reference" (e.g. a physical table, an in-lined

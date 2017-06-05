@@ -8,11 +8,9 @@ package org.hibernate.metamodel.model.relational.spi;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.naming.Identifier;
 

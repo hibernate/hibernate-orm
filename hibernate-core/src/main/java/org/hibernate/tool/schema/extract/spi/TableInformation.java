@@ -7,7 +7,7 @@
 package org.hibernate.tool.schema.extract.spi;
 
 import org.hibernate.naming.Identifier;
-import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.naming.QualifiedTableName;
 
 /**
  * Provides access to information about existing tables in the database

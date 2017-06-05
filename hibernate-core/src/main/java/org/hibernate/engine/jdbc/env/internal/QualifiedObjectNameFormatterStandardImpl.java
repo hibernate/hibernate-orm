@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import org.hibernate.naming.Identifier;
 import org.hibernate.naming.spi.QualifiedName;
 import org.hibernate.naming.QualifiedSequenceName;
-import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;

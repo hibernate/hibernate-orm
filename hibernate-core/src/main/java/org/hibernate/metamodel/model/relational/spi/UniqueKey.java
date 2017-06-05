@@ -45,7 +45,6 @@ public class UniqueKey implements Exportable {
 	public void addColumn(PhysicalColumn column, String order){
 			columns.add( column );
 			columnOrderMap.put( column, order );
-
 	}
 
 	@Override

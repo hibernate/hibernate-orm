@@ -11,7 +11,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.QueryException;
-import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;

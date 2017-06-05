@@ -134,7 +134,17 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		}
 
 		// if we get here, either we were asked to not use JDBC metadata or accessing the JDBC metadata failed.
-		return new JdbcEnvironmentImpl( registry, dialectFactory.buildDialect( configurationValues, null ) );
+		return new JdbcEnvironmentImpl( registry, getDialect(dialectFactory, configurationValues) );
+	}
+
+	private Dialect getDialect(DialectFactory dialectFactory, Map configurationValues) {
+		try {
+			return dialectFactory.buildDialect(configurationValues, null);
+		}
+		catch (HibernateException ex) {
+			log.warn("Unable to determine dialect: " + ex.getMessage());
+			return new Dialect() { };
+		}
 	}
 
 	private JdbcConnectionAccess buildJdbcConnectionAccess(Map configValues, ServiceRegistryImplementor registry) {

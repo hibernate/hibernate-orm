@@ -8,6 +8,7 @@ package org.hibernate.dialect.pagination;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -37,7 +38,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	private static final Pattern ORDER_BY_PATTERN = buildShallowIndexPattern( ORDER_BY, true );
 	private static final Pattern COMMA_PATTERN = buildShallowIndexPattern( ",", false );
 	private static final Pattern ALIAS_PATTERN =
-			Pattern.compile( "\\S+\\s*(\\s(?i)as\\s)\\s*(\\S+)*\\s*$|\\s+(\\S+)$" );
+			Pattern.compile( "(?![^\\[]*(\\]))\\S+\\s*(\\s(?i)as\\s)\\s*(\\S+)*\\s*$|(?![^\\[]*(\\]))\\s+(\\S+)$" );
 
 	// Flag indicating whether TOP(?) expression has been added to the original query.
 	private boolean topAdded;
@@ -261,10 +262,18 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		// This will match any text provided with:
 		// 		columnName [[as] alias]
 		final Matcher matcher = ALIAS_PATTERN.matcher( expression );
+
+		String alias = null;
 		if ( matcher.find() && matcher.groupCount() > 1 ) {
-			return matcher.group( 1 ) != null ? matcher.group( 2 ) : matcher.group( 3 );
+			// default to the alias after 'as' if detected
+			alias = matcher.group( 3 );
+			if ( alias == null ) {
+				// use the clause which has on proceeding 'as' fragment.
+				alias = matcher.group( 0 );
+			}
 		}
-		return null;
+
+		return ( alias != null ? alias.trim() : null );
 	}
 
 	/**
@@ -316,11 +325,28 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 			return -1;
 		}
 
+		List<IgnoreRange> ignoreRangeList = generateIgnoreRanges( matchString );
+
 		Matcher matcher = pattern.matcher( matchString );
 		matcher.region( fromIndex, matchString.length() );
 
-		if ( matcher.find() && matcher.groupCount() > 0 ) {
-			index = matcher.start();
+		if ( ignoreRangeList.isEmpty() ) {
+			// old behavior where the first match is used if no ignorable ranges
+			// were deduced from the matchString.
+			if ( matcher.find() && matcher.groupCount() > 0 ) {
+				index = matcher.start();
+			}
+		}
+		else {
+			// rather than taking the first match, we now iterate all matches
+			// until we determine a match that isn't considered "ignorable'.
+			while ( matcher.find() && matcher.groupCount() > 0 ) {
+				final int position = matcher.start();
+				if ( !isPositionIgnorable( ignoreRangeList, position ) ) {
+					index = position;
+					break;
+				}
+			}
 		}
 		return index;
 	}
@@ -330,16 +356,88 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * based on the search pattern that is not enclosed in parenthesis.
 	 *
 	 * @param pattern String search pattern.
-	 * @param wordBoundardy whether to apply a word boundary restriction.
+	 * @param wordBoundary whether to apply a word boundary restriction.
 	 * @return Compiled {@link Pattern}.
 	 */
-	private static Pattern buildShallowIndexPattern(String pattern, boolean wordBoundardy) {
+	private static Pattern buildShallowIndexPattern(String pattern, boolean wordBoundary) {
 		return Pattern.compile(
 				"(" +
-				( wordBoundardy ? "\\b" : "" ) +
+				( wordBoundary ? "\\b" : "" ) +
 				pattern +
-				")(?![^\\(]*\\))",
+				( wordBoundary ? "\\b" : "" ) +
+				")(?![^\\(|\\[]*(\\)|\\]))",
 				Pattern.CASE_INSENSITIVE
 		);
+	}
+
+	/**
+	 * Geneartes a list of {@code IgnoreRange} objects that represent nested sections of the
+	 * provided SQL buffer that should be ignored when performing regular expression matches.
+	 *
+	 * @param sql The SQL buffer.
+	 * @return list of {@code IgnoreRange} objects, never {@code null}.
+	 */
+	private static List<IgnoreRange> generateIgnoreRanges(String sql) {
+		List<IgnoreRange> ignoreRangeList = new ArrayList<IgnoreRange>();
+
+		int depth = 0;
+		int start = -1;
+		for ( int i = 0; i < sql.length(); ++i ) {
+			final char ch = sql.charAt( i );
+			if ( ch == '(' ) {
+				depth++;
+				if ( depth == 1 ) {
+					start = i;
+				}
+			}
+			else if ( ch == ')' ) {
+				if ( depth > 0 ) {
+					if ( depth == 1 ) {
+						ignoreRangeList.add( new IgnoreRange( start, i ) );
+						start = -1;
+					}
+					depth--;
+				}
+				else {
+					throw new IllegalStateException( "Found an unmatched ')' at position " + i + ": " + sql );
+				}
+			}
+		}
+
+		if ( depth != 0 ) {
+			throw new IllegalStateException( "Unmatched parenthesis in rendered SQL (" + depth + " depth): " + sql );
+		}
+
+		return ignoreRangeList;
+	}
+
+	/**
+	 * Returns whether the specified {@code position} is within the ranges of the {@code ignoreRangeList}.
+	 *
+	 * @param ignoreRangeList list of {@code IgnoreRange} objects deduced from the SQL buffer.
+	 * @param position the position to determine whether is ignorable.
+	 * @return {@code true} if the position is to ignored/skipped, {@code false} otherwise.
+	 */
+	private static boolean isPositionIgnorable(List<IgnoreRange> ignoreRangeList, int position) {
+		for ( IgnoreRange ignoreRange : ignoreRangeList ) {
+			if ( ignoreRange.isWithinRange( position ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	static class IgnoreRange {
+		private int start;
+		private int end;
+
+		IgnoreRange(int start, int end) {
+			this.start = start;
+			this.end = end;
+		}
+
+		boolean isWithinRange(int position) {
+			return position >= start && position <= end;
+		}
 	}
 }

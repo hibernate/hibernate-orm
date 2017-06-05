@@ -544,6 +544,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 
 													final PreparedStatement insertPS = prepareStatement( connection, insertQuery, statementLogger, statsCollector );
 													try {
+														LOG.tracef( "binding parameter [%s] - [%s]", 1, segmentValue );
 														insertPS.setString( 1, segmentValue );
 														value.bind( insertPS, 2 );
 														executeUpdate( insertPS, statsCollector );

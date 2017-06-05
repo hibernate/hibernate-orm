@@ -11,6 +11,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -24,7 +25,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  * @author Vlad Mihalcea
  */
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
-public class UnnamedSequenceTest extends BaseEntityManagerFunctionalTestCase {
+public class SequenceGeneratorConfiguredTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -53,7 +54,13 @@ public class UnnamedSequenceTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Id
 		@GeneratedValue(
-			strategy = GenerationType.SEQUENCE
+			strategy = GenerationType.SEQUENCE,
+			generator = "sequence-generator"
+		)
+		@SequenceGenerator(
+			name = "sequence-generator",
+			sequenceName = "product_sequence",
+			allocationSize = 5
 		)
 		private Long id;
 

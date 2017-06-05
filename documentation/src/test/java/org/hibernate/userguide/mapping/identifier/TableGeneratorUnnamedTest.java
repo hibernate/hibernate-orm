@@ -11,7 +11,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -24,8 +23,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
-public class ConfiguredSequenceTest extends BaseEntityManagerFunctionalTestCase {
+public class TableGeneratorUnnamedTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -48,19 +46,13 @@ public class ConfiguredSequenceTest extends BaseEntityManagerFunctionalTestCase 
 		} );
 	}
 
-	//tag::identifiers-generators-sequence-mapping-example[]
+	//tag::identifiers-generators-table-mapping-example[]
 	@Entity(name = "Product")
 	public static class Product {
 
 		@Id
 		@GeneratedValue(
-			strategy = GenerationType.SEQUENCE,
-			generator = "sequence-generator"
-		)
-		@SequenceGenerator(
-			name = "sequence-generator",
-			sequenceName = "product_sequence",
-			allocationSize = 5
+			strategy = GenerationType.TABLE
 		)
 		private Long id;
 
@@ -69,7 +61,7 @@ public class ConfiguredSequenceTest extends BaseEntityManagerFunctionalTestCase 
 
 		//Getters and setters are omitted for brevity
 
-	//end::identifiers-generators-sequence-mapping-example[]
+	//end::identifiers-generators-table-mapping-example[]
 
 		public Long getId() {
 			return id;
@@ -87,7 +79,7 @@ public class ConfiguredSequenceTest extends BaseEntityManagerFunctionalTestCase 
 			this.name = name;
 		}
 		
-	//tag::identifiers-generators-sequence-mapping-example[]
+	//tag::identifiers-generators-table-mapping-example[]
 	}
-	//end::identifiers-generators-sequence-mapping-example[]
+	//end::identifiers-generators-table-mapping-example[]
 }

@@ -588,7 +588,7 @@ See the <<chapters/query/native/Native.adoc#sql-custom-crud-secondary-table-exam
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/TableGenerator.html[`@TableGenerator`] annotation is used to specify the database table used by the identity generator of the current annotated entity.
 
-//TODO: Add example
+See the <<chapters/domain/identifiers.adoc#identifiers-generators-table-configured-mapping-example,`@TableGenerator` mapping>> section for more info.
 
 [[annotations-jpa-temporal]]
 ==== `@Temporal`

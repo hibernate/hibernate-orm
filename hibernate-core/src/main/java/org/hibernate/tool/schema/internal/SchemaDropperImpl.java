@@ -13,19 +13,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Exportable;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
-import org.hibernate.metamodel.model.relational.spi.ExportableTable;
-import org.hibernate.metamodel.model.relational.spi.ForeignKey;
-import org.hibernate.metamodel.model.relational.spi.Namespace;
-import org.hibernate.metamodel.model.relational.spi.Sequence;
-import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -38,6 +28,14 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
+import org.hibernate.metamodel.model.relational.spi.Namespace;
+import org.hibernate.metamodel.model.relational.spi.Sequence;
+import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.naming.Identifier;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -201,7 +199,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 		}
 
-		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
+		final Set<String> exportIdentifiers = new HashSet<>( 50 );
 
 		// NOTE : init commands are irrelevant for dropping...
 
@@ -244,7 +242,6 @@ public class SchemaDropperImpl implements SchemaDropper {
 								options,
 								targets
 						);
-
 					} );
 
 			for ( Sequence sequence : namespace.getSequences() ) {

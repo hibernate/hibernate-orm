@@ -6,15 +6,13 @@
  */
 package org.hibernate.tool.schema.internal;
 
-import java.util.Iterator;
-
-import org.hibernate.naming.QualifiedNameImpl;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Index;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.Index;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
+import org.hibernate.naming.QualifiedNameImpl;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
@@ -41,13 +39,13 @@ public class StandardIndexExporter implements Exporter<Index> {
 					new QualifiedNameImpl(
 							index.getTable().getQualifiedTableName().getCatalogName(),
 							index.getTable().getQualifiedTableName().getSchemaName(),
-							jdbcEnvironment.getIdentifierHelper().toIdentifier( index.getQuotedName( dialect ) )
+							index.getName()
 					),
 					jdbcEnvironment.getDialect()
 			);
 		}
 		else {
-			indexNameForCreation = index.getName();
+			indexNameForCreation = index.getName().render( jdbcEnvironment.getDialect() );
 		}
 		final StringBuilder buf = new StringBuilder()
 				.append( "create index " )
@@ -57,16 +55,14 @@ public class StandardIndexExporter implements Exporter<Index> {
 				.append( " (" );
 
 		boolean first = true;
-		Iterator<Column> columnItr = index.getColumnIterator();
-		while ( columnItr.hasNext() ) {
-			final Column column = columnItr.next();
+		for ( PhysicalColumn column : index.getColumns() ) {
 			if ( first ) {
 				first = false;
 			}
 			else {
 				buf.append( ", " );
 			}
-			buf.append( ( column.getQuotedName( dialect ) ) );
+			buf.append( ( column.getName().render( jdbcEnvironment.getDialect() ) ) );
 		}
 		buf.append( ")" );
 		return new String[] { buf.toString() };
@@ -86,10 +82,10 @@ public class StandardIndexExporter implements Exporter<Index> {
 
 		final String indexNameForCreation;
 		if ( dialect.qualifyIndexName() ) {
-			indexNameForCreation = StringHelper.qualify( tableName, index.getName() );
+			indexNameForCreation = StringHelper.qualify( tableName, index.getName().render( dialect ) );
 		}
 		else {
-			indexNameForCreation = index.getName();
+			indexNameForCreation = index.getName().render( dialect );
 		}
 
 		return new String[] { "drop index " + indexNameForCreation };

@@ -7,14 +7,16 @@
 package org.hibernate.tool.schema.internal;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.ForeignKey;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
@@ -36,7 +38,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 			return NO_COMMANDS;
 		}
 		
-		if ( ! foreignKey.isCreationEnabled() ) {
+		if ( ! foreignKey.isExportationEnabled() ) {
 			return NO_COMMANDS;
 		}
 
@@ -44,26 +46,26 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 			return NO_COMMANDS;
 		}
 
-		final int numberOfColumns = foreignKey.getColumnSpan();
+		final int numberOfColumns = foreignKey.getColumnMappings().getColumnMappings().size();
 		final String[] columnNames = new String[ numberOfColumns ];
 		final String[] targetColumnNames = new String[ numberOfColumns ];
 
-		final Iterator targetItr;
+		final List<Column> targetItr;
 		if ( foreignKey.isReferenceToPrimaryKey() ) {
-			if ( numberOfColumns != foreignKey.getReferencedTable().getPrimaryKey().getColumnSpan() ) {
+			if ( numberOfColumns != foreignKey.getReferringTable().getPrimaryKey().getColumns().size() ) {
 				throw new AssertionFailure(
 						String.format(
 								Locale.ENGLISH,
 								COLUMN_MISMATCH_MSG,
 								numberOfColumns,
-								foreignKey.getReferencedTable().getPrimaryKey().getColumnSpan(),
+								foreignKey.getReferringTable().getPrimaryKey().getColumns().size(),
 								foreignKey.getName(),
-								foreignKey.getTable().getName(),
-								foreignKey.getReferencedTable().getName()
+								( (ExportableTable) foreignKey.getTargetTable() ).getTableName(),
+								( (ExportableTable) foreignKey.getReferringTable() ).getTableName()
 						)
 				);
 			}
-			targetItr = foreignKey.getReferencedTable().getPrimaryKey().getColumnIterator();
+			targetItr = foreignKey.getReferringTable().getPrimaryKey().getColumns();
 		}
 		else {
 			if ( numberOfColumns != foreignKey.getReferencedColumns().size() ) {
@@ -74,8 +76,8 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 								numberOfColumns,
 								foreignKey.getReferencedColumns().size(),
 								foreignKey.getName(),
-								foreignKey.getTable().getName(),
-								foreignKey.getReferencedTable().getName()
+								( (ExportableTable) foreignKey.getTargetTable() ).getTableName(),
+								( (ExportableTable) foreignKey.getReferringTable() ).getTableName()
 						)
 				);
 			}
@@ -92,11 +94,11 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 
 		final JdbcEnvironment jdbcEnvironment = modelCreationContext.getDatabaseModel().getJdbcEnvironment();
 		final String sourceTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				foreignKey.getTable().getQualifiedTableName(),
+				( (ExportableTable) foreignKey.getTargetTable()).getQualifiedTableName(),
 				dialect
 		);
 		final String targetTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				foreignKey.getReferencedTable().getQualifiedTableName(),
+				( (ExportableTable) foreignKey.getReferringTable()).getQualifiedTableName(),
 				dialect
 		);
 
@@ -142,7 +144,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 
 		final JdbcEnvironment jdbcEnvironment = modelCreationContext.getDatabaseModel().getJdbcEnvironment();
 		final String sourceTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				foreignKey.getTable().getQualifiedTableName(),
+				( (ExportableTable) foreignKey.getTargetTable()).getQualifiedTableName(),
 				dialect
 		);
 		return new String[] {

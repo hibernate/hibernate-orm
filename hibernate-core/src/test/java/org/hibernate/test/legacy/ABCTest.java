@@ -12,7 +12,7 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.mapping.Index;
+import org.hibernate.mapping.MappedIndex;
 import org.hibernate.naming.Identifier;
 import org.junit.Test;
 
@@ -64,10 +64,10 @@ public class ABCTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testHigherLevelIndexDefinition() throws Throwable {
 		MappedTable table = metadata().getDatabase().getDefaultNamespace().locateTable( Identifier.toIdentifier( "TA" ) );
-		Iterator<Index> indexItr = table.getIndexIterator();
+		Iterator<MappedIndex> indexItr = table.getIndexIterator();
 		boolean found = false;
 		while ( indexItr.hasNext() ) {
-			final Index index = indexItr.next();
+			final MappedIndex index = indexItr.next();
 			if ( "indx_a_name".equals( index.getName() ) ) {
 				found = true;
 				break;

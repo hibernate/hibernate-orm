@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.naming.Identifier;
 
 /**
@@ -17,17 +18,24 @@ import org.hibernate.naming.Identifier;
  */
 public interface ExportableTable extends Table, Exportable {
 	Identifier getCatalogName();
+
 	Identifier getSchemaName();
+
 	Identifier getTableName();
+
+	QualifiedTableName getQualifiedTableName();
+
 	Collection<PhysicalColumn> getPhysicalColumns();
 
 	boolean hasPrimaryKey();
 
 	String getComment();
 
-	UniqueKey getUniqueKey(PhysicalColumn col);
+	Collection<UniqueKey> getUniqueKeys();
 
 	List<String> getCheckConstraints();
 
 	Collection<ForeignKey> getForeignKeys();
+
+	Collection<Index> getIndexes();
 }

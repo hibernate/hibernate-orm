@@ -136,8 +136,8 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable 
 		List indexes = new ArrayList();
 		Iterator iter = includedTable.getIndexIterator();
 		while ( iter.hasNext() ) {
-			Index parentIndex = (Index) iter.next();
-			Index index = new Index();
+			MappedIndex parentIndex = (MappedIndex) iter.next();
+			MappedIndex index = new MappedIndex();
 			index.setName( getName() + parentIndex.getName() );
 			index.setTable( this );
 			index.addColumns( parentIndex.getColumnIterator() );

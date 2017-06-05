@@ -10,12 +10,10 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
-import org.hibernate.naming.QualifiedNameImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -24,9 +22,10 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Index;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.Index;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
+import org.hibernate.naming.QualifiedNameImpl;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -227,27 +226,25 @@ public class Teradata14Dialect extends TeradataDialect {
 						new QualifiedNameImpl(
 								index.getTable().getQualifiedTableName().getCatalogName(),
 								index.getTable().getQualifiedTableName().getSchemaName(),
-								jdbcEnvironment.getIdentifierHelper().toIdentifier( index.getName() )
+								index.getName()
 						),
 						jdbcEnvironment.getDialect()
 				);
 			}
 			else {
-				indexNameForCreation = index.getName();
+				indexNameForCreation = index.getName().render( jdbcEnvironment.getDialect() );
 			}
 
 			StringBuilder colBuf = new StringBuilder("");
 			boolean first = true;
-			Iterator<Column> columnItr = index.getColumnIterator();
-			while ( columnItr.hasNext() ) {
-				final Column column = columnItr.next();
+			for ( PhysicalColumn column : index.getColumns() ) {
 				if ( first ) {
 					first = false;
 				}
 				else {
 					colBuf.append( ", " );
 				}
-				colBuf.append( ( column.getQuotedName( jdbcEnvironment.getDialect() )) );
+				colBuf.append( ( column.getName().render( jdbcEnvironment.getDialect() ) ) );
 			}
 			colBuf.append( ")" );
 

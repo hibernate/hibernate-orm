@@ -11,6 +11,8 @@ import java.util.Map;
 
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.Table;
 
 /**
  * @author Andrea Boriero
@@ -27,8 +29,8 @@ public class NameSpaceTablesInformation {
 		tables.put( tableInformation.getName().getTableName().getText(), tableInformation );
 	}
 
-	public TableInformation getTableInformation(MappedTable table) {
-		return tables.get( identifierHelper.toMetaDataObjectName( table.getQualifiedTableName().getTableName() ) );
+	public TableInformation getTableInformation(ExportableTable table) {
+		return tables.get( identifierHelper.toMetaDataObjectName( table.getTableName() ) );
 	}
 
 	public TableInformation getTableInformation(String tableName) {

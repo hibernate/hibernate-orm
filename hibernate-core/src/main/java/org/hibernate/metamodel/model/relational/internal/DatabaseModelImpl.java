@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.Namespace;
@@ -21,6 +22,7 @@ import org.hibernate.metamodel.model.relational.spi.Namespace;
 public class DatabaseModelImpl implements DatabaseModel {
 	private final List<Namespace> namespaces = new ArrayList<>();
 	private final JdbcEnvironment getJdbcEnvironment;
+	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new ArrayList<>(  );
 
 	public DatabaseModelImpl(JdbcEnvironment getJdbcEnvironment) {
 		this.getJdbcEnvironment = getJdbcEnvironment;
@@ -36,7 +38,16 @@ public class DatabaseModelImpl implements DatabaseModel {
 		return getJdbcEnvironment;
 	}
 
+	@Override
+	public Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects() {
+		return auxiliaryDatabaseObjects;
+	}
+
 	public void addNamespace(Namespace namespace) {
 		namespaces.add( namespace );
+	}
+
+	public void setAuxiliaryDatabaseObjects(List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects){
+		this.auxiliaryDatabaseObjects = auxiliaryDatabaseObjects;
 	}
 }

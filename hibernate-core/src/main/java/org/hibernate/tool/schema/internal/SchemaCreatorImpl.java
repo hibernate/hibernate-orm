@@ -37,7 +37,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.Index;
+import org.hibernate.mapping.MappedIndex;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -331,7 +331,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				// indexes
 				final Iterator indexItr = table.getIndexIterator();
 				while ( indexItr.hasNext() ) {
-					final Index index = (Index) indexItr.next();
+					final MappedIndex index = (MappedIndex) indexItr.next();
 					checkExportIdentifier( index, exportIdentifiers );
 					applySqlStrings(
 							dialect.getIndexExporter().getSqlCreateStrings( index, metadata ),

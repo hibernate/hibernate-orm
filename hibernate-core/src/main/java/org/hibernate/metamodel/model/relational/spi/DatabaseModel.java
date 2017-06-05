@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.relational.spi;
 
 import java.util.Collection;
 
+import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 /**
@@ -18,4 +19,6 @@ public interface DatabaseModel {
 	Collection<Namespace> getNamespaces();
 
 	JdbcEnvironment getJdbcEnvironment();
+
+	Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects();
 }

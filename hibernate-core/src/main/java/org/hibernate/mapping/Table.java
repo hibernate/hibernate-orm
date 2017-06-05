@@ -55,7 +55,7 @@ public class Table implements MappedTable, Serializable {
 	private KeyValue idValue;
 	private MappedPrimaryKey primaryKey;
 	private Map<ForeignKeyKey, ForeignKey> foreignKeyMap = new LinkedHashMap<>();
-	private Map<String, Index> indexes = new LinkedHashMap<>();
+	private Map<String, MappedIndex> indexes = new LinkedHashMap<>();
 	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<>();
 	private int uniqueInteger;
 	private List<String> checkConstraints = new ArrayList<>();
@@ -302,7 +302,7 @@ public class Table implements MappedTable, Serializable {
 	}
 
 	@Override
-	public Iterator<Index> getIndexIterator() {
+	public Iterator<MappedIndex> getIndexIterator() {
 		return indexes.values().iterator();
 	}
 
@@ -452,12 +452,12 @@ public class Table implements MappedTable, Serializable {
 	}
 
 	@Override
-	public Index getOrCreateIndex(String indexName) {
+	public MappedIndex getOrCreateIndex(String indexName) {
 
-		Index index =  indexes.get( indexName );
+		MappedIndex index =  indexes.get( indexName );
 
 		if ( index == null ) {
-			index = new Index();
+			index = new MappedIndex();
 			index.setName( indexName );
 			index.setTable( this );
 			indexes.put( indexName, index );
@@ -466,12 +466,12 @@ public class Table implements MappedTable, Serializable {
 		return index;
 	}
 
-	public Index getIndex(String indexName) {
+	public MappedIndex getIndex(String indexName) {
 		return  indexes.get( indexName );
 	}
 
-	public Index addIndex(Index index) {
-		Index current =  indexes.get( index.getName() );
+	public MappedIndex addIndex(MappedIndex index) {
+		MappedIndex current =  indexes.get( index.getName() );
 		if ( current != null ) {
 			throw new MappingException( "Index " + index.getName() + " already exists!" );
 		}
@@ -788,6 +788,10 @@ public class Table implements MappedTable, Serializable {
 		);
 
 		table.setCheckConstraints( getCheckConstraints() );
+
+		for ( MappedIndex index : indexes.values() ) {
+			table.addIndex( index.generateRuntimeIndex( table, namingStrategy, jdbcEnvironment ) );
+		}
 
 		return table;
 	}

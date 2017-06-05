@@ -8,14 +8,11 @@ package org.hibernate.metamodel.model.relational.spi;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Map;
 
-import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.QualifiedTableName;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.naming.Identifier;
 
@@ -34,7 +31,10 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 	private boolean hasPrimaryKey;
 	private String commment;
 	private List<String> checkConstraints = new ArrayList<>();
-	private List<ForeignKey> foreignKeys = new ArrayList<>(  );
+	private List<ForeignKey> foreignKeys = new ArrayList<>();
+	private List<Index> indexes = new ArrayList<>();
+	private List<UniqueKey> uniqueKeys = new ArrayList<>();
+
 
 	public PhysicalTable(
 			Identifier catalogName,
@@ -80,6 +80,11 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 	}
 
 	@Override
+	public QualifiedTableName getQualifiedTableName(){
+		return new QualifiedTableName( catalogName, schemaName, tableName );
+	}
+
+	@Override
 	public String getTableExpression() {
 		return getTableName().getText();
 	}
@@ -119,10 +124,6 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 		return qualifiedName.append( table ).toString();
 	}
 
-	private String render(Identifier identifier) {
-		return identifier == null ? null : identifier.render();
-	}
-
 	@Override
 	public Collection<PhysicalColumn> getPhysicalColumns() {
 		return getColumns().stream()
@@ -142,11 +143,6 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 		return commment;
 	}
 
-	@Override
-	public UniqueKey getUniqueKey(PhysicalColumn col) {
-		return null;
-	}
-
 	public void setCheckConstraints(List<String> checkConstraints) {
 		this.checkConstraints = checkConstraints;
 	}
@@ -162,14 +158,31 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 	}
 
 	@Override
+	public Collection<Index> getIndexes() {
+		return indexes;
+	}
+
+	public void addIndex(Index index) {
+		this.indexes.add( index );
+	}
+
+	@Override
+	public Collection<UniqueKey> getUniqueKeys() {
+		return uniqueKeys;
+	}
+
+	@Override
 	public ForeignKey createForeignKey(
-			String name, boolean export, Table targetTable, ForeignKey.ColumnMappings columnMappings) {
+			String name,
+			boolean export,
+			Table targetTable,
+			ForeignKey.ColumnMappings columnMappings) {
 		final ForeignKey foreignKey = new ForeignKey( name, export, this, targetTable, columnMappings );
 		foreignKeys.add( foreignKey );
 		return foreignKey;
 	}
 
-	public QualifiedTableName getQualifiedTableName(){
-		return new QualifiedTableName( catalogName, schemaName, tableName );
+	private String render(Identifier identifier) {
+		return identifier == null ? null : identifier.render();
 	}
 }

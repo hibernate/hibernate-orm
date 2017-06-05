@@ -26,5 +26,6 @@ public interface Table {
 	boolean isExportable();
 
 	Collection<Column> getColumns();
+
 	Column getColumn(String name);
 }

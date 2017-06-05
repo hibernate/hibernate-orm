@@ -89,7 +89,7 @@ import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.IdentifierCollection;
-import org.hibernate.mapping.Index;
+import org.hibernate.mapping.MappedIndex;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
@@ -1789,7 +1789,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
 			}
 
-			Index index = table.getOrCreateIndex( keyName );
+			MappedIndex index = table.getOrCreateIndex( keyName );
 			for ( int i = 0; i < columns.length; i++ ) {
 				Column column = columns[i];
 				String order = orderings != null ? orderings[i] : null;

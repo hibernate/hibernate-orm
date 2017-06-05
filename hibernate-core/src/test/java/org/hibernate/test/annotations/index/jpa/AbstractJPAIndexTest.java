@@ -13,7 +13,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Index;
+import org.hibernate.mapping.MappedIndex;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -57,7 +57,7 @@ public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTe
 
 		itr = entity.getTable().getIndexIterator();
 		assertTrue( itr.hasNext() );
-		Index index = (Index)itr.next();
+		MappedIndex index = (MappedIndex)itr.next();
 		assertFalse( itr.hasNext() );
 		assertEquals( "Car_idx", index.getName() );
 		assertEquals( 1, index.getColumnSpan() );
@@ -71,9 +71,9 @@ public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTe
 		PersistentClass entity = metadata().getEntityBinding( Car.class.getName() );
 
 		Join join = (Join)entity.getJoinIterator().next();
-		Iterator<Index> itr = join.getTable().getIndexIterator();
+		Iterator<MappedIndex> itr = join.getTable().getIndexIterator();
 		assertTrue( itr.hasNext() );
-		Index index = itr.next();
+		MappedIndex index = itr.next();
 		assertFalse( itr.hasNext() );
 		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
 		assertEquals( 2, index.getColumnSpan() );
@@ -93,9 +93,9 @@ public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTe
 		Set set = (Set)property.getValue();
 		Table collectionTable = set.getCollectionTable();
 
-		Iterator<Index> itr = collectionTable.getIndexIterator();
+		Iterator<MappedIndex> itr = collectionTable.getIndexIterator();
 		assertTrue( itr.hasNext() );
-		Index index = itr.next();
+		MappedIndex index = itr.next();
 		assertFalse( itr.hasNext() );
 		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
 		assertEquals( 1, index.getColumnSpan() );
@@ -113,9 +113,9 @@ public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTe
 		Bag set = (Bag)property.getValue();
 		Table collectionTable = set.getCollectionTable();
 
-		Iterator<Index> itr = collectionTable.getIndexIterator();
+		Iterator<MappedIndex> itr = collectionTable.getIndexIterator();
 		assertTrue( itr.hasNext() );
-		Index index = itr.next();
+		MappedIndex index = itr.next();
 		assertFalse( itr.hasNext() );
 		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
 		assertEquals( 1, index.getColumnSpan() );

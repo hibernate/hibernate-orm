@@ -80,6 +80,7 @@ public class RuntimeDatabaseModelProducer {
 			}
 
 			processForeignKeys( bootDatabaseModel, runtimeDatabaseModel );
+			runtimeDatabaseModel.setAuxiliaryDatabaseObjects( bootDatabaseModel.getAuxiliaryDatabaseObjects() );
 
 			return runtimeDatabaseModel;
 		}

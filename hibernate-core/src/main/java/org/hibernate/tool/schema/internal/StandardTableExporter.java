@@ -109,7 +109,6 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 			}
 
 			if ( col.isUnique() ) {
-				UniqueKey uk = table.getUniqueKey( col );
 				buf.append(
 						dialect.getUniqueDelegate()
 								.getColumnDefinitionUniquenessFragment( col )

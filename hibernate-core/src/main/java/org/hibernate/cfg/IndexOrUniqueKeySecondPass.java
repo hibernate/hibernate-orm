@@ -16,7 +16,7 @@ import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Index;
+import org.hibernate.mapping.MappedIndex;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.UniqueKey;
@@ -122,7 +122,7 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 			}
 		}
 		else {
-			Index index = table.getOrCreateIndex( indexName );
+			MappedIndex index = table.getOrCreateIndex( indexName );
 			for ( Column column : columns ) {
 				index.addColumn( column );
 			}

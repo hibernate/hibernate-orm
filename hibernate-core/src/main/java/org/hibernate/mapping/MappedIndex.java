@@ -13,6 +13,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.Index;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
+import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.dialect.Dialect;
@@ -24,7 +28,7 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Gavin King
  */
-public class Index implements Exportable, Serializable {
+public class MappedIndex implements Exportable, Serializable {
 	private Table table;
 	private java.util.List<Column> columns = new ArrayList<>();
 	private java.util.Map<Column, String> columnOrderMap = new HashMap<>();
@@ -153,5 +157,16 @@ public class Index implements Exportable, Serializable {
 	@Override
 	public String getExportIdentifier() {
 		return StringHelper.qualify( getTable().getName(), "IDX-" + getName() );
+	}
+
+	public Index generateRuntimeIndex(
+			ExportableTable runtimeTable,
+			PhysicalNamingStrategy namingStrategy,
+			JdbcEnvironment jdbcEnvironment) {
+		Index index = new Index( name, runtimeTable );
+		for ( Column column : columns ) {
+			index.addColumn( column.generateRuntimeColumn( runtimeTable, namingStrategy, jdbcEnvironment ) );
+		}
+		return index;
 	}
 }

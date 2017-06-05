@@ -14,7 +14,7 @@ import java.util.Set;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.Index;
+import org.hibernate.mapping.MappedIndex;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedPrimaryKey;
 import org.hibernate.mapping.UniqueKey;
@@ -81,7 +81,7 @@ public interface MappedTable extends Exportable, Loggable {
 	 */
 	String getCatalog();
 
-	Index getOrCreateIndex(String indexName);
+	MappedIndex getOrCreateIndex(String indexName);
 
 	UniqueKey getOrCreateUniqueKey(String keyName);
 
@@ -154,7 +154,7 @@ public interface MappedTable extends Exportable, Loggable {
 
 	Iterator getColumnIterator();
 
-	Iterator<Index> getIndexIterator();
+	Iterator<MappedIndex> getIndexIterator();
 
 	Collection<ForeignKey> getForeignKeys();
 

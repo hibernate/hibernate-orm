@@ -100,7 +100,7 @@ public abstract class BasicLoader extends Loader {
 
 		String[] suffixes = new String[length];
 		for ( int i = 0; i < length; i++ ) {
-			suffixes[i] = Integer.toString( i + seed ) + "_";
+			suffixes[i] = (Integer.toString( i + seed ) + "_").intern();
 		}
 		return suffixes;
 	}

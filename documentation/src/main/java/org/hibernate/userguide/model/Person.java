@@ -26,10 +26,14 @@ import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.NamedStoredProcedureQueries;
+import javax.persistence.NamedStoredProcedureQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
+import javax.persistence.ParameterMode;
 import javax.persistence.SqlResultSetMapping;
 import javax.persistence.SqlResultSetMappings;
+import javax.persistence.StoredProcedureParameter;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Version;
@@ -155,6 +159,26 @@ import javax.persistence.Version;
     )
 )
 //end::jpql-api-named-query-example[]
+//tag::sql-sp-ref-cursor-oracle-named-query-example[]
+@NamedStoredProcedureQueries(
+    @NamedStoredProcedureQuery(
+        name = "sp_person_phones",
+        procedureName = "sp_person_phones",
+        parameters = {
+            @StoredProcedureParameter(
+                name = "personId",
+                type = Long.class,
+                mode = ParameterMode.IN
+            ),
+            @StoredProcedureParameter(
+                name = "personPhones",
+                type = Class.class,
+                mode = ParameterMode.REF_CURSOR
+            )
+        }
+    )
+)
+//end::sql-sp-ref-cursor-oracle-named-query-example[]
 @Entity
 public class Person {
 

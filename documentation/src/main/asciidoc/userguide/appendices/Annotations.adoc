@@ -389,7 +389,7 @@ The http://docs.oracle.com/javaee/7/api/javax/persistence/NamedQueries.html[`@Na
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/NamedQuery.html[`@NamedQuery`] annotation is used to specify a JPQL query that can be retrieved later by its name.
 
-//TODO: Add example
+See the <<chapters/query/hql/HQL.adoc#jpql-api-named-query-example, `@NamedQuery`>> section for more info.
 
 [[annotations-jpa-namedstoredprocedurequeries]]
 ==== `@NamedStoredProcedureQueries`
@@ -401,7 +401,7 @@ The http://docs.oracle.com/javaee/7/api/javax/persistence/NamedStoredProcedureQu
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/NamedStoredProcedureQuery.html[`@NamedStoredProcedureQuery`] annotation is used to specify a stored procedure query that can be retrieved later by its name.
 
-//TODO: Add example
+See the <<chapters/query/native/Native.adoc#sql-sp-named-query, Using named queries to call stored procedures>> section for more info.
 
 [[annotations-jpa-namedsubgraph]]
 ==== `@NamedSubgraph`
@@ -574,7 +574,7 @@ The http://docs.oracle.com/javaee/7/api/javax/persistence/SqlResultSetMappings.h
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/StoredProcedureParameter.html[`@StoredProcedureParameter`] annotation is used to specify a parameter of a <<annotations-jpa-namedstoredprocedurequery>>.
 
-//TODO: Add example
+See the <<chapters/query/native/Native.adoc#sql-sp-named-query, Using named queries to call stored procedures>> section for more info.
 
 [[annotations-jpa-table]]
 ==== `@Table`

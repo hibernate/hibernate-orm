@@ -832,6 +832,32 @@ Hibernate will iterate the results and take the first result that is a result se
 For SQL Server, if you can enable `SET NOCOUNT ON` in your procedure it will probably be more efficient, but this is not a requirement.
 ====
 
+[[sql-sp-named-query]]
+=== Using named queries to call stored procedures
+
+Just like with SQL statements, you can also use named queries to call stored procedures.
+For this purpose, JPA defines the http://docs.oracle.com/javaee/7/api/javax/persistence/NamedStoredProcedureQuery.html[`@NamedStoredProcedureQuery`] annotation.
+
+[[sql-sp-ref-cursor-oracle-named-query-example]]
+.Oracle `REF_CURSOR` named query stored procedure
+====
+[source, JAVA, indent=0]
+----
+include::{modeldir}/Person.java[tags=sql-sp-ref-cursor-oracle-named-query-example]
+----
+====
+
+Calling this stored procedure is straightforward, as illustrated by the following example.
+
+[[sql-jpa-call-sp-ref-cursor-oracle-named-query-example]]
+.Calling an Oracle `REF_CURSOR` stored procedure using a JPA named query
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/OracleStoredProcedureTest.java[tags=sql-jpa-call-sp-ref-cursor-oracle-named-query-example]
+----
+====
+
 [[sql-crud]]
 === Custom SQL for create, update, and delete
 

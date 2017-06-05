@@ -37,7 +37,6 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeHelper;
 
 /**
  * A convenience bas class for listeners responding to save events.

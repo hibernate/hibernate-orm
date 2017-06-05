@@ -50,8 +50,7 @@ public final class EntityPrinter {
 			result.put(
 					entityPersister.getIdentifierPropertyName(),
 					entityPersister.getIdentifierType().toLoggableString(
-							entityPersister.getIdentifier( entity ),
-							factory
+							entityPersister.getIdentifier( entity )
 					)
 			);
 		}
@@ -63,7 +62,7 @@ public final class EntityPrinter {
 			if ( !names[i].startsWith( "_" ) ) {
 				String strValue = values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ?
 						values[i].toString() :
-						types[i].toLoggableString( values[i], factory );
+						types[i].toLoggableString( values[i] );
 				result.put( names[i], strValue );
 			}
 		}
@@ -74,7 +73,7 @@ public final class EntityPrinter {
 		StringBuilder buffer = new StringBuilder();
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( types[i] != null ) {
-				buffer.append( types[i].toLoggableString( values[i], factory ) ).append( ", " );
+				buffer.append( types[i].toLoggableString( values[i] ) ).append( ", " );
 			}
 		}
 		return buffer.toString();
@@ -85,8 +84,7 @@ public final class EntityPrinter {
 		for ( Map.Entry<String, TypedValue> entry : namedTypedValues.entrySet() ) {
 			result.put(
 					entry.getKey(), entry.getValue().getType().toLoggableString(
-							entry.getValue().getValue(),
-							factory
+							entry.getValue().getValue()
 					)
 			);
 		}

@@ -14,7 +14,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.CollectionType;
 
 /**
  * Evict any collections referenced by the object from the session cache.

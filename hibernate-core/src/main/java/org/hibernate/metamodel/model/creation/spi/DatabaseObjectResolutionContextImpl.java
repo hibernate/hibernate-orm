@@ -54,8 +54,8 @@ public class DatabaseObjectResolutionContextImpl
 	}
 
 	@Override
-	public void resolveForeignKey(
-			List<MappedColumn> constraintColumns, List<MappedColumn> mappedColumns) {
+	public ForeignKey.ColumnMappings resolveColumnMappings(
+			List<MappedColumn> columns, List<MappedColumn> otherColumns) {
 		throw new NotYetImplementedException(  );
 	}
 

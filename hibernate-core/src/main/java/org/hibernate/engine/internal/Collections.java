@@ -21,7 +21,6 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.CollectionType;
 
 import org.jboss.logging.Logger;
 
@@ -88,7 +87,7 @@ public final class Collections {
 			if ( owner == null ) {
 				throw new AssertionFailure(
 						"collection owner not associated with session: " +
-						loadedPersister.getRole()
+						loadedPersister.getNavigableRole()
 				);
 			}
 			final EntityEntry e = persistenceContext.getEntry( owner );
@@ -96,7 +95,7 @@ public final class Collections {
 			if ( e != null && e.getStatus() != Status.DELETED && e.getStatus() != Status.GONE ) {
 				throw new HibernateException(
 						"A collection with cascade=\"all-delete-orphan\" was no longer referenced by the owning entity instance: " +
-						loadedPersister.getRole()
+						loadedPersister.getNavigableRole()
 				);
 			}
 		}

@@ -10,9 +10,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.EmbeddedType;
-import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.Type;
 
 /**

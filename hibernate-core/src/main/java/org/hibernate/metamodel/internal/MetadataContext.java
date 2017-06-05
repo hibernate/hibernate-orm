@@ -31,7 +31,6 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.type.spi.EntityType;
 
 /**
  * Defines a context for storing information during the building of the {@link MetamodelImpl}.

@@ -31,9 +31,6 @@ import org.hibernate.mapping.Value;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.EmbeddedComponentType;
-import org.hibernate.type.spi.EntityType;
 
 /**
  * A factory for building {@link Attribute} instances.  Exposes 3 main services for building<ol>

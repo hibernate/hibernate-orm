@@ -16,8 +16,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.Type;
 
 /**

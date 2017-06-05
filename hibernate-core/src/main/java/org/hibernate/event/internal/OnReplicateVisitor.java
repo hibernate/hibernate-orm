@@ -13,7 +13,6 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.type.CollectionType;
 
 /**
  * When an entity is passed to replicate(), and there is an existing row, we must

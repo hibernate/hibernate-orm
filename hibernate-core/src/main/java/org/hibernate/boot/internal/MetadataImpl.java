@@ -331,11 +331,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public void validate() throws MappingException {
 		for ( PersistentClass entityBinding : this.getEntityBindings() ) {
-			entityBinding.validate( this );
+			entityBinding.validate();
 		}
 
 		for ( Collection collectionBinding : this.getCollectionBindings() ) {
-			collectionBinding.validate( this );
+			collectionBinding.validate();
 		}
 	}
 

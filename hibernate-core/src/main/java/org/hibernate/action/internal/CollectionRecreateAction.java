@@ -47,13 +47,13 @@ public final class CollectionRecreateAction extends CollectionAction {
 		final PersistentCollection collection = getCollection();
 		
 		preRecreate();
-		getPersister().recreate( collection, getKey(), getSession() );
+		getPersister().getTuplizer().recreate( collection, getKey(), getSession() );
 		getSession().getPersistenceContext().getCollectionEntry( collection ).afterAction( collection );
 		evict();
 		postRecreate();
 
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatistics().recreateCollection( getPersister().getRole() );
+			getSession().getFactory().getStatistics().recreateCollection( getPersister().getNavigableRole().getNavigableName() );
 		}
 	}
 

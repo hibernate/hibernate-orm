@@ -9,8 +9,6 @@ package org.hibernate.metamodel.internal;
 import java.io.Serializable;
 import javax.persistence.metamodel.EmbeddableType;
 
-import org.hibernate.type.ComponentType;
-
 /**
  * @author Emmanuel Bernard
  */

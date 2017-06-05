@@ -14,8 +14,6 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.Type;
 
 /**

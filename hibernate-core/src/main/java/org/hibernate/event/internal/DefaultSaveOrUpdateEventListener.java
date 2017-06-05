@@ -306,7 +306,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 		source.getPersistenceContext().addEntity(
 				entity,
-				( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
+				( persister.getJavaTypeDescriptor().getMutabilityPlan().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				null, // cachedState,
 				key,
 				persister.getVersion( entity ),

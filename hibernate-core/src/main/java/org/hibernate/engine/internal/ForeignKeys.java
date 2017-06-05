@@ -17,8 +17,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.type.spi.EmbeddedType;
-import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.Type;
 
 /**

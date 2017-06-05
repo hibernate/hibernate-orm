@@ -10,7 +10,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Collections;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.type.CollectionType;
 
 /**
  * Process collections reachable from an entity. This

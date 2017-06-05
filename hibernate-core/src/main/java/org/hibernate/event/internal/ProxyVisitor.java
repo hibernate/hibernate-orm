@@ -12,8 +12,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.EntityType;
 
 /**
  * Reassociates uninitialized proxies with the session

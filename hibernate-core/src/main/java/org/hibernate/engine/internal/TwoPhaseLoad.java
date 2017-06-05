@@ -35,7 +35,6 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeHelper;
 
 import org.jboss.logging.Logger;
 
@@ -230,7 +229,7 @@ public final class TwoPhaseLoad {
 		}
 
 		boolean isReallyReadOnly = readOnly;
-		if ( !persister.isMutable() ) {
+		if ( !persister.getJavaTypeDescriptor().getMutabilityPlan().isMutable() ) {
 			isReallyReadOnly = true;
 		}
 		else {

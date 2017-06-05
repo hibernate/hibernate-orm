@@ -93,7 +93,7 @@ public class UnsavedValueFactory {
 						.fromString( unsavedValue ) );
 			}
 			catch ( ClassCastException cce ) {
-				throw new MappingException( "Bad identifier type: " + identifierType.getName() );
+				throw new MappingException( "Bad identifier type: " + identifierType.getJavaType().getName() );
 			}
 			catch ( Exception e ) {
 				throw new MappingException( "Could not parse identifier unsaved-value: " + unsavedValue );

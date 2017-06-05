@@ -12,7 +12,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.type.CollectionType;
 
 /**
  * When an entity is passed to update(), we must inspect all its collections and

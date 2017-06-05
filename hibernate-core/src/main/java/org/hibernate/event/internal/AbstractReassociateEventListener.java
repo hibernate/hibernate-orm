@@ -18,7 +18,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.TypeHelper;
 
 import org.jboss.logging.Logger;
 
@@ -69,7 +68,7 @@ public abstract class AbstractReassociateEventListener implements Serializable {
 
 		EntityEntry newEntry = source.getPersistenceContext().addEntity(
 				object,
-				( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
+				( persister.getJavaTypeDescriptor().getMutabilityPlan().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				values,
 				key,
 				version,

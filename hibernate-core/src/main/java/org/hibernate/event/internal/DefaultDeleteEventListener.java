@@ -37,7 +37,6 @@ import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeHelper;
 
 /**
  * Defines the default delete event listener used by hibernate for deleting entities

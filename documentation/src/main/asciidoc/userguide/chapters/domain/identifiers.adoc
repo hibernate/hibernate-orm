@@ -256,32 +256,34 @@ The preferred (and portable) way to configure this generator is using the JPA-de
 
 The simplest form is to simply request sequence generation; Hibernate will use a single, implicitly-named sequence (`hibernate_sequence`) for all such unnamed definitions.
 
+[[identifiers-generators-sequence-unnamed]]
 .Unnamed sequence
 ====
 [source,java]
 ----
-include::{extrasdir}/id/UnnamedSequence.java[]
+include::{sourcedir}/UnnamedSequenceTest.java[tag=identifiers-generators-sequence-mapping-example, indent=0]
 ----
 ====
 
-Or a specifically named sequence can be requested.
+Using `javax.persistence.SequenceGenerator`, you can specify a specific database sequence name.
 
+[[identifiers-generators-sequence-named]]
 .Named sequence
 ====
 [source,java]
 ----
-include::{extrasdir}/id/NamedSequence.java[]
+include::{sourcedir}/NamedSequenceTest.java[tag=identifiers-generators-sequence-mapping-example, indent=0]
 ----
 ====
 
-Use `javax.persistence.SequenceGenerator` to specify additional
-configuration.
+The `javax.persistence.SequenceGenerator` annotataion allows you to specify additional configurations as well.
 
+[[identifiers-generators-sequence-configured]]
 .Configured sequence
 ====
 [source,java]
 ----
-include::{extrasdir}/id/ConfiguredSequence.java[]
+include::{sourcedir}/ConfiguredSequenceTest.java[tag=identifiers-generators-sequence-mapping-example, indent=0]
 ----
 ====
 

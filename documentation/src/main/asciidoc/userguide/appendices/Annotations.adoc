@@ -555,7 +555,7 @@ The http://docs.oracle.com/javaee/7/api/javax/persistence/SecondaryTables.html[`
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/SequenceGenerator.html[`@SequenceGenerator`] annotation is used to specify the database sequence used by the identifier generator of the current annotated entity.
 
-//TODO: Add example
+See the <<chapters/domain/identifiers.adoc#identifiers-generators-sequence-configured,`@SequenceGenerator` mapping>> section for more info.
 
 [[annotations-jpa-sqlresultsetmapping]]
 ==== `@SqlResultSetMapping`

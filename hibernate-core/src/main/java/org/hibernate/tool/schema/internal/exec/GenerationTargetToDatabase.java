@@ -52,7 +52,7 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 		try {
 			final Statement jdbcStatement = jdbcStatement();
 			jdbcStatement.execute( command );
-
+			ddlTransactionIsolator.getIsolatedConnection().commit();
 			try {
 				SQLWarning warnings = jdbcStatement.getWarnings();
 				if ( warnings != null) {
@@ -64,6 +64,12 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 			}
 		}
 		catch (SQLException e) {
+			try {
+				ddlTransactionIsolator.getIsolatedConnection().rollback();
+			}
+			catch (SQLException e1) {
+				log.jdbcRollbackFailed();
+			}
 			throw new CommandAcceptanceException(
 					"Error executing DDL via JDBC Statement",
 					e

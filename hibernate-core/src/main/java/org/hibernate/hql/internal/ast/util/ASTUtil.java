@@ -9,6 +9,7 @@ package org.hibernate.hql.internal.ast.util;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -395,11 +396,20 @@ public final class ASTUtil {
 		for ( final Field field : fields ) {
 			if ( Modifier.isStatic( field.getModifiers() ) ) {
 				try {
-					cache.put( field.get( null ), field.getName() );
+					Object fieldValue = field.get((null));
+					if (fieldValue instanceof Integer) {
+						Integer integer = (Integer) fieldValue;
+						// Use IntegerCache, if possible
+						fieldValue = Integer.valueOf(integer.intValue());
+					}
+					cache.put( fieldValue, field.getName() );
 				}
 				catch (Throwable ignore) {
 				}
 			}
+		}
+		if (cache.isEmpty()) {
+			return Collections.emptyMap();
 		}
 		return cache;
 	}

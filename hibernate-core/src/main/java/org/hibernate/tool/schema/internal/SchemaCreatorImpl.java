@@ -102,7 +102,6 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 	@Override
 	public void doCreation(
-			Metadata metadata,
 			ExecutionOptions options,
 			SourceDescriptor sourceDescriptor,
 			TargetDescriptor targetDescriptor) {
@@ -118,11 +117,10 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				true
 		);
 
-		doCreation( metadata, jdbcContext.getDialect(), options, sourceDescriptor, targets );
+		doCreation( jdbcContext.getDialect(), options, sourceDescriptor, targets );
 	}
 
 	public void doCreation(
-			Metadata metadata,
 			Dialect dialect,
 			ExecutionOptions options,
 			SourceDescriptor sourceDescriptor,
@@ -132,7 +130,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		try {
-			performCreation( metadata, dialect, options, sourceDescriptor, targets );
+			performCreation( dialect, options, sourceDescriptor, targets );
 		}
 		finally {
 			for ( GenerationTarget target : targets ) {
@@ -147,7 +145,6 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	}
 
 	private void performCreation(
-			Metadata metadata,
 			Dialect dialect,
 			ExecutionOptions options,
 			SourceDescriptor sourceDescriptor,
@@ -163,17 +160,17 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				break;
 			}
 			case METADATA: {
-				createFromMetadata( metadata, options, dialect, formatter, targets );
+				createFromMetadata( options, dialect, formatter, targets );
 				break;
 			}
 			case METADATA_THEN_SCRIPT: {
-				createFromMetadata( metadata, options, dialect, formatter, targets );
+				createFromMetadata( options, dialect, formatter, targets );
 				createFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
 				break;
 			}
 			case SCRIPT_THEN_METADATA: {
 				createFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
-				createFromMetadata( metadata, options, dialect, formatter, targets );
+				createFromMetadata( options, dialect, formatter, targets );
 			}
 		}
 
@@ -198,7 +195,6 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	}
 
 	public void createFromMetadata(
-			Metadata metadata,
 			ExecutionOptions options,
 			Dialect dialect,
 			Formatter formatter,
@@ -214,7 +210,6 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 		}
 
-		final Database database = metadata.getDatabase();
 		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 
 		final Set<String> exportIdentifiers = new HashSet<String>( 50 );

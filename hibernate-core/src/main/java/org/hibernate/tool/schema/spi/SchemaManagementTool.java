@@ -9,6 +9,7 @@ package org.hibernate.tool.schema.spi;
 import java.util.Map;
 
 import org.hibernate.Incubating;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.service.Service;
 
 /**
@@ -18,8 +19,11 @@ import org.hibernate.service.Service;
  */
 @Incubating
 public interface SchemaManagementTool extends Service {
-	SchemaCreator getSchemaCreator(Map options);
-	SchemaDropper getSchemaDropper(Map options);
-	SchemaMigrator getSchemaMigrator(Map options);
-	SchemaValidator getSchemaValidator(Map options);
+	SchemaCreator getSchemaCreator(DatabaseModel databaseModel, Map options);
+
+	SchemaDropper getSchemaDropper(DatabaseModel databaseModel, Map options);
+
+	SchemaMigrator getSchemaMigrator(DatabaseModel databaseModel, Map options);
+
+	SchemaValidator getSchemaValidator(DatabaseModel databaseModel, Map options);
 }

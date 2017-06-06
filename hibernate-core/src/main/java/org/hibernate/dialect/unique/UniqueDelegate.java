@@ -6,7 +6,8 @@
  */
 package org.hibernate.dialect.unique;
 
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 
@@ -43,7 +44,7 @@ public interface UniqueDelegate {
 	 * @return The fragment (usually "unique"), empty string indicates the uniqueness will be indicated using a
 	 * different approach
 	 */
-	String getColumnDefinitionUniquenessFragment(org.hibernate.mapping.Column column);
+	String getColumnDefinitionUniquenessFragment(Column column);
 
 	/**
 	 * Get the fragment that can be used to apply unique constraints as part of table creation.  The implementation
@@ -64,19 +65,19 @@ public interface UniqueDelegate {
 	 * Get the SQL ALTER TABLE command to be used to create the given UniqueKey.
 	 *
 	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns
-	 * @param modelCreationContext Access to the model creation context
+	 * @param databaseModel Access to the runtime database model
 	 *
 	 * @return The ALTER TABLE command
 	 */
-	String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, RuntimeModelCreationContext modelCreationContext);
+	String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, DatabaseModel databaseModel);
 
 	/**
 	 * Get the SQL ALTER TABLE command to be used to drop the given UniqueKey.
 	 *
 	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns
-	 * @param modelCreationContext Access to the model creation context
+	 * @param databaseModel Access to the runtime database model
 	 *
 	 * @return The ALTER TABLE command
 	 */
-	String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey,  RuntimeModelCreationContext modelCreationContext);
+	String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, DatabaseModel databaseModel);
 }

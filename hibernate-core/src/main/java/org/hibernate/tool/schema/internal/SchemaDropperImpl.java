@@ -69,34 +69,39 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 	private final HibernateSchemaManagementTool tool;
 	private final SchemaFilter schemaFilter;
+	private final DatabaseModel database;
 
-	public SchemaDropperImpl(HibernateSchemaManagementTool tool) {
-		this( tool, DefaultSchemaFilter.INSTANCE );
+	public SchemaDropperImpl(HibernateSchemaManagementTool tool, DatabaseModel databaseModel) {
+		this( tool, databaseModel, DefaultSchemaFilter.INSTANCE );
 	}
 
-	public SchemaDropperImpl(HibernateSchemaManagementTool tool, SchemaFilter schemaFilter) {
+	public SchemaDropperImpl(
+			HibernateSchemaManagementTool tool,
+			DatabaseModel databaseModel,
+			SchemaFilter schemaFilter) {
 		this.tool = tool;
 		this.schemaFilter = schemaFilter;
+		this.database = databaseModel;
 	}
 
-	public SchemaDropperImpl(ServiceRegistry serviceRegistry) {
-		this( serviceRegistry, DefaultSchemaFilter.INSTANCE );
+	public SchemaDropperImpl(DatabaseModel databaseModel, ServiceRegistry serviceRegistry) {
+		this( databaseModel, serviceRegistry, DefaultSchemaFilter.INSTANCE );
 	}
 
-	public SchemaDropperImpl(ServiceRegistry serviceRegistry, SchemaFilter schemaFilter) {
+	public SchemaDropperImpl(DatabaseModel databaseModel, ServiceRegistry serviceRegistry, SchemaFilter schemaFilter) {
 		SchemaManagementTool smt = serviceRegistry.getService( SchemaManagementTool.class );
 		if ( smt == null || !HibernateSchemaManagementTool.class.isInstance( smt ) ) {
 			smt = new HibernateSchemaManagementTool();
 			( (HibernateSchemaManagementTool) smt ).injectServices( (ServiceRegistryImplementor) serviceRegistry );
 		}
-
 		this.tool = (HibernateSchemaManagementTool) smt;
 		this.schemaFilter = schemaFilter;
+		this.database = databaseModel;
 	}
+
 
 	@Override
 	public void doDrop(
-			RuntimeModelCreationContext modelCreationContext,
 			ExecutionOptions options,
 			SourceDescriptor sourceDescriptor,
 			TargetDescriptor targetDescriptor) {
@@ -108,11 +113,10 @@ public class SchemaDropperImpl implements SchemaDropper {
 		final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 		final GenerationTarget[] targets = tool.buildGenerationTargets( targetDescriptor, jdbcContext, options.getConfigurationValues(), true );
 
-		doDrop( modelCreationContext, options, jdbcContext.getDialect(), sourceDescriptor, targets );
+		doDrop( options, jdbcContext.getDialect(), sourceDescriptor, targets );
 	}
 
 	public void doDrop(
-			RuntimeModelCreationContext modelCreationContext,
 			ExecutionOptions options,
 			Dialect dialect,
 			SourceDescriptor sourceDescriptor,
@@ -122,7 +126,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 
 		try {
-			performDrop( modelCreationContext, options, dialect, sourceDescriptor, targets );
+			performDrop( options, dialect, sourceDescriptor, targets );
 		}
 		finally {
 			for ( GenerationTarget target : targets ) {
@@ -137,7 +141,6 @@ public class SchemaDropperImpl implements SchemaDropper {
 	}
 
 	private void performDrop(
-			RuntimeModelCreationContext modelCreationContext,
 			ExecutionOptions options,
 			Dialect dialect,
 			SourceDescriptor sourceDescriptor,
@@ -150,15 +153,15 @@ public class SchemaDropperImpl implements SchemaDropper {
 			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
 		}
 		else if ( sourceDescriptor.getSourceType() == SourceType.METADATA ) {
-			dropFromCreationContext( modelCreationContext, options, dialect, formatter, targets );
+			dropFromCreationContext( options, dialect, formatter, targets );
 		}
 		else if ( sourceDescriptor.getSourceType() == SourceType.METADATA_THEN_SCRIPT ) {
-			dropFromCreationContext( modelCreationContext, options, dialect, formatter, targets );
+			dropFromCreationContext( options, dialect, formatter, targets );
 			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
 		}
 		else {
 			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
-			dropFromCreationContext( modelCreationContext, options, dialect, formatter, targets );
+			dropFromCreationContext( options, dialect, formatter, targets );
 		}
 	}
 
@@ -180,12 +183,10 @@ public class SchemaDropperImpl implements SchemaDropper {
 	}
 
 	private void dropFromCreationContext(
-			RuntimeModelCreationContext modelCreationContext,
 			ExecutionOptions options,
 			Dialect dialect,
 			Formatter formatter,
 			GenerationTarget... targets) {
-		final DatabaseModel database = modelCreationContext.getDatabaseModel();
 		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 
 		boolean tryToDropCatalogs = false;

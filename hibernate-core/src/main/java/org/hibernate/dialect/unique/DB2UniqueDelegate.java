@@ -11,7 +11,7 @@ import java.util.Collection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 
@@ -32,8 +32,8 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 	}
 
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, RuntimeModelCreationContext modelCreationContext) {
-		final JdbcEnvironment jdbcEnvironment = getJdbcEnvironment( modelCreationContext );
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, DatabaseModel databaseModel) {
+		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
 		if ( hasNullable( uniqueKey ) ) {
 			return buildSqlCreateIndexString(
 					dialect,
@@ -48,13 +48,13 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 			);
 		}
 		else {
-			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, modelCreationContext );
+			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, databaseModel );
 		}
 	}
 	
 	@Override
-	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, RuntimeModelCreationContext modelCreationContext) {
-		final JdbcEnvironment jdbcEnvironment = getJdbcEnvironment( modelCreationContext );
+	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, DatabaseModel databaseModel) {
+		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
 		if ( hasNullable( uniqueKey ) ) {
 			return buildSqlDropIndexString(
 					uniqueKey.getName().getText(),
@@ -65,12 +65,8 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 			);
 		}
 		else {
-			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, modelCreationContext );
+			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, databaseModel );
 		}
-	}
-
-	private JdbcEnvironment getJdbcEnvironment(RuntimeModelCreationContext modelCreationContext){
-		return modelCreationContext.getDatabaseModel().getJdbcEnvironment();
 	}
 
 	private boolean hasNullable(UniqueKey uniqueKey) {

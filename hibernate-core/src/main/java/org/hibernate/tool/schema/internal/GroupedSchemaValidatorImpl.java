@@ -10,6 +10,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
@@ -25,6 +26,7 @@ public class GroupedSchemaValidatorImpl extends AbstractSchemaValidator {
 
 	public GroupedSchemaValidatorImpl(
 			HibernateSchemaManagementTool tool,
+			RuntimeModelCreationContext modelCreationContext,
 			SchemaFilter validateFilter) {
 		super( tool, validateFilter );
 	}

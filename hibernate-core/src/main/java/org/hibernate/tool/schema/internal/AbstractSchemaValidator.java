@@ -10,13 +10,12 @@ import java.util.Iterator;
 import java.util.Locale;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.naming.Identifier;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedSequence;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Selectable;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.naming.Identifier;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
@@ -38,12 +37,15 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 	private static final Logger log = Logger.getLogger( AbstractSchemaValidator.class );
 
 	protected HibernateSchemaManagementTool tool;
+	protected final RuntimeModelCreationContext modelCreationContext;
 	protected SchemaFilter schemaFilter;
 
 	public AbstractSchemaValidator(
 			HibernateSchemaManagementTool tool,
-			SchemaFilter validateFilter) {
+			SchemaFilter validateFilter,
+			RuntimeModelCreationContext modelCreationContext) {
 		this.tool = tool;
+		this.modelCreationContext = modelCreationContext;
 		if ( validateFilter == null ) {
 			this.schemaFilter = DefaultSchemaFilter.INSTANCE;
 		}
@@ -61,7 +63,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 		final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
 				tool.getServiceRegistry(),
 				isolator,
-				metadata.getDatabase().getDefaultNamespace().getName()
+				metadata.getDatabase().getDefaultNamespace()
 		);
 
 		try {

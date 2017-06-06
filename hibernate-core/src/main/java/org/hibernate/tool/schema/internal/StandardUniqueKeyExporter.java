@@ -8,6 +8,7 @@ package org.hibernate.tool.schema.internal;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.tool.schema.spi.Exporter;
 
@@ -25,21 +26,21 @@ public class StandardUniqueKeyExporter implements Exporter<UniqueKey> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(UniqueKey uniqueKey, RuntimeModelCreationContext modelCreationContext) {
+	public String[] getSqlCreateStrings(UniqueKey uniqueKey, DatabaseModel databaseModel) {
 		return new String[] {
 				dialect.getUniqueDelegate().getAlterTableToAddUniqueKeyCommand(
 						uniqueKey,
-						modelCreationContext
+						databaseModel
 				)
 		};
 	}
 
 	@Override
-	public String[] getSqlDropStrings(UniqueKey uniqueKey, RuntimeModelCreationContext modelCreationContext) {
+	public String[] getSqlDropStrings(UniqueKey uniqueKey, DatabaseModel databaseModel) {
 		return new String[] {
 				dialect.getUniqueDelegate().getAlterTableToDropUniqueKeyCommand(
 						uniqueKey,
-						modelCreationContext
+						databaseModel
 				)
 		};
 	}

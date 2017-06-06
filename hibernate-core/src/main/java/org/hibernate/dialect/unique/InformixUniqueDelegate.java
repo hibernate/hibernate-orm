@@ -8,7 +8,7 @@ package org.hibernate.dialect.unique;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 
 /**
@@ -25,8 +25,8 @@ public class InformixUniqueDelegate extends DefaultUniqueDelegate {
 	// legacy model ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey,  RuntimeModelCreationContext modelCreationContext) {
-		final JdbcEnvironment jdbcEnvironment = getJdbcEnvironment( modelCreationContext );
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey,  DatabaseModel databaseModel) {
+		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
 
 		// Do this here, rather than allowing UniqueKey/Constraint to do it.
 		// We need full, simplified control over whether or not it happens.
@@ -36,10 +36,6 @@ public class InformixUniqueDelegate extends DefaultUniqueDelegate {
 		);
 		final String constraintName = uniqueKey.getName().render( dialect );
 		return "alter table " + tableName + " add constraint " + uniqueConstraintSql( uniqueKey ) + " constraint " + constraintName;
-	}
-
-	private JdbcEnvironment getJdbcEnvironment(RuntimeModelCreationContext modelCreationContext){
-		return modelCreationContext.getDatabaseModel().getJdbcEnvironment();
 	}
 
 }

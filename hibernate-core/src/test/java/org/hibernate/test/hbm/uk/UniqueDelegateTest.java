@@ -8,7 +8,6 @@ package org.hibernate.test.hbm.uk;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
@@ -17,8 +16,9 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.unique.DefaultUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 
@@ -110,23 +110,23 @@ public class UniqueDelegateTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public String getTableCreationUniqueConstraintsFragment(MappedTable table) {
+		public String getTableCreationUniqueConstraintsFragment(ExportableTable table) {
 			getTableCreationUniqueConstraintsFragmentCallCount++;
 			return super.getTableCreationUniqueConstraintsFragment( table );
 		}
 
 		@Override
 		public String getAlterTableToAddUniqueKeyCommand(
-				UniqueKey uniqueKey, Metadata metadata) {
+				UniqueKey uniqueKey, DatabaseModel databaseModel) {
 			getAlterTableToAddUniqueKeyCommandCallCount++;
-			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, metadata );
+			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, databaseModel );
 		}
 
 		@Override
 		public String getAlterTableToDropUniqueKeyCommand(
-				UniqueKey uniqueKey, Metadata metadata) {
+				UniqueKey uniqueKey, DatabaseModel databaseModel) {
 			getAlterTableToDropUniqueKeyCommandCallCount++;
-			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, metadata );
+			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, databaseModel );
 		}
 	}
 }

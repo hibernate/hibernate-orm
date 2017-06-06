@@ -13,8 +13,8 @@ import java.util.Locale;
 import org.hibernate.AssertionFailure;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -33,16 +33,12 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(ForeignKey foreignKey, RuntimeModelCreationContext modelCreationContext) {
+	public String[] getSqlCreateStrings(ForeignKey foreignKey, DatabaseModel databaseModel) {
 		if ( ! dialect.hasAlterTable() ) {
 			return NO_COMMANDS;
 		}
 		
 		if ( ! foreignKey.isExportationEnabled() ) {
-			return NO_COMMANDS;
-		}
-
-		if ( !foreignKey.isPhysicalConstraint() ) {
 			return NO_COMMANDS;
 		}
 
@@ -92,7 +88,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 			i++;
 		}
 
-		final JdbcEnvironment jdbcEnvironment = modelCreationContext.getDatabaseModel().getJdbcEnvironment();
+		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
 		final String sourceTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 				( (ExportableTable) foreignKey.getTargetTable()).getQualifiedTableName(),
 				dialect
@@ -129,20 +125,16 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 	}
 
 	@Override
-	public String[] getSqlDropStrings(ForeignKey foreignKey, RuntimeModelCreationContext modelCreationContext) {
+	public String[] getSqlDropStrings(ForeignKey foreignKey, DatabaseModel databaseModel) {
 		if ( ! dialect.hasAlterTable() ) {
 			return NO_COMMANDS;
 		}
 
-		if ( ! foreignKey.isCreationEnabled() ) {
+		if ( ! foreignKey.isExportationEnabled() ) {
 			return NO_COMMANDS;
 		}
 
-		if ( !foreignKey.isPhysicalConstraint() ) {
-			return NO_COMMANDS;
-		}
-
-		final JdbcEnvironment jdbcEnvironment = modelCreationContext.getDatabaseModel().getJdbcEnvironment();
+		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
 		final String sourceTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 				( (ExportableTable) foreignKey.getTargetTable()).getQualifiedTableName(),
 				dialect

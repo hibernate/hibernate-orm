@@ -7,7 +7,8 @@
 package org.hibernate.dialect.unique;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
@@ -33,7 +34,7 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	// legacy model ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public String getColumnDefinitionUniquenessFragment(org.hibernate.mapping.Column column) {
+	public String getColumnDefinitionUniquenessFragment(Column column) {
 		return "";
 	}
 
@@ -43,18 +44,12 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	}
 
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(
-			UniqueKey uniqueKey,
-			RuntimeModelCreationContext modelCreationContext) {
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, DatabaseModel databaseModel) {
 
-		final String tableName = modelCreationContext
-				.getDatabaseModel()
+		final String tableName = databaseModel
 				.getJdbcEnvironment()
 				.getQualifiedObjectNameFormatter()
-				.format(
-						uniqueKey.getTable().getQualifiedTableName(),
-						dialect
-				);
+				.format( uniqueKey.getTable().getQualifiedTableName(), dialect );
 
 		final String constraintName = uniqueKey.getName().render( dialect );
 		return "alter table " + tableName + " add constraint " + constraintName + " " + uniqueConstraintSql( uniqueKey );
@@ -64,16 +59,12 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	@Override
 	public String getAlterTableToDropUniqueKeyCommand(
 			UniqueKey uniqueKey,
-			RuntimeModelCreationContext modelCreationContext) {
+			DatabaseModel databaseModel) {
 
-		final String tableName = modelCreationContext
-				.getDatabaseModel()
+		final String tableName = databaseModel
 				.getJdbcEnvironment()
 				.getQualifiedObjectNameFormatter()
-				.format(
-						uniqueKey.getTable().getQualifiedTableName(),
-						dialect
-				);
+				.format( uniqueKey.getTable().getQualifiedTableName(), dialect );
 
 		final StringBuilder buf = new StringBuilder( "alter table " );
 		buf.append( tableName );

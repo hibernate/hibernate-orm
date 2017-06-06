@@ -16,6 +16,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.relational.spi.Table;
@@ -35,14 +36,14 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(ExportableTable table, RuntimeModelCreationContext modelCreationContext) {
+	public String[] getSqlCreateStrings(ExportableTable table, DatabaseModel databaseModel) {
 		final QualifiedName tableName = new QualifiedNameParser.NameParts(
 				table.getCatalogName(),
 				table.getSchemaName(),
 				table.getTableName()
 		);
 
-		final JdbcEnvironment jdbcEnvironment = modelCreationContext.getDatabaseModel().getJdbcEnvironment();
+		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
 		StringBuilder buf =
 				new StringBuilder( tableCreateString( table.hasPrimaryKey() ) )
 						.append( ' ' )
@@ -197,7 +198,7 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 	}
 
 	@Override
-	public String[] getSqlDropStrings(ExportableTable table, RuntimeModelCreationContext modelCreationContext) {
+	public String[] getSqlDropStrings(ExportableTable table, DatabaseModel databaseModel) {
 		StringBuilder buf = new StringBuilder( "drop table " );
 		if ( dialect.supportsIfExistsBeforeTableName() ) {
 			buf.append( "if exists " );
@@ -208,7 +209,7 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 				table.getSchemaName(),
 				table.getTableName()
 		);
-		final JdbcEnvironment jdbcEnvironment = modelCreationContext.getDatabaseModel().getJdbcEnvironment();
+		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
 		buf.append( jdbcEnvironment.getQualifiedObjectNameFormatter().format( tableName, jdbcEnvironment.getDialect() ) )
 				.append( dialect.getCascadeConstraintsString() );
 

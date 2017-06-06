@@ -19,22 +19,20 @@ public interface SchemaDropper {
 	/**
 	 * Perform a schema drop from the indicated source(s) to the indicated target(s).
 	 *
-	 * @param modelCreationContext the context to drop.
 	 * @param options Options for executing the drop
 	 * @param sourceDescriptor description of the source(s) of drop commands
 	 * @param targetDescriptor description of the target(s) for the drop commands
 	 */
-	void doDrop(RuntimeModelCreationContext modelCreationContext, ExecutionOptions options, SourceDescriptor sourceDescriptor, TargetDescriptor targetDescriptor);
+	void doDrop( ExecutionOptions options, SourceDescriptor sourceDescriptor, TargetDescriptor targetDescriptor);
 
 	/**
 	 * Build a delayed Runnable for performing schema dropping.  This implicitly
 	 * targets the underlying data-store.
 	 *
-	 * @param modelCreationContext the context to drop.
 	 * @param options The drop options
 	 * @param sourceDescriptor For access to the {@link SourceDescriptor#getScriptSourceInput()}
 	 *
 	 * @return The Runnable
 	 */
-	DelayedDropAction buildDelayedAction(RuntimeModelCreationContext modelCreationContext, ExecutionOptions options, SourceDescriptor sourceDescriptor);
+	DelayedDropAction buildDelayedAction( ExecutionOptions options, SourceDescriptor sourceDescriptor);
 }

@@ -9,7 +9,7 @@ package org.hibernate.tool.schema.internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.Index;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.naming.QualifiedNameImpl;
@@ -26,8 +26,8 @@ public class StandardIndexExporter implements Exporter<Index> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(Index index, RuntimeModelCreationContext modelCreationContext) {
-		final JdbcEnvironment jdbcEnvironment = modelCreationContext.getDatabaseModel().getJdbcEnvironment();
+	public String[] getSqlCreateStrings(Index index, DatabaseModel databaseModel) {
+		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
 		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 				index.getTable().getQualifiedTableName(),
 				dialect
@@ -69,12 +69,12 @@ public class StandardIndexExporter implements Exporter<Index> {
 	}
 
 	@Override
-	public String[] getSqlDropStrings(Index index, RuntimeModelCreationContext modelCreationContext) {
+	public String[] getSqlDropStrings(Index index, DatabaseModel databaseModel) {
 		if ( ! dialect.dropConstraints() ) {
 			return NO_COMMANDS;
 		}
 
-		final JdbcEnvironment jdbcEnvironment = modelCreationContext.getDatabaseModel().getJdbcEnvironment();
+		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
 		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 				index.getTable().getQualifiedTableName(),
 				dialect

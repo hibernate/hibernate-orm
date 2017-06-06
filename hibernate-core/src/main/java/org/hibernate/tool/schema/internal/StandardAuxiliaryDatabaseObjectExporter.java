@@ -8,7 +8,7 @@ package org.hibernate.tool.schema.internal;
 
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
@@ -22,12 +22,12 @@ public class StandardAuxiliaryDatabaseObjectExporter implements Exporter<Auxilia
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(AuxiliaryDatabaseObject object,RuntimeModelCreationContext modelCreationContext) {
+	public String[] getSqlCreateStrings(AuxiliaryDatabaseObject object, DatabaseModel databaseMode) {
 		return object.sqlCreateStrings( dialect );
 	}
 
 	@Override
-	public String[] getSqlDropStrings(AuxiliaryDatabaseObject object, RuntimeModelCreationContext modelCreationContext) {
+	public String[] getSqlDropStrings(AuxiliaryDatabaseObject object, DatabaseModel databaseMode) {
 		return object.sqlDropStrings( dialect );
 	}
 }

@@ -15,21 +15,20 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Teradata14IdentityColumnSupport;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.Index;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.naming.QualifiedNameImpl;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.spi.Exporter;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * A dialect for the Teradata database
@@ -51,10 +50,14 @@ public class Teradata14Dialect extends TeradataDialect {
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
-		registerFunction( "current_time", new SQLFunctionTemplate( StandardSpiBasicTypes.TIME, "current_time" ) );
-		registerFunction( "current_date", new SQLFunctionTemplate( StandardSpiBasicTypes.DATE, "current_date" ) );
-
 		TeraIndexExporter =  new TeradataIndexExporter( this );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		registry.registerNamed( "current_time" );
+		registry.registerNamed( "current_date" );
+
 	}
 
 	@Override
@@ -213,8 +216,8 @@ public class Teradata14Dialect extends TeradataDialect {
 		}
 
 		@Override
-		public String[] getSqlCreateStrings(Index index, RuntimeModelCreationContext modelCreationContext) {
-			final JdbcEnvironment jdbcEnvironment = modelCreationContext.getDatabaseModel().getJdbcEnvironment();
+		public String[] getSqlCreateStrings(Index index, DatabaseModel databaseModel) {
+			final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
 			final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 					index.getTable().getQualifiedTableName(),
 					jdbcEnvironment.getDialect()

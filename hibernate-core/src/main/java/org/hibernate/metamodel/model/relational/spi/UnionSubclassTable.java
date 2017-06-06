@@ -15,7 +15,7 @@ import org.hibernate.MappingException;
 /**
  * @author Steve Ebersole
  */
-public class UnionSubclassTable extends AbstractTable implements Table {
+public class UnionSubclassTable extends AbstractTable implements ExportableTable {
 	private final String unionQuery;
 	private final PhysicalTable physicalTable;
 	private final UnionSubclassTable superTable;
@@ -49,55 +49,12 @@ public class UnionSubclassTable extends AbstractTable implements Table {
 	}
 
 	@Override
-	public PhysicalColumn makeColumn(String columnName, int jdbcType) {
-		if ( getSuperTable() != null ) {
-			final Column column = getSuperTable().locateColumn( columnName );
-			if ( column != null ) {
-				// todo : error or simply return the super's column?
-				return (PhysicalColumn) column;
-//				throw new HibernateException( "Attempt to add column already part of the UnionSubclassTable's super-entity table" );
-			}
-		}
-		return getPhysicalTable().makeColumn( columnName, jdbcType );
-	}
-
-	@Override
-	public DerivedColumn makeFormula(String formula, int jdbcType) {
-		if ( getSuperTable() != null ) {
-			final Column column = getSuperTable().locateColumn( formula );
-			if ( column != null ) {
-				// todo : error or simply return the super's column?
-				return (DerivedColumn) column;
-//				throw new HibernateException( "Attempt to add formula already part of the UnionSubclassTable's super-entity table" );
-			}
-		}
-		return getPhysicalTable().makeFormula( formula, jdbcType );
-	}
-
-	@Override
 	public Column getColumn(String columnName) {
-		final Column column = getPhysicalTable().locateColumn( columnName );
+		final Column column = getPhysicalTable().getColumn( columnName );
 		if ( column != null ) {
 			return column;
 		}
 		throw new MappingException( "Could not locate column : " + columnName );
-	}
-
-	@Override
-	public Column locateColumn(String columnName) {
-		Column column = getPhysicalTable().locateColumn( columnName );
-		if ( column != null ) {
-			return column;
-		}
-
-		if ( getSuperTable() != null ) {
-			column = getSuperTable().locateColumn( columnName );
-			if ( column != null ) {
-				return column;
-			}
-		}
-
-		return null;
 	}
 
 	@Override

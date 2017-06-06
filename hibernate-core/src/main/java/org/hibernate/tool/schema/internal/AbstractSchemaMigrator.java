@@ -64,16 +64,16 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 	public AbstractSchemaMigrator(
 			HibernateSchemaManagementTool tool,
-			SchemaFilter schemaFilter,
-			RuntimeModelCreationContext modelCreationContext) {
+			RuntimeModelCreationContext modelCreationContext,
+			SchemaFilter schemaFilter) {
 		this.tool = tool;
+		this.modelCreationContext = modelCreationContext;
 		if ( schemaFilter == null ) {
 			this.schemaFilter = DefaultSchemaFilter.INSTANCE;
 		}
 		else {
 			this.schemaFilter = schemaFilter;
 		}
-		this.modelCreationContext = modelCreationContext;
 	}
 
 	private UniqueConstraintSchemaUpdateStrategy uniqueConstraintStrategy;
@@ -94,7 +94,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
 						tool.getServiceRegistry(),
 						ddlTransactionIsolator,
-						modelCreationContext.getDatabaseModel().
+						modelCreationContext.getDatabaseModel().getDefaultNamespace()
 				);
 
 				final GenerationTarget[] targets = tool.buildGenerationTargets(
@@ -459,19 +459,6 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		exportIdentifiers.add( exportIdentifier );
 	}
 
-	protected static void applySqlStrings(
-			boolean quiet,
-			String[] sqlStrings,
-			Formatter formatter,
-			ExecutionOptions options,
-			GenerationTarget... targets) {
-		if ( sqlStrings != null ) {
-			for ( String sqlString : sqlStrings ) {
-				applySqlString( quiet, sqlString, formatter, options, targets );
-			}
-		}
-	}
-
 	protected void createSchemaAndCatalog(
 			DatabaseInformation existingDatabase,
 			ExecutionOptions options,
@@ -514,6 +501,19 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		}
 	}
 
+	protected static void applySqlStrings(
+			boolean quiet,
+			String[] sqlStrings,
+			Formatter formatter,
+			ExecutionOptions options,
+			GenerationTarget... targets) {
+		if ( sqlStrings != null ) {
+			for ( String sqlString : sqlStrings ) {
+				applySqlString( quiet, sqlString, formatter, options, targets );
+			}
+		}
+	}
+
 	private static void applySqlString(
 			boolean quiet,
 			String sqlString,
@@ -534,28 +534,4 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			}
 		}
 	}
-
-//	private static void applySqlStrings(
-//			boolean quiet,
-//			Iterator<String> sqlStrings,
-//			Formatter formatter,
-//			ExecutionOptions options,
-//			GenerationTarget... targets) {
-//		if ( sqlStrings != null ) {
-//			while ( sqlStrings.hasNext() ) {
-//				final String sqlString = sqlStrings.next();
-//				applySqlString( quiet, sqlString, formatter, options, targets );
-//			}
-//		}
-//	}
-
-//	private String getDefaultCatalogName(Database database, Dialect dialect) {
-//		final Identifier identifier = database.getDefaultNamespace().getCatalogName();
-//		return identifier == null ? null : identifier.render( dialect );
-//	}
-//
-//	private String getDefaultSchemaName(Database database, Dialect dialect) {
-//		final Identifier identifier = database.getDefaultNamespace().getSchemaName();
-//		return identifier == null ? null : identifier.render( dialect );
-//	}
 }

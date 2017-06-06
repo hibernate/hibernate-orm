@@ -8,13 +8,12 @@ package org.hibernate.tool.schema.internal;
 
 import java.util.Set;
 
-import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.relational.spi.Namespace;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.naming.Identifier;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
@@ -32,9 +31,9 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 
 	public GroupedSchemaMigratorImpl(
 			HibernateSchemaManagementTool tool,
-			SchemaFilter schemaFilter,
-			RuntimeModelCreationContext modelCreationContext) {
-		super( tool, schemaFilter, modelCreationContext );
+			RuntimeModelCreationContext modelCreationContext,
+			SchemaFilter schemaFilter) {
+		super( tool, modelCreationContext, schemaFilter );
 	}
 
 	@Override

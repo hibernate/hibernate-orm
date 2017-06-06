@@ -41,6 +41,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	public static final String NOT_NULL_DISCRIMINATOR_MAPPING = "not null";
 
 	private final MetadataBuildingContext metadataBuildingContext;
+	private final boolean useNewTypeConflictResolver;
 
 	private String entityName;
 
@@ -92,6 +93,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public PersistentClass(MetadataBuildingContext metadataBuildingContext) {
 		this.metadataBuildingContext = metadataBuildingContext;
+		this.useNewTypeConflictResolver = metadataBuildingContext.getBuildingOptions().useNewTypeConflictResolver();
 	}
 
 	public ServiceRegistry getServiceRegistry() {
@@ -287,6 +289,17 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	public abstract Iterator getKeyClosureIterator();
 
 	protected void addSubclassProperty(Property prop) {
+		if ( useNewTypeConflictResolver ) {
+			String name = prop.getName();
+			Iterator it = subclassProperties.iterator();
+			while ( it.hasNext() ) {
+				final Property other = (Property) it.next();
+				if ( name.equals( other.getName() ) ) {
+					// Since there might be multiple duplicates of a property, we have to go through all to resolve conflicts
+					prop = prop.resolveConflict( other.getPersistentClass(), other );
+				}
+			}
+		}
 		subclassProperties.add( prop );
 	}
 

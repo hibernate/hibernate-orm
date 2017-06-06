@@ -507,6 +507,16 @@ public interface AvailableSettings {
 	String USE_NEW_ID_GENERATOR_MAPPINGS = "hibernate.id.new_generator_mappings";
 
 	/**
+	 * Setting which indicates whether or not the new type conflict resolving should be used.
+	 * <p/>
+	 * Default is {@code true}.  Existing applications may want to disable this (set it {@code false}) for
+	 * upgrade compatibility.
+	 *
+	 * @see MetadataBuilder#enableNewTypeConflictResolverSupport
+	 */
+	String USE_NEW_TYPE_CONFLICT_RESOLVER = "hibernate.id.new_type_conflict_resolver";
+
+	/**
 	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitForcingOfDiscriminatorsInSelect(boolean)
 	 */
 	String FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT = "hibernate.discriminator.force_in_select";

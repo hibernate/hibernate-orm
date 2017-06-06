@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.boot.spi.MetadataBuildingContext;
+
 /**
  * Represents a @MappedSuperclass.
  * A @MappedSuperclass can be a superclass of an @Entity (root or not)
@@ -18,7 +20,7 @@ import java.util.List;
  *
  * Do not use outside this use case.
  *
- * 
+ *
  * A proper redesign will be evaluated in Hibernate 4
  *
  * Implementation details:
@@ -30,15 +32,18 @@ public class MappedSuperclass {
 	private final MappedSuperclass superMappedSuperclass;
 	private final PersistentClass superPersistentClass;
 	private final List declaredProperties;
+	private final boolean useNewTypeConflictResolver;
 	private Class mappedClass;
 	private Property identifierProperty;
 	private Property version;
 	private Component identifierMapper;
 
-	public MappedSuperclass(MappedSuperclass superMappedSuperclass, PersistentClass superPersistentClass) {
+	// TODO: Chris mentioned introducing metadataBuildingContext as parameter is a breaking change. Should I inject that via a setter?
+	public MappedSuperclass(MetadataBuildingContext metadataBuildingContext, MappedSuperclass superMappedSuperclass, PersistentClass superPersistentClass) {
 		this.superMappedSuperclass = superMappedSuperclass;
 		this.superPersistentClass = superPersistentClass;
 		this.declaredProperties = new ArrayList();
+		this.useNewTypeConflictResolver = metadataBuildingContext.getBuildingOptions().useNewTypeConflictResolver();
 	}
 
 	/**
@@ -78,13 +83,27 @@ public class MappedSuperclass {
 		//Do not add duplicate properties
 		//TODO is it efficient enough?
 		String name = p.getName();
+		Property resolvedProperty = p;
 		Iterator it = declaredProperties.iterator();
-		while (it.hasNext()) {
-			if ( name.equals( ((Property)it.next()).getName() ) ) {
-				return;
+		if ( useNewTypeConflictResolver ) {
+			while ( it.hasNext() ) {
+				final Property other = (Property) it.next();
+				if ( name.equals( other.getName() ) ) {
+					resolvedProperty = p.resolveConflict( other.getPersistentClass(), other );
+					if ( resolvedProperty == null ) {
+						return;
+					}
+
+				}
+			}
+		} else {
+			while ( it.hasNext() ) {
+				if ( name.equals( ( (Property) it.next() ).getName() ) ) {
+					return;
+				}
 			}
 		}
-		declaredProperties.add(p);
+		declaredProperties.add( resolvedProperty );
 	}
 
 	public Class getMappedClass() {

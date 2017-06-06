@@ -138,6 +138,12 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Abs
 	}
 
 	@Override
+	public MetadataBuilder enableNewTypeConflictResolverSupport(boolean enable) {
+		delegate.enableNewTypeConflictResolverSupport( enable );
+		return getThis();
+	}
+
+	@Override
 	public MetadataBuilder enableExplicitDiscriminatorsForJoinedSubclassSupport(boolean enabled) {
 		delegate.enableExplicitDiscriminatorsForJoinedSubclassSupport( enabled );
 		return getThis();

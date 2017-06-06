@@ -536,7 +536,7 @@ The http://docs.oracle.com/javaee/7/api/javax/persistence/PrimaryKeyJoinColumns.
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/QueryHint.html[`@QueryHint`] annotation is used to specify a JPA provider hint used by a `@NamedQuery` or a `@NamedNativeQuery` annotation.
 
-//TODO: Add example
+See the <<chapters/query/hql/HQL.adoc#jpa-read-only-entities-native-example, `@QueryHint`>> section for more info.
 
 [[annotations-jpa-secondarytable]]
 ==== `@SecondaryTable`

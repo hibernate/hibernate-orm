@@ -6,18 +6,20 @@
  */
 package org.hibernate.metamodel.model.relational.spi;
 
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+
 /**
  * @author Steve Ebersole
  */
 public class DerivedColumn implements Column {
 	private final Table table;
 	private final String expression;
-	private final int jdbcTypeCode;
+	private SqlTypeDescriptor sqlTypeDescriptor;
 
-	public DerivedColumn(Table table, String expression, int jdbcTypeCode) {
+	public DerivedColumn(Table table, String expression, SqlTypeDescriptor sqlTypeDescriptor) {
 		this.table = table;
 		this.expression = expression;
-		this.jdbcTypeCode = jdbcTypeCode;
+		this.sqlTypeDescriptor = sqlTypeDescriptor;
 	}
 
 	public String getExpression() {
@@ -27,11 +29,6 @@ public class DerivedColumn implements Column {
 	@Override
 	public Table getSourceTable() {
 		return table;
-	}
-
-	@Override
-	public int getJdbcType() {
-		return jdbcTypeCode;
 	}
 
 	@Override
@@ -47,5 +44,10 @@ public class DerivedColumn implements Column {
 	@Override
 	public String render(String identificationVariable) {
 		return expression;
+	}
+
+	@Override
+	public SqlTypeDescriptor getSqlTypeDescriptor() {
+		return sqlTypeDescriptor;
 	}
 }

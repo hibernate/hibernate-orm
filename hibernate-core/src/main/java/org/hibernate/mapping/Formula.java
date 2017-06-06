@@ -15,6 +15,7 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.DerivedColumn;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.sql.Template;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * A formula is a derived column value
@@ -24,12 +25,9 @@ public class Formula implements Selectable, Serializable {
 	private static int formulaUniqueInteger;
 
 	private String formula;
-
-	public Formula() {
-	}
+	private SqlTypeDescriptor sqlTypeDescriptor;
 
 	public Formula(String formula) {
-		this();
 		this.formula = formula;
 	}
 
@@ -49,11 +47,20 @@ public class Formula implements Selectable, Serializable {
 	}
 
 	@Override
+	public SqlTypeDescriptor getSqlTypeDescriptor() {
+		return sqlTypeDescriptor;
+	}
+
+	public void setSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+		this.sqlTypeDescriptor = sqlTypeDescriptor;
+	}
+
+	@Override
 	public Column generateRuntimeColumn(
 			org.hibernate.metamodel.model.relational.spi.Table runtimeTable,
 			PhysicalNamingStrategy namingStrategy,
 			JdbcEnvironment jdbcEnvironment) {
-		return new DerivedColumn( runtimeTable, formula );
+		return new DerivedColumn( runtimeTable, formula, sqlTypeDescriptor );
 	}
 
 	public String getFormula() {

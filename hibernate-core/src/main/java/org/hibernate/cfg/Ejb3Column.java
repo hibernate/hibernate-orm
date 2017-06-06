@@ -202,8 +202,7 @@ public class Ejb3Column {
 	public void bind() {
 		if ( StringHelper.isNotEmpty( formulaString ) ) {
 			LOG.debugf( "Binding formula %s", formulaString );
-			formula = new Formula();
-			formula.setFormula( formulaString );
+			formula = new Formula(formulaString);
 		}
 		else {
 			initMappingColumn(
@@ -229,12 +228,11 @@ public class Ejb3Column {
 			boolean unique,
 			boolean applyNamingStrategy) {
 		if ( StringHelper.isNotEmpty( formulaString ) ) {
-			this.formula = new Formula();
-			this.formula.setFormula( formulaString );
+			this.formula = new Formula(formulaString);
 		}
 		else {
-			this.mappingColumn = new Column();
-			redefineColumnName( columnName, propertyName, applyNamingStrategy );
+			this.mappingColumn = new Column(redefineColumnName( columnName, propertyName, applyNamingStrategy ));
+			;
 			this.mappingColumn.setLength( length );
 			if ( precision > 0 ) {  //revelent precision
 				this.mappingColumn.setPrecision( precision );
@@ -263,7 +261,7 @@ public class Ejb3Column {
 		return mappingColumn == null || StringHelper.isEmpty( mappingColumn.getText() );
 	}
 
-	public void redefineColumnName(Identifier columnName, String propertyName, boolean applyNamingStrategy) {
+	public Identifier redefineColumnName(Identifier columnName, String propertyName, boolean applyNamingStrategy) {
 		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
 		final ImplicitNamingStrategy implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
 
@@ -302,19 +300,20 @@ public class Ejb3Column {
 								implicitName.isQuoted() );
 					}
 
-					mappingColumn.setName( implicitName );
+					return implicitName;
 				}
 				//Do nothing otherwise
 			}
 			else {
-				mappingColumn.setName( columnName );
+				return columnName;
 			}
 		}
 		else {
 			if ( columnName != null) {
-				mappingColumn.setName( normalizer.normalizeIdentifierQuoting( columnName ) );
+				return normalizer.normalizeIdentifierQuoting( columnName );
 			}
 		}
+		return null;
 	}
 
 	public String getName() {

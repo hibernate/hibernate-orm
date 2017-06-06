@@ -92,7 +92,9 @@ public class RelationalObjectBinder {
 			}
 			else {
 				final DerivedValueSource formulaSource = (DerivedValueSource) relationalValueSource;
-				simpleValue.addFormula( new Formula( formulaSource.getExpression() ) );
+				final Formula formula = new Formula( formulaSource.getExpression() );
+				formula.setSqlTypeDescriptor( simpleValue.getBasicTypeParameters().getSqlTypeDescriptor() );
+				simpleValue.addFormula( formula );
 			}
 		}
 	}

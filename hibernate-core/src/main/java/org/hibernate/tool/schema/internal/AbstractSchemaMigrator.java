@@ -94,7 +94,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
 						tool.getServiceRegistry(),
 						ddlTransactionIsolator,
-						modelCreationContext.getDatabaseModel().getDefaultNamespace().getName()
+						modelCreationContext.getDatabaseModel().
 				);
 
 				final GenerationTarget[] targets = tool.buildGenerationTargets(
@@ -413,7 +413,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			final Exporter<ForeignKey> exporter = dialect.getForeignKeyExporter();
 
 			for ( ForeignKey foreignKey : table.getForeignKeys() ) {
-				if ( foreignKey.isPhysicalConstraint() && foreignKey.isExportationEnabled() ) {
+				if ( foreignKey.isExportationEnabled() ) {
 					ForeignKeyInformation existingForeignKey = null;
 					if ( tableInformation != null ) {
 						existingForeignKey = findMatchingForeignKey(

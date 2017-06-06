@@ -18,6 +18,8 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 public interface DatabaseModel {
 	Collection<Namespace> getNamespaces();
 
+	Namespace getDefaultNamespace();
+
 	JdbcEnvironment getJdbcEnvironment();
 
 	Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects();

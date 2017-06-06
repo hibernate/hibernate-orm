@@ -49,8 +49,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private SqlTypeDescriptor sqlTypeDescriptor;
 	private Identifier tableName;
 
-
-	public Column(String columnName){
+	public Column(String columnName) {
 		setName( Identifier.toIdentifier( columnName ) );
 	}
 

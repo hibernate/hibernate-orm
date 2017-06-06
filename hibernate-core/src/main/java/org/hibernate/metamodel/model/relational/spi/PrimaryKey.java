@@ -19,17 +19,17 @@ public class PrimaryKey {
 	private static final Logger log = Logger.getLogger( PrimaryKey.class );
 
 	private final Table table;
-	private final List<Column> columns = new ArrayList<>();
+	private final List<PhysicalColumn> columns = new ArrayList<>();
 
 	public PrimaryKey(Table table) {
 		this.table = table;
 	}
 
-	public List<Column> getColumns() {
+	public List<PhysicalColumn> getColumns() {
 		return Collections.unmodifiableList( columns );
 	}
 
-	public void addColumn(Column column) {
+	public void addColumn(PhysicalColumn column) {
 		log.debugf( "Adding column [%s] to primary-key for table [%s]", column.getExpression(), table );
 		columns.add( column );
 	}

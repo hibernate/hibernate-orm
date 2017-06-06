@@ -35,4 +35,5 @@ public interface Column {
 	default int getJdbcType() {
 		return getSqlTypeDescriptor().getJdbcTypeCode();
 	}
+
 }

@@ -61,6 +61,13 @@ public class ForeignKey implements Exportable {
 	}
 
 	/**
+	 * Does this foreignkey reference the primary key of the reference table
+	 */
+	public boolean isReferenceToPrimaryKey() {
+		return getColumnMappings().getTargetColumns().isEmpty();
+	}
+
+	/**
 	 * Models the metadata for a foreign key (physical or logical).
 	 * <p/>
 	 * The terms "target" and "referring" used here are relative to the
@@ -96,12 +103,14 @@ public class ForeignKey implements Exportable {
 		Table getReferringTable();
 		Table getTargetTable();
 		List<ColumnMapping> getColumnMappings();
+		List<PhysicalColumn> getTargetColumns();
+		List<PhysicalColumn> getReferringColumns();
 
 		// todo (6.0) : consider exposing org.hibernate.type.ForeignKeyDirection here
 	}
 
 	public interface ColumnMapping {
-		Column getReferringColumn();
-		Column getTargetColumn();
+		PhysicalColumn getReferringColumn();
+		PhysicalColumn getTargetColumn();
 	}
 }

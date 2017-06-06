@@ -21,6 +21,8 @@ import org.hibernate.metamodel.model.relational.spi.Namespace;
  */
 public class DatabaseModelImpl implements DatabaseModel {
 	private final List<Namespace> namespaces = new ArrayList<>();
+	private Namespace defautlNamespace;
+
 	private final JdbcEnvironment getJdbcEnvironment;
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new ArrayList<>(  );
 
@@ -31,6 +33,11 @@ public class DatabaseModelImpl implements DatabaseModel {
 	@Override
 	public Collection<Namespace> getNamespaces() {
 		return namespaces;
+	}
+
+	@Override
+	public Namespace getDefaultNamespace() {
+		return defautlNamespace;
 	}
 
 	@Override
@@ -45,6 +52,10 @@ public class DatabaseModelImpl implements DatabaseModel {
 
 	public void addNamespace(Namespace namespace) {
 		namespaces.add( namespace );
+	}
+
+	public void setDefaultNamespace(Namespace namespace){
+		defautlNamespace = namespace;
 	}
 
 	public void setAuxiliaryDatabaseObjects(List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects){

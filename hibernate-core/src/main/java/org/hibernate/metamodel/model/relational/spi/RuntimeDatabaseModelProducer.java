@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
@@ -68,7 +70,7 @@ public class RuntimeDatabaseModelProducer {
 
 		private DatabaseModel execute() {
 			final DatabaseModelImpl runtimeDatabaseModel = new DatabaseModelImpl( bootDatabaseModel.getJdbcEnvironment() );
-
+			generateDefaultNamespace(runtimeDatabaseModel);
 			for ( MappedNamespace bootModelNamespace : bootDatabaseModel.getNamespaces() ) {
 				final NamespaceImpl runtimeModelNamespace = generateNamespace(
 						runtimeDatabaseModel,
@@ -88,13 +90,25 @@ public class RuntimeDatabaseModelProducer {
 		private NamespaceImpl generateNamespace(
 				DatabaseModelImpl databaseModel,
 				MappedNamespace bootModelNamespace) {
-			final NamespaceImpl runtimeModelNamespace = new NamespaceImpl(
-					namingStrategy.toPhysicalCatalogName( bootModelNamespace.getName().getCatalog(), jdbcEnvironment ),
-					namingStrategy.toPhysicalSchemaName( bootModelNamespace.getName().getSchema(), jdbcEnvironment )
-			);
+			final NamespaceImpl runtimeModelNamespace = generateRuntimeNamespace(bootModelNamespace);
 			databaseModel.addNamespace( runtimeModelNamespace );
 			callback.namespaceBuilt( bootModelNamespace, runtimeModelNamespace );
 			return runtimeModelNamespace;
+		}
+
+		private void generateDefaultNamespace(
+				DatabaseModelImpl databaseModel) {
+			final MappedNamespace bootModelDefaultNamespace = bootDatabaseModel.getDefaultNamespace();
+			final NamespaceImpl runtimeModelDefaultNamespace = generateRuntimeNamespace( bootModelDefaultNamespace );
+			databaseModel.setDefaultNamespace( runtimeModelDefaultNamespace );
+			callback.namespaceBuilt( bootModelDefaultNamespace, runtimeModelDefaultNamespace );
+		}
+
+		private NamespaceImpl generateRuntimeNamespace(MappedNamespace bootModelNamespace) {
+			return new NamespaceImpl(
+					namingStrategy.toPhysicalCatalogName( bootModelNamespace.getName().getCatalog(), jdbcEnvironment ),
+					namingStrategy.toPhysicalSchemaName( bootModelNamespace.getName().getSchema(), jdbcEnvironment )
+			);
 		}
 
 		private void processTables(
@@ -123,7 +137,10 @@ public class RuntimeDatabaseModelProducer {
 				final MappedPrimaryKey bootPk = mappedTable.getPrimaryKey();
 				for ( org.hibernate.mapping.Column mappedColumn : bootPk.getColumns() ) {
 					final Column column = tableColumnXref.get( mappedColumn );
-					runtimeTable.getPrimaryKey().addColumn( column );
+					if ( !PhysicalColumn.class.isInstance( column ) ) {
+						throw new MappingException( "FK column must be a physical column" );
+					}
+					runtimeTable.getPrimaryKey().addColumn( (PhysicalColumn) column );
 				}
 				callback.primaryKeyBuilt( bootPk, runtimeTable.getPrimaryKey() );
 
@@ -172,13 +189,13 @@ public class RuntimeDatabaseModelProducer {
 							assert bootFk.isReferenceToPrimaryKey();
 
 							// use PK
-							final List<Column> runtimeTargetPkColumns = runtimeTargetTable.getPrimaryKey().getColumns();
+							final List<PhysicalColumn> runtimeTargetPkColumns = runtimeTargetTable.getPrimaryKey().getColumns();
 							assertSameNumberOfFkColumns( bootReferringColumns, runtimeTargetPkColumns );
 
 							for ( int i = 0; i < runtimeTargetPkColumns.size(); i++ ) {
 								columnMappingList.add(
 										new ColumnMappingImpl(
-												dbObjectResolver.resolveColumn( bootReferringColumns.get( i ) ),
+												(PhysicalColumn) dbObjectResolver.resolveColumn( bootReferringColumns.get( i ) ),
 												runtimeTargetPkColumns.get( i )
 										)
 								);
@@ -191,8 +208,8 @@ public class RuntimeDatabaseModelProducer {
 							for ( int i = 0; i < bootReferringColumns.size(); i++ ) {
 								columnMappingList.add(
 										new ColumnMappingImpl(
-												dbObjectResolver.resolveColumn( bootReferringColumns.get( i ) ),
-												dbObjectResolver.resolveColumn( bootTargetColumns.get( i ) )
+												(PhysicalColumn) dbObjectResolver.resolveColumn( bootReferringColumns.get( i ) ),
+												(PhysicalColumn) dbObjectResolver.resolveColumn( bootTargetColumns.get( i ) )
 										)
 								);
 							}
@@ -201,7 +218,7 @@ public class RuntimeDatabaseModelProducer {
 						// todo (6.0) : handle implicit fk names
 						final ForeignKey runtimeFk = ( (InflightTable) runtimeReferringTable ).createForeignKey(
 								bootFk.getName(),
-								bootFk.isCreationEnabled(),
+								bootFk.isCreationEnabled() && bootFk.isPhysicalConstraint(),
 								runtimeTargetTable,
 								new ColumnMappingsImpl(
 										runtimeReferringTable,
@@ -253,24 +270,41 @@ public class RuntimeDatabaseModelProducer {
 			public List<ForeignKey.ColumnMapping> getColumnMappings() {
 				return columnMappings;
 			}
+
+			@Override
+			public List<PhysicalColumn> getTargetColumns() {
+				return getColumns( columnMapping -> columnMapping.getTargetColumn() );
+			}
+
+			@Override
+			public List<PhysicalColumn> getReferringColumns() {
+				return getColumns( columnMapping -> columnMapping.getReferringColumn() );
+			}
+
+			private List<PhysicalColumn> getColumns(Function<ForeignKey.ColumnMapping, PhysicalColumn> mapper) {
+				return columnMappings
+						.stream()
+						.map( mapper )
+						.collect( Collectors.toList() );
+			}
 		}
 
 		private class ColumnMappingImpl implements ForeignKey.ColumnMapping {
-			private final Column referringColumn;
-			private final Column targetColumn;
+			private final PhysicalColumn referringColumn;
+			private final PhysicalColumn targetColumn;
 
-			public ColumnMappingImpl(Column referringColumn, Column targetColumn) {
+			public ColumnMappingImpl(PhysicalColumn referringColumn, PhysicalColumn targetColumn) {
 				this.referringColumn = referringColumn;
 				this.targetColumn = targetColumn;
 			}
 
 			@Override
-			public Column getReferringColumn() {
+			public PhysicalColumn getReferringColumn() {
 				return referringColumn;
 			}
 
 			@Override
-			public Column getTargetColumn() {
+			public PhysicalColumn getTargetColumn() {
 				return targetColumn;
 			}
 		}

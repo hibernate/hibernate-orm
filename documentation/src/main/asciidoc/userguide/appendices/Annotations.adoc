@@ -443,7 +443,7 @@ See the <<chapters/domain/collections.adoc#collections-unidirectional-ordered-li
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceContext.html[`@PersistenceContext`] annotation is used to specify the `EntityManager` that needs to be injected as a dependency.
 
-//TODO: Add example
+See the <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant-PersistenceContext-example, `@PersistenceContext` mapping>> section for more info.
 
 [[annotations-jpa-persistencecontexts]]
 ==== `@PersistenceContexts`
@@ -455,7 +455,7 @@ The http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceContexts.ht
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceProperty.html[`@PersistenceProperty`] annotation is used by the <<annotations-jpa-persistencecontext>> annotation to declare JPA provider properties that are passed to the underlying container when the `EntityManager` instance is created.
 
-//TODO: Add example
+See the <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant-PersistenceContext-configurable-example, `@PersistenceProperty` mapping>> section for more info.
 
 [[annotations-jpa-persistenceunit]]
 ==== `@PersistenceUnit`

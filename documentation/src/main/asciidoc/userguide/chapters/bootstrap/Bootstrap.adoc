@@ -44,7 +44,7 @@ For compliant container-bootstrapping, the container will build an `EntityManage
 and make that available to the application for injection via the `javax.persistence.PersistenceUnit` annotation or via JNDI lookup.
 
 [[bootstrap-jpa-compliant-PersistenceUnit-example]]
-.Injecting a EntityManagerFactory
+.Injecting a `EntityManagerFactory`
 ====
 [source, JAVA, indent=0]
 ----
@@ -67,7 +67,7 @@ For compliant application-bootstrapping, rather than the container building the 
 The application creates an `EntityManagerFactory` by calling the `createEntityManagerFactory` method:
 
 [[bootstrap-jpa-compliant-EntityManagerFactory-example]]
-.Application bootstrapped EntityManagerFactory
+.Application bootstrapped `EntityManagerFactory`
 ====
 [source, JAVA, indent=0]
 ----
@@ -80,6 +80,32 @@ include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-EntityManag
 If you don't want to provide a `persistence.xml` configuration file, JPA allows you to provide all the configuration options in a
 http://docs.oracle.com/javaee/7/api/javax/persistence/spi/PersistenceUnitInfo.html[PersistenceUnitInfo] implementation and call
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/HibernatePersistenceProvider.html#createContainerEntityManagerFactory-javax.persistence.spi.PersistenceUnitInfo-java.util.Map-[HibernatePersistenceProvider.html#createContainerEntityManagerFactory].
+====
+
+To inject the default Persistence Context, you can use the http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceContext.html[`@PersistenceContext`] annotation.
+
+[[bootstrap-jpa-compliant-PersistenceContext-example]]
+.Inject the default `EntityManager`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceContext-example, indent=0]
+----
+====
+
+To inject a specific Persistence Context,
+you can use the http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceContext.html[`@PersistenceContext`] annotation,
+and you can even pass `EntityManager`-specific properties using the
+http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceProperty.html[`@PersistenceProperty`] annotation.
+
+
+[[bootstrap-jpa-compliant-PersistenceContext-configurable-example]]
+.Inject a configurable `EntityManager`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceContext-configurable-example, indent=0]
+----
 ====
 
 [[bootstrap-jpa-xml-files]]

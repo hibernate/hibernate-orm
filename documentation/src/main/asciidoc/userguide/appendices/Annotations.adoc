@@ -462,7 +462,7 @@ See the <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant-PersistenceC
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceUnit.html[`@PersistenceUnit`] annotation is used to specify the `EntityManagerFactory` that needs to be injected as a dependency.
 
-//TODO: Add example
+See the <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant-PersistenceUnit-example, `@PersistenceUnit` mapping>> section for more info.
 
 [[annotations-jpa-persistenceunits]]
 ==== `@PersistenceUnits`

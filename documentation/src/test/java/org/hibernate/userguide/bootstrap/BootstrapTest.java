@@ -412,6 +412,13 @@ public class BootstrapTest {
 	private EntityManagerFactory emf;
 	//end::bootstrap-jpa-compliant-PersistenceUnit-example[]
 
+	//tag::bootstrap-jpa-compliant-PersistenceUnit-configurable-example[]
+	@PersistenceUnit(
+		unitName = "CRM"
+	)
+	private EntityManagerFactory entityManagerFactory;
+	//end::bootstrap-jpa-compliant-PersistenceUnit-configurable-example[]
+
 	//tag::bootstrap-jpa-compliant-PersistenceContext-example[]
 	@PersistenceContext
 	private EntityManager em;

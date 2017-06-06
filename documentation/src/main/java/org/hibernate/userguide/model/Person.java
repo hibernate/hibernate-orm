@@ -162,7 +162,7 @@ import javax.persistence.Version;
     ,
     // tag::jpa-read-only-entities-native-example[]
     @NamedQuery(
-        name = "get_person_by_name",
+        name = "get_read_only_person_by_name",
         query = "select p from Person p where name = :name",
         hints = {
             @QueryHint(

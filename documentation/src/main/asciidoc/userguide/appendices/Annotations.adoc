@@ -408,7 +408,7 @@ See the <<chapters/query/native/Native.adoc#sql-sp-named-query, Using named quer
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/NamedSubgraph.html[`@NamedSubgraph`] annotation used to specify a subgraph in an Entity Graph.
 
-//TODO: Add example
+See the <<chapters/fetching/Fetching.adoc#fetching-strategies-dynamic-fetching-entity-subgraph, Fetch subgraph>> section for more info.
 
 [[annotations-jpa-onetomany]]
 ==== `@OneToMany`

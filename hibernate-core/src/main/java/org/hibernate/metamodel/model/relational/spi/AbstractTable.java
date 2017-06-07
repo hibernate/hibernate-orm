@@ -6,7 +6,9 @@
  */
 package org.hibernate.metamodel.model.relational.spi;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -17,6 +19,7 @@ import org.hibernate.metamodel.model.relational.internal.InflightTable;
  */
 public abstract class AbstractTable implements InflightTable {
 	private final PrimaryKey primaryKey = new PrimaryKey( this );
+	private List<ForeignKey> foreignKeys = new ArrayList<>();
 	private final Map<String,Column> columnMap = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
 	private final boolean isAbstract;
 
@@ -47,5 +50,30 @@ public abstract class AbstractTable implements InflightTable {
 	@Override
 	public Collection<Column> getColumns() {
 		return columnMap.values();
+	}
+
+	@Override
+	public Collection<ForeignKey> getForeignKeys() {
+		return foreignKeys;
+	}
+
+	public ForeignKey createForeignKey(
+			String name,
+			boolean export,
+			String keyDefinition,
+			boolean cascadeDeleteEnabled,
+			Table targetTable,
+			ForeignKey.ColumnMappings columnMappings) {
+		final ForeignKey foreignKey = new ForeignKey(
+				name,
+				export,
+				keyDefinition,
+				cascadeDeleteEnabled,
+				this,
+				targetTable,
+				columnMappings
+		);
+		foreignKeys.add( foreignKey );
+		return foreignKey;
 	}
 }

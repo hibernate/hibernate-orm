@@ -219,6 +219,8 @@ public class RuntimeDatabaseModelProducer {
 						final ForeignKey runtimeFk = ( (InflightTable) runtimeReferringTable ).createForeignKey(
 								bootFk.getName(),
 								bootFk.isCreationEnabled() && bootFk.isPhysicalConstraint(),
+								bootFk.getKeyDefinition(),
+								bootFk.isCascadeDeleteEnabled(),
 								runtimeTargetTable,
 								new ColumnMappingsImpl(
 										runtimeReferringTable,

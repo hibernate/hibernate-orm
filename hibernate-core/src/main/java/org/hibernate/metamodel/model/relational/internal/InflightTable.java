@@ -19,6 +19,8 @@ public interface InflightTable extends Table {
 	ForeignKey createForeignKey(
 			String name,
 			boolean export,
+			String keyDefinition,
+			boolean cascadeDeleteEnabled,
 			Table targetTable,
 			ForeignKey.ColumnMappings columnMappings);
 }

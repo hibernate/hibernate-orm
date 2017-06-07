@@ -35,7 +35,5 @@ public interface ExportableTable extends Table, Exportable {
 
 	List<String> getCheckConstraints();
 
-	Collection<ForeignKey> getForeignKeys();
-
 	Collection<Index> getIndexes();
 }

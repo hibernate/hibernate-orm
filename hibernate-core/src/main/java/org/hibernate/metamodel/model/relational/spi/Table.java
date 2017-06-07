@@ -28,4 +28,6 @@ public interface Table {
 	Collection<Column> getColumns();
 
 	Column getColumn(String name);
+
+	Collection<ForeignKey> getForeignKeys();
 }

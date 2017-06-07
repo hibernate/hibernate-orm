@@ -50,15 +50,14 @@ public class WithClauseJoinRewriteTest extends BaseCoreFunctionalTestCase {
         Transaction tx = s.beginTransaction();
 
         // Just assert that the query is successful
-        List<Object[]> results = s.createQuery(
+        List results = s.createQuery(
                 "SELECT usedBy.id, usedBy.name, COUNT(inverse.id) " +
                 "FROM " + AbstractConfigurationObject.class.getName() + " config " +
                 "INNER JOIN config.usedBy usedBy " +
                 "LEFT JOIN usedBy.uses inverse ON inverse.id = config.id " +
                 "WHERE config.id = 0 " +
-                "GROUP BY usedBy.id, usedBy.name",
-                Object[].class
-        ).getResultList();
+                "GROUP BY usedBy.id, usedBy.name"
+        ).list();
 
         tx.commit();
         s.close();

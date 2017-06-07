@@ -11,11 +11,11 @@ import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.naming.Identifier;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.sql.Template;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
@@ -38,7 +38,6 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private boolean nullable = true;
 	private boolean unique;
 	private String sqlType;
-	private Integer sqlTypeCode;
 	private boolean quoted;
 	int uniqueInteger;
 	private String checkConstraint;
@@ -135,26 +134,14 @@ public class Column implements Selectable, Serializable, Cloneable {
 		return name.equals( column.name );
 	}
 
-	/**
-	 * Returns the underlying columns sqltypecode.
-	 * If null, it is because the sqltype code is unknown.
-	 * <p/>
-	 * Use #getSqlTypeCode(Mapping) to retrieve the sqltypecode used
-	 * for the columns associated Value/Type.
-	 *
-	 * @return sqlTypeCode if it is set, otherwise null.
-	 */
-	public Integer getSqlTypeCode() {
-		return sqlTypeCode;
-	}
-
-	public void setSqlTypeCode(Integer typeCode) {
-		sqlTypeCode = typeCode;
-	}
-
 	public String getSqlType(Dialect dialect) throws HibernateException {
 		if ( sqlType == null ) {
-			sqlType = dialect.getTypeName( getSqlTypeCode(), getLength(), getPrecision(), getScale() );
+			sqlType = dialect.getTypeName(
+					getSqlTypeDescriptor().getJdbcTypeCode(),
+					getLength(),
+					getPrecision(),
+					getScale()
+			);
 		}
 		return sqlType;
 	}
@@ -245,7 +232,19 @@ public class Column implements Selectable, Serializable, Cloneable {
 				getName(),
 				jdbcEnvironment
 		);
-		return new PhysicalColumn( runtimeTable, physicalName, sqlTypeDescriptor, getDefaultValue(), isNullable(), isUnique() );
+		final PhysicalColumn column = new PhysicalColumn(
+				runtimeTable,
+				physicalName,
+				sqlTypeDescriptor,
+				getDefaultValue(),
+				getSqlType(),
+				isNullable(),
+				isUnique()
+		);
+		column.setLength( getLength() );
+		column.setPrecision( getPrecision() );
+		column.setScale( getScale() );
+		return column;
 	}
 
 	public int getPrecision() {
@@ -314,7 +313,6 @@ public class Column implements Selectable, Serializable, Cloneable {
 		copy.setPrecision( precision );
 		copy.setUnique( unique );
 		copy.setSqlType( sqlType );
-		copy.setSqlTypeCode( sqlTypeCode );
 		copy.uniqueInteger = uniqueInteger; //usually useless
 		copy.setCheckConstraint( checkConstraint );
 		copy.setComment( comment );

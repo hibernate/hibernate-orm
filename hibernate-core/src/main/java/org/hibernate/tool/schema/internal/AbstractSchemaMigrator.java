@@ -20,7 +20,6 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
@@ -58,16 +57,16 @@ import static org.hibernate.cfg.AvailableSettings.UNIQUE_CONSTRAINT_SCHEMA_UPDAT
 public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 	private static final Logger log = Logger.getLogger( IndividuallySchemaMigratorImpl.class );
 
-	protected HibernateSchemaManagementTool tool;
-	protected SchemaFilter schemaFilter;
-	protected final RuntimeModelCreationContext modelCreationContext;
+	protected final HibernateSchemaManagementTool tool;
+	protected final SchemaFilter schemaFilter;
+	protected final DatabaseModel databaseModel;
 
 	public AbstractSchemaMigrator(
 			HibernateSchemaManagementTool tool,
-			RuntimeModelCreationContext modelCreationContext,
+			DatabaseModel databaseModel,
 			SchemaFilter schemaFilter) {
 		this.tool = tool;
-		this.modelCreationContext = modelCreationContext;
+		this.databaseModel = databaseModel;
 		if ( schemaFilter == null ) {
 			this.schemaFilter = DefaultSchemaFilter.INSTANCE;
 		}
@@ -94,7 +93,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
 						tool.getServiceRegistry(),
 						ddlTransactionIsolator,
-						modelCreationContext.getDatabaseModel().getDefaultNamespace()
+						databaseModel.getDefaultNamespace()
 				);
 
 				final GenerationTarget[] targets = tool.buildGenerationTargets(
@@ -157,17 +156,15 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		final boolean format = Helper.interpretFormattingEnabled( options.getConfigurationValues() );
 		final Formatter formatter = format ? FormatStyle.DDL.getFormatter() : FormatStyle.NONE.getFormatter();
 
-		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
-
-		final DatabaseModel database = modelCreationContext.getDatabaseModel();
+		final Set<String> exportIdentifiers = new HashSet<>( 50 );
 
 		// Drop all AuxiliaryDatabaseObjects
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
 				applySqlStrings(
 						true,
 						dialect.getAuxiliaryDatabaseObjectExporter()
-								.getSqlDropStrings( auxiliaryDatabaseObject, modelCreationContext ),
+								.getSqlDropStrings( auxiliaryDatabaseObject, databaseModel ),
 						formatter,
 						options,
 						targets
@@ -176,7 +173,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		}
 
 		// Create beforeQuery-table AuxiliaryDatabaseObjects
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
 			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() && auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
 				applySqlStrings(
 						true,
@@ -200,7 +197,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		}
 		final Map<Namespace, NameSpaceTablesInformation> tablesInformation = new HashMap<>();
 		Set<Identifier> exportedCatalogs = new HashSet<>();
-		for ( Namespace namespace : database.getNamespaces() ) {
+		for ( Namespace namespace : databaseModel.getNamespaces() ) {
 			final NameSpaceTablesInformation nameSpaceTablesInformation = performTablesMigration(
 					existingDatabase,
 					options,
@@ -223,7 +220,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 								false,
 								dialect.getSequenceExporter().getSqlCreateStrings(
 										sequence,
-										modelCreationContext
+										databaseModel
 								),
 								formatter,
 								options,
@@ -235,7 +232,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		}
 
 		//NOTE : Foreign keys must be created *afterQuery* all tables of all namespaces for cross namespace fks. see HHH-10420
-		for ( Namespace namespace : database.getNamespaces() ) {
+		for ( Namespace namespace : databaseModel.getNamespaces() ) {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
 				final NameSpaceTablesInformation nameSpaceTablesInformation = tablesInformation.get( namespace );
 				for ( Table table : namespace.getTables() ) {
@@ -261,7 +258,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		}
 
 		// Create afterQuery-table AuxiliaryDatabaseObjects
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.beforeTablesOnCreation() && auxiliaryDatabaseObject.appliesToDialect( dialect )) {
 				applySqlStrings(
 						true,
@@ -282,7 +279,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			GenerationTarget... targets) {
 		applySqlStrings(
 				false,
-				dialect.getTableExporter().getSqlCreateStrings( table, modelCreationContext ),
+				dialect.getTableExporter().getSqlCreateStrings( table, databaseModel ),
 				formatter,
 				options,
 				targets
@@ -296,8 +293,6 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			Formatter formatter,
 			ExecutionOptions options,
 			GenerationTarget... targets) {
-		final DatabaseModel database = modelCreationContext.getDatabaseModel();
-
 		// todo: (6.0) create and use a StandardTableAlter
 		throw new NotYetImplementedException(  );
 		//noinspection unchecked
@@ -332,7 +327,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				if ( existingIndex == null ) {
 					applySqlStrings(
 							false,
-							exporter.getSqlCreateStrings( index, modelCreationContext ),
+							exporter.getSqlCreateStrings( index, databaseModel ),
 							formatter,
 							options,
 							targets
@@ -372,7 +367,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					if ( uniqueConstraintStrategy == UniqueConstraintSchemaUpdateStrategy.DROP_RECREATE_QUIETLY ) {
 						applySqlStrings(
 								true,
-								exporter.getSqlDropStrings( uniqueKey, modelCreationContext ),
+								exporter.getSqlDropStrings( uniqueKey, databaseModel ),
 								formatter,
 								options,
 								targets
@@ -381,7 +376,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 					applySqlStrings(
 							true,
-							exporter.getSqlCreateStrings( uniqueKey, modelCreationContext ),
+							exporter.getSqlCreateStrings( uniqueKey, databaseModel ),
 							formatter,
 							options,
 							targets
@@ -392,10 +387,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 	}
 
 	private UniqueConstraintSchemaUpdateStrategy determineUniqueConstraintSchemaUpdateStrategy() {
-		final ConfigurationService cfgService = modelCreationContext
-				.getSessionFactory()
-				.getServiceRegistry()
-				.getService( ConfigurationService.class );
+		final ConfigurationService cfgService = tool.getServiceRegistry().getService( ConfigurationService.class );
 
 		return UniqueConstraintSchemaUpdateStrategy.interpret(
 				cfgService.getSetting( UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY, StandardConverters.STRING )
@@ -428,7 +420,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 						// in old SchemaUpdate code, this was the trigger to "create"
 						applySqlStrings(
 								false,
-								exporter.getSqlCreateStrings( foreignKey, modelCreationContext ),
+								exporter.getSqlCreateStrings( foreignKey, databaseModel ),
 								formatter,
 								options,
 								targets

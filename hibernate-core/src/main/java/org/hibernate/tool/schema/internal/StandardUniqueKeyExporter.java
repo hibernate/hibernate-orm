@@ -7,7 +7,6 @@
 package org.hibernate.tool.schema.internal;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.tool.schema.spi.Exporter;

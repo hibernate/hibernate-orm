@@ -36,6 +36,7 @@ public class ExportableColumn extends Column {
 		if(table!= null){
 			setTableName( table.getNameIdentifier() );
 		}
+
 		setSqlTypeDescriptor( type.getColumnDescriptor().getSqlTypeDescriptor() );
 		setSqlType( dbTypeDeclaration );
 	}

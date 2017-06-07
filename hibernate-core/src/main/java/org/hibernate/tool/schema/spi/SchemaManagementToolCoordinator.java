@@ -9,8 +9,8 @@ package org.hibernate.tool.schema.spi;
 import java.util.EnumSet;
 import java.util.Map;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.ServiceRegistry;
@@ -45,7 +45,7 @@ public class SchemaManagementToolCoordinator {
 	private static final Logger log = Logger.getLogger( SchemaManagementToolCoordinator.class );
 
 	public static void process(
-			final Metadata metadata,
+			final MetadataImplementor metadata,
 			final ServiceRegistry serviceRegistry,
 			final Map configurationValues,
 			DelayedDropRegistry delayedDropRegistry) {
@@ -74,8 +74,7 @@ public class SchemaManagementToolCoordinator {
 		if ( actions.getDatabaseAction() == Action.CREATE_DROP ) {
 			//noinspection unchecked
 			delayedDropRegistry.registerOnCloseAction(
-					tool.getSchemaDropper( configurationValues ).buildDelayedAction(
-							metadata,
+					tool.getSchemaDropper( Helper.buildDatabaseModel( metadata ), configurationValues ).buildDelayedAction(
 							executionOptions,
 							buildDatabaseTargetDescriptor(
 									configurationValues,
@@ -111,7 +110,7 @@ public class SchemaManagementToolCoordinator {
 	@SuppressWarnings("unchecked")
 	private static void performDatabaseAction(
 			final Action action,
-			Metadata metadata,
+			MetadataImplementor metadata,
 			SchemaManagementTool tool,
 			ServiceRegistry serviceRegistry,
 			final ExecutionOptions executionOptions) {
@@ -126,12 +125,8 @@ public class SchemaManagementToolCoordinator {
 						CreateSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaCreator( executionOptions.getConfigurationValues() ).doCreation(
-						metadata,
-						executionOptions,
-						createDescriptor,
-						createDescriptor
-				);
+				tool.getSchemaCreator( Helper.buildDatabaseModel( metadata ), executionOptions.getConfigurationValues() )
+						.doCreation( executionOptions, createDescriptor, createDescriptor );
 				break;
 			}
 			case CREATE:
@@ -141,23 +136,16 @@ public class SchemaManagementToolCoordinator {
 						DropSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaDropper( executionOptions.getConfigurationValues() ).doDrop(
-						metadata,
-						executionOptions,
-						dropDescriptor,
-						dropDescriptor
-				);
+				tool.getSchemaDropper( Helper.buildDatabaseModel( metadata ), executionOptions.getConfigurationValues() )
+						.doDrop( executionOptions, dropDescriptor, dropDescriptor );
+
 				final JpaTargetAndSourceDescriptor createDescriptor = buildDatabaseTargetDescriptor(
 						executionOptions.getConfigurationValues(),
 						CreateSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaCreator( executionOptions.getConfigurationValues() ).doCreation(
-						metadata,
-						executionOptions,
-						createDescriptor,
-						createDescriptor
-				);
+				tool.getSchemaCreator( Helper.buildDatabaseModel( metadata ), executionOptions.getConfigurationValues() )
+						.doCreation( executionOptions, createDescriptor, createDescriptor );
 				break;
 			}
 			case DROP: {
@@ -166,12 +154,8 @@ public class SchemaManagementToolCoordinator {
 						DropSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaDropper( executionOptions.getConfigurationValues() ).doDrop(
-						metadata,
-						executionOptions,
-						dropDescriptor,
-						dropDescriptor
-				);
+				tool.getSchemaDropper( Helper.buildDatabaseModel( metadata ), executionOptions.getConfigurationValues() )
+						.doDrop( executionOptions, dropDescriptor, dropDescriptor );
 				break;
 			}
 			case UPDATE: {
@@ -180,18 +164,13 @@ public class SchemaManagementToolCoordinator {
 						MigrateSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaMigrator( executionOptions.getConfigurationValues() ).doMigration(
-						metadata,
-						executionOptions,
-						migrateDescriptor
-				);
+				tool.getSchemaMigrator( Helper.buildDatabaseModel( metadata ), executionOptions.getConfigurationValues() )
+						.doMigration( executionOptions, migrateDescriptor );
 				break;
 			}
 			case VALIDATE: {
-				tool.getSchemaValidator( executionOptions.getConfigurationValues() ).doValidation(
-						metadata,
-						executionOptions
-				);
+				tool.getSchemaValidator( Helper.buildDatabaseModel( metadata ), executionOptions.getConfigurationValues() )
+						.doValidation( executionOptions );
 				break;
 			}
 		}
@@ -248,7 +227,7 @@ public class SchemaManagementToolCoordinator {
 	@SuppressWarnings("unchecked")
 	private static void performScriptAction(
 			Action scriptAction,
-			Metadata metadata,
+			MetadataImplementor metadata,
 			SchemaManagementTool tool,
 			ServiceRegistry serviceRegistry,
 			ExecutionOptions executionOptions) {
@@ -259,12 +238,8 @@ public class SchemaManagementToolCoordinator {
 						CreateSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaCreator( executionOptions.getConfigurationValues() ).doCreation(
-						metadata,
-						executionOptions,
-						createDescriptor,
-						createDescriptor
-				);
+				tool.getSchemaCreator( Helper.buildDatabaseModel( metadata ), executionOptions.getConfigurationValues() )
+						.doCreation( executionOptions, createDescriptor, createDescriptor );
 				break;
 			}
 			case CREATE:
@@ -274,23 +249,16 @@ public class SchemaManagementToolCoordinator {
 						DropSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaDropper( executionOptions.getConfigurationValues() ).doDrop(
-						metadata,
-						executionOptions,
-						dropDescriptor,
-						dropDescriptor
-				);
+				tool.getSchemaDropper( Helper.buildDatabaseModel( metadata ), executionOptions.getConfigurationValues() )
+						.doDrop( executionOptions, dropDescriptor, dropDescriptor );
+
 				final JpaTargetAndSourceDescriptor createDescriptor = buildScriptTargetDescriptor(
 						executionOptions.getConfigurationValues(),
 						CreateSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaCreator( executionOptions.getConfigurationValues() ).doCreation(
-						metadata,
-						executionOptions,
-						createDescriptor,
-						createDescriptor
-				);
+				tool.getSchemaCreator( Helper.buildDatabaseModel( metadata ), executionOptions.getConfigurationValues() )
+						.doCreation( executionOptions, createDescriptor, createDescriptor );
 				break;
 			}
 			case DROP: {
@@ -299,12 +267,8 @@ public class SchemaManagementToolCoordinator {
 						DropSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaDropper( executionOptions.getConfigurationValues() ).doDrop(
-						metadata,
-						executionOptions,
-						dropDescriptor,
-						dropDescriptor
-				);
+				tool.getSchemaDropper( Helper.buildDatabaseModel( metadata ), executionOptions.getConfigurationValues() )
+						.doDrop( executionOptions, dropDescriptor, dropDescriptor );
 				break;
 			}
 			case UPDATE: {
@@ -313,11 +277,8 @@ public class SchemaManagementToolCoordinator {
 						MigrateSettingSelector.INSTANCE,
 						serviceRegistry
 				);
-				tool.getSchemaMigrator( executionOptions.getConfigurationValues() ).doMigration(
-						metadata,
-						executionOptions,
-						migrateDescriptor
-				);
+				tool.getSchemaMigrator( Helper.buildDatabaseModel( metadata ), executionOptions.getConfigurationValues() )
+						.doMigration( executionOptions, migrateDescriptor );
 				break;
 			}
 			case VALIDATE: {

@@ -14,7 +14,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.mapping.ForeignKey;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 

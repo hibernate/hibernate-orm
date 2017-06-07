@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.relational.spi;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.naming.Identifier;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
@@ -19,16 +20,21 @@ public class PhysicalColumn implements Column {
 	private final String defaultValue;
 	private final boolean isNullable;
 	private final boolean isUnique;
-	private String comment;
+	private final String comment;
+	private String sqlType;
+	private int length;
+	private int precision;
+	private int scale;
 
 	public PhysicalColumn(
 			Table table,
 			Identifier name,
 			SqlTypeDescriptor sqlTypeDescriptor,
 			String defaultValue,
+			String sqlType,
 			boolean isNullable,
 			boolean isUnique) {
-		this( table, name, sqlTypeDescriptor, defaultValue, isNullable, isUnique, null );
+		this( table, name, sqlTypeDescriptor, defaultValue, sqlType, isNullable, isUnique, null );
 	}
 
 	public PhysicalColumn(
@@ -36,6 +42,7 @@ public class PhysicalColumn implements Column {
 			Identifier name,
 			SqlTypeDescriptor sqlTypeDescriptor,
 			String defaultValue,
+			String sqlType,
 			boolean isNullable,
 			boolean isUnique,
 			String comment) {
@@ -43,6 +50,7 @@ public class PhysicalColumn implements Column {
 		this.name = name;
 		this.sqlTypeDescriptor = sqlTypeDescriptor;
 		this.defaultValue = defaultValue;
+		this.sqlType = sqlType;
 		this.isNullable = isNullable;
 		this.isUnique = isUnique;
 		this.comment = comment;
@@ -96,5 +104,41 @@ public class PhysicalColumn implements Column {
 
 	public String getComment() {
 		return comment;
+	}
+
+	public int getLength() {
+		return length;
+	}
+
+	public void setLength(int length) {
+		this.length = length;
+	}
+
+	public int getPrecision() {
+		return precision;
+	}
+
+	public void setPrecision(int precision) {
+		this.precision = precision;
+	}
+
+	public int getScale() {
+		return scale;
+	}
+
+	public void setScale(int scale) {
+		this.scale = scale;
+	}
+
+	public String getSqlType(Dialect dialect) {
+		if ( sqlType == null ) {
+			sqlType = dialect.getTypeName(
+					getSqlTypeDescriptor().getJdbcTypeCode(),
+					getLength(),
+					getPrecision(),
+					getScale()
+			);
+		}
+		return sqlType;
 	}
 }

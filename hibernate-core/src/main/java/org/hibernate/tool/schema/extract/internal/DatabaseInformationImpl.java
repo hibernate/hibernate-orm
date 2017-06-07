@@ -10,13 +10,12 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.relational.spi.Namespace;
-import org.hibernate.naming.NamespaceName;
 import org.hibernate.naming.Identifier;
-import org.hibernate.boot.model.relational.MappedNamespace;
+import org.hibernate.naming.NamespaceName;
 import org.hibernate.naming.QualifiedSequenceName;
 import org.hibernate.naming.QualifiedTableName;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;

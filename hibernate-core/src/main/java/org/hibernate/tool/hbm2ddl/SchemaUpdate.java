@@ -24,19 +24,17 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.metamodel.model.creation.spi.DatabaseObjectResolutionContextImpl;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
-import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerCollectingImpl;
+import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
@@ -140,7 +138,7 @@ public class SchemaUpdate {
 			try {
 				final MetadataImplementor metadata = buildMetadata( parsedArgs, serviceRegistry );
 
-				new SchemaUpdate( buildDatabaseModel( metadata ), serviceRegistry )
+				new SchemaUpdate( Helper.buildDatabaseModel( metadata ), serviceRegistry )
 						.setOutputFile( parsedArgs.outputFile )
 						.setDelimiter( parsedArgs.delimiter )
 						.execute( parsedArgs.targetTypes );
@@ -153,19 +151,6 @@ public class SchemaUpdate {
 			LOG.unableToRunSchemaUpdate( e );
 			e.printStackTrace();
 		}
-	}
-
-	private static DatabaseModel buildDatabaseModel(MetadataImplementor metadata) {
-		final DatabaseObjectResolutionContextImpl dbObjectResolver = new DatabaseObjectResolutionContextImpl();
-		final BootstrapContext bootstrapContext = metadata.getTypeConfiguration()
-				.getMetadataBuildingContext()
-				.getBootstrapContext();
-		return new RuntimeDatabaseModelProducer( bootstrapContext )
-				.produceDatabaseModel(
-						metadata.getDatabase(),
-						dbObjectResolver,
-						dbObjectResolver
-				);
 	}
 
 	private static StandardServiceRegistry buildStandardServiceRegistry(CommandLineArgs parsedArgs) throws Exception {

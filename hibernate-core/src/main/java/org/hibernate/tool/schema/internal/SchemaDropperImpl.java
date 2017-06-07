@@ -17,7 +17,6 @@ import java.util.Set;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
@@ -28,7 +27,6 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
@@ -69,7 +67,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 	private final HibernateSchemaManagementTool tool;
 	private final SchemaFilter schemaFilter;
-	private final DatabaseModel database;
+	private final DatabaseModel databaseModel;
 
 	public SchemaDropperImpl(HibernateSchemaManagementTool tool, DatabaseModel databaseModel) {
 		this( tool, databaseModel, DefaultSchemaFilter.INSTANCE );
@@ -81,7 +79,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			SchemaFilter schemaFilter) {
 		this.tool = tool;
 		this.schemaFilter = schemaFilter;
-		this.database = databaseModel;
+		this.databaseModel = databaseModel;
 	}
 
 	public SchemaDropperImpl(DatabaseModel databaseModel, ServiceRegistry serviceRegistry) {
@@ -96,7 +94,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 		this.tool = (HibernateSchemaManagementTool) smt;
 		this.schemaFilter = schemaFilter;
-		this.database = databaseModel;
+		this.databaseModel = databaseModel;
 	}
 
 
@@ -187,7 +185,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Dialect dialect,
 			Formatter formatter,
 			GenerationTarget... targets) {
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
 
 		boolean tryToDropCatalogs = false;
 		boolean tryToDropSchemas = false;
@@ -204,7 +202,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 		// NOTE : init commands are irrelevant for dropping...
 
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
 			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
 				continue;
 			}
@@ -213,21 +211,21 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 
 			applySqlStrings(
-					dialect.getAuxiliaryDatabaseObjectExporter().getSqlDropStrings( auxiliaryDatabaseObject, modelCreationContext ),
+					dialect.getAuxiliaryDatabaseObjectExporter().getSqlDropStrings( auxiliaryDatabaseObject, databaseModel ),
 					formatter,
 					options,
 					targets
 			);
 		}
 
-		for ( Namespace namespace : database.getNamespaces() ) {
+		for ( Namespace namespace : databaseModel.getNamespaces() ) {
 
 			if ( !schemaFilter.includeNamespace( namespace ) ) {
 				continue;
 			}
 
 			// we need to drop all constraints/indexes prior to dropping the tables
-			applyConstraintDropping( namespace, modelCreationContext, formatter, options, targets );
+			applyConstraintDropping( namespace, formatter, options, targets );
 
 			// now it's safe to drop the tables
 			namespace.getTables().stream()
@@ -238,7 +236,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 						checkExportIdentifier( table, exportIdentifiers );
 						applySqlStrings(
 								dialect.getTableExporter()
-										.getSqlDropStrings( table, modelCreationContext ),
+										.getSqlDropStrings( table, databaseModel ),
 								formatter,
 								options,
 								targets
@@ -251,7 +249,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 				}
 				checkExportIdentifier( sequence, exportIdentifiers );
 				applySqlStrings(
-						dialect.getSequenceExporter().getSqlDropStrings( sequence, modelCreationContext ),
+						dialect.getSequenceExporter().getSqlDropStrings( sequence, databaseModel ),
 						formatter,
 						options,
 						targets
@@ -259,7 +257,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 		}
 
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
 				continue;
 			}
@@ -278,7 +276,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		if ( tryToDropCatalogs || tryToDropSchemas ) {
 			Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
 
-			for ( Namespace namespace : database.getNamespaces() ) {
+			for ( Namespace namespace : databaseModel.getNamespaces() ) {
 
 				if ( !schemaFilter.includeNamespace( namespace ) ) {
 					continue;
@@ -315,11 +313,10 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 	private void applyConstraintDropping(
 			Namespace namespace,
-			RuntimeModelCreationContext modelCreationContex,
 			Formatter formatter,
 			ExecutionOptions options,
 			GenerationTarget... targets) {
-		final Dialect dialect = modelCreationContex.getDatabaseModel().getJdbcEnvironment().getDialect();
+		final Dialect dialect = databaseModel.getJdbcEnvironment().getDialect();
 
 		if ( !dialect.dropConstraints() ) {
 			return;
@@ -335,7 +332,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 			for ( ForeignKey foreignKey : ( (ExportableTable) table ).getForeignKeys() ) {
 				applySqlStrings(
-						dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, modelCreationContex ),
+						dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, databaseModel ),
 						formatter,
 						options,
 						targets
@@ -388,16 +385,13 @@ public class SchemaDropperImpl implements SchemaDropper {
 	/**
 	 * For testing...
 	 *
-	 * @param modelCreationContex The manageNamespaces for which to generate the creation commands.
 	 *
 	 * @return The generation commands
 	 */
-	public List<String> generateDropCommands(
-			RuntimeModelCreationContext modelCreationContex,
-			final boolean manageNamespaces) {
+	public List<String> generateDropCommands(final boolean manageNamespaces) {
 		final JournalingGenerationTarget target = new JournalingGenerationTarget();
 
-		final ServiceRegistry serviceRegistry = modelCreationContex.getSessionFactory().getServiceRegistry();
+		final ServiceRegistry serviceRegistry = tool.getServiceRegistry();
 		final Dialect dialect = serviceRegistry.getService( JdbcEnvironment.class ).getDialect();
 
 		final ExecutionOptions options = new ExecutionOptions() {
@@ -417,19 +411,17 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 		};
 
-		dropFromCreationContext( modelCreationContex, options, dialect, FormatStyle.NONE.getFormatter(), target );
+		dropFromCreationContext( options, dialect, FormatStyle.NONE.getFormatter(), target );
 
 		return target.commands;
 	}
 
 	@Override
 	public DelayedDropAction buildDelayedAction(
-			RuntimeModelCreationContext modelCreationContex,
 			ExecutionOptions options,
 			SourceDescriptor sourceDescriptor) {
 		final JournalingGenerationTarget target = new JournalingGenerationTarget();
 		doDrop(
-				modelCreationContex,
 				options,
 				tool.getServiceRegistry().getService( JdbcEnvironment.class ).getDialect(),
 				sourceDescriptor,
@@ -438,41 +430,27 @@ public class SchemaDropperImpl implements SchemaDropper {
 		return new DelayedDropActionImpl( target.commands );
 	}
 
-	/**
-	 * For tests
-	 */
-	public void doDrop(RuntimeModelCreationContext modelCreationContex, boolean manageNamespaces, GenerationTarget... targets) {
-		final ServiceRegistry serviceRegistry = modelCreationContex.getSessionFactory().getServiceRegistry();
-		doDrop(
-				modelCreationContex,
-				serviceRegistry,
-				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
-				manageNamespaces,
-				targets
-		);
-	}
 
 	/**
 	 * For tests
 	 */
 	public void doDrop(
-			RuntimeModelCreationContext modelCreationContex,
-			final ServiceRegistry serviceRegistry,
 			final Map settings,
 			final boolean manageNamespaces,
 			GenerationTarget... targets) {
+		final ServiceRegistry serviceRegistry = tool.getServiceRegistry();
 		if ( targets == null || targets.length == 0 ) {
 			final JdbcContext jdbcContext = tool.resolveJdbcContext( settings );
 			targets = new GenerationTarget[] {
 				new GenerationTargetToDatabase(
-						serviceRegistry.getService( TransactionCoordinatorBuilder.class ).buildDdlTransactionIsolator( jdbcContext ),
+						serviceRegistry
+								.getService( TransactionCoordinatorBuilder.class ).buildDdlTransactionIsolator( jdbcContext ),
 						true
 				)
 			};
 		}
 
 		doDrop(
-				modelCreationContex,
 				new ExecutionOptions() {
 					@Override
 					public boolean shouldManageNamespaces() {
@@ -506,7 +484,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	}
 
 	private static class JournalingGenerationTarget implements GenerationTarget {
-		private final ArrayList<String> commands = new ArrayList<String>();
+		private final ArrayList<String> commands = new ArrayList<>();
 
 		@Override
 		public void prepare() {

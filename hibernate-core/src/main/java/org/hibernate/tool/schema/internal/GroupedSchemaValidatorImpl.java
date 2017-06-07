@@ -7,7 +7,8 @@
 package org.hibernate.tool.schema.internal;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.Namespace;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
@@ -25,9 +26,9 @@ public class GroupedSchemaValidatorImpl extends AbstractSchemaValidator {
 
 	public GroupedSchemaValidatorImpl(
 			HibernateSchemaManagementTool tool,
-			RuntimeModelCreationContext modelCreationContext,
+			DatabaseModel databaseModel,
 			SchemaFilter validateFilter) {
-		super( tool, validateFilter );
+		super( tool, databaseModel, validateFilter );
 	}
 
 	@Override
@@ -40,9 +41,10 @@ public class GroupedSchemaValidatorImpl extends AbstractSchemaValidator {
 		final NameSpaceTablesInformation tables = databaseInformation.getTablesInformation( namespace );
 		for ( Table table : namespace.getTables() ) {
 			if ( schemaFilter.includeTable( table ) && table.isExportable() ) {
+				final ExportableTable exportableTable = (ExportableTable) table;
 				validateTable(
-						table,
-						tables.getTableInformation( table ),
+						exportableTable,
+						tables.getTableInformation( exportableTable ),
 						options,
 						dialect
 				);

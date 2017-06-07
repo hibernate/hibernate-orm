@@ -8,12 +8,13 @@ package org.hibernate.tool.schema.internal;
 
 import java.util.Set;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.naming.Identifier;
-import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.Formatter;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.Namespace;
+import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.naming.Identifier;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
@@ -31,13 +32,13 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 
 	public IndividuallySchemaMigratorImpl(
 			HibernateSchemaManagementTool tool,
+			DatabaseModel databaseModel,
 			SchemaFilter schemaFilter) {
-		super( tool, schemaFilter );
+		super( tool, databaseModel, schemaFilter );
 	}
 
 	@Override
 	protected NameSpaceTablesInformation performTablesMigration(
-			Metadata metadata,
 			DatabaseInformation existingDatabase,
 			ExecutionOptions options,
 			Dialect dialect,
@@ -46,10 +47,10 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 			boolean tryToCreateCatalogs,
 			boolean tryToCreateSchemas,
 			Set<Identifier> exportedCatalogs,
-			MappedNamespace namespace,
+			Namespace namespace,
 			GenerationTarget[] targets) {
 		final NameSpaceTablesInformation tablesInformation =
-				new NameSpaceTablesInformation( metadata.getDatabase().getJdbcEnvironment().getIdentifierHelper() );
+				new NameSpaceTablesInformation( databaseModel.getJdbcEnvironment().getIdentifierHelper() );
 
 		if ( schemaFilter.includeNamespace( namespace ) ) {
 			createSchemaAndCatalog(
@@ -63,26 +64,28 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 					namespace,
 					targets
 			);
-			for ( MappedTable table : namespace.getTables() ) {
-				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
-					checkExportIdentifier( table, exportIdentifiers );
-					final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
+			for ( Table table : namespace.getTables() ) {
+				if ( schemaFilter.includeTable( table ) && table.isExportable() ) {
+					final ExportableTable exportableTable = (ExportableTable) table;
+					checkExportIdentifier( exportableTable, exportIdentifiers );
+					final TableInformation tableInformation = existingDatabase.getTableInformation( exportableTable.getQualifiedTableName() );
 					if ( tableInformation == null ) {
-						createTable( table, dialect, metadata, formatter, options, targets );
+						createTable( exportableTable, dialect, formatter, options, targets );
 					}
 					else if ( tableInformation != null && tableInformation.isPhysicalTable() ) {
 						tablesInformation.addTableInformation( tableInformation );
-						migrateTable( table, tableInformation, dialect, metadata, formatter, options, targets );
+						migrateTable( exportableTable, tableInformation, dialect, formatter, options, targets );
 					}
 				}
 			}
 
-			for ( MappedTable table : namespace.getTables() ) {
-				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
-					final TableInformation tableInformation = tablesInformation.getTableInformation( table );
+			for ( Table table : namespace.getTables() ) {
+				if ( schemaFilter.includeTable( table ) && table.isExportable() ) {
+					final ExportableTable exportableTable = (ExportableTable) table;
+					final TableInformation tableInformation = tablesInformation.getTableInformation( exportableTable );
 					if ( tableInformation == null || ( tableInformation != null && tableInformation.isPhysicalTable() ) ) {
-						applyIndexes( table, tableInformation, dialect, metadata, formatter, options, targets );
-						applyUniqueKeys( table, tableInformation, dialect, metadata, formatter, options, targets );
+						applyIndexes( exportableTable, tableInformation, dialect, formatter, options, targets );
+						applyUniqueKeys( exportableTable, tableInformation, dialect, formatter, options, targets );
 					}
 				}
 			}

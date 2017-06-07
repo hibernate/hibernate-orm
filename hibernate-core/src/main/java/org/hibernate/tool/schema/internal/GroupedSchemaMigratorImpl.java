@@ -10,7 +10,8 @@ import java.util.Set;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.Namespace;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.naming.Identifier;
@@ -31,9 +32,9 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 
 	public GroupedSchemaMigratorImpl(
 			HibernateSchemaManagementTool tool,
-			RuntimeModelCreationContext modelCreationContext,
+			DatabaseModel databaseModel,
 			SchemaFilter schemaFilter) {
-		super( tool, modelCreationContext, schemaFilter );
+		super( tool, databaseModel, schemaFilter );
 	}
 
 	@Override
@@ -48,7 +49,7 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 			Set<Identifier> exportedCatalogs,
 			Namespace namespace, GenerationTarget[] targets) {
 		final NameSpaceTablesInformation tablesInformation =
-				new NameSpaceTablesInformation( modelCreationContext.getDatabaseModel().getJdbcEnvironment().getIdentifierHelper() );
+				new NameSpaceTablesInformation( databaseModel.getJdbcEnvironment().getIdentifierHelper() );
 
 		if ( schemaFilter.includeNamespace( namespace ) ) {
 			createSchemaAndCatalog(
@@ -64,25 +65,27 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 			);
 			final NameSpaceTablesInformation tables = existingDatabase.getTablesInformation( namespace );
 			for ( Table table : namespace.getTables() ) {
-				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
-					checkExportIdentifier( table, exportIdentifiers );
-					final TableInformation tableInformation = tables.getTableInformation( table );
+				if ( schemaFilter.includeTable( table ) && table.isExportable() ) {
+					final ExportableTable exportableTable = (ExportableTable) table;
+					checkExportIdentifier( exportableTable, exportIdentifiers );
+					final TableInformation tableInformation = tables.getTableInformation( exportableTable );
 					if ( tableInformation == null ) {
-						createTable( table, dialect, metadata, formatter, options, targets );
+						createTable( exportableTable, dialect, formatter, options, targets );
 					}
-					else if ( tableInformation != null && tableInformation.isPhysicalTable() ) {
+					else if ( tableInformation.isPhysicalTable() ) {
 						tablesInformation.addTableInformation( tableInformation );
-						migrateTable( table, tableInformation, dialect, metadata, formatter, options, targets );
+						migrateTable( exportableTable, tableInformation, dialect, formatter, options, targets );
 					}
 				}
 			}
 
 			for ( Table table : namespace.getTables() ) {
-				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
-					final TableInformation tableInformation = tablesInformation.getTableInformation( table );
-					if ( tableInformation == null || ( tableInformation != null && tableInformation.isPhysicalTable() ) ) {
-						applyIndexes( table, tableInformation, dialect, metadata, formatter, options, targets );
-						applyUniqueKeys( table, tableInformation, dialect, metadata, formatter, options, targets );
+				if ( schemaFilter.includeTable( table ) && table.isExportable() ) {
+					final ExportableTable exportableTable = (ExportableTable) table;
+					final TableInformation tableInformation = tablesInformation.getTableInformation( exportableTable );
+					if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
+						applyIndexes( exportableTable, tableInformation, dialect, formatter, options, targets );
+						applyUniqueKeys( exportableTable, tableInformation, dialect, formatter, options, targets );
 					}
 				}
 			}

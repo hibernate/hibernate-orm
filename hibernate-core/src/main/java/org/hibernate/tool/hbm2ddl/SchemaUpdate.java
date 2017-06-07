@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -25,12 +24,16 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.metamodel.model.creation.spi.DatabaseObjectResolutionContextImpl;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerCollectingImpl;
@@ -48,18 +51,22 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 public class SchemaUpdate {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaUpdate.class );
 
-	private final List<Exception> exceptions = new ArrayList<Exception>();
+	private final List<Exception> exceptions = new ArrayList<>();
+
+	private final DatabaseModel databaseModel;
+	private final ServiceRegistry serviceRegistry;
 
 	private String outputFile;
 	private String delimiter;
 	private boolean format;
 
-	public void execute(EnumSet<TargetType> targetTypes, Metadata metadata) {
-		execute( targetTypes, metadata, ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry() );
+	public SchemaUpdate(DatabaseModel databaseModel, ServiceRegistry serviceRegistry) {
+		this.databaseModel = databaseModel;
+		this.serviceRegistry = serviceRegistry;
 	}
 
 	@SuppressWarnings("unchecked")
-	public void execute(EnumSet<TargetType> targetTypes, Metadata metadata, ServiceRegistry serviceRegistry) {
+	public void execute(EnumSet<TargetType> targetTypes) {
 		if ( targetTypes.isEmpty() ) {
 			LOG.debug( "Skipping SchemaExport as no targets were specified" );
 			return;
@@ -84,7 +91,7 @@ public class SchemaUpdate {
 		final TargetDescriptor targetDescriptor = SchemaExport.buildTargetDescriptor( targetTypes, outputFile, serviceRegistry );
 
 		try {
-			tool.getSchemaMigrator( config ).doMigration( metadata, executionOptions, targetDescriptor );
+			tool.getSchemaMigrator( databaseModel, config ).doMigration( executionOptions, targetDescriptor );
 		}
 		finally {
 			exceptions.addAll( exceptionHandler.getExceptions() );
@@ -133,10 +140,10 @@ public class SchemaUpdate {
 			try {
 				final MetadataImplementor metadata = buildMetadata( parsedArgs, serviceRegistry );
 
-				new SchemaUpdate()
+				new SchemaUpdate( buildDatabaseModel( metadata ), serviceRegistry )
 						.setOutputFile( parsedArgs.outputFile )
 						.setDelimiter( parsedArgs.delimiter )
-						.execute( parsedArgs.targetTypes, metadata, serviceRegistry );
+						.execute( parsedArgs.targetTypes );
 			}
 			finally {
 				StandardServiceRegistryBuilder.destroy( serviceRegistry );
@@ -146,6 +153,19 @@ public class SchemaUpdate {
 			LOG.unableToRunSchemaUpdate( e );
 			e.printStackTrace();
 		}
+	}
+
+	private static DatabaseModel buildDatabaseModel(MetadataImplementor metadata) {
+		final DatabaseObjectResolutionContextImpl dbObjectResolver = new DatabaseObjectResolutionContextImpl();
+		final BootstrapContext bootstrapContext = metadata.getTypeConfiguration()
+				.getMetadataBuildingContext()
+				.getBootstrapContext();
+		return new RuntimeDatabaseModelProducer( bootstrapContext )
+				.produceDatabaseModel(
+						metadata.getDatabase(),
+						dbObjectResolver,
+						dbObjectResolver
+				);
 	}
 
 	private static StandardServiceRegistry buildStandardServiceRegistry(CommandLineArgs parsedArgs) throws Exception {
@@ -211,8 +231,8 @@ public class SchemaUpdate {
 		String implicitNamingStrategyImplName = null;
 		String physicalNamingStrategyImplName = null;
 
-		List<String> hbmXmlFiles = new ArrayList<String>();
-		List<String> jarFiles = new ArrayList<String>();
+		List<String> hbmXmlFiles = new ArrayList<>();
+		List<String> jarFiles = new ArrayList<>();
 
 		public static CommandLineArgs parseCommandLineArgs(String[] args) {
 			final CommandLineArgs parsedArgs = new CommandLineArgs();
@@ -275,27 +295,6 @@ public class SchemaUpdate {
 			}
 
 			return parsedArgs;
-		}
-	}
-
-	/**
-	 * Intended for test usage only.  Builds a Metadata using the same algorithm  as
-	 * {@link #main}
-	 *
-	 * @param args The "command line args"
-	 *
-	 * @return The built Metadata
-	 *
-	 * @throws Exception Problems building the Metadata
-	 */
-	public static MetadataImplementor buildMetadataFromMainArgs(String[] args) throws Exception {
-		final CommandLineArgs commandLineArgs = CommandLineArgs.parseCommandLineArgs( args );
-		StandardServiceRegistry serviceRegistry = buildStandardServiceRegistry( commandLineArgs );
-		try {
-			return buildMetadata( commandLineArgs, serviceRegistry );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 }

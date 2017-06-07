@@ -14,13 +14,10 @@ import java.util.List;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.mapping.Constraint;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.naming.spi.QualifiedName;
 import org.hibernate.naming.spi.QualifiedNameParser;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -56,9 +53,6 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 						.append( " (" );
 
 
-		boolean isPrimaryKeyIdentity = table.hasPrimaryKey()
-				&& table.getIdentifierValue() != null
-				&& table.getIdentifierValue().isIdentityColumn( databaseModel.getIdentifierGeneratorFactory(), dialect );
 		// this is the much better form moving forward as we move to metamodel
 		//boolean isPrimaryKeyIdentity = hasPrimaryKey
 		//				&& table.getPrimaryKey().getColumnSpan() == 1
@@ -67,7 +61,7 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 		// Try to find out the name of the primary key in case the dialect needs it to create an identity
 		String pkColName = null;
 		if ( table.hasPrimaryKey() ) {
-			PhysicalColumn pkColumn = (PhysicalColumn) table.getPrimaryKey().getColumns().iterator().next();
+			PhysicalColumn pkColumn = table.getPrimaryKey().getColumns().iterator().next();
 			pkColName = pkColumn.getName().render();
 		}
 
@@ -83,17 +77,17 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 
 			buf.append( colName ).append( ' ' );
 
-			if ( isPrimaryKeyIdentity && colName.equals( pkColName ) ) {
+			if ( table.isPrimaryKeyIdentity() && colName.equals( pkColName ) ) {
 				// to support dialects that have their own identity data type
 				if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
-					buf.append( col.getSqlTypeDescriptor().getSqlType());
+					buf.append( col.getSqlTypeDescriptor().getJdbcTypeCode() );
 				}
 				buf.append( ' ' )
 						.append( dialect.getIdentityColumnSupport()
-										 .getIdentityColumnString( col.getSqlTypeDescriptor().getSqlType() ) );
+										 .getIdentityColumnString( col.getSqlTypeDescriptor().getJdbcTypeCode() ) );
 			}
 			else {
-				buf.append( col.getSqlTypeDescriptor().getSqlType() );
+				buf.append( col.getSqlTypeDescriptor().getJdbcTypeCode() );
 
 				String defaultValue = col.getDefaultValue();
 				if ( defaultValue != null ) {

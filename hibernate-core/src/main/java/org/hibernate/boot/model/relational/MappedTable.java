@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.MappedIndex;
@@ -169,5 +170,8 @@ public interface MappedTable extends Exportable, Loggable {
 
 	void addInitCommand(InitCommand command);
 
-	InflightTable generateRuntimeTable(PhysicalNamingStrategy namingStrategy, JdbcEnvironment jdbcEnvironment);
+	InflightTable generateRuntimeTable(
+			PhysicalNamingStrategy namingStrategy,
+			JdbcEnvironment jdbcEnvironment,
+			IdentifierGeneratorFactory identifierGeneratorFactory);
 }

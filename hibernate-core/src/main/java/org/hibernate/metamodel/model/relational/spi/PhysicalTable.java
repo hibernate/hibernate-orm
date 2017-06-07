@@ -27,6 +27,7 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 	private final Identifier catalogName;
 	private final Identifier schemaName;
 	private boolean hasPrimaryKey;
+	private boolean primaryKeyIdentity;
 	private String commment;
 	private List<String> checkConstraints = new ArrayList<>();
 	private List<Index> indexes = new ArrayList<>();
@@ -151,6 +152,15 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 	@Override
 	public Collection<Index> getIndexes() {
 		return indexes;
+	}
+
+	@Override
+	public boolean isPrimaryKeyIdentity() {
+		return primaryKeyIdentity;
+	}
+
+	public void setPrimaryKeyIdentity(boolean primaryKeyIdentity) {
+		this.primaryKeyIdentity = primaryKeyIdentity;
 	}
 
 	public void addIndex(Index index) {

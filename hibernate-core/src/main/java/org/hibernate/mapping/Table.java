@@ -21,6 +21,7 @@ import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
@@ -770,7 +771,8 @@ public class Table implements MappedTable, Serializable {
 	@Override
 	public InflightTable generateRuntimeTable(
 			PhysicalNamingStrategy namingStrategy,
-			JdbcEnvironment jdbcEnvironment) {
+			JdbcEnvironment jdbcEnvironment,
+			IdentifierGeneratorFactory identifierGeneratorFactory) {
 
 		if ( getSubselect() != null ) {
 			return new DerivedTable( getSubselect(), isAbstract() );
@@ -787,6 +789,10 @@ public class Table implements MappedTable, Serializable {
 				jdbcEnvironment
 		);
 
+		if ( hasPrimaryKey() && getIdentifierValue() != null && getIdentifierValue().isIdentityColumn(
+				identifierGeneratorFactory ) ) {
+			table.setPrimaryKeyIdentity( true );
+		}
 		table.setCheckConstraints( getCheckConstraints() );
 
 		for ( MappedIndex index : indexes.values() ) {

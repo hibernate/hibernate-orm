@@ -26,7 +26,7 @@ public interface KeyValue extends Value {
 			String defaultSchema,
 			RootClass rootClass) throws MappingException;
 
-	boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect);
+	boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory);
 	
 	void createForeignKeyOfEntity(String entityName);
 	

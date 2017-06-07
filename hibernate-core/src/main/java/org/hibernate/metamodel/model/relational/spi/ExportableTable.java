@@ -36,4 +36,6 @@ public interface ExportableTable extends Table, Exportable {
 	List<String> getCheckConstraints();
 
 	Collection<Index> getIndexes();
+
+	boolean isPrimaryKeyIdentity();
 }

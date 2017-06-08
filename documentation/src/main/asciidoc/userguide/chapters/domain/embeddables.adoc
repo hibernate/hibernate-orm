@@ -1,6 +1,7 @@
 [[embeddables]]
 === Embeddable types
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/embeddable
+:extrasdir: extras
 
 Historically Hibernate called these components.
 JPA calls them embeddables.
@@ -19,12 +20,12 @@ Throughout this chapter and thereafter, for brevity sake, embeddable types may a
 ====
 [source,java]
 ----
-include::{sourcedir}/embeddable/Name.java[]
+include::{extrasdir}/embeddable/Name.java[]
 ----
 
 [source,java]
 ----
-include::{sourcedir}/embeddable/Address.java[]
+include::{extrasdir}/embeddable/Address.java[]
 ----
 ====
 
@@ -40,7 +41,7 @@ Most often, embeddable types are used to group multiple basic type mappings and 
 ====
 [source,java]
 ----
-include::{sourcedir}/embeddable/Person.java[]
+include::{extrasdir}/embeddable/Person.java[]
 ----
 ====
 
@@ -57,7 +58,7 @@ So, the embeddable type is represented by the `Name` class and the parent makes 
 ====
 [source,sql]
 ----
-include::{sourcedir}/embeddable/Person1.sql[]
+include::{extrasdir}/embeddable/Person1.sql[]
 ----
 ====
 
@@ -69,7 +70,7 @@ In fact, that table could also be mapped by the following entity type instead.
 ====
 [source,java]
 ----
-include::{sourcedir}/embeddable/Person_alt.java[]
+include::{extrasdir}/embeddable/Person_alt.java[]
 ----
 ====
 
@@ -82,7 +83,7 @@ The composition form is certainly more Object-oriented, and that becomes more ev
 ====
 [source,java]
 ----
-include::{sourcedir}/embeddable/Contact.java[]
+include::{extrasdir}/embeddable/Contact.java[]
 ----
 ====
 
@@ -104,14 +105,14 @@ JPA defines the `@AttributeOverride` annotation to handle this scenario.
 ====
 [source,java]
 ----
-include::{sourcedir}/embeddable/Contact-AttributeOverride.java[]
+include::{extrasdir}/embeddable/Contact-AttributeOverride.java[]
 ----
 ====
 
 This way, the mapping conflict is resolved by setting up explicit name-based property-column type mappings.
 
 [[embeddable-multiple-namingstrategy]]
-==== ImplicitNamingStrategy
+==== Embeddables and ImplicitNamingStrategy
 
 [IMPORTANT]
 ====
@@ -126,14 +127,14 @@ However, for the purposes of this discussion, Hibernate has the capability to in
 ====
 [source,java]
 ----
-include::{sourcedir}/embeddable/component-safe-implicit-naming.java[]
+include::{extrasdir}/embeddable/component-safe-implicit-naming.java[]
 ----
 ====
 
 ====
 [source,sql]
 ----
-include::{sourcedir}/embeddable/Contact-ImplicitNamingStrategy.sql[]
+include::{extrasdir}/embeddable/Contact-ImplicitNamingStrategy.sql[]
 ----
 ====
 
@@ -162,3 +163,49 @@ This usage is covered in detail in <<chapters/domain/identifiers.adoc#identifier
 ====
 Embeddable types that are used as collection entries, map keys or entity type identifiers cannot include their own collection mappings.
 ====
+
+[[embeddable-override]]
+==== Overriding Embeddable types
+
+If an Embeddabe type is used multiple times in some entity, you need to use the
+http://docs.oracle.com/javaee/7/api/javax/persistence/AttributeOverride.html[`@AttributeOverride`] and
+http://docs.oracle.com/javaee/7/api/javax/persistence/AssociationOverride.html[`@AssociationOverride`] annotations
+to override the default column names definied by the Embeddable.
+
+Considering you have the following `Publisher` embeddable type
+which defines a `@ManyToOne` association with the `Country` entity:
+
+[[embeddable-type-association-mapping-example]]
+.Embeddable type with a `@ManyToOne` association
+====
+[source,java]
+----
+include::{sourcedir}/EmbeddableOverrideTest.java[tag=embeddable-type-association-mapping-example, indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/embeddable/embeddable-type-association-mapping-example.sql[]
+----
+====
+
+Now, if you have a `Book` entity which declares two `Publisher` embeddable types for the ebook and paperback version,
+you cannot use the default `Publisher` embeddable mapping since there will be a conflict between the two embeddable column mappings.
+
+Therefore, the `Book` entity needs to override the embeddable type mappings for each `Publisher` attribute:
+
+[[embeddable-type-override-mapping-example]]
+.Overriding embeddable type attributes
+====
+[source,java]
+----
+include::{sourcedir}/EmbeddableOverrideTest.java[tag=embeddable-type-override-mapping-example, indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/embeddable/embeddable-type-override-mapping-example.sql[]
+----
+====
+
+

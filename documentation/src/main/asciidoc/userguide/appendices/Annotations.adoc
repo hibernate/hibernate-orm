@@ -16,7 +16,7 @@ See the <<chapters/domain/access.adoc#access,Access type>> section for more info
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/AssociationOverride.html[`@AssociationOverride`] annotation is used to override an association mapping (e.g. `@ManyToOne`, `@OneToOne`, `@OneToMany`, `@ManyToMany`) inherited from a mapped superclass or an embeddable.
 
-//TODO: Add example
+See the <<chapters/domain/embeddables.adoc#embeddable-override, Overriding Embeddable types>> section for more info.
 
 [[annotations-jpa-associationoverrides]]
 ==== `@AssociationOverrides`
@@ -28,7 +28,7 @@ The http://docs.oracle.com/javaee/7/api/javax/persistence/AssociationOverrides.h
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/AttributeOverride.html[`@AttributeOverride`] annotation is used to override an attribute mapping inherited from a mapped superclass or an embeddable.
 
-//TODO: Add example
+See the <<chapters/domain/embeddables.adoc#embeddable-override, Overriding Embeddable types>> section for more info.
 
 [[annotations-jpa-attributeoverrides]]
 ==== `@AttributeOverrides`

@@ -7,7 +7,6 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -113,18 +112,6 @@ public class ManyToOneType extends EntityType {
 		return requireIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );
 	}
 
-	private Type requireIdentifierOrUniqueKeyType(Mapping mapping) {
-		final Type fkTargetType = getIdentifierOrUniqueKeyType( mapping );
-		if ( fkTargetType == null ) {
-			throw new MappingException(
-					"Unable to determine FK target Type for many-to-one mapping: " +
-							"referenced-entity-name=[" + getAssociatedEntityName() +
-							"], referenced-entity-attribute-name=[" + getLHSPropertyName() + "]"
-			);
-		}
-		return fkTargetType;
-	}
-
 	@Override
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
 		return requireIdentifierOrUniqueKeyType( mapping ).sqlTypes( mapping );
@@ -138,27 +125,6 @@ public class ManyToOneType extends EntityType {
 	@Override
 	public Size[] defaultSizes(Mapping mapping) throws MappingException {
 		return requireIdentifierOrUniqueKeyType( mapping ).defaultSizes( mapping );
-	}
-
-	@Override
-	public void nullSafeSet(
-			PreparedStatement st,
-			Object value,
-			int index,
-			boolean[] settable,
-			SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		requireIdentifierOrUniqueKeyType( session.getFactory() )
-				.nullSafeSet( st, getIdentifier( value, session ), index, settable, session );
-	}
-
-	@Override
-	public void nullSafeSet(
-			PreparedStatement st,
-			Object value,
-			int index,
-			SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		requireIdentifierOrUniqueKeyType( session.getFactory() )
-				.nullSafeSet( st, getIdentifier( value, session ), index, session );
 	}
 
 	@Override

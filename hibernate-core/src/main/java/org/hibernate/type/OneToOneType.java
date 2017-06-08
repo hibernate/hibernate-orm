@@ -7,7 +7,6 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -106,16 +105,6 @@ public class OneToOneType extends EntityType {
 	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
-	}
-
-	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SharedSessionContractImplementor session) {
-		//nothing to do
-	}
-
-	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) {
-		//nothing to do
 	}
 
 	@Override

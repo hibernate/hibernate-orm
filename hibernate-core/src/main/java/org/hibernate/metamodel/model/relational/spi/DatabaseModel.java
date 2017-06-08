@@ -26,4 +26,6 @@ public interface DatabaseModel {
 	Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects();
 
 	Collection<InitCommand> getInitCommands();
+
+	void addInitCommand(InitCommand initCommand);
 }

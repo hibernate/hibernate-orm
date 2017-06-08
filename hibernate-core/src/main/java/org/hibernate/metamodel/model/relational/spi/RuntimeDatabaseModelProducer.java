@@ -117,7 +117,8 @@ public class RuntimeDatabaseModelProducer {
 			for ( MappedTable mappedTable : bootModelNamespace.getTables() ) {
 				final InflightTable runtimeTable = mappedTable.generateRuntimeTable(
 						namingStrategy,
-						jdbcEnvironment
+						jdbcEnvironment,
+
 				);
 				runtimeModelNamespace.addTable( runtimeTable );
 

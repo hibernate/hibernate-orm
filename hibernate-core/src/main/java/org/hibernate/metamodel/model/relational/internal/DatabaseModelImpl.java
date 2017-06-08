@@ -9,9 +9,11 @@ package org.hibernate.metamodel.model.relational.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.Namespace;
@@ -20,11 +22,12 @@ import org.hibernate.metamodel.model.relational.spi.Namespace;
  * @author Steve Ebersole
  */
 public class DatabaseModelImpl implements DatabaseModel {
-	private final List<Namespace> namespaces = new ArrayList<>();
-	private Namespace defautlNamespace;
-
 	private final JdbcEnvironment getJdbcEnvironment;
-	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new ArrayList<>(  );
+
+	private Namespace defautlNamespace;
+	private Collection<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects;
+	private final List<Namespace> namespaces = new ArrayList<>();
+	private List<InitCommand> initCommands = new ArrayList<>();
 
 	public DatabaseModelImpl(JdbcEnvironment getJdbcEnvironment) {
 		this.getJdbcEnvironment = getJdbcEnvironment;
@@ -47,7 +50,20 @@ public class DatabaseModelImpl implements DatabaseModel {
 
 	@Override
 	public Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects() {
+		if ( auxiliaryDatabaseObjects == null ) {
+			return Collections.emptyList();
+		}
 		return auxiliaryDatabaseObjects;
+	}
+
+	@Override
+	public Collection<InitCommand> getInitCommands() {
+		return initCommands;
+	}
+
+	@Override
+	public void addInitCommand(InitCommand initCommand) {
+		initCommands.add( initCommand );
 	}
 
 	public void addNamespace(Namespace namespace) {
@@ -58,7 +74,7 @@ public class DatabaseModelImpl implements DatabaseModel {
 		defautlNamespace = namespace;
 	}
 
-	public void setAuxiliaryDatabaseObjects(List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects){
+	public void setAuxiliaryDatabaseObjects(Collection<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects) {
 		this.auxiliaryDatabaseObjects = auxiliaryDatabaseObjects;
 	}
 }

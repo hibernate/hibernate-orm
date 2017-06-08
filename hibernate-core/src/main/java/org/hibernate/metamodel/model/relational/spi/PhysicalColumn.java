@@ -14,6 +14,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public class PhysicalColumn implements Column {
+
 	private final Table table;
 	private final Identifier name;
 	private final SqlTypeDescriptor sqlTypeDescriptor;
@@ -22,6 +23,7 @@ public class PhysicalColumn implements Column {
 	private final boolean isUnique;
 	private final String comment;
 	private String sqlType;
+	private String checkConstraint;
 	private int length;
 	private int precision;
 	private int scale;
@@ -130,6 +132,10 @@ public class PhysicalColumn implements Column {
 		this.scale = scale;
 	}
 
+	public void setCheckConstraint(String checkConstraint) {
+		this.checkConstraint = checkConstraint;
+	}
+
 	public String getSqlType(Dialect dialect) {
 		if ( sqlType == null ) {
 			sqlType = dialect.getTypeName(
@@ -140,5 +146,9 @@ public class PhysicalColumn implements Column {
 			);
 		}
 		return sqlType;
+	}
+
+	public String getCheckConstraint() {
+		return checkConstraint;
 	}
 }

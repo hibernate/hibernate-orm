@@ -175,10 +175,6 @@ public class Column implements Selectable, Serializable, Cloneable {
 		this.checkConstraint = checkConstraint;
 	}
 
-	public boolean hasCheckConstraint() {
-		return checkConstraint != null;
-	}
-
 	@Override
 	public String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry) {
 		return hasCustomRead()
@@ -244,6 +240,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		column.setLength( getLength() );
 		column.setPrecision( getPrecision() );
 		column.setScale( getScale() );
+		column.setCheckConstraint( getCheckConstraint() );
 		return column;
 	}
 

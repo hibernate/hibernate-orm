@@ -21,18 +21,18 @@ import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.relational.internal.InflightTable;
 import org.hibernate.metamodel.model.relational.spi.DerivedTable;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
 import org.hibernate.naming.Identifier;
+import org.hibernate.naming.QualifiedTableName;
 
 import org.jboss.logging.Logger;
 
@@ -197,10 +197,6 @@ public class Table implements MappedTable, Serializable {
 		return schema == null ? null : schema.getText();
 	}
 
-	public String getQuotedSchema() {
-		return schema == null ? null : schema.toString();
-	}
-
 	public String getQuotedSchema(Dialect dialect) {
 		return schema == null ? null : schema.render( dialect );
 	}
@@ -217,10 +213,6 @@ public class Table implements MappedTable, Serializable {
 	@Override
 	public String getCatalog() {
 		return catalog == null ? null : catalog.getText();
-	}
-
-	public String getQuotedCatalog() {
-		return catalog == null ? null : catalog.render();
 	}
 
 	public String getQuotedCatalog(Dialect dialect) {
@@ -438,10 +430,6 @@ public class Table implements MappedTable, Serializable {
 		return getPrimaryKey() != null;
 	}
 
-	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		return dialect.getDropTableString( getQualifiedName( dialect, defaultCatalog, defaultSchema ) );
-	}
-
 	@Override
 	public MappedPrimaryKey getPrimaryKey() {
 		return primaryKey;
@@ -469,15 +457,6 @@ public class Table implements MappedTable, Serializable {
 
 	public MappedIndex getIndex(String indexName) {
 		return  indexes.get( indexName );
-	}
-
-	public MappedIndex addIndex(MappedIndex index) {
-		MappedIndex current =  indexes.get( index.getName() );
-		if ( current != null ) {
-			throw new MappingException( "Index " + index.getName() + " already exists!" );
-		}
-		indexes.put( index.getName(), index );
-		return index;
 	}
 
 	public UniqueKey addUniqueKey(UniqueKey uniqueKey) {

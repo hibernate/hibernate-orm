@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.naming.Identifier;
@@ -32,6 +33,7 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 	private List<String> checkConstraints = new ArrayList<>();
 	private List<Index> indexes = new ArrayList<>();
 	private List<UniqueKey> uniqueKeys = new ArrayList<>();
+	private List<InitCommand> initCommands = new ArrayList<>();
 
 	public PhysicalTable(
 			Identifier catalogName,
@@ -157,6 +159,15 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 	@Override
 	public boolean isPrimaryKeyIdentity() {
 		return primaryKeyIdentity;
+	}
+
+	@Override
+	public Collection<InitCommand> getInitCommands() {
+		return initCommands;
+	}
+
+	public void addInitCommand(InitCommand command) {
+		initCommands.add( command );
 	}
 
 	public void setPrimaryKeyIdentity(boolean primaryKeyIdentity) {

@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.naming.Identifier;
 
@@ -38,4 +39,6 @@ public interface ExportableTable extends Table, Exportable {
 	Collection<Index> getIndexes();
 
 	boolean isPrimaryKeyIdentity();
+
+	Collection<InitCommand> getInitCommands();
 }

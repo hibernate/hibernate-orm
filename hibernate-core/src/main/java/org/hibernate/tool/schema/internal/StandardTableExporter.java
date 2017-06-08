@@ -122,8 +122,7 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 			}
 		}
 		if ( table.hasPrimaryKey() ) {
-			buf.append( ", " )
-					.append( table.getPrimaryKey().sqlConstraintString( dialect ) );
+			appendPrimaryKey( table, buf );
 		}
 
 		buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( table ) );
@@ -148,6 +147,22 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 		return sqlStrings.toArray( new String[ sqlStrings.size() ] );
 	}
 
+	private void appendPrimaryKey(ExportableTable table, StringBuilder buf) {
+		buf.append( ", primary key (" );
+		boolean firstColumn = true;
+		for ( PhysicalColumn column : table.getPrimaryKey().getColumns() ) {
+			if ( firstColumn == true ) {
+				firstColumn = false;
+			}
+			else {
+				buf.append( ", " );
+			}
+			buf.append( column.getName().render( dialect ) );
+
+		}
+		buf.append( ')' );
+	}
+
 	protected void applyComments(ExportableTable table, QualifiedName tableName, List<String> sqlStrings) {
 		if ( dialect.supportsCommentOn() ) {
 			if ( table.getComment() != null ) {
@@ -165,7 +180,7 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 		}
 	}
 
-	protected void applyInitCommands(Table table, List<String> sqlStrings) {
+	protected void applyInitCommands(ExportableTable table, List<String> sqlStrings) {
 		for ( InitCommand initCommand : table.getInitCommands() ) {
 			Collections.addAll( sqlStrings, initCommand.getInitCommands() );
 		}

@@ -182,14 +182,14 @@ See the <<chapters/domain/basic_types.adoc#basic-enums-Enumerated, `@Enumerated`
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/ExcludeDefaultListeners.html[`@ExcludeDefaultListeners`] annotation is used to specify that the current annotated entity skips the invocation of any default listener.
 
-//TODO: Add example
+See the <<chapters/events/Events.adoc#events-exclude-default-listener, Exclude default entity listeners>> section for more info.
 
 [[annotations-jpa-excludesuperclasslisteners]]
 ==== `@ExcludeSuperclassListeners`
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/ExcludeSuperclassListeners.html[`@ExcludeSuperclassListeners`]  annotation is used to specify that the current annotated entity skips the invocation of listeners declared by its superclass.
 
-//TODO: Add example
+See the <<chapters/events/Events.adoc#events-exclude-default-listener, Exclude default entity listeners>> section for more info.
 
 [[annotations-jpa-fieldresult]]
 ==== `@FieldResult`

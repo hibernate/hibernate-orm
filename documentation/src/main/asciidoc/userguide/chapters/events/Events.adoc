@@ -1,6 +1,7 @@
 [[events]]
 == Interceptors and events
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/events
+:extrasdir: extras
 
 It is useful for the application to react to certain events that occur inside Hibernate.
 This allows for the implementation of generic functionality and the extension of Hibernate functionality.
@@ -176,4 +177,106 @@ See the `javax.persistence.ExcludeSuperclassListener`s annotation.
 * Lastly, callback methods defined on the entity hierarchy are invoked.
 If a callback type is annotated on both an entity and one or more of its superclasses without method overriding, both would be called, the most general superclass first.
 An entity class is also allowed to override a callback method defined in a superclass in which case the super callback would not get invoked; the overriding method would get invoked provided it is annotated.
+
+[[events-default-listener]]
+=== Default entity listeners
+
+The JPA specification allows you to define a default entity listener which is going to be applied for every entity in that particular system.
+Default entity listeners can only be defined in XML mapping files.
+
+[[events-default-listener-mapping-example]]
+.Default event listner mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DefaultEntityListener.java[tags=events-default-listener-mapping-example]
+----
+
+[source, XML, indent=0]
+----
+include::{sourcedir}/DefaultEntityListener-orm.xml[tags=events-default-listener-mapping-example]
+----
+====
+
+Considering that all entities extend the `BaseEntity` class:
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/BaseEntity.java[tags=events-default-listener-mapping-example]
+----
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DefaultEntityListenerTest.java[tags=events-default-listener-mapping-example]
+----
+
+When persisting a `Person` or `Book` entity, the `createdOn` is going to be set by the `onPersist` method of the `DefaultEntityListener`.
+
+[[events-default-listener-persist-example]]
+.Default event listner persist event
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DefaultEntityListenerTest.java[tags=events-default-listener-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/events-default-listener-persist-example.sql[]
+----
+====
+
+When updating a `Person` or `Book` entity, the `updatedOn` is going to be set by the `onUpdate` method of the `DefaultEntityListener`.
+
+[[events-default-listener-update-example]]
+.Default event listner update event
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DefaultEntityListenerTest.java[tags=events-default-listener-update-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/events-default-listener-update-example.sql[]
+----
+====
+
+[[events-exclude-default-listener]]
+==== Exclude default entity listeners
+
+If you already registered a default entity listener, but you don't want to apply it to a particular entity,
+you can use the
+http://docs.oracle.com/javaee/7/api/javax/persistence/ExcludeDefaultListeners.html[`@ExcludeDefaultListeners`] and
+http://docs.oracle.com/javaee/7/api/javax/persistence/ExcludeSuperclassListeners.html[`@ExcludeSuperclassListeners`] JPA annotations.
+
+`@ExcludeDefaultListeners` instructs the current class to ignore the default entity listeners for the current entity
+while `@ExcludeSuperclassListeners` is used to ignore the default entity listeners propagated to the `BaseEntity` super-class.
+
+[[events-exclude-default-listener-mapping-example]]
+.Exclude default event listner mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DefaultEntityListenerTest.java[tags=events-exclude-default-listener-mapping-example]
+----
+====
+
+When persisting a `Publisher` entity,
+the `createdOn` is not going to be set by the `onPersist` method of the `DefaultEntityListener`
+because the `Publisher` entity was marked with the `@ExcludeDefaultListeners` and `@ExcludeSuperclassListeners` annotations.
+
+[[events-exclude-default-listener-persist-example]]
+.Excluding default event listner events
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DefaultEntityListenerTest.java[tags=events-exclude-default-listener-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/events-exclude-default-listener-persist-example.sql[]
+----
+====
 

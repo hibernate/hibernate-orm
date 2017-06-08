@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.AssociationOverride;
 import javax.persistence.AssociationOverrides;
+import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.ConstraintMode;
 import javax.persistence.ElementCollection;
@@ -25,8 +26,10 @@ import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
@@ -43,6 +46,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.PrimaryKeyJoinColumns;
 import javax.persistence.SecondaryTable;
+import javax.persistence.Table;
 
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.Column;
@@ -73,7 +77,10 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 				VehicleBuyInfo.class,
 				Car.class,
 				Truck.class,
-				Company.class
+				Company.class,
+				UserTask.class,
+				User.class,
+				RegularUser.class
 		};
 	}
 
@@ -154,7 +161,15 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 		assertForeignKey( "FK_CAR_DETAILS_CAR", "CAR_NR", "CAR_VENDOR_NR" );
 	}
 
-	private void assertForeignKey(String foreignKeyName, String... columns) {
+	@Test
+	@TestForIssue( jiraKey = "HHH-11543")
+	public void testTablePerClass() {
+		assertForeignKey( "FK_USER_TASK_REGULAR_USER", "REGULAR_USER_ID" );
+		org.hibernate.mapping.ForeignKey fk = assertForeignKey( "FK_USER_TASK_USER", "USER_ID" );
+		assertTrue( fk.isPhysicalConstraint() );
+	}
+
+	private org.hibernate.mapping.ForeignKey assertForeignKey(String foreignKeyName, String... columns) {
 		Set<String> columnSet = new LinkedHashSet<>( Arrays.asList( columns ) );
 		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
 			for ( org.hibernate.mapping.Table table : namespace.getTables() ) {
@@ -169,12 +184,13 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 								"ForeignKey columns [" + columnNames + "] do not match expected columns [" + columnSet + "]",
 								columnSet.containsAll( columnNames )
 						);
-						return;
+						return fk;
 					}
 				}
 			}
 		}
 		fail( "ForeignKey '" + foreignKeyName + "' could not be found!" );
+		return null;
 	}
 
 	private void assertNoForeignKey(String foreignKeyName, String... columns) {
@@ -505,5 +521,36 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 				)
 		})
 		public CompanyInfo info;
+	}
+
+	@Entity
+	@Table(name = "PLAIN_USER")
+	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+	public abstract class User implements Serializable {
+
+		@Id
+		private Long id;
+	}
+
+	@Entity
+	@Table(name = "REGULAR_USER")
+	public class RegularUser extends User {
+
+	}
+
+	@Entity
+	@Table(name = "USER_TASK")
+	public class UserTask implements Serializable {
+
+		@Id
+		private Long id;
+
+		@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+		@JoinColumn(name = "REGULAR_USER_ID", foreignKey = @ForeignKey( name = "FK_USER_TASK_REGULAR_USER" ))
+		private RegularUser regularUser;
+
+		@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+		@JoinColumn(name = "USER_ID", foreignKey = @ForeignKey( name = "FK_USER_TASK_USER" ))
+		private User user;
 	}
 }

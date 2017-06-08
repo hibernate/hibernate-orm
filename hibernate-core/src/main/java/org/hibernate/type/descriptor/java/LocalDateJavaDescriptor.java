@@ -11,10 +11,12 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 import org.hibernate.type.LocalDateType;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -112,7 +114,15 @@ public class LocalDateJavaDescriptor extends AbstractTypeDescriptor<LocalDate> {
 
 		if ( Date.class.isInstance( value ) ) {
 			if ( java.sql.Date.class.isInstance( value ) ) {
-				return ((java.sql.Date) value).toLocalDate();
+				final java.sql.Date date = (java.sql.Date) value;
+				// If the JDBC timezone is given, the date might have been adjusted accordingly if we have a different default timezone
+				if ( options.getJdbcTimeZone() != null ) {
+					return Instant.ofEpochMilli( date.getTime() )
+							.atZone( options.getJdbcTimeZone().toZoneId() )
+							.toLocalDate();
+				} else {
+					return date.toLocalDate();
+				}
 			}
 			else {
 				return Instant.ofEpochMilli( ((Date) value).getTime() ).atZone( ZoneId.systemDefault() ).toLocalDate();

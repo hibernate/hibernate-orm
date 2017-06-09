@@ -7,6 +7,8 @@
 package org.hibernate.test.discriminator.joined;
 
 import org.hibernate.Session;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -34,11 +36,11 @@ public class JoinedSubclassInheritanceTest extends BaseCoreFunctionalTestCase {
 			session.getTransaction().commit();
 			session.clear();
 
-			ce = (ChildEntity) session.find( ChildEntity.class, 1 );
+			ce = (ChildEntity) session.get( ChildEntity.class, 1 );
 			assertEquals( "ce", ce.getType() );
 		}
 		catch ( Exception e ) {
-			if ( session.getTransaction().isActive() ) {
+			if ( session.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
 				session.getTransaction().rollback();
 			}
 		}

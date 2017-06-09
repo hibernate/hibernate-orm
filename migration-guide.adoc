@@ -32,3 +32,12 @@ These changes will only be a migration concern for applications directly using a
 * `org.hibernate.tool.hbm2ddl.SchemaValidator`
 * `org.hibernate.tool.schema.spi.SchemaManagementTool` or any of its delegates
 
+
+In 5.1.4, a new strategy for retrieving database tables was introduced that improves SchemaMigrator and SchemaValidator
+performance. This strategy executes a single `java.sql.DatabaseMetaData#getTables(String, String, String, String[])`
+call to determine if each `javax.persistence.Entity` has a mapped database table.
+This strategy is the default, and uses the property setting `hibernate.hbm2ddl.jdbc_metadata_extraction_strategy=grouped`.
+This strategy may require `hibernate.default_schema` and/or `hibernate.default_catalog` to be provided.
+
+To use the old strategy, which executes a `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call for
+each javax.persistence.Entity, use the property setting `hibernate.hbm2ddl.jdbc_metadata_extraction_strategy=individually`.

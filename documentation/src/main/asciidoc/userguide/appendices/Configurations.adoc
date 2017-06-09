@@ -607,7 +607,8 @@ Used to specify the `org.hibernate.tool.schema.spi.SchemaFilterProvider` to be u
 Setting to choose the strategy used to access the JDBC Metadata.
 Valid options are defined by the `strategy` value of the `org.hibernate.tool.schema.JdbcMetadaAccessStrategy` enum:
 
-`grouped`:: `org.hibernate.tool.schema.spi.SchemaMigrator` and `org.hibernate.tool.schema.spi.SchemaValidator` execute a single `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call to retrieve all the database table in order to determine if all the `javax.persistence.Entity` have a corresponding mapped database tables.
+`grouped`:: `org.hibernate.tool.schema.spi.SchemaMigrator` and `org.hibernate.tool.schema.spi.SchemaValidator` execute a single `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call to retrieve all the database table in order to determine if all the `javax.persistence.Entity` have a corresponding mapped database tables. This strategy may require `hibernate.default_schema` and/or `hibernate.default_catalog` to be provided.
+
 `individually`:: `org.hibernate.tool.schema.spi.SchemaMigrator` and `org.hibernate.tool.schema.spi.SchemaValidator` execute one `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call for each `javax.persistence.Entity` in order to determine if a corresponding database table exists.
 
 |`hibernate.hbm2ddl.delimiter` | `;` |Identifies the delimiter to use to separate schema management statements in script outputs.

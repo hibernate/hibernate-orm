@@ -1655,6 +1655,50 @@ include::{extrasdir}/basic/mapping-where-collection-query-example.sql[]
 ----
 ====
 
+[[mapping-where-join-table]]
+==== `@WhereJoinTable`
+
+Just like `@Where` annotation, `@WhereJoinTable` is used to filter out collections using a joined table (e.g. @ManyToMany association).
+
+[[mapping-where-join-table-example]]
+.`@WhereJoinTable` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/WhereJoinTableTest.java[tags=mapping-where-join-table-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-where-join-table-example.sql[]
+----
+====
+
+In the example above, the current week `Reader` entities are included in the `currentWeekReaders` collection
+which uses the `@WhereJoinTable` annotation to filter the joined table rows according to the provided SQL clause.
+
+Considering that the following two `Book_Reader` entries are added into our system:
+
+[[mapping-where-join-table-persist-example]]
+.`@WhereJoinTable` test data
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/WhereJoinTableTest.java[tags=mapping-where-join-table-persist-example]
+----
+====
+
+When fetching the `currentWeekReaders` collection, Hibernate is going to find one one entry:
+
+[[mapping-where-join-table-fetch-example]]
+.`@WhereJoinTable` fetch example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/WhereJoinTableTest.java[tags=mapping-where-join-table-fetch-example]
+----
+====
+
 [[mapping-column-filter]]
 ==== `@Filter`
 

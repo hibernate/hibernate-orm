@@ -1356,4 +1356,4 @@ See the <<chapters/domain/basic_types.adoc#mapping-where-example,`@Where` mappin
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/WhereJoinTable.html[`@WhereJoinTable`] annotation is used to specify a custom SQL `WHERE` clause used when fetching a join collection table.
 
-//TODO: Add example
+See the <<chapters/domain/basic_types.adoc#mapping-where-join-table, `@WhereJoinTable` mapping>> section for more info.

@@ -34,6 +34,7 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.spi.ConcatFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.FunctionAsExpressionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.StandardAnsiSqlSqmAggregationFunctionTemplates.AvgFunctionTemplate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
@@ -253,15 +254,7 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
 				.register();
 
-		registry.register(
-				"concat",
-				new FunctionAsExpressionTemplate(
-						"(",
-						"||",
-						")",
-						StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.STRING )
-				)
-		);
+		registry.register( "concat", ConcatFunctionTemplate.INSTANCE );
 
 		registry.namedTemplateBuilder( "difference" )
 				.setExactArgumentCount( 2 )

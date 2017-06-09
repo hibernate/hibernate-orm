@@ -39,6 +39,7 @@ import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Index;
 import org.hibernate.metamodel.model.relational.spi.Sequence;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.spi.CastFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -265,41 +266,22 @@ public abstract class Dialect implements ConversionContext {
 				.setExactArgumentCount( 1 )
 				.register();
 
-		registry.registerNamed( "coalesce" );
-		registry.registerNamed( "nullif" );
-		registry.register( "cast", new CastFunctionTemplate() );
-
-		registry.patternTemplateBuilder( "extract", "extract(?1 from ?2)" )
+		registry.namedTemplateBuilder( "coalesce" )
+				.setArgumentsValidator( StandardArgumentsValidators.min( 2 ) )
+				.register();
+		registry.namedTemplateBuilder( "nullif" )
 				.setExactArgumentCount( 2 )
 				.register();
+		registry.register( "cast", new CastFunctionTemplate() );
 
-		registry.patternTemplateBuilder( "second", "extract(second from ?1)" )
-				.setExactArgumentCount( 1 )
-				.register();
-
-		registry.patternTemplateBuilder( "minute", "extract(minute from ?1)" )
-				.setExactArgumentCount( 1 )
-				.register();
-
-		registry.patternTemplateBuilder( "hour", "extract(hour from ?1)" )
-				.setExactArgumentCount( 1 )
-				.register();
-
-		registry.patternTemplateBuilder( "day", "extract(day from ?1)" )
-				.setExactArgumentCount( 1 )
-				.register();
-
-		registry.patternTemplateBuilder( "month", "extract(month from ?1)" )
-				.setExactArgumentCount( 1 )
-				.register();
-
-		registry.patternTemplateBuilder( "year", "extract(year from ?1)" )
-				.setExactArgumentCount( 1 )
-				.register();
-
-		registry.patternTemplateBuilder( "str", "cast(?1 as char)" )
-				.setExactArgumentCount( 1 )
-				.register();
+		registry.registerPattern( "extract", "extract(?1 from ?2)" );
+		registry.registerPattern( "second", "extract(second from ?1)" );
+		registry.registerPattern( "minute", "extract(minute from ?1)" );
+		registry.registerPattern( "hour", "extract(hour from ?1)" );
+		registry.registerPattern( "day", "extract(day from ?1)" );
+		registry.registerPattern( "month", "extract(month from ?1)" );
+		registry.registerPattern( "year", "extract(year from ?1)" );
+		registry.registerPattern( "str", "cast(?1 as char)" );
 
 	}
 

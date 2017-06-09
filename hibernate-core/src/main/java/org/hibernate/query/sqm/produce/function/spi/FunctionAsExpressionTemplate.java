@@ -78,14 +78,31 @@ public class FunctionAsExpressionTemplate
 		else {
 			// render the first argument..
 			sqlAstArguments.get( 0 ).accept( walker );
+			renderArgument( sqlAppender, sqlAstArguments.get( 0 ), walker, sessionFactory );
 
 			// render the rest of the arguments, preceded by the separator
 			for ( int i = 1; i < sqlAstArguments.size(); i++ ) {
 				sqlAppender.appendSql( argumentSeparator );
-				sqlAstArguments.get( i ).accept( walker );
+				renderArgument( sqlAppender, sqlAstArguments.get( i ), walker, sessionFactory );
 			}
 		}
 
 		sqlAppender.appendSql( expressionEnd );
+	}
+
+	/**
+	 * Called from {@link #render} to render an argument.
+	 *
+	 * @param sqlAppender The sql appender to append the rendered argument.
+	 * @param sqlAstArgument The argument being processed.
+	 * @param walker The walker to use for rendering {@link org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode} expressions
+	 * @param sessionFactory The session factory
+	 */
+	protected void renderArgument(
+			SqlAppender sqlAppender,
+			Expression sqlAstArgument,
+			SqlAstWalker walker,
+			SessionFactoryImplementor sessionFactory) {
+		sqlAstArgument.accept( walker );
 	}
 }

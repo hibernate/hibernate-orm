@@ -12,6 +12,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
@@ -41,7 +42,13 @@ public class PatternBasedSqmFunctionTemplate extends AbstractSelfRenderingFuncti
 			PatternRenderer renderer,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver) {
-		super( returnTypeResolver, argumentsValidator );
+		super( returnTypeResolver,
+			   argumentsValidator != null ?
+					   argumentsValidator :
+					   // If no validator is given, it's still better to validate against the parameter count as given
+					   // by the pattern than accepting every input blindly and producing wrong output
+					   StandardArgumentsValidators.exactly( renderer.getParamCount() )
+		);
 		this.renderer = renderer;
 	}
 

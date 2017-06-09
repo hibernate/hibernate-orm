@@ -10,7 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
-import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.OptimisticLockingStrategy;
@@ -22,7 +22,7 @@ import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.MckoiCaseFragment;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * An SQL dialect compatible with McKoi SQL
@@ -53,19 +53,24 @@ public class MckoiDialect extends Dialect {
 		registerColumnType( Types.BLOB, "blob" );
 		registerColumnType( Types.CLOB, "clob" );
 
-		registerFunction( "upper", new NamedSqmFunctionTemplate( "upper") );
-		registerFunction( "lower", new NamedSqmFunctionTemplate( "lower") );
-		registerFunction( "sqrt", new NamedSqmFunctionTemplate( "sqrt", StandardBasicTypes.DOUBLE) );
-		registerFunction( "abs", new NamedSqmFunctionTemplate( "abs") );
-		registerFunction( "sign", new NamedSqmFunctionTemplate( "sign", StandardBasicTypes.INTEGER ) );
-		registerFunction( "round", new NamedSqmFunctionTemplate( "round", StandardBasicTypes.INTEGER ) );
-		registerFunction( "mod", new NamedSqmFunctionTemplate( "mod", StandardBasicTypes.INTEGER ) );
-		registerFunction( "least", new NamedSqmFunctionTemplate( "least") );
-		registerFunction( "greatest", new NamedSqmFunctionTemplate( "greatest") );
-		registerFunction( "user", new NamedSqmFunctionTemplate( "user", StandardBasicTypes.STRING ) );
-		registerFunction( "concat", new NamedSqmFunctionTemplate( "concat", StandardBasicTypes.STRING ) );
-
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		registry.registerNamed( "upper" );
+		registry.registerNamed( "lower" );
+		registry.registerNamed( "sqrt", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "abs" );
+		registry.registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "round", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "mod", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "least" );
+		registry.registerNamed( "greatest" );
+		registry.registerNamed( "user", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "concat", StandardSpiBasicTypes.STRING );
 	}
 
 	@Override

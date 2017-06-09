@@ -10,9 +10,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.NvlFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -27,28 +27,41 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 	 */
 	public PostgresPlusDialect() {
 		super();
+	}
 
-		registerFunction( "ltrim", new NamedSqmFunctionTemplate( "ltrim" ) );
-		registerFunction( "rtrim", new NamedSqmFunctionTemplate( "rtrim" ) );
-		registerFunction( "soundex", new NamedSqmFunctionTemplate( "soundex" ) );
-		registerFunction( "sysdate", new NoArgsSqmFunctionTemplate( "sysdate", StandardSpiBasicTypes.DATE, false ) );
-		registerFunction( "rowid", new NoArgsSqmFunctionTemplate( "rowid", StandardSpiBasicTypes.LONG, false ) );
-		registerFunction( "rownum", new NoArgsSqmFunctionTemplate( "rownum", StandardSpiBasicTypes.LONG, false ) );
-		registerFunction( "instr", new NamedSqmFunctionTemplate( "instr", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "lpad", new NamedSqmFunctionTemplate( "lpad", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "replace", new NamedSqmFunctionTemplate( "replace", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "rpad", new NamedSqmFunctionTemplate( "rpad", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "translate", new NamedSqmFunctionTemplate( "translate", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "substring", new NamedSqmFunctionTemplate( "substr", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "coalesce", new NvlFunctionTemplate() );
-		registerFunction( "atan2", new NamedSqmFunctionTemplate( "atan2", StandardSpiBasicTypes.FLOAT ) );
-		registerFunction( "mod", new NamedSqmFunctionTemplate( "mod", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "nvl", new NamedSqmFunctionTemplate( "nvl" ) );
-		registerFunction( "nvl2", new NamedSqmFunctionTemplate( "nvl2" ) );
-		registerFunction( "power", new NamedSqmFunctionTemplate( "power", StandardSpiBasicTypes.FLOAT ) );
-		registerFunction( "add_months", new NamedSqmFunctionTemplate( "add_months", StandardSpiBasicTypes.DATE ) );
-		registerFunction( "months_between", new NamedSqmFunctionTemplate( "months_between", StandardSpiBasicTypes.FLOAT ) );
-		registerFunction( "next_day", new NamedSqmFunctionTemplate( "next_day", StandardSpiBasicTypes.DATE ) );
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		CommonFunctionFactory.soundex( registry );
+		registry.registerNoArgs( "sysdate", StandardSpiBasicTypes.DATE );
+		registry.registerNoArgs( "rowid", StandardSpiBasicTypes.LONG );
+		registry.registerNoArgs( "rownum", StandardSpiBasicTypes.LONG );
+		registry.namedTemplateBuilder( "instr" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setArgumentCountBetween( 2, 4 )
+				.register();
+		registry.register( "coalesce", new NvlFunctionTemplate() );
+		registry.namedTemplateBuilder( "nvl" )
+				.setExactArgumentCount( 2 )
+				.register();
+		registry.namedTemplateBuilder( "nvl2" )
+				.setExactArgumentCount( 3 )
+				.register();
+
+		// Multi-param date dialect functions...
+		registry.namedTemplateBuilder( "add_months" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 2 )
+				.register();
+		registry.namedTemplateBuilder( "months_between" )
+				.setInvariantType( StandardSpiBasicTypes.FLOAT )
+				.setExactArgumentCount( 2 )
+				.register();
+		registry.namedTemplateBuilder( "next_day" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 2 )
+				.register();
 	}
 
 	@Override

@@ -11,6 +11,7 @@ import java.util.Locale;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.spi.AnsiTrimEmulationFunctionTemplate;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
@@ -43,21 +44,29 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		registerColumnType( Types.LONGVARCHAR, "text" );
 		registerColumnType( Types.BOOLEAN, "bit" );
 
-		registerFunction( "second", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(second, ?1)" ) );
-		registerFunction( "minute", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(minute, ?1)" ) );
-		registerFunction( "hour", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(hour, ?1)" ) );
-		registerFunction( "locate", new NamedSqmFunctionTemplate( "charindex", StandardSpiBasicTypes.INTEGER ) );
-
-		registerFunction( "extract", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(?1, ?3)" ) );
-		registerFunction( "mod", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "?1 % ?2" ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datalength(?1) * 8" ) );
-
-		registerFunction( "trim", new AnsiTrimEmulationFunctionTemplate() );
-
 		registerKeyword( "top" );
 		registerKeyword( "key" );
 
 		this.limitHandler = new TopLimitHandler( false, false );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		registry.registerPattern( "second", "datepart(second, ?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "minute", "datepart(minute, ?1)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "hour", "datepart(hour, ?1)", StandardSpiBasicTypes.INTEGER );
+		registry.namedTemplateBuilder( "locate", "charindex" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+
+		registry.registerPattern( "extract", "datepart(?1, ?3)", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "mod", "?1 % ?2", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "bit_length", "datalength(?1) * 8", StandardSpiBasicTypes.INTEGER );
+
+		registry.register( "trim", new AnsiTrimEmulationFunctionTemplate() );
 	}
 
 	@Override

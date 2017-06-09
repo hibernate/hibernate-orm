@@ -1104,7 +1104,7 @@ public class ActionQueue {
 				//Make sure that child entries are not before parents
 				for ( int j = i - 1; j >= 0; j-- ) {
 					BatchIdentifier prevBatchIdentifier = latestBatches.get( j );
-					if(prevBatchIdentifier.getParentEntityNames().contains( entityName )) {
+					if ( prevBatchIdentifier.getParentEntityNames().contains( entityName ) ) {
 						latestBatches.remove( batchIdentifier );
 						latestBatches.add( j, batchIdentifier );
 					}
@@ -1114,8 +1114,12 @@ public class ActionQueue {
 				for ( int j = i + 1; j < latestBatches.size(); j++ ) {
 					BatchIdentifier nextBatchIdentifier = latestBatches.get( j );
 					//Take care of unidirectional @OneToOne associations but exclude bidirectional @ManyToMany
-					if(nextBatchIdentifier.getChildEntityNames().contains( entityName ) &&
-						!batchIdentifier.getChildEntityNames().contains( nextBatchIdentifier.getEntityName() )) {
+					if ( nextBatchIdentifier.getChildEntityNames().contains( entityName ) &&
+							!batchIdentifier.getChildEntityNames().contains( nextBatchIdentifier.getEntityName() ) ) {
+						latestBatches.remove( batchIdentifier );
+						latestBatches.add( j, batchIdentifier );
+					}
+					else if ( batchIdentifier.getParentEntityNames().contains( nextBatchIdentifier.getEntityName() ) ) {
 						latestBatches.remove( batchIdentifier );
 						latestBatches.add( j, batchIdentifier );
 					}

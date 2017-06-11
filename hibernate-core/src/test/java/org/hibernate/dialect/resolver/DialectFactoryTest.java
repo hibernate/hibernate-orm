@@ -6,11 +6,6 @@
  */
 package org.hibernate.dialect.resolver;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -18,36 +13,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.DB2400Dialect;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.DerbyTenFiveDialect;
-import org.hibernate.dialect.DerbyTenSevenDialect;
-import org.hibernate.dialect.DerbyTenSixDialect;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.Informix10Dialect;
-import org.hibernate.dialect.InformixDialect;
-import org.hibernate.dialect.IngresDialect;
-import org.hibernate.dialect.MySQL55Dialect;
-import org.hibernate.dialect.MySQL57Dialect;
-import org.hibernate.dialect.MySQL5Dialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle10gDialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.Oracle9iDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQL82Dialect;
-import org.hibernate.dialect.PostgreSQL92Dialect;
-import org.hibernate.dialect.PostgreSQL94Dialect;
-import org.hibernate.dialect.PostgreSQL95Dialect;
-import org.hibernate.dialect.PostgreSQL9Dialect;
-import org.hibernate.dialect.PostgresPlusDialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.SybaseAnywhereDialect;
-import org.hibernate.dialect.TestingDialects;
+import org.hibernate.dialect.*;
 import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryImpl;
 import org.hibernate.engine.jdbc.dialect.internal.DialectResolverSet;
 import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
@@ -55,14 +21,16 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Steve Ebersole
@@ -146,6 +114,12 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		testDetermination( "MySQL", 5, 6, MySQL55Dialect.class, resolver );
 		testDetermination( "MySQL", 5, 7, MySQL57Dialect.class, resolver );
 		testDetermination( "MySQL", 8, 0, MySQL57Dialect.class, resolver );
+		testDetermination( "MariaDB", "MariaDB connector/J", 10, 3, MariaDB103Dialect.class, resolver );
+		testDetermination( "MariaDB", "MariaDB connector/J", 10, 2, MariaDB102Dialect.class, resolver );
+		testDetermination( "MariaDB", "MariaDB connector/J", 10, 1, MariaDB10Dialect.class, resolver );
+		testDetermination( "MariaDB", "MariaDB connector/J", 10, 0, MariaDB10Dialect.class, resolver );
+		testDetermination( "MariaDB", "MariaDB connector/J", 5, 5, MariaDB53Dialect.class, resolver );
+		testDetermination( "MariaDB", "MariaDB connector/J", 5, 2, MariaDBDialect.class, resolver );
 		testDetermination( "PostgreSQL", PostgreSQL81Dialect.class, resolver );
 		testDetermination( "PostgreSQL", 8, 2, PostgreSQL82Dialect.class, resolver );
 		testDetermination( "PostgreSQL", 8, 3, PostgreSQL82Dialect.class, resolver );
@@ -250,13 +224,23 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 			final int minorVersion,
 			Class expected,
 			DialectResolver resolver) {
+		testDetermination( databaseName, null, majorVersion, minorVersion, expected, resolver );
+	}
+
+	private void testDetermination(
+			final String databaseName,
+			final String driverName,
+			final int majorVersion,
+			final int minorVersion,
+			Class expected,
+			DialectResolver resolver) {
 		dialectFactory.setDialectResolver( resolver );
 		Dialect resolved = dialectFactory.buildDialect(
 				new Properties(),
 				new DialectResolutionInfoSource() {
 					@Override
 					public DialectResolutionInfo getDialectResolutionInfo() {
-						return TestingDialectResolutionInfo.forDatabaseInfo( databaseName, majorVersion, minorVersion );
+						return TestingDialectResolutionInfo.forDatabaseInfo( databaseName, driverName, majorVersion, minorVersion );
 					}
 				}
 		);

@@ -47,6 +47,10 @@ public class TestingDialectResolutionInfo implements DialectResolutionInfo {
 		return new TestingDialectResolutionInfo( name, majorVersion, minorVersion, null, NO_VERSION, NO_VERSION );
 	}
 
+	public static TestingDialectResolutionInfo forDatabaseInfo(String databaseName, String driverName, int majorVersion, int minorVersion) {
+		return new TestingDialectResolutionInfo( databaseName, majorVersion, minorVersion, driverName, NO_VERSION, NO_VERSION );
+	}
+
 	@Override
 	public String getDatabaseName() {
 		return databaseName;

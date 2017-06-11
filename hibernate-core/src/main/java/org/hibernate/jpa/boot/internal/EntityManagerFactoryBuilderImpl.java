@@ -483,15 +483,17 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				final String valueString = (String) entry.getValue();
 
 				if ( keyString.startsWith( JACC_PREFIX ) ) {
-					if ( jaccContextId == null ) {
-						LOG.debug(
-								"Found JACC permission grant [%s] in properties, but no JACC context id was specified; ignoring"
-						);
-					}
-					else {
-						mergedSettings.getJaccPermissions( jaccContextId ).addPermissionDeclaration(
-								parseJaccConfigEntry( keyString, valueString )
-						);
+					if( ! JACC_CONTEXT_ID.equals( keyString ) && ! JACC_ENABLED.equals( keyString )) {
+						if ( jaccContextId == null ) {
+							LOG.debug(
+									"Found JACC permission grant [%s] in properties, but no JACC context id was specified; ignoring"
+							);
+						}
+						else {
+							mergedSettings.getJaccPermissions( jaccContextId ).addPermissionDeclaration(
+									parseJaccConfigEntry( keyString, valueString )
+							);
+						}
 					}
 				}
 				else if ( keyString.startsWith( CLASS_CACHE_PREFIX ) ) {

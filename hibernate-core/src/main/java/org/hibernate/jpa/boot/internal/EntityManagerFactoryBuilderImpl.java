@@ -87,6 +87,7 @@ import org.jboss.jandex.Index;
 import static org.hibernate.cfg.AvailableSettings.DATASOURCE;
 import static org.hibernate.cfg.AvailableSettings.DRIVER;
 import static org.hibernate.cfg.AvailableSettings.JACC_CONTEXT_ID;
+import static org.hibernate.cfg.AvailableSettings.JACC_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.JACC_PREFIX;
 import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_DRIVER;
 import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_PASSWORD;

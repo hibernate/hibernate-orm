@@ -257,7 +257,7 @@ public enum Database {
 	MARIADB {
 		@Override
 		public Class<? extends Dialect> latestDialect() {
-			return MariaDB53Dialect.class;
+			return MariaDB102Dialect.class;
 		}
 
 		@Override
@@ -267,11 +267,22 @@ public enum Database {
 				final int majorVersion = info.getDatabaseMajorVersion();
 				final int minorVersion = info.getDatabaseMinorVersion();
 
-				if ( majorVersion < 5 || ( majorVersion == 5 && minorVersion < 3 ) ) {
-					return new MariaDBDialect();
+				if ( majorVersion == 10 ) {
+					if ( minorVersion >= 3 ) {
+						return new MariaDB103Dialect();
+					}
+					else if ( minorVersion == 2 ) {
+						return new MariaDB102Dialect();
+					}
+					else if ( minorVersion >= 0 ) {
+						return new MariaDB10Dialect();
+					}
+					return new MariaDB53Dialect();
 				}
-
-				return latestDialectInstance( this );
+				else if ( majorVersion > 5 || ( majorVersion == 5 && minorVersion >= 3 ) ) {
+					return new MariaDB53Dialect();
+				}
+				return new MariaDBDialect();
 			}
 
 			return null;

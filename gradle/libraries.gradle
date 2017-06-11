@@ -98,7 +98,7 @@ ext {
             derby:           "org.apache.derby:derby:10.11.1.1",
             postgresql:      'org.postgresql:postgresql:42.1.1',
             mysql:           'mysql:mysql-connector-java:6.0.5',
-            mariadb:         'org.mariadb.jdbc:mariadb-java-client:1.5.7',
+            mariadb:         'org.mariadb.jdbc:mariadb-java-client:2.2.3',
 
             oracle:          'com.oracle.jdbc:ojdbc7:12.1.0.2',
             mssql:           'com.microsoft.sqlserver:mssql-jdbc:6.1.0.jre8',

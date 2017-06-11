@@ -72,6 +72,7 @@ dependencies {
     testCompile( project(':hibernate-testing') )
     testCompile( libraries.shrinkwrap_api )
     testCompile( libraries.shrinkwrap )
+    testCompile( libraries.jacc )
     testCompile( libraries.validation )
     testCompile( libraries.jandex )
     testCompile( libraries.classmate )

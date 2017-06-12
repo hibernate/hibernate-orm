@@ -25,7 +25,7 @@ import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.type.internal.BasicTypeProducerRegistryImpl;
 import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -80,7 +80,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private IndexView jandexView;
 
 	private HashMap<String,SqmFunctionTemplate> sqlFunctionMap;
-	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
+	private ArrayList<MappedAuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
 	private HashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
 	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
 
@@ -259,7 +259,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList() {
+	public Collection<MappedAuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList() {
 		return auxiliaryDatabaseObjectList == null ? Collections.emptyList() : auxiliaryDatabaseObjectList;
 	}
 
@@ -343,7 +343,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.sqlFunctionMap.put( functionName, function );
 	}
 
-	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
+	public void addAuxiliaryDatabaseObject(MappedAuxiliaryDatabaseObject auxiliaryDatabaseObject) {
 		if ( this.auxiliaryDatabaseObjectList == null ) {
 			this.auxiliaryDatabaseObjectList = new ArrayList<>();
 		}

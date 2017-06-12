@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -27,6 +26,7 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
@@ -203,13 +203,9 @@ public class SchemaDropperImpl implements SchemaDropper {
 		// NOTE : init commands are irrelevant for dropping...
 
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
-			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+			if ( !auxiliaryDatabaseObject.isBeforeTablesOnCreation() ) {
 				continue;
 			}
-			if ( !auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
-				continue;
-			}
-
 			applySqlStrings(
 					dialect.getAuxiliaryDatabaseObjectExporter().getSqlDropStrings( auxiliaryDatabaseObject, databaseModel ),
 					formatter,
@@ -258,15 +254,11 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
-			if ( auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+			if ( auxiliaryDatabaseObject.isBeforeTablesOnCreation() ) {
 				continue;
 			}
-			if ( !auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
-				continue;
-			}
-
 			applySqlStrings(
-					auxiliaryDatabaseObject.sqlDropStrings( jdbcEnvironment.getDialect() ),
+					auxiliaryDatabaseObject.getSqlDropStrings(),
 					formatter,
 					options,
 					targets

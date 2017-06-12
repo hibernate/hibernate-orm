@@ -15,7 +15,7 @@ import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.ClassmateContext;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
 import org.hibernate.boot.model.type.spi.BasicTypeResolverRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -158,7 +158,7 @@ public interface BootstrapContext {
 	 *
 	 * @return The AuxiliaryDatabaseObject registered through MetadataBuilder
 	 */
-	Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList();
+	Collection<MappedAuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList();
 
 	/**
 	 * Access to collected AttributeConverter definitions.

@@ -14,13 +14,11 @@ import org.hibernate.naming.Identifier;
  * @author Steve Ebersole
  */
 public interface Sequence extends Exportable {
-	String getLoggableView();
-
 	int getInitialValue();
 
 	int getIncrementSize();
 
 	Identifier getName();
 
-	QualifiedSequenceName getQaulifiedName();
+	QualifiedSequenceName getQualifiedName();
 }

@@ -74,7 +74,7 @@ public class NamespaceImpl implements Namespace {
 	}
 
 	public void addSequence(Sequence sequence) {
-		log.debugf( "Registering Sequence [%s] with namespace [%s]", sequence.getLoggableView(), this );
+		log.debugf( "Registering Sequence [%s] with namespace [%s]", sequence, this );
 
 		if ( sequences == null ) {
 			sequences = new ArrayList<>();

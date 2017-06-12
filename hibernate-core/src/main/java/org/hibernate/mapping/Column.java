@@ -219,7 +219,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	@Override
-	public org.hibernate.metamodel.model.relational.spi.Column generateRuntimeColumn(
+	public org.hibernate.metamodel.model.relational.spi.PhysicalColumn generateRuntimeColumn(
 			org.hibernate.metamodel.model.relational.spi.Table runtimeTable,
 			PhysicalNamingStrategy namingStrategy,
 			JdbcEnvironment jdbcEnvironment) {

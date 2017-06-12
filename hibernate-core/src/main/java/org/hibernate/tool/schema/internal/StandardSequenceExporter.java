@@ -27,7 +27,7 @@ public class StandardSequenceExporter implements Exporter<Sequence> {
 		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
 		return dialect.getCreateSequenceStrings(
 				jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-						sequence.getQaulifiedName(),
+						sequence.getQualifiedName(),
 						jdbcEnvironment.getDialect()
 				),
 				sequence.getInitialValue(),
@@ -40,7 +40,7 @@ public class StandardSequenceExporter implements Exporter<Sequence> {
 		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
 		return dialect.getDropSequenceStrings(
 				jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-						sequence.getQaulifiedName(),
+						sequence.getQualifiedName(),
 						jdbcEnvironment.getDialect()
 				)
 		);

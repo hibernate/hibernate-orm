@@ -35,7 +35,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -103,7 +103,7 @@ public class Configuration {
 	private Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 
 	private Map<String, SqmFunctionTemplate> sqlFunctions;
-	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
+	private List<MappedAuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
 	private HashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
 
 	// used to build SF
@@ -682,7 +682,7 @@ public class Configuration {
 			}
 		}
 		if ( auxiliaryDatabaseObjectList != null ) {
-			for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : auxiliaryDatabaseObjectList ) {
+			for ( MappedAuxiliaryDatabaseObject auxiliaryDatabaseObject : auxiliaryDatabaseObjectList ) {
 				metadataBuilder.applyAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
 			}
 		}
@@ -744,9 +744,9 @@ public class Configuration {
 		sqlFunctions.put( functionName, function );
 	}
 
-	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject object) {
+	public void addAuxiliaryDatabaseObject(MappedAuxiliaryDatabaseObject object) {
 		if ( auxiliaryDatabaseObjectList == null ) {
-			auxiliaryDatabaseObjectList = new ArrayList<AuxiliaryDatabaseObject>();
+			auxiliaryDatabaseObjectList = new ArrayList<MappedAuxiliaryDatabaseObject>();
 		}
 		auxiliaryDatabaseObjectList.add( object );
 	}

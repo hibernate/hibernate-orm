@@ -9,8 +9,8 @@ package org.hibernate.boot.model.relational;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.naming.Identifier;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
+import org.hibernate.naming.Identifier;
 import org.hibernate.naming.QualifiedSequenceName;
 import org.hibernate.naming.spi.QualifiedNameParser;
 
@@ -31,13 +31,11 @@ public class Sequence implements MappedSequence {
 	}
 
 	private final QualifiedSequenceName logicalName;
-	private final String exportIdentifier;
 	private int initialValue = 1;
 	private int incrementSize = 1;
 
 	public Sequence(Identifier catalogName, Identifier schemaName, Identifier sequenceName) {
 		this.logicalName = new QualifiedSequenceName( catalogName, schemaName, sequenceName );
-		this.exportIdentifier = logicalName.render();
 	}
 
 	public Sequence(
@@ -64,11 +62,6 @@ public class Sequence implements MappedSequence {
 		return logicalName;
 	}
 
-	@Override
-	public String getExportIdentifier() {
-		return exportIdentifier;
-	}
-
 	public int getInitialValue() {
 		return initialValue;
 	}
@@ -84,7 +77,7 @@ public class Sequence implements MappedSequence {
 					String.format(
 							"Multiple references to database sequence [%s] were encountered attempting to" +
 									"set conflicting values for 'initial value'.  Found [%s] and [%s]",
-							exportIdentifier,
+							logicalName.render(),
 							this.initialValue,
 							initialValue
 					)
@@ -95,7 +88,7 @@ public class Sequence implements MappedSequence {
 					String.format(
 							"Multiple references to database sequence [%s] were encountered attempting to" +
 									"set conflicting values for 'increment size'.  Found [%s] and [%s]",
-							exportIdentifier,
+							logicalName.render(),
 							this.incrementSize,
 							incrementSize
 					)

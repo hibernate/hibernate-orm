@@ -663,15 +663,6 @@ public class Table implements MappedTable, Serializable {
 	}
 
 	@Override
-	public String getExportIdentifier() {
-		return Table.qualify(
-				render( catalog ),
-				render( schema ),
-				name.render()
-		);
-	}
-
-	@Override
 	public boolean isExportable() {
 		return isPhysicalTable();
 	}

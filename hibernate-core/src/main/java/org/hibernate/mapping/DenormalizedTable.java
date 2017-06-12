@@ -15,6 +15,7 @@ import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.naming.Identifier;
 import org.hibernate.metamodel.model.relational.internal.InflightTable;
@@ -59,9 +60,10 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable 
 	@Override
 	public InflightTable generateRuntimeTable(
 			PhysicalNamingStrategy namingStrategy,
-			JdbcEnvironment jdbcEnvironment) {
+			JdbcEnvironment jdbcEnvironment,
+			IdentifierGeneratorFactory identifierGeneratorFactory) {
 		// todo (6.0) : build the UnionSubclassTable
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedException();
 	}
 
 	@Override

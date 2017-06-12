@@ -17,7 +17,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
@@ -187,7 +187,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	 *
 	 * @param auxiliaryDatabaseObject The metadata.
 	 */
-	void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
+	void addAuxiliaryDatabaseObject(MappedAuxiliaryDatabaseObject auxiliaryDatabaseObject);
 
 	void addFetchProfile(FetchProfile profile);
 

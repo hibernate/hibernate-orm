@@ -9,8 +9,6 @@ package org.hibernate.mapping;
 import java.util.Iterator;
 
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
 
 import org.jboss.logging.Logger;
 
@@ -59,38 +57,7 @@ public class MappedPrimaryKey extends Constraint {
 		return "<unknown>";
 	}
 
-	public String sqlConstraintString(Dialect dialect) {
-		StringBuilder buf = new StringBuilder("primary key (");
-		Iterator iter = getColumnIterator();
-		while ( iter.hasNext() ) {
-			buf.append( ( (Column) iter.next() ).getQuotedName(dialect) );
-			if ( iter.hasNext() ) {
-				buf.append(", ");
-			}
-		}
-		return buf.append(')').toString();
-	}
-
-	public String sqlConstraintString(Dialect dialect, String constraintName, String defaultCatalog, String defaultSchema) {
-		StringBuilder buf = new StringBuilder(
-			dialect.getAddPrimaryKeyConstraintString(constraintName)
-		).append('(');
-		Iterator iter = getColumnIterator();
-		while ( iter.hasNext() ) {
-			buf.append( ( (Column) iter.next() ).getQuotedName(dialect) );
-			if ( iter.hasNext() ) {
-				buf.append(", ");
-			}
-		}
-		return buf.append(')').toString();
-	}
-	
 	public String generatedConstraintNamePrefix() {
 		return "PK_";
-	}
-
-	@Override
-	public String getExportIdentifier() {
-		return StringHelper.qualify( getTable().getName(), "PK-" + getName() );
 	}
 }

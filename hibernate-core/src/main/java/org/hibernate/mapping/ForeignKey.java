@@ -12,7 +12,6 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * A foreign key constraint
@@ -28,12 +27,6 @@ public class ForeignKey extends Constraint {
 	private boolean creationEnabled = true;
 
 	public ForeignKey() {
-	}
-
-	@Override
-	public String getExportIdentifier() {
-		// NOt sure name is always set.  Might need some implicit naming
-		return StringHelper.qualify( getTable().getName(), "FK-" + getName() );
 	}
 
 	public void disableCreation() {

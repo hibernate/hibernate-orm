@@ -8,7 +8,6 @@ package org.hibernate.tool.schema.spi;
 
 
 import org.hibernate.boot.model.relational.Exportable;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 
 /**

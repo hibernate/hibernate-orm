@@ -15,8 +15,8 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.MappedIndex;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.MappedIndex;
 import org.hibernate.mapping.MappedPrimaryKey;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.metamodel.model.relational.internal.InflightTable;
@@ -30,7 +30,7 @@ import org.hibernate.naming.QualifiedTableName;
  *
  * @author Steve Ebersole
  */
-public interface MappedTable extends Exportable, Loggable {
+public interface MappedTable extends Loggable {
 	/**
 	 * Get an identifier for this MappedTable that is unique across all
 	 * MappedTable references in a given {@link Database}.

@@ -6,8 +6,7 @@
  */
 package org.hibernate.tool.schema.internal;
 
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.tool.schema.spi.Exporter;
 
@@ -15,19 +14,14 @@ import org.hibernate.tool.schema.spi.Exporter;
  * @author Steve Ebersole
  */
 public class StandardAuxiliaryDatabaseObjectExporter implements Exporter<AuxiliaryDatabaseObject> {
-	private final Dialect dialect;
-
-	public StandardAuxiliaryDatabaseObjectExporter(Dialect dialect) {
-		this.dialect = dialect;
-	}
 
 	@Override
 	public String[] getSqlCreateStrings(AuxiliaryDatabaseObject object, DatabaseModel databaseMode) {
-		return object.sqlCreateStrings( dialect );
+		return object.getSqlCreateStrings();
 	}
 
 	@Override
 	public String[] getSqlDropStrings(AuxiliaryDatabaseObject object, DatabaseModel databaseMode) {
-		return object.sqlDropStrings( dialect );
+		return object.getSqlDropStrings();
 	}
 }

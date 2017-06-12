@@ -9,6 +9,7 @@ package org.hibernate.boot.model.relational;
 import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
 
 /**
  * Auxiliary database objects (i.e., triggers, stored procedures, etc) defined
@@ -17,7 +18,7 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Steve Ebersole
  */
-public interface AuxiliaryDatabaseObject extends Exportable, Serializable {
+public interface MappedAuxiliaryDatabaseObject extends Exportable, Serializable {
 	/**
 	 * Does this database object apply to the given dialect?
 	 *
@@ -63,5 +64,14 @@ public interface AuxiliaryDatabaseObject extends Exportable, Serializable {
 	 */
 	interface Expandable {
 		void addDialectScope(String dialectName);
+	}
+
+	default AuxiliaryDatabaseObject generateRuntimeAuxiliaryDatabaseObject(Dialect dialect) {
+		return new AuxiliaryDatabaseObject(
+				getExportIdentifier(),
+				beforeTablesOnCreation(),
+				sqlCreateStrings( dialect ),
+				sqlDropStrings( dialect )
+		);
 	}
 }

@@ -7,14 +7,14 @@
 package org.hibernate.boot.model.relational;
 
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.metamodel.model.relational.spi.*;
+import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.metamodel.model.relational.spi.Sequence;
 import org.hibernate.naming.QualifiedSequenceName;
 
 /**
  * @author Steve Ebersole
  */
-public interface MappedSequence extends Exportable, Loggable {
+public interface MappedSequence extends Loggable {
 	/**
 	 * Get the qualified name for this MappedSequence, including namespace
 	 * name (catalog, schema).  The actual "physical name" (see

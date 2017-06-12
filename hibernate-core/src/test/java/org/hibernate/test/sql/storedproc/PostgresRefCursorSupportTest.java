@@ -17,7 +17,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
@@ -43,7 +43,7 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 @FailureExpected( jiraKey = "HHH-8445", message = "Waiting on EG clarification" )
 public class PostgresRefCursorSupportTest extends BaseUnitTestCase {
 
-	public static class ProcedureDefinitions implements AuxiliaryDatabaseObject, AuxiliaryDatabaseObject.Expandable {
+	public static class ProcedureDefinitions implements MappedAuxiliaryDatabaseObject, MappedAuxiliaryDatabaseObject.Expandable {
 		/**
 		 * Singleton access
 		 */

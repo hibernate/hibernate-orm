@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -31,6 +30,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
@@ -252,22 +252,20 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		// next, create all "beforeQuery table" auxiliary objects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
-			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+			if ( !auxiliaryDatabaseObject.isBeforeTablesOnCreation() ) {
 				continue;
 			}
 
-			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
-				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
-				applySqlStrings(
-						dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings(
-								auxiliaryDatabaseObject,
-								databaseModel
-						),
-						formatter,
-						options,
-						targets
-				);
-			}
+			checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
+			applySqlStrings(
+					dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings(
+							auxiliaryDatabaseObject,
+							databaseModel
+					),
+					formatter,
+					options,
+					targets
+			);
 		}
 
 		// then, create all schema objects (tables, sequences, constraints, etc) in each schema
@@ -372,11 +370,11 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		// next, create all "afterQuery table" auxiliary objects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
-			if ( auxiliaryDatabaseObject.appliesToDialect( dialect )
-					&& !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+			if ( !auxiliaryDatabaseObject.isBeforeTablesOnCreation() ) {
 				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
 				applySqlStrings(
-						dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings( auxiliaryDatabaseObject, databaseModel ),
+						dialect.getAuxiliaryDatabaseObjectExporter()
+								.getSqlCreateStrings( auxiliaryDatabaseObject, databaseModel ),
 						formatter,
 						options,
 						targets

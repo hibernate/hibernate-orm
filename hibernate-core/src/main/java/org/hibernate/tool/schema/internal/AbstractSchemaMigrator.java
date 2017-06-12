@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
@@ -20,6 +19,7 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
@@ -160,7 +160,6 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 		// Drop all AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
-			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
 				applySqlStrings(
 						true,
 						dialect.getAuxiliaryDatabaseObjectExporter()
@@ -169,15 +168,14 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 						options,
 						targets
 				);
-			}
 		}
 
 		// Create beforeQuery-table AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
-			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() && auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
+			if ( !auxiliaryDatabaseObject.isBeforeTablesOnCreation() ) {
 				applySqlStrings(
 						true,
-						auxiliaryDatabaseObject.sqlCreateStrings( dialect ),
+						auxiliaryDatabaseObject.getSqlCreateStrings(),
 						formatter,
 						options,
 						targets
@@ -214,7 +212,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
 				for ( Sequence sequence : namespace.getSequences() ) {
 					checkExportIdentifier( sequence, exportIdentifiers );
-					final SequenceInformation sequenceInformation = existingDatabase.getSequenceInformation( sequence.getQaulifiedName() );
+					final SequenceInformation sequenceInformation = existingDatabase.getSequenceInformation( sequence.getQualifiedName() );
 					if ( sequenceInformation == null ) {
 						applySqlStrings(
 								false,
@@ -259,10 +257,10 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 		// Create afterQuery-table AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
-			if ( auxiliaryDatabaseObject.beforeTablesOnCreation() && auxiliaryDatabaseObject.appliesToDialect( dialect )) {
+			if ( auxiliaryDatabaseObject.isBeforeTablesOnCreation() ) {
 				applySqlStrings(
 						true,
-						auxiliaryDatabaseObject.sqlCreateStrings( dialect ),
+						auxiliaryDatabaseObject.getSqlCreateStrings(),
 						formatter,
 						options,
 						targets

@@ -94,7 +94,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 				for ( Sequence sequence : namespace.getSequences() ) {
 					if ( schemaFilter.includeSequence( sequence ) ) {
 						final SequenceInformation sequenceInformation = databaseInformation.getSequenceInformation(
-								sequence.getQaulifiedName()
+								sequence.getQualifiedName()
 						);
 						validateSequence( sequence, sequenceInformation );
 					}

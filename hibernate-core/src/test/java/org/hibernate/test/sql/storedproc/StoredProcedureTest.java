@@ -17,7 +17,7 @@ import javax.persistence.StoredProcedureParameter;
 
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
@@ -49,7 +49,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
 		configuration.addAuxiliaryDatabaseObject(
-				new AuxiliaryDatabaseObject() {
+				new MappedAuxiliaryDatabaseObject() {
 					@Override
 					public String getExportIdentifier() {
 						return "function:findOneUser";
@@ -93,7 +93,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		);
 
 		configuration.addAuxiliaryDatabaseObject(
-				new AuxiliaryDatabaseObject() {
+				new MappedAuxiliaryDatabaseObject() {
 					@Override
 					public String getExportIdentifier() {
 						return "function:findUsers";
@@ -137,7 +137,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		);
 
 		configuration.addAuxiliaryDatabaseObject(
-				new AuxiliaryDatabaseObject() {
+				new MappedAuxiliaryDatabaseObject() {
 					@Override
 					public String getExportIdentifier() {
 						return "function:findUserRange";

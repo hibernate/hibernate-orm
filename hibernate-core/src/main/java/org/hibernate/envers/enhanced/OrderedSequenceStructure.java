@@ -7,7 +7,7 @@
 package org.hibernate.envers.enhanced;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.naming.spi.QualifiedName;
 import org.hibernate.dialect.Dialect;
@@ -24,7 +24,7 @@ public class OrderedSequenceStructure extends SequenceStructure {
 
 	private static final String ORDER = " ORDER";
 
-	private AuxiliaryDatabaseObject sequenceObject;
+	private MappedAuxiliaryDatabaseObject sequenceObject;
 
 	public OrderedSequenceStructure(
 			JdbcEnvironment jdbcEnvironment,
@@ -57,7 +57,7 @@ public class OrderedSequenceStructure extends SequenceStructure {
 		);
 	}
 
-	private class OrderedSequence implements AuxiliaryDatabaseObject {
+	private class OrderedSequence implements MappedAuxiliaryDatabaseObject {
 		@Override
 		public String getExportIdentifier() {
 			return getName();

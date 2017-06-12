@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
+
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -16,7 +17,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.dialect.Dialect;
 
@@ -26,7 +26,7 @@ import org.hibernate.dialect.Dialect;
  * @author Gavin King
  * @author Brett Meyer
  */
-public abstract class Constraint implements Exportable, Serializable {
+public abstract class Constraint implements Serializable {
 
 	private String name;
 	private final ArrayList<Column> columns = new ArrayList<>();

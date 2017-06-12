@@ -34,7 +34,7 @@ public class Database {
 
 	private final Map<NamespaceName,MappedNamespace> namespaceMap = new TreeMap<>();
 
-	private Map<String,AuxiliaryDatabaseObject> auxiliaryDatabaseObjects;
+	private Map<String,MappedAuxiliaryDatabaseObject> auxiliaryDatabaseObjects;
 	private List<InitCommand> initCommands;
 
 	public Database(MetadataBuildingOptions buildingOptions) {
@@ -145,14 +145,14 @@ public class Database {
 		return adjustDefaultNamespace( toIdentifier( implicitCatalogName ), toIdentifier( implicitSchemaName ) );
 	}
 
-	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
+	public void addAuxiliaryDatabaseObject(MappedAuxiliaryDatabaseObject auxiliaryDatabaseObject) {
 		if ( auxiliaryDatabaseObjects == null ) {
 			auxiliaryDatabaseObjects = new HashMap<>();
 		}
 		auxiliaryDatabaseObjects.put( auxiliaryDatabaseObject.getExportIdentifier(), auxiliaryDatabaseObject );
 	}
 
-	public Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects() {
+	public Collection<MappedAuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects() {
 		return auxiliaryDatabaseObjects == null
 				? Collections.emptyList()
 				: auxiliaryDatabaseObjects.values();

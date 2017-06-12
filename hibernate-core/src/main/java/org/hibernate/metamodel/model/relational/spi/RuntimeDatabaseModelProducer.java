@@ -15,13 +15,17 @@ import java.util.stream.Collectors;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedSequence;
 import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.mapping.MappedPrimaryKey;
 import org.hibernate.metamodel.model.creation.spi.DatabaseObjectResolver;
 import org.hibernate.metamodel.model.relational.internal.DatabaseModelImpl;
@@ -42,12 +46,14 @@ public class RuntimeDatabaseModelProducer {
 
 	private final PhysicalNamingStrategy namingStrategy;
 	private final JdbcEnvironment jdbcEnvironment;
+	private final IdentifierGeneratorFactory identifierGeneratorFactory;
 
 	public RuntimeDatabaseModelProducer(BootstrapContext bootstrapContext) {
 		this.namingStrategy = bootstrapContext.getMetadataBuildingOptions().getPhysicalNamingStrategy();
-		this.jdbcEnvironment = bootstrapContext.getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getJdbcEnvironment();
+
+		final StandardServiceRegistry serviceRegistry = bootstrapContext.getServiceRegistry();
+		this.jdbcEnvironment = serviceRegistry.getService( JdbcServices.class ).getJdbcEnvironment();
+		this.identifierGeneratorFactory = serviceRegistry.getService( MutableIdentifierGeneratorFactory.class );
 	}
 
 	public DatabaseModel produceDatabaseModel(Database database, DatabaseObjectResolver dbObjectResolver, Callback callback) {
@@ -82,7 +88,10 @@ public class RuntimeDatabaseModelProducer {
 			}
 
 			processForeignKeys( bootDatabaseModel, runtimeDatabaseModel );
-			runtimeDatabaseModel.setAuxiliaryDatabaseObjects( bootDatabaseModel.getAuxiliaryDatabaseObjects() );
+			for ( MappedAuxiliaryDatabaseObject mappedAuxiliaryDatabaseObject : bootDatabaseModel.getAuxiliaryDatabaseObjects() ) {
+				runtimeDatabaseModel.addAuxiliaryDatabaseObject( mappedAuxiliaryDatabaseObject.generateRuntimeAuxiliaryDatabaseObject(
+						bootDatabaseModel.getJdbcEnvironment().getDialect() ) );
+			}
 
 			return runtimeDatabaseModel;
 		}
@@ -118,7 +127,7 @@ public class RuntimeDatabaseModelProducer {
 				final InflightTable runtimeTable = mappedTable.generateRuntimeTable(
 						namingStrategy,
 						jdbcEnvironment,
-
+						identifierGeneratorFactory
 				);
 				runtimeModelNamespace.addTable( runtimeTable );
 

@@ -18,11 +18,12 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.result.ResultSetOutput;
@@ -74,7 +75,7 @@ public class StoredProcedureResultSetMappingTest extends BaseUnitTestCase {
 		}
 	}
 
-	public static class ProcedureDefinition implements AuxiliaryDatabaseObject {
+	public static class ProcedureDefinition implements MappedAuxiliaryDatabaseObject {
 		@Override
 		public boolean appliesToDialect(Dialect dialect) {
 			return true;

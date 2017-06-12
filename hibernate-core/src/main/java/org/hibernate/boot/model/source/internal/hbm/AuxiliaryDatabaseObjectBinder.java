@@ -8,7 +8,7 @@ package org.hibernate.boot.model.source.internal.hbm;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmAuxiliaryDatabaseObjectType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmDialectScopeType;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -26,12 +26,12 @@ public class AuxiliaryDatabaseObjectBinder {
 	public static void processAuxiliaryDatabaseObject(
 			HbmLocalMetadataBuildingContext context,
 			JaxbHbmAuxiliaryDatabaseObjectType auxDbObjectMapping) {
-		final AuxiliaryDatabaseObject auxDbObject;
+		final MappedAuxiliaryDatabaseObject auxDbObject;
 
 		if ( auxDbObjectMapping.getDefinition() != null ) {
 			final String auxDbObjectImplClass = auxDbObjectMapping.getDefinition().getClazz();
 			try {
-				auxDbObject = (AuxiliaryDatabaseObject) context.getBuildingOptions()
+				auxDbObject = (MappedAuxiliaryDatabaseObject) context.getBuildingOptions()
 						.getServiceRegistry()
 						.getService( ClassLoaderService.class )
 						.classForName( auxDbObjectImplClass )
@@ -60,9 +60,9 @@ public class AuxiliaryDatabaseObjectBinder {
 		}
 
 		if ( !auxDbObjectMapping.getDialectScope().isEmpty() ) {
-			if ( AuxiliaryDatabaseObject.Expandable.class.isInstance( auxDbObject ) ) {
-				final AuxiliaryDatabaseObject.Expandable expandable
-						= (AuxiliaryDatabaseObject.Expandable) auxDbObject;
+			if ( MappedAuxiliaryDatabaseObject.Expandable.class.isInstance( auxDbObject ) ) {
+				final MappedAuxiliaryDatabaseObject.Expandable expandable
+						= (MappedAuxiliaryDatabaseObject.Expandable) auxDbObject;
 				for ( JaxbHbmDialectScopeType dialectScopeBinding : auxDbObjectMapping.getDialectScope() ) {
 					expandable.addDialectScope( dialectScopeBinding.getName() );
 				}

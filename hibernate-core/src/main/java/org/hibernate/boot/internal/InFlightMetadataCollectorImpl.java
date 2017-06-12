@@ -39,7 +39,7 @@ import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.MappedNamespace;
@@ -770,7 +770,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 
 	@Override
-	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
+	public void addAuxiliaryDatabaseObject(MappedAuxiliaryDatabaseObject auxiliaryDatabaseObject) {
 		getDatabase().addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
 	}
 

@@ -285,8 +285,8 @@ public class ActionQueue {
 		}
 		insert.makeEntityManaged();
 		if( unresolvedInsertions != null ) {
-			for (AbstractEntityInsertAction resolvedAction : unresolvedInsertions.resolveDependentActions(insert.getInstance(), session)) {
-				addResolvedEntityInsertAction(resolvedAction);
+			for ( AbstractEntityInsertAction resolvedAction : unresolvedInsertions.resolveDependentActions( insert.getInstance(), session ) ) {
+				addResolvedEntityInsertAction( resolvedAction );
 			}
 		}
 	}
@@ -383,7 +383,7 @@ public class ActionQueue {
 			if( beforeTransactionProcesses == null ) {
 				beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
 			}
-			beforeTransactionProcesses.register(executable.getBeforeTransactionCompletionProcess());
+			beforeTransactionProcesses.register( executable.getBeforeTransactionCompletionProcess() );
 		}
 		if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
 			invalidateSpaces( executable.getPropertySpaces() );
@@ -392,7 +392,7 @@ public class ActionQueue {
 			if( afterTransactionProcesses == null ) {
 				afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
 			}
-			afterTransactionProcesses.register(executable.getAfterTransactionCompletionProcess());
+			afterTransactionProcesses.register( executable.getAfterTransactionCompletionProcess() );
 		}
 	}
 
@@ -495,7 +495,7 @@ public class ActionQueue {
 		if ( !isTransactionCoordinatorShared ) {
 			// Execute completion actions only in transaction owner (aka parent session).
 			if( afterTransactionProcesses != null ) {
-				afterTransactionProcesses.afterTransactionCompletion(success);
+				afterTransactionProcesses.afterTransactionCompletion( success );
 			}
 		}
 	}
@@ -593,13 +593,13 @@ public class ActionQueue {
 						if( beforeTransactionProcesses == null ) {
 							beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
 						}
-						beforeTransactionProcesses.register(e.getBeforeTransactionCompletionProcess());
+						beforeTransactionProcesses.register( e.getBeforeTransactionCompletionProcess() );
 					}
 					if( e.getAfterTransactionCompletionProcess() != null ) {
 						if( afterTransactionProcesses == null ) {
 							afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
 						}
-						afterTransactionProcesses.register(e.getAfterTransactionCompletionProcess());
+						afterTransactionProcesses.register( e.getAfterTransactionCompletionProcess() );
 					}
 				}
 			}
@@ -655,14 +655,14 @@ public class ActionQueue {
 	 */
 	@Override
 	public String toString() {
-		return "ActionQueue[insertions=" + toString(insertions)
-				+ " updates=" + toString(updates)
-				+ " deletions=" + toString(deletions)
-				+ " orphanRemovals=" + toString(orphanRemovals)
-				+ " collectionCreations=" + toString(collectionCreations)
-				+ " collectionRemovals=" + toString(collectionRemovals)
-				+ " collectionUpdates=" + toString(collectionUpdates)
-				+ " collectionQueuedOps=" + toString(collectionQueuedOps)
+		return "ActionQueue[insertions=" + toString( insertions )
+				+ " updates=" + toString( updates )
+				+ " deletions=" + toString( deletions )
+				+ " orphanRemovals=" + toString( orphanRemovals )
+				+ " collectionCreations=" + toString( collectionCreations )
+				+ " collectionRemovals=" + toString( collectionRemovals )
+				+ " collectionUpdates=" + toString( collectionUpdates )
+				+ " collectionQueuedOps=" + toString( collectionQueuedOps )
 				+ " unresolvedInsertDependencies=" + unresolvedInsertions
 				+ "]";
 	}
@@ -811,25 +811,25 @@ public class ActionQueue {
 
 	public void unScheduleDeletion(EntityEntry entry, Object rescuedEntity) {
 		if ( rescuedEntity instanceof HibernateProxy ) {
-			LazyInitializer initializer = ( ( HibernateProxy ) rescuedEntity ).getHibernateLazyInitializer();
+			LazyInitializer initializer = ( (HibernateProxy) rescuedEntity ).getHibernateLazyInitializer();
 			if ( !initializer.isUninitialized() ) {
 				rescuedEntity = initializer.getImplementation( session );
 			}
 		}
 		if( deletions != null ) {
 			for ( int i = 0; i < deletions.size(); i++ ) {
-				EntityDeleteAction action = deletions.get(i);
+				EntityDeleteAction action = deletions.get( i );
 				if (action.getInstance() == rescuedEntity) {
-					deletions.remove(i);
+					deletions.remove( i );
 					return;
 				}
 			}
 		}
 		if( orphanRemovals != null ) {
 			for ( int i = 0; i < orphanRemovals.size(); i++ ) {
-				EntityDeleteAction action = orphanRemovals.get(i);
+				EntityDeleteAction action = orphanRemovals.get( i );
 				if (action.getInstance() == rescuedEntity) {
-					orphanRemovals.remove(i);
+					orphanRemovals.remove( i );
 					return;
 				}
 			}
@@ -851,9 +851,9 @@ public class ActionQueue {
 		unresolvedInsertions.serialize( oos );
 
 		for ( ListProvider p : EXECUTABLE_LISTS_MAP.values() ) {
-			ExecutableList<?> l = p.get(this);
+			ExecutableList<?> l = p.get( this );
 			if( l == null ) {
-				oos.writeBoolean(false);
+				oos.writeBoolean( false );
 			}
 			else {
 				oos.writeBoolean( true );
@@ -874,18 +874,18 @@ public class ActionQueue {
 	public static ActionQueue deserialize(ObjectInputStream ois, SessionImplementor session) throws IOException, ClassNotFoundException {
 		final boolean traceEnabled = LOG.isTraceEnabled();
 		if ( traceEnabled ) {
-			LOG.trace("Deserializing action-queue");
+			LOG.trace( "Deserializing action-queue" );
 		}
 		ActionQueue rtn = new ActionQueue( session );
 
 		rtn.unresolvedInsertions = UnresolvedEntityInsertActions.deserialize( ois, session );
 
 		for ( ListProvider provider : EXECUTABLE_LISTS_MAP.values() ) {
-			ExecutableList<?> l = provider.get(rtn);
+			ExecutableList<?> l = provider.get( rtn );
 			boolean notNull = ois.readBoolean();
 			if( notNull ) {
 				if(l == null) {
-					l = provider.init(rtn);
+					l = provider.init( rtn );
 				}
 				l.readExternal( ois );
 
@@ -899,7 +899,7 @@ public class ActionQueue {
 		return rtn;
 	}
 
-	private static abstract class AbstractTransactionCompletionProcessQueue<T> {
+	private abstract static class AbstractTransactionCompletionProcessQueue<T> {
 		protected SessionImplementor session;
 		// Concurrency handling required when transaction completion process is dynamically registered
 		// inside event listener (HHH-7478).
@@ -1111,7 +1111,7 @@ public class ActionQueue {
 				}
 				addParentChildEntityNames( action, batchIdentifier );
 				entityBatchIdentifier.put( currentEntity, batchIdentifier );
-				addToBatch(batchIdentifier, action);
+				addToBatch( batchIdentifier, action );
 			}
 			insertions.clear();
 
@@ -1220,7 +1220,7 @@ public class ActionQueue {
 
 	}
 
-	private static abstract class ListProvider<T extends Executable & Comparable & Serializable> {
+	private abstract static class ListProvider<T extends Executable & Comparable & Serializable> {
 		abstract ExecutableList<T> get(ActionQueue instance);
 		abstract ExecutableList<T> init(ActionQueue instance);
 		ExecutableList<T> getOrInit( ActionQueue instance ) {

@@ -3,6 +3,22 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.0.14.Final (June 12, 2017)
+------------------------------------------------------------------------------------------------------------------------
+
+    [JBEAP-9959 / HHH-11536] - Fix unit tests failing on Oracle
+
+    [JBEAP-10844] SQLServer2005LimitHandler bugfixes
+                  [HHH-11324] - SQLServer2005LimitHandler uncapable of handle subquery in column list
+                  [HHH-11145] - SQLServer2005LimitHandler creates invalid query when quoted column uses keywords.
+                  [HHH-11352] - Hibernate & Paging: BROKEN when a column contains the word "FROM" for SQL Server
+
+    [JBEAP-10915] DB297Dialect bugfixes
+                  [HHH-11499] - Add a new DB2 dialect that uses "cross join" for cross joins instead of ","
+                  [HHH-11740] - Default MultiTableBulkIdStrategy for DB2 does not work with connection pools
+
+    [JBEAP-11041 / HHH-10183] - Mapping for NVARCHAR in SqlServer not working with native queries; org.hibernate.MappingException: No Dialect mapping for JDBC type: -9
+
 Changes in 5.0.13.Final (March 27, 2017)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -1024,7 +1024,7 @@ public class ActionQueue {
 
 			private Set<String> childEntityNames = new HashSet<>( );
 
-			public BatchIdentifier(String entityName, String rootEntityName) {
+			BatchIdentifier(String entityName, String rootEntityName) {
 				this.entityName = entityName;
 				this.rootEntityName = rootEntityName;
 			}
@@ -1046,38 +1046,30 @@ public class ActionQueue {
 				return Objects.hash( entityName );
 			}
 
-			public String getEntityName() {
+			String getEntityName() {
 				return entityName;
 			}
 
-			public String getRootEntityName() {
+			String getRootEntityName() {
 				return rootEntityName;
 			}
 
-			public Set<String> getParentEntityNames() {
+			Set<String> getParentEntityNames() {
 				return parentEntityNames;
 			}
 
-			public Set<String> getChildEntityNames() {
+			Set<String> getChildEntityNames() {
 				return childEntityNames;
 			}
 
-			public boolean hasAnyParentEntityNames(String... entityNames) {
-				for ( String entityName : entityNames ) {
-					if ( parentEntityNames.contains( entityName ) ) {
-						return true;
-					}
-				}
-				return false;
+			boolean hasAnyParentEntityNames(BatchIdentifier batchIdentifier) {
+				return parentEntityNames.contains( batchIdentifier.getEntityName() ) ||
+						parentEntityNames.contains( batchIdentifier.getRootEntityName() );
 			}
 
-			public boolean hasAnyChildEntityNames(String... entityNames) {
-				for ( String entityName : entityNames ) {
-					if ( childEntityNames.contains( entityName ) ) {
-						return true;
-					}
-				}
-				return false;
+			boolean hasAnyChildEntityNames(BatchIdentifier batchIdentifier) {
+				return childEntityNames.contains( batchIdentifier.getEntityName() ) ||
+						parentEntityNames.contains( batchIdentifier.getRootEntityName() );
 			}
 		}
 
@@ -1123,33 +1115,34 @@ public class ActionQueue {
 			}
 			insertions.clear();
 
+			// Examine each entry in the batch list, sorting them based on parent/child associations.
 			for ( int i = 0; i < latestBatches.size(); i++ ) {
 				BatchIdentifier batchIdentifier = latestBatches.get( i );
-				String entityName = batchIdentifier.getEntityName();
-				String rootEntityName = batchIdentifier.getRootEntityName();
 
-				//Make sure that child entries are not before parents
+				// Iterate previous batches and make sure that parent types are before children
+				// Since the outer loop looks at each batch entry individually, we need to verify that any
+				// prior batches in the list are not considered children (or have a parent) of the current
+				// batch.  If so, we reordered them.
 				for ( int j = i - 1; j >= 0; j-- ) {
 					BatchIdentifier prevBatchIdentifier = latestBatches.get( j );
-					if ( prevBatchIdentifier.hasAnyParentEntityNames( entityName, rootEntityName ) ) {
+					if ( prevBatchIdentifier.hasAnyParentEntityNames( batchIdentifier ) ) {
 						latestBatches.remove( batchIdentifier );
 						latestBatches.add( j, batchIdentifier );
 					}
 				}
 
-				//Make sure that parent entries are not after children
+				// Iterate next batches and make sure that children types are after parents.
+				// Since the outer loop looks at each batch entry individually and the prior loop will reorder
+				// entries as well, we need to look and verify if the current batch is a child of the next
+				// batch or if the current batch is seen as a parent or child of the next batch.
 				for ( int j = i + 1; j < latestBatches.size(); j++ ) {
 					BatchIdentifier nextBatchIdentifier = latestBatches.get( j );
 
-					final boolean nextBatchHasChild = nextBatchIdentifier.hasAnyChildEntityNames( entityName, rootEntityName );
+					final boolean nextBatchHasChild = nextBatchIdentifier.hasAnyChildEntityNames( batchIdentifier );
+					final boolean batchHasChild = batchIdentifier.hasAnyChildEntityNames( nextBatchIdentifier );
+					final boolean batchHasParent = batchIdentifier.hasAnyParentEntityNames( nextBatchIdentifier );
 
-					final boolean batchHasChild = batchIdentifier.hasAnyChildEntityNames(
-							nextBatchIdentifier.getEntityName(), nextBatchIdentifier.getRootEntityName() );
-
-					final boolean batchHasParent = batchIdentifier.hasAnyParentEntityNames(
-							nextBatchIdentifier.getEntityName(), nextBatchIdentifier.getRootEntityName() );
-
-					//Take care of unidirectional @OneToOne associations but exclude bidirectional @ManyToMany
+					// Take care of unidirectional @OneToOne associations but exclude bidirectional @ManyToMany
 					if ( ( nextBatchHasChild && !batchHasChild ) || batchHasParent ) {
 						latestBatches.remove( batchIdentifier );
 						latestBatches.add( j, batchIdentifier );

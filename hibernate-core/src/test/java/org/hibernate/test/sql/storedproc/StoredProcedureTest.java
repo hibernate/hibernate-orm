@@ -51,7 +51,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		configuration.addAuxiliaryDatabaseObject(
 				new MappedAuxiliaryDatabaseObject() {
 					@Override
-					public String getExportIdentifier() {
+					public String getIdentifier() {
 						return "function:findOneUser";
 					}
 
@@ -95,7 +95,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		configuration.addAuxiliaryDatabaseObject(
 				new MappedAuxiliaryDatabaseObject() {
 					@Override
-					public String getExportIdentifier() {
+					public String getIdentifier() {
 						return "function:findUsers";
 					}
 
@@ -139,7 +139,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		configuration.addAuxiliaryDatabaseObject(
 				new MappedAuxiliaryDatabaseObject() {
 					@Override
-					public String getExportIdentifier() {
+					public String getIdentifier() {
 						return "function:findUserRange";
 					}
 

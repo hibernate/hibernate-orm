@@ -7,7 +7,7 @@
 package org.hibernate.tool.schema.spi;
 
 
-import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.metamodel.model.relational.spi.Exportable;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 
 /**

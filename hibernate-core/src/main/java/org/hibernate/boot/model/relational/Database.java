@@ -149,7 +149,7 @@ public class Database {
 		if ( auxiliaryDatabaseObjects == null ) {
 			auxiliaryDatabaseObjects = new HashMap<>();
 		}
-		auxiliaryDatabaseObjects.put( auxiliaryDatabaseObject.getExportIdentifier(), auxiliaryDatabaseObject );
+		auxiliaryDatabaseObjects.put( auxiliaryDatabaseObject.getIdentifier(), auxiliaryDatabaseObject );
 	}
 
 	public Collection<MappedAuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects() {

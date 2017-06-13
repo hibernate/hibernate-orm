@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.metamodel.model.relational.spi.Exportable;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -239,7 +239,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 						if ( schemaFilter.includeTable( table ) ) {
 							final TableInformation tableInformation = nameSpaceTablesInformation
 									.getTableInformation( exportableTable );
-							if ( tableInformation == null || ( tableInformation != null && tableInformation.isPhysicalTable() ) ) {
+							if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
 								applyForeignKeys(
 										exportableTable,
 										tableInformation,

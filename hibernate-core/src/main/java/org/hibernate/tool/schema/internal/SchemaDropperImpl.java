@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.metamodel.model.relational.spi.Exportable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -185,8 +185,6 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Dialect dialect,
 			Formatter formatter,
 			GenerationTarget... targets) {
-		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
-
 		boolean tryToDropCatalogs = false;
 		boolean tryToDropSchemas = false;
 		if ( options.shouldManageNamespaces() ) {
@@ -266,7 +264,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 
 		if ( tryToDropCatalogs || tryToDropSchemas ) {
-			Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
+			Set<Identifier> exportedCatalogs = new HashSet<>();
 
 			for ( Namespace namespace : databaseModel.getNamespaces() ) {
 
@@ -322,7 +320,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 				continue;
 			}
 
-			for ( ForeignKey foreignKey : ( (ExportableTable) table ).getForeignKeys() ) {
+			for ( ForeignKey foreignKey : table.getForeignKeys() ) {
 				applySqlStrings(
 						dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, databaseModel ),
 						formatter,

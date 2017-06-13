@@ -20,6 +20,7 @@ import org.hibernate.mapping.MappedIndex;
 import org.hibernate.mapping.MappedPrimaryKey;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.metamodel.model.relational.internal.InflightTable;
+import org.hibernate.metamodel.model.relational.spi.Exportable;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.naming.Identifier;
 import org.hibernate.naming.QualifiedTableName;

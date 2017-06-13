@@ -66,7 +66,7 @@ public class PostgresRefCursorSupportTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public String getExportIdentifier() {
+		public String getIdentifier() {
 			return "function:all_items";
 		}
 

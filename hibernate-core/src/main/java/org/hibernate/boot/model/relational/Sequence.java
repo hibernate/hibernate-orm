@@ -7,7 +7,6 @@
 package org.hibernate.boot.model.relational;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.naming.Identifier;
@@ -100,12 +99,15 @@ public class Sequence implements MappedSequence {
 	public org.hibernate.metamodel.model.relational.spi.Sequence generateRuntimeSequence(
 			PhysicalNamingStrategy namingStrategy,
 			JdbcEnvironment jdbcEnvironment) {
-		final Identifier physicalName = namingStrategy.toPhysicalSequenceName(
+		return new org.hibernate.metamodel.model.relational.spi.Sequence(
+				getLogicalName().getCatalogName(),
+				getLogicalName().getSchemaName(),
 				getLogicalName().getSequenceName(),
+				getInitialValue(),
+				getIncrementSize(),
+				namingStrategy,
 				jdbcEnvironment
 		);
-
-		throw new NotYetImplementedException(  );
 	}
 
 	@Override

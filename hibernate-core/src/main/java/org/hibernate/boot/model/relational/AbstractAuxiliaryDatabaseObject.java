@@ -50,7 +50,7 @@ public abstract class AbstractAuxiliaryDatabaseObject
 	}
 
 	@Override
-	public String getExportIdentifier() {
+	public String getIdentifier() {
 		return exportIdentifier;
 	}
 

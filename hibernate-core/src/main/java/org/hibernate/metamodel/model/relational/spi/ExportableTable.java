@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.relational.spi;
 import java.util.Collection;
 import java.util.List;
 
-import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.naming.Identifier;

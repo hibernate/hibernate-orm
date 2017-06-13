@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.relational;
 
+import org.hibernate.metamodel.model.relational.spi.Exportable;
+
 /**
  * Identifies metamodel objects that can produce {@link Exportable} relational stuff.
  *

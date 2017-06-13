@@ -18,7 +18,15 @@ import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
  *
  * @author Steve Ebersole
  */
-public interface MappedAuxiliaryDatabaseObject extends Exportable, Serializable {
+public interface MappedAuxiliaryDatabaseObject extends Serializable {
+
+	/**
+	 * Get a unique identifier to make sure we are not adding the same database structure multiple times.
+	 *
+	 * @return The identifier.
+	 */
+	String getIdentifier();
+
 	/**
 	 * Does this database object apply to the given dialect?
 	 *
@@ -68,7 +76,7 @@ public interface MappedAuxiliaryDatabaseObject extends Exportable, Serializable 
 
 	default AuxiliaryDatabaseObject generateRuntimeAuxiliaryDatabaseObject(Dialect dialect) {
 		return new AuxiliaryDatabaseObject(
-				getExportIdentifier(),
+				getIdentifier(),
 				beforeTablesOnCreation(),
 				sqlCreateStrings( dialect ),
 				sqlDropStrings( dialect )

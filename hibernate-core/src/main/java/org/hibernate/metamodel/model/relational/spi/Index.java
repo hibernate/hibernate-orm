@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.relational.spi;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.naming.Identifier;
 

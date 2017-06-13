@@ -59,7 +59,7 @@ public class OrderedSequenceStructure extends SequenceStructure {
 
 	private class OrderedSequence implements MappedAuxiliaryDatabaseObject {
 		@Override
-		public String getExportIdentifier() {
+		public String getIdentifier() {
 			return getName();
 		}
 

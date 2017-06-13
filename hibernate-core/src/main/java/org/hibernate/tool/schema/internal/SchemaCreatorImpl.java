@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.metamodel.model.relational.spi.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -218,7 +218,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		// first, create each catalog/schema
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
-			Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
+			Set<Identifier> exportedCatalogs = new HashSet<>();
 			for ( Namespace namespace : databaseModel.getNamespaces() ) {
 
 				if ( !schemaFilter.includeNamespace( namespace ) ) {
@@ -588,7 +588,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	}
 
 	private static class JournalingGenerationTarget implements GenerationTarget {
-		private final ArrayList<String> commands = new ArrayList<String>();
+		private final ArrayList<String> commands = new ArrayList<>();
 
 		@Override
 		public void prepare() {

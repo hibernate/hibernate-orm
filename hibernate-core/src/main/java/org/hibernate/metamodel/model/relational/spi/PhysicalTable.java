@@ -27,6 +27,7 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 	private final Identifier tableName;
 	private final Identifier catalogName;
 	private final Identifier schemaName;
+	private final QualifiedTableName qualifiedTableName;
 	private boolean hasPrimaryKey;
 	private boolean primaryKeyIdentity;
 	private String commment;
@@ -61,6 +62,7 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 		this.tableName = namingStrategy.toPhysicalTableName( tableName, jdbcEnvironment );
 		this.catalogName = namingStrategy.toPhysicalCatalogName( catalogName, jdbcEnvironment );
 		this.schemaName = namingStrategy.toPhysicalSchemaName( schemaName, jdbcEnvironment );
+		this.qualifiedTableName = new QualifiedTableName( catalogName, schemaName, tableName );
 	}
 
 	@Override
@@ -79,8 +81,8 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 	}
 
 	@Override
-	public QualifiedTableName getQualifiedTableName(){
-		return new QualifiedTableName( catalogName, schemaName, tableName );
+	public QualifiedTableName getQualifiedTableName() {
+		return qualifiedTableName;
 	}
 
 	@Override

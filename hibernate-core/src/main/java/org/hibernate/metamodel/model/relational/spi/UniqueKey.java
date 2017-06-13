@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.naming.Identifier;
 

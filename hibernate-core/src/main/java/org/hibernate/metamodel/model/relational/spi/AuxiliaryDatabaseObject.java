@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.model.relational.spi;
 
-import org.hibernate.boot.model.relational.Exportable;
-
 /**
  * @author Andrea Boriero
  */

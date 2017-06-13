@@ -113,7 +113,7 @@ public class StoredProcedureResultSetMappingTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public String getExportIdentifier() {
+		public String getIdentifier() {
 			return "alias:allEmployeeNames";
 		}
 	}

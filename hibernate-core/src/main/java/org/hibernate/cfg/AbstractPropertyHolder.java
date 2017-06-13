@@ -6,7 +6,10 @@
  */
 package org.hibernate.cfg;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.persistence.AssociationOverride;
 import javax.persistence.AssociationOverrides;
@@ -422,10 +425,26 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			}
 
 			if ( overrides != null ) {
+				Map<String, List<Column>> columnOverrideList = new HashMap<>();
+
 				for ( AttributeOverride depAttr : overrides ) {
+					String qualifiedName = StringHelper.qualify( path, depAttr.name() );
+
+					if ( columnOverrideList.containsKey( qualifiedName ) ) {
+						columnOverrideList.get( qualifiedName ).add( depAttr.column() );
+					}
+					else {
+						columnOverrideList.put(
+							qualifiedName,
+							new ArrayList<>( Arrays.asList( depAttr.column() ) )
+						);
+					}
+				}
+
+				for (Map.Entry<String, List<Column>> entry : columnOverrideList.entrySet()) {
 					columnOverride.put(
-							StringHelper.qualify( path, depAttr.name() ),
-							new Column[]{ depAttr.column() }
+						entry.getKey(),
+						entry.getValue().toArray( new Column[entry.getValue().size()] )
 					);
 				}
 			}

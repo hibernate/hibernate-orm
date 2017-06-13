@@ -119,7 +119,10 @@ public class TypeOverrides {
    }
 
    public Configuration createInfinispanConfiguration() {
-      Configuration cacheCfg = new Configuration();
+      return prepareInfinispanConfiguration(new Configuration());
+   }
+
+   public Configuration prepareInfinispanConfiguration(Configuration cacheCfg) {
       if (overridden.contains("evictionStrategy"))
          cacheCfg.fluent().eviction().strategy(evictionStrategy);
       if (overridden.contains("evictionWakeUpInterval"))

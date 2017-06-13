@@ -19,6 +19,7 @@ import org.infinispan.commands.module.ModuleCommandFactory;
 import org.infinispan.config.Configuration;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.cache.LegacyConfigurationAdaptor;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.factories.GlobalComponentRegistry;
@@ -510,12 +511,21 @@ public class InfinispanRegionFactory implements RegionFactory {
          if (regionOverride != null) {
             if (log.isDebugEnabled()) log.debug("Cache region specific configuration exists: " + regionOverride);
             regionOverride = overrideStatisticsIfPresent(regionOverride, properties);
-            regionCacheCfg = regionOverride.createInfinispanConfiguration();
+
             String cacheName = regionOverride.getCacheName();
             if (cacheName != null) // Region specific override with a given cache name
                templateCacheName = cacheName; 
             else // Region specific override without cache name, so template cache name is generic for data type.
-               templateCacheName = typeOverrides.get(typeKey).getCacheName(); 
+               templateCacheName = typeOverrides.get(typeKey).getCacheName();
+
+            org.infinispan.configuration.cache.Configuration cfg = manager.getCacheConfiguration(templateCacheName);
+            if(cfg != null) {
+               Configuration cfgAdapted = LegacyConfigurationAdaptor.adapt(cfg);
+               regionCacheCfg = regionOverride.prepareInfinispanConfiguration(cfgAdapted);
+            } else {
+               regionCacheCfg = regionOverride.createInfinispanConfiguration();
+            }
+
          } else {
             // No region specific overrides, template cache name is generic for data type.
             templateCacheName = typeOverrides.get(typeKey).getCacheName();

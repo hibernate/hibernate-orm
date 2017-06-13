@@ -16,7 +16,7 @@ Quickstart
      cd hibernate-orm
      ./gradlew clean build
 
-The build requires a Java 8 JDK as JAVA_HOME, but will ensure Java 6 compatibility.
+The build requires a Java 8 JDK as JAVA_HOME.
  
 
 Resources

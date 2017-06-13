@@ -6,10 +6,9 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression.domain;
 
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.tree.spi.select.EntityValuedSelectable;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 
@@ -17,7 +16,7 @@ import org.hibernate.sql.ast.tree.spi.select.Selectable;
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
-public class EntityReference implements NavigableContainerReference {
+public class EntityReference extends AbstractNavigableContainerReference {
 	// todo (6.0) : for now assuming a single class works for all TableGroup Expression cases
 	//		^^ verify that this is accurate and that there are no other pieces of information
 	//		that we need to account for in the distinction.  See also EntityTableGroup for
@@ -25,10 +24,7 @@ public class EntityReference implements NavigableContainerReference {
 
 	// todo (6.0) : see org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference and SqmRoot ctor
 
-	private final EntityDescriptor entityMetadata;
 	private final EntityValuedExpressableType expressionType;
-	private final NavigablePath navigablePath;
-	private final NavigableContainerReference containerReference;
 
 	private final EntityValuedSelectable selectable;
 
@@ -38,38 +34,15 @@ public class EntityReference implements NavigableContainerReference {
 			NavigablePath navigablePath,
 			NavigableContainerReference containerReference,
 			boolean isShallow) {
+		super( containerReference, expressionType, navigablePath );
 		this.expressionType = expressionType;
-		this.navigablePath = navigablePath;
-		this.containerReference = containerReference;
-
-		this.entityMetadata = expressionType.getEntityDescriptor();
 
 		this.selectable = new EntityValuedSelectable(
 				this,
 				navigablePath,
 				columnReferenceSource,
-				entityMetadata,
 				isShallow
 		);
-	}
-
-	public EntityDescriptor getEntityMetadata() {
-		return entityMetadata;
-	}
-
-	@Override
-	public NavigablePath getNavigablePath() {
-		return navigablePath;
-	}
-
-	@Override
-	public EntityDescriptor getNavigable() {
-		return getEntityMetadata();
-	}
-
-	@Override
-	public NavigableReference findNavigableReference(String navigableName) {
-		return null;
 	}
 
 	@Override
@@ -80,11 +53,6 @@ public class EntityReference implements NavigableContainerReference {
 	@Override
 	public Selectable getSelectable() {
 		return selectable;
-	}
-
-	@Override
-	public NavigableContainerReference getNavigableContainerReference() {
-		return containerReference;
 	}
 
 	@Override

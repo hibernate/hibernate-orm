@@ -27,10 +27,21 @@ public abstract class AbstractNavigableContainerReference implements NavigableCo
 	public AbstractNavigableContainerReference(
 			NavigableContainerReference ourContainerReference,
 			NavigableContainer navigable) {
+		this(
+				ourContainerReference,
+				navigable,
+				ourContainerReference.getNavigablePath().append( navigable.getNavigableName() )
+	  	);
+	}
+
+	public AbstractNavigableContainerReference(
+			NavigableContainerReference ourContainerReference,
+			NavigableContainer navigable,
+			NavigablePath navigablePath) {
 		this.ourContainerReference = ourContainerReference;
 		this.navigable = navigable;
 
-		this.navigablePath = ourContainerReference.getNavigablePath().append( navigable.getNavigableName() );
+		this.navigablePath = navigablePath;
 	}
 
 	@Override

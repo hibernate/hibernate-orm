@@ -10,6 +10,7 @@ package org.hibernate.query;
 import javax.persistence.ParameterMode;
 
 import org.hibernate.Incubating;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.type.Type;
 
@@ -51,5 +52,5 @@ public interface QueryParameter<T> extends javax.persistence.Parameter<T> {
 	 *
 	 * @return The associated Hibernate Type, may be {@code null}.
 	 */
-	Type getHibernateType();
+	AllowableParameterType<T> getHibernateType();
 }

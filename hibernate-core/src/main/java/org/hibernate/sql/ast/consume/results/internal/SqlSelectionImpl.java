@@ -7,9 +7,9 @@
 
 package org.hibernate.sql.ast.consume.results.internal;
 
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 
 /**
  * @author Steve Ebersole
@@ -34,7 +34,7 @@ public class SqlSelectionImpl implements SqlSelection {
 	}
 
 	@Override
-	public void accept(SqlSelectAstToJdbcSelectConverter interpreter) {
+	public void accept(SqlAstWalker interpreter) {
 		interpreter.visitSqlSelection( this );
 	}
 }

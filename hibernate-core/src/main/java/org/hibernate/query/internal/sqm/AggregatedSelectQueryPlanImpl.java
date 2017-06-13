@@ -16,6 +16,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.NotYetImplementedException;
 
 /**
  * @author Steve Ebersole
@@ -44,19 +45,11 @@ public class AggregatedSelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 	}
 
 	@Override
-	public Iterator<R> performIterate(
-			SharedSessionContractImplementor persistenceContext,
-			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings) {
-		return null;
-	}
-
-	@Override
 	public ScrollableResultsImplementor performScroll(
 			SharedSessionContractImplementor persistenceContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings,
 			ScrollMode scrollMode) {
-		return null;
+		throw new NotYetImplementedException();
 	}
 }

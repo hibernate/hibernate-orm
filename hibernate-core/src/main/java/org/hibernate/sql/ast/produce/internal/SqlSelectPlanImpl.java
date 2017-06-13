@@ -10,12 +10,12 @@ import java.util.List;
 
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
-import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
+import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
 
 /**
  * @author Steve Ebersole
  */
-public class SqlSelectPlanImpl implements SqlSelectPlan {
+public class SqlSelectPlanImpl implements SqlAstSelectInterpretation {
 	private final SelectStatement selectQuery;
 	private final List<QueryResult> queryReturns;
 
@@ -27,7 +27,7 @@ public class SqlSelectPlanImpl implements SqlSelectPlan {
 	}
 
 	@Override
-	public SelectStatement getSqlAstSelectStatement() {
+	public SelectStatement getSqlAstStatement() {
 		return selectQuery;
 	}
 

@@ -18,10 +18,16 @@ import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.DeleteStatement;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.query.sqm.tree.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.sql.Delete;
+import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
+import org.hibernate.sql.ast.tree.spi.InsertSelectStatement;
+import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
@@ -35,7 +41,7 @@ public class TableBasedDeleteHandlerImpl
 		implements MultiTableBulkIdStrategy.DeleteHandler {
 	private static final Logger log = Logger.getLogger( TableBasedDeleteHandlerImpl.class );
 
-	private final Queryable targetedPersister;
+	private final EntityDescriptor targetedPersister;
 
 	private final String idInsertSelect;
 	private final List<ParameterSpecification> idSelectParameterSpecifications;
@@ -43,11 +49,46 @@ public class TableBasedDeleteHandlerImpl
 
 	public TableBasedDeleteHandlerImpl(
 			SessionFactoryImplementor factory,
-			HqlSqlWalker walker,
+			SqmDeleteStatement sqmDeleteStatement,
 			IdTableInfo idTableInfo) {
-		super( factory, walker );
+		super( factory, sqmDeleteStatement );
 
-		DeleteStatement deleteStatement = ( DeleteStatement ) walker.getAST();
+
+		// Actually on the level of SqmToSqlAstConverter
+
+		// todo (6.0) : determine proper args
+		//		need access to:
+		//			1) The walker - SqmToSqlAstConverter
+		//			2) The SQL AST "production context" - maybe the walker is enough here?
+
+		final SqmToSqlAstConverter sqmConverter = new SqmToSqlAstConverter() {
+		};
+
+		// todo (6.0) : by the nature of walking we will already be readily able collect parameters and their binders
+		//		and `userWhereClauseFragment` will be a SQL AST `Predicate` (or a
+		//		SQL AST `QuerySpec` so that we can use `QuerySpec#addRestriction`
+
+		// Step 1
+		//		- create the id table insert-select statement
+
+		final InsertSelectStatement idTableInsertSelect = new InsertSelectStatement();
+		final QuerySpec idSelect
+
+		final SqmRoot targetEntityRoot = sqmDeleteStatement.getEntityFromElement();
+		final EntityDescriptor targetEntityDescriptor = targetEntityRoot.getNavigableReference()
+				.getReferencedNavigable()
+				.getEntityDescriptor();
+
+
+		// Step 2
+		//		- create the individual deletes
+
+
+		// Step 3
+		//		- create the id table row deletes?
+
+
+		DeleteStatement deleteStatement = ( DeleteStatement ) sqmDeleteStatement.getAST();
 		FromElement fromElement = deleteStatement.getFromClause().getFromElement();
 
 		this.targetedPersister = fromElement.getQueryable();
@@ -96,7 +137,7 @@ public class TableBasedDeleteHandlerImpl
 	}
 
 	@Override
-	public Queryable getTargetedQueryable() {
+	public Queryable getTargetedEntityDescriptor() {
 		return targetedPersister;
 	}
 

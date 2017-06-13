@@ -17,7 +17,7 @@ public class SemanticException extends QueryException {
 		super( message );
 	}
 
-	public SemanticException(String message, Throwable cause) {
+	public SemanticException(String message, Exception cause) {
 		super( message, cause );
 	}
 }

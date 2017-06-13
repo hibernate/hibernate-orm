@@ -16,10 +16,9 @@ import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttrib
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.metamodel.model.domain.spi.NavigableEmbeddedValued;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -44,7 +43,7 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
  */
 public class SingularPersistentAttributeEmbedded<O,J>
 		extends AbstractSingularPersistentAttribute<O,J>
-		implements SingularPersistentAttribute<O,J>, NavigableEmbeddedValued<J>, Fetchable<J> {
+		implements EmbeddedValuedNavigable<J>, Fetchable<J> {
 
 	private final EmbeddedTypeDescriptor<J> embeddedDescriptor;
 

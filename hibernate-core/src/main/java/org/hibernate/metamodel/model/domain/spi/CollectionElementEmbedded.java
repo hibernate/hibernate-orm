@@ -9,7 +9,7 @@ package org.hibernate.metamodel.model.domain.spi;
 /**
  * @author Steve Ebersole
  */
-public interface CollectionElementEmbedded<J> extends CollectionElement<J>, NavigableEmbeddedValued<J> {
+public interface CollectionElementEmbedded<J> extends CollectionElement<J>, EmbeddedValuedNavigable<J> {
 	@Override
 	default ElementClassification getClassification() {
 		return ElementClassification.EMBEDDABLE;

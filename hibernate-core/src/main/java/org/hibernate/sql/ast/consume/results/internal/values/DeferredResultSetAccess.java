@@ -14,40 +14,31 @@ import java.sql.SQLException;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.sql.ast.consume.spi.ExecutionContext;
 import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
+import org.hibernate.sql.ast.consume.spi.ParameterBindingContext;
 import org.hibernate.sql.ast.consume.spi.JdbcSelect;
 import org.hibernate.sql.ast.consume.spi.PreparedStatementCreator;
-import org.hibernate.sql.ast.consume.spi.PreparedStatementExecutor;
 
 /**
  * @author Steve Ebersole
  */
 public class DeferredResultSetAccess implements JdbcValuesSourceResultSetImpl.ResultSetAccess {
-	private final SharedSessionContractImplementor persistenceContext;
 	private final JdbcSelect jdbcSelect;
-	private final QueryOptions queryOptions;
+	private final ExecutionContext executionContext;
 	private final PreparedStatementCreator statementCreator;
-	private final PreparedStatementExecutor preparedStatementExecutor;
-	private final QueryParameterBindings queryParameterBindings;
 
 	private PreparedStatement preparedStatement;
 	private ResultSet resultSet;
 
 	public DeferredResultSetAccess(
-			SharedSessionContractImplementor persistenceContext,
 			JdbcSelect jdbcSelect,
-			QueryOptions queryOptions,
-			PreparedStatementCreator statementCreator,
-			PreparedStatementExecutor preparedStatementExecutor,
-			QueryParameterBindings queryParameterBindings) {
-		this.persistenceContext = persistenceContext;
+			ExecutionContext executionContext,
+			PreparedStatementCreator statementCreator) {
+		this.executionContext = executionContext;
 		this.jdbcSelect = jdbcSelect;
-		this.queryOptions = queryOptions;
 		this.statementCreator = statementCreator;
-		this.preparedStatementExecutor = preparedStatementExecutor;
-		this.queryParameterBindings = queryParameterBindings;
 	}
 
 	@Override
@@ -59,10 +50,10 @@ public class DeferredResultSetAccess implements JdbcValuesSourceResultSetImpl.Re
 	}
 
 	private void executeQuery() {
-		final LogicalConnectionImplementor logicalConnection = persistenceContext.getJdbcCoordinator().getLogicalConnection();
+		final LogicalConnectionImplementor logicalConnection = executionContext.getSession().getJdbcCoordinator().getLogicalConnection();
 		final Connection connection = logicalConnection.getPhysicalConnection();
 
-		final JdbcServices jdbcServices = persistenceContext.getFactory().getServiceRegistry().getService( JdbcServices.class );
+		final JdbcServices jdbcServices = executionContext.getSession().getFactory().getServiceRegistry().getService( JdbcServices.class );
 
 		final String sql = jdbcSelect.getSql();
 		try {
@@ -73,11 +64,11 @@ public class DeferredResultSetAccess implements JdbcValuesSourceResultSetImpl.Re
 			logicalConnection.getResourceRegistry().register( preparedStatement, true );
 
 			// set options
-			if ( queryOptions.getFetchSize() != null ) {
-				preparedStatement.setFetchSize( queryOptions.getFetchSize() );
+			if ( executionContext.getQueryOptions().getFetchSize() != null ) {
+				preparedStatement.setFetchSize( executionContext.getQueryOptions().getFetchSize() );
 			}
-			if ( queryOptions.getTimeout() != null ) {
-				preparedStatement.setQueryTimeout( queryOptions.getTimeout() );
+			if ( executionContext.getQueryOptions().getTimeout() != null ) {
+				preparedStatement.setQueryTimeout( executionContext.getQueryOptions().getTimeout() );
 			}
 
 			// todo : limit/offset
@@ -90,12 +81,11 @@ public class DeferredResultSetAccess implements JdbcValuesSourceResultSetImpl.Re
 				paramBindingPosition += parameterBinder.bindParameterValue(
 						preparedStatement,
 						paramBindingPosition,
-						queryParameterBindings,
-						persistenceContext
+						executionContext.getParameterBindingContext()
 				);
 			}
 
-			resultSet = preparedStatementExecutor.execute( preparedStatement, queryOptions, persistenceContext );
+			resultSet = preparedStatement.executeQuery();
 			logicalConnection.getResourceRegistry().register( resultSet, preparedStatement );
 
 		}
@@ -113,7 +103,7 @@ public class DeferredResultSetAccess implements JdbcValuesSourceResultSetImpl.Re
 	@Override
 	public void release() {
 		if ( resultSet != null ) {
-			persistenceContext.getJdbcCoordinator()
+			executionContext.getSession().getJdbcCoordinator()
 					.getLogicalConnection()
 					.getResourceRegistry()
 					.release( resultSet, preparedStatement );
@@ -121,7 +111,7 @@ public class DeferredResultSetAccess implements JdbcValuesSourceResultSetImpl.Re
 		}
 
 		if ( preparedStatement != null ) {
-			persistenceContext.getJdbcCoordinator()
+			executionContext.getSession().getJdbcCoordinator()
 					.getLogicalConnection()
 					.getResourceRegistry()
 					.release( preparedStatement );

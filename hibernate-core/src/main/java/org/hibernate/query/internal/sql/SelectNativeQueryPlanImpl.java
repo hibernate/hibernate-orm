@@ -22,7 +22,7 @@ import org.hibernate.sql.ast.consume.spi.RowTransformer;
 /**
  * @author Steve Ebersole
  */
-public class SelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
+public class SelectNativeQueryPlanImpl<R> implements SelectQueryPlan<R> {
 	private final String sql;
 	private final boolean callable;
 	private final boolean autoDiscoverTypes;
@@ -31,7 +31,7 @@ public class SelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 
 	private final RowTransformer<R> rowTransformer;
 
-	public SelectQueryPlanImpl(NativeQueryImpl<R> nativeQuery) {
+	public SelectNativeQueryPlanImpl(NativeQueryImpl<R> nativeQuery) {
 		this.sql = nativeQuery.getQueryString();
 		this.callable = nativeQuery.isCallable();
 		this.autoDiscoverTypes = nativeQuery.isAutoDiscoverTypes();
@@ -50,14 +50,6 @@ public class SelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 
 	@Override
 	public List<R> performList(
-			SharedSessionContractImplementor persistenceContext,
-			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings) {
-		throw new NotYetImplementedException( "Not yet implemented" );
-	}
-
-	@Override
-	public Iterator<R> performIterate(
 			SharedSessionContractImplementor persistenceContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings) {

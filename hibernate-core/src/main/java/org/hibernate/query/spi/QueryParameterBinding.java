@@ -11,8 +11,7 @@ import java.util.Collection;
 import javax.persistence.TemporalType;
 
 import org.hibernate.Incubating;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 
 /**
  * The value/type binding information for a particular query parameter.  Supports
@@ -33,7 +32,7 @@ public interface QueryParameterBinding<T> {
 	 *
 	 * @return The currently associated Type
 	 */
-	ExpressableType getBindType();
+	AllowableParameterType<T> getBindType();
 
 	/**
 	 * Sets the parameter binding value.  The inherent parameter type (if known) is assumed
@@ -48,15 +47,15 @@ public interface QueryParameterBinding<T> {
 	 * @param value The bind value
 	 * @param clarifiedType The explicit Type to use
 	 */
-	void setBindValue(T value, Type clarifiedType);
+	void setBindValue(T value, AllowableParameterType<T> clarifiedType);
 
 	/**
 	 * Sets the parameter binding value using the explicit TemporalType.
 	 *
 	 * @param value The bind value
-	 * @param clarifiedTemporalType The temporal type to use
+	 * @param temporalTypePrecision The temporal type to use
 	 */
-	void setBindValue(T value, TemporalType clarifiedTemporalType);
+	void setBindValue(T value, TemporalType temporalTypePrecision);
 
 	/**
 	 * Get the value current bound.
@@ -78,15 +77,15 @@ public interface QueryParameterBinding<T> {
 	 * @param values The bind values
 	 * @param clarifiedType The explicit Type to use
 	 */
-	void setBindValues(Collection<T> values, Type clarifiedType);
+	void setBindValues(Collection<T> values, AllowableParameterType<T> clarifiedType);
 
 	/**Sets the parameter binding value using the explicit TemporalType in regards to the individual values.
 	 *
 	 *
 	 * @param values The bind values
-	 * @param clarifiedTemporalType The temporal type to use
+	 * @param temporalTypePrecision The temporal type to use
 	 */
-	void setBindValues(Collection<T> values, TemporalType clarifiedTemporalType);
+	void setBindValues(Collection<T> values, TemporalType temporalTypePrecision);
 
 	/**
 	 * Get the values currently bound.

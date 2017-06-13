@@ -11,7 +11,7 @@ import java.sql.SQLException;
 
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.consume.spi.ParameterBindingContext;
 import org.hibernate.sql.ast.produce.sqm.spi.ParameterSpec;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;

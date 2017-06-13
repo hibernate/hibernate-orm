@@ -13,6 +13,8 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
+import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -65,6 +67,21 @@ public abstract class AbstractSqmAttributeReference<A extends PersistentAttribut
 	}
 
 	@Override
+	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
+		return sourceReference;
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return attribute.getJavaTypeDescriptor();
+	}
+
+	@Override
+	public Class getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
+
+	@Override
 	public A getReferencedNavigable() {
 		return attribute;
 	}
@@ -82,11 +99,6 @@ public abstract class AbstractSqmAttributeReference<A extends PersistentAttribut
 	@Override
 	public ExpressableType getInferableType() {
 		return getExpressionType();
-	}
-
-	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitAttributeReferenceExpression( this );
 	}
 
 	@Override

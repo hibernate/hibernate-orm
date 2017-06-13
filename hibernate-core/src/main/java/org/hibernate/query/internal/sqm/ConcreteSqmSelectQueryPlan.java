@@ -7,14 +7,13 @@
 package org.hibernate.query.internal.sqm;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
 
 import org.hibernate.ScrollMode;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.streams.StingArrayCollector;
@@ -32,11 +31,13 @@ import org.hibernate.sql.ast.consume.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.ast.consume.internal.RowTransformerTupleImpl;
 import org.hibernate.sql.ast.consume.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.ast.consume.internal.TupleElementImpl;
+import org.hibernate.sql.ast.consume.spi.ExecutionContext;
 import org.hibernate.sql.ast.consume.spi.JdbcSelect;
+import org.hibernate.sql.ast.consume.spi.ParameterBindingContext;
 import org.hibernate.sql.ast.consume.spi.RowTransformer;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
-import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
+import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 
@@ -47,6 +48,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final SqmSelectStatement sqm;
 	private final RowTransformer<R> rowTransformer;
 
+	@SuppressWarnings("WeakerAccess")
 	public ConcreteSqmSelectQueryPlan(
 			SqmSelectStatement sqm,
 			Class<R> resultType,
@@ -143,78 +145,91 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			SharedSessionContractImplementor persistenceContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings) {
-		verifyQueryIsSelect();
-
-		final Callback callback = afterLoadAction -> {
-			// do nothing here
-		};
-
-		final JdbcSelect jdbcSelect = buildJdbcSelect(
+		final ExecutionContext executionContext = generateExecutionContext(
 				persistenceContext,
 				queryOptions,
-				inputParameterBindings,
-				callback
+				inputParameterBindings
 		);
+
+		final JdbcSelect jdbcSelect = buildJdbcSelect( executionContext );
 
 
 		return new JdbcSelectExecutorStandardImpl().list(
 				jdbcSelect,
-				queryOptions,
-				inputParameterBindings,
-				rowTransformer,
-				callback,
-				persistenceContext
+				executionContext,
+				rowTransformer
 		);
 	}
 
-	private JdbcSelect buildJdbcSelect(
+	private ExecutionContext generateExecutionContext(
 			SharedSessionContractImplementor persistenceContext,
-			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings, Callback callback) {
-		// todo (6.0) : SqmSelectToSqlAstConverter needs to account for the EntityGraph hint
-		final SqlSelectPlan interpretation = SqmSelectToSqlAstConverter.interpret(
+			QueryOptions queryOptions, QueryParameterBindings inputParameterBindings) {
+		return new ExecutionContext() {
+				final ParameterBindingContext parameterBindingContext = new ParameterBindingContext() {
+					@Override
+					public <T> Collection<T> getLoadIdentifiers() {
+						// todo (6.0) : where do these come from?
+						return null;
+					}
+
+					@Override
+					public QueryParameterBindings getQueryParameterBindings() {
+						return inputParameterBindings;
+					}
+
+					@Override
+					public SharedSessionContractImplementor getSession() {
+						return persistenceContext;
+					}
+				};
+
+				@Override
+				public SharedSessionContractImplementor getSession() {
+					return persistenceContext;
+				}
+
+				@Override
+				public QueryOptions getQueryOptions() {
+					return queryOptions;
+				}
+
+				@Override
+				public ParameterBindingContext getParameterBindingContext() {
+					return parameterBindingContext;
+				}
+
+				@Override
+				public Callback getCallback() {
+					return afterLoadAction -> {
+						// do nothing here (yet)
+					};
+				}
+			};
+	}
+
+	private JdbcSelect buildJdbcSelect(ExecutionContext executionContext) {
+		final SqlAstSelectInterpretation interpretation = SqmSelectToSqlAstConverter.interpret(
 				sqm,
-				queryOptions,
+				executionContext.getQueryOptions(),
 				new SqlAstBuildingContext() {
 					@Override
 					public SessionFactoryImplementor getSessionFactory() {
-						return persistenceContext.getFactory();
+						return executionContext.getSession().getFactory();
 					}
 
 					@Override
 					public Callback getCallback() {
-						return callback;
+						return executionContext.getCallback();
 					}
 				}
 		);
 
-		// todo (6.0) : is there any benefit to building SqlSelectPlan and then JdbcSelect in successive steps?
-		//		as opposed to combining into one step
 		return SqlSelectAstToJdbcSelectConverter.interpret(
 				interpretation,
-				persistenceContext,
-				inputParameterBindings,
+				executionContext.getSession(),
+				executionContext.getParameterBindingContext().getQueryParameterBindings(),
 				Collections.emptyList()
 		);
-	}
-
-	private void verifyQueryIsSelect() {
-		if ( !SqmSelectStatement.class.isInstance( sqm ) ) {
-			throw new IllegalQueryOperationException(
-					"Query is not a SELECT statement [" + sqm.getClass().getSimpleName() + "]"
-			);
-		}
-	}
-
-	@Override
-	public Iterator<R> performIterate(
-			SharedSessionContractImplementor persistenceContext,
-			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings) {
-		verifyQueryIsSelect();
-
-		// todo : implement
-		throw new NotYetImplementedException( "Query#iterate not yet implemented" );
 	}
 
 	@Override
@@ -224,28 +239,19 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings,
 			ScrollMode scrollMode) {
-		verifyQueryIsSelect();
-
-		final Callback callback = afterLoadAction -> {
-			// do nothing here
-		};
-
-		// todo : SqmSelectToSqlAstConverter needs to account for the EntityGraph hint
-		final JdbcSelect jdbcSelect = buildJdbcSelect(
+		final ExecutionContext executionContext = generateExecutionContext(
 				persistenceContext,
 				queryOptions,
-				inputParameterBindings,
-				callback
+				inputParameterBindings
 		);
+
+		final JdbcSelect jdbcSelect = buildJdbcSelect( executionContext );
 
 		return new JdbcSelectExecutorStandardImpl().scroll(
 				jdbcSelect,
 				scrollMode,
-				queryOptions,
-				inputParameterBindings,
-				rowTransformer,
-				callback,
-				persistenceContext
+				executionContext,
+				rowTransformer
 		);
 	}
 }

@@ -11,9 +11,13 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.boot.model.relational.InitCommand;
-import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.naming.Identifier;
+import org.hibernate.naming.QualifiedTableName;
+import org.hibernate.naming.spi.QualifiedName;
+import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.tree.spi.TargetColumnInfo;
+import org.hibernate.sql.ast.tree.spi.TargetTableInfo;
 
 import static java.util.stream.Collectors.toCollection;
 
@@ -22,62 +26,69 @@ import static java.util.stream.Collectors.toCollection;
  *
  * @author Steve Ebersole
  */
-public class PhysicalTable extends AbstractTable implements ExportableTable {
-
-	private final Identifier tableName;
-	private final Identifier catalogName;
-	private final Identifier schemaName;
+public class PhysicalTable extends AbstractTable implements ExportableTable, TargetTableInfo {
 	private final QualifiedTableName qualifiedTableName;
 	private boolean hasPrimaryKey;
 	private boolean primaryKeyIdentity;
-	private String commment;
+	private String comment;
 	private List<String> checkConstraints = new ArrayList<>();
 	private List<Index> indexes = new ArrayList<>();
 	private List<UniqueKey> uniqueKeys = new ArrayList<>();
 	private List<InitCommand> initCommands = new ArrayList<>();
 
 	public PhysicalTable(
-			Identifier catalogName,
-			Identifier schemaName,
-			Identifier tableName,
+			Identifier logicalCatalogName,
+			Identifier logicalSchemaName,
+			Identifier logicalTableName,
 			boolean isAbstract,
 			boolean hasPrimaryKey,
+			String comment,
 			PhysicalNamingStrategy namingStrategy,
 			JdbcEnvironment jdbcEnvironment) {
-		this(catalogName, schemaName, tableName, isAbstract, hasPrimaryKey, null, namingStrategy, jdbcEnvironment );
+		this(
+				new QualifiedTableName(
+						namingStrategy.toPhysicalCatalogName( logicalCatalogName, jdbcEnvironment ),
+						namingStrategy.toPhysicalSchemaName( logicalSchemaName, jdbcEnvironment ),
+						namingStrategy.toPhysicalTableName( logicalTableName, jdbcEnvironment )
+				),
+				isAbstract,
+				hasPrimaryKey,
+				comment,
+				namingStrategy,
+				jdbcEnvironment
+		);
 	}
 
 	public PhysicalTable(
-			Identifier catalogName,
-			Identifier schemaName,
-			Identifier tableName,
+			QualifiedTableName logicalQualifiedName,
 			boolean isAbstract,
 			boolean hasPrimaryKey,
-			String commment,
+			String comment,
 			PhysicalNamingStrategy namingStrategy,
 			JdbcEnvironment jdbcEnvironment) {
 		super( isAbstract );
+		this.qualifiedTableName = new QualifiedTableName(
+				namingStrategy.toPhysicalCatalogName( logicalQualifiedName.getCatalogName(), jdbcEnvironment ),
+				namingStrategy.toPhysicalSchemaName( logicalQualifiedName.getSchemaName(), jdbcEnvironment ),
+				namingStrategy.toPhysicalTableName( logicalQualifiedName.getTableName(), jdbcEnvironment )
+		);
 		this.hasPrimaryKey = hasPrimaryKey;
-		this.commment = commment;
-		this.tableName = namingStrategy.toPhysicalTableName( tableName, jdbcEnvironment );
-		this.catalogName = namingStrategy.toPhysicalCatalogName( catalogName, jdbcEnvironment );
-		this.schemaName = namingStrategy.toPhysicalSchemaName( schemaName, jdbcEnvironment );
-		this.qualifiedTableName = new QualifiedTableName( catalogName, schemaName, tableName );
+		this.comment = comment;
 	}
 
 	@Override
 	public Identifier getCatalogName() {
-		return catalogName;
+		return qualifiedTableName.getCatalogName();
 	}
 
 	@Override
 	public Identifier getSchemaName() {
-		return schemaName;
+		return qualifiedTableName.getSchemaName();
 	}
 
 	@Override
 	public Identifier getTableName() {
-		return tableName;
+		return qualifiedTableName.getTableName();
 	}
 
 	@Override
@@ -97,15 +108,15 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 
 	@Override
 	public String toString() {
-		return "PhysicalTable(" + tableName + ")";
+		return "PhysicalTable(" + getTableName() + ")";
 	}
 
 	@Override
 	public String getExportIdentifier() {
 		return qualify(
-				render( catalogName ),
-				render( schemaName ),
-				tableName.render()
+				render( getCatalogName() ),
+				render( getSchemaName() ),
+				getTableName().render()
 		);
 	}
 
@@ -128,10 +139,9 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 	@Override
 	public Collection<PhysicalColumn> getPhysicalColumns() {
 		return getColumns().stream()
-				.filter( column -> PhysicalColumn.class.isInstance( column ) )
+				.filter( PhysicalColumn.class::isInstance )
 				.map( column -> (PhysicalColumn) column )
-				.collect( toCollection(
-						ArrayList::new ) );
+				.collect( toCollection( ArrayList::new ) );
 	}
 
 	@Override
@@ -141,7 +151,7 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 
 	@Override
 	public String getComment() {
-		return commment;
+		return comment;
 	}
 
 	public void setCheckConstraints(List<String> checkConstraints) {
@@ -187,5 +197,15 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 
 	private String render(Identifier identifier) {
 		return identifier == null ? null : identifier.render();
+	}
+
+	@Override
+	public QualifiedName getName() {
+		return getQualifiedTableName();
+	}
+
+	@Override
+	public List<TargetColumnInfo> getTargetColumns() {
+		throw new NotYetImplementedException(  );
 	}
 }

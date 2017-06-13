@@ -8,7 +8,6 @@ package org.hibernate.query.internal.sqm;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,7 +18,9 @@ import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.jpa.graph.internal.EntityGraphImpl;
+import org.hibernate.graph.spi.EntityGraphImplementor;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.AbstractQuery;
@@ -38,10 +39,12 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.consume.spi.QuerySplitter;
+import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmNonSelectStatement;
 import org.hibernate.query.sqm.tree.SqmParameter;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 
 /**
  * {@link Query} implementation based on an SQM
@@ -211,7 +214,7 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 	}
 
 	@Override
-	protected void applyEntityGraphQueryHint(String hintName, EntityGraphImpl entityGraph) {
+	protected void applyEntityGraphQueryHint(String hintName, EntityGraphImplementor entityGraph) {
 		queryOptions.setEntityGraphQueryHint(
 				new EntityGraphQueryHint( hintName, entityGraph )
 		);
@@ -233,6 +236,7 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	protected List<R> doList() {
+		SqmUtil.verifyIsSelectStatement( getSqmStatement() );
 		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 
 		return resolveSelectQueryPlan().performList(
@@ -314,19 +318,8 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected Iterator<R> doIterate() {
-		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
-
-		return resolveSelectQueryPlan().performIterate(
-				getSession(),
-				getQueryOptions(),
-				getQueryParameterBindings()
-		);
-	}
-
-	@Override
 	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
+		SqmUtil.verifyIsSelectStatement( getSqmStatement() );
 		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 
 		return resolveSelectQueryPlan().performScroll(
@@ -339,6 +332,7 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 
 	@Override
 	protected int doExecuteUpdate() {
+		SqmUtil.verifyIsNonSelectStatement( getSqmStatement() );
 		getSession().prepareForQueryExecution( true );
 
 		return resolveNonSelectQueryPlan().executeUpdate(
@@ -349,14 +343,11 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 	}
 
 	private NonSelectQueryPlan resolveNonSelectQueryPlan() {
-		// resolve (or make) the QueryPlan.  This QueryPlan might be an
-		// aggregation of multiple plans.  QueryPlans can be cached, unless either:
-		//		1) the query declared multi-valued parameter(s)
-		//		2) an EntityGraph hint is attached.
+		// resolve (or make) the QueryPlan.
 
 		NonSelectQueryPlan queryPlan = null;
 
-		final QueryInterpretations.Key cacheKey = SqmInterpretationsKey.generateFrom( this );
+		final QueryInterpretations.Key cacheKey = SqmInterpretationsKey.generateNonSelectKey( this );
 		if ( cacheKey != null ) {
 			queryPlan = getSession().getFactory().getQueryEngine().getQueryInterpretations().getNonSelectQueryPlan( cacheKey );
 		}
@@ -372,6 +363,60 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 	}
 
 	private NonSelectQueryPlan buildNonSelectQueryPlan() {
+		// to get here the SQM statement has already been validated to be
+		// a non-select variety...
+		if ( getSqmStatement() instanceof SqmDeleteStatement ) {
+			return buildDeleteQueryPlan();
+		}
+
+		if ( getSqmStatement() instanceof SqmUpdateStatement ) {
+			return buildUpdateQueryPlan();
+		}
+
 		throw new NotYetImplementedException( "Query#executeUpdate not yet implemented" );
+	}
+
+	private NonSelectQueryPlan buildDeleteQueryPlan() {
+		final SqmDeleteStatement sqmStatement = (SqmDeleteStatement) getSqmStatement();
+
+		// If the entity to delete is multi-table we need to leverage the
+		// configured org.hibernate.hql.spi.id.MultiTableBulkIdStrategy
+		final EntityDescriptor entityToDelete = sqmStatement.getEntityFromElement()
+				.getNavigableReference()
+				.getReferencedNavigable()
+				.getEntityDescriptor();
+
+		if ( entityToDelete.isMultiTable() ) {
+			final MultiTableBulkIdStrategy.DeleteHandler handler = getSession().getFactory()
+					.getSessionFactoryOptions()
+					.getMultiTableBulkIdStrategy()
+					.buildDeleteHandler( getSession().getFactory(), sqmStatement );
+			return new MultiTableDeleteQueryPlan( handler );
+		}
+		else {
+			return new SimpleDeleteQueryPlan( sqmStatement );
+		}
+	}
+
+	private NonSelectQueryPlan buildUpdateQueryPlan() {
+		final SqmUpdateStatement sqmStatement = (SqmUpdateStatement) getSqmStatement();
+
+		// If the entity to update is multi-table we need to leverage the
+		// configured org.hibernate.hql.spi.id.MultiTableBulkIdStrategy
+		final EntityDescriptor entityToDelete = sqmStatement.getEntityFromElement()
+				.getNavigableReference()
+				.getReferencedNavigable()
+				.getEntityDescriptor();
+
+		if ( entityToDelete.isMultiTable() ) {
+			final MultiTableBulkIdStrategy.UpdateHandler handler = getSession().getFactory()
+					.getSessionFactoryOptions()
+					.getMultiTableBulkIdStrategy()
+					.buildUpdateHandler( getSession().getFactory(), sqmStatement );
+			return new MultiTableUpdateQueryPlan( handler );
+		}
+		else {
+			return new SimpleUpdateQueryPlan( sqmStatement );
+		}
 	}
 }

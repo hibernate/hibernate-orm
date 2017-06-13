@@ -23,11 +23,7 @@ import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.internal.ScrollableResultsIterator;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
-import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.consume.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.ast.consume.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.ast.consume.results.internal.RowReaderStandardImpl;
@@ -41,10 +37,12 @@ import org.hibernate.sql.ast.consume.results.spi.InitializerSource;
 import org.hibernate.sql.ast.consume.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.consume.results.spi.RowReader;
+import org.hibernate.sql.ast.consume.spi.ExecutionContext;
 import org.hibernate.sql.ast.consume.spi.JdbcSelect;
 import org.hibernate.sql.ast.consume.spi.JdbcSelectExecutor;
 import org.hibernate.sql.ast.consume.spi.PreparedStatementCreator;
 import org.hibernate.sql.ast.consume.spi.RowTransformer;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 
 import org.jboss.logging.Logger;
 
@@ -52,23 +50,22 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
+	/**
+	 * Singleton access
+	 */
+	public static final JdbcSelectExecutorStandardImpl INSTANCE = new JdbcSelectExecutorStandardImpl();
+
 	private static final Logger log = Logger.getLogger( JdbcSelectExecutorStandardImpl.class );
 
 	@Override
 	public <R> List<R> list(
 			JdbcSelect jdbcSelect,
-			QueryOptions queryOptions,
-			QueryParameterBindings queryParameterBindings,
-			RowTransformer<R> rowTransformer,
-			Callback callback,
-			SharedSessionContractImplementor persistenceContext) {
+			ExecutionContext executionContext,
+			RowTransformer<R> rowTransformer) {
 		return executeQuery(
 				jdbcSelect,
-				queryOptions,
-				queryParameterBindings,
+				executionContext,
 				rowTransformer,
-				persistenceContext,
-				callback,
 				Connection::prepareStatement,
 				ListResultsConsumer.instance()
 		);
@@ -78,18 +75,12 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 	public <R> ScrollableResultsImplementor<R> scroll(
 			JdbcSelect jdbcSelect,
 			ScrollMode scrollMode,
-			QueryOptions queryOptions,
-			QueryParameterBindings queryParameterBindings,
-			RowTransformer<R> rowTransformer,
-			Callback callback,
-			SharedSessionContractImplementor persistenceContext) {
+			ExecutionContext executionContext,
+			RowTransformer<R> rowTransformer) {
 		return executeQuery(
 				jdbcSelect,
-				queryOptions,
-				queryParameterBindings,
+				executionContext,
 				rowTransformer,
-				persistenceContext,
-				callback,
 				(connection, sql) -> connection.prepareStatement(
 						sql,
 						scrollMode.toResultSetType(),
@@ -103,19 +94,13 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 	@Override
 	public <R> Stream<R> stream(
 			JdbcSelect jdbcSelect,
-			QueryOptions queryOptions,
-			QueryParameterBindings queryParameterBindings,
-			RowTransformer<R> rowTransformer,
-			Callback callback,
-			SharedSessionContractImplementor persistenceContext) {
+			ExecutionContext executionContext,
+			RowTransformer<R> rowTransformer) {
 		final ScrollableResultsImplementor<R> scrollableResults = scroll(
 				jdbcSelect,
 				ScrollMode.FORWARD_ONLY,
-				queryOptions,
-				queryParameterBindings,
-				rowTransformer,
-				callback,
-				persistenceContext
+				executionContext,
+				rowTransformer
 		);
 		final ScrollableResultsIterator<R> iterator = new ScrollableResultsIterator<>( scrollableResults );
 		final Spliterator<R> spliterator = Spliterators.spliteratorUnknownSize( iterator, Spliterator.NONNULL );
@@ -202,27 +187,25 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		}
 	}
 
+	private enum ExecuteAction {
+		EXECUTE_QUERY,
+
+	}
+
 	private <T, R> T executeQuery(
 			JdbcSelect jdbcSelect,
-			QueryOptions queryOptions,
-			QueryParameterBindings queryParameterBindings,
+			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
-			SharedSessionContractImplementor persistenceContext,
-			Callback callback,
 			PreparedStatementCreator statementCreator,
 			ResultsConsumer<T,R> resultsConsumer) {
 		final JdbcValuesSource jdbcValuesSource = resolveJdbcValuesSource(
 				jdbcSelect,
-				queryOptions,
+				executionContext,
 				new DeferredResultSetAccess(
-						persistenceContext,
 						jdbcSelect,
-						queryOptions,
-						statementCreator,
-						(ps, x1, x2) -> ps.executeQuery(),
-						queryParameterBindings
-				),
-				persistenceContext
+						executionContext,
+						statementCreator
+				)
 		);
 
 		/*
@@ -252,9 +235,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState = new JdbcValuesSourceProcessingStateStandardImpl(
 				jdbcValuesSource,
-				queryOptions,
-				processingOptions,
-				persistenceContext
+				executionContext,
+				processingOptions
 		);
 
 		final List<QueryResultAssembler> returnAssemblers = new ArrayList<>();
@@ -272,17 +254,17 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				returnAssemblers,
 				initializers,
 				rowTransformer,
-				callback
+				executionContext.getCallback()
 		);
 		final RowProcessingStateStandardImpl rowProcessingState = new RowProcessingStateStandardImpl(
 				jdbcValuesSourceProcessingState,
-				queryOptions,
+				executionContext.getQueryOptions(),
 				jdbcValuesSource
 		);
 
 		return resultsConsumer.consume(
 				jdbcValuesSource,
-				persistenceContext,
+				executionContext.getSession(),
 				processingOptions,
 				jdbcValuesSourceProcessingState,
 				rowProcessingState,
@@ -293,20 +275,19 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 	@SuppressWarnings("unchecked")
 	private JdbcValuesSource resolveJdbcValuesSource(
 			JdbcSelect jdbcSelect,
-			QueryOptions queryOptions,
-			ResultSetAccess resultSetAccess,
-			SharedSessionContractImplementor persistenceContext) {
+			ExecutionContext executionContext,
+			ResultSetAccess resultSetAccess) {
 		final List<Object[]> cachedResults;
 
-		final boolean queryCacheEnabled = persistenceContext.getFactory().getSessionFactoryOptions().isQueryCacheEnabled();
-		final CacheMode cacheMode = resolveCacheMode( queryOptions.getCacheMode(), persistenceContext );
+		final boolean queryCacheEnabled = executionContext.getSession().getFactory().getSessionFactoryOptions().isQueryCacheEnabled();
+		final CacheMode cacheMode = resolveCacheMode(  executionContext );
 
-		if ( queryCacheEnabled && queryOptions.getCacheMode().isGetEnabled() ) {
+		if ( queryCacheEnabled && executionContext.getQueryOptions().getCacheMode().isGetEnabled() ) {
 			log.debugf( "Reading Query result cache data per CacheMode#isGetEnabled [%s]", cacheMode.name() );
 
-			final QueryCache queryCache = persistenceContext.getFactory()
+			final QueryCache queryCache = executionContext.getSession().getFactory()
 					.getCache()
-					.getQueryCache( queryOptions.getResultCacheRegionName() );
+					.getQueryCache( executionContext.getQueryOptions().getResultCacheRegionName() );
 
 			final QueryKey queryResultsCacheKey = null;
 
@@ -343,9 +324,9 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		if ( cachedResults == null || cachedResults.isEmpty() ) {
 			return new JdbcValuesSourceResultSetImpl(
 					resultSetAccess,
-					queryOptions,
+					executionContext.getQueryOptions(),
 					jdbcSelect.getSqlSelections(),
-					persistenceContext
+					executionContext.getSession()
 			);
 		}
 		else {
@@ -353,12 +334,13 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		}
 	}
 
-	private CacheMode resolveCacheMode(CacheMode cacheMode, SharedSessionContractImplementor persistenceContext) {
+	private CacheMode resolveCacheMode(ExecutionContext executionContext) {
+		CacheMode cacheMode = executionContext.getQueryOptions().getCacheMode();
 		if ( cacheMode != null ) {
 			return cacheMode;
 		}
 
-		cacheMode = persistenceContext.getCacheMode();
+		cacheMode = executionContext.getSession().getCacheMode();
 		if ( cacheMode != null ) {
 			return cacheMode;
 		}

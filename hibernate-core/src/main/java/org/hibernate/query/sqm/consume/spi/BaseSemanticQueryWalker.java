@@ -15,6 +15,10 @@ import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.query.sqm.tree.expression.CaseSearchedSqmExpression;
 import org.hibernate.query.sqm.tree.expression.CaseSimpleSqmExpression;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceAny;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceBasic;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEmbedded;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEntity;
 import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.CollectionSizeSqmExpression;
 import org.hibernate.query.sqm.tree.expression.ConcatSqmExpression;
@@ -138,8 +142,8 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public T visitAssignment(SqmAssignment assignment) {
-		visitAttributeReferenceExpression( assignment.getStateField() );
 		assignment.getStateField().accept( this );
+		assignment.getValue().accept( this );
 		return (T) assignment;
 	}
 
@@ -376,14 +380,9 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitUnaryOperationExpression(UnaryOperationSqmExpression expression) {
-		expression.getOperand().accept( this );
-		return (T) expression;
-	}
-
-	@Override
-	public T visitAttributeReferenceExpression(SqmAttributeReference expression) {
-		return (T) expression;
+	public T visitUnaryOperationExpression(UnaryOperationSqmExpression sqmExpression) {
+		sqmExpression.getOperand().accept( this );
+		return (T) sqmExpression;
 	}
 
 	@Override
@@ -663,5 +662,25 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	@Override
 	public T visitEntityIdentifierBinding(SqmEntityIdentifierReference expression) {
 		return (T) expression;
+	}
+
+	@Override
+	public T visitBasicValuedSingularAttribute(SqmSingularAttributeReferenceBasic sqmAttributeReference) {
+		return (T) sqmAttributeReference;
+	}
+
+	@Override
+	public T visitEntityValuedSingularAttribute(SqmSingularAttributeReferenceEntity sqmAttributeReference) {
+		return (T) sqmAttributeReference;
+	}
+
+	@Override
+	public T visitEmbeddableValuedSingularAttribute(SqmSingularAttributeReferenceEmbedded sqmAttributeReference) {
+		return (T) sqmAttributeReference;
+	}
+
+	@Override
+	public T visitAnyValuedSingularAttribute(SqmSingularAttributeReferenceAny sqmAttributeReference) {
+		return (T) sqmAttributeReference;
 	}
 }

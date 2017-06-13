@@ -97,7 +97,7 @@ public class TableBasedUpdateHandlerImpl
 	}
 
 	@Override
-	public Queryable getTargetedQueryable() {
+	public Queryable getTargetedEntityDescriptor() {
 		return targetedPersister;
 	}
 

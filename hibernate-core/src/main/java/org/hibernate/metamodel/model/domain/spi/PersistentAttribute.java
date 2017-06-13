@@ -6,6 +6,9 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
+
 /**
  * Models a persistent (mapped) attribute in Hibernate's "runtime model".
  *
@@ -32,6 +35,8 @@ public interface PersistentAttribute<O,T> extends Navigable<T>, javax.persistenc
 	@Override
 	@SuppressWarnings("unchecked")
 	default Class<T> getJavaType() {
-		return (Class<T>) getJavaTypeDescriptor().getJavaType();
+		return getJavaTypeDescriptor().getJavaType();
 	}
+
+	SqlSelectionGroup resolveSqlSelectionGroup(QueryResultCreationContext resolutionContext);
 }

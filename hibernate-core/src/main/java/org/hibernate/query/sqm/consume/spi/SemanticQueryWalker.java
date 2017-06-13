@@ -15,6 +15,11 @@ import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.query.sqm.tree.expression.CaseSearchedSqmExpression;
 import org.hibernate.query.sqm.tree.expression.CaseSimpleSqmExpression;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceAny;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceBasic;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEmbedded;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEntity;
 import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.CollectionSizeSqmExpression;
 import org.hibernate.query.sqm.tree.expression.ConcatSqmExpression;
@@ -149,6 +154,20 @@ public interface SemanticQueryWalker<T> {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// expressions - navigable
+
+	T visitEntityIdentifierBinding(SqmEntityIdentifierReference sqmEntityIdentifierBinding);
+
+	T visitBasicValuedSingularAttribute(SqmSingularAttributeReferenceBasic sqmAttributeReference);
+
+	T visitEntityValuedSingularAttribute(SqmSingularAttributeReferenceEntity sqmAttributeReference);
+
+	T visitEmbeddableValuedSingularAttribute(SqmSingularAttributeReferenceEmbedded sqmAttributeReference);
+
+	T visitAnyValuedSingularAttribute(SqmSingularAttributeReferenceAny sqmAttributeReference);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// expressions - general
 
 	T visitPositionalParameterExpression(PositionalParameterSqmExpression expression);
@@ -162,8 +181,6 @@ public interface SemanticQueryWalker<T> {
 	T visitParameterizedEntityTypeExpression(ParameterizedEntityTypeSqmExpression expression);
 
 	T visitUnaryOperationExpression(UnaryOperationSqmExpression expression);
-
-	T visitAttributeReferenceExpression(SqmAttributeReference expression);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -327,6 +344,4 @@ public interface SemanticQueryWalker<T> {
 	T visitSimpleCaseExpression(CaseSimpleSqmExpression expression);
 
 	T visitSearchedCaseExpression(CaseSearchedSqmExpression expression);
-
-	T visitEntityIdentifierBinding(SqmEntityIdentifierReference sqmEntityIdentifierBinding);
 }

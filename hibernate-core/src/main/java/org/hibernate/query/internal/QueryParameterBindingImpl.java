@@ -102,9 +102,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	}
 
 	@Override
-	public void setBindValue(T value, TemporalType clarifiedTemporalType) {
+	public void setBindValue(T value, TemporalType temporalTypePrecision) {
 		setBindValue( value );
-		this.bindType = BindingTypeHelper.INSTANCE.determineTypeForTemporalType( clarifiedTemporalType, bindType, value );
+		this.bindType = BindingTypeHelper.INSTANCE.determineTypeForTemporalType( temporalTypePrecision, bindType, value );
 	}
 
 
@@ -143,9 +143,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	}
 
 	@Override
-	public void setBindValues(Collection<T> values, TemporalType clarifiedTemporalType) {
+	public void setBindValues(Collection<T> values, TemporalType temporalTypePrecision) {
 		setBindValues( values );
 		final Object exampleValue = values.isEmpty() ? null : values.iterator().next();
-		this.bindType = BindingTypeHelper.INSTANCE.determineTypeForTemporalType( clarifiedTemporalType, bindType, exampleValue );
+		this.bindType = BindingTypeHelper.INSTANCE.determineTypeForTemporalType( temporalTypePrecision, bindType, exampleValue );
 	}
 }

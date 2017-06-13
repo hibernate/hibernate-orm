@@ -8,10 +8,6 @@ package org.hibernate.sql.ast.consume.spi;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Collection;
-
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.spi.QueryParameterBindings;
 
 /**
  * Performs parameter value binding to a JDBC PreparedStatement.
@@ -25,11 +21,4 @@ public interface JdbcParameterBinder {
 			int startPosition,
 			ParameterBindingContext context) throws SQLException;
 
-	interface ParameterBindingContext {
-		// todo (6.0) : consider more deeply this `#getLoadIdentifier` solution.  seems like there must be a better way.
-
-		<T> Collection<T> getLoadIdentifiers();
-		QueryParameterBindings getQueryParameterBindings();
-		SharedSessionContractImplementor getSession();
-	}
 }

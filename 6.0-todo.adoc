@@ -309,7 +309,7 @@ This is the best option IMO as it
 	 		the JDBC DatabaseMetaData
 	* allows us to mingle in settings from anywhere else we want (settings, etc)
 	* allows easy testing - no more mocking JDBC for testing boot code
-
++
 Ultimately the call to the Dialect is something like
 +
 ----
@@ -317,7 +317,9 @@ Dialect dialect = ...;
 DatabaseInformation dbInfo = ...;
 dialect.initialize( dbInfo );
 ----
-
+* For UPDATE and DELETE it might be better to have the "persister" generate the SQM and
+	process from that point.  The reason being that this would allow us to hook
+	into the normal `org.hibernate.hql.spi.id.MultiTableBulkIdStrategy` handling
 
 
 

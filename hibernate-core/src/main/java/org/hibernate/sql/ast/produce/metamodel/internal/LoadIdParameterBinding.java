@@ -56,7 +56,7 @@ public class LoadIdParameterBinding<T> implements QueryParameterBinding<T> {
 	}
 
 	@Override
-	public void setBindValue(Object value, TemporalType clarifiedTemporalType) {
+	public void setBindValue(Object value, TemporalType temporalTypePrecision) {
 		throw new UnsupportedOperationException( "Cannot change parameter binding value" );
 	}
 
@@ -76,7 +76,7 @@ public class LoadIdParameterBinding<T> implements QueryParameterBinding<T> {
 	}
 
 	@Override
-	public void setBindValues(Collection values, TemporalType clarifiedTemporalType) {
+	public void setBindValues(Collection values, TemporalType temporalTypePrecision) {
 		throw new UnsupportedOperationException( "Cannot change parameter binding value" );
 	}
 

@@ -7,6 +7,8 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeBasic;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
 /**
@@ -26,5 +28,30 @@ public class SqmSingularAttributeReferenceBasic extends AbstractSqmSingularAttri
 	@Override
 	public SingularPersistentAttributeBasic getReferencedNavigable() {
 		return (SingularPersistentAttributeBasic) super.getReferencedNavigable();
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
+	@Override
+	public String getUniqueIdentifier() {
+		return null;
+	}
+
+	@Override
+	public String getIdentificationVariable() {
+		return null;
+	}
+
+	@Override
+	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
+		return null;
+	}
+
+	@Override
+	public <T> T accept(SemanticQueryWalker<T> walker) {
+		return walker.visitBasicValuedSingularAttribute( this );
 	}
 }

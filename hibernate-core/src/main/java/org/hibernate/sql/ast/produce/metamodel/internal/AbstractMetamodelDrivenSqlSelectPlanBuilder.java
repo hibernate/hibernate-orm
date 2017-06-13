@@ -54,7 +54,7 @@ import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.NavigablePathStack;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
-import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
+import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
@@ -78,7 +78,7 @@ import org.jboss.logging.Logger;
  * that need to walk the run-time metamodel and build a SqlSelectPlan (SQL AST for
  * SELECT queries).
  * <p/>
- * Specifically, this class helps builds the {@link SqlSelectPlan} and its single {@link QueryResult}
+ * Specifically, this class helps builds the {@link SqlAstSelectInterpretation} and its single {@link QueryResult}
  *
  * @author Steve Ebersole
  */
@@ -221,7 +221,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	}
 
 	@Override
-	public SqlSelectPlan buildSqlSelectPlan(NavigableContainer rootNavigable) {
+	public SqlAstSelectInterpretation buildSqlSelectPlan(NavigableContainer rootNavigable) {
 		assert rootNavigable instanceof RootTableGroupProducer;
 		final RootTableGroupProducer rootTableGroupProducer = (RootTableGroupProducer) rootNavigable;
 

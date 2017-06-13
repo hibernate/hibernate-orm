@@ -11,6 +11,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.ElementColumnReferenceSource;
 import org.hibernate.sql.ast.produce.metamodel.spi.IndexColumnReferenceSource;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
@@ -89,7 +90,7 @@ public class CollectionTableGroup implements TableGroup {
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, SqlSelectAstWalker walker) {
+	public void render(SqlAppender sqlAppender, SqlAstWalker walker) {
 		throw new NotYetImplementedException(  );
 
 //		renderTableReference( rootTableReference, sqlAppender, walker );

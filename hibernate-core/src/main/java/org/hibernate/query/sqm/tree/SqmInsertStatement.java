@@ -17,7 +17,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
  *
  * @author Steve Ebersole
  */
-public interface SqmInsertStatement extends SqmStatement {
+public interface SqmInsertStatement extends SqmNonSelectStatement {
 	SqmRoot getInsertTarget();
 	List<SqmSingularAttributeReference> getStateFields();
 }

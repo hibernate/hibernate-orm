@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.consume.spi;
 
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
+import org.hibernate.sql.ast.tree.spi.assign.Assignment;
 import org.hibernate.sql.ast.tree.spi.expression.AbsFunction;
 import org.hibernate.sql.ast.tree.spi.expression.AvgFunction;
 import org.hibernate.sql.ast.tree.spi.expression.BinaryArithmeticExpression;
@@ -71,6 +72,9 @@ import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
  * @author Andrea Boriero
  */
 public interface SqlAstWalker {
+
+	void visitAssignment(Assignment assignment);
+
 	void visitQuerySpec(QuerySpec querySpec);
 
 	void visitSortSpecification(SortSpecification sortSpecification);

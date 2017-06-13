@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
@@ -16,12 +17,27 @@ public abstract class AbstractSqmSingularAttributeReference
 		extends AbstractSqmAttributeReference<SingularPersistentAttribute>
 		implements SqmSingularAttributeReference {
 	public AbstractSqmSingularAttributeReference(
-			SqmNavigableContainerReference domainReferenceBinding,
-			SingularPersistentAttribute boundNavigable) {
-		super( domainReferenceBinding, boundNavigable );
+			SqmNavigableContainerReference navigableContainerReference,
+			SingularPersistentAttribute referencedNavigable) {
+		super( navigableContainerReference, referencedNavigable );
 	}
 
 	public AbstractSqmSingularAttributeReference(SqmAttributeJoin fromElement) {
 		super( fromElement );
+	}
+
+	@Override
+	public String getUniqueIdentifier() {
+		return null;
+	}
+
+	@Override
+	public String getIdentificationVariable() {
+		return null;
+	}
+
+	@Override
+	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
+		return null;
 	}
 }

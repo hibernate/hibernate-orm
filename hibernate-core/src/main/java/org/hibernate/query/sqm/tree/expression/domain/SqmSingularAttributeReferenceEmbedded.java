@@ -7,13 +7,15 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmSingularAttributeReferenceEmbedded extends AbstractSqmSingularAttributeReference implements
-		SqmEmbeddableTypedReference {
+public class SqmSingularAttributeReferenceEmbedded
+		extends AbstractSqmSingularAttributeReference
+		implements SqmEmbeddableTypedReference {
 	public SqmSingularAttributeReferenceEmbedded(
 			SqmNavigableContainerReference domainReferenceBinding,
 			SingularPersistentAttributeEmbedded boundNavigable) {
@@ -27,5 +29,15 @@ public class SqmSingularAttributeReferenceEmbedded extends AbstractSqmSingularAt
 	@Override
 	public SingularPersistentAttributeEmbedded getReferencedNavigable() {
 		return (SingularPersistentAttributeEmbedded) super.getReferencedNavigable();
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.EMBEDDABLE;
+	}
+
+	@Override
+	public <T> T accept(SemanticQueryWalker<T> walker) {
+		return walker.visitEmbeddableValuedSingularAttribute( this );
 	}
 }

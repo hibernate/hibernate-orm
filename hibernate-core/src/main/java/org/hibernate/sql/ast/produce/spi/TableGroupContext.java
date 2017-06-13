@@ -15,7 +15,12 @@ import org.hibernate.sql.ast.tree.spi.from.TableSpace;
  * @author Steve Ebersole
  */
 public interface TableGroupContext {
+	/**
+	 * todo (6.0) : would like to remove this.  Sometimes we create TableGroup with no QuerySpec (update/delete handling)
+	 * 		It is not used
+	 */
 	QuerySpec getQuerySpec();
+
 	TableSpace getTableSpace();
 
 	/**

@@ -39,11 +39,4 @@ public interface SelectQueryPlan<R> extends QueryPlan {
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings,
 			ScrollMode scrollMode);
-
-	// todo (6.0) : drop support for Query#iterate per team consensus (dev ml)
-
-	Iterator<R> performIterate(
-			SharedSessionContractImplementor persistenceContext,
-			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings);
 }

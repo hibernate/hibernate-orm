@@ -9,7 +9,11 @@ package org.hibernate.sql.ast.consume.spi;
 import java.util.List;
 
 /**
- * Unifying contract for any SQL statement we want to execute via JDBC.
+ * Unifying contract for any SQL statement we want to execute via JDBC.  Gener
+ *
+ * todo (6.0) : good idea to have a single `#execute(...)` method here imo...
+ * 		defines a nice singular access point for execution of an operation,
+ * 		defined on each direct subclass
  *
  * @author Steve Ebersole
  */

@@ -6,13 +6,11 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.set.SqmSetClause;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqmUpdateStatement extends SqmNonSelectStatement{
-	SqmRoot getEntityFromElement();
+public interface SqmUpdateStatement extends SqmDeleteOrUpdateStatement{
 	SqmSetClause getSetClause();
 }

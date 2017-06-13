@@ -11,12 +11,15 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.sqm.tree.SqmNonSelectStatement;
 
 /**
  * @author Steve Ebersole
  */
 public class NonSelectQueryPlanImpl implements NonSelectQueryPlan {
-	public NonSelectQueryPlanImpl(NativeQueryImpl nativeQuery) {
+	public NonSelectQueryPlanImpl(
+			SqmNonSelectStatement sqm,
+			QueryOptions queryOptions) {
 	}
 
 	@Override

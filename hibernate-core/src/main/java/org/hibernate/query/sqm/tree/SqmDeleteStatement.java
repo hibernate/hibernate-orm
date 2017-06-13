@@ -6,11 +6,8 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import org.hibernate.query.sqm.tree.from.SqmRoot;
-
 /**
  * @author Steve Ebersole
  */
-public interface SqmDeleteStatement extends SqmNonSelectStatement {
-	SqmRoot getEntityFromElement();
+public interface SqmDeleteStatement extends SqmDeleteOrUpdateStatement {
 }

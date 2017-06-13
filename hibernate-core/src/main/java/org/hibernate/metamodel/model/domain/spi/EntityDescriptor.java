@@ -709,4 +709,12 @@ public interface EntityDescriptor<T>
 	boolean canUseReferenceCacheEntries();
 
 	void registerAffectingFetchProfile(String fetchProfileName);
+
+	/**
+	 * Does this entity map "across" multiple tables.  Generally this is
+	 * used to
+	 *
+	 * @return `true` indicates it does; `false` indicates it does not.
+	 */
+	boolean isMultiTable();
 }

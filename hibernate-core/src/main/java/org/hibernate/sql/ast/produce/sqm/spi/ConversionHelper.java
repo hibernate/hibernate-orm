@@ -15,7 +15,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder.ParameterBindingContext;
+import org.hibernate.sql.ast.consume.spi.ParameterBindingContext;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.tree.spi.expression.GenericParameter;
 import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;

@@ -13,7 +13,6 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -356,7 +355,7 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 		}
 
 		if ( queryPlan == null ) {
-			queryPlan = new SelectQueryPlanImpl<>( this );
+			queryPlan = new SelectNativeQueryPlanImpl<>( this );
 			if ( cacheKey != null ) {
 				getSession().getFactory().getQueryEngine().getQueryInterpretations().cacheSelectQueryPlan( cacheKey, queryPlan );
 			}
@@ -376,12 +375,6 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 				parameterBindings,
 				scrollMode
 		);
-	}
-
-	@Override
-	protected Iterator<R> doIterate() {
-		log.debugf( "NativeQuery#iterate being executed as NativeQuery#list#iterator" );
-		return doList().iterator();
 	}
 
 	protected int doExecuteUpdate() {

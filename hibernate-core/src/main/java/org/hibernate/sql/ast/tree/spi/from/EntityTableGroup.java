@@ -13,6 +13,7 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.metamodel.model.relational.spi.UnionSubclassTable;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.tree.internal.NavigableSelection;
@@ -51,7 +52,6 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 		this.expression = new EntityReference(
 				this,
 				entityDescriptor,
-				entityValuedExpressableType,
 				navigablePath,
 				null,
 				false
@@ -98,7 +98,7 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, SqlSelectAstWalker walker) {
+	public void render(SqlAppender sqlAppender, SqlAstWalker walker) {
 		renderTableReference( primaryTableReference, sqlAppender, walker );
 
 		for ( TableReferenceJoin tableJoin : tableReferenceJoins ) {

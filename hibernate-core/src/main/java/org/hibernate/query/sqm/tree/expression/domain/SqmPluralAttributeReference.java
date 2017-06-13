@@ -6,9 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
@@ -30,34 +29,13 @@ public class SqmPluralAttributeReference
 	}
 
 	@Override
-	public PluralPersistentAttribute getReferencedNavigable() {
-		return super.getReferencedNavigable();
-	}
-
-	@Override
 	public SqmAttributeJoin getExportedFromElement() {
 		return (SqmAttributeJoin) super.getExportedFromElement();
-	}
-
-
-	@Override
-	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
-		return getSourceReference();
-	}
-
-	@Override
-	public String getTypeName() {
-		return getReferencedNavigable().getTypeName();
 	}
 
 	@Override
 	public PersistenceType getPersistenceType() {
 		return getReferencedNavigable().getPersistentCollectionMetadata().getPersistenceType();
-	}
-
-	@Override
-	public Class getJavaType() {
-		return getReferencedNavigable().getJavaType();
 	}
 
 	@Override

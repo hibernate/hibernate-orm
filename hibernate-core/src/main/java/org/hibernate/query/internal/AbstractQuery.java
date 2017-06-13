@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.query.internal;
 
 import java.io.Serializable;
@@ -46,7 +45,6 @@ import org.hibernate.ScrollMode;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
-import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.jpa.QueryHints;
@@ -54,9 +52,11 @@ import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
@@ -1134,7 +1134,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					setParameterList( paramName, (Object[]) object );
 				}
 				else {
-					Type type = determineType( paramName, retType );
+					AllowableParameterType type = determineType( paramName, retType );
 					setParameter( paramName, object, type );
 				}
 			}
@@ -1145,8 +1145,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return this;
 	}
 
-	protected Type determineType(String namedParam, Class retType) {
-		Type type = locateBinding( namedParam ).getBindType();
+	protected AllowableParameterType determineType(String namedParam, Class retType) {
+		AllowableParameterType type = locateBinding( namedParam ).getBindType();
 		if ( type == null ) {
 			type = getParameterMetadata().getQueryParameter( namedParam ).getHibernateType();
 		}
@@ -1199,8 +1199,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		try {
 			return doList();
 		}
-		catch (QueryExecutionRequestException he) {
-			throw new IllegalStateException( he );
+		catch (IllegalQueryOperationException e) {
+			throw new IllegalStateException( e );
 		}
 		catch (TypeMismatchException e) {
 			throw new IllegalArgumentException( e );
@@ -1259,19 +1259,6 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public Iterator<R> iterate() {
-		beforeQuery();
-		try {
-			return doIterate();
-		}
-		finally {
-			afterQuery();
-		}
-	}
-
-	protected abstract Iterator<R> doIterate();
-
-	@Override
 	public ScrollableResultsImplementor scroll() {
 		return scroll( getSession().getFactory().getJdbcServices().getJdbcEnvironment().getDialect().defaultScrollMode() );
 	}
@@ -1297,9 +1284,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		final Spliterator<R> spliterator = Spliterators.spliteratorUnknownSize( iterator, Spliterator.NONNULL );
 
 		final Stream<R> stream = StreamSupport.stream( spliterator, false );
-		stream.onClose( scrollableResults::close );
-
-		return stream;
+		return stream.onClose( scrollableResults::close );
 	}
 
 	@Override
@@ -1315,7 +1300,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		try {
 			return doExecuteUpdate();
 		}
-		catch ( QueryExecutionRequestException e) {
+		catch (IllegalQueryOperationException e) {
 			throw new IllegalStateException( e );
 		}
 		catch( TypeMismatchException e ) {

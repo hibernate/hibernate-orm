@@ -40,8 +40,9 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.consume.results.internal.values.JdbcValuesSource;
 import org.hibernate.sql.ast.consume.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.ast.consume.results.spi.JdbcValuesSourceProcessingState;
-import org.hibernate.type.TypeHelper;
+import org.hibernate.sql.ast.consume.spi.ExecutionContext;
 import org.hibernate.type.Type;
+import org.hibernate.type.TypeHelper;
 
 import org.jboss.logging.Logger;
 
@@ -51,29 +52,25 @@ import org.jboss.logging.Logger;
 public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSourceProcessingState {
 	private static final Logger log = Logger.getLogger( JdbcValuesSourceProcessingStateStandardImpl.class );
 
-	private final QueryOptions queryOptions;
-	private final JdbcValuesSourceProcessingOptions processingOptions;
-	private final SharedSessionContractImplementor persistenceContext;
-
 	private final JdbcValuesSource jdbcValuesSource;
+	private final ExecutionContext executionContext;
+	private final JdbcValuesSourceProcessingOptions processingOptions;
 
 	private Map<EntityKey,LoadingEntity> loadingEntityMap;
 	private Map<Object,EntityKey> hydratedEntityKeys;
 
 	public JdbcValuesSourceProcessingStateStandardImpl(
 			JdbcValuesSource jdbcValuesSource,
-			QueryOptions queryOptions,
-			JdbcValuesSourceProcessingOptions processingOptions,
-			SharedSessionContractImplementor persistenceContext) {
+			ExecutionContext executionContext,
+			JdbcValuesSourceProcessingOptions processingOptions) {
 		this.jdbcValuesSource = jdbcValuesSource;
-		this.queryOptions = queryOptions;
+		this.executionContext = executionContext;
 		this.processingOptions = processingOptions;
-		this.persistenceContext = persistenceContext;
 	}
 
 	@Override
 	public QueryOptions getQueryOptions() {
-		return queryOptions;
+		return executionContext.getQueryOptions();
 	}
 
 	@Override
@@ -115,7 +112,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 	@Override
 	public SharedSessionContractImplementor getPersistenceContext() {
-		return persistenceContext;
+		return executionContext.getSession();
 	}
 
 	@Override
@@ -147,8 +144,8 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 		// IMPORTANT: reuse the same event instances for performance!
 		final PreLoadEvent preLoadEvent;
-		if ( persistenceContext.isEventSource() ) {
-			preLoadEvent = new PreLoadEvent( (EventSource) persistenceContext );
+		if ( executionContext.getSession().isEventSource() ) {
+			preLoadEvent = new PreLoadEvent( (EventSource) executionContext.getSession() );
 		}
 		else {
 			preLoadEvent = null;
@@ -165,7 +162,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 			initializeEntity(
 					loadingEntity,
 					isReadOnly(),
-					persistenceContext,
+					executionContext.getSession(),
 					preLoadEvent
 			);
 		}
@@ -173,12 +170,12 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 	@SuppressWarnings("SimplifiableIfStatement")
 	private boolean isReadOnly() {
-		if ( queryOptions.isReadOnly() != null ) {
-			return queryOptions.isReadOnly();
+		if ( getQueryOptions().isReadOnly() != null ) {
+			return getQueryOptions().isReadOnly();
 		}
 
-		if ( persistenceContext instanceof EventSource ) {
-			return ( (EventSource) persistenceContext ).isDefaultReadOnly();
+		if ( executionContext.getSession() instanceof EventSource ) {
+			return ( (EventSource) executionContext.getSession() ).isDefaultReadOnly();
 		}
 
 		return false;
@@ -316,7 +313,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 			}
 		}
 
-		if ( persister.hasNaturalIdentifier() ) {
+		if ( persister.getHierarchy().getNaturalIdentifierDescriptor() != null ) {
 			persistenceContext.getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
 					persister,
 					id,
@@ -325,7 +322,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		}
 
 		boolean isReallyReadOnly = readOnly;
-		if ( !persister.isMutable() ) {
+		if ( !persister.getHierarchy().isMutable() ) {
 			isReallyReadOnly = true;
 		}
 		else {
@@ -383,15 +380,15 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 		// IMPORTANT: reuse the same event instances for performance!
 		final PostLoadEvent postLoadEvent;
-		if ( persistenceContext.isEventSource() ) {
-			postLoadEvent = new PostLoadEvent( (EventSource) persistenceContext );
+		if ( executionContext.getSession().isEventSource() ) {
+			postLoadEvent = new PostLoadEvent( (EventSource) executionContext.getSession() );
 		}
 		else {
 			postLoadEvent = null;
 		}
 
 		for ( LoadingEntity loadingEntity : loadingEntityMap.values() ) {
-			TwoPhaseLoad.postLoad( loadingEntity.entityInstance, persistenceContext, postLoadEvent );
+			TwoPhaseLoad.postLoad( loadingEntity.entityInstance, executionContext.getSession(), postLoadEvent );
 		}
 	}
 

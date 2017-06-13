@@ -7,7 +7,6 @@
 package org.hibernate.sql.ast.produce.sqm.spi;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 
 /**
@@ -17,5 +16,5 @@ import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
  * @author Steve Ebersole
  */
 public interface SqmToSqlAstConverter<T>
-		extends SemanticQueryWalker<T>, SqlSelectionResolver, QueryResultCreationContext {
+		extends SemanticQueryWalker<T>, SqlSelectionResolver {
 }

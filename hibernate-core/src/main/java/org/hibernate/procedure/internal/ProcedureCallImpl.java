@@ -740,11 +740,6 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	protected Iterator<R> doIterate() {
-		throw new UnsupportedOperationException( "Query#iterate is not valid for ProcedureCall/StoredProcedureQuery" );
-	}
-
-	@Override
 	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
 		throw new UnsupportedOperationException( "Query#scroll is not valid for ProcedureCall/StoredProcedureQuery" );
 	}

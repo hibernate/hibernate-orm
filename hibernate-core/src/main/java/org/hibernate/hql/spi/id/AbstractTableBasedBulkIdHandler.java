@@ -16,8 +16,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.SqlGenerator;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.sql.InsertSelect;
 import org.hibernate.sql.Select;
 import org.hibernate.sql.SelectValues;
@@ -40,28 +42,32 @@ import antlr.collections.AST;
  */
 public abstract class AbstractTableBasedBulkIdHandler {
 	private final SessionFactoryImplementor sessionFactory;
-	private final HqlSqlWalker walker;
+	private final SqmDeleteStatement sqmDeleteStatement;
 
 	public AbstractTableBasedBulkIdHandler(
 			SessionFactoryImplementor sessionFactory,
-			HqlSqlWalker walker) {
+			SqmDeleteStatement sqmDeleteStatement) {
 		this.sessionFactory = sessionFactory;
-		this.walker = walker;
+		this.sqmDeleteStatement = sqmDeleteStatement;
 	}
 
 	protected SessionFactoryImplementor factory() {
 		return sessionFactory;
 	}
 
-	protected HqlSqlWalker walker() {
-		return walker;
+	protected SqmDeleteStatement walker() {
+		return sqmDeleteStatement;
 	}
 
-	public abstract Queryable getTargetedQueryable();
+	public abstract EntityDescriptor getTargetedEntityDescriptor();
 
 	protected static class ProcessedWhereClause {
 		public static final ProcessedWhereClause NO_WHERE_CLAUSE = new ProcessedWhereClause();
 
+
+		// todo (6.0) : by the nature of walking we will already be readily able collect parameters and their binders
+		//		and `userWhereClauseFragment` will be a SQL AST `Predicate` (or a
+		//		SQL AST `QuerySpec` so that we can use `QuerySpec#addRestriction`
 		private final String userWhereClauseFragment;
 		private final List<ParameterSpecification> idSelectParameterSpecifications;
 
@@ -132,15 +138,15 @@ public abstract class AbstractTableBasedBulkIdHandler {
 		final Select select = new Select( dialect );
 		final SelectValues selectClause = new SelectValues( dialect ).addColumns(
 				tableAlias,
-				getTargetedQueryable().getIdentifierColumnNames(),
-				getTargetedQueryable().getIdentifierColumnNames()
+				getTargetedEntityDescriptor().getIdentifierColumnNames(),
+				getTargetedEntityDescriptor().getIdentifierColumnNames()
 		);
 		addAnyExtraIdSelectValues( selectClause );
 		select.setSelectClause( selectClause.render() );
 
-		String rootTableName = getTargetedQueryable().getTableName();
-		String fromJoinFragment = getTargetedQueryable().fromJoinFragment( tableAlias, true, false );
-		String whereJoinFragment = getTargetedQueryable().whereJoinFragment( tableAlias, true, false );
+		String rootTableName = getTargetedEntityDescriptor().getTableName();
+		String fromJoinFragment = getTargetedEntityDescriptor().fromJoinFragment( tableAlias, true, false );
+		String whereJoinFragment = getTargetedEntityDescriptor().whereJoinFragment( tableAlias, true, false );
 
 		select.setFromClause( rootTableName + ' ' + tableAlias + fromJoinFragment );
 
@@ -163,7 +169,7 @@ public abstract class AbstractTableBasedBulkIdHandler {
 
 		InsertSelect insert = new InsertSelect( dialect );
 		if ( sessionFactory.getSessionFactoryOptions().isCommentsEnabled() ) {
-			insert.setComment( "insert-select for " + getTargetedQueryable().getEntityName() + " ids" );
+			insert.setComment( "insert-select for " + getTargetedEntityDescriptor().getEntityName() + " ids" );
 		}
 		insert.setTableName( idTableInfo.getQualifiedIdTableName() );
 		insert.setSelect( select );
@@ -185,9 +191,9 @@ public abstract class AbstractTableBasedBulkIdHandler {
 				" from " + idTableInfo.getQualifiedIdTableName();
 	}
 
-	protected void prepareForUse(Queryable persister, SharedSessionContractImplementor session) {
+	protected void prepareForUse(EntityDescriptor persister, SharedSessionContractImplementor session) {
 	}
 
-	protected void releaseFromUse(Queryable persister, SharedSessionContractImplementor session) {
+	protected void releaseFromUse(EntityDescriptor persister, SharedSessionContractImplementor session) {
 	}
 }

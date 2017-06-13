@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.tree.SqmStatement;
  * @author Steve Ebersole
  */
 public class SqmInterpretationsKey implements QueryInterpretations.Key {
+	@SuppressWarnings("WeakerAccess")
 	public static SqmInterpretationsKey generateFrom(QuerySqmImpl query) {
 		if ( !isCacheable( query ) ) {
 			return null;
@@ -32,21 +33,33 @@ public class SqmInterpretationsKey implements QueryInterpretations.Key {
 		);
 	}
 
+	@SuppressWarnings("WeakerAccess")
+	public static QueryInterpretations.Key generateNonSelectKey(QuerySqmImpl query) {
+		// todo (6.0) : do we want to cache non-select plans?  If so, what requirements?
+		// for now... no caching of non-select plans
+		return null;
+	}
+
 	@SuppressWarnings("RedundantIfStatement")
 	private static boolean isCacheable(QuerySqmImpl query) {
 		if ( query.getEntityGraphHint() != null ) {
+			// At the moment we cannot cache query plan if there is an
+			// EntityGraph involved.
 			return false;
 		}
 
 		if ( query.getParameterMetadata().hasAnyMatching( QueryParameter::allowsMultiValuedBinding ) ) {
+			// cannot cache query plans if there is are multi-valued param bindings
 			return false;
 		}
 
 		if ( hasLimit( query.getQueryOptions().getLimit() ) ) {
+			// cannot cache query plans if there is a limit defined
 			return false;
 		}
 
 		if ( definesLocking( query.getQueryOptions().getLockOptions() ) ) {
+			// cannot cache query plans if it defines locking
 			return false;
 		}
 

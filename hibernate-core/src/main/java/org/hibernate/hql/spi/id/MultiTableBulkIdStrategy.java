@@ -10,7 +10,6 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -18,15 +17,22 @@ import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 
 /**
- * Generalized strategy contract for handling multi-table bulk HQL operations.
+ * Extension contract for handling UPDATE/DELETE queries against entities
+ * spanning multiple tables.
+ *
+ * {@link #prepare} and {@link #release} allow the strategy to perform
+ * any one time preparation and cleanup.  The heavy lifting is handled by
+ * the {@link UpdateHandler} and {@link DeleteHandler} delegates obtained
+ * via {@link #buildUpdateHandler} and {@link #buildDeleteHandler} methods.
  *
  * @author Steve Ebersole
  */
 public interface MultiTableBulkIdStrategy {
 	/**
-	 * Prepare the strategy.  Called as the SessionFactory is being built.  Intended patterns here include:<ul>
-	 *     <li>Adding tables to the passed Mappings, to be picked by by "schema management tools"</li>
-	 *     <li>Manually creating the tables immediately through the passed JDBC Connection access</li>
+	 * Prepare the strategy for use.  Called one time as the SessionFactory
+	 * is being built.  This can be used to, for example:<ul>
+	 *     <li>add tables to the passed Mappings, to be picked by by "schema management tools"</li>
+	 *     <li>manually create the tables immediately through the passed JDBC Connection access</li>
 	 * </ul>
 	 *  @param jdbcServices The JdbcService object
 	 * @param connectionAccess Access to the JDBC Connection
@@ -40,7 +46,8 @@ public interface MultiTableBulkIdStrategy {
 			SessionFactoryOptions sessionFactoryOptions);
 
 	/**
-	 * Release the strategy.   Called as the SessionFactory is being shut down.
+	 * Release the strategy.   Called one time as the SessionFactory is
+	 * being shut down.
 	 *
 	 * @param jdbcServices The JdbcService object
 	 * @param connectionAccess Access to the JDBC Connection
@@ -57,22 +64,25 @@ public interface MultiTableBulkIdStrategy {
 		//
 		//		something like:
 
-		int execute(SqmDeleteStatement sqmDeleteStatement, QueryParameterBindings parameterBindings);
+		/**
+		 * Execute the multi-table update indicated by the SQM AST passed in when this
+		 * UpdateHandler was created.
+		 *
+		 * @param parameterBindings The value for all query parameter bindings
+		 * @param session The originating Session
+		 *
+		 * @return The "number of rows affected" count
+		 *
+		 * @see #buildUpdateHandler
+		 */
+		int execute(QueryParameterBindings parameterBindings, SharedSessionContractImplementor session);
 
 		// 		What is the proper return type?  for now returning the "number of rows affected" count..
 
-		//		Similarly, any other parameters to pass?  Does it need the Session e.g.?
+		//		Similarly, any other parameters to pass?
 
 		// 		the parameter references in the tree still just refer back the the overall bindings
 		// 		regardless of which "split tree" they get split into.  Perfect! :)
-
-
-		// I'd remove thses ones below...
-
-		Queryable getTargetedQueryable();
-		String[] getSqlStatements();
-
-		int execute(SharedSessionContractImplementor session, QueryParameters queryParameters);
 	}
 
 	/**
@@ -91,11 +101,18 @@ public interface MultiTableBulkIdStrategy {
 	interface DeleteHandler {
 
 		// todo (6.0) : same as discussions above in UpdateHandler
-
-		Queryable getTargetedQueryable();
-		String[] getSqlStatements();
-
-		int execute(SharedSessionContractImplementor session, QueryParameters queryParameters);
+		/**
+		 * Execute the multi-table delete indicated by the SQM AST passed in when this
+		 * DeleteHandler was created.
+		 *
+		 * @param parameterBindings The value for all query parameter bindings
+		 * @param session The originating Session
+		 *
+		 * @return The "number of rows affected" count
+		 *
+		 * @see #buildUpdateHandler
+		 */
+		int execute(QueryParameterBindings parameterBindings, SharedSessionContractImplementor session);
 	}
 
 	/**

@@ -31,7 +31,8 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
  * @author Steve Ebersole
  */
 public interface EmbeddedTypeDescriptor<T>
-		extends InheritanceCapable<T>, EmbeddedContainer<T>, EmbeddedValueExpressableType<T>, EmbeddableType<T>, NavigableEmbeddedValued<T> {
+		extends InheritanceCapable<T>, EmbeddedContainer<T>, EmbeddedValueExpressableType<T>, EmbeddableType<T>,
+		EmbeddedValuedNavigable<T> {
 
 	Class[] STANDARD_CTOR_SIGNATURE = new Class[] {
 			Component.class,

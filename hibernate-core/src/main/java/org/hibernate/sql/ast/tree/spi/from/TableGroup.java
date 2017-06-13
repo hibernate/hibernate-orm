@@ -35,7 +35,7 @@ public interface TableGroup extends ColumnReferenceSource, SqlAstNode {
 	/**
 	 * Perform rendering of this group into the passed SQL appender.
 	 */
-	void render(SqlAppender sqlAppender, SqlSelectAstWalker walker);
+	void render(SqlAppender sqlAppender, SqlAstWalker walker);
 
 	@Override
 	default void accept(SqlAstWalker  sqlTreeWalker) {

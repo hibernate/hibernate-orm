@@ -16,7 +16,7 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface NavigableEmbeddedValued<J> extends EmbeddedValueExpressableType<J>, NavigableContainer<J> {
+public interface EmbeddedValuedNavigable<J> extends EmbeddedValueExpressableType<J>, NavigableContainer<J> {
 	@Override
 	EmbeddedContainer getContainer();
 

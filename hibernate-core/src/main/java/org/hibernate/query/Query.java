@@ -79,8 +79,15 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * SQL query returns identifiers only.<br>
 	 *
 	 * @return the result iterator
+	 *
+	 * @deprecated Deprecated functionality with no real replacement.  Use
+	 * {@link #list} / {@link #getResultList} instead and open Iterator
+	 * on returned List
 	 */
-	Iterator<R> iterate();
+	@Deprecated
+	default Iterator<R> iterate() {
+		return list().iterator();
+	}
 
 	/**
 	 * Return the query results as <tt>ScrollableResults</tt>. The

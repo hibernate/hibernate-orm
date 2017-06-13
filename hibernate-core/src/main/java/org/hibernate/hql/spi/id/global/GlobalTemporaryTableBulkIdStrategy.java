@@ -32,7 +32,9 @@ import org.hibernate.hql.spi.id.TableBasedUpdateHandlerImpl;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 
 /**
  * Strategy based on ANSI SQL's definition of a "global temporary table".
@@ -184,21 +186,30 @@ public class GlobalTemporaryTableBulkIdStrategy
 	}
 
 	@Override
+	public DeleteHandler buildDeleteHandler(
+			SessionFactoryImplementor factory,
+			SqmDeleteStatement sqmDeleteStatement) {
+		// todo (6.0) :
+		sqmDeleteStatement.getEntityFromElement()
+		return null;
+	}
+
+	@Override
 	public DeleteHandler buildDeleteHandler(SessionFactoryImplementor factory, HqlSqlWalker walker) {
 		final DeleteStatement updateStatement = (DeleteStatement) walker.getAST();
 
 		final FromElement fromElement = updateStatement.getFromClause().getFromElement();
-		final Queryable targetedPersister = fromElement.getQueryable();
+		final EntityDescriptor targetedEntityDescriptor = fromElement.getQueryable();
 
-		return new TableBasedDeleteHandlerImpl( factory, walker, getIdTableInfo( targetedPersister ) ) {
+		return new TableBasedDeleteHandlerImpl( factory, walker, getIdTableInfo( targetedEntityDescriptor ) ) {
 			@Override
-			protected void releaseFromUse(Queryable persister, SharedSessionContractImplementor session) {
+			protected void releaseFromUse(EntityDescriptor entityDescriptor, SharedSessionContractImplementor session) {
 				if ( afterUseAction == AfterUseAction.NONE ) {
 					return;
 				}
 
 				// clean up our id-table rows
-				cleanUpRows( getIdTableInfo( persister ).getQualifiedIdTableName(), session );
+				cleanUpRows( getIdTableInfo( entityDescriptor ).getQualifiedIdTableName(), session );
 			}
 		};
 	}

@@ -1,0 +1,80 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.query.sqm.consume.multitable.spi.idtable;
+
+import java.util.Locale;
+
+import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
+import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
+import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
+import org.hibernate.metamodel.model.relational.spi.Table;
+
+/**
+ * @author Steve Ebersole
+ */
+public class IdTable extends PhysicalTable {
+	private final EntityDescriptor entityDescriptor;
+
+	public IdTable(
+			EntityDescriptor entityDescriptor,
+			QualifiedTableName qualifiedTableName,
+			PhysicalNamingStrategy namingStrategy,
+			JdbcEnvironment jdbcEnvironment) {
+		super(
+				qualifiedTableName,
+				false,
+				true,
+				"",
+				namingStrategy,
+				jdbcEnvironment
+		);
+		this.entityDescriptor = entityDescriptor;
+	}
+
+	public EntityDescriptor getEntityDescriptor() {
+		return entityDescriptor;
+	}
+
+	@Override
+	public String getTableExpression() {
+		return getQualifiedTableName().getTableName().getText();
+	}
+
+	@Override
+	public boolean isExportable() {
+		return false;
+	}
+
+	@Override
+	public void addColumn(Column column) {
+		if ( ! IdTableColumn.class.isInstance( column ) ) {
+			throw new IllegalArgumentException(
+					String.format(
+							Locale.ROOT,
+							"Columns added to an IdTable must be typed as %s, but found %s",
+							IdTableColumn.class.getName(),
+							column
+					)
+			);
+		}
+
+		super.addColumn( column );
+	}
+
+	@Override
+	public ForeignKey createForeignKey(
+			String name,
+			boolean export,
+			Table targetTable,
+			ForeignKey.ColumnMappings columnMappings) {
+		throw new UnsupportedOperationException( "Cannot generate FK on entity id table" );
+	}
+}

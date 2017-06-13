@@ -6,12 +6,10 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import org.hibernate.query.sqm.tree.predicate.SqmWhereClauseContainer;
-
 /**
  * Used to more easily identifier non-SELECT (DML) statements by gross type.
  *
  * @author Steve Ebersole
  */
-public interface SqmNonSelectStatement extends SqmStatement, SqmWhereClauseContainer {
+public interface SqmNonSelectStatement extends SqmStatement {
 }

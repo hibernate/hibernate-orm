@@ -9,7 +9,9 @@ package org.hibernate.mapping;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.type.descriptor.java.internal.SetJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * A set with no nullable element columns. It will have a primary key
@@ -17,8 +19,8 @@ import org.hibernate.boot.spi.MetadataImplementor;
  * @author Gavin King
  */
 public class Set extends Collection {
-	public Set(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
+	public Set(MetadataBuildingContext context, PersistentClass owner) {
+		super( context, owner );
 	}
 
 	public void validate() throws MappingException {
@@ -68,5 +70,10 @@ public class Set extends Collection {
 
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return SetJavaDescriptor.INSTANCE;
 	}
 }

@@ -7,6 +7,8 @@
 package org.hibernate.mapping;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.type.descriptor.java.internal.ListJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * A list mapping has a primary key consisting of the key columns + index column.
@@ -35,5 +37,10 @@ public class List extends IndexedCollection {
 	
 	public void setBaseIndex(int baseIndex) {
 		this.baseIndex = baseIndex;
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return ListJavaDescriptor.INSTANCE;
 	}
 }

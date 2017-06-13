@@ -11,7 +11,6 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.type.Type;
 
 /**
  * A simple-point association (ie. a reference to another entity).

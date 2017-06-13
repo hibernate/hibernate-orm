@@ -7,7 +7,9 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.type.descriptor.java.internal.MapJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * A map has a primary key consisting of
@@ -15,8 +17,8 @@ import org.hibernate.boot.spi.MetadataImplementor;
  */
 public class Map extends IndexedCollection {
 
-	public Map(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
+	public Map(MetadataBuildingContext context, PersistentClass owner) {
+		super( context, owner );
 	}
 	
 	public boolean isMap() {
@@ -32,5 +34,10 @@ public class Map extends IndexedCollection {
 
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return MapJavaDescriptor.INSTANCE;
 	}
 }

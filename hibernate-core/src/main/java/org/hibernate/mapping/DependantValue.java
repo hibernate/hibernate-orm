@@ -16,7 +16,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
  *
  * @author Gavin King
  */
-public class DependantValue extends SimpleValue {
+public class DependantValue extends BasicValue {
 	private KeyValue wrappedValue;
 	private boolean nullable;
 	private boolean updateable;

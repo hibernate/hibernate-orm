@@ -11,6 +11,7 @@ import javax.persistence.AttributeConverter;
 import org.hibernate.MappingException;
 import org.hibernate.boot.internal.AttributeConverterDescriptorNonAutoApplicableImpl;
 import org.hibernate.boot.model.domain.BasicValueMapping;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AttributeConverterDescriptor;
@@ -34,6 +35,10 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 
 	public BasicValue(MetadataBuildingContext buildingContext) {
 		super( buildingContext );
+	}
+
+	public BasicValue(MetadataBuildingContext buildingContext, MappedTable table) {
+		super( buildingContext, table );
 	}
 
 	public AttributeConverterDescriptor getAttributeConverterDescriptor() {

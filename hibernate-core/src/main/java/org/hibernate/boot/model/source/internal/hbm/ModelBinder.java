@@ -30,6 +30,7 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.naming.EntityNaming;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitCollectionTableNameSource;
@@ -612,7 +613,7 @@ public class ModelBinder {
 		}
 
 		// KEY
-		final SimpleValue keyBinding = new DependantValue(
+		final BasicValue keyBinding = new DependantValue(
 				mappingDocument.getMetadataCollector().getTypeConfiguration().getMetadataBuildingContext(),
 				primaryTable,
 				entityDescriptor.getIdentifier()
@@ -1347,7 +1348,7 @@ public class ModelBinder {
 		final Collection collectionBinding;
 
 		if ( attributeSource instanceof PluralAttributeSourceListImpl ) {
-			collectionBinding = new org.hibernate.mapping.List( sourceDocument.getMetadataCollector(), entityDescriptor );
+			collectionBinding = new org.hibernate.mapping.List( sourceDocument, entityDescriptor );
 			bindCollectionMetadata( sourceDocument, attributeSource, collectionBinding );
 
 			registerSecondPass(
@@ -1360,7 +1361,7 @@ public class ModelBinder {
 			);
 		}
 		else if ( attributeSource instanceof PluralAttributeSourceSetImpl ) {
-			collectionBinding = new Set( sourceDocument.getMetadataCollector(), entityDescriptor );
+			collectionBinding = new Set( sourceDocument, entityDescriptor );
 			bindCollectionMetadata( sourceDocument, attributeSource, collectionBinding );
 
 			registerSecondPass(
@@ -1369,7 +1370,7 @@ public class ModelBinder {
 			);
 		}
 		else if ( attributeSource instanceof PluralAttributeSourceMapImpl ) {
-			collectionBinding = new org.hibernate.mapping.Map( sourceDocument.getMetadataCollector(), entityDescriptor );
+			collectionBinding = new org.hibernate.mapping.Map( sourceDocument, entityDescriptor );
 			bindCollectionMetadata( sourceDocument, attributeSource, collectionBinding );
 
 			registerSecondPass(
@@ -1796,7 +1797,7 @@ public class ModelBinder {
 			);
 		}
 
-		final SimpleValue keyBinding = new DependantValue(
+		final BasicValue keyBinding = new DependantValue(
 				mappingDocument.getBootstrapContext().getTypeConfiguration().getMetadataBuildingContext(),
 				secondaryTable,
 				persistentClass.getIdentifier()
@@ -2316,7 +2317,7 @@ public class ModelBinder {
 
 		for ( Map.Entry<String,String> discriminatorValueMappings : anyMapping.getDiscriminatorSource().getValueMappings().entrySet() ) {
 			try {
-				final Object discriminatorValue = discriminatorType.fromStringValue( discriminatorValueMappings.getKey() );
+				final Object discriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( discriminatorValueMappings.getKey() );
 				final String mappedEntityName = sourceDocument.qualifyClassName( discriminatorValueMappings.getValue() );
 
 				anyBinding.addDiscriminatorMapping( discriminatorValue, mappedEntityName );
@@ -2721,10 +2722,13 @@ public class ModelBinder {
 	}
 
 	private static void bindSimpleValueType(MappingDocument mappingDocument, SimpleValue simpleValue, BasicTypeResolver basicTypeResolver) {
-		if ( mappingDocument.getBuildingOptions().useNationalizedCharacterData() ) {
-			simpleValue.makeNationalized();
+		if ( simpleValue instanceof BasicValue ) {
+			BasicValue basicValue = BasicValue.class.cast( simpleValue );
+			if ( mappingDocument.getBuildingOptions().useNationalizedCharacterData() ) {
+				basicValue.makeNationalized();
+			}
+			basicValue.setBasicTypeResolver( basicTypeResolver );
 		}
-		simpleValue.setBasicTypeResolver( basicTypeResolver );
 	}
 
 	private MappedTable bindEntityTableSpecification(
@@ -3377,7 +3381,7 @@ public class ModelBinder {
 				final PluralAttributeElementSourceOneToMany elementSource =
 						(PluralAttributeElementSourceOneToMany) getPluralAttributeSource().getElementSource();
 				final OneToMany elementBinding = new OneToMany(
-						getMappingDocument().getMetadataCollector(),
+						getMappingDocument(),
 						getCollectionBinding().getOwner()
 				);
 				collectionBinding.setElement( elementBinding );

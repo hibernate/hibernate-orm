@@ -72,7 +72,7 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 		if ( column != null ) {
 			this.table = column.getTable();
 
-			PersistentClass persistentClass = (PersistentClass) persistentClasses.get( column.getPropertyHolder().getEntityName() );
+			PersistentClass persistentClass = (PersistentClass) persistentClasses.get( column.getPropertyHolder().getEntityOwnerClassName() );
 			Property property = persistentClass.getProperty( column.getPropertyName() );
 
 			if ( property.getValue() instanceof Component ) {

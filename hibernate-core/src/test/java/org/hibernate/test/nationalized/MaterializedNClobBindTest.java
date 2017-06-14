@@ -12,7 +12,6 @@ import java.lang.reflect.Proxy;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.TimeZone;
 
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
@@ -99,11 +98,6 @@ public class MaterializedNClobBindTest {
 
 		@Override
 		public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-			return null;
-		}
-
-		@Override
-		public TimeZone getJdbcTimeZone() {
 			return null;
 		}
 	}

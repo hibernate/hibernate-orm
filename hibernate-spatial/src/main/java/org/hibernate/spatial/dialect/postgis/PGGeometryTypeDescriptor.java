@@ -60,19 +60,25 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.POSTGIS_EWKB_1 );
-				final Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
-				final byte[] bytes = encoder.encode( geometry, ByteOrder.NDR ).toByteArray();
-				st.setBytes( index, bytes );
+				final PGobject obj = toPGobject( value, options );
+				st.setObject( index, obj );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
+				final PGobject obj = toPGobject( value, options );
+				st.setObject( name, obj );
+			}
+
+			private PGobject toPGobject(X value, WrapperOptions options) throws SQLException {
 				final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.POSTGIS_EWKB_1 );
 				final Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
-				final byte[] bytes = encoder.encode( geometry, ByteOrder.NDR ).toByteArray();
-				st.setBytes( name, bytes );
+				final String hexString = encoder.encode( geometry, ByteOrder.NDR ).toString();
+				final PGobject obj = new PGobject();
+				obj.setType( "geometry" );
+				obj.setValue( hexString );
+				return obj;
 			}
 
 		};

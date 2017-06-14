@@ -16,7 +16,7 @@ import org.hibernate.type.Type;
 
 /**
  * Functions registered in all Postgis Dialects
- *
+ * <p>
  * Created by Karel Maesen, Geovise BVBA on 29/10/16.
  */
 class PostgisFunctions extends SpatialFunctionsRegistry {
@@ -139,7 +139,8 @@ class PostgisFunctions extends SpatialFunctionsRegistry {
 				)
 		);
 		put(
-				"buffer", new BufferFunction()
+				"buffer", new StandardSQLFunction( "st_buffer"
+				)
 		);
 		put(
 				"convexhull", new StandardSQLFunction(
@@ -197,30 +198,6 @@ class PostgisFunctions extends SpatialFunctionsRegistry {
 			String rendered = super.render( firstArgumentType, arguments, sessionFactory );
 			//add cast
 			return rendered + "::geometry";
-		}
-	}
-
-	private static class BufferFunction extends  StandardSQLFunction {
-
-		public BufferFunction() {
-			super( "st_buffer" );
-		}
-
-		@Override
-		public String render(
-				Type firstArgumentType, List arguments, SessionFactoryImplementor sessionFactory) {
-			final StringBuilder buf = new StringBuilder();
-			buf.append( getName() ).append( '(' );
-			for ( int i = 0; i < arguments.size(); i++ ) {
-				buf.append( arguments.get( i ) );
-				if( i == 0 ) {
-					buf.append( "::geometry" );
-				}
-				if ( i < arguments.size() - 1 ) {
-					buf.append( ", " );
-				}
-			}
-			return buf.append( ")::geometry" ).toString();
 		}
 	}
 

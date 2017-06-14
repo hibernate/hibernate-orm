@@ -44,7 +44,7 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Component extends SimpleValue implements EmbeddedValueMapping, ManagedTypeMapping, PropertyContainer, MetaAttributable {
+public class Component extends SimpleValue implements EmbeddedValueMapping, PropertyContainer, MetaAttributable {
 	private List<PersistentAttributeMapping> properties = new ArrayList<>();
 	private String componentClassName;
 	private boolean embedded;

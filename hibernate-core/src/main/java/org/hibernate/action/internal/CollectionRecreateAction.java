@@ -47,7 +47,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 		final PersistentCollection collection = getCollection();
 		
 		preRecreate();
-		getPersister().getTuplizer().recreate( collection, getKey(), getSession() );
+		getPersister().recreate( collection, getKey(), getSession() );
 		getSession().getPersistenceContext().getCollectionEntry( collection ).afterAction( collection );
 		evict();
 		postRecreate();

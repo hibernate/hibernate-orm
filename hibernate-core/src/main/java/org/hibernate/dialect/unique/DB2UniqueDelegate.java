@@ -10,8 +10,8 @@ import java.util.Collection;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 
@@ -32,8 +32,8 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 	}
 
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, DatabaseModel databaseModel) {
-		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, JdbcServices jdbcServices) {
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		if ( hasNullable( uniqueKey ) ) {
 			return buildSqlCreateIndexString(
 					dialect,
@@ -48,13 +48,13 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 			);
 		}
 		else {
-			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, databaseModel );
+			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, jdbcServices );
 		}
 	}
 	
 	@Override
-	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, DatabaseModel databaseModel) {
-		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
+	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, JdbcServices jdbcServices) {
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		if ( hasNullable( uniqueKey ) ) {
 			return buildSqlDropIndexString(
 					uniqueKey.getName().getText(),
@@ -65,7 +65,7 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 			);
 		}
 		else {
-			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, databaseModel );
+			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, jdbcServices );
 		}
 	}
 

@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.metamodel.model.relational.spi.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -26,12 +25,14 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.metamodel.model.relational.spi.Exportable;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Index;
@@ -213,6 +214,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				tryToCreateCatalogs = true;
 			}
 		}
+		JdbcServices jdbcServices = tool.getServiceRegistry().getService( JdbcServices.class );
 
 		final Set<String> exportIdentifiers = new HashSet<>( 50 );
 
@@ -260,7 +262,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			applySqlStrings(
 					dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings(
 							auxiliaryDatabaseObject,
-							databaseModel
+							jdbcServices
 					),
 					formatter,
 					options,
@@ -282,10 +284,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				}
 				checkExportIdentifier( sequence, exportIdentifiers );
 				applySqlStrings(
-						dialect.getSequenceExporter().getSqlCreateStrings(
-								sequence,
-								databaseModel
-						),
+						dialect.getSequenceExporter().getSqlCreateStrings( sequence, jdbcServices ),
 //						dialect.getCreateSequenceStrings(
 //								jdbcEnvironment.getQualifiedObjectNameFormatter().format( sequence.getName(), dialect ),
 //								sequence.getInitialValue(),
@@ -307,7 +306,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			for ( ExportableTable exportableTable : exportableTables ) {
 				checkExportIdentifier( exportableTable, exportIdentifiers );
 				applySqlStrings(
-						dialect.getTableExporter().getSqlCreateStrings( exportableTable, databaseModel ),
+						dialect.getTableExporter().getSqlCreateStrings( exportableTable, jdbcServices ),
 						formatter,
 						options,
 						targets
@@ -320,7 +319,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				for ( Index index : exportableTable.getIndexes() ) {
 					checkExportIdentifier( index, exportIdentifiers );
 					applySqlStrings(
-							dialect.getIndexExporter().getSqlCreateStrings( index, databaseModel ),
+							dialect.getIndexExporter().getSqlCreateStrings( index, jdbcServices ),
 							formatter,
 							options,
 							targets
@@ -331,7 +330,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				for ( UniqueKey ignored : exportableTable.getUniqueKeys() ) {
 					checkExportIdentifier( ignored, exportIdentifiers );
 					applySqlStrings(
-							dialect.getUniqueKeyExporter().getSqlCreateStrings( ignored, databaseModel ),
+							dialect.getUniqueKeyExporter().getSqlCreateStrings( ignored, jdbcServices ),
 							formatter,
 							options,
 							targets
@@ -359,7 +358,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				final ExportableTable exportableTable = (ExportableTable) table;
 				for ( ForeignKey foreignKey : exportableTable.getForeignKeys() ) {
 					applySqlStrings(
-							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, databaseModel ),
+							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, jdbcServices ),
 							formatter,
 							options,
 							targets
@@ -374,7 +373,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
 				applySqlStrings(
 						dialect.getAuxiliaryDatabaseObjectExporter()
-								.getSqlCreateStrings( auxiliaryDatabaseObject, databaseModel ),
+								.getSqlCreateStrings( auxiliaryDatabaseObject, jdbcServices ),
 						formatter,
 						options,
 						targets

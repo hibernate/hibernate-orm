@@ -7,7 +7,7 @@
 package org.hibernate.tool.schema.internal;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.tool.schema.spi.Exporter;
 
@@ -25,21 +25,21 @@ public class StandardUniqueKeyExporter implements Exporter<UniqueKey> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(UniqueKey uniqueKey, DatabaseModel databaseModel) {
+	public String[] getSqlCreateStrings(UniqueKey uniqueKey, JdbcServices jdbcServices) {
 		return new String[] {
 				dialect.getUniqueDelegate().getAlterTableToAddUniqueKeyCommand(
 						uniqueKey,
-						databaseModel
+						jdbcServices
 				)
 		};
 	}
 
 	@Override
-	public String[] getSqlDropStrings(UniqueKey uniqueKey, DatabaseModel databaseModel) {
+	public String[] getSqlDropStrings(UniqueKey uniqueKey, JdbcServices jdbcServices) {
 		return new String[] {
 				dialect.getUniqueDelegate().getAlterTableToDropUniqueKeyCommand(
 						uniqueKey,
-						databaseModel
+						jdbcServices
 				)
 		};
 	}

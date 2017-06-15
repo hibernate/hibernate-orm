@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.metamodel.model.relational.spi.Exportable;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
@@ -28,6 +28,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.metamodel.model.relational.spi.Exportable;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Namespace;
@@ -68,6 +69,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 	private final HibernateSchemaManagementTool tool;
 	private final SchemaFilter schemaFilter;
 	private final DatabaseModel databaseModel;
+	private final JdbcServices jdbcServices;
+
 
 	public SchemaDropperImpl(HibernateSchemaManagementTool tool, DatabaseModel databaseModel) {
 		this( tool, databaseModel, DefaultSchemaFilter.INSTANCE );
@@ -80,6 +83,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 		this.tool = tool;
 		this.schemaFilter = schemaFilter;
 		this.databaseModel = databaseModel;
+		this.jdbcServices = tool.getServiceRegistry().getService( JdbcServices.class );
+
 	}
 
 	public SchemaDropperImpl(DatabaseModel databaseModel, ServiceRegistry serviceRegistry) {
@@ -95,6 +100,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		this.tool = (HibernateSchemaManagementTool) smt;
 		this.schemaFilter = schemaFilter;
 		this.databaseModel = databaseModel;
+		this.jdbcServices = tool.getServiceRegistry().getService( JdbcServices.class );
 	}
 
 
@@ -205,7 +211,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 				continue;
 			}
 			applySqlStrings(
-					dialect.getAuxiliaryDatabaseObjectExporter().getSqlDropStrings( auxiliaryDatabaseObject, databaseModel ),
+					dialect.getAuxiliaryDatabaseObjectExporter()
+							.getSqlDropStrings( auxiliaryDatabaseObject, jdbcServices ),
 					formatter,
 					options,
 					targets
@@ -230,7 +237,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 						checkExportIdentifier( table, exportIdentifiers );
 						applySqlStrings(
 								dialect.getTableExporter()
-										.getSqlDropStrings( table, databaseModel ),
+										.getSqlDropStrings( table, jdbcServices ),
 								formatter,
 								options,
 								targets
@@ -243,7 +250,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 				}
 				checkExportIdentifier( sequence, exportIdentifiers );
 				applySqlStrings(
-						dialect.getSequenceExporter().getSqlDropStrings( sequence, databaseModel ),
+						dialect.getSequenceExporter().getSqlDropStrings( sequence, jdbcServices ),
 						formatter,
 						options,
 						targets
@@ -306,7 +313,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Formatter formatter,
 			ExecutionOptions options,
 			GenerationTarget... targets) {
-		final Dialect dialect = databaseModel.getJdbcEnvironment().getDialect();
+		final Dialect dialect = jdbcServices.getDialect();
 
 		if ( !dialect.dropConstraints() ) {
 			return;
@@ -322,7 +329,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 			for ( ForeignKey foreignKey : table.getForeignKeys() ) {
 				applySqlStrings(
-						dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, databaseModel ),
+						dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, jdbcServices ),
 						formatter,
 						options,
 						targets
@@ -420,6 +427,17 @@ public class SchemaDropperImpl implements SchemaDropper {
 		return new DelayedDropActionImpl( target.commands );
 	}
 
+	/**
+	 * For tests
+	 */
+	public void doDrop(boolean manageNamespaces, GenerationTarget... targets) {
+		final ServiceRegistry serviceRegistry = tool.getServiceRegistry();
+		doDrop(
+				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
+				manageNamespaces,
+				targets
+		);
+	}
 
 	/**
 	 * For tests

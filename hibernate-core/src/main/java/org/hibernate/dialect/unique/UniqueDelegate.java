@@ -6,8 +6,8 @@
  */
 package org.hibernate.dialect.unique;
 
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 
@@ -65,19 +65,19 @@ public interface UniqueDelegate {
 	 * Get the SQL ALTER TABLE command to be used to create the given UniqueKey.
 	 *
 	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns
-	 * @param databaseModel Access to the runtime database model
+	 * @param jdbcServices Access to the JDBC services
 	 *
 	 * @return The ALTER TABLE command
 	 */
-	String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, DatabaseModel databaseModel);
+	String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, JdbcServices jdbcServices);
 
 	/**
 	 * Get the SQL ALTER TABLE command to be used to drop the given UniqueKey.
 	 *
 	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns
-	 * @param databaseModel Access to the runtime database model
+	 * @param jdbcServices Access to the JDBC services
 	 *
 	 * @return The ALTER TABLE command
 	 */
-	String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, DatabaseModel databaseModel);
+	String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, JdbcServices jdbcServices);
 }

@@ -14,10 +14,9 @@ import java.util.List;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
-import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.naming.spi.QualifiedName;
 import org.hibernate.naming.spi.QualifiedNameParser;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -33,14 +32,14 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(ExportableTable table, DatabaseModel databaseModel) {
+	public String[] getSqlCreateStrings(ExportableTable table, JdbcServices jdbcServices) {
 		final QualifiedName tableName = new QualifiedNameParser.NameParts(
 				table.getCatalogName(),
 				table.getSchemaName(),
 				table.getTableName()
 		);
 
-		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		StringBuilder buf =
 				new StringBuilder( tableCreateString( table.hasPrimaryKey() ) )
 						.append( ' ' )
@@ -147,6 +146,29 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 		return sqlStrings.toArray( new String[ sqlStrings.size() ] );
 	}
 
+	@Override
+	public String[] getSqlDropStrings(ExportableTable table, JdbcServices jdbcServices) {
+		StringBuilder buf = new StringBuilder( "drop table " );
+		if ( dialect.supportsIfExistsBeforeTableName() ) {
+			buf.append( "if exists " );
+		}
+
+		final QualifiedName tableName = new QualifiedNameParser.NameParts(
+				table.getCatalogName(),
+				table.getSchemaName(),
+				table.getTableName()
+		);
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+		buf.append( jdbcEnvironment.getQualifiedObjectNameFormatter().format( tableName, jdbcEnvironment.getDialect() ) )
+				.append( dialect.getCascadeConstraintsString() );
+
+		if ( dialect.supportsIfExistsAfterTableName() ) {
+			buf.append( " if exists" );
+		}
+
+		return new String[] { buf.toString() };
+	}
+
 	private void appendPrimaryKey(ExportableTable table, StringBuilder buf) {
 		buf.append( ", primary key (" );
 		boolean firstColumn = true;
@@ -204,28 +226,5 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 	protected String tableCreateString(boolean hasPrimaryKey) {
 		return hasPrimaryKey ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString();
 
-	}
-
-	@Override
-	public String[] getSqlDropStrings(ExportableTable table, DatabaseModel databaseModel) {
-		StringBuilder buf = new StringBuilder( "drop table " );
-		if ( dialect.supportsIfExistsBeforeTableName() ) {
-			buf.append( "if exists " );
-		}
-
-		final QualifiedName tableName = new QualifiedNameParser.NameParts(
-				table.getCatalogName(),
-				table.getSchemaName(),
-				table.getTableName()
-		);
-		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
-		buf.append( jdbcEnvironment.getQualifiedObjectNameFormatter().format( tableName, jdbcEnvironment.getDialect() ) )
-				.append( dialect.getCascadeConstraintsString() );
-
-		if ( dialect.supportsIfExistsAfterTableName() ) {
-			buf.append( " if exists" );
-		}
-
-		return new String[] { buf.toString() };
 	}
 }

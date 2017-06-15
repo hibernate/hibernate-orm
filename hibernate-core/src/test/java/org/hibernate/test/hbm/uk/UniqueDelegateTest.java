@@ -10,15 +10,18 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.unique.DefaultUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
-import org.hibernate.mapping.Column;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
+import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 
@@ -45,8 +48,10 @@ public class UniqueDelegateTest extends BaseUnitTestCase {
 
 	@Before
 	public void before() {
-		ssr = new StandardServiceRegistryBuilder()
-				.applySetting( AvailableSettings.DIALECT, MyDialect.class )
+		final StandardServiceRegistryBuilder standardServiceRegistryBuilder = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.DIALECT, MyDialect.class );
+		standardServiceRegistryBuilder.getSettings();
+		ssr = standardServiceRegistryBuilder
 				.build();
 	}
 
@@ -64,14 +69,16 @@ public class UniqueDelegateTest extends BaseUnitTestCase {
 				.addResource( "org/hibernate/test/hbm/uk/person_unique.hbm.xml" )
 				.buildMetadata();
 
+		final DatabaseModel databaseModel = Helper.buildDatabaseModel( (MetadataImplementor) metadata );
+
 		final JournalingSchemaToolingTarget target = new JournalingSchemaToolingTarget();
-		new SchemaCreatorImpl( ssr ).doCreation( metadata, false, target );
+		new SchemaCreatorImpl( databaseModel, ssr ).doCreation( false, target );
 
 		assertThat( getAlterTableToAddUniqueKeyCommandCallCount, equalTo( 1 ) );
 		assertThat( getColumnDefinitionUniquenessFragmentCallCount, equalTo( 1 ) );
 		assertThat( getTableCreationUniqueConstraintsFragmentCallCount, equalTo( 1 ) );
 
-		new SchemaDropperImpl( ssr ).doDrop( metadata, false, target );
+		new SchemaDropperImpl( databaseModel, ssr ).doDrop( false, target );
 
 		// unique keys are not dropped explicitly
 		assertThat( getAlterTableToAddUniqueKeyCommandCallCount, equalTo( 1 ) );
@@ -116,17 +123,15 @@ public class UniqueDelegateTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public String getAlterTableToAddUniqueKeyCommand(
-				UniqueKey uniqueKey, DatabaseModel databaseModel) {
+		public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, JdbcServices jdbcServices) {
 			getAlterTableToAddUniqueKeyCommandCallCount++;
-			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, databaseModel );
+			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, jdbcServices );
 		}
 
 		@Override
-		public String getAlterTableToDropUniqueKeyCommand(
-				UniqueKey uniqueKey, DatabaseModel databaseModel) {
+		public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, JdbcServices jdbcServices) {
 			getAlterTableToDropUniqueKeyCommandCallCount++;
-			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, databaseModel );
+			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, jdbcServices );
 		}
 	}
 }

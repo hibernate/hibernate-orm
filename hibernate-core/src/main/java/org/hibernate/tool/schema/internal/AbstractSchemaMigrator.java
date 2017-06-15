@@ -11,16 +11,17 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.metamodel.model.relational.spi.Exportable;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.metamodel.model.relational.spi.Exportable;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Index;
@@ -60,6 +61,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 	protected final HibernateSchemaManagementTool tool;
 	protected final SchemaFilter schemaFilter;
 	protected final DatabaseModel databaseModel;
+	protected final JdbcServices jdbcServices;
 
 	public AbstractSchemaMigrator(
 			HibernateSchemaManagementTool tool,
@@ -73,6 +75,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		else {
 			this.schemaFilter = schemaFilter;
 		}
+		this.jdbcServices = tool.getServiceRegistry().getService( JdbcServices.class );
 	}
 
 	private UniqueConstraintSchemaUpdateStrategy uniqueConstraintStrategy;
@@ -163,7 +166,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				applySqlStrings(
 						true,
 						dialect.getAuxiliaryDatabaseObjectExporter()
-								.getSqlDropStrings( auxiliaryDatabaseObject, databaseModel ),
+								.getSqlDropStrings( auxiliaryDatabaseObject, jdbcServices ),
 						formatter,
 						options,
 						targets
@@ -218,7 +221,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 								false,
 								dialect.getSequenceExporter().getSqlCreateStrings(
 										sequence,
-										databaseModel
+										jdbcServices
 								),
 								formatter,
 								options,
@@ -277,7 +280,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			GenerationTarget... targets) {
 		applySqlStrings(
 				false,
-				dialect.getTableExporter().getSqlCreateStrings( table, databaseModel ),
+				dialect.getTableExporter().getSqlCreateStrings( table, jdbcServices ),
 				formatter,
 				options,
 				targets
@@ -325,7 +328,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				if ( existingIndex == null ) {
 					applySqlStrings(
 							false,
-							exporter.getSqlCreateStrings( index, databaseModel ),
+							exporter.getSqlCreateStrings( index, jdbcServices ),
 							formatter,
 							options,
 							targets
@@ -365,7 +368,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					if ( uniqueConstraintStrategy == UniqueConstraintSchemaUpdateStrategy.DROP_RECREATE_QUIETLY ) {
 						applySqlStrings(
 								true,
-								exporter.getSqlDropStrings( uniqueKey, databaseModel ),
+								exporter.getSqlDropStrings( uniqueKey, jdbcServices ),
 								formatter,
 								options,
 								targets
@@ -374,7 +377,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 					applySqlStrings(
 							true,
-							exporter.getSqlCreateStrings( uniqueKey, databaseModel ),
+							exporter.getSqlCreateStrings( uniqueKey, jdbcServices ),
 							formatter,
 							options,
 							targets
@@ -418,7 +421,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 						// in old SchemaUpdate code, this was the trigger to "create"
 						applySqlStrings(
 								false,
-								exporter.getSqlCreateStrings( foreignKey, databaseModel ),
+								exporter.getSqlCreateStrings( foreignKey, jdbcServices ),
 								formatter,
 								options,
 								targets

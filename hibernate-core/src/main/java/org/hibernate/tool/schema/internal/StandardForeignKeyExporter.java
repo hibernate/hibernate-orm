@@ -12,7 +12,7 @@ import java.util.Locale;
 import org.hibernate.AssertionFailure;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
@@ -32,7 +32,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(ForeignKey foreignKey, DatabaseModel databaseModel) {
+	public String[] getSqlCreateStrings(ForeignKey foreignKey, JdbcServices jdbcServices) {
 		if ( ! dialect.hasAlterTable() ) {
 			return NO_COMMANDS;
 		}
@@ -85,7 +85,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 			targetColumnNames[i] = targetColumns.get( i ).getName().render( dialect );
 		}
 
-		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final String sourceTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 				( (ExportableTable) foreignKey.getTargetTable()).getQualifiedTableName(),
 				dialect
@@ -122,7 +122,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 	}
 
 	@Override
-	public String[] getSqlDropStrings(ForeignKey foreignKey, DatabaseModel databaseModel) {
+	public String[] getSqlDropStrings(ForeignKey foreignKey, JdbcServices jdbcServices) {
 		if ( ! dialect.hasAlterTable() ) {
 			return NO_COMMANDS;
 		}
@@ -131,7 +131,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 			return NO_COMMANDS;
 		}
 
-		final JdbcEnvironment jdbcEnvironment = databaseModel.getJdbcEnvironment();
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final String sourceTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 				( (ExportableTable) foreignKey.getTargetTable()).getQualifiedTableName(),
 				dialect

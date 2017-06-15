@@ -7,8 +7,8 @@
 package org.hibernate.dialect.unique;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
@@ -44,9 +44,9 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	}
 
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, DatabaseModel databaseModel) {
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, JdbcServices jdbcServices) {
 
-		final String tableName = databaseModel
+		final String tableName = jdbcServices
 				.getJdbcEnvironment()
 				.getQualifiedObjectNameFormatter()
 				.format( uniqueKey.getTable().getQualifiedTableName(), dialect );
@@ -57,11 +57,9 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	}
 
 	@Override
-	public String getAlterTableToDropUniqueKeyCommand(
-			UniqueKey uniqueKey,
-			DatabaseModel databaseModel) {
+	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, JdbcServices jdbcServices) {
 
-		final String tableName = databaseModel
+		final String tableName = jdbcServices
 				.getJdbcEnvironment()
 				.getQualifiedObjectNameFormatter()
 				.format( uniqueKey.getTable().getQualifiedTableName(), dialect );

@@ -6,8 +6,8 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
-import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
@@ -16,12 +16,12 @@ import org.hibernate.tool.schema.spi.Exporter;
 public class StandardAuxiliaryDatabaseObjectExporter implements Exporter<AuxiliaryDatabaseObject> {
 
 	@Override
-	public String[] getSqlCreateStrings(AuxiliaryDatabaseObject object, DatabaseModel databaseMode) {
+	public String[] getSqlCreateStrings(AuxiliaryDatabaseObject object, JdbcServices jdbcServices) {
 		return object.getSqlCreateStrings();
 	}
 
 	@Override
-	public String[] getSqlDropStrings(AuxiliaryDatabaseObject object, DatabaseModel databaseMode) {
+	public String[] getSqlDropStrings(AuxiliaryDatabaseObject object, JdbcServices jdbcServices) {
 		return object.getSqlDropStrings();
 	}
 }

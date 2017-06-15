@@ -33,7 +33,7 @@ import org.hibernate.mapping.Table;
  */
 public class IdBagBinder extends BagBinder {
 	protected Collection createCollection(PersistentClass persistentClass) {
-		return new org.hibernate.mapping.IdentifierBag( getBuildingContext().getMetadataCollector(), persistentClass );
+		return new org.hibernate.mapping.IdentifierBag( getBuildingContext(), persistentClass );
 	}
 
 	@Override

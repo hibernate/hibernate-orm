@@ -68,7 +68,7 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	protected Collection createCollection(PersistentClass persistentClass) {
-		return new org.hibernate.mapping.Map( getBuildingContext().getMetadataCollector(), persistentClass );
+		return new org.hibernate.mapping.Map( getBuildingContext(), persistentClass );
 	}
 
 	@Override
@@ -427,7 +427,6 @@ public class MapBinder extends CollectionBinder {
 			Random random = new Random();
 			while ( columns.hasNext() ) {
 				Object current = columns.next();
-				Formula formula = new Formula();
 				String formulaString;
 				if ( current instanceof Column ) {
 					formulaString = ( (Column) current ).getQuotedName();
@@ -438,6 +437,7 @@ public class MapBinder extends CollectionBinder {
 				else {
 					throw new AssertionFailure( "Unknown element in column iterator: " + current.getClass() );
 				}
+				Formula formula = new Formula(formulaString);
 				if ( fromAndWhere != null ) {
 					formulaString = Template.renderWhereStringTemplate( formulaString, "$alias$", new HSQLDialect() );
 					formulaString = "(select " + formulaString + fromAndWhere + ")";

@@ -12,7 +12,7 @@ package org.hibernate.mapping;
  *
  * @author Steve Ebersole
  *
- * @deprecated (6.0) Use {@link ManagedTypeMapping} instead
+ * @deprecated (6.0) Use {@link org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor} instead
  */
 @Deprecated
 public interface PropertyContainer {

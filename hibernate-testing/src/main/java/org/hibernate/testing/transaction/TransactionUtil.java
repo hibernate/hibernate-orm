@@ -471,7 +471,7 @@ public class TransactionUtil {
 
 			}
 			else if( Dialect.getDialect() instanceof MySQLDialect ) {
-				try (PreparedStatement st = connection.prepareStatement("SET GLOBAL innodb_lock_wait_timeout = ?")) {
+				try (PreparedStatement st = connection.prepareStatement("SET SESSION innodb_lock_wait_timeout = ?")) {
 					st.setLong( 1, TimeUnit.MILLISECONDS.toSeconds( millis ) );
 					st.execute();
 				}

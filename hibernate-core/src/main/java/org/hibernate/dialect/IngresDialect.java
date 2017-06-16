@@ -103,10 +103,7 @@ public class IngresDialect extends Dialect {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Standard function overrides
 
-		registry.patternTemplateBuilder( "bit_length", "octet_length(hex(?1))*4" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
+		registry.registerPattern( "bit_length", "octet_length(hex(?1))*4", StandardSpiBasicTypes.INTEGER );
 
 		registry.register(
 				"concat",
@@ -128,15 +125,12 @@ public class IngresDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.register();
 
-		registry.patternTemplateBuilder( "extract", "date_part('?1', ?2)" )
-				.setExactArgumentCount( 2 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
+		registry.registerPattern( "extract", "date_part('?1', ?2)", StandardSpiBasicTypes.INTEGER );
 
 		registry.register(
 				"locate",
 				new LocateEmulationUsingPositionAndSubstring(
-						(type, arguments) -> IngresSubstringFunction.INSTANCE.makeSqmFunctionExpression(
+						(reg, type, arguments) -> reg.findFunctionTemplate( "substring" ).makeSqmFunctionExpression(
 								arguments,
 								type
 						)
@@ -168,10 +162,7 @@ public class IngresDialect extends Dialect {
 		// Casting to char of numeric values introduces space padding up to the
 		// maximum width of a value for that return type.  Casting to varchar
 		// does not introduce space padding.
-		registry.patternTemplateBuilder( "str", "cast(?1 as varchar)" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.register();
+		registry.registerPattern( "str", "cast(?1 as varchar)", StandardSpiBasicTypes.STRING );
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -303,23 +294,23 @@ public class IngresDialect extends Dialect {
 
 
 		// uncategorized
-		registerFunction( "hash", new NamedSqmFunctionTemplate( "hash", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "hex", new NamedSqmFunctionTemplate( "hex", StandardSpiBasicTypes.STRING ) );
+		registry.registerNamed( "hash", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "hex", StandardSpiBasicTypes.STRING );
 
 
 
 
-		registerFunction( "intextract", new NamedSqmFunctionTemplate( "intextract", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "left", new NamedSqmFunctionTemplate( "left", StandardSpiBasicTypes.STRING ) );
+		registry.registerNamed( "intextract", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "left", StandardSpiBasicTypes.STRING );
 
 
 
-		registerFunction( "octet_length", new NamedSqmFunctionTemplate( "octet_length", StandardSpiBasicTypes.LONG ) );
-		registerFunction( "pad", new NamedSqmFunctionTemplate( "pad", StandardSpiBasicTypes.STRING ) );
+		registry.registerNamed( "octet_length", StandardSpiBasicTypes.LONG );
+		registry.registerNamed( "pad", StandardSpiBasicTypes.STRING );
 
 
 
-		registerFunction( "right", new NamedSqmFunctionTemplate( "right", StandardSpiBasicTypes.STRING ) );
+		registry.registerNamed( "right", StandardSpiBasicTypes.STRING );
 
 
 
@@ -328,9 +319,9 @@ public class IngresDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.register();
 
-		registerFunction( "squeeze", new NamedSqmFunctionTemplate( "squeeze" ) );
+		registry.registerNamed( "squeeze" );
 
-		registerFunction( "unhex", new NamedSqmFunctionTemplate( "unhex", StandardSpiBasicTypes.STRING ) );
+		registry.registerNamed( "unhex", StandardSpiBasicTypes.STRING );
 
 	}
 

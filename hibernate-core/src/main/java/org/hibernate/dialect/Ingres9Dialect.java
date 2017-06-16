@@ -8,14 +8,13 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Ingres9IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -69,30 +68,29 @@ public class Ingres9Dialect extends IngresDialect {
 	 */
 	public Ingres9Dialect() {
 		super();
-		registerDateTimeFunctions();
-		registerDateTimeColumnTypes();
-		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "(", "||", ")" ) );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+		registerDateTimeFunctions(registry);
+		registerDateTimeColumnTypes(registry);
+		registry.registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 	}
 
 	/**
 	 * Register functions current_time, current_timestamp, current_date
 	 */
-	protected void registerDateTimeFunctions() {
-		registerFunction( "current_time", new NoArgsSqmFunctionTemplate( "current_time", StandardSpiBasicTypes.TIME, false ) );
-		registerFunction(
-				"current_timestamp", new NoArgsSqmFunctionTemplate(
-						"current_timestamp",
-						StandardSpiBasicTypes.TIMESTAMP,
-						false
-		)
-		);
-		registerFunction( "current_date", new NoArgsSqmFunctionTemplate( "current_date", StandardSpiBasicTypes.DATE, false ) );
+	protected void registerDateTimeFunctions(SqmFunctionRegistry registry) {
+		registry.registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
+		registry.registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
 	}
 
 	/**
 	 * Register column types date, time, timestamp
 	 */
-	protected void registerDateTimeColumnTypes() {
+	protected void registerDateTimeColumnTypes(SqmFunctionRegistry registry) {
 		registerColumnType( Types.DATE, "ansidate" );
 		registerColumnType( Types.TIMESTAMP, "timestamp(9) with time zone" );
 	}

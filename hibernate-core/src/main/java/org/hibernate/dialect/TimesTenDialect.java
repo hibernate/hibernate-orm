@@ -10,8 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.OptimisticLockingStrategy;
@@ -74,17 +73,22 @@ public class TimesTenDialect extends Dialect {
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-		registerFunction( "lower", new NamedSqmFunctionTemplate( "lower" ) );
-		registerFunction( "upper", new NamedSqmFunctionTemplate( "upper" ) );
-		registerFunction( "rtrim", new NamedSqmFunctionTemplate( "rtrim" ) );
-		registerFunction( "concat", new NamedSqmFunctionTemplate( "concat", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "mod", new NamedSqmFunctionTemplate( "mod" ) );
-		registerFunction( "to_char", new NamedSqmFunctionTemplate( "to_char", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "to_date", new NamedSqmFunctionTemplate( "to_date", StandardSpiBasicTypes.TIMESTAMP ) );
-		registerFunction( "sysdate", new NoArgsSqmFunctionTemplate( "sysdate", StandardSpiBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "getdate", new NoArgsSqmFunctionTemplate( "getdate", StandardSpiBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "nvl", new NamedSqmFunctionTemplate( "nvl" ) );
+	}
 
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		registry.registerNamed( "lower" );
+		registry.registerNamed( "upper" );
+		registry.registerNamed( "rtrim" );
+		registry.registerNamed( "concat", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "mod" );
+		registry.registerNamed( "to_char", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "to_date", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNoArgs( "sysdate", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNoArgs( "getdate", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNamed( "nvl" );
 	}
 
 	@Override

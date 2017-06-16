@@ -17,6 +17,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.MappedTable;
@@ -52,6 +53,16 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	BootstrapContext getBootstrapContext();
 
 	Database getDatabase();
+
+	/**
+	 * Add the EntityMappingHierarchy for an entity mapping hierarchy.
+	 *
+	 * @param entityMappingHierarchy The entity hierarchy metadata
+	 *
+	 * @throws DuplicateMappingException Indicates there was already an entry
+	 * corresponding to the given entity name.
+	 */
+	void addEntityMappingHierarchy(EntityMappingHierarchy entityMappingHierarchy);
 
 	/**
 	 * Add the PersistentClass for an entity mapping.

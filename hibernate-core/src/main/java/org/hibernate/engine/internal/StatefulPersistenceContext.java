@@ -372,7 +372,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	private EntityDescriptor locateProperPersister(EntityDescriptor persister) {
-		return session.getFactory().getTypeConfiguration().findEntityPersister( persister.getRootEntityName() );
+		return session.getFactory().getTypeConfiguration().findEntityPersister( persister.getHierarchy().getRootEntityType().getEntityName() );
 	}
 
 	@Override
@@ -1246,7 +1246,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		final Object collection = persister.getPropertyValue( potentialParent, property );
 		return collection != null
 				&& Hibernate.isInitialized( collection )
-				&& collectionPersister.getOrmType().contains( collection, childEntity );
+				&& collectionPersister.getTuplizer().contains( collection, childEntity );
 	}
 
 	@Override
@@ -1318,7 +1318,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			Object potentialParent){
 		final Object collection = persister.getPropertyValue( potentialParent, property );
 		if ( collection != null && Hibernate.isInitialized( collection ) ) {
-			return collectionPersister.getOrmType().indexOf( collection, childEntity );
+			return collectionPersister.getTuplizer().indexOf( collection, childEntity );
 		}
 		else {
 			return null;
@@ -1673,7 +1673,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( insertedKeysMap == null ) {
 				insertedKeysMap = new HashMap<>();
 			}
-			final String rootEntityName = persister.getRootEntityName();
+			final String rootEntityName = persister.getHierarchy().getRootEntityType().getEntityName();
 			List<Serializable> insertedEntityIds = insertedKeysMap.get( rootEntityName );
 			if ( insertedEntityIds == null ) {
 				insertedEntityIds = new ArrayList<>();
@@ -1688,7 +1688,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		// again, we only really care if the entity is cached
 		if ( persister.hasCache() ) {
 			if ( insertedKeysMap != null ) {
-				final List<Serializable> insertedEntityIds = insertedKeysMap.get( persister.getRootEntityName() );
+				final List<Serializable> insertedEntityIds = insertedKeysMap.get( persister.getHierarchy()
+																						  .getRootEntityType()
+																						  .getEntityName() );
 				if ( insertedEntityIds != null ) {
 					return insertedEntityIds.contains( id );
 				}

@@ -18,8 +18,6 @@ import org.hibernate.MappingException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -45,9 +43,8 @@ import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.query.sqm.produce.function.spi.NoArgsSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.spi.StandardAnsiSqlSqmAggregationFunctionTemplates.AvgFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.jboss.logging.Logger;
@@ -163,98 +160,101 @@ public class HSQLDialect extends Dialect {
 			registerColumnType( Types.CLOB, "clob($l)" );
 		}
 
+		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+
+		limitHandler = new HSQLLimitHandler();
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
 		// aggregate functions
-		registerFunction( "avg", new AvgFunctionTemplate( "double" ) );
+		registry.register( "avg", new AvgFunctionTemplate( "double" ) );
 
 		// string functions
-		registerFunction( "ascii", new NamedSqmFunctionTemplate( "ascii", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "char", new NamedSqmFunctionTemplate( "char", StandardSpiBasicTypes.CHARACTER ) );
-		registerFunction( "lower", new NamedSqmFunctionTemplate( "lower" ) );
-		registerFunction( "upper", new NamedSqmFunctionTemplate( "upper" ) );
-		registerFunction( "lcase", new NamedSqmFunctionTemplate( "lcase" ) );
-		registerFunction( "ucase", new NamedSqmFunctionTemplate( "ucase" ) );
-		registerFunction( "soundex", new NamedSqmFunctionTemplate( "soundex", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "ltrim", new NamedSqmFunctionTemplate( "ltrim" ) );
-		registerFunction( "rtrim", new NamedSqmFunctionTemplate( "rtrim" ) );
-		registerFunction( "reverse", new NamedSqmFunctionTemplate( "reverse" ) );
-		registerFunction( "space", new NamedSqmFunctionTemplate( "space", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "str", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "cast(?1 as varchar(256))" ) );
-		registerFunction( "to_char", new NamedSqmFunctionTemplate( "to_char", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "rawtohex", new NamedSqmFunctionTemplate( "rawtohex" ) );
-		registerFunction( "hextoraw", new NamedSqmFunctionTemplate( "hextoraw" ) );
+		registry.registerNamed( "ascii", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "char", StandardSpiBasicTypes.CHARACTER );
+		registry.registerNamed( "lower" );
+		registry.registerNamed( "upper" );
+		registry.registerNamed( "lcase" );
+		registry.registerNamed( "ucase" );
+		registry.registerNamed( "soundex", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "ltrim" );
+		registry.registerNamed( "rtrim" );
+		registry.registerNamed( "reverse" );
+		registry.registerNamed( "space", StandardSpiBasicTypes.STRING );
+		registry.registerPattern( "str", "cast(?1 as varchar(256))", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "to_char", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "rawtohex" );
+		registry.registerNamed( "hextoraw" );
 
 		// system functions
-		registerFunction( "user", new NoArgsSqmFunctionTemplate( "user", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "database", new NoArgsSqmFunctionTemplate( "database", StandardSpiBasicTypes.STRING ) );
+		registry.registerNoArgs( "user", StandardSpiBasicTypes.STRING );
+		registry.registerNoArgs( "database", StandardSpiBasicTypes.STRING );
 
 		// datetime functions
 		if ( hsqldbVersion < 200 ) {
-			registerFunction( "sysdate", new NoArgsSqmFunctionTemplate( "sysdate", false, StandardSpiBasicTypes.DATE ) );
+			registry.registerNoArgs( "sysdate", StandardSpiBasicTypes.DATE );
 		}
 		else {
-			registerFunction( "sysdate", new NoArgsSqmFunctionTemplate( "sysdate", false, StandardSpiBasicTypes.TIMESTAMP ) );
+			registry.registerNoArgs( "sysdate", StandardSpiBasicTypes.TIMESTAMP );
 		}
-		registerFunction( "current_date", new NoArgsSqmFunctionTemplate( "current_date", false, StandardSpiBasicTypes.DATE ) );
-		registerFunction( "curdate", new NoArgsSqmFunctionTemplate( "curdate", StandardSpiBasicTypes.DATE ) );
-		registerFunction(
-				"current_timestamp", new NoArgsSqmFunctionTemplate( "current_timestamp", false, StandardSpiBasicTypes.TIMESTAMP )
-		);
-		registerFunction( "now", new NoArgsSqmFunctionTemplate( "now", StandardSpiBasicTypes.TIMESTAMP ) );
-		registerFunction( "current_time", new NoArgsSqmFunctionTemplate( "current_time", false, StandardSpiBasicTypes.TIME ) );
-		registerFunction( "curtime", new NoArgsSqmFunctionTemplate( "curtime", StandardSpiBasicTypes.TIME ) );
-		registerFunction( "day", new NamedSqmFunctionTemplate( "day", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "dayofweek", new NamedSqmFunctionTemplate( "dayofweek", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new NamedSqmFunctionTemplate( "dayofyear", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "dayofmonth", new NamedSqmFunctionTemplate( "dayofmonth", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "month", new NamedSqmFunctionTemplate( "month", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "year", new NamedSqmFunctionTemplate( "year", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "week", new NamedSqmFunctionTemplate( "week", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "quarter", new NamedSqmFunctionTemplate( "quarter", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "hour", new NamedSqmFunctionTemplate( "hour", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "minute", new NamedSqmFunctionTemplate( "minute", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "second", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "cast(second(?1) as int)" ) );
-		registerFunction( "dayname", new NamedSqmFunctionTemplate( "dayname", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "monthname", new NamedSqmFunctionTemplate( "monthname", StandardSpiBasicTypes.STRING ) );
+		registry.registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
+		registry.registerNoArgs( "curdate", StandardSpiBasicTypes.DATE );
+		registry.registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNoArgs( "now", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
+		registry.registerNoArgs( "curtime", StandardSpiBasicTypes.TIME );
+		registry.registerNamed( "day", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "dayofweek", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "dayofyear", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "dayofmonth", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "month", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "year", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "week", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "quarter", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "hour", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "minute", StandardSpiBasicTypes.INTEGER );
+		registry.registerPattern( "second", "cast(second(?1) as int)", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "dayname", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "monthname", StandardSpiBasicTypes.STRING );
 
 		// numeric functions
-		registerFunction( "abs", new NamedSqmFunctionTemplate( "abs" ) );
-		registerFunction( "sign", new NamedSqmFunctionTemplate( "sign", StandardSpiBasicTypes.INTEGER ) );
+		registry.registerNamed( "abs" );
+		registry.registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
 
-		registerFunction( "acos", new NamedSqmFunctionTemplate( "acos", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new NamedSqmFunctionTemplate( "asin", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new NamedSqmFunctionTemplate( "atan", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "cos", new NamedSqmFunctionTemplate( "cos", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "cot", new NamedSqmFunctionTemplate( "cot", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "exp", new NamedSqmFunctionTemplate( "exp", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "log", new NamedSqmFunctionTemplate( "log", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new NamedSqmFunctionTemplate( "log10", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "sin", new NamedSqmFunctionTemplate( "sin", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "sqrt", new NamedSqmFunctionTemplate( "sqrt", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new NamedSqmFunctionTemplate( "tan", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "pi", new NoArgsSqmFunctionTemplate( "pi", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "rand", new NamedSqmFunctionTemplate( "rand", StandardSpiBasicTypes.FLOAT ) );
+		registry.registerNamed( "acos", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "asin", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "atan", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "cos", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "cot", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "exp", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "log", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "log10", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "sin", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "sqrt", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "tan", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNoArgs( "pi", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "rand", StandardSpiBasicTypes.FLOAT );
 
-		registerFunction( "radians", new NamedSqmFunctionTemplate( "radians", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "degrees", new NamedSqmFunctionTemplate( "degrees", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "round", new NamedSqmFunctionTemplate( "round" ) );
-		registerFunction( "roundmagic", new NamedSqmFunctionTemplate( "roundmagic" ) );
-		registerFunction( "truncate", new NamedSqmFunctionTemplate( "truncate" ) );
+		registry.registerNamed( "radians", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "degrees", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "round" );
+		registry.registerNamed( "roundmagic" );
+		registry.registerNamed( "truncate" );
 
-		registerFunction( "ceiling", new NamedSqmFunctionTemplate( "ceiling" ) );
-		registerFunction( "floor", new NamedSqmFunctionTemplate( "floor" ) );
+		registry.registerNamed( "ceiling" );
+		registry.registerNamed( "floor" );
 
 		// special functions
 		// from v. 2.2.0 ROWNUM() is supported in all modes as the equivalent of Oracle ROWNUM
 		if ( hsqldbVersion > 219 ) {
-			registerFunction( "rownum", new NoArgsSqmFunctionTemplate( "rownum", StandardSpiBasicTypes.INTEGER ) );
+			registry.registerNoArgs( "rownum", StandardSpiBasicTypes.INTEGER );
 		}
 
 		// function templates
-		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "(", "||", ")" ) );
-
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-
-		limitHandler = new HSQLLimitHandler();
+		registry.registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 	}
 
 	@Override

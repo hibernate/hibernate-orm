@@ -24,11 +24,11 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.QueryLiteralRendering;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -80,7 +80,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final EntityTuplizerFactory entityTuplizerFactory;
 	private boolean checkNullability;
 	private final boolean initializeLazyStateOutsideTransactions;
-	private final MultiTableBulkIdStrategy multiTableBulkIdStrategy;
+	private final IdTableStrategy idTableStrategy;
 	private final TempTableDdlTransactionHandling tempTableDdlTransactionHandling;
 	private final BatchFetchStyle batchFetchStyle;
 	private final int defaultBatchFetchSize;
@@ -164,7 +164,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.entityTuplizerFactory = state.getEntityTuplizerFactory();
 		this.checkNullability = state.isCheckNullability();
 		this.initializeLazyStateOutsideTransactions = state.isInitializeLazyStateOutsideTransactionsEnabled();
-		this.multiTableBulkIdStrategy = state.getMultiTableBulkIdStrategy();
+		this.idTableStrategy = state.getIdTableStrategy();
 		this.tempTableDdlTransactionHandling = state.getTempTableDdlTransactionHandling();
 		this.batchFetchStyle = state.getBatchFetchStyle();
 		this.defaultBatchFetchSize = state.getDefaultBatchFetchSize();
@@ -312,8 +312,8 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getMultiTableBulkIdStrategy() {
-		return multiTableBulkIdStrategy;
+	public IdTableStrategy getIdTableStrategy() {
+		return idTableStrategy;
 	}
 
 	@Override

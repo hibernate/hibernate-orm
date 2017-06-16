@@ -19,9 +19,10 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.naming.Identifier;
-import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.query.sqm.consume.multitable.internal.PersistentTableSessionUidSupport;
+import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.schema.spi.Exporter;
 
 /**
  * This is a strategy that mimics temporary tables for databases which do not support
@@ -44,10 +45,14 @@ public class PersistentTableStrategy
 
 	private final IdTableSupport idTableSupport;
 
-	private Identifier catalog;
-	private Identifier schema;
+	private Identifier configuredCatalog;
+	private Identifier configuredSchema;
 
 	private List<IdTableHelper> idTableHelpers;
+
+	public PersistentTableStrategy(Exporter<IdTable> exporter) {
+		this( new StandardIdTableSupport( exporter ) );
+	}
 
 	public PersistentTableStrategy(IdTableSupport idTableSupport) {
 		this.idTableSupport = idTableSupport;
@@ -88,8 +93,8 @@ public class PersistentTableStrategy
 				configService.getSetting( AvailableSettings.DEFAULT_SCHEMA, StandardConverters.STRING )
 		);
 
-		this.catalog = jdbcEnvironment.getIdentifierHelper().toIdentifier( catalogName );
-		this.schema = jdbcEnvironment.getIdentifierHelper().toIdentifier( schemaName );
+		this.configuredCatalog = jdbcEnvironment.getIdentifierHelper().toIdentifier( catalogName );
+		this.configuredSchema = jdbcEnvironment.getIdentifierHelper().toIdentifier( schemaName );
 
 		final boolean dropIdTables = configService.getSetting(
 				DROP_ID_TABLES,
@@ -155,15 +160,18 @@ public class PersistentTableStrategy
 	}
 
 	@Override
-	protected QualifiedTableName determineIdTableName(
-			EntityDescriptor entityDescriptor,
-			SessionFactoryOptions sessionFactoryOptions) {
-		return getIdTableSupport().determineIdTableName(
-				entityDescriptor,
-				sessionFactoryOptions.getServiceRegistry().getService( JdbcServices.class ).getJdbcEnvironment(),
-				catalog,
-				schema
-		);
+	protected NamespaceHandling getNamespaceHandling() {
+		return NamespaceHandling.PREFER_SETTINGS;
+	}
+
+	@Override
+	protected Identifier getConfiguredCatalog() {
+		return configuredCatalog;
+	}
+
+	@Override
+	protected Identifier getConfiguredSchema() {
+		return configuredSchema;
 	}
 
 	@Override

@@ -9,9 +9,9 @@ package org.hibernate.query.internal.sqm;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.exec.spi.ParameterBindingContext;
 
 /**
  * @author Steve Ebersole
@@ -29,7 +29,7 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 	public int executeUpdate(
 			SharedSessionContractImplementor persistenceContext,
 			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings) {
+			ParameterBindingContext parameterBindingContext) {
 		throw new NotYetImplementedException(  );
 	}
 }

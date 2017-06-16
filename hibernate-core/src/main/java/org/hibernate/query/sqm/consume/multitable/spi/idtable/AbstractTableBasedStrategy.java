@@ -7,12 +7,15 @@
 package org.hibernate.query.sqm.consume.multitable.spi.idtable;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
+import org.hibernate.naming.Identifier;
 import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.query.sqm.consume.multitable.spi.DeleteHandler;
 import org.hibernate.query.sqm.consume.multitable.spi.HandlerCreationContext;
@@ -64,9 +67,86 @@ public abstract class AbstractTableBasedStrategy implements IdTableStrategy {
 		return idTable;
 	}
 
-	protected abstract QualifiedTableName determineIdTableName(
+	protected QualifiedTableName determineIdTableName(
 			EntityDescriptor entityDescriptor,
-			SessionFactoryOptions sessionFactoryOptions);
+			SessionFactoryOptions sessionFactoryOptions) {
+
+		final Identifier entityTableCatalog = entityDescriptor.getPrimaryTable() instanceof PhysicalTable
+				? ( (PhysicalTable) entityDescriptor.getPrimaryTable() ).getCatalogName()
+				: null;
+		final Identifier entityTableSchema = entityDescriptor.getPrimaryTable() instanceof PhysicalTable
+				? ( (PhysicalTable) entityDescriptor.getPrimaryTable() ).getSchemaName()
+				: null;
+
+		final Identifier catalogToUse;
+		final Identifier schemaToUse;
+
+		switch ( getNamespaceHandling() ) {
+			case USE_NONE: {
+				catalogToUse = null;
+				schemaToUse = null;
+				break;
+			}
+			case USE_ENTITY_TABLE_NAMESPACE: {
+				catalogToUse = entityTableCatalog;
+				schemaToUse = entityTableSchema;
+				break;
+			}
+			case PREFER_SETTINGS: {
+				final Identifier configuredCatalog = getConfiguredCatalog();
+				final Identifier configuredSchema = getConfiguredSchema();
+
+				// todo (6.0) : if no setting use default (null) or entity namespace?
+
+				catalogToUse = configuredCatalog == null ? entityTableCatalog : configuredCatalog;
+				schemaToUse = configuredSchema == null ? entityTableSchema : configuredSchema;
+				break;
+			}
+			default: {
+				throw new IllegalArgumentException(
+						String.format(
+								Locale.ROOT,
+								"Unknown NamespaceHandling value [%s] - expecting %s, %s or %s",
+								getNamespaceHandling().name(),
+								NamespaceHandling.USE_NONE.name(),
+								NamespaceHandling.USE_ENTITY_TABLE_NAMESPACE.name(),
+								NamespaceHandling.PREFER_SETTINGS.name()
+						)
+				);
+			}
+		}
+
+		return new QualifiedTableName(
+				catalogToUse,
+				schemaToUse,
+				getIdTableSupport().determineIdTableName(
+						entityDescriptor,
+						sessionFactoryOptions
+				)
+		);
+
+	}
+
+	protected Identifier getConfiguredCatalog() {
+		// by default, none
+		return null;
+	}
+
+	protected Identifier getConfiguredSchema() {
+		// by default, none
+		return null;
+	}
+
+	protected NamespaceHandling getNamespaceHandling() {
+		// by default use the entity table's namespace
+		return NamespaceHandling.USE_ENTITY_TABLE_NAMESPACE;
+	}
+
+	public enum NamespaceHandling {
+		USE_NONE,
+		USE_ENTITY_TABLE_NAMESPACE,
+		PREFER_SETTINGS
+	}
 
 	protected SessionUidSupport getSessionUidSupport() {
 		// by default none

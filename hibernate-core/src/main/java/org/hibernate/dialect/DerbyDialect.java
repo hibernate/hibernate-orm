@@ -13,6 +13,9 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.MappingException;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.AfterUseAction;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.spi.AnsiTrimFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.DerbyConcatFunctionTemplate;
@@ -22,10 +25,6 @@ import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.AfterUseAction;
-import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.sql.CaseFragment;
@@ -577,28 +576,17 @@ public class DerbyDialect extends DB2Dialect {
 	 *     The DECLARE GLOBAL TEMPORARY TABLE statement defines a temporary table for the current connection.
 	 * </pre>
 	 *
-	 * {@link DB2Dialect} returns a {@link org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy} that
-	 * will make temporary tables created at startup and hence unavailable for subsequent connections.<br/>
-	 * see HHH-10238.
+	 * Here we return a local-temp-table strategy even though we are creating global temp tables.
+	 * See HHH-10238 for details why...
 	 * </p>
      */
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new LocalTemporaryTableBulkIdStrategy(new IdTableSupportStandardImpl() {
+	public IdTableStrategy getDefaultIdTableStrategy() {
+		return new LocalTemporaryTableStrategy( generateIdTableSupport() ) {
 			@Override
-			public String generateIdTableName(String baseName) {
-				return "session." + super.generateIdTableName( baseName );
+			public AfterUseAction getAfterUseAction() {
+				return AfterUseAction.CLEAN;
 			}
-
-			@Override
-			public String getCreateIdTableCommand() {
-				return "declare global temporary table";
-			}
-
-			@Override
-			public String getCreateIdTableStatementOptions() {
-				return "not logged";
-			}
-		}, AfterUseAction.CLEAN, null);
+		};
 	}
 }

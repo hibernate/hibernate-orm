@@ -6,11 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.produce.function.spi.AnsiTrimFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.DerbyConcatFunctionTemplate;
-
-
 /**
  * Hibernate Dialect for Cloudscape 10 - aka Derby. This implements both an
  * override for the identity column generator as well as for the case statement

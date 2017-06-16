@@ -20,10 +20,12 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.QueryLiteralRendering;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -169,8 +171,8 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	}
 
 	@Override
-	public T applyMultiTableBulkIdStrategy(MultiTableBulkIdStrategy strategy) {
-		delegate.applyMultiTableBulkIdStrategy( strategy );
+	public SessionFactoryBuilder applyIdTableStrategy(IdTableStrategy strategy) {
+		delegate.applyIdTableStrategy( strategy );
 		return getThis();
 	}
 
@@ -395,5 +397,16 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	@SuppressWarnings("unchecked")
 	public <S extends SessionFactoryBuilder> S unwrap(Class<S> type) {
 		return (S) this;
+	}
+
+	@Override
+	public SqmFunctionRegistry getSqmFunctionRegistry() {
+		return delegate.getSqmFunctionRegistry();
+	}
+
+	@Override
+	public SessionFactoryBuilder applyQueryLiteralRendering(QueryLiteralRendering queryLiteralRendering) {
+		delegate.applyQueryLiteralRendering( queryLiteralRendering );
+		return getThis();
 	}
 }

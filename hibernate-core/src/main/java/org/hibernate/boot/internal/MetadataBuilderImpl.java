@@ -620,16 +620,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			this.implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
 					ImplicitNamingStrategy.class,
 					configService.getSettings().get( AvailableSettings.IMPLICIT_NAMING_STRATEGY ),
-					new Callable<ImplicitNamingStrategy>() {
-						@Override
-						public ImplicitNamingStrategy call() throws Exception {
-							return strategySelector.resolveDefaultableStrategy(
-									ImplicitNamingStrategy.class,
-									"default",
-									ImplicitNamingStrategyJpaCompliantImpl.INSTANCE
-							);
-						}
-					}
+					(Callable<ImplicitNamingStrategy>) () -> strategySelector.resolveDefaultableStrategy(
+							ImplicitNamingStrategy.class,
+							"default",
+							ImplicitNamingStrategyJpaCompliantImpl.INSTANCE
+					)
 			);
 
 			this.physicalNamingStrategy = strategySelector.resolveDefaultableStrategy(

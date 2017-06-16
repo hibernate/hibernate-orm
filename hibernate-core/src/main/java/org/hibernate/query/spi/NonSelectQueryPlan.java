@@ -7,6 +7,7 @@
 package org.hibernate.query.spi;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.exec.spi.ParameterBindingContext;
 
 /**
  * @author Steve Ebersole
@@ -15,5 +16,5 @@ public interface NonSelectQueryPlan {
 	int executeUpdate(
 			SharedSessionContractImplementor persistenceContext,
 			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings);
+			ParameterBindingContext parameterBindingContext);
 }

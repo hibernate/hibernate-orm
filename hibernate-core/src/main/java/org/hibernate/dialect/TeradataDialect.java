@@ -5,13 +5,17 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.dialect;
+
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.AfterUseAction;
-import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTableSupport;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTempTableExporter;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -20,7 +24,7 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  *
  * @author Jay Nance
  */
-public class TeradataDialect extends Dialect implements IdTableSupport {
+public class TeradataDialect extends Dialect {
 	
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
@@ -120,28 +124,22 @@ public class TeradataDialect extends Dialect implements IdTableSupport {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new GlobalTemporaryTableBulkIdStrategy( this, AfterUseAction.CLEAN );
+	public IdTableStrategy getDefaultIdTableStrategy() {
+		return new GlobalTemporaryTableStrategy( generateIdTableExporter() );
 	}
 
-	@Override
-	public String generateIdTableName(String baseName) {
-		return IdTableSupportStandardImpl.INSTANCE.generateIdTableName( baseName );
-	}
+	private Exporter<IdTable> generateIdTableExporter() {
+		return new GlobalTempTableExporter() {
+			@Override
+			public String getCreateCommand() {
+				return "create global temporary table";
+			}
 
-	@Override
-	public String getCreateIdTableCommand() {
-		return "create global temporary table";
-	}
-
-	@Override
-	public String getCreateIdTableStatementOptions() {
-		return " on commit preserve rows";
-	}
-
-	@Override
-	public String getDropIdTableCommand() {
-		return "drop table";
+			@Override
+			public String getCreateOptions() {
+				return " on commit preserve rows";
+			}
+		};
 	}
 
 	/**

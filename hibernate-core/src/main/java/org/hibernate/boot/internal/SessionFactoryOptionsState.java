@@ -24,11 +24,11 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.QueryLiteralRendering;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -90,7 +90,7 @@ public interface SessionFactoryOptionsState {
 
 	boolean isInitializeLazyStateOutsideTransactionsEnabled();
 
-	MultiTableBulkIdStrategy getMultiTableBulkIdStrategy();
+	IdTableStrategy getIdTableStrategy();
 
 	TempTableDdlTransactionHandling getTempTableDdlTransactionHandling();
 

@@ -6,13 +6,11 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**

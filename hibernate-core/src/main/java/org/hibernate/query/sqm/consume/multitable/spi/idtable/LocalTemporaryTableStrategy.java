@@ -9,9 +9,6 @@ package org.hibernate.query.sqm.consume.multitable.spi.idtable;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
 import org.hibernate.tool.schema.spi.Exporter;
 
@@ -100,14 +97,8 @@ public class LocalTemporaryTableStrategy extends AbstractTableBasedStrategy {
 	}
 
 	@Override
-	protected QualifiedTableName determineIdTableName(
-			EntityDescriptor entityDescriptor,
-			SessionFactoryOptions sessionFactoryOptions) {
-		return getIdTableSupport().determineIdTableName(
-				entityDescriptor,
-				sessionFactoryOptions.getServiceRegistry().getService( JdbcServices.class ).getJdbcEnvironment(),
-				null,
-				null
-		);
+	protected NamespaceHandling getNamespaceHandling() {
+		// by default local temp tables will use no namespace
+		return NamespaceHandling.USE_NONE;
 	}
 }

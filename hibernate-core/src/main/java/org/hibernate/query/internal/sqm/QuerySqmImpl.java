@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.internal.sqm;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,7 +20,6 @@ import org.hibernate.ScrollMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
@@ -38,6 +38,9 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.sqm.consume.multitable.spi.DeleteHandler;
+import org.hibernate.query.sqm.consume.multitable.spi.HandlerExecutionContext;
+import org.hibernate.query.sqm.consume.multitable.spi.UpdateHandler;
 import org.hibernate.query.sqm.consume.spi.QuerySplitter;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmNonSelectStatement;
@@ -45,13 +48,15 @@ import org.hibernate.query.sqm.tree.SqmParameter;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
+import org.hibernate.sql.ast.produce.sqm.spi.Callback;
+import org.hibernate.sql.exec.spi.ParameterBindingContext;
 
 /**
  * {@link Query} implementation based on an SQM
  *
  * @author Steve Ebersole
  */
-public class QuerySqmImpl<R> extends AbstractQuery<R> {
+public class QuerySqmImpl<R> extends AbstractQuery<R> implements HandlerExecutionContext, ParameterBindingContext {
 	private final String sourceQueryString;
 	private final SqmStatement sqmStatement;
 	private final Class resultType;
@@ -337,8 +342,8 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 
 		return resolveNonSelectQueryPlan().executeUpdate(
 				getSession(),
-				getQueryOptions(),
-				getQueryParameterBindings()
+				queryOptions,
+				this
 		);
 	}
 
@@ -387,10 +392,10 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 				.getEntityDescriptor();
 
 		if ( entityToDelete.isMultiTable() ) {
-			final MultiTableBulkIdStrategy.DeleteHandler handler = getSession().getFactory()
+			final DeleteHandler handler = getSession().getFactory()
 					.getSessionFactoryOptions()
-					.getMultiTableBulkIdStrategy()
-					.buildDeleteHandler( getSession().getFactory(), sqmStatement );
+					.getIdTableStrategy()
+					.buildDeleteHandler( sqmStatement, getSession() );
 			return new MultiTableDeleteQueryPlan( handler );
 		}
 		else {
@@ -409,14 +414,29 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 				.getEntityDescriptor();
 
 		if ( entityToDelete.isMultiTable() ) {
-			final MultiTableBulkIdStrategy.UpdateHandler handler = getSession().getFactory()
+			final UpdateHandler handler = getSession().getFactory()
 					.getSessionFactoryOptions()
-					.getMultiTableBulkIdStrategy()
-					.buildUpdateHandler( getSession().getFactory(), sqmStatement );
+					.getIdTableStrategy()
+					.buildUpdateHandler( sqmStatement, getSession() );
 			return new MultiTableUpdateQueryPlan( handler );
 		}
 		else {
 			return new SimpleUpdateQueryPlan( sqmStatement );
 		}
+	}
+
+	@Override
+	public ParameterBindingContext getParameterBindingContext() {
+		return this;
+	}
+
+	@Override
+	public Callback getCallback() {
+		return afterLoadAction -> {};
+	}
+
+	@Override
+	public <T> Collection<T> getLoadIdentifiers() {
+		return null;
 	}
 }

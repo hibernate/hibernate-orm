@@ -7,18 +7,20 @@
 package org.hibernate.query.internal.sqm;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.sqm.consume.multitable.spi.DeleteHandler;
+import org.hibernate.query.sqm.consume.multitable.spi.HandlerExecutionContext;
+import org.hibernate.sql.ast.produce.sqm.spi.Callback;
+import org.hibernate.sql.exec.spi.ParameterBindingContext;
 
 /**
  * @author Steve Ebersole
  */
 public class MultiTableDeleteQueryPlan implements NonSelectQueryPlan {
-	private final MultiTableBulkIdStrategy.DeleteHandler deleteHandler;
+	private final DeleteHandler deleteHandler;
 
-	public MultiTableDeleteQueryPlan(MultiTableBulkIdStrategy.DeleteHandler deleteHandler) {
+	public MultiTableDeleteQueryPlan(DeleteHandler deleteHandler) {
 		this.deleteHandler = deleteHandler;
 	}
 
@@ -26,7 +28,29 @@ public class MultiTableDeleteQueryPlan implements NonSelectQueryPlan {
 	public int executeUpdate(
 			SharedSessionContractImplementor persistenceContext,
 			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings) {
-		return deleteHandler.execute( inputParameterBindings, persistenceContext );
+			ParameterBindingContext parameterBindingContext) {
+		return deleteHandler.execute(
+				new HandlerExecutionContext() {
+					@Override
+					public SharedSessionContractImplementor getSession() {
+						return persistenceContext;
+					}
+
+					@Override
+					public QueryOptions getQueryOptions() {
+						return queryOptions;
+					}
+
+					@Override
+					public ParameterBindingContext getParameterBindingContext() {
+						return parameterBindingContext;
+					}
+
+					@Override
+					public Callback getCallback() {
+						return afterLoadAction -> {};
+					}
+				}
+		);
 	}
 }

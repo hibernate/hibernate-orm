@@ -17,7 +17,6 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
 import org.hibernate.tool.schema.spi.Exporter;
 
@@ -41,12 +40,7 @@ public class GlobalTemporaryTableStrategy
 	}
 
 	private static Exporter<IdTable> generateStandardExporter() {
-		return new IdTableExporterImpl() {
-			@Override
-			protected String getCreateCommand() {
-				return "create global temporary table";
-			}
-		};
+		return new GlobalTempTableExporter();
 	}
 
 	public GlobalTemporaryTableStrategy(Exporter<IdTable> exporter) {
@@ -60,6 +54,11 @@ public class GlobalTemporaryTableStrategy
 	@Override
 	protected IdTableSupport getIdTableSupport() {
 		return idTableSupport;
+	}
+
+	@Override
+	protected NamespaceHandling getNamespaceHandling() {
+		return NamespaceHandling.USE_NONE;
 	}
 
 	@Override
@@ -97,18 +96,6 @@ public class GlobalTemporaryTableStrategy
 		}
 
 		super.prepare( runtimeMetadata, sessionFactoryOptions, connectionAccess );
-	}
-
-	@Override
-	protected QualifiedTableName determineIdTableName(
-			EntityDescriptor entityDescriptor,
-			SessionFactoryOptions sessionFactoryOptions) {
-		return getIdTableSupport().determineIdTableName(
-				entityDescriptor,
-				sessionFactoryOptions.getServiceRegistry().getService( JdbcServices.class ).getJdbcEnvironment(),
-				null,
-				null
-		);
 	}
 
 	@Override

@@ -7,6 +7,8 @@
 package org.hibernate.boot.registry.selector.spi;
 
 import java.util.concurrent.Callable;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.hibernate.service.Service;
 
@@ -107,6 +109,17 @@ public interface StrategySelector extends Service {
 	 * @return The strategy instance
 	 */
 	<T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, T defaultValue);
+
+	/**
+	 * Same as the other overloaded forms, but here accepting a Supplier for default values.
+	 *
+	 * @param strategy
+	 * @param strategyReference
+	 * @param defaultValueSupplier
+	 *
+	 * @return
+	 */
+	<T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, Supplier<T> defaultValueSupplier);
 
 	/**
 	 * Resolve strategy instances. The incoming reference might be:<ul>

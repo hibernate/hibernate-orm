@@ -53,6 +53,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.ParameterBindingContext;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -60,7 +61,9 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryImplementor<R> {
+public class NativeQueryImpl<R>
+		extends AbstractQuery<R>
+		implements NativeQueryImplementor<R>, ParameterBindingContext {
 	private static final Logger log = Logger.getLogger( NativeQueryImpl.class );
 
 	private final String sqlString;
@@ -384,7 +387,7 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 		return resolveNonSelectQueryPlan().executeUpdate(
 				getSession(),
 				getQueryOptions(),
-				parameterBindings
+				this
 		);
 	}
 
@@ -397,7 +400,7 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 		}
 
 		if ( queryPlan == null ) {
-			queryPlan = new NonSelectQueryPlanImpl( this );
+			queryPlan = new NativeNonSelectQueryPlanImpl( this );
 			if ( cacheKey != null ) {
 				getSession().getFactory().getQueryEngine().getQueryInterpretations().cacheNonSelectQueryPlan( cacheKey, queryPlan );
 			}
@@ -847,4 +850,15 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 		super.setHint( hintName, value );
 		return this;
 	}
+
+	@Override
+	public <T> Collection<T> getLoadIdentifiers() {
+		return null;
+	}
+
+	@Override
+	public QueryParameterBindings getQueryParameterBindings() {
+		return parameterBindings;
+	}
+
 }

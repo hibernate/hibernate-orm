@@ -32,16 +32,6 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
-import org.hibernate.mapping.Column;
-import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
-import org.hibernate.metamodel.model.relational.spi.ExportableTable;
-import org.hibernate.metamodel.model.relational.spi.ForeignKey;
-import org.hibernate.metamodel.model.relational.spi.Index;
-import org.hibernate.metamodel.model.relational.spi.Sequence;
-import org.hibernate.metamodel.model.relational.spi.UniqueKey;
-import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
-import org.hibernate.query.sqm.produce.function.spi.CastFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -69,8 +59,6 @@ import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.persistent.PersistentTableBulkIdStrategy;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreLogging;
@@ -80,8 +68,22 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.loader.BatchLoadSizingStrategy;
+import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
+import org.hibernate.metamodel.model.relational.spi.Index;
+import org.hibernate.metamodel.model.relational.spi.Sequence;
+import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTableExporterImpl;
+import org.hibernate.query.sqm.consume.multitable.spi.idtable.PersistentTableStrategy;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.spi.CastFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ANSICaseFragment;
 import org.hibernate.sql.ANSIJoinFragment;
@@ -1517,9 +1519,14 @@ public abstract class Dialect implements ConversionContext {
 		return getCreateTableString();
 	}
 
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new PersistentTableBulkIdStrategy();
+	public IdTableStrategy getDefaultIdTableStrategy() {
+		return new PersistentTableStrategy( getIdTableExporter() );
 	}
+
+	protected Exporter<IdTable> getIdTableExporter() {
+		return new IdTableExporterImpl();
+	}
+
 
 	// callable statement support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1973,34 +1980,52 @@ public abstract class Dialect implements ConversionContext {
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private StandardTableExporter tableExporter = new StandardTableExporter( this );
-	private StandardSequenceExporter sequenceExporter = new StandardSequenceExporter( this );
-	private StandardIndexExporter indexExporter = new StandardIndexExporter( this );
-	private StandardForeignKeyExporter foreignKeyExporter = new StandardForeignKeyExporter( this );
-	private StandardUniqueKeyExporter uniqueKeyExporter = new StandardUniqueKeyExporter( this );
-	private StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter();
+	private StandardTableExporter tableExporter;
+	private StandardSequenceExporter sequenceExporter;
+	private StandardIndexExporter indexExporter;
+	private StandardForeignKeyExporter foreignKeyExporter;
+	private StandardUniqueKeyExporter uniqueKeyExporter;
+	private StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter;
 
 	public Exporter<ExportableTable> getTableExporter() {
+		if ( tableExporter == null ) {
+			tableExporter = new StandardTableExporter( this );
+		}
 		return tableExporter;
 	}
 
 	public Exporter<Sequence> getSequenceExporter() {
+		if ( sequenceExporter == null ) {
+			sequenceExporter = new StandardSequenceExporter( this );
+		}
 		return sequenceExporter;
 	}
 
 	public Exporter<Index> getIndexExporter() {
+		if ( indexExporter == null ) {
+			indexExporter = new StandardIndexExporter( this );
+		}
 		return indexExporter;
 	}
 
 	public Exporter<ForeignKey> getForeignKeyExporter() {
+		if ( foreignKeyExporter == null ) {
+			foreignKeyExporter = new StandardForeignKeyExporter( this );
+		}
 		return foreignKeyExporter;
 	}
 
 	public Exporter<UniqueKey> getUniqueKeyExporter() {
+		if ( uniqueKeyExporter == null ) {
+			uniqueKeyExporter = new StandardUniqueKeyExporter( this );
+		}
 		return uniqueKeyExporter;
 	}
 
 	public Exporter<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectExporter() {
+		if ( auxiliaryObjectExporter == null ) {
+			auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter();
+		}
 		return auxiliaryObjectExporter;
 	}
 

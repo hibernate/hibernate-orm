@@ -6,15 +6,17 @@
  */
 package org.hibernate.query.sqm.consume.multitable.spi.idtable;
 
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.naming.Identifier;
-import org.hibernate.naming.QualifiedTableName;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
  * Defines environment's support for id-tables.  Generally this comes from
  * Dialect.
+ *
+ * todo (6.0) : get rid of this contract - the strategy can handle this on its own
+ * 		this is a left-over from porting pre-6.0 support
  *
  * @author Steve Ebersole
  */
@@ -22,11 +24,7 @@ public interface IdTableSupport {
 	/**
 	 * Determine the name to use for the id-table.
 	 */
-	QualifiedTableName determineIdTableName(
-			EntityDescriptor entityDescriptor,
-			JdbcEnvironment jdbcEnvironment,
-			Identifier catalog,
-			Identifier schema);
+	Identifier determineIdTableName(EntityDescriptor entityDescriptor, SessionFactoryOptions sessionFactoryOptions);
 
 	Exporter<IdTable> getIdTableExporter();
 }

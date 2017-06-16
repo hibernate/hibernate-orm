@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.function.Supplier;
 
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -41,18 +42,18 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.engine.config.internal.ConfigurationServiceImpl;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.QueryLiteralRendering;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -83,6 +84,7 @@ import static org.hibernate.cfg.AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS;
 import static org.hibernate.cfg.AvailableSettings.FLUSH_BEFORE_COMPLETION;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.HQL_BULK_ID_STRATEGY;
+import static org.hibernate.cfg.AvailableSettings.ID_TABLE_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.INTERCEPTOR;
 import static org.hibernate.cfg.AvailableSettings.JDBC_TIME_ZONE;
 import static org.hibernate.cfg.AvailableSettings.JPAQL_STRICT_COMPLIANCE;
@@ -280,8 +282,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyMultiTableBulkIdStrategy(MultiTableBulkIdStrategy strategy) {
-		this.options.multiTableBulkIdStrategy = strategy;
+	public SessionFactoryBuilder applyIdTableStrategy(IdTableStrategy strategy) {
+		this.options.idTableStrategy = strategy;
 		return this;
 	}
 
@@ -572,7 +574,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private EntityTuplizerFactory entityTuplizerFactory;
 		private boolean checkNullability;
 		private boolean initializeLazyStateOutsideTransactions;
-		private MultiTableBulkIdStrategy multiTableBulkIdStrategy;
+		private IdTableStrategy idTableStrategy;
 		private TempTableDdlTransactionHandling tempTableDdlTransactionHandling;
 		private BatchFetchStyle batchFetchStyle;
 		private int defaultBatchFetchSize;
@@ -702,10 +704,14 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 					configurationSettings.get( MULTI_TENANT_IDENTIFIER_RESOLVER )
 			);
 
-			this.multiTableBulkIdStrategy = strategySelector.resolveDefaultableStrategy(
-					MultiTableBulkIdStrategy.class,
-					configurationSettings.get( HQL_BULK_ID_STRATEGY ),
-					jdbcServices.getJdbcEnvironment().getDialect().getDefaultMultiTableBulkIdStrategy()
+			// check the legacy setting for id table strategy and warn if set
+			if ( configurationSettings.containsKey( HQL_BULK_ID_STRATEGY ) ) {
+				DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting( HQL_BULK_ID_STRATEGY, ID_TABLE_STRATEGY );
+			}
+			this.idTableStrategy = strategySelector.resolveDefaultableStrategy(
+					IdTableStrategy.class,
+					configurationSettings.get( ID_TABLE_STRATEGY ),
+					(Supplier<IdTableStrategy>) () -> jdbcServices.getJdbcEnvironment().getDialect().getDefaultIdTableStrategy()
 			);
 
 			this.batchFetchStyle = BatchFetchStyle.interpret( configurationSettings.get( BATCH_FETCH_STYLE ) );
@@ -1062,8 +1068,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 
 		@Override
-		public MultiTableBulkIdStrategy getMultiTableBulkIdStrategy() {
-			return multiTableBulkIdStrategy;
+		public IdTableStrategy getIdTableStrategy() {
+			return idTableStrategy;
 		}
 
 		@Override
@@ -1390,8 +1396,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getMultiTableBulkIdStrategy() {
-		return options.getMultiTableBulkIdStrategy();
+	public IdTableStrategy getIdTableStrategy() {
+		return options.getIdTableStrategy();
 	}
 
 	@Override

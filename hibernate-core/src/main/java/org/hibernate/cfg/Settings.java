@@ -14,13 +14,13 @@ import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.SchemaAutoTooling;
-import org.hibernate.naming.Identifier;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
+import org.hibernate.naming.Identifier;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 import org.jboss.logging.Logger;
@@ -168,8 +168,8 @@ public final class Settings {
 		return sessionFactoryOptions.isInitializeLazyStateOutsideTransactionsEnabled();
 	}
 
-	public MultiTableBulkIdStrategy getMultiTableBulkIdStrategy() {
-		return sessionFactoryOptions.getMultiTableBulkIdStrategy();
+	public IdTableStrategy getMultiTableBulkIdStrategy() {
+		return sessionFactoryOptions.getIdTableStrategy();
 	}
 
 	public BatchFetchStyle getBatchFetchStyle() {

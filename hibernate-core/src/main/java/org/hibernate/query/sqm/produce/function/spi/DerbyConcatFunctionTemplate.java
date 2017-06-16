@@ -6,25 +6,18 @@
  */
 package org.hibernate.query.sqm.produce.function.spi;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
-import org.hibernate.AssertionFailure;
-import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
-import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
-import org.hibernate.query.sqm.tree.expression.ConcatSqmExpression;
-import org.hibernate.query.sqm.tree.expression.ParameterSqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-
-import static org.hibernate.type.spi.StandardSpiBasicTypes.STRING;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.consume.spi.SqlAppender;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.GenericParameter;
 
 /**
  * A specialized concat() function definition in which:<ol>
- *     <li>we translate to use the concat operator ('||')</li>
- *     <li>wrap dynamic parameters in CASTs to VARCHAR</li>
+ * <li>we translate to use the concat operator ('||')</li>
+ * <li>wrap dynamic parameters in CASTs to VARCHAR</li>
  * </ol>
  * <p/>
  * This last spec is to deal with a limitation on DB2 and variants (e.g. Derby)
@@ -34,95 +27,50 @@ import static org.hibernate.type.spi.StandardSpiBasicTypes.STRING;
  * it is not that we just go ahead and do the CASTing.
  *
  * @author Steve Ebersole
+ * @author Christian Beikov
  */
-public class DerbyConcatFunctionTemplate implements SqmFunctionTemplate {
+public class DerbyConcatFunctionTemplate extends ConcatFunctionTemplate {
+
+	public static final DerbyConcatFunctionTemplate INSTANCE = new DerbyConcatFunctionTemplate();
 
 	@Override
-	public SqmExpression makeSqmFunctionExpression(
-			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
-		if ( arguments.size() < 2 ) {
-			throw new org.hibernate.query.sqm.QueryException( "concat function must have 2 or more arguments" );
-		}
-
+	public void render(
+			SqlAppender sqlAppender,
+			List<Expression> sqlAstArguments,
+			SqlAstWalker walker,
+			SessionFactoryImplementor sessionFactory) {
 		// check if all arguments are parameters...
 		//		- if not, simply use the Derby concat operator - e.g. `arg1 || arg2`
 		//		- if so, wrap the individual args in `cast` function and wrap the
 		//				entire expression in Derby's `varchar` function (specialized
 		// 				`cast` function)
 		boolean areAllArgumentsDynamic = true;
-		for ( SqmExpression argument : arguments ) {
-			if ( ParameterSqmExpression.class.isInstance( argument ) ) {
+		for ( Expression argument : sqlAstArguments ) {
+			if ( GenericParameter.class.isInstance( argument ) ) {
 				areAllArgumentsDynamic = false;
 				break;
 			}
 		}
 
 		if ( areAllArgumentsDynamic ) {
-			return buildAllParameterExpression( arguments, impliedResultType );
+			sqlAppender.appendSql( "cast(" );
+			super.render( sqlAppender, sqlAstArguments, walker, sessionFactory );
+			sqlAppender.appendSql( " as varchar(32672))" );
 		}
 		else {
-			return buildNotAllParameterExpression( arguments, impliedResultType );
+			super.render( sqlAppender, sqlAstArguments, walker, sessionFactory );
 		}
 	}
 
-	private SqmExpression buildAllParameterExpression(
-			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
-		// all args where parameters - wrap the individual args in `cast`
-		// 		function and wrap the entire expression in Derby's `varchar`
-		// 		function (specialized `cast` function)
-		final Optional<SqmExpression> concat = arguments.stream().reduce(
-				(argument1, argument2) -> concat(
-						cast( argument1 ),
-						cast( argument2 ),
-						impliedResultType
-				)
-		);
-
-		if ( !concat.isPresent() ) {
-			throw new AssertionFailure( "Was unable to build Derby concat chain" );
-		}
-
-		return varchar( concat.get() );
+	@Override
+	protected void renderArgument(
+			SqlAppender sqlAppender,
+			Expression sqlAstArgument,
+			SqlAstWalker walker,
+			SessionFactoryImplementor sessionFactory) {
+		sqlAppender.appendSql( "varchar(" );
+		super.renderArgument( sqlAppender, sqlAstArgument, walker, sessionFactory );
+		sqlAppender.appendSql( ")" );
 	}
 
-	private SqmExpression buildNotAllParameterExpression(
-			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
-		// simply use the Derby concat operator - e.g. `arg1 || arg2 (|| argX)?`
-		final Optional<SqmExpression> concat = arguments.stream().reduce(
-				(argument1, argument2) -> concat(
-						cast( argument1 ),
-						cast( argument2 ),
-						impliedResultType
-				)
-		);
-
-		if ( !concat.isPresent() ) {
-			throw new AssertionFailure( "Was unable to build Derby concat chain" );
-		}
-
-		return concat.get();
-	}
-
-	private SqmExpression varchar(SqmExpression argument) {
-		return new PatternBasedSqmFunctionTemplate( STRING, "varchar(?1)" )
-				.makeSqmFunctionExpression( Collections.singletonList( argument ), null );
-	}
-
-	private ConcatSqmExpression concat(
-			SqmExpression expression1,
-			SqmExpression expression2,
-			AllowableFunctionReturnType impliedResultType) {
-		return new ConcatSqmExpression(
-				expression1,
-				expression2,
-				(BasicValuedExpressableType) impliedResultType
-		);
-	}
-
-	private SqmExpression cast(SqmExpression argument) {
-		return new SqmCastFunction( argument, STRING, "varchar(32672)" );
-	}
 }

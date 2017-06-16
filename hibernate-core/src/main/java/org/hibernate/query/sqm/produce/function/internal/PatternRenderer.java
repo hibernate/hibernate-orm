@@ -7,7 +7,9 @@
 package org.hibernate.query.sqm.produce.function.internal;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -26,6 +28,7 @@ public class PatternRenderer {
 	private final boolean useParenthesisIfNoArgs;
 	private final String[] chunks;
 	private final int[] paramIndexes;
+	private final int paramCount;
 
 	/**
 	 * Constructs a template renderer
@@ -37,6 +40,7 @@ public class PatternRenderer {
 		this.pattern = pattern;
 		this.useParenthesisIfNoArgs = useParenthesisIfNoArgs;
 
+		final Set<Integer> paramNumbers = new HashSet<>();
 		final List<String> chunkList = new ArrayList<>();
 		final List<Integer> paramList = new ArrayList<>();
 		final StringBuilder chunk = new StringBuilder( 10 );
@@ -61,7 +65,9 @@ public class PatternRenderer {
 					}
 				}
 
-				paramList.add( Integer.valueOf( index.toString() ) );
+				Integer paramNumber = Integer.valueOf( index.toString() );
+				paramNumbers.add( paramNumber );
+				paramList.add( paramNumber );
 				index.delete( 0, index.length() );
 			}
 			else {
@@ -76,6 +82,7 @@ public class PatternRenderer {
 
 		chunks = chunkList.toArray( new String[chunkList.size()] );
 		paramIndexes = new int[paramList.size()];
+		paramCount = paramNumbers.size();
 		for ( i = 0; i < paramIndexes.length; ++i ) {
 			paramIndexes[i] = paramList.get( i );
 		}
@@ -87,6 +94,10 @@ public class PatternRenderer {
 
 	public int getAnticipatedNumberOfArguments() {
 		return paramIndexes.length;
+	}
+
+	public int getParamCount() {
+		return paramCount;
 	}
 
 	/**

@@ -23,6 +23,15 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  * @author Steve Ebersole
  */
 public class AnsiTrimFunctionTemplate implements SqmFunctionTemplate {
+
+	/**
+	 * A singleton instance for a function template that renders the "trim" function, as defined in ANSI SQL.
+	 */
+	public static final AnsiTrimFunctionTemplate INSTANCE = new AnsiTrimFunctionTemplate();
+
+	private AnsiTrimFunctionTemplate() {
+	}
+
 	@Override
 	public SqmFunction makeSqmFunctionExpression(
 			List<SqmExpression> arguments,

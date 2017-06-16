@@ -9,9 +9,7 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.LockMode;
-import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.OptimisticLockingStrategy;
@@ -86,100 +84,6 @@ public class RDMSOS2200Dialect extends Dialect {
 		LOG.rdmsOs2200Dialect();
 
 		/**
-		 * This section registers RDMS Built-in Functions (BIFs) with Hibernate.
-		 * The first parameter is the 'register' function name with Hibernate.
-		 * The second parameter is the defined RDMS SQL Function and it's
-		 * characteristics. If StandardSQLFunction(...) is used, the RDMS BIF
-		 * name and the return type (if any) is specified.  If
-		 * SQLFunctionTemplate(...) is used, the return type and a template
-		 * string is provided, plus an optional hasParenthesesIfNoArgs flag.
-		 */
-		registerFunction( "abs", new NamedSqmFunctionTemplate( "abs" ) );
-		registerFunction( "sign", new NamedSqmFunctionTemplate( "sign", StandardSpiBasicTypes.INTEGER ) );
-
-		registerFunction( "ascii", new NamedSqmFunctionTemplate( "ascii", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "char_length", new NamedSqmFunctionTemplate( "char_length", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "character_length", new NamedSqmFunctionTemplate( "character_length", StandardSpiBasicTypes.INTEGER ) );
-
-		// The RDMS concat() function only supports 2 parameters
-		registerFunction( "concat", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "concat(?1, ?2)" ) );
-		registerFunction( "instr", new NamedSqmFunctionTemplate( "instr", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "lpad", new NamedSqmFunctionTemplate( "lpad", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "replace", new NamedSqmFunctionTemplate( "replace", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "rpad", new NamedSqmFunctionTemplate( "rpad", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "substr", new NamedSqmFunctionTemplate( "substr", StandardSpiBasicTypes.STRING ) );
-
-		registerFunction( "lcase", new NamedSqmFunctionTemplate( "lcase" ) );
-		registerFunction( "lower", new NamedSqmFunctionTemplate( "lower" ) );
-		registerFunction( "ltrim", new NamedSqmFunctionTemplate( "ltrim" ) );
-		registerFunction( "reverse", new NamedSqmFunctionTemplate( "reverse" ) );
-		registerFunction( "rtrim", new NamedSqmFunctionTemplate( "rtrim" ) );
-
-		// RDMS does not directly support the trim() function, we use rtrim() and ltrim()
-		registerFunction( "trim", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "ltrim(rtrim(?1))" ) );
-		registerFunction( "soundex", new NamedSqmFunctionTemplate( "soundex" ) );
-		registerFunction( "space", new NamedSqmFunctionTemplate( "space", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "ucase", new NamedSqmFunctionTemplate( "ucase" ) );
-		registerFunction( "upper", new NamedSqmFunctionTemplate( "upper" ) );
-
-		registerFunction( "acos", new NamedSqmFunctionTemplate( "acos", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new NamedSqmFunctionTemplate( "asin", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new NamedSqmFunctionTemplate( "atan", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "cos", new NamedSqmFunctionTemplate( "cos", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "cosh", new NamedSqmFunctionTemplate( "cosh", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "cot", new NamedSqmFunctionTemplate( "cot", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "exp", new NamedSqmFunctionTemplate( "exp", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "ln", new NamedSqmFunctionTemplate( "ln", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "log", new NamedSqmFunctionTemplate( "log", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new NamedSqmFunctionTemplate( "log10", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "pi", new NoArgsSqmFunctionTemplate( "pi", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "rand", new NoArgsSqmFunctionTemplate( "rand", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "sin", new NamedSqmFunctionTemplate( "sin", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "sinh", new NamedSqmFunctionTemplate( "sinh", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "sqrt", new NamedSqmFunctionTemplate( "sqrt", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new NamedSqmFunctionTemplate( "tan", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "tanh", new NamedSqmFunctionTemplate( "tanh", StandardSpiBasicTypes.DOUBLE ) );
-
-		registerFunction( "round", new NamedSqmFunctionTemplate( "round" ) );
-		registerFunction( "trunc", new NamedSqmFunctionTemplate( "trunc" ) );
-		registerFunction( "ceil", new NamedSqmFunctionTemplate( "ceil" ) );
-		registerFunction( "floor", new NamedSqmFunctionTemplate( "floor" ) );
-
-		registerFunction( "chr", new NamedSqmFunctionTemplate( "chr", StandardSpiBasicTypes.CHARACTER ) );
-		registerFunction( "initcap", new NamedSqmFunctionTemplate( "initcap" ) );
-
-		registerFunction( "user", new NoArgsSqmFunctionTemplate( "user", StandardSpiBasicTypes.STRING, false ) );
-
-		registerFunction( "current_date", new NoArgsSqmFunctionTemplate( "current_date", StandardSpiBasicTypes.DATE, false ) );
-		registerFunction( "current_time", new NoArgsSqmFunctionTemplate( "current_timestamp", StandardSpiBasicTypes.TIME, false ) );
-		registerFunction( "current_timestamp", new NoArgsSqmFunctionTemplate( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "curdate", new NoArgsSqmFunctionTemplate( "curdate", StandardSpiBasicTypes.DATE ) );
-		registerFunction( "curtime", new NoArgsSqmFunctionTemplate( "curtime", StandardSpiBasicTypes.TIME ) );
-		registerFunction( "days", new NamedSqmFunctionTemplate( "days", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "dayofmonth", new NamedSqmFunctionTemplate( "dayofmonth", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "dayname", new NamedSqmFunctionTemplate( "dayname", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "dayofweek", new NamedSqmFunctionTemplate( "dayofweek", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new NamedSqmFunctionTemplate( "dayofyear", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "hour", new NamedSqmFunctionTemplate( "hour", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "last_day", new NamedSqmFunctionTemplate( "last_day", StandardSpiBasicTypes.DATE ) );
-		registerFunction( "microsecond", new NamedSqmFunctionTemplate( "microsecond", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "minute", new NamedSqmFunctionTemplate( "minute", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "month", new NamedSqmFunctionTemplate( "month", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "monthname", new NamedSqmFunctionTemplate( "monthname", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "now", new NoArgsSqmFunctionTemplate( "now", StandardSpiBasicTypes.TIMESTAMP ) );
-		registerFunction( "quarter", new NamedSqmFunctionTemplate( "quarter", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "second", new NamedSqmFunctionTemplate( "second", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "time", new NamedSqmFunctionTemplate( "time", StandardSpiBasicTypes.TIME ) );
-		registerFunction( "timestamp", new NamedSqmFunctionTemplate( "timestamp", StandardSpiBasicTypes.TIMESTAMP ) );
-		registerFunction( "week", new NamedSqmFunctionTemplate( "week", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "year", new NamedSqmFunctionTemplate( "year", StandardSpiBasicTypes.INTEGER ) );
-
-		registerFunction( "atan2", new NamedSqmFunctionTemplate( "atan2", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "mod", new NamedSqmFunctionTemplate( "mod", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "nvl", new NamedSqmFunctionTemplate( "nvl" ) );
-		registerFunction( "power", new NamedSqmFunctionTemplate( "power", StandardSpiBasicTypes.DOUBLE ) );
-
-		/**
 		 * For a list of column types to register, see section A-1
 		 * in 7862 7395, the Unisys JDBC manual.
 		 *
@@ -228,6 +132,105 @@ public class RDMSOS2200Dialect extends Dialect {
 		// registerColumnType(Types.VARBINARY, "CHARACTER($l)");
 		// registerColumnType(Types.BLOB, "CHARACTER($l)" );  // For use prior to CP 11.0
 		// registerColumnType(Types.CLOB, "CHARACTER($l)" );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		/**
+		 * This section registers RDMS Built-in Functions (BIFs) with Hibernate.
+		 * The first parameter is the 'register' function name with Hibernate.
+		 * The second parameter is the defined RDMS SQL Function and it's
+		 * characteristics. If StandardSQLFunction(...) is used, the RDMS BIF
+		 * name and the return type (if any) is specified.  If
+		 * SQLFunctionTemplate(...) is used, the return type and a template
+		 * string is provided, plus an optional hasParenthesesIfNoArgs flag.
+		 */
+		registry.registerNamed( "abs" );
+		registry.registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
+
+		registry.registerNamed( "ascii", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "char_length", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "character_length", StandardSpiBasicTypes.INTEGER );
+
+		// The RDMS concat() function only supports 2 parameters
+		registry.registerPattern( "concat", "concat(?1, ?2)", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "instr", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "lpad", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "replace", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "rpad", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "substr", StandardSpiBasicTypes.STRING );
+
+		registry.registerNamed( "lcase" );
+		registry.registerNamed( "lower" );
+		registry.registerNamed( "ltrim" );
+		registry.registerNamed( "reverse" );
+		registry.registerNamed( "rtrim" );
+
+		// RDMS does not directly support the trim() function, we use rtrim() and ltrim()
+		registry.registerPattern( "trim", "ltrim(rtrim(?1))", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "soundex" );
+		registry.registerNamed( "space", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "ucase" );
+		registry.registerNamed( "upper" );
+
+		registry.registerNamed( "acos", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "asin", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "atan", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "cos", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "cosh", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "cot", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "exp", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "ln", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "log", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "log10", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNoArgs( "pi", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNoArgs( "rand", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "sin", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "sinh", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "sqrt", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "tan", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "tanh", StandardSpiBasicTypes.DOUBLE );
+
+		registry.registerNamed( "round" );
+		registry.registerNamed( "trunc" );
+		registry.registerNamed( "ceil" );
+		registry.registerNamed( "floor" );
+
+		registry.registerNamed( "chr", StandardSpiBasicTypes.CHARACTER );
+		registry.registerNamed( "initcap" );
+
+		registry.registerNoArgs( "user", StandardSpiBasicTypes.STRING );
+
+		registry.registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
+		registry.registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
+		registry.registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNoArgs( "curdate", StandardSpiBasicTypes.DATE );
+		registry.registerNoArgs( "curtime", StandardSpiBasicTypes.TIME );
+		registry.registerNamed( "days", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "dayofmonth", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "dayname", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "dayofweek", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "dayofyear", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "hour", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "last_day", StandardSpiBasicTypes.DATE );
+		registry.registerNamed( "microsecond", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "minute", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "month", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "monthname", StandardSpiBasicTypes.STRING );
+		registry.registerNoArgs( "now", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNamed( "quarter", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "second", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "time", StandardSpiBasicTypes.TIME );
+		registry.registerNamed( "timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNamed( "week", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "year", StandardSpiBasicTypes.INTEGER );
+
+		registry.registerNamed( "atan2", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "mod", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "nvl" );
+		registry.registerNamed( "power", StandardSpiBasicTypes.DOUBLE );
 	}
 
 

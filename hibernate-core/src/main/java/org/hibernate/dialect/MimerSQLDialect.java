@@ -9,10 +9,10 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MimerSQLIdentityColumnSupport;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * An Hibernate 3 SQL dialect for Mimer SQL. This dialect requires Mimer SQL 9.2.1 or later
@@ -57,70 +57,75 @@ public class MimerSQLDialect extends Dialect {
 		registerColumnType( Types.BLOB, "BLOB($l)" );
 		registerColumnType( Types.CLOB, "NCLOB($l)" );
 
-		registerFunction( "abs", new NamedSqmFunctionTemplate( "abs" ) );
-		registerFunction( "sign", new NamedSqmFunctionTemplate( "sign", StandardBasicTypes.INTEGER ) );
-		registerFunction( "ceiling", new NamedSqmFunctionTemplate( "ceiling" ) );
-		registerFunction( "floor", new NamedSqmFunctionTemplate( "floor" ) );
-		registerFunction( "round", new NamedSqmFunctionTemplate( "round" ) );
-
-		registerFunction( "dacos", new NamedSqmFunctionTemplate( "dacos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "acos", new NamedSqmFunctionTemplate( "dacos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dasin", new NamedSqmFunctionTemplate( "dasin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new NamedSqmFunctionTemplate( "dasin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "datan", new NamedSqmFunctionTemplate( "datan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new NamedSqmFunctionTemplate( "datan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "datan2", new NamedSqmFunctionTemplate( "datan2", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan2", new NamedSqmFunctionTemplate( "datan2", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dcos", new NamedSqmFunctionTemplate( "dcos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cos", new NamedSqmFunctionTemplate( "dcos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dcot", new NamedSqmFunctionTemplate( "dcot", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cot", new NamedSqmFunctionTemplate( "dcot", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "ddegrees", new NamedSqmFunctionTemplate( "ddegrees", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "degrees", new NamedSqmFunctionTemplate( "ddegrees", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dexp", new NamedSqmFunctionTemplate( "dexp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "exp", new NamedSqmFunctionTemplate( "dexp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dlog", new NamedSqmFunctionTemplate( "dlog", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log", new NamedSqmFunctionTemplate( "dlog", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dlog10", new NamedSqmFunctionTemplate( "dlog10", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new NamedSqmFunctionTemplate( "dlog10", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dradian", new NamedSqmFunctionTemplate( "dradian", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "radian", new NamedSqmFunctionTemplate( "dradian", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dsin", new NamedSqmFunctionTemplate( "dsin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sin", new NamedSqmFunctionTemplate( "dsin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "soundex", new NamedSqmFunctionTemplate( "soundex", StandardBasicTypes.STRING ) );
-		registerFunction( "dsqrt", new NamedSqmFunctionTemplate( "dsqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sqrt", new NamedSqmFunctionTemplate( "dsqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dtan", new NamedSqmFunctionTemplate( "dtan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new NamedSqmFunctionTemplate( "dtan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dpower", new NamedSqmFunctionTemplate( "dpower" ) );
-		registerFunction( "power", new NamedSqmFunctionTemplate( "dpower" ) );
-
-		registerFunction( "date", new NamedSqmFunctionTemplate( "date", StandardBasicTypes.DATE ) );
-		registerFunction( "dayofweek", new NamedSqmFunctionTemplate( "dayofweek", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new NamedSqmFunctionTemplate( "dayofyear", StandardBasicTypes.INTEGER ) );
-		registerFunction( "time", new NamedSqmFunctionTemplate( "time", StandardBasicTypes.TIME ) );
-		registerFunction( "timestamp", new NamedSqmFunctionTemplate( "timestamp", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "week", new NamedSqmFunctionTemplate( "week", StandardBasicTypes.INTEGER ) );
-
-
-		registerFunction( "varchar", new NamedSqmFunctionTemplate( "varchar", StandardBasicTypes.STRING ) );
-		registerFunction( "real", new NamedSqmFunctionTemplate( "real", StandardBasicTypes.FLOAT ) );
-		registerFunction( "bigint", new NamedSqmFunctionTemplate( "bigint", StandardBasicTypes.LONG ) );
-		registerFunction( "char", new NamedSqmFunctionTemplate( "char", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "integer", new NamedSqmFunctionTemplate( "integer", StandardBasicTypes.INTEGER ) );
-		registerFunction( "smallint", new NamedSqmFunctionTemplate( "smallint", StandardBasicTypes.SHORT ) );
-
-		registerFunction( "ascii_char", new NamedSqmFunctionTemplate( "ascii_char", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "ascii_code", new NamedSqmFunctionTemplate( "ascii_code", StandardBasicTypes.STRING ) );
-		registerFunction( "unicode_char", new NamedSqmFunctionTemplate( "unicode_char", StandardBasicTypes.LONG ) );
-		registerFunction( "unicode_code", new NamedSqmFunctionTemplate( "unicode_code", StandardBasicTypes.STRING ) );
-		registerFunction( "upper", new NamedSqmFunctionTemplate( "upper" ) );
-		registerFunction( "lower", new NamedSqmFunctionTemplate( "lower" ) );
-		registerFunction( "char_length", new NamedSqmFunctionTemplate( "char_length", StandardBasicTypes.LONG ) );
-		registerFunction( "bit_length", new NamedSqmFunctionTemplate( "bit_length", StandardBasicTypes.STRING ) );
-
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, "50" );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		registry.registerNamed( "abs" );
+		registry.registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "ceiling" );
+		registry.registerNamed( "floor" );
+		registry.registerNamed( "round" );
+
+		registry.registerNamed( "dacos", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "acos", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "dasin", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "asin", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "datan", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "atan", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "datan2", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "atan2", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "dcos", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "cos", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "dcot", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "cot", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "ddegrees", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "degrees", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "dexp", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "exp", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "dlog", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "log", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "dlog10", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "log10", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "dradian", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "radian", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "dsin", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "sin", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "soundex", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "dsqrt", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "sqrt", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "dtan", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "tan", StandardSpiBasicTypes.DOUBLE );
+		registry.registerNamed( "dpower" );
+		registry.registerNamed( "power" );
+
+		registry.registerNamed( "date", StandardSpiBasicTypes.DATE );
+		registry.registerNamed( "dayofweek", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "dayofyear", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "time", StandardSpiBasicTypes.TIME );
+		registry.registerNamed( "timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		registry.registerNamed( "week", StandardSpiBasicTypes.INTEGER );
+
+
+		registry.registerNamed( "varchar", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "real", StandardSpiBasicTypes.FLOAT );
+		registry.registerNamed( "bigint", StandardSpiBasicTypes.LONG );
+		registry.registerNamed( "char", StandardSpiBasicTypes.CHARACTER );
+		registry.registerNamed( "integer", StandardSpiBasicTypes.INTEGER );
+		registry.registerNamed( "smallint", StandardSpiBasicTypes.SHORT );
+
+		registry.registerNamed( "ascii_char", StandardSpiBasicTypes.CHARACTER );
+		registry.registerNamed( "ascii_code", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "unicode_char", StandardSpiBasicTypes.LONG );
+		registry.registerNamed( "unicode_code", StandardSpiBasicTypes.STRING );
+		registry.registerNamed( "upper" );
+		registry.registerNamed( "lower" );
+		registry.registerNamed( "char_length", StandardSpiBasicTypes.LONG );
+		registry.registerNamed( "bit_length", StandardSpiBasicTypes.STRING );
 	}
 
 

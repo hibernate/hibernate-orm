@@ -36,6 +36,12 @@ public interface PersistentCollectionTuplizer<T extends PersistentCollection> {
 
 	Class<PersistentCollection> getPersistentCollectionJavaType();
 
+	default Object indexOf(Object collection, Object element) {
+		throw new UnsupportedOperationException( "generic collections don't have indexes" );
+	}
+
+	boolean contains(Object collection, Object childObject);
+
 	<O, C, E> PluralPersistentAttribute<O, C, E> generatePluralPersistentAttribute(
 			ManagedTypeDescriptor container,
 			Property property,

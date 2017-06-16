@@ -51,7 +51,7 @@ public enum ReplicationMode {
 		@SuppressWarnings("unchecked")
 		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, Type type) {
 			// always overwrite non-versioned data (because we don't know which is newer)
-			return type == null || type.getComparator().compare( currentVersion, newVersion ) <= 0;
+			return type == null || type.getJavaTypeDescriptor().getComparator().compare( currentVersion, newVersion ) <= 0;
 		}
 	};
 

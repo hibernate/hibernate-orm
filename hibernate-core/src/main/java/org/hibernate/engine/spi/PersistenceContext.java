@@ -39,7 +39,7 @@ public interface PersistenceContext {
 	/**
 	 * Marker object used to indicate (via reference checking) that no row was returned.
 	 */
-	public static final Object NO_ROW = new MarkerObject( "NO_ROW" );
+	Object NO_ROW = new MarkerObject( "NO_ROW" );
 
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public boolean isStateless();
@@ -49,14 +49,14 @@ public interface PersistenceContext {
 	 *
 	 * @return The session.
 	 */
-	public SharedSessionContractImplementor getSession();
+	SharedSessionContractImplementor getSession();
 
 	/**
 	 * Retrieve this persistence context's managed load context.
 	 *
 	 * @return The load context
 	 */
-	public LoadContexts getLoadContexts();
+	LoadContexts getLoadContexts();
 
 	/**
 	 * Add a collection which has no owner loaded
@@ -64,7 +64,7 @@ public interface PersistenceContext {
 	 * @param key The collection key under which to add the collection
 	 * @param collection The collection to add
 	 */
-	public void addUnownedCollection(CollectionKey key, PersistentCollection collection);
+	void addUnownedCollection(CollectionKey key, PersistentCollection collection);
 
 	/**
 	 * Take ownership of a previously unowned collection, if one.  This method returns {@code null} if no such
@@ -76,25 +76,25 @@ public interface PersistenceContext {
 	 *
 	 * @return The unowned collection, or {@code null}
 	 */
-	public PersistentCollection useUnownedCollection(CollectionKey key);
+	PersistentCollection useUnownedCollection(CollectionKey key);
 
 	/**
 	 * Get the {@link BatchFetchQueue}, instantiating one if necessary.
 	 *
 	 * @return The batch fetch queue in effect for this persistence context
 	 */
-	public BatchFetchQueue getBatchFetchQueue();
+	BatchFetchQueue getBatchFetchQueue();
 	
 	/**
 	 * Clear the state of the persistence context
 	 */
-	public void clear();
+	void clear();
 
 	/**
 	 * @return false if we know for certain that all the entities are read-only
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public boolean hasNonReadOnlyEntities();
+	boolean hasNonReadOnlyEntities();
 
 	/**
 	 * Set the status of an entry
@@ -102,12 +102,12 @@ public interface PersistenceContext {
 	 * @param entry The entry for which to set the status
 	 * @param status The new status
 	 */
-	public void setEntryStatus(EntityEntry entry, Status status);
+	void setEntryStatus(EntityEntry entry, Status status);
 
 	/**
 	 * Called afterQuery transactions end
 	 */
-	public void afterTransactionCompletion();
+	void afterTransactionCompletion();
 
 	/**
 	 * Get the current state of the entity as known to the underlying database, or null if there is no
@@ -120,7 +120,7 @@ public interface PersistenceContext {
 	 *
 	 * @see #getCachedDatabaseSnapshot
 	 */
-	public Object[] getDatabaseSnapshot(Serializable id, EntityDescriptor persister);
+	Object[] getDatabaseSnapshot(Serializable id, EntityDescriptor persister);
 
 	/**
 	 * Retrieve the cached database snapshot for the requested entity key.
@@ -133,7 +133,7 @@ public interface PersistenceContext {
 	 * @return The cached snapshot
 	 * @throws IllegalStateException if the cached snapshot was == {@link #NO_ROW}.
 	 */
-	public Object[] getCachedDatabaseSnapshot(EntityKey key);
+	Object[] getCachedDatabaseSnapshot(EntityKey key);
 
 	/**
 	 * Get the values of the natural id fields as known to the underlying database, or null if the entity has no

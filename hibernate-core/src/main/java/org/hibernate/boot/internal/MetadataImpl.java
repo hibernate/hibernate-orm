@@ -22,7 +22,7 @@ import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.MappedNamespace;
@@ -67,10 +67,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private final IdentifierGeneratorFactory identifierGeneratorFactory;
 
+	private final Map<String, EntityMappingHierarchy> entityMappingHierarchies;
+
 	private final Map<String,PersistentClass> entityBindingMap;
 	private final Map<Class, MappedSuperclass> mappedSuperclassMap;
 	private final Map<String,Collection> collectionBindingMap;
-	private final Map<String, TypeDefinition> typeDefinitionMap;
 	private final Map<String, FilterDefinition> filterDefinitionMap;
 	private final Map<String, FetchProfile> fetchProfileMap;
 	private final Map<String, String> imports;
@@ -90,10 +91,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			MetadataBuildingOptions metadataBuildingOptions,
 			TypeConfiguration typeConfiguration,
 			MutableIdentifierGeneratorFactory identifierGeneratorFactory,
+			Map<String, EntityMappingHierarchy> entityMappingHierarchies,
 			Map<String, PersistentClass> entityBindingMap,
 			Map<Class, MappedSuperclass> mappedSuperclassMap,
 			Map<String, Collection> collectionBindingMap,
-			Map<String, TypeDefinition> typeDefinitionMap,
 			Map<String, FilterDefinition> filterDefinitionMap,
 			Map<String, FetchProfile> fetchProfileMap,
 			Map<String, String> imports,
@@ -111,10 +112,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.metadataBuildingOptions = metadataBuildingOptions;
 		this.typeConfiguration = typeConfiguration;
 		this.identifierGeneratorFactory = identifierGeneratorFactory;
+		this.entityMappingHierarchies = entityMappingHierarchies;
 		this.entityBindingMap = entityBindingMap;
 		this.mappedSuperclassMap = mappedSuperclassMap;
 		this.collectionBindingMap = collectionBindingMap;
-		this.typeDefinitionMap = typeDefinitionMap;
 		this.filterDefinitionMap = filterDefinitionMap;
 		this.fetchProfileMap = fetchProfileMap;
 		this.imports = imports;
@@ -188,6 +189,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public Database getDatabase() {
 		return database;
+	}
+
+	@Override
+	public java.util.Collection<EntityMappingHierarchy> getEntityHierarchies() {
+		return entityMappingHierarchies.values();
 	}
 
 	@Override

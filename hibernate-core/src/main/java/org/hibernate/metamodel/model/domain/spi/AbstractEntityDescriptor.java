@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,11 +30,9 @@ import org.hibernate.boot.model.domain.MappedTableJoin;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.LoadQueryInfluencers.InternalFetchProfileType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
@@ -56,9 +53,9 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.consume.results.internal.SqlSelectionGroupImpl;
-import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroupEmpty;
+import org.hibernate.sql.exec.results.internal.SqlSelectionGroupImpl;
+import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.exec.results.spi.SqlSelectionGroupEmpty;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultEntityImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;

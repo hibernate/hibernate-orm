@@ -11,10 +11,10 @@ import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttribute
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.consume.results.internal.EntityFetchInitializerImpl;
-import org.hibernate.sql.ast.consume.results.spi.Initializer;
-import org.hibernate.sql.ast.consume.results.spi.InitializerCollector;
-import org.hibernate.sql.ast.consume.results.spi.InitializerParent;
+import org.hibernate.sql.exec.results.internal.EntityFetchInitializerImpl;
+import org.hibernate.sql.exec.results.spi.Initializer;
+import org.hibernate.sql.exec.results.spi.InitializerCollector;
+import org.hibernate.sql.exec.results.spi.InitializerParent;
 import org.hibernate.sql.ast.produce.result.spi.EntityIdentifierReference;
 import org.hibernate.sql.ast.produce.result.spi.FetchEntityAttribute;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;

@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.produce.result.spi;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.sql.ast.consume.results.spi.InitializerSource;
+import org.hibernate.sql.exec.results.spi.InitializerSource;
 
 /**
  * Represents a reference to an entity either as a return, fetch, or collection element or index.

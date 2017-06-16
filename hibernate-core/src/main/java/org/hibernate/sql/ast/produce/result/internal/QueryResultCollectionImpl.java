@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.produce.result.internal;
 
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
+import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCollection;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;

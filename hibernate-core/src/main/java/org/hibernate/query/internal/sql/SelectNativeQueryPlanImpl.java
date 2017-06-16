@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.internal.sql;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.ScrollMode;
@@ -16,8 +15,8 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
-import org.hibernate.sql.ast.consume.spi.RowTransformer;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.RowTransformer;
 
 /**
  * @author Steve Ebersole

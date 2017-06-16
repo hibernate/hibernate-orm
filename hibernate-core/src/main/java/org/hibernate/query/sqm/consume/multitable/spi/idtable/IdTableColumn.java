@@ -24,12 +24,14 @@ public class IdTableColumn extends PhysicalColumn {
 			IdTable containingTable,
 			Identifier columnName,
 			SqlTypeDescriptor sqlTypeDescriptor,
-			String defaultValue) {
+			String defaultValue,
+			String sqlTypeDefinition) {
 		super(
 				containingTable,
 				columnName,
 				sqlTypeDescriptor,
 				defaultValue,
+				sqlTypeDefinition,
 				false,
 				false,
 				null

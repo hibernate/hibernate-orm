@@ -6,7 +6,7 @@
  */
 
 /**
- * Support for {@link org.hibernate.query.sqm.consume.multitable.spi.MultiTableMutationStrategy}
+ * Support for {@link org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy}
  * implementations which are backed by an "id table" which is used to temporarily store
  * the ids of entities matching the update/delete restrictions.
  *
@@ -44,7 +44,7 @@
  * 		+
  * 		Note that generally speaking the id-table is created and dropped
  * 		at the Strategy level during
- * 		{@link org.hibernate.query.sqm.consume.multitable.spi.MultiTableMutationStrategy#prepare}
- * 		and {@link org.hibernate.query.sqm.consume.multitable.spi.MultiTableMutationStrategy#release}
+ * 		{@link org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy#prepare}
+ * 		and {@link org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy#release}
  */
 package org.hibernate.query.sqm.consume.multitable.spi.idtable;

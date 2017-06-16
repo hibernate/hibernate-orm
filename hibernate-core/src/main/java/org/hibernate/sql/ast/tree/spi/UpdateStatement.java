@@ -63,6 +63,11 @@ public class UpdateStatement implements MutationStatement {
 			return this;
 		}
 
+		public UpdateStatementBuilder addRestriction(Predicate restriction) {
+			this.restriction = SqlAstHelper.combinePredicates( this.restriction, restriction );
+			return this;
+		}
+
 		public UpdateStatementBuilder setRestriction(Predicate restriction) {
 			this.restriction = restriction;
 			return this;

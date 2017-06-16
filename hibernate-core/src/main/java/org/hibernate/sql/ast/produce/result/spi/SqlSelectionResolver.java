@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.produce.result.spi;
 
 import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 

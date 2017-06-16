@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.produce.metamodel.internal;
 
 import org.hibernate.query.spi.QueryParameterBinding;
-import org.hibernate.sql.ast.consume.spi.ParameterBindingContext;
+import org.hibernate.sql.exec.spi.ParameterBindingContext;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.tree.spi.expression.AbstractParameter;

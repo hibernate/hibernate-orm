@@ -87,11 +87,10 @@ import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole

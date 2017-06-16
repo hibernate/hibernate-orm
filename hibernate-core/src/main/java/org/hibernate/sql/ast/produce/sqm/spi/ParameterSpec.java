@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.ast.produce.sqm.spi;
 
-import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
 /**
  * @author Steve Ebersole

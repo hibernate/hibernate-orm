@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.spi.select;
 
-import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
+import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
 
 /**
  * Unifying contract for things that are selectable at the SQL level.

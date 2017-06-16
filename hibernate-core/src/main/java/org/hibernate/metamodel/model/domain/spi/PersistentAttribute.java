@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 
 /**

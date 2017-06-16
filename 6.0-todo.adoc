@@ -42,7 +42,7 @@ As always the "trigger" for Beta1 is (relatively) stable API.
 	represents an ongoing path in a query; NavigableRole represents the static role of an attribute
 	in relation to a root entity#
 * find all usage of `LoadPlan` and replace it with
-	`org.hibernate.sql.ast.produce.spi.SqlSelectPlan` / `org.hibernate.sql.ast.consume.spi.JdbcSelect`.  This will
+	`org.hibernate.sql.ast.produce.spi.SqlSelectPlan` / `org.hibernate.sql.exec.spi.JdbcSelect`.  This will
 	include the following (and more probably) replacements:
 	** `AssociationVisitationStrategy` -> `NavigableVisitationStrategy`
 	** `EntityDefinition` -> ? `EntityReference` or `EntityPersister`?

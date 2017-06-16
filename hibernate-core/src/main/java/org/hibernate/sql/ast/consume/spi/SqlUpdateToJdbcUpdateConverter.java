@@ -14,6 +14,8 @@ import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.tree.spi.UpdateStatement;
 import org.hibernate.sql.ast.tree.spi.assign.Assignment;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcUpdate;
 
 /**
  * @author Steve Ebersole

@@ -167,7 +167,7 @@ public class SqmUpdateToSqlAstConverterMultiTable
 			UpdateStatementBuilder concreteUpdateStatementBuilder = updateStatementBuilderMap.get( assignmentTableReference );
 			if ( concreteUpdateStatementBuilder == null ) {
 				concreteUpdateStatementBuilder = new UpdateStatementBuilder( assignmentTableReference );
-				concreteUpdateStatementBuilder.setRestriction(
+				concreteUpdateStatementBuilder.addRestriction(
 						new InSubQueryPredicate(
 								null,
 								idTableSelect,

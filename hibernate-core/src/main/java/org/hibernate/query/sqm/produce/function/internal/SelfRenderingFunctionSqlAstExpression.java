@@ -12,8 +12,8 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
+import org.hibernate.sql.exec.results.internal.SqlSelectionReaderImpl;
+import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SelfRenderingExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;

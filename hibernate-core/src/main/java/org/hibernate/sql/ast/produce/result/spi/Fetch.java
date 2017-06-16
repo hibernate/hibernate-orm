@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.produce.result.spi;
 
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.consume.results.spi.InitializerSource;
+import org.hibernate.sql.exec.results.spi.InitializerSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
 /**

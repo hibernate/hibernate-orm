@@ -14,10 +14,6 @@ import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.naming.Identifier;
 import org.hibernate.naming.QualifiedTableName;
-import org.hibernate.naming.spi.QualifiedName;
-import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.tree.spi.TargetColumnInfo;
-import org.hibernate.sql.ast.tree.spi.TargetTableInfo;
 
 import static java.util.stream.Collectors.toCollection;
 
@@ -26,7 +22,7 @@ import static java.util.stream.Collectors.toCollection;
  *
  * @author Steve Ebersole
  */
-public class PhysicalTable extends AbstractTable implements ExportableTable, TargetTableInfo {
+public class PhysicalTable extends AbstractTable implements ExportableTable {
 	private final QualifiedTableName qualifiedTableName;
 	private boolean hasPrimaryKey;
 	private boolean primaryKeyIdentity;
@@ -53,9 +49,7 @@ public class PhysicalTable extends AbstractTable implements ExportableTable, Tar
 				),
 				isAbstract,
 				hasPrimaryKey,
-				comment,
-				namingStrategy,
-				jdbcEnvironment
+				comment
 		);
 	}
 
@@ -66,12 +60,25 @@ public class PhysicalTable extends AbstractTable implements ExportableTable, Tar
 			String comment,
 			PhysicalNamingStrategy namingStrategy,
 			JdbcEnvironment jdbcEnvironment) {
-		super( isAbstract );
-		this.qualifiedTableName = new QualifiedTableName(
-				namingStrategy.toPhysicalCatalogName( logicalQualifiedName.getCatalogName(), jdbcEnvironment ),
-				namingStrategy.toPhysicalSchemaName( logicalQualifiedName.getSchemaName(), jdbcEnvironment ),
-				namingStrategy.toPhysicalTableName( logicalQualifiedName.getTableName(), jdbcEnvironment )
+		this(
+				new QualifiedTableName(
+						namingStrategy.toPhysicalCatalogName( logicalQualifiedName.getCatalogName(), jdbcEnvironment ),
+						namingStrategy.toPhysicalSchemaName( logicalQualifiedName.getSchemaName(), jdbcEnvironment ),
+						namingStrategy.toPhysicalTableName( logicalQualifiedName.getTableName(), jdbcEnvironment )
+				),
+				isAbstract,
+				hasPrimaryKey,
+				comment
 		);
+	}
+
+	public PhysicalTable(
+			QualifiedTableName physicalQualifiedName,
+			boolean isAbstract,
+			boolean hasPrimaryKey,
+			String comment) {
+		super( isAbstract );
+		this.qualifiedTableName = physicalQualifiedName;
 		this.hasPrimaryKey = hasPrimaryKey;
 		this.comment = comment;
 	}
@@ -197,15 +204,5 @@ public class PhysicalTable extends AbstractTable implements ExportableTable, Tar
 
 	private String render(Identifier identifier) {
 		return identifier == null ? null : identifier.render();
-	}
-
-	@Override
-	public QualifiedName getName() {
-		return getQualifiedTableName();
-	}
-
-	@Override
-	public List<TargetColumnInfo> getTargetColumns() {
-		throw new NotYetImplementedException(  );
 	}
 }

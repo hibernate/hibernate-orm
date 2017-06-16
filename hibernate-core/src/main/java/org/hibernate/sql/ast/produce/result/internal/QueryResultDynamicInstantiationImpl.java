@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.produce.result.internal;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultDynamicInstantiation;
-import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
+import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
 
 /**
  * @author Steve Ebersole

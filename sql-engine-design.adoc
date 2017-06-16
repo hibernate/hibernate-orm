@@ -256,7 +256,7 @@ similar.
 
 The main actor in consuming SQL AST for a SELECT query (`org.hibernate.sql.ast.tree.spi.SelectStatement`) is
 `org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter` which consumes the `SelectStatement` and
-transforms it into a `org.hibernate.sql.ast.consume.spi.JdbcSelect` which encapsulates:
+transforms it into a `org.hibernate.sql.exec.spi.JdbcSelect` which encapsulates:
 
 	* The SQL String
 	* `List` of `JdbcParameterBinder`

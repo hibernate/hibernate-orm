@@ -16,7 +16,7 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.sql.ast.consume.results.spi.RowReader;
+import org.hibernate.sql.exec.results.spi.RowReader;
 import org.hibernate.type.Type;
 
 /**

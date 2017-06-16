@@ -12,12 +12,11 @@ import java.util.List;
 
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.consume.results.spi.InitializerCollector;
-import org.hibernate.sql.ast.consume.results.spi.InitializerParent;
+import org.hibernate.sql.exec.results.spi.InitializerCollector;
+import org.hibernate.sql.exec.results.spi.InitializerParent;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
 /**
  * @author Steve Ebersole

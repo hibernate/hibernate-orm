@@ -8,8 +8,8 @@
 package org.hibernate.sql.ast.tree.spi.expression;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
-import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
+import org.hibernate.sql.exec.results.internal.SqlSelectionReaderImpl;
+import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;

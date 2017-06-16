@@ -52,7 +52,7 @@ import org.hibernate.query.spi.QueryInterpretations;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;

@@ -11,8 +11,8 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultScalar;
-import org.hibernate.sql.ast.consume.results.internal.QueryResultAssemblerScalar;
-import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
+import org.hibernate.sql.exec.results.internal.QueryResultAssemblerScalar;
+import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
 
 /**
  * @author Steve Ebersole

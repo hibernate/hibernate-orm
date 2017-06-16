@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.produce.result.spi;
 
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
+import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
 
 /**
  * Represents a return value in the query results.

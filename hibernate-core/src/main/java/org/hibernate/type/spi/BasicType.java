@@ -11,7 +11,7 @@ import java.util.Optional;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.metamodel.model.domain.spi.VersionSupport;
-import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
+import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.Type;

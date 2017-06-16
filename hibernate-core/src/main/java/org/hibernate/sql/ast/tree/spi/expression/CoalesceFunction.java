@@ -10,8 +10,8 @@ package org.hibernate.sql.ast.tree.spi.expression;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
+import org.hibernate.sql.exec.results.internal.SqlSelectionReaderImpl;
+import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;

@@ -25,7 +25,7 @@ import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.internal.ProcedureCallMementoImpl;
 import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.sql.ast.consume.results.internal.RowReaderNoResultsExpectedImpl;
+import org.hibernate.sql.exec.results.internal.RowReaderNoResultsExpectedImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 
 import static org.hibernate.procedure.internal.ProcedureCallMementoImpl.ParameterMemento;

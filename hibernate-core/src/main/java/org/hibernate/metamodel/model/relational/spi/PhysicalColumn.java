@@ -8,13 +8,12 @@ package org.hibernate.metamodel.model.relational.spi;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.naming.Identifier;
-import org.hibernate.sql.ast.tree.spi.TargetColumnInfo;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class PhysicalColumn implements Column, TargetColumnInfo {
+public class PhysicalColumn implements Column {
 	private final Table table;
 	private final Identifier name;
 	private final SqlTypeDescriptor sqlTypeDescriptor;

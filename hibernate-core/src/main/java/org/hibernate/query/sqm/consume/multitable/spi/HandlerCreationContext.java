@@ -10,8 +10,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Parameter object (pattern) for contextual information possibly needed in
- * {@link MultiTableMutationStrategy#buildUpdateHandler} and
- * {@link MultiTableMutationStrategy#buildDeleteHandler}
+ * {@link IdTableStrategy#buildUpdateHandler} and
+ * {@link IdTableStrategy#buildDeleteHandler}
  */
 public interface HandlerCreationContext {
 	/**

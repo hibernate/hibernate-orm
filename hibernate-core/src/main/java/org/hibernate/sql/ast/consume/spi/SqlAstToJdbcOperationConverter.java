@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.ast.consume.spi;
 
+import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.exec.spi.ParameterBindingContext;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 
 /**

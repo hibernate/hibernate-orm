@@ -7,35 +7,33 @@
 package org.hibernate.query.sqm.consume.multitable.spi.idtable;
 
 import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.consume.multitable.spi.Handler;
 import org.hibernate.query.sqm.consume.multitable.spi.HandlerCreationContext;
 import org.hibernate.query.sqm.consume.multitable.spi.HandlerExecutionContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
-import org.hibernate.sql.ast.consume.spi.JdbcInsertSelect;
-import org.hibernate.sql.ast.consume.spi.JdbcMutationExecutor;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.consume.spi.SqlInsertSelectToJdbcInsertSelectConverter;
 import org.hibernate.sql.ast.produce.sqm.internal.IdSelectGenerator;
 import org.hibernate.sql.ast.tree.spi.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.AbstractTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
+import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
+import org.hibernate.sql.exec.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.exec.spi.JdbcInsertSelect;
+import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.jboss.logging.Logger;
 
@@ -49,27 +47,32 @@ public abstract class AbstractTableBasedHandler implements Handler {
 
 	private final SqmDeleteOrUpdateStatement sqmDeleteOrUpdateStatement;
 	private final EntityDescriptor entityDescriptor;
-	private final IdTableSupport idTableSupport;
 	private final IdTable idTableInfo;
+	private final SessionUidSupport sessionUidSupport;
+	private final BeforeUseAction beforeUseAction;
+	private final AfterUseAction afterUseAction;
 	private final HandlerCreationContext creationContext;
-
-	/**
-	 * The creation command for the id-table
-	 */
-	private String idTableCreationCommand;
+	private final IdTableHelper tableHelper;
 
 
 	public AbstractTableBasedHandler(
 			SqmDeleteOrUpdateStatement sqmDeleteOrUpdateStatement,
 			EntityDescriptor entityDescriptor,
-			IdTableSupport idTableSupport,
 			IdTable idTableInfo,
+			SessionUidSupport sessionUidSupport,
+			BeforeUseAction beforeUseAction,
+			AfterUseAction afterUseAction,
+			IdTableHelper idTableHelper,
 			HandlerCreationContext creationContext) {
 		this.sqmDeleteOrUpdateStatement = sqmDeleteOrUpdateStatement;
 		this.entityDescriptor = entityDescriptor;
-		this.idTableSupport = idTableSupport;
 		this.idTableInfo = idTableInfo;
+		this.sessionUidSupport = sessionUidSupport;
+		this.beforeUseAction = beforeUseAction;
+		this.afterUseAction = afterUseAction;
 		this.creationContext = creationContext;
+
+		this.tableHelper = idTableHelper;
 	}
 
 	public EntityDescriptor getEntityDescriptor() {
@@ -87,112 +90,6 @@ public abstract class AbstractTableBasedHandler implements Handler {
 	public HandlerCreationContext getCreationContext() {
 		return creationContext;
 	}
-
-	protected void createIdTable(
-			IdTableInfo idTableInfo,
-			JdbcServices jdbcServices,
-			JdbcConnectionAccess jdbcConnectionAccess) {
-		// this may be called multiple times for certain strategies, so we want to
-		//		cache them in case we need it multiple times.  but don't build it
-		//		until we are sure we will need it
-		if ( idTableCreationCommand == null ) {
-			idTableCreationCommand = generateIdTableCreationCommand( idTableInfo, jdbcServices );
-		}
-
-		// todo (6.0) : handle transaction-ality
-		//
-		//		this is a 3-way decision tree including:
-		//			1) should the creation be transacted or not
-		//			2) should we join or suspend an existing transaction
-		//			3) does
-
-		// btw this applies to creates and drops...
-
-		//		this is best viewed as a matrix like:
-		//
-		//					transacted     not-transacted
-		//		----------|--------------|---------------
-		//
-		//
-		//		- do we stop any current transaction?  or join with it?
-		//		- does there need to be a transaction?
-		//
-		//		in general, options are:
-		//			-
-		try {
-			final Connection connection = jdbcConnectionAccess.obtainConnection();
-
-			try {
-				try (Statement statement = connection.createStatement()) {
-					statement.execute( idTableCreationCommand );
-				}
-			}
-			finally {
-				try {
-					connection.close();
-				}
-				catch (Exception ignore) {
-				}
-			}
-		}
-		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper().convert(
-					e,
-					String.format(
-							Locale.ROOT,
-							"Could not perform id-table creation [%s] using strategy %s",
-							idTableCreationCommand,
-							getClass().getName()
-					)
-			);
-		}
-	}
-
-	private String generateIdTableCreationCommand(IdTableInfo idTableInfo, JdbcServices jdbcServices) {
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final Dialect dialect = jdbcEnvironment.getDialect();
-
-		final String qualifiedNameText = jdbcEnvironment.getQualifiedObjectNameFormatter()
-				.format( idTableInfo.getName(), dialect );
-
-		log.debugf( "About to create id-table %s", qualifiedNameText );
-
-		final StringBuilder sqlBuffer = new StringBuilder( idTableSupport.getCreateIdTableCommand() )
-				.append( ' ' )
-				.append( qualifiedNameText )
-				.append( " (" );
-
-		boolean firstPass = true;
-		for ( ColumnInfo column : idTableInfo.getColumns() ) {
-			if ( firstPass ) {
-				firstPass = false;
-			}
-			else {
-				// append a comma and space to separate from the previous column
-				sqlBuffer.append( ", " );
-			}
-
-			final String columnName = jdbcEnvironment.getIdentifierHelper()
-					.toMetaDataObjectName( column.getName() );
-
-			final String sqlTypeDescription = jdbcEnvironment.getDialect()
-					.getTypeName( column.getSqlTypeDescriptor().getJdbcTypeCode() );
-
-			sqlBuffer.append( columnName )
-					.append( ' ' )
-					.append( sqlTypeDescription );
-		}
-
-		sqlBuffer.append( ")" );
-
-		if ( idTableSupport.getCreateIdTableStatementOptions() != null ) {
-			sqlBuffer.append( ' ' )
-					.append( idTableSupport.getCreateIdTableStatementOptions() );
-		}
-
-		return sqlBuffer.toString();
-	}
-
 
 	@Override
 	public int execute(HandlerExecutionContext executionContext) {
@@ -227,14 +124,36 @@ public abstract class AbstractTableBasedHandler implements Handler {
 	}
 
 	protected int performExecution(HandlerExecutionContext executionContext) {
-		// 1) save the matching ids into the id table
-		final int affectedRowCount = saveMatchingIdsIntoIdTable( executionContext );
+		performBeforeUseActions( executionContext );
 
-		// 2) perform the actual individual update or deletes, using
-		// 		inclusion in the id-table as restriction
-		performMutations( executionContext );
+		try {
+			// 1) save the matching ids into the id table
+			final int affectedRowCount = saveMatchingIdsIntoIdTable( executionContext );
 
-		return affectedRowCount;
+			// 2) perform the actual individual update or deletes, using
+			// 		inclusion in the id-table as restriction
+			performMutations( executionContext );
+
+			return affectedRowCount;
+		}
+		finally {
+			performAfterUseActions( executionContext );
+		}
+	}
+
+	private void performBeforeUseActions(HandlerExecutionContext executionContext) {
+		if ( beforeUseAction == BeforeUseAction.CREATE ) {
+			tableHelper.createIdTable( executionContext.getSession() );
+		}
+	}
+
+	private void performAfterUseActions(HandlerExecutionContext executionContext) {
+		if ( afterUseAction == AfterUseAction.DROP ) {
+			tableHelper.dropIdTable( executionContext.getSession() );
+		}
+		else if ( afterUseAction == AfterUseAction.CLEAN ) {
+			tableHelper.cleanIdTableRows( executionContext.getSession() );
+		}
 	}
 
 	protected int saveMatchingIdsIntoIdTable(HandlerExecutionContext executionContext) {
@@ -243,6 +162,15 @@ public abstract class AbstractTableBasedHandler implements Handler {
 				sqmDeleteOrUpdateStatement,
 				executionContext
 		);
+		if ( sessionUidSupport.needsSessionUidColumn() ) {
+			// we need to insert the uid into the id-table to properly identify the rows later
+			entityIdSelect.getSelectClause().addSqlSelection(
+					new SqlSelectionImpl(
+							generateSessionUidLiteralExpression( executionContext ),
+							idTableInfo.getPhysicalColumns().size()
+					)
+			);
+		}
 
 		final InsertSelectStatement idTableInsertSelectAst = generateIdTableInsertSelect(
 				idTableInfo,
@@ -256,11 +184,16 @@ public abstract class AbstractTableBasedHandler implements Handler {
 
 		return JdbcMutationExecutor.NO_AFTER_STATEMENT_CALL.execute(
 				insertSelectCall,
-				executionContext.getQueryOptions(),
-				Connection::prepareStatement,
-				executionContext.getParameterBindingContext(),
-				afterLoadAction -> {},
-				executionContext.getSession()
+				executionContext,
+				Connection::prepareStatement
+		);
+	}
+
+	private QueryLiteral generateSessionUidLiteralExpression(HandlerExecutionContext executionContext) {
+		return new QueryLiteral(
+				sessionUidSupport.extractUid( executionContext.getSession() ),
+				StandardSpiBasicTypes.STRING,
+				true
 		);
 	}
 
@@ -291,15 +224,28 @@ public abstract class AbstractTableBasedHandler implements Handler {
 
 	protected abstract void performMutations(HandlerExecutionContext executionContext);
 
-	protected QuerySpec generateIdTableSelect() {
+	protected QuerySpec generateIdTableSelect(HandlerExecutionContext executionContext) {
 		QuerySpec idTableSelect = new QuerySpec( false );
 		final TableSpace tableSpace = idTableSelect.getFromClause().makeTableSpace();
 		tableSpace.setRootTableGroup( createTableGroupForIdTable( idTableInfo, tableSpace ) );
 
 		// todo (6.0) : still need to add SqlSelections
 
-		// todo (6.0) : still need to account for persistent tables in terms of adding Session-uid column restriction
-		//		and add a ParameterBinder for that restriction parameter.
+		// account for session uid column in the id table, if one
+		if ( sessionUidSupport.needsSessionUidColumn() ) {
+			final IdTableColumn sessUidColumn = (IdTableColumn) idTableInfo.getColumn( SessionUidSupport.SESSION_ID_COLUMN_NAME );
+			idTableSelect.addRestriction(
+					new RelationalPredicate(
+							RelationalPredicate.Operator.EQUAL,
+							new ColumnReference(
+									sessUidColumn,
+									StandardSpiBasicTypes.STRING,
+									( (IdTableGroup) tableSpace.getRootTableGroup() ).getPrimaryTableReference()
+							),
+							generateSessionUidLiteralExpression( executionContext )
+					)
+			);
+		}
 
 		return idTableSelect;
 	}
@@ -307,27 +253,37 @@ public abstract class AbstractTableBasedHandler implements Handler {
 	private TableGroup createTableGroupForIdTable(
 			IdTable idTableInfo,
 			TableSpace tableSpace) {
-		return new AbstractTableGroup( tableSpace, "id_table") {
-			final IdTableReference idTableReference = new IdTableReference( idTableInfo, null );
-			@Override
-			protected TableReference getPrimaryTableReference() {
-				return idTableReference;
-			}
+		return new IdTableGroup( tableSpace, new IdTableReference( idTableInfo, null ) );
+	}
 
-			@Override
-			protected List<TableReferenceJoin> getTableReferenceJoins() {
-				return Collections.emptyList();
-			}
+	private static class IdTableGroup extends AbstractTableGroup {
+		private final IdTableReference idTableReference;
 
-			@Override
-			public NavigableReference asExpression() {
-				throw new UnsupportedOperationException( "IdTable cannot be used as an Expression" );
-			}
+		public IdTableGroup(
+				TableSpace tableSpace,
+				IdTableReference idTableReference) {
+			super( tableSpace, "id_table" );
+			this.idTableReference = idTableReference;
+		}
 
-			@Override
-			public void render(SqlAppender sqlAppender, SqlAstWalker walker) {
-				renderTableReference( getPrimaryTableReference(), sqlAppender, walker );
-			}
-		};
+		@Override
+		protected TableReference getPrimaryTableReference() {
+			return idTableReference;
+		}
+
+		@Override
+		protected List<TableReferenceJoin> getTableReferenceJoins() {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public NavigableReference asExpression() {
+			throw new UnsupportedOperationException( "IdTable cannot be used as an Expression" );
+		}
+
+		@Override
+		public void render(SqlAppender sqlAppender, SqlAstWalker walker) {
+			renderTableReference( getPrimaryTableReference(), sqlAppender, walker );
+		}
 	}
 }

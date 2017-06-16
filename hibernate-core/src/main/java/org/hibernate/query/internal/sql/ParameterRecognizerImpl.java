@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.*;
 import org.hibernate.query.spi.ParameterRecognizer;
-import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
 /**
  * @author Steve Ebersole

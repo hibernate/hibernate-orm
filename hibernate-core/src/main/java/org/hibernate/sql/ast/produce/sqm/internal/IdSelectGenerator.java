@@ -14,7 +14,7 @@ import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;

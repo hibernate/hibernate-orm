@@ -7,7 +7,7 @@
 
 /**
  * Support for consuming an SQL AST tree ({@link org.hibernate.sql.ast.tree}), e.g. for transformation
- * into a {@link org.hibernate.sql.ast.consume.spi.JdbcOperation} and coordinating the tasks to perform
+ * into a {@link org.hibernate.sql.exec.spi.JdbcOperation} and coordinating the tasks to perform
  * that operation.
  */
 package org.hibernate.sql.ast.consume;

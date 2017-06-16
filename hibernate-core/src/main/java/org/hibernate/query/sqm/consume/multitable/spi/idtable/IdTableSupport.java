@@ -6,7 +6,11 @@
  */
 package org.hibernate.query.sqm.consume.multitable.spi.idtable;
 
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.naming.Identifier;
+import org.hibernate.naming.QualifiedTableName;
+import org.hibernate.tool.schema.spi.Exporter;
 
 /**
  * Defines environment's support for id-tables.  Generally this comes from
@@ -18,22 +22,11 @@ public interface IdTableSupport {
 	/**
 	 * Determine the name to use for the id-table.
 	 */
-	String determineIdTableName(EntityDescriptor entityDescriptor);
+	QualifiedTableName determineIdTableName(
+			EntityDescriptor entityDescriptor,
+			JdbcEnvironment jdbcEnvironment,
+			Identifier catalog,
+			Identifier schema);
 
-	/**
-	 * Get the SQL command needed to create the id-table
-	 */
-	String getCreateIdTableCommand();
-
-	/**
-	 * Get the options for id-table creation.  This is added to the
-	 * end of the {@link #getCreateIdTableCommand()}, after the
-	 * name is added.
-	 */
-	String getCreateIdTableStatementOptions();
-
-	/**
-	 * Get the SQL command for dropping the id-table
-	 */
-	String getDropIdTableCommand();
+	Exporter<IdTable> getIdTableExporter();
 }

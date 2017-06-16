@@ -6,32 +6,44 @@
  */
 package org.hibernate.query.sqm.consume.multitable.spi.idtable;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.consume.multitable.spi.DeleteHandler;
 import org.hibernate.query.sqm.consume.multitable.spi.HandlerCreationContext;
 import org.hibernate.query.sqm.consume.multitable.spi.HandlerExecutionContext;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
-import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
-import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-
-import org.jboss.logging.Logger;
 
 /**
 * @author Steve Ebersole
 */
 public class TableBasedDeleteHandlerImpl
 		extends AbstractTableBasedHandler
-		implements DeleteHandler, SqlAstBuildingContext {
-	private static final Logger log = Logger.getLogger( TableBasedDeleteHandlerImpl.class );
+		implements DeleteHandler {
 
-	public TableBasedDeleteHandlerImpl(
+	private TableBasedDeleteHandlerImpl(
 			SqmDeleteStatement sqmDeleteStatement,
 			EntityDescriptor entityDescriptor,
-			IdTableSupport idTableSupport,
 			IdTable idTableInfo,
+			IdTableSupport idTableSupport,
+			SessionUidSupport sessionUidSupport,
+			BeforeUseAction beforeUseAction,
+			AfterUseAction afterUseAction,
+			IdTableManagementTransactionality transactionality,
 			HandlerCreationContext creationContext) {
-		super( sqmDeleteStatement, entityDescriptor, idTableSupport, idTableInfo, creationContext );
+		super(
+				sqmDeleteStatement,
+				entityDescriptor,
+				idTableInfo,
+				sessionUidSupport,
+				beforeUseAction,
+				afterUseAction,
+				new IdTableHelper(
+						idTableInfo,
+						idTableSupport,
+						transactionality,
+						creationContext.getSessionFactory().getJdbcServices()
+				),
+				creationContext
+		);
 	}
 
 	@Override
@@ -42,15 +54,60 @@ public class TableBasedDeleteHandlerImpl
 	@Override
 	protected void performMutations(HandlerExecutionContext executionContext) {
 		// todo (6.0) : see TableBasedUpdateHandlerImpl#performMutations for general guideline
+
+		// todo (6.0) : who is responsible for injecting any strategy-specific restrictions (i.e., session-uid)?
 	}
 
-	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return getCreationContext().getSessionFactory();
-	}
+	public static class Builder {
+		private final SqmDeleteStatement sqmStatement;
+		private final EntityDescriptor entityDescriptor;
+		private final IdTable idTableInfo;
+		private final IdTableSupport idTableSupport;
 
-	@Override
-	public Callback getCallback() {
-		return afterLoadAction -> {};
+		private SessionUidSupport sessionUidSupport = SessionUidSupport.NONE;
+		private BeforeUseAction beforeUseAction = BeforeUseAction.NONE;
+		private AfterUseAction afterUseAction = AfterUseAction.NONE;
+		private IdTableManagementTransactionality transactionality = IdTableManagementTransactionality.NONE;
+
+		public Builder(
+				SqmDeleteStatement sqmStatement,
+				EntityDescriptor entityDescriptor,
+				IdTable idTableInfo,
+				IdTableSupport idTableSupport) {
+			this.sqmStatement = sqmStatement;
+			this.entityDescriptor = entityDescriptor;
+			this.idTableInfo = idTableInfo;
+			this.idTableSupport = idTableSupport;
+		}
+
+		public void setSessionUidSupport(SessionUidSupport sessionUidSupport) {
+			this.sessionUidSupport = sessionUidSupport;
+		}
+
+		public void setBeforeUseAction(BeforeUseAction beforeUseAction) {
+			this.beforeUseAction = beforeUseAction;
+		}
+
+		public void setAfterUseAction(AfterUseAction afterUseAction) {
+			this.afterUseAction = afterUseAction;
+		}
+
+		public void setTransactionality(IdTableManagementTransactionality transactionality) {
+			this.transactionality = transactionality;
+		}
+
+		public TableBasedDeleteHandlerImpl build(HandlerCreationContext creationContext) {
+			return new TableBasedDeleteHandlerImpl(
+					sqmStatement,
+					entityDescriptor,
+					idTableInfo,
+					idTableSupport,
+					sessionUidSupport,
+					beforeUseAction,
+					afterUseAction,
+					transactionality,
+					creationContext
+			);
+		}
 	}
 }

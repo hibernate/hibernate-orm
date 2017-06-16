@@ -11,6 +11,9 @@ import java.util.List;
 import org.hibernate.sql.ast.consume.SyntaxException;
 import org.hibernate.sql.ast.tree.spi.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.spi.assign.Assignment;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcInsertSelect;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
 /**
  * @author Steve Ebersole

@@ -7,8 +7,8 @@
 package org.hibernate.sql.ast.produce.result.internal;
 
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
-import org.hibernate.sql.ast.consume.results.internal.QueryResultAssemblerComposite;
-import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
+import org.hibernate.sql.exec.results.internal.QueryResultAssemblerComposite;
+import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultComposite;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;

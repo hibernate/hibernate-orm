@@ -8,14 +8,12 @@ package org.hibernate.query.sqm.consume.multitable.spi.idtable;
 
 import java.util.Locale;
 
-import org.hibernate.boot.model.relational.QualifiedTableName;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
-import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
 import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.naming.QualifiedTableName;
 
 /**
  * @author Steve Ebersole
@@ -25,16 +23,12 @@ public class IdTable extends PhysicalTable {
 
 	public IdTable(
 			EntityDescriptor entityDescriptor,
-			QualifiedTableName qualifiedTableName,
-			PhysicalNamingStrategy namingStrategy,
-			JdbcEnvironment jdbcEnvironment) {
+			QualifiedTableName physicalQualifiedName) {
 		super(
-				qualifiedTableName,
+				physicalQualifiedName,
 				false,
 				true,
-				"",
-				namingStrategy,
-				jdbcEnvironment
+				"Table used to temporarily hold id values for the entity " + entityDescriptor.getEntityName()
 		);
 		this.entityDescriptor = entityDescriptor;
 	}
@@ -73,6 +67,8 @@ public class IdTable extends PhysicalTable {
 	public ForeignKey createForeignKey(
 			String name,
 			boolean export,
+			String keyDefinition,
+			boolean cascadeDeleteEnabled,
 			Table targetTable,
 			ForeignKey.ColumnMappings columnMappings) {
 		throw new UnsupportedOperationException( "Cannot generate FK on entity id table" );

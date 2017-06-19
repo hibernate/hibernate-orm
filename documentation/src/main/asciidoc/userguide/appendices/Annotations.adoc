@@ -960,7 +960,7 @@ FALSE:: Eagerly load the association. This one is not needed since the JPA `Fetc
 NO_PROXY:: This option will fetch the association lazily while returning real entity object.
 PROXY:: This option will fetch the association lazily while returning a proxy instead.
 
-//TODO: Add example
+See the <<chapters/domain/associations.adoc#associations-one-to-one-bidirectional-lazy,`@LazyToOne` mapping example>> section for more info.
 
 [[annotations-hibernate-listindexbase]]
 ==== `@ListIndexBase`

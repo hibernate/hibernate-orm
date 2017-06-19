@@ -225,6 +225,31 @@ include::{sourcedir}/OneToOneBidirectionalTest.java[tags=associations-one-to-one
 ----
 ====
 
+[[associations-one-to-one-bidirectional-lazy]]
+====== Bidirectional `@OneToOne` lazy association
+
+Although you might annotate the parent-side association to be fetched lazily,
+Hibernate cannot honor this request since it cannot know whether the association is `null` or not.
+
+The only way to figure out whether there is an associated record on the child side is to fetch the child association using a secondary query.
+Because this can lead to N+1 query issues, it's much more efficient to use unidirectional `@OneToOne` associations with the `@MapsId` annotation in place.
+
+However, if you really need to use a bidirectional association and want to make sure that this is always going to be fetched lazily,
+then you need to enable lazy state initialization bytecode enhancement and use the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyToOne.html[`@LazyToOne`] annotation as well.
+
+[[associations-one-to-one-bidirectional-lazy-example]]
+.Bidirectional `@OneToOne` lazy parent-side association
+====
+[source,java]
+----
+include::{sourcedir}/OneToOneBidirectionalLazyTest.java[tags=associations-one-to-one-bidirectional-lazy-example,indent=0]
+----
+====
+
+For more about how to enable Bytecode enhancement,
+see the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement, BytecodeEnhancement chapter>>.
+
 [[associations-many-to-many]]
 ==== `@ManyToMany`
 

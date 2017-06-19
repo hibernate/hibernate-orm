@@ -22,8 +22,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
-import com.sun.org.apache.bcel.internal.generic.RETURN;
-
 /**
  * Mapping for a collection. Subclasses specialize to particular collection styles.
  *

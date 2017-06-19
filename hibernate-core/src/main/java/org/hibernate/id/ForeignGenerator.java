@@ -7,15 +7,12 @@
 package org.hibernate.id;
 
 import java.io.Serializable;
-import java.util.Properties;
 
-import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 /**

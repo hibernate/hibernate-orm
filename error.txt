@@ -1,0 +1,2181 @@
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SharedSessionContractImplementor.java:28: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SharedSessionContractImplementor.java:29: error: package org.hibernate.loader.custom does not exist
+import org.hibernate.loader.custom.CustomQuery;
+                                  ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/spi/NamedQueryRepository.java:17: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/NamedSQLQueryDefinition.java:14: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/ResultSetMappingDefinition.java:13: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/Dialect.java:1226: error: cannot find symbol
+	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                                          ^
+  symbol:   class Lockable
+  location: class Dialect
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/QueryParameters.java:21: error: package org.hibernate.engine.query.spi does not exist
+import org.hibernate.engine.query.spi.HQLQueryPlan;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/QueryParameters.java:22: error: package org.hibernate.hql.internal.classic does not exist
+import org.hibernate.hql.internal.classic.ParserHelper;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/QueryParameters.java:28: error: cannot find symbol
+import org.hibernate.type.ComponentType;
+                         ^
+  symbol:   class ComponentType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/NativeQuery.java:24: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SharedSessionContractImplementor.java:293: error: cannot find symbol
+	List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
+	                     ^
+  symbol:   class CustomQuery
+  location: interface SharedSessionContractImplementor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SharedSessionContractImplementor.java:299: error: cannot find symbol
+	ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
+	                                               ^
+  symbol:   class CustomQuery
+  location: interface SharedSessionContractImplementor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SharedSessionContractImplementor.java:314: error: cannot find symbol
+	List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters)
+	          ^
+  symbol:   class NativeSQLQuerySpecification
+  location: interface SharedSessionContractImplementor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SharedSessionContractImplementor.java:327: error: cannot find symbol
+	ScrollableResultsImplementor scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters);
+	                                    ^
+  symbol:   class NativeSQLQuerySpecification
+  location: interface SharedSessionContractImplementor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SharedSessionContractImplementor.java:339: error: cannot find symbol
+	int executeNativeUpdate(NativeSQLQuerySpecification specification, QueryParameters queryParameters)
+	                        ^
+  symbol:   class NativeSQLQuerySpecification
+  location: interface SharedSessionContractImplementor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/NamedSQLQueryDefinition.java:24: error: cannot find symbol
+	private NativeSQLQueryReturn[] queryReturns;
+	        ^
+  symbol:   class NativeSQLQueryReturn
+  location: class NamedSQLQueryDefinition
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/NamedSQLQueryDefinition.java:55: error: cannot find symbol
+			NativeSQLQueryReturn[] queryReturns,
+			^
+  symbol:   class NativeSQLQueryReturn
+  location: class NamedSQLQueryDefinition
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/NamedSQLQueryDefinition.java:164: error: cannot find symbol
+			NativeSQLQueryReturn[] queryReturns) {
+			^
+  symbol:   class NativeSQLQueryReturn
+  location: class NamedSQLQueryDefinition
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/NamedSQLQueryDefinition.java:187: error: cannot find symbol
+	public NativeSQLQueryReturn[] getQueryReturns() {
+	       ^
+  symbol:   class NativeSQLQueryReturn
+  location: class NamedSQLQueryDefinition
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/NamedSQLQueryDefinition.java:226: error: cannot find symbol
+	public void addQueryReturns(NativeSQLQueryReturn[] queryReturnsToAdd) {
+	                            ^
+  symbol:   class NativeSQLQueryReturn
+  location: class NamedSQLQueryDefinition
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/ResultSetMappingDefinition.java:22: error: cannot find symbol
+	private final List<NativeSQLQueryReturn> queryReturns = new ArrayList<NativeSQLQueryReturn>();
+	                   ^
+  symbol:   class NativeSQLQueryReturn
+  location: class ResultSetMappingDefinition
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/ResultSetMappingDefinition.java:42: error: cannot find symbol
+	public void addQueryReturn(NativeSQLQueryReturn queryReturn) {
+	                           ^
+  symbol:   class NativeSQLQueryReturn
+  location: class ResultSetMappingDefinition
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/ResultSetMappingDefinition.java:56: error: cannot find symbol
+	public NativeSQLQueryReturn[] getQueryReturns() {
+	       ^
+  symbol:   class NativeSQLQueryReturn
+  location: class ResultSetMappingDefinition
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/QueryParameters.java:82: error: cannot find symbol
+	private HQLQueryPlan queryPlan;
+	        ^
+  symbol:   class HQLQueryPlan
+  location: class QueryParameters
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/QueryParameters.java:242: error: cannot find symbol
+			QueryParameterBindingsImpl queryParameterBindings,
+			^
+  symbol:   class QueryParameterBindingsImpl
+  location: class QueryParameters
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/QueryParameters.java:668: error: cannot find symbol
+	public HQLQueryPlan getQueryPlan() {
+	       ^
+  symbol:   class HQLQueryPlan
+  location: class QueryParameters
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/QueryParameters.java:672: error: cannot find symbol
+	public void setQueryPlan(HQLQueryPlan queryPlan) {
+	                         ^
+  symbol:   class HQLQueryPlan
+  location: class QueryParameters
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/action/internal/EntityUpdateAction.java:32: error: cannot find symbol
+import org.hibernate.type.TypeHelper;
+                         ^
+  symbol:   class TypeHelper
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/NativeQuery.java:83: error: cannot find symbol
+	List<NativeSQLQueryReturn> getQueryReturns();
+	     ^
+  symbol:   class NativeSQLQueryReturn
+  location: interface NativeQuery<T>
+  where T is a type-variable:
+    T extends Object declared in interface NativeQuery
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/CascadingAction.java:14: error: cannot find symbol
+import org.hibernate.type.CollectionType;
+                         ^
+  symbol:   class CollectionType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SubselectFetch.java:16: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Loadable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SubselectFetch.java:17: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.PropertyMapping;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/CascadingAction.java:54: error: cannot find symbol
+			CollectionType collectionType,
+			^
+  symbol:   class CollectionType
+  location: interface CascadingAction
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SubselectFetch.java:33: error: cannot find symbol
+	private final Loadable loadable;
+	              ^
+  symbol:   class Loadable
+  location: class SubselectFetch
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SubselectFetch.java:59: error: cannot find symbol
+			final Loadable loadable,
+			      ^
+  symbol:   class Loadable
+  location: class SubselectFetch
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SubselectFetch.java:91: error: cannot find symbol
+			final Loadable loadable,
+			      ^
+  symbol:   class Loadable
+  location: class SubselectFetch
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/loader/spi/AfterLoadAction.java:10: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Loadable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/loader/spi/AfterLoadAction.java:16: error: cannot find symbol
+	void afterLoad(SharedSessionContractImplementor session, Object entity, Loadable persister);
+	                                                                        ^
+  symbol:   class Loadable
+  location: interface AfterLoadAction
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ResultSetMappingBinder.java:29: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryCollectionReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ResultSetMappingBinder.java:30: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryJoinReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ResultSetMappingBinder.java:31: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ResultSetMappingBinder.java:32: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ResultSetMappingBinder.java:33: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ResultSetMappingBinder.java:139: error: cannot find symbol
+	public static NativeSQLQueryScalarReturn extractReturnDescription(
+	              ^
+  symbol:   class NativeSQLQueryScalarReturn
+  location: class ResultSetMappingBinder
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ResultSetMappingBinder.java:161: error: cannot find symbol
+	public static NativeSQLQueryRootReturn extractReturnDescription(
+	              ^
+  symbol:   class NativeSQLQueryRootReturn
+  location: class ResultSetMappingBinder
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ResultSetMappingBinder.java:184: error: cannot find symbol
+	public static NativeSQLQueryJoinReturn extractReturnDescription(
+	              ^
+  symbol:   class NativeSQLQueryJoinReturn
+  location: class ResultSetMappingBinder
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ResultSetMappingBinder.java:213: error: cannot find symbol
+	public static NativeSQLQueryReturn extractReturnDescription(
+	              ^
+  symbol:   class NativeSQLQueryReturn
+  location: class ResultSetMappingBinder
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/NamedSQLQueryDefinitionBuilder.java:17: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/NamedSQLQueryDefinitionBuilder.java:20: error: cannot find symbol
+	private NativeSQLQueryReturn[] queryReturns;
+	        ^
+  symbol:   class NativeSQLQueryReturn
+  location: class NamedSQLQueryDefinitionBuilder
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/NamedSQLQueryDefinitionBuilder.java:32: error: cannot find symbol
+	public NamedSQLQueryDefinitionBuilder setQueryReturns(NativeSQLQueryReturn[] queryReturns) {
+	                                                      ^
+  symbol:   class NativeSQLQueryReturn
+  location: class NamedSQLQueryDefinitionBuilder
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/NamedSQLQueryDefinitionBuilder.java:37: error: cannot find symbol
+	public NamedSQLQueryDefinitionBuilder setQueryReturns(List<NativeSQLQueryReturn> queryReturns) {
+	                                                           ^
+  symbol:   class NativeSQLQueryReturn
+  location: class NamedSQLQueryDefinitionBuilder
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/registry/selector/internal/StrategySelectorBuilder.java:85: error: package org.hibernate.hql.spi.id does not exist
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+                               ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/registry/selector/internal/StrategySelectorBuilder.java:86: error: package org.hibernate.hql.spi.id.global does not exist
+import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
+                                      ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/registry/selector/internal/StrategySelectorBuilder.java:87: error: package org.hibernate.hql.spi.id.local does not exist
+import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/registry/selector/internal/StrategySelectorBuilder.java:88: error: package org.hibernate.hql.spi.id.persistent does not exist
+import org.hibernate.hql.spi.id.persistent.PersistentTableBulkIdStrategy;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/ProxyFactory.java:15: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/ProxyFactory.java:54: error: cannot find symbol
+			EmbeddedType componentIdType) throws HibernateException;
+			^
+  symbol:   class EmbeddedType
+  location: interface ProxyFactory
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/internal/OldNaturalIdCacheKey.java:18: error: cannot find symbol
+import org.hibernate.type.spi.EntityType;
+                             ^
+  symbol:   class EntityType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/internal/StandardQueryCache.java:30: error: cannot find symbol
+import org.hibernate.type.TypeHelper;
+                         ^
+  symbol:   class TypeHelper
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/spi/entry/StandardCacheEntryImpl.java:22: error: cannot find symbol
+import org.hibernate.type.TypeHelper;
+                         ^
+  symbol:   class TypeHelper
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/spi/entry/StructuredCacheEntry.java:14: error: cannot find symbol
+import org.hibernate.type.TypeHelper;
+                         ^
+  symbol:   class TypeHelper
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Configuration.java:57: error: cannot find symbol
+import org.hibernate.type.CompositeCustomType;
+                         ^
+  symbol:   class CompositeCustomType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Configuration.java:58: error: cannot find symbol
+import org.hibernate.type.CustomType;
+                         ^
+  symbol:   class CustomType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Configuration.java:60: error: cannot find symbol
+import org.hibernate.usertype.CompositeUserType;
+                             ^
+  symbol:   class CompositeUserType
+  location: package org.hibernate.usertype
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Configuration.java:342: error: cannot find symbol
+	public Configuration registerTypeOverride(CompositeUserType type, String[] keys) {
+	                                          ^
+  symbol:   class CompositeUserType
+  location: class Configuration
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:29: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:30: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:31: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/QueryBinder.java:29: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/QueryBinder.java:30: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/AbstractEmptinessExpression.java:14: error: package org.hibernate.persister.collection does not exist
+import org.hibernate.persister.collection.QueryableCollection;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/AbstractEmptinessExpression.java:15: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Loadable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/AbstractEmptinessExpression.java:16: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.PropertyMapping;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/AbstractEmptinessExpression.java:18: error: cannot find symbol
+import org.hibernate.type.CollectionType;
+                         ^
+  symbol:   class CollectionType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/AbstractEmptinessExpression.java:65: error: cannot find symbol
+	protected QueryableCollection getQueryableCollection(
+	          ^
+  symbol:   class QueryableCollection
+  location: class AbstractEmptinessExpression
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/SubqueryExpression.java:16: error: package org.hibernate.loader.criteria does not exist
+import org.hibernate.loader.criteria.CriteriaJoinWalker;
+                                    ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/SubqueryExpression.java:17: error: package org.hibernate.loader.criteria does not exist
+import org.hibernate.loader.criteria.CriteriaQueryTranslator;
+                                    ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/SubqueryExpression.java:18: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.OuterJoinLoadable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/SubqueryExpression.java:33: error: cannot find symbol
+	private CriteriaQueryTranslator innerQuery;
+	        ^
+  symbol:   class CriteriaQueryTranslator
+  location: class SubqueryExpression
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/SizeExpression.java:14: error: package org.hibernate.persister.collection does not exist
+import org.hibernate.persister.collection.QueryableCollection;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/SizeExpression.java:15: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Loadable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/InExpression.java:15: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/Example.java:21: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/Example.java:290: error: cannot find symbol
+			EmbeddedType type,
+			^
+  symbol:   class EmbeddedType
+  location: class Example
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/Example.java:363: error: cannot find symbol
+			EmbeddedType type,
+			^
+  symbol:   class EmbeddedType
+  location: class Example
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/FrontBaseDialect.java:19: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Lockable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/FrontBaseDialect.java:100: error: cannot find symbol
+	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                                          ^
+  symbol:   class Lockable
+  location: class FrontBaseDialect
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/Oracle12cDialect.java:18: error: cannot find symbol
+import org.hibernate.type.MaterializedBlobType;
+                         ^
+  symbol:   class MaterializedBlobType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/Oracle12cDialect.java:19: error: cannot find symbol
+import org.hibernate.type.WrappedMaterializedBlobType;
+                         ^
+  symbol:   class WrappedMaterializedBlobType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/PointbaseDialect.java:20: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Lockable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/PointbaseDialect.java:76: error: cannot find symbol
+	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                                          ^
+  symbol:   class Lockable
+  location: class PointbaseDialect
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/PostgreSQL82Dialect.java:15: error: cannot find symbol
+import org.hibernate.type.PostgresUUIDType;
+                         ^
+  symbol:   class PostgresUUIDType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/AbstractSelectLockingStrategy.java:11: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Lockable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/AbstractSelectLockingStrategy.java:20: error: cannot find symbol
+	private final Lockable lockable;
+	              ^
+  symbol:   class Lockable
+  location: class AbstractSelectLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/AbstractSelectLockingStrategy.java:24: error: cannot find symbol
+	protected AbstractSelectLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                                        ^
+  symbol:   class Lockable
+  location: class AbstractSelectLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/AbstractSelectLockingStrategy.java:30: error: cannot find symbol
+	protected Lockable getLockable() {
+	          ^
+  symbol:   class Lockable
+  location: class AbstractSelectLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/OptimisticForceIncrementLockingStrategy.java:17: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Lockable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/OptimisticForceIncrementLockingStrategy.java:29: error: cannot find symbol
+	private final Lockable lockable;
+	              ^
+  symbol:   class Lockable
+  location: class OptimisticForceIncrementLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/OptimisticForceIncrementLockingStrategy.java:38: error: cannot find symbol
+	public OptimisticForceIncrementLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                                               ^
+  symbol:   class Lockable
+  location: class OptimisticForceIncrementLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/OptimisticLockingStrategy.java:18: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Lockable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/OptimisticLockingStrategy.java:30: error: cannot find symbol
+	private final Lockable lockable;
+	              ^
+  symbol:   class Lockable
+  location: class OptimisticLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/OptimisticLockingStrategy.java:39: error: cannot find symbol
+	public OptimisticLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                                 ^
+  symbol:   class Lockable
+  location: class OptimisticLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticReadSelectLockingStrategy.java:20: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Lockable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticReadSelectLockingStrategy.java:49: error: cannot find symbol
+	public PessimisticReadSelectLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                                            ^
+  symbol:   class Lockable
+  location: class PessimisticReadSelectLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticReadUpdateLockingStrategy.java:20: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Lockable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticReadUpdateLockingStrategy.java:43: error: cannot find symbol
+	private final Lockable lockable;
+	              ^
+  symbol:   class Lockable
+  location: class PessimisticReadUpdateLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticReadUpdateLockingStrategy.java:54: error: cannot find symbol
+	public PessimisticReadUpdateLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                                            ^
+  symbol:   class Lockable
+  location: class PessimisticReadUpdateLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticWriteSelectLockingStrategy.java:20: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Lockable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticWriteSelectLockingStrategy.java:48: error: cannot find symbol
+	public PessimisticWriteSelectLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                                             ^
+  symbol:   class Lockable
+  location: class PessimisticWriteSelectLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticWriteUpdateLockingStrategy.java:20: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Lockable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticWriteUpdateLockingStrategy.java:43: error: cannot find symbol
+	private final Lockable lockable;
+	              ^
+  symbol:   class Lockable
+  location: class PessimisticWriteUpdateLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticWriteUpdateLockingStrategy.java:53: error: cannot find symbol
+	public PessimisticWriteUpdateLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                                             ^
+  symbol:   class Lockable
+  location: class PessimisticWriteUpdateLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/SelectLockingStrategy.java:20: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Lockable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/SelectLockingStrategy.java:43: error: cannot find symbol
+	public SelectLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                             ^
+  symbol:   class Lockable
+  location: class SelectLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/UpdateLockingStrategy.java:20: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Lockable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/UpdateLockingStrategy.java:40: error: cannot find symbol
+	private final Lockable lockable;
+	              ^
+  symbol:   class Lockable
+  location: class UpdateLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/UpdateLockingStrategy.java:51: error: cannot find symbol
+	public UpdateLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                             ^
+  symbol:   class Lockable
+  location: class UpdateLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticForceIncrementLockingStrategy.java:16: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Lockable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticForceIncrementLockingStrategy.java:27: error: cannot find symbol
+	private final Lockable lockable;
+	              ^
+  symbol:   class Lockable
+  location: class PessimisticForceIncrementLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticForceIncrementLockingStrategy.java:36: error: cannot find symbol
+	public PessimisticForceIncrementLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                                                ^
+  symbol:   class Lockable
+  location: class PessimisticForceIncrementLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/MckoiDialect.java:22: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Lockable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/MckoiDialect.java:117: error: cannot find symbol
+	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                                          ^
+  symbol:   class Lockable
+  location: class MckoiDialect
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/RDMSOS2200Dialect.java:26: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Lockable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/RDMSOS2200Dialect.java:382: error: cannot find symbol
+	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                                          ^
+  symbol:   class Lockable
+  location: class RDMSOS2200Dialect
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/Cache71Dialect.java:552: error: cannot find symbol
+	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                                          ^
+  symbol:   class Lockable
+  location: class Cache71Dialect
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/HSQLDialect.java:568: error: cannot find symbol
+	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                                          ^
+  symbol:   class Lockable
+  location: class HSQLDialect
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/HSQLDialect.java:594: error: cannot find symbol
+		public ReadUncommittedLockingStrategy(Lockable lockable, LockMode lockMode) {
+		                                      ^
+  symbol:   class Lockable
+  location: class ReadUncommittedLockingStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/TimesTenDialect.java:23: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Lockable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/TimesTenDialect.java:243: error: cannot find symbol
+	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	                                          ^
+  symbol:   class Lockable
+  location: class TimesTenDialect
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinHelper.java:31: error: cannot find symbol
+			AssociationType type,
+			^
+  symbol:   class AssociationType
+  location: class JoinHelper
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinHelper.java:34: error: cannot find symbol
+			OuterJoinLoadable lhsPersister,
+			^
+  symbol:   class OuterJoinLoadable
+  location: class JoinHelper
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinHelper.java:35: error: cannot find symbol
+			Mapping mapping) {
+			^
+  symbol:   class Mapping
+  location: class JoinHelper
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinHelper.java:50: error: cannot find symbol
+			AssociationType type,
+			^
+  symbol:   class AssociationType
+  location: class JoinHelper
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinHelper.java:52: error: cannot find symbol
+			OuterJoinLoadable lhsPersister,
+			^
+  symbol:   class OuterJoinLoadable
+  location: class JoinHelper
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinHelper.java:53: error: cannot find symbol
+			Mapping mapping) {
+			^
+  symbol:   class Mapping
+  location: class JoinHelper
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinHelper.java:73: error: cannot find symbol
+			AssociationType associationType,
+			^
+  symbol:   class AssociationType
+  location: class JoinHelper
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinHelper.java:77: error: cannot find symbol
+			OuterJoinLoadable lhsPersister,
+			^
+  symbol:   class OuterJoinLoadable
+  location: class JoinHelper
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinHelper.java:78: error: cannot find symbol
+			Mapping mapping) {
+			^
+  symbol:   class Mapping
+  location: class JoinHelper
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinHelper.java:98: error: cannot find symbol
+	private static String[] toColumns(OuterJoinLoadable persister, String columnQualifier, int propertyIndex) {
+	                                  ^
+  symbol:   class OuterJoinLoadable
+  location: class JoinHelper
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinHelper.java:126: error: cannot find symbol
+			AssociationType type,
+			^
+  symbol:   class AssociationType
+  location: class JoinHelper
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinHelper.java:129: error: cannot find symbol
+			OuterJoinLoadable lhsPersister,
+			^
+  symbol:   class OuterJoinLoadable
+  location: class JoinHelper
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinHelper.java:130: error: cannot find symbol
+			Mapping mapping) {
+			^
+  symbol:   class Mapping
+  location: class JoinHelper
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinHelper.java:167: error: cannot find symbol
+			AssociationType type,
+			^
+  symbol:   class AssociationType
+  location: class JoinHelper
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinHelper.java:169: error: cannot find symbol
+			OuterJoinLoadable lhsPersister) {
+			^
+  symbol:   class OuterJoinLoadable
+  location: class JoinHelper
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinHelper.java:207: error: cannot find symbol
+	public static String[] getRHSColumnNames(AssociationType type, SessionFactoryImplementor factory) {
+	                                         ^
+  symbol:   class AssociationType
+  location: class JoinHelper
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:258: error: cannot find symbol
+	private static boolean cascadeAssociationNow(final CascadePoint cascadePoint, AssociationType associationType) {
+	                                                                              ^
+  symbol:   class AssociationType
+  location: class Cascade
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:269: error: cannot find symbol
+			final EmbeddedType componentType,
+			      ^
+  symbol:   class EmbeddedType
+  location: class Cascade
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:342: error: cannot find symbol
+			final CollectionType type) {
+			      ^
+  symbol:   class CollectionType
+  location: class Cascade
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:408: error: cannot find symbol
+			final CollectionType collectionType,
+			      ^
+  symbol:   class CollectionType
+  location: class Cascade
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Collections.java:144: error: cannot find symbol
+			CollectionType type,
+			^
+  symbol:   class CollectionType
+  location: class Collections
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinSequence.java:41: error: cannot find symbol
+	private Joinable rootJoinable;
+	        ^
+  symbol:   class Joinable
+  location: class JoinSequence
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinSequence.java:119: error: cannot find symbol
+			AssociationType associationType,
+			^
+  symbol:   class AssociationType
+  location: class JoinSequence
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinSequence.java:377: error: cannot find symbol
+	private boolean isManyToManyRoot(Joinable joinable) {
+	                                 ^
+  symbol:   class Joinable
+  location: class JoinSequence
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinSequence.java:387: error: cannot find symbol
+			Joinable joinable,
+			^
+  symbol:   class Joinable
+  location: class JoinSequence
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinSequence.java:454: error: cannot find symbol
+	public JoinSequence setRoot(Joinable joinable, String alias) {
+	                            ^
+  symbol:   class Joinable
+  location: class JoinSequence
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinSequence.java:522: error: cannot find symbol
+		private final AssociationType associationType;
+		              ^
+  symbol:   class AssociationType
+  location: class Join
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinSequence.java:523: error: cannot find symbol
+		private final Joinable joinable;
+		              ^
+  symbol:   class Joinable
+  location: class Join
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinSequence.java:530: error: cannot find symbol
+				AssociationType associationType,
+				^
+  symbol:   class AssociationType
+  location: class Join
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinSequence.java:545: error: cannot find symbol
+		public AssociationType getAssociationType() {
+		       ^
+  symbol:   class AssociationType
+  location: class Join
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/JoinSequence.java:549: error: cannot find symbol
+		public Joinable getJoinable() {
+		       ^
+  symbol:   class Joinable
+  location: class Join
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Nullability.java:158: error: cannot find symbol
+	private String checkComponentNullability(Object value, EmbeddedType compositeType) throws HibernateException {
+	                                                       ^
+  symbol:   class EmbeddedType
+  location: class Nullability
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/CascadingActions.java:24: error: cannot find symbol
+import org.hibernate.type.CollectionType;
+                         ^
+  symbol:   class CollectionType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/CascadingActions.java:25: error: cannot find symbol
+import org.hibernate.type.spi.EntityType;
+                             ^
+  symbol:   class EntityType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/CascadingActions.java:485: error: cannot find symbol
+			CollectionType collectionType,
+			^
+  symbol:   class CollectionType
+  location: class CascadingActions
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/CascadingActions.java:496: error: cannot find symbol
+			CollectionType collectionType,
+			^
+  symbol:   class CollectionType
+  location: class CascadingActions
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionDelegatorBaseImpl.java:54: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionDelegatorBaseImpl.java:57: error: package org.hibernate.loader.custom does not exist
+import org.hibernate.loader.custom.CustomQuery;
+                                  ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionDelegatorBaseImpl.java:242: error: cannot find symbol
+	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) throws HibernateException {
+	                            ^
+  symbol:   class CustomQuery
+  location: class SessionDelegatorBaseImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionDelegatorBaseImpl.java:247: error: cannot find symbol
+	public ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) throws HibernateException {
+	                                                      ^
+  symbol:   class CustomQuery
+  location: class SessionDelegatorBaseImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionDelegatorBaseImpl.java:252: error: cannot find symbol
+	public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters) throws HibernateException {
+	                 ^
+  symbol:   class NativeSQLQuerySpecification
+  location: class SessionDelegatorBaseImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionDelegatorBaseImpl.java:257: error: cannot find symbol
+	public ScrollableResultsImplementor scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters) throws HibernateException {
+	                                           ^
+  symbol:   class NativeSQLQuerySpecification
+  location: class SessionDelegatorBaseImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionDelegatorBaseImpl.java:277: error: cannot find symbol
+	public int executeNativeUpdate(NativeSQLQuerySpecification specification, QueryParameters queryParameters) throws HibernateException {
+	                               ^
+  symbol:   class NativeSQLQuerySpecification
+  location: class SessionDelegatorBaseImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultMergeEventListener.java:42: error: cannot find symbol
+import org.hibernate.type.TypeHelper;
+                         ^
+  symbol:   class TypeHelper
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/OnLockVisitor.java:16: error: cannot find symbol
+import org.hibernate.type.CollectionType;
+                         ^
+  symbol:   class CollectionType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/OnLockVisitor.java:34: error: cannot find symbol
+	public Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	                                                   ^
+  symbol:   class CollectionType
+  location: class OnLockVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/ReattachVisitor.java:59: error: cannot find symbol
+	Object processComponent(Object component, EmbeddedType componentType) throws HibernateException {
+	                                          ^
+  symbol:   class EmbeddedType
+  location: class ReattachVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/ProxyVisitor.java:27: error: cannot find symbol
+	Object processEntity(Object value, EntityType entityType) throws HibernateException {
+	                                   ^
+  symbol:   class EntityType
+  location: class ProxyVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/ProxyVisitor.java:63: error: cannot find symbol
+	protected void reattachCollection(PersistentCollection collection, CollectionType type)
+	                                                                   ^
+  symbol:   class CollectionType
+  location: class ProxyVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/AbstractVisitor.java:80: error: cannot find symbol
+	Object processComponent(Object component, EmbeddedType componentType) throws HibernateException {
+	                                          ^
+  symbol:   class EmbeddedType
+  location: class AbstractVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/AbstractVisitor.java:136: error: cannot find symbol
+	Object processCollection(Object collection, CollectionType type)
+	                                            ^
+  symbol:   class CollectionType
+  location: class AbstractVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/AbstractVisitor.java:149: error: cannot find symbol
+	Object processEntity(Object value, EntityType entityType)
+	                                   ^
+  symbol:   class EntityType
+  location: class AbstractVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultLoadEventListener.java:171: error: cannot find symbol
+			EmbeddedComponentType dependentIdType,
+			^
+  symbol:   class EmbeddedComponentType
+  location: class DefaultLoadEventListener
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/WrapVisitor.java:40: error: cannot find symbol
+	Object processCollection(Object collection, CollectionType collectionType)
+	                                            ^
+  symbol:   class CollectionType
+  location: class WrapVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/WrapVisitor.java:59: error: cannot find symbol
+	final Object processArrayOrNewCollection(Object collection, CollectionType collectionType)
+	                                                            ^
+  symbol:   class CollectionType
+  location: class WrapVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/WrapVisitor.java:114: error: cannot find symbol
+	Object processComponent(Object component, EmbeddedType componentType) throws HibernateException {
+	                                          ^
+  symbol:   class EmbeddedType
+  location: class WrapVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/OnUpdateVisitor.java:33: error: cannot find symbol
+	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	                                            ^
+  symbol:   class CollectionType
+  location: class OnUpdateVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/OnReplicateVisitor.java:38: error: cannot find symbol
+	public Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	                                                   ^
+  symbol:   class CollectionType
+  location: class OnReplicateVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/FlushVisitor.java:25: error: cannot find symbol
+	Object processCollection(Object collection, CollectionType type)
+	                                            ^
+  symbol:   class CollectionType
+  location: class FlushVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/EvictVisitor.java:33: error: cannot find symbol
+	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	                                            ^
+  symbol:   class CollectionType
+  location: class EvictVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/EvictVisitor.java:40: error: cannot find symbol
+	public void evictCollection(Object value, CollectionType type) {
+	                                          ^
+  symbol:   class CollectionType
+  location: class EvictVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DirtyCollectionSearchVisitor.java:36: error: cannot find symbol
+	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	                                            ^
+  symbol:   class CollectionType
+  location: class DirtyCollectionSearchVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/DynamicFilterAliasGenerator.java:9: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.AbstractEntityPersister;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractSharedSessionContract.java:46: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractSharedSessionContract.java:47: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractSharedSessionContract.java:48: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractSharedSessionContract.java:49: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractSharedSessionContract.java:889: error: cannot find symbol
+	public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters) {
+	                 ^
+  symbol:   class NativeSQLQuerySpecification
+  location: class AbstractSharedSessionContract
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractSharedSessionContract.java:894: error: cannot find symbol
+	public ScrollableResultsImplementor scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters) {
+	                                           ^
+  symbol:   class NativeSQLQuerySpecification
+  location: class AbstractSharedSessionContract
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/FilterConfiguration.java:15: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Joinable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/ScrollableResultsImpl.java:18: error: package org.hibernate.hql.internal does not exist
+import org.hibernate.hql.internal.HolderInstantiator;
+                                 ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/ScrollableResultsImpl.java:19: error: cannot find symbol
+import org.hibernate.loader.Loader;
+                           ^
+  symbol:   class Loader
+  location: package org.hibernate.loader
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractScrollableResults.java:23: error: package org.hibernate.hql.internal does not exist
+import org.hibernate.hql.internal.HolderInstantiator;
+                                 ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractScrollableResults.java:24: error: cannot find symbol
+import org.hibernate.loader.Loader;
+                           ^
+  symbol:   class Loader
+  location: package org.hibernate.loader
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/ScrollableResultsImpl.java:45: error: cannot find symbol
+			Loader loader,
+			^
+  symbol:   class Loader
+  location: class ScrollableResultsImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/ScrollableResultsImpl.java:47: error: cannot find symbol
+			Type[] types, HolderInstantiator holderInstantiator) {
+			              ^
+  symbol:   class HolderInstantiator
+  location: class ScrollableResultsImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractScrollableResults.java:40: error: cannot find symbol
+	private final Loader loader;
+	              ^
+  symbol:   class Loader
+  location: class AbstractScrollableResults
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractScrollableResults.java:43: error: cannot find symbol
+	private HolderInstantiator holderInstantiator;
+	        ^
+  symbol:   class HolderInstantiator
+  location: class AbstractScrollableResults
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractScrollableResults.java:50: error: cannot find symbol
+			Loader loader,
+			^
+  symbol:   class Loader
+  location: class AbstractScrollableResults
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractScrollableResults.java:53: error: cannot find symbol
+			HolderInstantiator holderInstantiator) {
+			^
+  symbol:   class HolderInstantiator
+  location: class AbstractScrollableResults
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractScrollableResults.java:79: error: cannot find symbol
+	protected Loader getLoader() {
+	          ^
+  symbol:   class Loader
+  location: class AbstractScrollableResults
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractScrollableResults.java:91: error: cannot find symbol
+	protected HolderInstantiator getHolderInstantiator() {
+	          ^
+  symbol:   class HolderInstantiator
+  location: class AbstractScrollableResults
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/FetchingScrollableResultsImpl.java:16: error: package org.hibernate.hql.internal does not exist
+import org.hibernate.hql.internal.HolderInstantiator;
+                                 ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/FetchingScrollableResultsImpl.java:17: error: cannot find symbol
+import org.hibernate.loader.Loader;
+                           ^
+  symbol:   class Loader
+  location: package org.hibernate.loader
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/FetchingScrollableResultsImpl.java:45: error: cannot find symbol
+			Loader loader,
+			^
+  symbol:   class Loader
+  location: class FetchingScrollableResultsImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/FetchingScrollableResultsImpl.java:48: error: cannot find symbol
+			HolderInstantiator holderInstantiator) {
+			^
+  symbol:   class HolderInstantiator
+  location: class FetchingScrollableResultsImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/IteratorImpl.java:18: error: package org.hibernate.hql.internal does not exist
+import org.hibernate.hql.internal.HolderInstantiator;
+                                 ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/IteratorImpl.java:19: error: cannot find symbol
+import org.hibernate.type.spi.EntityType;
+                             ^
+  symbol:   class EntityType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/IteratorImpl.java:40: error: cannot find symbol
+	private HolderInstantiator holderInstantiator;
+	        ^
+  symbol:   class HolderInstantiator
+  location: class IteratorImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/IteratorImpl.java:49: error: cannot find symbol
+			HolderInstantiator holderInstantiator) throws HibernateException, SQLException {
+			^
+  symbol:   class HolderInstantiator
+  location: class IteratorImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/StatelessSessionImpl.java:31: error: package org.hibernate.engine.query.spi does not exist
+import org.hibernate.engine.query.spi.HQLQueryPlan;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/StatelessSessionImpl.java:32: error: package org.hibernate.engine.query.spi does not exist
+import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/StatelessSessionImpl.java:33: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/StatelessSessionImpl.java:41: error: package org.hibernate.loader.criteria does not exist
+import org.hibernate.loader.criteria.CriteriaLoader;
+                                    ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/StatelessSessionImpl.java:42: error: package org.hibernate.loader.custom does not exist
+import org.hibernate.loader.custom.CustomLoader;
+                                  ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/StatelessSessionImpl.java:43: error: package org.hibernate.loader.custom does not exist
+import org.hibernate.loader.custom.CustomQuery;
+                                  ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/StatelessSessionImpl.java:45: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.OuterJoinLoadable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/StatelessSessionImpl.java:563: error: cannot find symbol
+	private OuterJoinLoadable getOuterJoinLoadable(String entityName) throws MappingException {
+	        ^
+  symbol:   class OuterJoinLoadable
+  location: class StatelessSessionImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/StatelessSessionImpl.java:572: error: cannot find symbol
+	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
+	                            ^
+  symbol:   class CustomQuery
+  location: class StatelessSessionImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/StatelessSessionImpl.java:591: error: cannot find symbol
+	public ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
+	                                                      ^
+  symbol:   class CustomQuery
+  location: class StatelessSessionImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/StatelessSessionImpl.java:621: error: cannot find symbol
+			NativeSQLQuerySpecification nativeSQLQuerySpecification,
+			^
+  symbol:   class NativeSQLQuerySpecification
+  location: class StatelessSessionImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/SessionImpl.java:80: error: package org.hibernate.engine.query.spi does not exist
+import org.hibernate.engine.query.spi.FilterQueryPlan;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/SessionImpl.java:81: error: package org.hibernate.engine.query.spi does not exist
+import org.hibernate.engine.query.spi.HQLQueryPlan;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/SessionImpl.java:82: error: package org.hibernate.engine.query.spi does not exist
+import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/SessionImpl.java:83: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/SessionImpl.java:1479: error: cannot find symbol
+			NativeSQLQuerySpecification nativeQuerySpecification,
+			^
+  symbol:   class NativeSQLQuerySpecification
+  location: class SessionImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/SessionImpl.java:1644: error: cannot find symbol
+	private FilterQueryPlan getFilterQueryPlan(
+	        ^
+  symbol:   class FilterQueryPlan
+  location: class SessionImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/SessionImpl.java:1919: error: cannot find symbol
+	private OuterJoinLoadable getOuterJoinLoadable(String entityName) throws MappingException {
+	        ^
+  symbol:   class OuterJoinLoadable
+  location: class SessionImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/SessionImpl.java:2067: error: cannot find symbol
+	public ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) {
+	                                                      ^
+  symbol:   class CustomQuery
+  location: class SessionImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/SessionImpl.java:2091: error: cannot find symbol
+	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) {
+	                            ^
+  symbol:   class CustomQuery
+  location: class SessionImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityMetamodel.java:43: error: cannot find symbol
+import org.hibernate.type.spi.AssociationType;
+                             ^
+  symbol:   class AssociationType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityMetamodel.java:44: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityMetamodel.java:45: error: cannot find symbol
+import org.hibernate.type.spi.EntityType;
+                             ^
+  symbol:   class EntityType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityMetamodel.java:64: error: cannot find symbol
+	private EntityType entityType;
+	        ^
+  symbol:   class EntityType
+  location: class EntityMetamodel
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/NonIdentifierAttribute.java:11: error: package org.hibernate.persister.walking.spi does not exist
+import org.hibernate.persister.walking.spi.AttributeDefinition;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/NonIdentifierAttribute.java:16: error: cannot find symbol
+public interface NonIdentifierAttribute extends Attribute, AttributeDefinition {
+                                                           ^
+  symbol: class AttributeDefinition
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityMetamodel.java:891: error: cannot find symbol
+	public EntityType getEntityType() {
+	       ^
+  symbol:   class EntityType
+  location: class EntityMetamodel
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/AbstractNonIdentifierAttribute.java:12: error: package org.hibernate.persister.walking.spi does not exist
+import org.hibernate.persister.walking.spi.AttributeSource;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/EmbeddableTypeImpl.java:20: error: cannot find symbol
+	private final ComponentType hibernateType;
+	              ^
+  symbol:   class ComponentType
+  location: class EmbeddableTypeImpl<X>
+  where X is a type-variable:
+    X extends Object declared in class EmbeddableTypeImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/EmbeddableTypeImpl.java:22: error: cannot find symbol
+	public EmbeddableTypeImpl(Class<X> javaType, AbstractManagedType parent, ComponentType hibernateType) {
+	                                                                         ^
+  symbol:   class ComponentType
+  location: class EmbeddableTypeImpl<X>
+  where X is a type-variable:
+    X extends Object declared in class EmbeddableTypeImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/EmbeddableTypeImpl.java:36: error: cannot find symbol
+	public ComponentType getHibernateType() {
+	       ^
+  symbol:   class ComponentType
+  location: class EmbeddableTypeImpl<X>
+  where X is a type-variable:
+    X extends Object declared in class EmbeddableTypeImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/AbstractNonIdentifierAttribute.java:19: error: cannot find symbol
+	private final AttributeSource source;
+	              ^
+  symbol:   class AttributeSource
+  location: class AbstractNonIdentifierAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/AbstractNonIdentifierAttribute.java:27: error: cannot find symbol
+			AttributeSource source,
+			^
+  symbol:   class AttributeSource
+  location: class AbstractNonIdentifierAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/AbstractNonIdentifierAttribute.java:41: error: cannot find symbol
+	public AttributeSource getSource() {
+	       ^
+  symbol:   class AttributeSource
+  location: class AbstractNonIdentifierAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/AbstractNonIdentifierAttribute.java:45: error: cannot find symbol
+	protected AttributeSource source() {
+	          ^
+  symbol:   class AttributeSource
+  location: class AbstractNonIdentifierAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/Helper.java:70: error: cannot find symbol
+		private final EmbeddedType compositeType;
+		              ^
+  symbol:   class EmbeddedType
+  location: class ComponentAttributeSource
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/Helper.java:73: error: cannot find symbol
+		public ComponentAttributeSource(EmbeddedType compositeType) {
+		                                ^
+  symbol:   class EmbeddedType
+  location: class ComponentAttributeSource
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/domain/internal/SingleTableEntityDescriptor.java:30: error: package org.hibernate.metadata does not exist
+import org.hibernate.metadata.ClassMetadata;
+                             ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/domain/internal/SingleTableEntityDescriptor.java:328: error: cannot find symbol
+	public ClassMetadata getClassMetadata() {
+	       ^
+  symbol:   class ClassMetadata
+  location: class SingleTableEntityDescriptor<T>
+  where T is a type-variable:
+    T extends Object declared in class SingleTableEntityDescriptor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/procedure/internal/Util.java:18: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/procedure/internal/Util.java:19: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/procedure/internal/Util.java:20: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/procedure/internal/Util.java:58: error: cannot find symbol
+	public static NativeSQLQueryReturn[] copy(NativeSQLQueryReturn[] queryReturns) {
+	                                          ^
+  symbol:   class NativeSQLQueryReturn
+  location: class Util
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/procedure/internal/Util.java:58: error: cannot find symbol
+	public static NativeSQLQueryReturn[] copy(NativeSQLQueryReturn[] queryReturns) {
+	              ^
+  symbol:   class NativeSQLQueryReturn
+  location: class Util
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/procedure/internal/Util.java:286: error: cannot find symbol
+		private QueryResultAssembler buildDynamicInstantiationAssembler(NativeSQLQueryConstructorReturn nativeQueryReturn) {
+		                                                                ^
+  symbol:   class NativeSQLQueryConstructorReturn
+  location: class QueryReturnResolver
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/map/MapProxyFactory.java:17: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/map/MapProxyFactory.java:32: error: cannot find symbol
+			EmbeddedType componentIdType) throws HibernateException {
+			^
+  symbol:   class EmbeddedType
+  location: class MapProxyFactory
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/bytebuddy/ByteBuddyInterceptor.java:18: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/BasicLazyInitializer.java:16: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/bytebuddy/ByteBuddyInterceptor.java:34: error: cannot find symbol
+			EmbeddedType componentIdType,
+			^
+  symbol:   class EmbeddedType
+  location: class ByteBuddyInterceptor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/BasicLazyInitializer.java:31: error: cannot find symbol
+	protected final EmbeddedType componentIdType;
+	                ^
+  symbol:   class EmbeddedType
+  location: class BasicLazyInitializer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/BasicLazyInitializer.java:41: error: cannot find symbol
+			EmbeddedType componentIdType,
+			^
+  symbol:   class EmbeddedType
+  location: class BasicLazyInitializer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/bytebuddy/ByteBuddyProxyFactory.java:27: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/bytebuddy/ByteBuddyProxyFactory.java:52: error: cannot find symbol
+	private EmbeddedType componentIdType;
+	        ^
+  symbol:   class EmbeddedType
+  location: class ByteBuddyProxyFactory
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/bytebuddy/ByteBuddyProxyFactory.java:64: error: cannot find symbol
+			EmbeddedType componentIdType) throws HibernateException {
+			^
+  symbol:   class EmbeddedType
+  location: class ByteBuddyProxyFactory
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/bytebuddy/SerializableProxy.java:14: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/bytebuddy/SerializableProxy.java:27: error: cannot find symbol
+	private final EmbeddedType componentIdType;
+	              ^
+  symbol:   class EmbeddedType
+  location: class SerializableProxy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/bytebuddy/SerializableProxy.java:37: error: cannot find symbol
+			EmbeddedType componentIdType) {
+			^
+  symbol:   class EmbeddedType
+  location: class SerializableProxy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/bytebuddy/SerializableProxy.java:102: error: cannot find symbol
+	protected EmbeddedType getComponentIdType() {
+	          ^
+  symbol:   class EmbeddedType
+  location: class SerializableProxy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/javassist/JavassistLazyInitializer.java:19: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/javassist/JavassistLazyInitializer.java:42: error: cannot find symbol
+			EmbeddedType componentIdType,
+			^
+  symbol:   class EmbeddedType
+  location: class JavassistLazyInitializer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/javassist/JavassistProxyFactory.java:24: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/javassist/JavassistProxyFactory.java:48: error: cannot find symbol
+	private EmbeddedType componentIdType;
+	        ^
+  symbol:   class EmbeddedType
+  location: class JavassistProxyFactory
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/javassist/JavassistProxyFactory.java:63: error: cannot find symbol
+			EmbeddedType componentIdType) throws HibernateException {
+			^
+  symbol:   class EmbeddedType
+  location: class JavassistProxyFactory
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/javassist/SerializableProxy.java:14: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/javassist/SerializableProxy.java:30: error: cannot find symbol
+	private final EmbeddedType componentIdType;
+	              ^
+  symbol:   class EmbeddedType
+  location: class SerializableProxy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/javassist/SerializableProxy.java:40: error: cannot find symbol
+			EmbeddedType componentIdType) {
+			^
+  symbol:   class EmbeddedType
+  location: class SerializableProxy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/javassist/SerializableProxy.java:105: error: cannot find symbol
+	protected EmbeddedType getComponentIdType() {
+	          ^
+  symbol:   class EmbeddedType
+  location: class SerializableProxy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/criteria/internal/path/MapKeyHelpers.java:168: error: cannot find symbol
+		private final org.hibernate.type.spi.Type mapKeyType;
+		                                    ^
+  symbol:   class Type
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeInterpretationsKey.java:12: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryImpl.java:33: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryImpl.java:34: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryImpl.java:35: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeInterpretationsKey.java:54: error: cannot find symbol
+	private final List<NativeSQLQueryReturn> queryReturns;
+	                   ^
+  symbol:   class NativeSQLQueryReturn
+  location: class NativeInterpretationsKey
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeInterpretationsKey.java:69: error: cannot find symbol
+			List<NativeSQLQueryReturn> queryReturns,
+			     ^
+  symbol:   class NativeSQLQueryReturn
+  location: class NativeInterpretationsKey
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryImpl.java:71: error: cannot find symbol
+	private List<NativeSQLQueryReturn> queryReturns;
+	             ^
+  symbol:   class NativeSQLQueryReturn
+  location: class NativeQueryImpl<R>
+  where R is a type-variable:
+    R extends Object declared in class NativeQueryImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryReturnBuilder.java:9: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryImpl.java:112: error: cannot find symbol
+			List<NativeSQLQueryReturn> queryReturns) {
+			     ^
+  symbol:   class NativeSQLQueryReturn
+  location: class NativeQueryImpl<R>
+  where R is a type-variable:
+    R extends Object declared in class NativeQueryImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryImpl.java:137: error: cannot find symbol
+	private static List<NativeSQLQueryReturn> collectQueryReturns(
+	                    ^
+  symbol:   class NativeSQLQueryReturn
+  location: class NativeQueryImpl<R>
+  where R is a type-variable:
+    R extends Object declared in class NativeQueryImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryImpl.java:217: error: cannot find symbol
+	public List<NativeSQLQueryReturn> getQueryReturns() {
+	            ^
+  symbol:   class NativeSQLQueryReturn
+  location: class NativeQueryImpl<R>
+  where R is a type-variable:
+    R extends Object declared in class NativeQueryImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryReturnBuilder.java:15: error: cannot find symbol
+	NativeSQLQueryReturn buildReturn();
+	^
+  symbol:   class NativeSQLQueryReturn
+  location: interface NativeQueryReturnBuilder
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryInterpreterStandardImpl.java:9: error: package org.hibernate.engine.query.spi does not exist
+import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryInterpreterStandardImpl.java:10: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryInterpreterStandardImpl.java:12: error: package org.hibernate.loader.custom does not exist
+import org.hibernate.loader.custom.CustomQuery;
+                                  ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryInterpreterStandardImpl.java:13: error: package org.hibernate.loader.custom.sql does not exist
+import org.hibernate.loader.custom.sql.SQLCustomQuery;
+                                      ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/spi/NativeQueryInterpreter.java:11: error: package org.hibernate.engine.query.spi does not exist
+import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/spi/NativeQueryInterpreter.java:12: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryInterpreterStandardImpl.java:33: error: cannot find symbol
+			NativeSQLQuerySpecification specification,
+			^
+  symbol:   class NativeSQLQuerySpecification
+  location: class NativeQueryInterpreterStandardImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryInterpreterStandardImpl.java:32: error: cannot find symbol
+	public NativeSQLQueryPlan createQueryPlan(
+	       ^
+  symbol:   class NativeSQLQueryPlan
+  location: class NativeQueryInterpreterStandardImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/spi/NativeQueryInterpreter.java:42: error: cannot find symbol
+			NativeSQLQuerySpecification specification,
+			^
+  symbol:   class NativeSQLQuerySpecification
+  location: interface NativeQueryInterpreter
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/spi/NativeQueryInterpreter.java:41: error: cannot find symbol
+	NativeSQLQueryPlan createQueryPlan(
+	^
+  symbol:   class NativeSQLQueryPlan
+  location: interface NativeQueryInterpreter
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryReturnBuilderFetchImpl.java:13: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryJoinReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryReturnBuilderFetchImpl.java:14: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryReturnBuilderFetchImpl.java:65: error: cannot find symbol
+	public NativeSQLQueryReturn buildReturn() {
+	       ^
+  symbol:   class NativeSQLQueryReturn
+  location: class NativeQueryReturnBuilderFetchImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryReturnBuilderRootImpl.java:13: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryReturnBuilderRootImpl.java:14: error: package org.hibernate.engine.query.spi.sql does not exist
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryReturnBuilderRootImpl.java:68: error: cannot find symbol
+	public NativeSQLQueryReturn buildReturn() {
+	       ^
+  symbol:   class NativeSQLQueryReturn
+  location: class NativeQueryReturnBuilderRootImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/ParameterParser.java:10: error: package org.hibernate.hql.internal.classic does not exist
+import org.hibernate.hql.internal.classic.ParserHelper;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/QueryParameterPositionalImpl.java:10: error: package org.hibernate.persister.common.spi does not exist
+import org.hibernate.persister.common.spi.TypeExporter;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/QueryParameterNamedImpl.java:10: error: package org.hibernate.persister.common.spi does not exist
+import org.hibernate.persister.common.spi.TypeExporter;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/produce/internal/SemanticQueryProducerImpl.java:16: error: package org.hibernate.query.sqm.hql.internal.antlr does not exist
+import org.hibernate.query.sqm.hql.internal.antlr.HqlParser;
+                                                 ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/produce/internal/hql/HqlParseTreeBuilder.java:9: error: package org.hibernate.query.sqm.hql.internal.antlr does not exist
+import org.hibernate.query.sqm.hql.internal.antlr.HqlParser;
+                                                 ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/produce/internal/hql/HqlParseTreeBuilder.java:10: error: package org.hibernate.query.sqm.hql.internal.antlr does not exist
+import org.hibernate.query.sqm.hql.internal.antlr.HqlLexer;
+                                                 ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/produce/internal/hql/HqlParseTreeBuilder.java:29: error: cannot find symbol
+	public HqlParser parseHql(String hql) {
+	       ^
+  symbol:   class HqlParser
+  location: class HqlParseTreeBuilder
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/produce/internal/hql/HqlParseTreePrinter.java:9: error: package org.hibernate.query.sqm.hql.internal.antlr does not exist
+import org.hibernate.query.sqm.hql.internal.antlr.HqlParser;
+                                                 ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/produce/internal/hql/HqlParseTreePrinter.java:10: error: package org.hibernate.query.sqm.hql.internal.antlr does not exist
+import org.hibernate.query.sqm.hql.internal.antlr.HqlParserBaseListener;
+                                                 ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/produce/internal/hql/HqlParseTreePrinter.java:21: error: cannot find symbol
+public class HqlParseTreePrinter extends HqlParserBaseListener {
+                                         ^
+  symbol: class HqlParserBaseListener
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/produce/internal/hql/HqlParseTreePrinter.java:24: error: cannot find symbol
+	public static void logParseTree(HqlParser parser) {
+	                                ^
+  symbol:   class HqlParser
+  location: class HqlParseTreePrinter
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/produce/internal/hql/HqlParseTreePrinter.java:33: error: cannot find symbol
+	private final HqlParser parser;
+	              ^
+  symbol:   class HqlParser
+  location: class HqlParseTreePrinter
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/produce/internal/hql/HqlParseTreePrinter.java:37: error: cannot find symbol
+	public HqlParseTreePrinter(HqlParser parser) {
+	                           ^
+  symbol:   class HqlParser
+  location: class HqlParseTreePrinter
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/service/internal/StandardSessionFactoryServiceInitiators.java:13: error: package org.hibernate.engine.query.spi does not exist
+import org.hibernate.engine.query.spi.NativeQueryInterpreterInitiator;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/NodeSupport.java:9: error: package antlr does not exist
+import antlr.CommonAST;
+            ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/NodeSupport.java:16: error: cannot find symbol
+public class NodeSupport extends CommonAST implements Node {
+                                 ^
+  symbol: class CommonAST
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/Factory.java:9: error: package antlr does not exist
+import antlr.ASTFactory;
+            ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/Factory.java:16: error: cannot find symbol
+public class Factory extends ASTFactory implements OrderByTemplateTokenTypes {
+                             ^
+  symbol: class ASTFactory
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/Factory.java:16: error: cannot find symbol
+public class Factory extends ASTFactory implements OrderByTemplateTokenTypes {
+                                                   ^
+  symbol: class OrderByTemplateTokenTypes
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:11: error: package org.hibernate.hql.internal.ast.util does not exist
+import org.hibernate.hql.internal.ast.util.ASTPrinter;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:16: error: package antlr.collections does not exist
+import antlr.collections.AST;
+                        ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:25: error: cannot find symbol
+public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
+                                             ^
+  symbol: class GeneratedOrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:28: error: cannot find symbol
+	private static final ASTPrinter printer = new ASTPrinter( GeneratedOrderByFragmentRendererTokenTypes.class );
+	                     ^
+  symbol:   class ASTPrinter
+  location: class OrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:37: error: cannot find symbol
+	protected void out(AST ast) {
+	                   ^
+  symbol:   class AST
+  location: class OrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:47: error: cannot find symbol
+	public void traceIn(String ruleName, AST tree) {
+	                                     ^
+  symbol:   class AST
+  location: class OrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:56: error: cannot find symbol
+	private String buildTraceNodeName(AST tree) {
+	                                  ^
+  symbol:   class AST
+  location: class OrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:63: error: cannot find symbol
+	public void traceOut(String ruleName, AST tree) {
+	                                      ^
+  symbol:   class AST
+  location: class OrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:13: error: package org.hibernate.hql.internal.ast.util does not exist
+import org.hibernate.hql.internal.ast.util.ASTPrinter;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:9: error: package antlr.collections does not exist
+import antlr.collections.AST;
+                        ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:21: error: package antlr does not exist
+import antlr.CommonAST;
+            ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:22: error: package antlr does not exist
+import antlr.TokenStream;
+            ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:23: error: package antlr.collections does not exist
+import antlr.collections.AST;
+                        ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:31: error: cannot find symbol
+public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
+                                           ^
+  symbol: class GeneratedOrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:38: error: cannot find symbol
+	public OrderByFragmentParser(TokenStream lexer, TranslationContext context) {
+	                             ^
+  symbol:   class TokenStream
+  location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:49: error: cannot find symbol
+	protected AST quotedIdentifier(AST ident) {
+	                               ^
+  symbol:   class AST
+  location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:49: error: cannot find symbol
+	protected AST quotedIdentifier(AST ident) {
+	          ^
+  symbol:   class AST
+  location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:60: error: cannot find symbol
+	protected AST quotedString(AST ident) {
+	                           ^
+  symbol:   class AST
+  location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:60: error: cannot find symbol
+	protected AST quotedString(AST ident) {
+	          ^
+  symbol:   class AST
+  location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:69: error: cannot find symbol
+	protected boolean isFunctionName(AST ast) {
+	                                 ^
+  symbol:   class AST
+  location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:95: error: cannot find symbol
+	protected AST resolveFunction(AST ast) {
+	                              ^
+  symbol:   class AST
+  location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:95: error: cannot find symbol
+	protected AST resolveFunction(AST ast) {
+	          ^
+  symbol:   class AST
+  location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:133: error: cannot find symbol
+	private String resolveFunctionArgument(AST argumentNode) {
+	                                       ^
+  symbol:   class AST
+  location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:159: error: cannot find symbol
+	protected AST resolveIdent(AST ident) {
+	                           ^
+  symbol:   class AST
+  location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:159: error: cannot find symbol
+	protected AST resolveIdent(AST ident) {
+	          ^
+  symbol:   class AST
+  location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:188: error: cannot find symbol
+	private AST processSqlValueReference(SqlValueReference sqlValueReference) {
+	        ^
+  symbol:   class AST
+  location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:247: error: cannot find symbol
+	protected AST postProcessSortSpecification(AST sortSpec) {
+	                                           ^
+  symbol:   class AST
+  location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:247: error: cannot find symbol
+	protected AST postProcessSortSpecification(AST sortSpec) {
+	          ^
+  symbol:   class AST
+  location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:271: error: cannot find symbol
+			AST ident,
+			^
+  symbol:   class AST
+  location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/produce/sqm/spi/ConversionHelper.java:23: error: cannot find symbol
+import org.hibernate.type.spi.EntityType;
+                             ^
+  symbol:   class EntityType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/produce/metamodel/spi/NamedQueryCollectionInitializer.java:16: error: package org.hibernate.loader.collection does not exist
+import org.hibernate.loader.collection.CollectionInitializer;
+                                      ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/produce/metamodel/spi/NamedQueryCollectionInitializer.java:27: error: cannot find symbol
+public final class NamedQueryCollectionInitializer implements CollectionInitializer {
+                                                              ^
+  symbol: class CollectionInitializer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/produce/metamodel/spi/NamedQueryLoader.java:16: error: package org.hibernate.loader.entity does not exist
+import org.hibernate.loader.entity.UniqueEntityLoader;
+                                  ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/produce/metamodel/spi/NamedQueryLoader.java:18: error: package org.hibernate.query.internal.old does not exist
+import org.hibernate.query.internal.old.AbstractProducedQuery;
+                                       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/produce/metamodel/spi/NamedQueryLoader.java:27: error: cannot find symbol
+public final class NamedQueryLoader implements UniqueEntityLoader {
+                                               ^
+  symbol: class UniqueEntityLoader
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/exec/internal/JdbcCallParameterRegistrationImpl.java:18: error: cannot find symbol
+import org.hibernate.type.ProcedureParameterExtractionAware;
+                         ^
+  symbol:   class ProcedureParameterExtractionAware
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/exec/internal/JdbcCallParameterExtractorImpl.java:14: error: cannot find symbol
+import org.hibernate.type.ProcedureParameterExtractionAware;
+                         ^
+  symbol:   class ProcedureParameterExtractionAware
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/exec/internal/JdbcCallParameterBinderImpl.java:17: error: cannot find symbol
+import org.hibernate.type.ProcedureParameterNamedBinder;
+                         ^
+  symbol:   class ProcedureParameterNamedBinder
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/exec/results/internal/JdbcValuesSourceProcessingStateStandardImpl.java:45: error: cannot find symbol
+import org.hibernate.type.TypeHelper;
+                         ^
+  symbol:   class TypeHelper
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/exec/results/internal/RowProcessingStateStandardImpl.java:11: error: package org.hibernate.loader.plan.spi does not exist
+import org.hibernate.loader.plan.spi.EntityFetch;
+                                    ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/exec/results/internal/RowProcessingStateStandardImpl.java:63: error: cannot find symbol
+	public void registerNonExists(EntityFetch fetch) {
+	                              ^
+  symbol:   class EntityFetch
+  location: class RowProcessingStateStandardImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/hbm2ddl/MultipleLinesSqlCommandExtractor.java:12: error: package org.hibernate.hql.internal.antlr does not exist
+import org.hibernate.hql.internal.antlr.SqlStatementLexer;
+                                       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/hbm2ddl/MultipleLinesSqlCommandExtractor.java:13: error: package org.hibernate.hql.internal.antlr does not exist
+import org.hibernate.hql.internal.antlr.SqlStatementParser;
+                                       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedBasicAttribute.java:10: error: package org.hibernate.persister.walking.spi does not exist
+import org.hibernate.persister.walking.spi.AttributeSource;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedBasicAttribute.java:20: error: cannot find symbol
+			AttributeSource source,
+			^
+  symbol:   class AttributeSource
+  location: class CompositeBasedBasicAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/AbstractCompositionAttribute.java:13: error: package org.hibernate.persister.collection does not exist
+import org.hibernate.persister.collection.QueryableCollection;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/AbstractCompositionAttribute.java:15: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Joinable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/AbstractCompositionAttribute.java:16: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.OuterJoinLoadable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/AbstractCompositionAttribute.java:17: error: package org.hibernate.persister.walking.spi does not exist
+import org.hibernate.persister.walking.spi.AssociationKey;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/AbstractCompositionAttribute.java:18: error: package org.hibernate.persister.walking.spi does not exist
+import org.hibernate.persister.walking.spi.AttributeDefinition;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/AbstractCompositionAttribute.java:19: error: package org.hibernate.persister.walking.spi does not exist
+import org.hibernate.persister.walking.spi.AttributeSource;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/AbstractCompositionAttribute.java:20: error: package org.hibernate.persister.walking.spi does not exist
+import org.hibernate.persister.walking.spi.CompositionDefinition;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/AbstractCompositionAttribute.java:23: error: cannot find symbol
+import org.hibernate.type.spi.AssociationType;
+                             ^
+  symbol:   class AssociationType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/AbstractCompositionAttribute.java:24: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/AbstractCompositionAttribute.java:39: error: cannot find symbol
+		implements CompositionDefinition {
+		           ^
+  symbol: class CompositionDefinition
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/AbstractCompositionAttribute.java:44: error: cannot find symbol
+			AttributeSource source,
+			^
+  symbol:   class AttributeSource
+  location: class AbstractCompositionAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/AbstractCompositionAttribute.java:48: error: cannot find symbol
+			EmbeddedType attributeType,
+			^
+  symbol:   class EmbeddedType
+  location: class AbstractCompositionAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/AbstractCompositionAttribute.java:56: error: cannot find symbol
+	public EmbeddedType getType() {
+	       ^
+  symbol:   class EmbeddedType
+  location: class AbstractCompositionAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/AbstractCompositionAttribute.java:61: error: cannot find symbol
+	public Iterable<AttributeDefinition> getAttributes() {
+	                ^
+  symbol:   class AttributeDefinition
+  location: class AbstractCompositionAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositionBasedCompositionAttribute.java:11: error: package org.hibernate.persister.walking.spi does not exist
+import org.hibernate.persister.walking.spi.EntityDefinition;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositionBasedCompositionAttribute.java:13: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositionBasedCompositionAttribute.java:25: error: cannot find symbol
+			EmbeddedType attributeType,
+			^
+  symbol:   class EmbeddedType
+  location: class CompositionBasedCompositionAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedAssociationAttribute.java:28: error: cannot find symbol
+		implements NonIdentifierAttribute, AssociationAttributeDefinition {
+		                                   ^
+  symbol: class AssociationAttributeDefinition
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedAssociationAttribute.java:31: error: cannot find symbol
+	private final AssociationKey associationKey;
+	              ^
+  symbol:   class AssociationKey
+  location: class CompositeBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedAssociationAttribute.java:32: error: cannot find symbol
+	private Joinable joinable;
+	        ^
+  symbol:   class Joinable
+  location: class CompositeBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedAssociationAttribute.java:39: error: cannot find symbol
+			AssociationType attributeType,
+			^
+  symbol:   class AssociationType
+  location: class CompositeBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedAssociationAttribute.java:42: error: cannot find symbol
+			AssociationKey associationKey) {
+			^
+  symbol:   class AssociationKey
+  location: class CompositeBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedAssociationAttribute.java:49: error: cannot find symbol
+	public AssociationType getType() {
+	       ^
+  symbol:   class AssociationType
+  location: class CompositeBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedAssociationAttribute.java:58: error: cannot find symbol
+	protected Joinable getJoinable() {
+	          ^
+  symbol:   class Joinable
+  location: class CompositeBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedAssociationAttribute.java:66: error: cannot find symbol
+	public AssociationKey getAssociationKey() {
+	       ^
+  symbol:   class AssociationKey
+  location: class CompositeBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedAssociationAttribute.java:71: error: cannot find symbol
+	public AssociationNature getAssociationNature() {
+	       ^
+  symbol:   class AssociationNature
+  location: class CompositeBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedAssociationAttribute.java:98: error: cannot find symbol
+	public AnyMappingDefinition toAnyDefinition() {
+	       ^
+  symbol:   class AnyMappingDefinition
+  location: class CompositeBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedAssociationAttribute.java:107: error: cannot find symbol
+	public EntityDefinition toEntityDefinition() {
+	       ^
+  symbol:   class EntityDefinition
+  location: class CompositeBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedAssociationAttribute.java:118: error: cannot find symbol
+	public CollectionDefinition toCollectionDefinition() {
+	       ^
+  symbol:   class CollectionDefinition
+  location: class CompositeBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedAssociationAttribute.java:129: error: cannot find symbol
+	public FetchStrategy determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath) {
+	                                                                                   ^
+  symbol:   class PropertyPath
+  location: class CompositeBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedAssociationAttribute.java:145: error: cannot find symbol
+	protected FetchStyle determineFetchStyleByMetadata(FetchMode fetchMode, AssociationType type) {
+	                                                                        ^
+  symbol:   class AssociationType
+  location: class CompositeBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:31: error: cannot find symbol
+import org.hibernate.loader.PropertyPath;
+                           ^
+  symbol:   class PropertyPath
+  location: package org.hibernate.loader
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:41: error: cannot find symbol
+import org.hibernate.type.ComponentType;
+                         ^
+  symbol:   class ComponentType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:42: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:43: error: cannot find symbol
+import org.hibernate.type.spi.EntityType;
+                             ^
+  symbol:   class EntityType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:71: error: cannot find symbol
+	private final EmbeddedType identifierMapperType;
+	              ^
+  symbol:   class EmbeddedType
+  location: class AbstractEntityTuplizer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:275: error: cannot find symbol
+			ComponentType mappedIdClassComponentType,
+			^
+  symbol:   class ComponentType
+  location: class AbstractEntityTuplizer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:276: error: cannot find symbol
+			ComponentType virtualIdComponent) {
+			^
+  symbol:   class ComponentType
+  location: class AbstractEntityTuplizer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:572: error: cannot find symbol
+	protected Object getComponentValue(ComponentType type, Object component, String propertyPath) {
+	                                   ^
+  symbol:   class ComponentType
+  location: class AbstractEntityTuplizer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:595: error: cannot find symbol
+	private int findSubPropertyIndex(ComponentType type, String subPropertyName) {
+	                                 ^
+  symbol:   class ComponentType
+  location: class AbstractEntityTuplizer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/PojoEntityTuplizer.java:38: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:307: error: cannot find symbol
+		private final ComponentType virtualIdComponent;
+		              ^
+  symbol:   class ComponentType
+  location: class NormalMappedIdentifierValueMarshaller
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:308: error: cannot find symbol
+		private final ComponentType mappedIdentifierType;
+		              ^
+  symbol:   class ComponentType
+  location: class NormalMappedIdentifierValueMarshaller
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:311: error: cannot find symbol
+				ComponentType virtualIdComponent,
+				^
+  symbol:   class ComponentType
+  location: class NormalMappedIdentifierValueMarshaller
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:312: error: cannot find symbol
+				ComponentType mappedIdentifierType) {
+				^
+  symbol:   class ComponentType
+  location: class NormalMappedIdentifierValueMarshaller
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:337: error: cannot find symbol
+		private final ComponentType virtualIdComponent;
+		              ^
+  symbol:   class ComponentType
+  location: class IncrediblySillyJpaMapsIdMappedIdentifierValueMarshaller
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:338: error: cannot find symbol
+		private final ComponentType mappedIdentifierType;
+		              ^
+  symbol:   class ComponentType
+  location: class IncrediblySillyJpaMapsIdMappedIdentifierValueMarshaller
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:341: error: cannot find symbol
+				ComponentType virtualIdComponent,
+				^
+  symbol:   class ComponentType
+  location: class IncrediblySillyJpaMapsIdMappedIdentifierValueMarshaller
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/AbstractEntityTuplizer.java:342: error: cannot find symbol
+				ComponentType mappedIdentifierType) {
+				^
+  symbol:   class ComponentType
+  location: class IncrediblySillyJpaMapsIdMappedIdentifierValueMarshaller
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:15: error: cannot find symbol
+import org.hibernate.loader.PropertyPath;
+                           ^
+  symbol:   class PropertyPath
+  location: package org.hibernate.loader
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:16: error: package org.hibernate.persister.collection does not exist
+import org.hibernate.persister.collection.QueryableCollection;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:18: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Joinable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:19: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.OuterJoinLoadable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:21: error: package org.hibernate.persister.walking.internal does not exist
+import org.hibernate.persister.walking.internal.FetchStrategyHelper;
+                                               ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:22: error: package org.hibernate.persister.walking.internal does not exist
+import org.hibernate.persister.walking.internal.StandardAnyTypeDefinition;
+                                               ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:23: error: package org.hibernate.persister.walking.spi does not exist
+import org.hibernate.persister.walking.spi.AnyMappingDefinition;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:24: error: package org.hibernate.persister.walking.spi does not exist
+import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:25: error: package org.hibernate.persister.walking.spi does not exist
+import org.hibernate.persister.walking.spi.AssociationKey;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:26: error: package org.hibernate.persister.walking.spi does not exist
+import org.hibernate.persister.walking.spi.CollectionDefinition;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:27: error: package org.hibernate.persister.walking.spi does not exist
+import org.hibernate.persister.walking.spi.EntityDefinition;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:28: error: package org.hibernate.persister.walking.spi does not exist
+import org.hibernate.persister.walking.spi.WalkingException;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:30: error: cannot find symbol
+import org.hibernate.type.AnyType;
+                         ^
+  symbol:   class AnyType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:31: error: cannot find symbol
+import org.hibernate.type.spi.AssociationType;
+                             ^
+  symbol:   class AssociationType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:43: error: cannot find symbol
+		implements AssociationAttributeDefinition {
+		           ^
+  symbol: class AssociationAttributeDefinition
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:51: error: cannot find symbol
+			AssociationType attributeType,
+			^
+  symbol:   class AssociationType
+  location: class EntityBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:57: error: cannot find symbol
+	public AssociationType getType() {
+	       ^
+  symbol:   class AssociationType
+  location: class EntityBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:61: error: cannot find symbol
+	public AssociationKey getAssociationKey() {
+	       ^
+  symbol:   class AssociationKey
+  location: class EntityBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:101: error: cannot find symbol
+	public AssociationNature getAssociationNature() {
+	       ^
+  symbol:   class AssociationNature
+  location: class EntityBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:116: error: cannot find symbol
+	public AnyMappingDefinition toAnyDefinition() {
+	       ^
+  symbol:   class AnyMappingDefinition
+  location: class EntityBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:123: error: cannot find symbol
+	private Joinable joinable;
+	        ^
+  symbol:   class Joinable
+  location: class EntityBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:125: error: cannot find symbol
+	protected Joinable getJoinable() {
+	          ^
+  symbol:   class Joinable
+  location: class EntityBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:137: error: cannot find symbol
+	public EntityDefinition toEntityDefinition() {
+	       ^
+  symbol:   class EntityDefinition
+  location: class EntityBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:148: error: cannot find symbol
+	public CollectionDefinition toCollectionDefinition() {
+	       ^
+  symbol:   class CollectionDefinition
+  location: class EntityBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedAssociationAttribute.java:159: error: cannot find symbol
+	public FetchStrategy determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath) {
+	                                                                                   ^
+  symbol:   class PropertyPath
+  location: class EntityBasedAssociationAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedCompositionAttribute.java:11: error: package org.hibernate.persister.walking.spi does not exist
+import org.hibernate.persister.walking.spi.CompositionDefinition;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedCompositionAttribute.java:14: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedCompositionAttribute.java:21: error: cannot find symbol
+		implements CompositionDefinition {
+		           ^
+  symbol: class CompositionDefinition
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/entity/EntityBasedCompositionAttribute.java:28: error: cannot find symbol
+			EmbeddedType attributeType,
+			^
+  symbol:   class EmbeddedType
+  location: class EntityBasedCompositionAttribute
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/PropertyFactory.java:33: error: cannot find symbol
+import org.hibernate.type.spi.AssociationType;
+                             ^
+  symbol:   class AssociationType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/PropertyFactory.java:35: error: cannot find symbol
+import org.hibernate.type.spi.EmbeddedType;
+                             ^
+  symbol:   class EmbeddedType
+  location: package org.hibernate.type.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/configuration/internal/metadata/AuditMetadataGenerator.java:44: error: cannot find symbol
+import org.hibernate.type.CollectionType;
+                         ^
+  symbol:   class CollectionType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/configuration/internal/metadata/AuditMetadataGenerator.java:45: error: cannot find symbol
+import org.hibernate.type.ComponentType;
+                         ^
+  symbol:   class ComponentType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/configuration/internal/metadata/AuditMetadataGenerator.java:46: error: cannot find symbol
+import org.hibernate.type.ManyToOneType;
+                         ^
+  symbol:   class ManyToOneType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/configuration/internal/metadata/AuditMetadataGenerator.java:47: error: cannot find symbol
+import org.hibernate.type.OneToOneType;
+                         ^
+  symbol:   class OneToOneType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/configuration/internal/metadata/BasicMetadataGenerator.java:16: error: cannot find symbol
+import org.hibernate.type.CustomType;
+                         ^
+  symbol:   class CustomType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/configuration/internal/metadata/BasicMetadataGenerator.java:17: error: cannot find symbol
+import org.hibernate.type.EnumType;
+                         ^
+  symbol:   class EnumType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/configuration/internal/metadata/BasicMetadataGenerator.java:18: error: cannot find symbol
+import org.hibernate.type.SerializableToBlobType;
+                         ^
+  symbol:   class SerializableToBlobType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/configuration/internal/metadata/IdMetadataGenerator.java:25: error: cannot find symbol
+import org.hibernate.type.ManyToOneType;
+                         ^
+  symbol:   class ManyToOneType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/configuration/internal/metadata/CollectionMetadataGenerator.java:75: error: cannot find symbol
+import org.hibernate.type.internal.BagType;
+                                  ^
+  symbol:   class BagType
+  location: package org.hibernate.type.internal
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/configuration/internal/metadata/CollectionMetadataGenerator.java:76: error: cannot find symbol
+import org.hibernate.type.ComponentType;
+                         ^
+  symbol:   class ComponentType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/configuration/internal/metadata/CollectionMetadataGenerator.java:77: error: cannot find symbol
+import org.hibernate.type.internal.ListType;
+                                  ^
+  symbol:   class ListType
+  location: package org.hibernate.type.internal
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/configuration/internal/metadata/CollectionMetadataGenerator.java:78: error: cannot find symbol
+import org.hibernate.type.ManyToOneType;
+                         ^
+  symbol:   class ManyToOneType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/configuration/internal/metadata/CollectionMetadataGenerator.java:79: error: cannot find symbol
+import org.hibernate.type.internal.MapType;
+                                  ^
+  symbol:   class MapType
+  location: package org.hibernate.type.internal
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/configuration/internal/metadata/CollectionMetadataGenerator.java:80: error: cannot find symbol
+import org.hibernate.type.internal.SetType;
+                                  ^
+  symbol:   class SetType
+  location: package org.hibernate.type.internal
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/configuration/internal/metadata/CollectionMetadataGenerator.java:81: error: cannot find symbol
+import org.hibernate.type.internal.SortedMapType;
+                                  ^
+  symbol:   class SortedMapType
+  location: package org.hibernate.type.internal
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/configuration/internal/metadata/CollectionMetadataGenerator.java:82: error: cannot find symbol
+import org.hibernate.type.internal.SortedSetType;
+                                  ^
+  symbol:   class SortedSetType
+  location: package org.hibernate.type.internal
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/event/spi/BaseEnversCollectionEventListener.java:27: error: package org.hibernate.persister.collection does not exist
+import org.hibernate.persister.collection.AbstractCollectionPersister;
+                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/query/criteria/internal/CriteriaTools.java:21: error: cannot find symbol
+import org.hibernate.type.EmbeddedComponentType;
+                         ^
+  symbol:   class EmbeddedComponentType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/query/criteria/internal/SimpleAuditExpression.java:17: error: cannot find symbol
+import org.hibernate.type.ComponentType;
+                         ^
+  symbol:   class ComponentType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:37: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:38: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.Queryable;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:39: error: package org.hibernate.persister.entity does not exist
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:42: error: cannot find symbol
+import org.hibernate.type.CollectionType;
+                         ^
+  symbol:   class CollectionType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:43: error: cannot find symbol
+import org.hibernate.type.ComponentType;
+                         ^
+  symbol:   class ComponentType
+  location: package org.hibernate.type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:571: error: cannot find symbol
+			Queryable entityQueryable,
+			^
+  symbol:   class Queryable
+  location: class ValidityAuditStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:572: error: cannot find symbol
+			Queryable auditedEntityQueryable,
+			^
+  symbol:   class Queryable
+  location: class ValidityAuditStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:587: error: cannot find symbol
+	private Queryable getQueryable(String entityName, SessionImplementor sessionImplementor) {
+	        ^
+  symbol:   class Queryable
+  location: class ValidityAuditStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:599: error: cannot find symbol
+	private String getUpdateTableName(Queryable rootProductionEntityQueryable,
+	                                  ^
+  symbol:   class Queryable
+  location: class ValidityAuditStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:600: error: cannot find symbol
+			Queryable rootAuditedEntityQueryable,
+			^
+  symbol:   class Queryable
+  location: class ValidityAuditStrategy
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:601: error: cannot find symbol
+			Queryable auditedEntityQueryable) {
+			^
+  symbol:   class Queryable
+  location: class ValidityAuditStrategy
+490 errors
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':hibernate-core:compileJava'.
+> Compilation failed; see the compiler error output for details.
+
+* Try:
+Run with --stacktrace option to get the stack trace. Run with --info or --debug option to get more log output.

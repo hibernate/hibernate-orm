@@ -19,7 +19,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
 
 /**
@@ -98,12 +97,6 @@ public final class IdentifierGeneratorHelper {
 		if ( ResultSetIdentifierConsumer.class.isInstance( type ) ) {
 			return ( (ResultSetIdentifierConsumer) type ).consumeIdentifier( rs );
 		}
-		if ( CustomType.class.isInstance( type ) ) {
-			final CustomType customType = (CustomType) type;
-			if ( ResultSetIdentifierConsumer.class.isInstance( customType.getUserType() ) ) {
-				return ( (ResultSetIdentifierConsumer) customType.getUserType() ).consumeIdentifier( rs );
-			}
-		}
 		ResultSetMetaData resultSetMetaData = null;
 		int columnCount = 1;
 		try {
@@ -114,7 +107,7 @@ public final class IdentifierGeneratorHelper {
 			//Oracle driver will throw NPE
 		}
 
-		Class clazz = type.getReturnedClass();
+		Class clazz = type.getJavaTypeDescriptor().getJavaType();
 		if ( columnCount == 1 ) {
 			if ( clazz == Long.class ) {
 				return rs.getLong( 1 );
@@ -136,7 +129,7 @@ public final class IdentifierGeneratorHelper {
 			}
 			else {
 				throw new IdentifierGenerationException(
-						"unrecognized id type : " + type.getName() + " -> " + clazz.getName()
+						"unrecognized id type : " + type.getJavaTypeDescriptor().getTypeName()  + " -> " + clazz.getName()
 				);
 			}
 		}
@@ -175,7 +168,7 @@ public final class IdentifierGeneratorHelper {
 		}
 		else {
 			throw new IdentifierGenerationException(
-					"unrecognized id type : " + type.getName() + " -> " + clazz.getName()
+					"unrecognized id type : " + type.getJavaTypeDescriptor().getTypeName() + " -> " + clazz.getName()
 			);
 		}
 	}

@@ -242,7 +242,7 @@ public class PostgreSQL81Dialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select relname from pg_class where relkind='S'";
+		return "select relname from pg_class where relkind='S' and pg_table_is_visible(oid)";
 	}
 
 	@Override

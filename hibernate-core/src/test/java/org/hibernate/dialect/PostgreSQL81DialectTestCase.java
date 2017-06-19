@@ -98,4 +98,15 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 			assertEquals( "PostgreSQL only supports accessing REF_CURSOR parameters by position", e.getMessage() );
 		}
 	}
+
+	@TestForIssue( jiraKey = "HHH-5538" )
+	public void testGetQuerySequencesString() {
+		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
+
+		String queryForSequences = dialect.getQuerySequencesString();
+
+		// verify that the query contains pg_table_is_visible filter, omitting it will yield sequences of all scheme's on the search_path
+		assertEquals("pg_table_is_visible filter is required to only return sequences visible within search_path",
+				"select relname from pg_class where relkind='S' and pg_table_is_visible(oid)",queryForSequences);
+	}
 }

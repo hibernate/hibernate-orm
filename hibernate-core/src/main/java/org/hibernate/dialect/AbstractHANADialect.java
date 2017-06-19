@@ -243,8 +243,8 @@ public abstract class AbstractHANADialect extends Dialect {
 		registerColumnType( Types.BIT, "smallint" );
 		registerColumnType( Types.TINYINT, "smallint" );
 
-		registerHibernateType( Types.NCLOB, StandardSpiBasicTypes.NCLOB.getName() );
-		registerHibernateType( Types.NVARCHAR, StandardSpiBasicTypes.STRING.getName() );
+		registerHibernateType( Types.NCLOB, StandardSpiBasicTypes.NCLOB.getJavaTypeDescriptor().getTypeName() );
+		registerHibernateType( Types.NVARCHAR, StandardSpiBasicTypes.STRING.getJavaTypeDescriptor().getTypeName() );
 
 		registerHanaKeywords();
 

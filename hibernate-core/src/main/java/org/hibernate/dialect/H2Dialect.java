@@ -73,6 +73,7 @@ public class H2Dialect extends Dialect {
 
 	private final String querySequenceString;
 	private final SequenceInformationExtractor sequenceInformationExtractor;
+	private final String timestampWithTimeZone;
 
 	/**
 	 * Constructs a H2Dialect
@@ -82,6 +83,7 @@ public class H2Dialect extends Dialect {
 
 		String querySequenceString = "select sequence_name from information_schema.sequences";
 		SequenceInformationExtractor sequenceInformationExtractor = SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
+		String timestampWithTimeZone = "timestamp";
 		try {
 			// HHH-2300
 			final Class h2ConstantsClass = ReflectHelper.classForName( "org.h2.engine.Constants" );
@@ -95,6 +97,18 @@ public class H2Dialect extends Dialect {
 			if ( ! ( majorVersion > 1 || minorVersion > 2 || buildId >= 139 ) ) {
 				LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
 			}
+			if ( majorVersion == 1 && minorVersion == 4 && buildId >= 192 && buildId <= 193 ) {
+				// 1.4.192 and 1.4.193 support only TIMESTAMP WITH TIMEZONE
+				// http://www.h2database.com/html/changelog.html
+				timestampWithTimeZone = "timestamp with timezone";
+			}
+			if ( ( majorVersion == 1 && minorVersion == 4 && buildId >= 194 )
+				|| ( majorVersion == 1 && minorVersion > 4 )
+				|| ( majorVersion > 1 ) ) {
+				// 1.4.194  and later support TIMESTAMP WITH TIME ZONE
+				// http://www.h2database.com/html/changelog.html
+				timestampWithTimeZone = "timestamp with time zone";
+			}
 		}
 		catch ( Exception e ) {
 			// probably H2 not in the classpath, though in certain app server environments it might just mean we are
@@ -104,6 +118,7 @@ public class H2Dialect extends Dialect {
 
 		this.querySequenceString = querySequenceString;
 		this.sequenceInformationExtractor = sequenceInformationExtractor;
+		this.timestampWithTimeZone = timestampWithTimeZone;
 
 		registerColumnType( Types.BOOLEAN, "boolean" );
 		registerColumnType( Types.BIGINT, "bigint" );
@@ -128,6 +143,8 @@ public class H2Dialect extends Dialect {
 		registerColumnType( Types.VARBINARY, "binary($l)" );
 		registerColumnType( Types.BLOB, "blob" );
 		registerColumnType( Types.CLOB, "clob" );
+		// when registration in superclass happens the instance variable is null
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, getTimestampWithTimeZone() );
 
 		// Aggregations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		registerFunction( "avg", new AvgWithArgumentCastFunction( "double" ) );
@@ -303,6 +320,11 @@ public class H2Dialect extends Dialect {
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
 		return sequenceInformationExtractor;
+	}
+
+	@Override
+	protected String getTimestampWithTimeZone() {
+		return timestampWithTimeZone;
 	}
 
 	@Override

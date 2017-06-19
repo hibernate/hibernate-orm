@@ -240,6 +240,18 @@ public class TeradataDialect extends Dialect implements IdTableSupport {
 	public String getCreateMultisetTableString() {
 		return "create multiset table ";
 	}
+	
+	@Override
+	protected String getTimeWithTimeZone() {
+		// www.info.teradata.com/download.cfm?ItemID=1003919
+		return "time with time zone";
+	}
+	
+	@Override
+	protected String getTimestampWithTimeZone() {
+		// www.info.teradata.com/download.cfm?ItemID=1003919
+		return "timestamp with time zone";
+	}
 
 	@Override
 	public boolean supportsLobValueChangePropogation() {

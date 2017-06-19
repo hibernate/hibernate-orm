@@ -8,6 +8,8 @@ package org.hibernate.boot.spi;
 
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.source.spi.HibernateTypeSource;
+import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.model.type.spi.TypeDefinitionRegistry;
 
 /**

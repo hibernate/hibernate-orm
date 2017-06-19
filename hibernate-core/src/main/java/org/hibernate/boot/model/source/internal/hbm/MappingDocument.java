@@ -26,7 +26,6 @@ import org.hibernate.boot.model.source.internal.OverriddenMappingDefaults;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
 import org.hibernate.boot.model.type.internal.TypeDefinitionRegistryImpl;
-import org.hibernate.boot.model.type.spi.TypeDefinitionRegistry;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;

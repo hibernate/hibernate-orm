@@ -14,6 +14,7 @@ import javax.xml.bind.JAXBElement;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterParameterType;
+import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.Type;
@@ -69,13 +70,15 @@ public class FilterDefinitionBinder {
 				}
 
 				if ( parameterMap == null ) {
-					parameterMap = new HashMap<String, Type>();
+					parameterMap = new HashMap<>();
 				}
 
-				parameterMap.put(
-						jaxbParameterMapping.getParameterName(),
-						context.getMetadataCollector().getTypeConfiguration().heuristicType( jaxbParameterMapping.getParameterValueTypeName() )
+				final BasicTypeResolver basicTypeResolver = new HbmBasicTypeResolverImpl( context,
+																						  new HibernateTypeSourceImpl(
+																								  jaxbParameterMapping.getParameterValueTypeName() )
 				);
+
+				parameterMap.put( jaxbParameterMapping.getParameterName(), basicTypeResolver.resolveBasicType() );
 			}
 		}
 

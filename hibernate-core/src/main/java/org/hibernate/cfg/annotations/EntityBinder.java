@@ -57,8 +57,8 @@ import org.hibernate.annotations.Where;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.boot.model.naming.EntityNaming;
-import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitEntityNameSource;
 import org.hibernate.boot.model.naming.NamingStrategyHelper;
 import org.hibernate.boot.model.relational.MappedTable;
@@ -87,7 +87,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
-import org.hibernate.mapping.Value;
+import org.hibernate.naming.Identifier;
 
 import org.jboss.logging.Logger;
 
@@ -447,16 +447,16 @@ public class EntityBinder {
 	
 	public void bindDiscriminatorValue() {
 		if ( StringHelper.isEmpty( discriminatorValue ) ) {
-			Value discriminator = persistentClass.getDiscriminator();
+			ValueMapping discriminator = persistentClass.getEntityMappingHierarchy().getDiscriminatorMapping();
 			if ( discriminator == null ) {
 				persistentClass.setDiscriminatorValue( name );
 			}
-			else if ( "character".equals( discriminator.getType().getName() ) ) {
+			else if ( "character".equals( discriminator.getJavaTypeDescriptor().getTypeName() ) ) {
 				throw new AnnotationException(
 						"Using default @DiscriminatorValue for a discriminator of type CHAR is not safe"
 				);
 			}
-			else if ( "integer".equals( discriminator.getType().getName() ) ) {
+			else if ( "integer".equals( discriminator.getJavaTypeDescriptor().getTypeName() ) ) {
 				persistentClass.setDiscriminatorValue( String.valueOf( name.hashCode() ) );
 			}
 			else {

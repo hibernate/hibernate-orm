@@ -300,7 +300,7 @@ public abstract class PersistentClass
 	public abstract Property getDeclaredVersion();
 
 	/**
-	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#getDiscriminatorValueMapping()}.
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#getDiscriminatorMapping()}.
 	 */
 	@Deprecated
 	public abstract Value getDiscriminator();

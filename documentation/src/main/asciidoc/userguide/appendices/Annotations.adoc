@@ -1018,7 +1018,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 - what SQL-level comment should be sent to the database
 - if the query is read-only, hence it does not store the resulted entities into the currently running Persistence Context
 
-//TODO: Add example
+See the <<chapters/query/native/Native.adoc#sql-multiple-scalar-values-dto-NamedNativeQuery-hibernate-example, Hibernate `@NamedNativeQuery`>> section for more info.
 
 [[annotations-hibernate-namedqueries]]
 ==== `@NamedQueries`
@@ -1039,7 +1039,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 - what SQL-level comment should be sent to the database
 - if the query is read-only, hence it does not store the resulted entities into the currently running Persistence Context
 
-//TODO: Add example
+See the <<chapters/query/hql/HQL.adoc#jpql-api-hibernate-named-query-example, `@NamedQuery`>> section for more info.
 
 [[annotations-hibernate-nationalized]]
 ==== `@Nationalized`

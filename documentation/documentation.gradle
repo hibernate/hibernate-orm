@@ -51,11 +51,11 @@ dependencies {
 	asciidoclet 'org.asciidoctor:asciidoclet:0.+'
 
 	compile( libraries.jpa )
+	compile( project( ':hibernate-core' ) )
 	compile( project( ':hibernate-jpamodelgen' ) )
 
 	testCompile( 'org.apache.commons:commons-lang3:3.4' )
 
-	testCompile( project(':hibernate-core') )
 	testCompile( project(':hibernate-ehcache') )
 	testCompile( project(':hibernate-spatial') )
 	testCompile( project(path: ':hibernate-core', configuration: 'tests') )

@@ -536,6 +536,27 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-multiple-scalar-values-dto-
 ----
 ====
 
+You can also use the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedNativeQuery.html[`@NamedNativeQuery`] Hibernate annotation
+to customize the named query using various configurations such as fetch mode, cacheability, time out interval.
+
+[[sql-multiple-scalar-values-dto-NamedNativeQuery-hibernate-example]]
+.Multiple scalar values using `ConstructorResult` and Hibernate `NamedNativeQuery`
+====
+[source, JAVA, indent=0]
+----
+include::{modeldir}/Phone.java[tags=sql-multiple-scalar-values-dto-NamedNativeQuery-hibernate-example]
+----
+====
+
+[[sql-hibernate-multiple-scalar-values-dto-hibernate-named-query-example]]
+.Hibernate `NamedNativeQuery` named native query selecting multiple scalar values into a DTO
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-multiple-scalar-values-dto-hibernate-named-query-example]
+----
+====
+
 [[sql-entity-named-queries]]
 ==== Named SQL queries selecting entities
 

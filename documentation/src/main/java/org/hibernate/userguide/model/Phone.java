@@ -13,21 +13,67 @@ import java.util.List;
 import java.util.Map;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.ColumnResult;
+import javax.persistence.ConstructorResult;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EntityResult;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.FieldResult;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKey;
 import javax.persistence.MapKeyTemporal;
 import javax.persistence.OneToMany;
+import javax.persistence.SqlResultSetMapping;
 import javax.persistence.TemporalType;
+
+import org.hibernate.annotations.NamedNativeQueries;
+import org.hibernate.annotations.NamedNativeQuery;
+import org.hibernate.annotations.NamedQueries;
+import org.hibernate.annotations.NamedQuery;
 
 /**
  * @author Vlad Mihalcea
  */
+//tag::jpql-api-hibernate-named-query-example[]
+@NamedQueries({
+    @NamedQuery(
+        name = "get_phone_by_number",
+        query = "select p " +
+                "from Phone p " +
+                "where p.number = :number",
+        timeout = 1,
+        readOnly = true
+    )
+})
+//end::jpql-api-hibernate-named-query-example[]
+//tag::sql-multiple-scalar-values-dto-NamedNativeQuery-hibernate-example[]
+@NamedNativeQueries({
+    @NamedNativeQuery(
+        name = "get_person_phone_count",
+        query = "SELECT pr.name AS name, count(*) AS phoneCount " +
+                "FROM Phone p " +
+                "JOIN Person pr ON pr.id = p.person_id " +
+                "GROUP BY p.person_id",
+        resultSetMapping = "person_phone_count",
+        timeout = 1,
+        readOnly = true
+    ),
+})
+@SqlResultSetMapping(
+    name = "person_phone_count",
+    classes = @ConstructorResult(
+        targetClass = PersonPhoneCount.class,
+        columns = {
+            @ColumnResult(name = "name"),
+            @ColumnResult(name = "phoneCount")
+        }
+    )
+)
+//end::sql-multiple-scalar-values-dto-NamedNativeQuery-hibernate-example[]
 //tag::hql-examples-domain-model-example[]
 @Entity
 public class Phone {

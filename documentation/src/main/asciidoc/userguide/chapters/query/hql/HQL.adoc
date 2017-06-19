@@ -71,6 +71,21 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-named-query-example, indent=0]
 ----
 ====
 
+Hibernate offers a specific
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation
+which provides ways to configure various query features, like flush mode, cacheability, time out interval.
+
+[[jpql-api-hibernate-named-query-example]]
+.Obtaining a Hibernate `Query` or a `TypedQuery` reference for a named query
+====
+[source, JAVA, indent=0]
+----
+include::{modeldir}/Phone.java[tags=jpql-api-hibernate-named-query-example, indent=0]
+
+include::{sourcedir}/HQLTest.java[tags=jpql-api-hibernate-named-query-example, indent=0]
+----
+====
+
 The `Query` interface can then be used to control the execution of the query.
 For example, we may want to specify an execution timeout or control caching.
 

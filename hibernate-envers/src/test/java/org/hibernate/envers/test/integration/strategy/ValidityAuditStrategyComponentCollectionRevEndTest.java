@@ -15,6 +15,7 @@ import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OrderColumn;
@@ -25,7 +26,6 @@ import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -56,26 +56,38 @@ public class ValidityAuditStrategyComponentCollectionRevEndTest extends BaseEnve
 	@Priority(10)
 	public void initData() {
 		// Revision 1
-		this.productId = TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		EntityManager entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+		{
 			Product product = new Product( 1 , "Test" );
 			product.getItems().add( new Item( "bread", null ) );
 			entityManager.persist( product );
-			return product.getId();
-		} );
+			this.productId = product.getId();
+		}
+		entityManager.getTransaction().commit();
+		entityManager.close();
 
 		// Revision 2
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+		{
 			Product product = entityManager.find( Product.class, productId );
 			product.getItems().add( new Item( "bread2", 2 ) );
 			entityManager.merge( product );
-		} );
+		}
+		entityManager.getTransaction().commit();
+		entityManager.close();
 
 		// Revision 3
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+		{
 			Product product = entityManager.find( Product.class, productId );
 			product.getItems().remove( 0 );
 			entityManager.merge( product );
-		} );
+		}
+		entityManager.getTransaction().commit();
+		entityManager.close();
 	}
 
 	@Test

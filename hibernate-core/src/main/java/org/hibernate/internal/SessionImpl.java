@@ -246,6 +246,8 @@ public final class SessionImpl
 
 	private transient boolean discardOnClose;
 
+	private transient TransactionObserver transactionObserver;
+
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
@@ -2645,35 +2647,39 @@ public final class SessionImpl
 
 	@Override
 	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
-		transactionCoordinator.addObserver(
-				new TransactionObserver() {
-					@Override
-					public void afterBegin() {
-					}
+		this.transactionObserver = new TransactionObserver() {
+			@Override
+			public void afterBegin() {
+			}
 
-					@Override
-					public void beforeCompletion() {
-						if ( isOpen() && getHibernateFlushMode() !=  FlushMode.MANUAL ) {
-							managedFlush();
-						}
-						actionQueue.beforeTransactionCompletion();
-						try {
-							getInterceptor().beforeTransactionCompletion( getCurrentTransaction() );
-						}
-						catch (Throwable t) {
-							log.exceptionInBeforeTransactionCompletionInterceptor( t );
-						}
-					}
-
-					@Override
-					public void afterCompletion(boolean successful, boolean delayed) {
-						afterTransactionCompletion( successful, delayed );
-						if ( !isClosed() && autoClose ) {
-							managedClose();
-						}
-					}
+			@Override
+			public void beforeCompletion() {
+				if ( isOpen() && getHibernateFlushMode() !=  FlushMode.MANUAL ) {
+					managedFlush();
 				}
-		);
+				actionQueue.beforeTransactionCompletion();
+				try {
+					getInterceptor().beforeTransactionCompletion( getCurrentTransaction() );
+				}
+				catch (Throwable t) {
+					log.exceptionInBeforeTransactionCompletionInterceptor( t );
+				}
+			}
+
+			@Override
+			public void afterCompletion(boolean successful, boolean delayed) {
+				afterTransactionCompletion( successful, delayed );
+				if ( !isClosed() && autoClose ) {
+					managedClose();
+				}
+			}
+		};
+		transactionCoordinator.addObserver(transactionObserver);
+	}
+
+	@Override
+	protected void removeSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
+		transactionCoordinator.removeObserver( transactionObserver );
 	}
 
 	private class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {

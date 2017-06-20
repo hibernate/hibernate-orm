@@ -59,10 +59,20 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 			TransactionCoordinatorBuilder transactionCoordinatorBuilder,
 			TransactionCoordinatorOwner owner,
 			JdbcResourceTransactionAccess jdbcResourceTransactionAccess) {
-		this.observers = new ArrayList<TransactionObserver>();
+		this.observers = new ArrayList<>();
 		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
 		this.jdbcResourceTransactionAccess = jdbcResourceTransactionAccess;
 		this.transactionCoordinatorOwner = owner;
+	}
+
+	/**
+	 * Needed because while iterating the observers list and executing the before/update callbacks,
+	 * some observers might get removed from the list.
+	 *
+	 * @return TransactionObserver
+	 */
+	private Iterable<TransactionObserver> observers() {
+		return new ArrayList<>( observers );
 	}
 
 	@Override
@@ -134,7 +144,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 			transactionCoordinatorOwner.setTransactionTimeOut( this.timeOut );
 		}
 		transactionCoordinatorOwner.afterTransactionBegin();
-		for ( TransactionObserver observer : observers ) {
+		for ( TransactionObserver observer : observers() ) {
 			observer.afterBegin();
 		}
 		log.trace( "ResourceLocalTransactionCoordinatorImpl#afterBeginCallback" );
@@ -145,7 +155,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		try {
 			transactionCoordinatorOwner.beforeTransactionCompletion();
 			synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
-			for ( TransactionObserver observer : observers ) {
+			for ( TransactionObserver observer : observers() ) {
 				observer.beforeCompletion();
 			}
 		}
@@ -164,11 +174,12 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
 
 		transactionCoordinatorOwner.afterTransactionCompletion( successful, false );
-		for ( TransactionObserver observer : observers ) {
+		for ( TransactionObserver observer : observers() ) {
 			observer.afterCompletion( successful, false );
 		}
 	}
 
+	@Override
 	public void addObserver(TransactionObserver observer) {
 		observers.add( observer );
 	}

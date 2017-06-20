@@ -118,6 +118,16 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	}
 
+	/**
+	 * Needed because while iterating the observers list and executing the before/update callbacks,
+	 * some observers might get removed from the list.
+	 *
+	 * @return TransactionObserver
+	 */
+	private Iterable<TransactionObserver> observers() {
+		return new ArrayList<>( observers );
+	}
+
 	public SynchronizationCallbackCoordinator getSynchronizationCallbackCoordinator() {
 		if ( callbackCoordinator == null ) {
 			callbackCoordinator = performJtaThreadTracking
@@ -329,7 +339,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		}
 		finally {
 			synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
-			for ( TransactionObserver observer : observers ) {
+			for ( TransactionObserver observer : observers() ) {
 				observer.beforeCompletion();
 			}
 		}
@@ -348,7 +358,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 		transactionCoordinatorOwner.afterTransactionCompletion( successful, delayed );
 
-		for ( TransactionObserver observer : observers ) {
+		for ( TransactionObserver observer : observers() ) {
 			observer.afterCompletion( successful, delayed );
 		}
 

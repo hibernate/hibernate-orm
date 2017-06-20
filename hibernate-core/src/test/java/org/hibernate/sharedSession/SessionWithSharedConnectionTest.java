@@ -6,6 +6,7 @@
  */
 package org.hibernate.sharedSession;
 
+import org.hibernate.FlushMode;
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -15,9 +16,13 @@ import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 
+import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import java.lang.reflect.Field;
+import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -242,7 +247,51 @@ public class SessionWithSharedConnectionTest extends BaseCoreFunctionalTestCase 
 		session.getTransaction().begin();
 		session.getTransaction().commit();
 	}
-	
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11830")
+	public void testSharedSessionTransactionObserver() throws Exception {
+		Session session = openSession();
+
+		session.getTransaction().begin();
+
+		Field field = null;
+		Class<?> clazz = ((JdbcSessionOwner) session).getTransactionCoordinator().getClass();
+		while (clazz != null) {
+			try {
+				field = clazz.getDeclaredField("observers");
+				field.setAccessible(true);
+				break;
+			} catch (NoSuchFieldException e) {
+				clazz = clazz.getSuperclass();
+			} catch (Exception e) {
+				throw new IllegalStateException(e);
+			}
+		}
+		assertNotNull("Observers field was not found", field);
+
+		assertEquals(0, ((Collection) field.get(((SessionImplementor) session).getTransactionCoordinator())).size());
+
+		//open secondary sessions with managed options and immediately close
+		Session secondarySession;
+		for (int i = 0; i < 10; i++){
+			secondarySession = session.sessionWithOptions()
+					.connection()
+					.flushMode( FlushMode.COMMIT )
+					.autoClose( true )
+					.openSession();
+
+			//when the shared session is opened it should register an observer
+			assertEquals(1, ((Collection) field.get(((JdbcSessionOwner) session).getTransactionCoordinator())).size());
+
+			//observer should be released
+			secondarySession.close();
+
+			assertEquals(0, ((Collection) field.get(((JdbcSessionOwner) session).getTransactionCoordinator())).size());
+		}
+	}
+
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { IrrelevantEntity.class };

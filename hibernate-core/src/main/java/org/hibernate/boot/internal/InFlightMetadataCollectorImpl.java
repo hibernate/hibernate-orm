@@ -123,7 +123,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final ClassmateContext classmateContext = new ClassmateContext();
 
 	private final UUID uuid;
-	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
 
 	private final Map<String,EntityMappingHierarchy> entityMappingHierarchies = new HashMap<>();
 	private final Map<String, PersistentClass> entityBindingMap = new HashMap<>();
@@ -170,9 +169,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		this.bootstrapContext = bootstrapContext;
 		this.uuid = UUID.randomUUID();
 		this.options = options;
-
-		this.identifierGeneratorFactory = options.getServiceRegistry()
-				.getService( MutableIdentifierGeneratorFactory.class );
 
 		for ( Map.Entry<String, SqmFunctionTemplate> sqlFunctionEntry : bootstrapContext.getSqlFunctions()
 				.entrySet() ) {
@@ -1962,7 +1958,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 					uuid,
 					options,
 					getBootstrapContext().getTypeConfiguration(),
-					identifierGeneratorFactory,
 					entityMappingHierarchies,
 					entityBindingMap,
 					mappedSuperClasses,

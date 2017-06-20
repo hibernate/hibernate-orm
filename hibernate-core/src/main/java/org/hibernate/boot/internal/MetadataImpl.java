@@ -24,8 +24,8 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.MappedNamespace;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -33,14 +33,12 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
-import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.boot.spi.AuditMetadataBuilderImplementor;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
@@ -50,6 +48,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.query.spi.NamedQueryRepository;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -64,8 +63,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final MetadataBuildingOptions metadataBuildingOptions;
 
 	private final TypeConfiguration typeConfiguration;
-
-	private final IdentifierGeneratorFactory identifierGeneratorFactory;
 
 	private final Map<String, EntityMappingHierarchy> entityMappingHierarchies;
 
@@ -90,7 +87,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			UUID uuid,
 			MetadataBuildingOptions metadataBuildingOptions,
 			TypeConfiguration typeConfiguration,
-			MutableIdentifierGeneratorFactory identifierGeneratorFactory,
 			Map<String, EntityMappingHierarchy> entityMappingHierarchies,
 			Map<String, PersistentClass> entityBindingMap,
 			Map<Class, MappedSuperclass> mappedSuperclassMap,
@@ -111,7 +107,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.uuid = uuid;
 		this.metadataBuildingOptions = metadataBuildingOptions;
 		this.typeConfiguration = typeConfiguration;
-		this.identifierGeneratorFactory = identifierGeneratorFactory;
 		this.entityMappingHierarchies = entityMappingHierarchies;
 		this.entityBindingMap = entityBindingMap;
 		this.mappedSuperclassMap = mappedSuperclassMap;

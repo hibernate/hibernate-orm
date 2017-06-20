@@ -311,3 +311,66 @@ include::{extrasdir}/entity-inheritance-table-per-class-query-example.sql[]
 ====
 Polymorphic queries require multiple UNION queries, so be aware of the performance implications of a large class hierarchy.
 ====
+
+[[entity-inheritance-polymorphism]]
+==== Implicit and explicit polymorphism
+
+By default, when you query a base class entity,
+the polymorphic query will fetch all subclasses belonging to the base type.
+
+However, you can even query
+*interfaces or base classes that don't belong to the JPA entity inheritance model*.
+
+For instance, considering the following `DomainModelEntity` interface:
+
+[[entity-inheritance-polymorphism-interface-example]]
+.Domain Model Entity interface
+====
+[source,java]
+----
+include::{sourcedir}/polymorphism/DomainModelEntity.java[tags=entity-inheritance-polymorphism-interface-example,indent=0]
+----
+====
+
+If we have two entity mappings, a `Book` and a `Blog`,
+and the `Book` entity is mapped with the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Polymorphism.html[`@Polymorphism`] annotation
+and taking the `PolymorphismType.EXPLICIT` setting:
+
+[[entity-inheritance-polymorphism-mapping-example]]
+.`@Polymorphism` entity mapping
+====
+[source,java]
+----
+include::{sourcedir}/polymorphism/ExplicitPolymorphismTest.java[tags=entity-inheritance-polymorphism-mapping-example,indent=0]
+----
+====
+
+If we have the following entity objects in our system:
+
+[[entity-inheritance-polymorphism-persist-example]]
+.Domain Model entity objects
+====
+[source,java]
+----
+include::{sourcedir}/polymorphism/ExplicitPolymorphismTest.java[tags=entity-inheritance-polymorphism-persist-example,indent=0]
+----
+====
+
+We can now query against the `DomainModelEntity` interface,
+and Hibernate is going to fetch only the entities that are either mapped with
+`@Polymorphism(type = PolymorphismType.IMPLICIT)`
+or they are not annotated at all with the `@Polymorphism` annotation (implying the IMPLICIT behavior):
+
+[[entity-inheritance-polymorphism-fetch-example]]
+.Fetching Domain Model entities using non-mapped base class polymorphism
+====
+[source,java]
+----
+include::{sourcedir}/polymorphism/ExplicitPolymorphismTest.java[tags=entity-inheritance-polymorphism-fetch-example,indent=0]
+----
+====
+
+Therefore, only the `Book` was fetched since the `Blog` entity was marked with the
+`@Polymorphism(type = PolymorphismType.EXPLICIT)` annotation, which instructs Hibernate
+to skip it when executing a polymorphic query against a non-mapped base class.

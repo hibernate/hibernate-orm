@@ -1158,7 +1158,7 @@ There are two possible `PolymorphismType` options:
 EXPLICIT:: The current annotated entity is retrieved only if explicitly asked.
 IMPLICIT:: The current annotated entity is retrieved if any of its super entity are retrieved. This is the default option.
 
-//TODO: Add example
+See the <<chapters/domain/inheritance.adoc#entity-inheritance-polymorphism, `@Polymorphism`>> section for more info.
 
 [[annotations-hibernate-proxy]]
 ==== `@Proxy`

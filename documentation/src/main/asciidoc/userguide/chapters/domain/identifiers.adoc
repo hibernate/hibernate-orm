@@ -256,32 +256,34 @@ The preferred (and portable) way to configure this generator is using the JPA-de
 
 The simplest form is to simply request sequence generation; Hibernate will use a single, implicitly-named sequence (`hibernate_sequence`) for all such unnamed definitions.
 
+[[identifiers-generators-sequence-unnamed]]
 .Unnamed sequence
 ====
 [source,java]
 ----
-include::{extrasdir}/id/UnnamedSequence.java[]
+include::{sourcedir}/SequenceGeneratorUnnamedTest.java[tag=identifiers-generators-sequence-mapping-example, indent=0]
 ----
 ====
 
-Or a specifically named sequence can be requested.
+Using `javax.persistence.SequenceGenerator`, you can specify a specific database sequence name.
 
+[[identifiers-generators-sequence-named]]
 .Named sequence
 ====
 [source,java]
 ----
-include::{extrasdir}/id/NamedSequence.java[]
+include::{sourcedir}/SequenceGeneratorNamedTest.java[tag=identifiers-generators-sequence-mapping-example, indent=0]
 ----
 ====
 
-Use `javax.persistence.SequenceGenerator` to specify additional
-configuration.
+The `javax.persistence.SequenceGenerator` annotataion allows you to specify additional configurations as well.
 
+[[identifiers-generators-sequence-configured]]
 .Configured sequence
 ====
 [source,java]
 ----
-include::{extrasdir}/id/ConfiguredSequence.java[]
+include::{sourcedir}/SequenceGeneratorConfiguredTest.java[tag=identifiers-generators-sequence-mapping-example, indent=0]
 ----
 ====
 
@@ -311,30 +313,63 @@ If the application is not usually creating many new instances of a given type of
 ====
 
 [[identifiers-generators-table]]
-==== Using identifier table
+==== Using table identifier generator
 
-Hibernate achieves table-based identifier generation based on its `org.hibernate.id.enhanced.TableGenerator` id generator which defines a table capable of holding multiple named value segments for any number of entities.
+Hibernate achieves table-based identifier generation based on its `org.hibernate.id.enhanced.TableGenerator` which defines a table capable of holding multiple named value segments for any number of entities.
 
-.Table generator table structure
-====
-[source,sql]
-----
-include::{extrasdir}/id/TableGenerator.sql[]
-----
-====
 
 The basic idea is that a given table-generator table (`hibernate_sequences` for example) can hold multiple segments of identifier generation values.
 
+[[identifiers-generators-table-unnamed-mapping-example]]
 .Unnamed table generator
 ====
 [source,java]
 ----
-include::{extrasdir}/id/UnnamedTable.java[]
+include::{sourcedir}/TableGeneratorUnnamedTest.java[tag=identifiers-generators-table-mapping-example, indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/id/identifiers-generators-table-unnamed-mapping-example.sql[]
 ----
 ====
 
 If no table name is given Hibernate assumes an implicit name of `hibernate_sequences`.
-Additionally, because no `javax.persistence.TableGenerator#pkColumnValue` is specified, Hibernate will use the default segment (`sequence_name='default'`) from the hibernate_sequences table.
+
+Additionally, because no `javax.persistence.TableGenerator#pkColumnValue` is specified,
+Hibernate will use the default segment (`sequence_name='default'`) from the hibernate_sequences table.
+
+However, you can configure the table identifier generator using the http://docs.oracle.com/javaee/7/api/javax/persistence/TableGenerator.html[`@TableGenerator`] annotation.
+
+[[identifiers-generators-table-configured-mapping-example]]
+.Configured table generator
+====
+[source,java]
+----
+include::{sourcedir}/TableGeneratorConfiguredTest.java[tag=identifiers-generators-table-mapping-example, indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/id/identifiers-generators-table-configured-mapping-example.sql[]
+----
+====
+
+Now, when inserting 3 `Product` entities, Hibernate generates the following statements:
+
+[[identifiers-generators-table-configured-persist-example]]]
+.Configured table generator persist example
+====
+[source,java]
+----
+include::{sourcedir}/TableGeneratorConfiguredTest.java[tag=identifiers-generators-table-persist-example, indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/id/identifiers-generators-table-configured-persist-example.sql[]
+----
+====
 
 [[identifiers-generators-uuid]]
 ==== Using UUID generation
@@ -469,4 +504,35 @@ include::{extrasdir}/id/CompositeIdAssociationPrimaryKeyJoinColumn.java[]
 [NOTE]
 ====
 Unlike `@MapsId`, the application developer is responsible for ensuring that the identifier and the many-to-one (or one-to-one) association are in sync.
+====
+
+[[identifiers-rowid]]
+==== @RowId
+
+If you annotate a given entity with the `@RowId` annotation and the underlying database supports fetching a record by ROWID (e.g. Oracle),
+then Hibernate can use the `ROWID` pseudo-column for CRUD operations.
+
+[[identifiers-rowid-mapping]]
+.`@RowId` entity maapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/RowIdTest.java[tag=identifiers-rowid-mapping]
+----
+====
+
+Now, when fetching an entity and modifying it, Hibernate uses the `ROWID` pseudo-column for the UPDATE SQL statement.
+
+[[identifiers-rowid-example]]
+.`@RowId` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/RowIdTest.java[tag=identifiers-rowid-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/id/identifiers-rowid-example.sql[]
+----
 ====

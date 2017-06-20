@@ -88,6 +88,11 @@ public interface EnversSettings {
 	String REVISION_TYPE_FIELD_NAME = "org.hibernate.envers.revision_type_field_name";
 
 	/**
+	 * Original id property name name. Defaults to {@literal originalId}.
+	 */
+	String ORIGINAL_ID_PROP_NAME = "org.hibernate.envers.original_id_prop_name";
+
+	/**
 	 * Column name that will hold the end revision number in audit entities. Defaults to {@literal REVEND}.
 	 */
 	String AUDIT_STRATEGY_VALIDITY_END_REV_FIELD_NAME = "org.hibernate.envers.audit_strategy_validity_end_rev_field_name";

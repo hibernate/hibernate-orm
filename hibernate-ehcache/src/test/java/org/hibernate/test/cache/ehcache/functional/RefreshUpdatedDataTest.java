@@ -13,6 +13,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.persistence.Version;
 
 import org.hibernate.Session;
@@ -23,8 +24,10 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -35,6 +38,8 @@ import static org.junit.Assert.assertEquals;
  */
 @TestForIssue(jiraKey = "HHH-10649")
 public class RefreshUpdatedDataTest extends BaseNonConfigCoreFunctionalTestCase {
+
+	private SQLServerSnapshotIsolationConnectionProvider connectionProvider;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -53,7 +58,19 @@ public class RefreshUpdatedDataTest extends BaseNonConfigCoreFunctionalTestCase 
 		if ( H2Dialect.class.equals( Dialect.getDialect().getClass() ) ) {
 			settings.put( Environment.URL, "jdbc:h2:mem:db-mvcc;MVCC=true" );
 		}
+		else if( SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
+			connectionProvider = new SQLServerSnapshotIsolationConnectionProvider();
+			settings.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
+		}
 		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
+	}
+
+	@Override
+	protected void releaseResources() {
+		super.releaseResources();
+		if( SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
+			connectionProvider.stop();
+		}
 	}
 
 	@Override
@@ -173,6 +190,7 @@ public class RefreshUpdatedDataTest extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	@Entity(name = "ReadWriteCacheableItem")
+	@Table(name = "RW_ITEM")
 	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "item")
 	public static class ReadWriteCacheableItem {
 
@@ -215,6 +233,7 @@ public class RefreshUpdatedDataTest extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	@Entity(name = "ReadWriteVersionedCacheableItem")
+	@Table(name = "RW_VERSIONED_ITEM")
 	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "item")
 	public static class ReadWriteVersionedCacheableItem {
 
@@ -260,6 +279,7 @@ public class RefreshUpdatedDataTest extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	@Entity(name = "NonStrictReadWriteCacheableItem")
+	@Table(name = "RW_NOSTRICT_ITEM")
 	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, region = "item")
 	public static class NonStrictReadWriteCacheableItem {
 
@@ -302,6 +322,7 @@ public class RefreshUpdatedDataTest extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	@Entity(name = "NonStrictReadWriteVersionedCacheableItem")
+	@Table(name = "RW_NOSTRICT_VER_ITEM")
 	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, region = "item")
 	public static class NonStrictReadWriteVersionedCacheableItem {
 

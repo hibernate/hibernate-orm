@@ -140,7 +140,6 @@ public final class MapProxyTool {
 				.append( "{" )
 				.append( "this.theMap = map;" )
 				.append( "}" );
-		System.out.println( sb );
 		return CtNewConstructor.make( sb.toString(), cc );
 	}
 

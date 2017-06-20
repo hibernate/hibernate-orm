@@ -24,7 +24,7 @@ public interface SelectExpression {
 	Type getDataType();
 
 	/**
-	 * Appends AST nodes that represent the columns afterQuery the current AST node.
+	 * Appends AST nodes that represent the columns after the current AST node.
 	 * (e.g. 'as col0_O_')
 	 *
 	 * @param i The index of the select expression in the projection list.

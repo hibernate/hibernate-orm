@@ -138,7 +138,7 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 
 			// we need the readers ordered in a certain manner.  Here specifically: Fetch(Card), Fetch(Key), Return(CardField)
 			//
-			// additionally, we need Fetch(Card) and Fetch(Key) to be hydrated/semi-resolved beforeQuery attempting to
+			// additionally, we need Fetch(Card) and Fetch(Key) to be hydrated/semi-resolved before attempting to
 			// resolve the EntityKey for Return(CardField)
 			//
 			// together those sound like argument enough to continue keeping readers for "identifier fetches" as part of

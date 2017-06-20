@@ -30,7 +30,7 @@ public class CastFunctionNode extends AbstractSelectExpression implements Functi
 
 
 	/**
-	 * Called from the hql-sql grammar afterQuery the children of the CAST have been resolved.
+	 * Called from the hql-sql grammar after the children of the CAST have been resolved.
 	 *
 	 * @param inSelect Is this call part of the SELECT clause?
 	 */

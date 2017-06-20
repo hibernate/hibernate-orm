@@ -57,7 +57,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 			Serializable oid = persister.getIdentifier( object, session );
 			if ( id == null ) {
-				throw new AssertionFailure( "null id in " + persister.getEntityName() + " entry (don't flush the Session afterQuery an exception occurs)" );
+				throw new AssertionFailure( "null id in " + persister.getEntityName() + " entry (don't flush the Session after an exception occurs)" );
 			}
 			if ( !persister.getIdentifierType().isEqual( id, oid, session.getFactory() ) ) {
 				throw new HibernateException(
@@ -196,7 +196,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			// NOTE: we need to do the wrap here even if its not "dirty",
 			// because collections need wrapping but changes to _them_
 			// don't dirty the container. Also, for versioned data, we
-			// need to wrap beforeQuery calling searchForDirtyCollections
+			// need to wrap before calling searchForDirtyCollections
 
 			WrapVisitor visitor = new WrapVisitor( session );
 			// substitutes into values by side-effect
@@ -529,7 +529,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				}
 				else if ( entry.getStatus() == Status.DELETED && !event.getEntityEntry().isModifiableEntity() ) {
 					// A non-modifiable (e.g., read-only or immutable) entity needs to be have
-					// references to transient entities set to null beforeQuery being deleted. No other
+					// references to transient entities set to null before being deleted. No other
 					// fields should be updated.
 					if ( values != entry.getDeletedState() ) {
 						throw new IllegalStateException(

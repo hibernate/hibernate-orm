@@ -11,7 +11,7 @@ import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.secure.spi.PermissibleAction;
 
 /**
- * Check security beforeQuery any update
+ * Check security before any update
  *
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  * @author Steve Ebersole

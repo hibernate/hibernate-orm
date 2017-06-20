@@ -30,7 +30,7 @@ public final class PessimisticNumberParser {
 				return Integer.valueOf( parameterName );
 			}
 			catch (NumberFormatException e) {
-				//It wasn't valid afterQuery all, so return null
+				//It wasn't valid after all, so return null
 			}
 		}
 		return null;

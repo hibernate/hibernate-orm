@@ -68,7 +68,7 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 		s.getTransaction().begin();
 		one = (UnversionedNoCascadeOne) s.merge( one );
 
-		// afterQuery merging, one.getManies() should still be null;
+		// after merging, one.getManies() should still be null;
 		// the EntityEntry loaded state should contain a PersistentCollection though.
 
 		assertNull( one.getManies() );
@@ -109,7 +109,7 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 		assertNull( maniesEEOneStateOrig.getKey() );
 		assertNull( maniesEEOneStateOrig.getRole() );
 
-		// Ensure eeOne.getLoadedState() returns null for collection afterQuery flush.
+		// Ensure eeOne.getLoadedState() returns null for collection after flush.
 		assertNull( eeOne.getLoadedValue( "manies" ) );
 
 		// Ensure the session in maniesEEOneStateOrig has been unset.
@@ -186,7 +186,7 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 		assertNull( maniesEEOneStateOrig.getKey() );
 		assertNull( maniesEEOneStateOrig.getRole() );
 
-		// Ensure eeOne.getLoadedState() returns null for collection afterQuery flush.
+		// Ensure eeOne.getLoadedState() returns null for collection after flush.
 		assertNull( eeOne.getLoadedValue( "manies" ) );
 
 		// Ensure the session in maniesEEOneStateOrig has been unset.

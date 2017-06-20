@@ -7,8 +7,12 @@
 package org.hibernate.cache.infinispan.access;
 
 import org.infinispan.commands.write.DataWriteCommand;
+import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.interceptors.locking.NonTransactionalLockingInterceptor;
+import org.infinispan.util.concurrent.TimeoutException;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -27,6 +31,9 @@ import java.util.concurrent.CompletionException;
  * {@link CompletableFuture} and we'll wait for it here.
  */
 public class LockingInterceptor extends NonTransactionalLockingInterceptor {
+	private static final Log log = LogFactory.getLog(LockingInterceptor.class);
+	private static final boolean trace = log.isTraceEnabled();
+
 	@Override
 	protected Object visitDataWriteCommand(InvocationContext ctx, DataWriteCommand command) throws Throwable {
 		Object returnValue = null;
@@ -38,6 +45,19 @@ public class LockingInterceptor extends NonTransactionalLockingInterceptor {
 
 			returnValue = invokeNextInterceptor(ctx, command);
 			return returnValue;
+		}
+		catch (TimeoutException e) {
+			if (!ctx.isOriginLocal() && command.hasFlag(Flag.ZERO_LOCK_ACQUISITION_TIMEOUT)) {
+				// FAIL_SILENTLY flag is not replicated to remote nodes and zero acquisition timeouts cause
+				// very noisy logs.
+				if (trace) {
+					log.tracef("Silently ignoring exception", e);
+				}
+				return null;
+			}
+			else {
+				throw e;
+			}
 		}
 		finally {
 			lockManager.unlockAll(ctx);

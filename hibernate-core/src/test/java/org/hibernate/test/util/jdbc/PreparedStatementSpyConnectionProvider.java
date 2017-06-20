@@ -18,11 +18,11 @@ import java.util.stream.Collectors;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
+import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
+
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.internal.util.MockUtil;
-
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doAnswer;
 
 /**
  * This {@link ConnectionProvider} extends any other ConnectionProvider that would be used by default taken the current configuration properties, and it
@@ -39,10 +39,22 @@ public class PreparedStatementSpyConnectionProvider
 	private final List<String> executeUpdateStatements = new ArrayList<>();
 
 	private final List<Connection> acquiredConnections = new ArrayList<>( );
+	private final List<Connection> releasedConnections = new ArrayList<>( );
+
+	public PreparedStatementSpyConnectionProvider() {
+	}
+
+	public PreparedStatementSpyConnectionProvider(ConnectionProvider connectionProvider) {
+		super( connectionProvider );
+	}
+
+	protected Connection actualConnection() throws SQLException {
+		return super.getConnection();
+	}
 
 	@Override
 	public Connection getConnection() throws SQLException {
-		Connection connection = spy( super.getConnection() );
+		Connection connection = spy( actualConnection() );
 		acquiredConnections.add( connection );
 		return connection;
 	}
@@ -50,7 +62,14 @@ public class PreparedStatementSpyConnectionProvider
 	@Override
 	public void closeConnection(Connection conn) throws SQLException {
 		acquiredConnections.remove( conn );
+		releasedConnections.add( conn );
 		super.closeConnection( conn );
+	}
+
+	@Override
+	public void stop() {
+		clear();
+		super.stop();
 	}
 
 	private Connection spy(Connection connection) {
@@ -59,27 +78,27 @@ public class PreparedStatementSpyConnectionProvider
 		}
 		Connection connectionSpy = Mockito.spy( connection );
 		try {
-			doAnswer( invocation -> {
+			Mockito.doAnswer( invocation -> {
 				PreparedStatement statement = (PreparedStatement) invocation.callRealMethod();
 				PreparedStatement statementSpy = Mockito.spy( statement );
 				String sql = (String) invocation.getArguments()[0];
 				preparedStatementMap.put( statementSpy, sql );
 				return statementSpy;
-			} ).when( connectionSpy ).prepareStatement( anyString() );
+			} ).when( connectionSpy ).prepareStatement( ArgumentMatchers.anyString() );
 
-			doAnswer( invocation -> {
+			Mockito.doAnswer( invocation -> {
 				Statement statement = (Statement) invocation.callRealMethod();
 				Statement statementSpy = Mockito.spy( statement );
-				doAnswer( statementInvocation -> {
+				Mockito.doAnswer( statementInvocation -> {
 					String sql = (String) statementInvocation.getArguments()[0];
 					executeStatements.add( sql );
 					return statementInvocation.callRealMethod();
-			    }).when( statementSpy ).execute( anyString() );
-				doAnswer( statementInvocation -> {
+				} ).when( statementSpy ).execute( ArgumentMatchers.anyString() );
+				Mockito.doAnswer( statementInvocation -> {
 					String sql = (String) statementInvocation.getArguments()[0];
 					executeUpdateStatements.add( sql );
 					return statementInvocation.callRealMethod();
-				}).when( statementSpy ).executeUpdate( anyString() );
+				} ).when( statementSpy ).executeUpdate( ArgumentMatchers.anyString() );
 				return statementSpy;
 			} ).when( connectionSpy ).createStatement();
 		}
@@ -94,6 +113,7 @@ public class PreparedStatementSpyConnectionProvider
 	 */
 	public void clear() {
 		acquiredConnections.clear();
+		releasedConnections.clear();
 		preparedStatementMap.keySet().forEach( Mockito::reset );
 		preparedStatementMap.clear();
 	}
@@ -166,5 +186,13 @@ public class PreparedStatementSpyConnectionProvider
 	 */
 	public List<Connection> getAcquiredConnections() {
 		return acquiredConnections;
+	}
+
+	/**
+	 * Get a list of current released Connections.
+	 * @return list of current released Connections
+	 */
+	public List<Connection> getReleasedConnections() {
+		return releasedConnections;
 	}
 }

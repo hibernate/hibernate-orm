@@ -52,12 +52,12 @@ public class Man implements Serializable {
 	}
 
 	public int hashCode() {
-		//a NPE can occurs, but I don't expect hashcode to be used beforeQuery pk is set
+		//a NPE can occurs, but I don't expect hashcode to be used before pk is set
 		return getId().hashCode();
 	}
 
 	public boolean equals(Object obj) {
-		//a NPE can occurs, but I don't expect equals to be used beforeQuery pk is set
+		//a NPE can occurs, but I don't expect equals to be used before pk is set
 		if ( obj != null && obj instanceof Man ) {
 			return getId().equals( ( (Man) obj ).getId() );
 		}

@@ -18,6 +18,7 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
@@ -148,6 +149,7 @@ public class DiscriminatorJoinedInheritanceTest extends BaseEnversJPAFunctionalT
 	}
 
 	@Entity(name = "ChildListHolder")
+	@Table(name = "CHILD_HOLDER")
 	@Audited
 	public static class ChildListHolder {
 		@Id

@@ -171,7 +171,7 @@ public class ParameterParser {
 					final String param = sqlString.substring( indx + 1, chopLocation );
 					if ( StringHelper.isEmpty( param ) ) {
 						throw new QueryException(
-								"Space is not allowed afterQuery parameter prefix ':' [" + sqlString + "]"
+								"Space is not allowed after parameter prefix ':' [" + sqlString + "]"
 						);
 					}
 					recognizer.namedParameter( param, indx );

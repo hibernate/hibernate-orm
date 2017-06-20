@@ -101,7 +101,7 @@ public class StrategySelectorImpl implements StrategySelector {
 			}
 		}
 
-		// try tp clean up afterQuery ourselves...
+		// try to clean up after ourselves...
 		if ( namedStrategyImplementorMap.isEmpty() ) {
 			namedStrategyImplementorByStrategyMap.remove( strategy );
 		}

@@ -29,6 +29,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.type.StringType;
 import org.hibernate.userguide.model.AddressType;
@@ -41,7 +42,10 @@ import org.hibernate.userguide.model.Phone;
 import org.hibernate.userguide.model.PhoneType;
 import org.hibernate.userguide.model.WireTransferPayment;
 
+import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -577,6 +581,19 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				"get_person_by_name", Person.class
 			);
 			//end::jpql-api-named-query-example[]
+		});
+	}
+
+	@Test
+	public void test_jpql_api_hibernate_named_query_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::jpql-api-hibernate-named-query-example[]
+			Phone phone = entityManager
+				.createNamedQuery( "get_phone_by_number", Phone.class )
+				.setParameter( "number", "123-456-7890" )
+				.getSingleResult();
+			//end::jpql-api-hibernate-named-query-example[]
+			assertNotNull( phone );
 		});
 	}
 
@@ -1131,7 +1148,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-concat-function-example[]
 			List<String> callHistory = entityManager.createQuery(
-				"select concat( p.number, ' : ' ,c.duration ) " +
+				"select concat( p.number, ' : ' , cast(c.duration as string) ) " +
 				"from Call c " +
 				"join c.phone p", String.class )
 			.getResultList();
@@ -1259,6 +1276,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(SQLServerDialect.class)
 	public void test_hql_current_date_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-current-date-function-example[]
@@ -1268,6 +1286,19 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				"where c.timestamp = current_date", Call.class )
 			.getResultList();
 			//end::hql-current-date-function-example[]
+			assertEquals(0, calls.size());
+		});
+	}
+
+	@Test
+	@RequiresDialect(SQLServerDialect.class)
+	public void test_hql_current_date_function_example_sql_server() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			List<Call> calls = entityManager.createQuery(
+				"select c " +
+				"from Call c " +
+				"where c.timestamp = current_date()", Call.class )
+			.getResultList();
 			assertEquals(0, calls.size());
 		});
 	}
@@ -1356,11 +1387,26 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(SQLServerDialect.class)
 	public void test_hql_str_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-str-function-example[]
 			List<String> timestamps = entityManager.createQuery(
 				"select str( c.timestamp ) " +
+				"from Call c ", String.class )
+			.getResultList();
+			//end::hql-str-function-example[]
+			assertEquals(2, timestamps.size());
+		});
+	}
+
+	@Test
+	@RequiresDialect(SQLServerDialect.class)
+	public void test_hql_str_function_example_sql_server() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-str-function-example[]
+			List<String> timestamps = entityManager.createQuery(
+				"select str( cast(duration as float) / 60, 4, 2 ) " +
 				"from Call c ", String.class )
 			.getResultList();
 			//end::hql-str-function-example[]
@@ -2159,6 +2205,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 
 	@Test
+	@RequiresDialectFeature(DialectChecks.SupportRowValueConstructorSyntaxInInList.class)
 	public void test_hql_in_predicate_example_6() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {

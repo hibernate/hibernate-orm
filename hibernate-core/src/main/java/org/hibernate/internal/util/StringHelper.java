@@ -340,7 +340,7 @@ public final class StringHelper {
 		if ( name == null || !name.startsWith( qualifierBase ) ) {
 			return name;
 		}
-		return name.substring( qualifierBase.length() + 1 ); // +1 to start afterQuery the following '.'
+		return name.substring( qualifierBase.length() + 1 ); // +1 to start after the following '.'
 	}
 
 	/**

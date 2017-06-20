@@ -22,7 +22,7 @@ import org.hibernate.persister.entity.EntityPersister;
  * </ul>
  * <p/>
  * There is another usage pattern that is used to invalidate entries
- * afterQuery performing "bulk" HQL/SQL operations:
+ * after performing "bulk" HQL/SQL operations:
  * {@link #lockRegion} -> {@link #removeAll} -> {@link #unlockRegion}
  *
  * @author Gavin King
@@ -61,7 +61,7 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy {
 	EntityRegion getRegion();
 
 	/**
-	 * Called afterQuery an item has been inserted (beforeQuery the transaction completes),
+	 * Called after an item has been inserted (before the transaction completes),
 	 * instead of calling evict().
 	 * This method is used by "synchronous" concurrency strategies.
 	 *
@@ -75,7 +75,7 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy {
 	boolean insert(SharedSessionContractImplementor session, Object key, Object value, Object version) throws CacheException;
 
 	/**
-	 * Called afterQuery an item has been inserted (afterQuery the transaction completes),
+	 * Called after an item has been inserted (after the transaction completes),
 	 * instead of calling release().
 	 * This method is used by "asynchronous" concurrency strategies.
 	 *
@@ -89,7 +89,7 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy {
 	boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) throws CacheException;
 
 	/**
-	 * Called afterQuery an item has been updated (beforeQuery the transaction completes),
+	 * Called after an item has been updated (before the transaction completes),
 	 * instead of calling evict(). This method is used by "synchronous" concurrency
 	 * strategies.
 	 *
@@ -105,7 +105,7 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy {
 	boolean update(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion) throws CacheException;
 
 	/**
-	 * Called afterQuery an item has been updated (afterQuery the transaction completes),
+	 * Called after an item has been updated (after the transaction completes),
 	 * instead of calling release().  This method is used by "asynchronous"
 	 * concurrency strategies.
 	 *

@@ -103,7 +103,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		// null end date exists for each identifier.
 		final boolean reuseEntityIdentifier = audEntitiesCfg.getEnversService().getGlobalConfiguration().isAllowIdentifierReuse();
 		if ( reuseEntityIdentifier || getRevisionType( audEntitiesCfg, data ) != RevisionType.ADD ) {
-			// Register transaction completion process to guarantee execution of UPDATE statement afterQuery INSERT.
+			// Register transaction completion process to guarantee execution of UPDATE statement after INSERT.
 			( (EventSource) session ).getActionQueue().registerProcess( new BeforeTransactionCompletionProcess() {
 				@Override
 				public void doBeforeTransactionCompletion(final SessionImplementor sessionImplementor) {

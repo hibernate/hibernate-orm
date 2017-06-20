@@ -46,7 +46,7 @@ public class DetachedGetIdentifierTestTask extends AbstractEnhancerTestTask {
     protected void cleanup() {
     }
 
-    @Entity
+    @Entity(name = "SimpleEntity")
     public static class SimpleEntity {
 
         @Id

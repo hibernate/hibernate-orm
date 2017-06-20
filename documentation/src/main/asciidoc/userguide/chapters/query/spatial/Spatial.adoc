@@ -137,8 +137,10 @@ There are several dialects for MySQL:
 
 `MySQLSpatialDialect`:::
 	a spatially-extended version of Hibernate `MySQLDialect`
+`MySQL5SpatialDialect`:::
+	a spatially-extended version of Hibernate `MySQL5Dialect`
 `MySQLSpatial56Dialect`:::
-	a spatially-extended version of Hibernate `MySQL5DBDialect`.
+	a spatially-extended version of Hibernate `MySQL55Dialect`.
 
 [NOTE]
 ====

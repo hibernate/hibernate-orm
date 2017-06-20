@@ -79,7 +79,7 @@ public class SelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 
 		CriteriaQuery<Entity> query = cb.createQuery( Entity.class );
 		Root<Entity> from = query.from( Entity.class );
-		query.select( from ).where( cb.equal( from.get( "value" ), selectCase.as( String.class ) ) );
+		query.select( from ).where( cb.equal( from.get( "value" ).as( String.class ), selectCase.as( String.class ) ) );
 
 		entityManager.createQuery( query ).getResultList();
 	}
@@ -113,7 +113,7 @@ public class SelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 
 		CriteriaQuery<Entity> query = cb.createQuery( Entity.class );
 		Root<Entity> from = query.from( Entity.class );
-		query.select( from ).where( cb.equal( from.get( "value" ), selectCase.as( String.class ) ) );
+		query.select( from ).where( cb.equal( from.get( "value" ).as( String.class ), selectCase.as( String.class ) ) );
 
 		entityManager.createQuery( query ).getResultList();
 	}

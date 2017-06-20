@@ -563,7 +563,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	public String oneToManyFilterFragment(String alias) throws MappingException {
-		return needsDiscriminator()
+		return forceDiscriminator
 				? discriminatorFilterFragment( alias, null )
 				: "";
 	}

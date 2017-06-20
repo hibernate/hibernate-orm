@@ -90,7 +90,7 @@ public class UpdateTimestampsCache {
 	 * Perform invalidation.
 	 *
 	 *
-	 * @param spaces The spaces to pre-invalidate
+	 * @param spaces The spaces to invalidate.
 	 *
 	 * @param session
 	 * @throws CacheException Indicated problem delegating to underlying region.

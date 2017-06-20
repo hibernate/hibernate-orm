@@ -49,30 +49,47 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final ParameterMetadata parameterMetadata;
+	private final boolean queryParametersValidationEnabled;
 
 	private Map<QueryParameter, QueryParameterBinding> parameterBindingMap;
 	private Map<QueryParameter, QueryParameterListBinding> parameterListBindingMap;
 	private Map<Integer, QueryParameterBinding> positionalParameterBindings;
 
-	public static QueryParameterBindingsImpl from(ParameterMetadata parameterMetadata,
-			SessionFactoryImplementor sessionFactory) {
+	public static QueryParameterBindingsImpl from(
+			ParameterMetadata parameterMetadata,
+			SessionFactoryImplementor sessionFactory,
+			boolean queryParametersValidationEnabled) {
 		if ( parameterMetadata == null ) {
-			return new QueryParameterBindingsImpl( sessionFactory, parameterMetadata );
+			return new QueryParameterBindingsImpl(
+					sessionFactory,
+					parameterMetadata,
+					queryParametersValidationEnabled
+			);
 		}
 		else {
-			return new QueryParameterBindingsImpl( sessionFactory, parameterMetadata.collectAllParameters(), parameterMetadata );
+			return new QueryParameterBindingsImpl(
+					sessionFactory,
+					parameterMetadata.collectAllParameters(),
+					parameterMetadata, queryParametersValidationEnabled
+			);
 		}
 	}
 
-	public QueryParameterBindingsImpl(SessionFactoryImplementor sessionFactory, ParameterMetadata parameterMetadata) {
-		this( sessionFactory, Collections.emptySet(), parameterMetadata );
+	private QueryParameterBindingsImpl(
+			SessionFactoryImplementor sessionFactory,
+			ParameterMetadata parameterMetadata,
+			boolean queryParametersValidationEnabled) {
+		this( sessionFactory, Collections.emptySet(), parameterMetadata, queryParametersValidationEnabled );
 	}
 
-	public QueryParameterBindingsImpl(SessionFactoryImplementor sessionFactory,
+	private QueryParameterBindingsImpl(
+			SessionFactoryImplementor sessionFactory,
 			Set<QueryParameter<?>> queryParameters,
-			ParameterMetadata parameterMetadata) {
+			ParameterMetadata parameterMetadata,
+			boolean queryParametersValidationEnabled) {
 		this.sessionFactory = sessionFactory;
 		this.parameterMetadata = parameterMetadata;
+		this.queryParametersValidationEnabled = queryParametersValidationEnabled;
 		this.positionalParameterBindings = new TreeMap<>(  );
 
 		if ( queryParameters == null || queryParameters.isEmpty() ) {
@@ -98,7 +115,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	protected QueryParameterBinding makeBinding(Type bindType) {
-		return new QueryParameterBindingImpl( bindType, sessionFactory );
+		return new QueryParameterBindingImpl( bindType, sessionFactory, shouldValidateBindingValue() );
 	}
 
 	public boolean isBound(QueryParameter parameter) {
@@ -431,10 +448,17 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			);
 		}
 
-		final QueryParameterListBinding<T> convertedBinding = new QueryParameterListBindingImpl<>( binding.getBindType() );
+		final QueryParameterListBinding<T> convertedBinding = new QueryParameterListBindingImpl<>(
+				binding.getBindType(),
+				shouldValidateBindingValue()
+		);
 		parameterListBindingMap.put( queryParameter, convertedBinding );
 
 		return convertedBinding;
+	}
+
+	private boolean shouldValidateBindingValue() {
+		return sessionFactory.getSessionFactoryOptions().isJpaBootstrap() && queryParametersValidationEnabled;
 	}
 
 	/**

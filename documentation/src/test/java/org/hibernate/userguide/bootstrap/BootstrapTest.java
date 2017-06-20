@@ -16,9 +16,12 @@ import java.util.Map;
 import java.util.Properties;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
 import javax.persistence.Persistence;
+import javax.persistence.PersistenceContext;
+import javax.persistence.PersistenceProperty;
 import javax.persistence.PersistenceUnit;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
@@ -28,6 +31,7 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
 import org.hibernate.EmptyInterceptor;
+import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.Metadata;
@@ -407,6 +411,31 @@ public class BootstrapTest {
 	@PersistenceUnit
 	private EntityManagerFactory emf;
 	//end::bootstrap-jpa-compliant-PersistenceUnit-example[]
+
+	//tag::bootstrap-jpa-compliant-PersistenceUnit-configurable-example[]
+	@PersistenceUnit(
+		unitName = "CRM"
+	)
+	private EntityManagerFactory entityManagerFactory;
+	//end::bootstrap-jpa-compliant-PersistenceUnit-configurable-example[]
+
+	//tag::bootstrap-jpa-compliant-PersistenceContext-example[]
+	@PersistenceContext
+	private EntityManager em;
+	//end::bootstrap-jpa-compliant-PersistenceContext-example[]
+
+	//tag::bootstrap-jpa-compliant-PersistenceContext-configurable-example[]
+	@PersistenceContext(
+		unitName = "CRM",
+		properties = {
+			@PersistenceProperty(
+				name="org.hibernate.flushMode",
+				value= "MANUAL"
+			)
+		}
+	)
+	private EntityManager entityManager;
+	//end::bootstrap-jpa-compliant-PersistenceContext-configurable-example[]
 
 	//tag::bootstrap-native-PersistenceUnitInfoImpl-example[]
 	public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {

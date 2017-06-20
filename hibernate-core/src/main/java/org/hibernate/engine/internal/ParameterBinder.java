@@ -60,7 +60,7 @@ public class ParameterBinder {
 	 * @param source The named parameter source, for resolving the locations of named parameters
 	 * @param session The session
 	 *
-	 * @return The next bind position afterQuery the last position we bound here.
+	 * @return The next bind position after the last position we bound here.
 	 *
 	 * @throws SQLException Indicates a problem calling JDBC bind methods
 	 * @throws HibernateException Indicates a problem access bind values.

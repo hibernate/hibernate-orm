@@ -51,70 +51,11 @@ import static org.junit.Assert.assertTrue;
 @RequiresDialect(value = { SQLServer2005Dialect.class })
 public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 
-	private final ExecutorService executorService = Executors.newSingleThreadExecutor();
-
 	@Override
 	protected Configuration constructConfiguration() {
 		Configuration configuration = super.constructConfiguration();
 		configuration.setProperty( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, Boolean.TRUE.toString() );
 		return configuration;
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-7198")
-	public void testMaxResultsSqlServerWithCaseSensitiveCollation() throws Exception {
-
-		final Session s1 = openSession();
-		s1.beginTransaction();
-		String defaultCollationName = s1.doReturningWork( connection -> {
-			String databaseName = connection.getCatalog();
-			Statement st = ((SessionImplementor)s1).getJdbcCoordinator().getStatementPreparer().createStatement();
-			ResultSet rs =  ((SessionImplementor)s1).getJdbcCoordinator().getResultSetReturn().extract( st, "SELECT collation_name FROM sys.databases WHERE name = '"+databaseName+ "';" );
-			while(rs.next()){
-				return rs.getString( "collation_name" );
-			}
-			throw new AssertionError( "can't get collation name of database "+databaseName );
-
-		} );
-		s1.getTransaction().commit();
-		s1.close();
-
-		Session s2 = openSession();
-		Transaction tx = s2.beginTransaction();
-
-		String databaseName = s2.doReturningWork( new ReturningWork<String>() {
-			@Override
-			public String execute(Connection connection) throws SQLException {
-				return connection.getCatalog();
-			}
-		} );
-		s2.createNativeQuery( "ALTER DATABASE " + databaseName + " set single_user with rollback immediate" )
-				.executeUpdate();
-		s2.createNativeQuery( "ALTER DATABASE " + databaseName + " COLLATE Latin1_General_CS_AS" ).executeUpdate();
-		s2.createNativeQuery( "ALTER DATABASE " + databaseName + " set multi_user" ).executeUpdate();
-
-		for ( int i = 1; i <= 20; i++ ) {
-			s2.persist( new Product2( i, "Kit" + i ) );
-		}
-		s2.flush();
-		s2.clear();
-
-		List list = s2.createQuery( "from Product2 where description like 'Kit%'" )
-				.setFirstResult( 2 )
-				.setMaxResults( 2 )
-				.list();
-		assertEquals( 2, list.size() );
-		tx.rollback();
-		s2.close();
-
-		executorService.execute( () -> {
-			doInHibernate( this::sessionFactory, s3 -> {
-				s3.createNativeQuery( "ALTER DATABASE " + databaseName + " set single_user with rollback immediate" )
-						.executeUpdate();
-				s3.createNativeQuery( "ALTER DATABASE " + databaseName + " COLLATE " + defaultCollationName ).executeUpdate();
-				s3.createNativeQuery( "ALTER DATABASE " + databaseName + " set multi_user" ).executeUpdate();
-			} );
-		} );
 	}
 
 	@Test

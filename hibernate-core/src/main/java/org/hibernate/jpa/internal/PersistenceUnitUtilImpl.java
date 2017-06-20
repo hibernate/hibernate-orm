@@ -11,6 +11,7 @@ import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.spi.LoadState;
 
 import org.hibernate.Hibernate;
+import org.hibernate.MappingException;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -92,9 +93,15 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 
 	private Object getIdentifierFromPersister(Object entity) {
 		Class<?> entityClass = Hibernate.getClass( entity );
-		EntityPersister persister = sessionFactory.getMetamodel().entityPersister( entityClass );
-		if ( persister == null ) {
-			throw new IllegalArgumentException( entityClass.getName() + " is not an entity" );
+		final EntityPersister persister;
+		try {
+			persister = sessionFactory.getMetamodel().entityPersister( entityClass );
+			if ( persister == null ) {
+				throw new IllegalArgumentException( entityClass.getName() + " is not an entity" );
+			}
+		}
+		catch (MappingException ex) {
+			throw new IllegalArgumentException( entityClass.getName() + " is not an entity", ex );
 		}
 		return persister.getIdentifier( entity, null );
 	}

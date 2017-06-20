@@ -76,7 +76,7 @@ public interface ScrollableResultSetProcessor {
 	 * @param resultSet The result set being processed.
 	 * @param session The originating session
 	 * @param queryParameters The "parameters" used to build the query
-	 * @param isLogicallyAfterLast Is the result set currently positioned afterQuery the last row; again, is this really needed?  How is it any diff
+	 * @param isLogicallyAfterLast Is the result set currently positioned after the last row; again, is this really needed?  How is it any diff
 	 *
 	 * @return The extracted result row
 	 *

@@ -320,17 +320,22 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				final Map<String, HibernateException> errors = checkNamedQueries();
 				if ( !errors.isEmpty() ) {
 					StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
-					String sep = "";
+					String separator = System.lineSeparator();
+
 					for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
 						LOG.namedQueryError( entry.getKey(), entry.getValue() );
-						failingQueries.append( sep ).append( entry.getKey() );
-						sep = ", ";
+
+						failingQueries
+							.append( separator)
+							.append( entry.getKey() )
+							.append( " failed because of: " )
+							.append( entry.getValue() );
 					}
 					throw new HibernateException( failingQueries.toString() );
 				}
 			}
 
-			// this needs to happen afterQuery persisters are all ready to go...
+			// this needs to happen after persisters are all ready to go...
 			this.fetchProfiles = new HashMap<>();
 			for ( org.hibernate.mapping.FetchProfile mappingProfile : metadata.getFetchProfiles() ) {
 				final FetchProfile fetchProfile = new FetchProfile( mappingProfile.getName() );
@@ -719,7 +724,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	 * </ol>
 	 *
 	 * Note: Be aware that the sessionFactory instance still can
-	 * be a "heavy" object memory wise afterQuery close() has been called.  Thus
+	 * be a "heavy" object memory wise after close() has been called.  Thus
 	 * it is important to not keep referencing the instance to let the garbage
 	 * collector release the memory.
 	 * @throws HibernateException
@@ -1075,6 +1080,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		private boolean autoClear;
 		private String tenantIdentifier;
 		private TimeZone jdbcTimeZone;
+		private boolean queryParametersValidationEnabled;
 
 		private List<SessionEventListener> listeners;
 
@@ -1100,6 +1106,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.jdbcTimeZone = sessionFactory.getSessionFactoryOptions().getJdbcTimeZone();
 
 			listeners = sessionFactory.getSessionFactoryOptions().getBaselineSessionEventsListenerBuilder().buildBaselineList();
+			queryParametersValidationEnabled = sessionFactory.getSessionFactoryOptions().isQueryParametersValidationEnabled();
 		}
 
 
@@ -1141,6 +1148,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			return sessionOwnerBehavior == SessionOwnerBehavior.LEGACY_JPA
 					? ManagedFlushCheckerLegacyJpaImpl.INSTANCE
 					: null;
+		}
+
+		@Override
+		public boolean isQueryParametersValidationEnabled() {
+			return this.queryParametersValidationEnabled;
 		}
 
 		@Override
@@ -1318,12 +1330,19 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			jdbcTimeZone = timeZone;
 			return (T) this;
 		}
+
+		@Override
+		public T setQueryParameterValidation(boolean enabled) {
+			queryParametersValidationEnabled = enabled;
+			return (T) this;
+		}
 	}
 
 	public static class StatelessSessionBuilderImpl implements StatelessSessionBuilder, SessionCreationOptions {
 		private final SessionFactoryImpl sessionFactory;
 		private Connection connection;
 		private String tenantIdentifier;
+		private boolean queryParametersValidationEnabled;
 
 		public StatelessSessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
@@ -1331,6 +1350,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			if ( sessionFactory.getCurrentTenantIdentifierResolver() != null ) {
 				tenantIdentifier = sessionFactory.getCurrentTenantIdentifierResolver().resolveCurrentTenantIdentifier();
 			}
+			queryParametersValidationEnabled = sessionFactory.getSessionFactoryOptions().isQueryParametersValidationEnabled();
 		}
 
 		@Override
@@ -1419,6 +1439,17 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public ManagedFlushChecker getManagedFlushChecker() {
 			return null;
+		}
+
+		@Override
+		public boolean isQueryParametersValidationEnabled() {
+			return queryParametersValidationEnabled;
+		}
+
+		@Override
+		public StatelessSessionBuilder setQueryParameterValidation(boolean enabled) {
+			queryParametersValidationEnabled = enabled;
+			return this;
 		}
 	}
 

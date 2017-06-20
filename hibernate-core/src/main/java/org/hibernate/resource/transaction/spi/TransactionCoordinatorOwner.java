@@ -29,20 +29,20 @@ public interface TransactionCoordinatorOwner {
 	boolean isActive();
 
 	/**
-	 * A afterQuery-begin callback from the coordinator to its owner.
+	 * A after-begin callback from the coordinator to its owner.
 	 */
 	void afterTransactionBegin();
 
 	/**
-	 * A beforeQuery-completion callback from the coordinator to its owner.
+	 * A before-completion callback from the coordinator to its owner.
 	 */
 	void beforeTransactionCompletion();
 
 	/**
-	 * An afterQuery-completion callback from the coordinator to its owner.
+	 * An after-completion callback from the coordinator to its owner.
 	 *
 	 * @param successful Was the transaction successful?
-	 * @param delayed Is this a delayed afterQuery transaction completion call (aka afterQuery a timeout)?
+	 * @param delayed Is this a delayed after transaction completion call (aka after a timeout)?
 	 */
 	void afterTransactionCompletion(boolean successful, boolean delayed);
 
@@ -51,7 +51,7 @@ public interface TransactionCoordinatorOwner {
 	/**
 	 * Set the effective transaction timeout period for the current transaction, in seconds.
 	 *
-	 * @param seconds The number of seconds beforeQuery a time out should occur.
+	 * @param seconds The number of seconds before a time out should occur.
 	 */
 	void setTransactionTimeOut(int seconds);
 

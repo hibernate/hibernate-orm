@@ -429,7 +429,7 @@ public interface Type extends Serializable {
 	Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException;
 	
 	/**
-	 * Called beforeQuery assembling a query result set from the query cache, to allow batch fetching
+	 * Called before assembling a query result set from the query cache, to allow batch fetching
 	 * of entities missing from the second-level cache.
 	 *
 	 * @param cached The key

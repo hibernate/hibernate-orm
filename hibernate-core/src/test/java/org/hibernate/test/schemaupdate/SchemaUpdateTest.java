@@ -37,12 +37,16 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,6 +61,7 @@ import static org.junit.Assert.assertThat;
  */
 @RunWith(Parameterized.class)
 public class SchemaUpdateTest {
+
 	@Parameterized.Parameters
 	public static Collection<String> parameters() {
 		return Arrays.asList(
@@ -73,6 +78,9 @@ public class SchemaUpdateTest {
 
 	@Before
 	public void setUp() throws IOException {
+		if(SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
+			return;
+		}
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
 		ssr = new StandardServiceRegistryBuilder()
@@ -95,6 +103,9 @@ public class SchemaUpdateTest {
 
 	@After
 	public void tearsDown() {
+		if(SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
+			return;
+		}
 		new SchemaExport().setHaltOnError( true )
 				.setOutputFile( output.getAbsolutePath() )
 				.setFormat( false )
@@ -104,7 +115,9 @@ public class SchemaUpdateTest {
 
 	@Test
 	public void testSchemaUpdateAndValidation() throws Exception {
-
+		if(SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
+			return;
+		}
 		new SchemaUpdate().setHaltOnError( true )
 				.execute( EnumSet.of( TargetType.DATABASE ), metadata );
 

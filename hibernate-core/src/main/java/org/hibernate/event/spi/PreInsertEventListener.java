@@ -9,7 +9,7 @@ package org.hibernate.event.spi;
 import java.io.Serializable;
 
 /**
- * Called beforeQuery inserting an item in the datastore
+ * Called before inserting an item in the datastore
  * 
  * @author Gavin King
  */

@@ -92,19 +92,19 @@ public interface PersistentCollection {
 	Object getValue();
 
 	/**
-	 * Called just beforeQuery reading any rows from the JDBC result set
+	 * Called just before reading any rows from the JDBC result set
 	 */
 	void beginRead();
 
 	/**
-	 * Called afterQuery reading all rows from the JDBC result set
+	 * Called after reading all rows from the JDBC result set
 	 *
 	 * @return Whether to end the read.
 	 */
 	boolean endRead();
 	
 	/**
-	 * Called afterQuery initializing from cache
+	 * Called after initializing from cache
 	 *
 	 * @return ??
 	 */
@@ -190,7 +190,7 @@ public interface PersistentCollection {
 	 *
 	 * @param entry The collection entry/element
 	 * @param i The assumed index
-	 * @param persister it was more elegant beforeQuery we added this...
+	 * @param persister it was more elegant before we added this...
 	 *
 	 * @return The index value
 	 */
@@ -217,11 +217,11 @@ public interface PersistentCollection {
 	Object getSnapshotElement(Object entry, int i);
 
 	/**
-	 * Called beforeQuery any elements are read into the collection,
+	 * Called before any elements are read into the collection,
 	 * allowing appropriate initializations to occur.
 	 *
 	 * @param persister The underlying collection persister.
-	 * @param anticipatedSize The anticipated size of the collection afterQuery initialization is complete.
+	 * @param anticipatedSize The anticipated size of the collection after initialization is complete.
 	 */
 	void beforeInitialize(CollectionPersister persister, int anticipatedSize);
 
@@ -388,7 +388,7 @@ public interface PersistentCollection {
 	
 	/**
 	 * Is the collection dirty? Note that this is only
-	 * reliable during the flush cycle, afterQuery the
+	 * reliable during the flush cycle, after the
 	 * collection elements are dirty checked against
 	 * the snapshot.
 	 *
@@ -397,7 +397,7 @@ public interface PersistentCollection {
 	boolean isDirty();
 	
 	/**
-	 * Clear the dirty flag, afterQuery flushing changes
+	 * Clear the dirty flag, after flushing changes
 	 * to the database.
 	 */
 	void clearDirty();
@@ -415,7 +415,7 @@ public interface PersistentCollection {
 	void dirty();
 	
 	/**
-	 * Called beforeQuery inserting rows, to ensure that any surrogate keys
+	 * Called before inserting rows, to ensure that any surrogate keys
 	 * are fully generated
 	 *
 	 * @param persister The collection persister
@@ -423,7 +423,7 @@ public interface PersistentCollection {
 	void preInsert(CollectionPersister persister);
 
 	/**
-	 * Called afterQuery inserting a row, to fetch the natively generated id
+	 * Called after inserting a row, to fetch the natively generated id
 	 *
 	 * @param persister The collection persister
 	 * @param entry The collection element just inserted

@@ -54,6 +54,8 @@ public class IdentityGeneratorExtendsTest extends BaseCoreFunctionalTestCase {
 		public void setEntityId(int entityId) {
 			this.entityId = entityId;
 		}
+
+		public String description;
 	}
 
 

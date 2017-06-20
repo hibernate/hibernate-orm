@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import javax.transaction.SystemException;
 
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
@@ -42,7 +43,7 @@ public abstract class BaseUnitTestCase {
 	protected final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
 	@Rule
-	public TestRule globalTimeout = new Timeout( 30 * 60 * 1000 ); // no test should run longer than 30 minutes
+	public TestRule globalTimeout = Timeout.millis( TimeUnit.MINUTES.toMillis( 30 ) ); // no test should run longer than 30 minutes
 
 	public BaseUnitTestCase() {
 		if ( enableConnectionLeakDetection ) {
@@ -90,7 +91,7 @@ public abstract class BaseUnitTestCase {
 			Thread.currentThread().interrupt();
 		}
 		catch (ExecutionException e) {
-			e.printStackTrace();
+			throw new RuntimeException( e.getCause() );
 		}
 	}
 }

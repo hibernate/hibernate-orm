@@ -474,7 +474,7 @@ public final class AnnotationBinder {
 	}
 
 	/**
-	 * Bind a class having JSR175 annotations. Subclasses <b>have to</b> be bound afterQuery its parent class.
+	 * Bind a class having JSR175 annotations. Subclasses <b>have to</b> be bound after its parent class.
 	 *
 	 * @param clazzToProcess entity to bind as {@code XClass} instance
 	 * @param inheritanceStatePerClass Meta data about the inheritance relationships for all mapped classes
@@ -1156,15 +1156,10 @@ public final class AnnotationBinder {
 		return new LocalCacheAnnotationImpl( region, determineCacheConcurrencyStrategy( context ) );
 	}
 
-	private static CacheConcurrencyStrategy DEFAULT_CACHE_CONCURRENCY_STRATEGY;
-
 	private static CacheConcurrencyStrategy determineCacheConcurrencyStrategy(MetadataBuildingContext context) {
-		if ( DEFAULT_CACHE_CONCURRENCY_STRATEGY == null ) {
-			DEFAULT_CACHE_CONCURRENCY_STRATEGY = CacheConcurrencyStrategy.fromAccessType(
-					context.getBuildingOptions().getImplicitCacheAccessType()
-			);
-		}
-		return DEFAULT_CACHE_CONCURRENCY_STRATEGY;
+		return CacheConcurrencyStrategy.fromAccessType(
+				context.getBuildingOptions().getImplicitCacheAccessType()
+		);
 	}
 
 	@SuppressWarnings({ "ClassExplicitlyAnnotation" })
@@ -1282,7 +1277,7 @@ public final class AnnotationBinder {
 			//check if superclass is not a potential persistent class
 			if ( inheritanceState.hasParents() ) {
 				throw new AssertionFailure(
-						"Subclass has to be binded afterQuery it's mother class: "
+						"Subclass has to be binded after it's mother class: "
 								+ superEntityState.getClazz().getName()
 				);
 			}
@@ -1539,7 +1534,7 @@ public final class AnnotationBinder {
 
 		/*
 		 * put element annotated by @Id in front
-		 * since it has to be parsed beforeQuery any association by Hibernate
+		 * since it has to be parsed before any association by Hibernate
 		 */
 		final XAnnotatedElement element = propertyAnnotatedElement.getProperty();
 		if ( element.isAnnotationPresent( Id.class ) || element.isAnnotationPresent( EmbeddedId.class ) ) {
@@ -2304,7 +2299,7 @@ public final class AnnotationBinder {
 			}
 		}
 		//init index
-		//process indexes afterQuery everything: in second pass, many to one has to be done beforeQuery indexes
+		//process indexes after everything: in second pass, many to one has to be done before indexes
 		Index index = property.getAnnotation( Index.class );
 		if ( index != null ) {
 			if ( joinColumns != null ) {
@@ -2627,10 +2622,15 @@ public final class AnnotationBinder {
 			baseClassElements = new ArrayList<PropertyData>();
 			baseReturnedClassOrElement = baseInferredData.getClassOrElement();
 			bindTypeDefs( baseReturnedClassOrElement, buildingContext );
-			PropertyContainer propContainer = new PropertyContainer( baseReturnedClassOrElement, xClassProcessed, propertyAccessor );
-			addElementsOfClass( baseClassElements,  propContainer, buildingContext );
-			for ( PropertyData element : baseClassElements ) {
-				orderedBaseClassElements.put( element.getPropertyName(), element );
+			// iterate from base returned class up hierarchy to handle cases where the @Id attributes
+			// might be spread across the subclasses and super classes.
+			while ( !Object.class.getName().equals( baseReturnedClassOrElement.getName() ) ) {
+				PropertyContainer propContainer = new PropertyContainer( baseReturnedClassOrElement, xClassProcessed, propertyAccessor );
+				addElementsOfClass( baseClassElements,  propContainer, buildingContext );
+				for ( PropertyData element : baseClassElements ) {
+					orderedBaseClassElements.put( element.getPropertyName(), element );
+				}
+				baseReturnedClassOrElement = baseReturnedClassOrElement.getSuperclass();
 			}
 		}
 

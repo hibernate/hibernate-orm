@@ -66,7 +66,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	/**
 	 * This is a marker value to insert instead of null values for when a Statement gets registered in xref
 	 * but has no associated ResultSets registered. This is useful to efficiently check against duplicate
-	 * registration but you'll have to check against instance equality rather than null beforeQuery attempting
+	 * registration but you'll have to check against instance equality rather than null before attempting
 	 * to add elements to this set.
 	 */
 	private static final Set<ResultSet> EMPTY_RESULTSET = Collections.emptySet();
@@ -260,7 +260,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public void afterStatementExecution() {
-		LOG.tracev( "Starting afterQuery statement execution processing [{0}]", getConnectionReleaseMode() );
+		LOG.tracev( "Starting after statement execution processing [{0}]", getConnectionReleaseMode() );
 		if ( getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
 				LOG.debug( "Skipping aggressive release due to manual disabling" );

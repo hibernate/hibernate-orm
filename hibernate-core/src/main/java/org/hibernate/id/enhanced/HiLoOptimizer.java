@@ -46,7 +46,7 @@ import org.jboss.logging.Logger;
  * </ol>
  * And so on...
  * <p/>
- * Note, 'value' always (afterQuery init) holds the next value to return
+ * Note, 'value' always (after init) holds the next value to return
  *
  * @author Steve Ebersole
  */
@@ -95,6 +95,7 @@ public class HiLoOptimizer extends AbstractOptimizer {
 		else if ( ! generationState.upperLimit.gt( generationState.value ) ) {
 			generationState.lastSourceValue = callback.getNextValue();
 			generationState.upperLimit = generationState.lastSourceValue.copy().multiplyBy( incrementSize ).increment();
+			generationState.value = generationState.upperLimit.copy().subtract( incrementSize );
 		}
 		return generationState.value.makeValueThenIncrement();
 	}

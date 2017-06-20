@@ -11,7 +11,7 @@ public class Address {
     ...
 
     @Embeddable
-    public static class Zip {
+    public static class ZipCode {
 
         private String postalCode;
 

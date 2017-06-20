@@ -26,10 +26,15 @@ import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.NamedStoredProcedureQueries;
+import javax.persistence.NamedStoredProcedureQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
+import javax.persistence.ParameterMode;
+import javax.persistence.QueryHint;
 import javax.persistence.SqlResultSetMapping;
 import javax.persistence.SqlResultSetMappings;
+import javax.persistence.StoredProcedureParameter;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Version;
@@ -147,14 +152,47 @@ import javax.persistence.Version;
     //end::sql-multiple-scalar-values-dto-NamedNativeQuery-example[]
 })
 //tag::hql-examples-domain-model-example[]
-//tag::jpql-api-named-query-example[]
-@NamedQueries(
+@NamedQueries({
+    //tag::jpql-api-named-query-example[]
     @NamedQuery(
         name = "get_person_by_name",
         query = "select p from Person p where name = :name"
     )
+    //end::jpql-api-named-query-example[]
+    ,
+    // tag::jpa-read-only-entities-native-example[]
+    @NamedQuery(
+        name = "get_read_only_person_by_name",
+        query = "select p from Person p where name = :name",
+        hints = {
+            @QueryHint(
+                name = "org.hibernate.readOnly",
+                value = "true"
+            )
+        }
+    )
+    //end::jpa-read-only-entities-native-example[]
+})
+//tag::sql-sp-ref-cursor-oracle-named-query-example[]
+@NamedStoredProcedureQueries(
+    @NamedStoredProcedureQuery(
+        name = "sp_person_phones",
+        procedureName = "sp_person_phones",
+        parameters = {
+            @StoredProcedureParameter(
+                name = "personId",
+                type = Long.class,
+                mode = ParameterMode.IN
+            ),
+            @StoredProcedureParameter(
+                name = "personPhones",
+                type = Class.class,
+                mode = ParameterMode.REF_CURSOR
+            )
+        }
+    )
 )
-//end::jpql-api-named-query-example[]
+//end::sql-sp-ref-cursor-oracle-named-query-example[]
 @Entity
 public class Person {
 

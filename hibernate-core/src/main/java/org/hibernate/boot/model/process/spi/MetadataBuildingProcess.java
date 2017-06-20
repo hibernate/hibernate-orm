@@ -135,7 +135,7 @@ public class MetadataBuildingProcess {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Set up the processors and start binding
-		//		NOTE : this becomes even more simplified afterQuery we move purely
+		//		NOTE : this becomes even more simplified after we move purely
 		// 		to unified model
 
 		final MetadataSourceProcessor processor = new MetadataSourceProcessor() {

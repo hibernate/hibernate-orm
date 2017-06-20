@@ -44,7 +44,7 @@ import static org.junit.Assert.fail;
 @RequiresDialect(H2Dialect.class)
 public class CriteriaLiteralsTest extends BaseEntityManagerFunctionalTestCase {
 	
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	private PreparedStatementSpyConnectionProvider connectionProvider;
 
 	@Override
 	protected Map getConfig() {
@@ -54,6 +54,12 @@ public class CriteriaLiteralsTest extends BaseEntityManagerFunctionalTestCase {
 				connectionProvider
 		);
 		return config;
+	}
+
+	@Override
+	public void buildEntityManagerFactory() throws Exception {
+		connectionProvider = new PreparedStatementSpyConnectionProvider();
+		super.buildEntityManagerFactory();
 	}
 
 	@Override

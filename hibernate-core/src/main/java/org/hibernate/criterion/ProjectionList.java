@@ -57,7 +57,7 @@ public class ProjectionList implements EnhancedProjection {
 	}
 
 	/**
-	 * Adds a projection to this list of projections afterQuery wrapping it with an alias
+	 * Adds a projection to this list of projections after wrapping it with an alias
 	 *
 	 * @param projection The projection to add
 	 * @param alias The alias to apply to the projection

@@ -507,6 +507,13 @@
                             </listitem>
                             <listitem>
                                 <para>
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.SapNetWeaverJtaPlatform</classname> -
+                                    Integration with transaction manager as deployed in a SAP NetWeaver application server.
+                                    Can also be referenced using the <property>SapNetWeaver</property> configuration short name
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
                                     <classname>org.hibernate.engine.transaction.jta.platform.internal.SunOneJtaPlatform</classname> -
                                     Integration with transaction manager as deployed in a Sun ONE (7 and above)
                                     application server.  Can also be referenced using the <property>SunOne</property>

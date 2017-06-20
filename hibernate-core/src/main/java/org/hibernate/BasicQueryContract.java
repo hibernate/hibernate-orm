@@ -189,7 +189,7 @@ public interface BasicQueryContract {
 	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
 	 *
 	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
-	 * query that existed in the session beforeQuery the query was executed.
+	 * query that existed in the session before the query was executed.
 	 *
 	 * @return {@code true} if the entities and proxies loaded by the query will be put
 	 * in read-only mode; {@code false} otherwise (they will be modifiable)
@@ -216,7 +216,7 @@ public interface BasicQueryContract {
 	 * proxy has, regardless of the session's current setting.
 	 *
 	 * The read-only/modifiable setting has no impact on entities/proxies
-	 * returned by the query that existed in the session beforeQuery the query was executed.
+	 * returned by the query that existed in the session before the query was executed.
 	 *
 	 * @return {@code this}, for method chaining
 	 *

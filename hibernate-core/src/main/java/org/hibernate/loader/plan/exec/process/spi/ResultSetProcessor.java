@@ -45,7 +45,7 @@ public interface ResultSetProcessor {
 	 * @param queryParameters The "parameters" used to build the query
 	 * @param returnProxies Can proxies be returned (not the same as can they be created!)
 	 * @param forcedResultTransformer My old "friend" ResultTransformer...
-	 * @param afterLoadActions Actions to be performed afterQuery loading an entity.
+	 * @param afterLoadActions Actions to be performed after loading an entity.
 	 *
 	 * @return The extracted results list.
 	 *

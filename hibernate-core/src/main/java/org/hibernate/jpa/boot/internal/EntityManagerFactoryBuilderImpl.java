@@ -595,7 +595,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		applyJdbcConnectionProperties( ssrBuilder );
 		applyTransactionProperties( ssrBuilder );
 
-		// flush beforeQuery completion validation
+		// flush before completion validation
 		if ( "true".equals( configurationValues.get( Environment.FLUSH_BEFORE_COMPLETION ) ) ) {
 			ssrBuilder.applySetting( Environment.FLUSH_BEFORE_COMPLETION, "false" );
 			LOG.definingFlushBeforeCompletionIgnoredInHem( Environment.FLUSH_BEFORE_COMPLETION );

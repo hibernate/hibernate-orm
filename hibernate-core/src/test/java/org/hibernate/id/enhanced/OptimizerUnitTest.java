@@ -33,15 +33,16 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 		assertEquals( 10, sequence.getTimesCalled() );
 		assertEquals( 10, sequence.getCurrentValue() );
 
-		// test historic table behavior, where the initial values started at 0 (we now force 1 to be the first used id value)
+		// As of HHH-11709 being fixed, Hibernate will use the value retrieved from the sequence,
+		// rather than incrementing 1.
 		sequence = new SourceMock( 0 );
 		optimizer = buildNoneOptimizer( -1, 1 );
 		for ( int i = 1; i < 11; i++ ) {
 			final Long next = ( Long ) optimizer.generate( sequence );
-			assertEquals( i, next.intValue() );
+			assertEquals( i-1, next.intValue() );
 		}
-		assertEquals( 11, sequence.getTimesCalled() ); // an extra time to get to 1 initially
-		assertEquals( 10, sequence.getCurrentValue() );
+		assertEquals( 10, sequence.getTimesCalled() ); // an extra time to get to 1 initially
+		assertEquals( 9, sequence.getCurrentValue() );
 	}
 	@Test
 	public void testBasicNoOptimizerUsageWithNegativeValues() {
@@ -55,15 +56,16 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 		assertEquals( 10, sequence.getTimesCalled() );
 		assertEquals( -10, sequence.getCurrentValue() );
 
-		// test historic table behavior, where the initial values started at 0 (we now force 1 to be the first used id value)
+		// As of HHH-11709 being fixed, Hibernate will use the value retrieved from the sequence,
+		// rather than incrementing 1.
 		sequence = new SourceMock( 0 );
 		optimizer = buildNoneOptimizer( -1, 1 );
 		for ( int i = 1; i < 11; i++ ) {
 			final Long next = ( Long ) optimizer.generate( sequence );
-			assertEquals( i, next.intValue() );
+			assertEquals( i-1, next.intValue() );
 		}
-		assertEquals( 11, sequence.getTimesCalled() ); // an extra time to get to 1 initially
-		assertEquals( 10, sequence.getCurrentValue() );
+		assertEquals( 10, sequence.getTimesCalled() ); // an extra time to get to 1 initially
+		assertEquals( 9, sequence.getCurrentValue() );
 	}
 
 	@Test

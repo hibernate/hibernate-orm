@@ -41,7 +41,7 @@ public class A {
 		this.id = id;
 	}
 
-	@Column(name="`value`")
+	@Column(name="a_value")
 	public String getValue() {
 		return value;
 	}

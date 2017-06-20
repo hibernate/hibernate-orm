@@ -381,7 +381,7 @@ public class JarVisitorTest extends PackagingTestCase {
 		assertTrue( oldTime > newTime );
 	}
 
-	// This is the old getBytesFromInputStream from JarVisitorFactory beforeQuery
+	// This is the old getBytesFromInputStream from JarVisitorFactory before
 	// it was changed by HHH-7835. Use it as a regression test.
 	private byte[] getBytesFromInputStream(InputStream inputStream) throws IOException {
 		int size;

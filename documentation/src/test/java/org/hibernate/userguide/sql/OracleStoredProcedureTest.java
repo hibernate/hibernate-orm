@@ -185,6 +185,20 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
     }
 
     @Test
+    public void testStoredProcedureRefCursorUsingNamedQuery() {
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            //tag::sql-jpa-call-sp-ref-cursor-oracle-named-query-example[]
+            List<Object[]> postComments = entityManager
+            .createNamedStoredProcedureQuery( "sp_person_phones" )
+            .setParameter( "personId", 1L )
+            .getResultList();
+            //end::sql-jpa-call-sp-ref-cursor-oracle-named-query-example[]
+
+            assertNotNull( postComments );
+        });
+    }
+
+    @Test
     public void testHibernateProcedureCallRefCursor() {
         doInJPA( this::entityManagerFactory, entityManager -> {
             //tag::sql-hibernate-call-sp-ref-cursor-oracle-example[]

@@ -11,8 +11,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 
-import javax.persistence.FlushModeType;
-
+import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -154,7 +153,7 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 		}
 
 		// see: http://www.jboss.com/index.html?module=bb&op=viewtopic&p=4178431
-		if ( FlushModeType.COMMIT.equals( session.getFlushMode() ) || session.isClosed() ) {
+		if ( FlushMode.MANUAL.equals( session.getHibernateFlushMode() ) || session.isClosed() ) {
 			Session temporarySession = null;
 			try {
 				temporarySession = session.sessionWithOptions()

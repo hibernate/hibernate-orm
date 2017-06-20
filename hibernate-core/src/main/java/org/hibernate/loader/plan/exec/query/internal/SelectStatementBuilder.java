@@ -82,7 +82,7 @@ public class SelectStatementBuilder {
 	}
 
 	/**
-	 * Appends the specified restrictions afterQuery "cleaning" the specified value
+	 * Appends the specified restrictions after "cleaning" the specified value
 	 * (by trimming and removing 'and ' from beginning and ' and' from the end).
 	 * If the where clause already exists, this method ensure that ' and '
 	 * prefixes the cleaned restrictions.
@@ -201,7 +201,7 @@ public class SelectStatementBuilder {
 
 		if ( isNotEmpty( whereClause ) || isNotEmpty( outerJoinsAfterWhere ) ) {
 			buf.append( " where " );
-			// the outerJoinsAfterWhere needs to come beforeQuery where clause to properly
+			// the outerJoinsAfterWhere needs to come before where clause to properly
 			// handle dynamic filters
 			if ( StringHelper.isNotEmpty( outerJoinsAfterWhere ) ) {
 				buf.append( outerJoinsAfterWhere );

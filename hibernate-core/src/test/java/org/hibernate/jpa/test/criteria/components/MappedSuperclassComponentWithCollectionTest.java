@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -236,6 +237,7 @@ public class MappedSuperclassComponentWithCollectionTest extends BaseEntityManag
 
 	@Embeddable
 	public static class Phone {
+		@Column(name = "phone_number")
 		private String number;
 
 		public Phone() {

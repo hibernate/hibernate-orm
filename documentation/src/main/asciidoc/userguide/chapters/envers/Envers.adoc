@@ -106,6 +106,8 @@ It is possible to configure various aspects of Hibernate Envers behavior, such a
 |`org.hibernate.envers.cascade_delete_revision` |`false` |While deleting revision entry, remove data of associated audited entities. Requires database support for cascade row removal.
 
 |`org.hibernate.envers.allow_identifier_reuse` |`false` |Guarantees proper validity audit strategy behavior when application reuses identifiers of deleted entities. Exactly one row with `null` end date exists for each identifier.
+
+|`org.hibernate.envers.original_id_prop_name` |`originalId` |Specifies the composite-id key property name used by the audit table mappings.
 |=======================================================================
 
 [IMPORTANT]
@@ -116,6 +118,7 @@ be regarded as experimental:
 .  `org.hibernate.envers.track_entities_changed_in_revision`
 .  `org.hibernate.envers.using_modified_flag`
 .  `org.hibernate.envers.modified_flag_suffix`
+.  `org.hibernate.envers.original_id_prop_name`
 ====
 
 === Additional mapping annotations

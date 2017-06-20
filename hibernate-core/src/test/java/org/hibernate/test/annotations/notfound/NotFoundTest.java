@@ -9,16 +9,15 @@ package org.hibernate.test.annotations.notfound;
 import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
 
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -28,6 +27,7 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Emmanuel Bernard
  */
+@RequiresDialectFeature(value = DialectChecks.SupportsIdentityColumns.class)
 public class NotFoundTest extends BaseCoreFunctionalTestCase {
 
 	@Test
@@ -56,25 +56,9 @@ public class NotFoundTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
-	@Test
-	public void testOneToOne() throws Exception {
-		doInHibernate( this::sessionFactory, session -> {
-			Show show = new Show();
-			session.save( show );
-
-			ShowDescription showDescription = new ShowDescription();
-			session.save( showDescription );
-		} );
-	}
-
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Coin.class,
-				Currency.class,
-				Show.class,
-				ShowDescription.class
-		};
+		return new Class[] {Coin.class, Currency.class};
 	}
 
 	@Entity(name = "Coin")
@@ -142,63 +126,4 @@ public class NotFoundTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity(name = "T_Show")
-	public static class Show {
-
-		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
-		private Integer id;
-
-		@OneToOne()
-		@NotFound(action = NotFoundAction.IGNORE)
-		@JoinTable(name = "Show_Description",
-				joinColumns = @JoinColumn(name = "show_id"),
-				inverseJoinColumns = @JoinColumn(name = "description_id"))
-		private ShowDescription description;
-
-
-		public Integer getId() {
-			return id;
-		}
-
-		public void setId(Integer id) {
-			this.id = id;
-		}
-
-		public ShowDescription getDescription() {
-			return description;
-		}
-
-		public void setDescription(ShowDescription description) {
-			this.description = description;
-		}
-	}
-
-	@Entity(name = "ShowDescription")
-	public static class ShowDescription {
-
-		@Id
-		@GeneratedValue
-		private Integer id;
-
-		@NotFound(action = NotFoundAction.IGNORE)
-		@OneToOne(mappedBy = "description")
-		private Show show;
-
-		public Integer getId() {
-			return id;
-		}
-
-		public void setId(Integer id) {
-			this.id = id;
-		}
-
-		public Show getShow() {
-			return show;
-		}
-
-		public void setShow(Show show) {
-			this.show = show;
-		}
-	}
 }

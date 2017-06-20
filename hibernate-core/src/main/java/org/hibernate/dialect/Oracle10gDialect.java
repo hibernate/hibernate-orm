@@ -85,4 +85,9 @@ public class Oracle10gDialect extends Oracle9iDialect {
 	public ResultSet getResultSet(CallableStatement statement, String name) throws SQLException {
 		return (ResultSet) statement.getObject( name );
 	}
+
+	@Override
+	public boolean supportsSkipLocked() {
+		return true;
+	}
 }

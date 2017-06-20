@@ -61,7 +61,7 @@ public class QueryKeyTest extends BaseUnitTestCase {
 	public void testSerializedEqualityResultTransformer() throws Exception {
 		// settings are lazily initialized when calling transformTuple(),
 		// so they have not been initialized for the following test
-		// (it *should* be initialized beforeQuery creating a QueryKey)
+		// (it *should* be initialized before creating a QueryKey)
 		doResultTransformerTest( new AliasToBeanResultTransformer( AClass.class ), false );
 
 		// initialize settings for the next test

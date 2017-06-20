@@ -8,7 +8,7 @@ package org.hibernate.internal.util;
 
 /**
  * Represents a "final" value that is initialized either {@link #ValueHolder(Object) up front} or once at some point
- * {@link #ValueHolder(ValueHolder.DeferredInitializer) afterQuery} declaration.
+ * {@link #ValueHolder(ValueHolder.DeferredInitializer) after} declaration.
  * 
  * Note: If a Serializable class has a {@link ValueHolder} property, that property should be declared transient!
  *

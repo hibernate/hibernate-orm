@@ -86,7 +86,7 @@
 
         <para>
             When considering portability between databases, another important decision is selecting the
-            identifier generation stratagy you want to use.  Originally Hibernate provided the
+            identifier generation strategy you want to use.  Originally Hibernate provided the
             <emphasis>native</emphasis> generator for this purpose, which was intended to select between
             a <emphasis>sequence</emphasis>, <emphasis>identity</emphasis>, or <emphasis>table</emphasis>
             strategy depending on the capability of the underlying database.  However, an insidious implication

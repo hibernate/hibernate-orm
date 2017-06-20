@@ -62,10 +62,10 @@ public interface AvailableSettings {
 	String JDBC_USER = org.hibernate.cfg.AvailableSettings.JPA_JDBC_USER;
 
 	/**
-	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_JDBC_USER} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_JDBC_PASSWORD} instead
 	 */
 	@Deprecated
-	String JDBC_PASSWORD = org.hibernate.cfg.AvailableSettings.JPA_JDBC_USER;
+	String JDBC_PASSWORD = org.hibernate.cfg.AvailableSettings.JPA_JDBC_PASSWORD;
 
 	/**
 	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_SHARED_CACHE_MODE} instead

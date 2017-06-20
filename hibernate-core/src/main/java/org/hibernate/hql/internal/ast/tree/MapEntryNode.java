@@ -65,11 +65,12 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 			boolean generateJoin,
 			boolean implicitJoin,
 			String classAlias,
-			AST parent) throws SemanticException {
+			AST parent,
+			AST parentPredicate) throws SemanticException {
 		if (parent != null) {
 			throw new SemanticException( expressionDescription() + " expression cannot be further de-referenced" );
 		}
-		super.resolve(generateJoin, implicitJoin, classAlias, parent);
+		super.resolve(generateJoin, implicitJoin, classAlias, parent, parentPredicate);
 	}
 
 	@Override

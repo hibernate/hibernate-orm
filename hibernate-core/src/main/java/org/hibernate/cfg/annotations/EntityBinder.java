@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import javax.persistence.Access;
+import javax.persistence.Cacheable;
 import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
 import javax.persistence.InheritanceType;
@@ -162,7 +163,7 @@ public class EntityBinder {
 
 	/**
 	 * For the most part, this is a simple delegation to {@link PersistentClass#isPropertyDefinedInHierarchy},
-	 * afterQuery verifying that PersistentClass is indeed set here.
+	 * after verifying that PersistentClass is indeed set here.
 	 *
 	 * @param name The name of the property to check
 	 *
@@ -301,6 +302,10 @@ public class EntityBinder {
 			}
 			if (annotatedClass.isAnnotationPresent(Immutable.class)) {
 				LOG.immutableAnnotationOnNonRoot(annotatedClass.getName());
+			}
+			if ( annotatedClass.isAnnotationPresent( Cacheable.class ) ||
+					annotatedClass.isAnnotationPresent( Cache.class ) ) {
+				LOG.cacheOrCacheableAnnotationOnNonRoot( annotatedClass.getName() );
 			}
 		}
 		persistentClass.setOptimisticLockStyle( getVersioning( optimisticLockType ) );
@@ -697,8 +702,8 @@ public class EntityBinder {
 
 	public void finalSecondaryTableBinding(PropertyHolder propertyHolder) {
 		/*
-		 * Those operations has to be done afterQuery the id definition of the persistence class.
-		 * ie afterQuery the properties parsing
+		 * Those operations has to be done after the id definition of the persistence class.
+		 * ie after the properties parsing
 		 */
 		Iterator joins = secondaryTables.values().iterator();
 		Iterator joinColumns = secondaryTableJoins.values().iterator();

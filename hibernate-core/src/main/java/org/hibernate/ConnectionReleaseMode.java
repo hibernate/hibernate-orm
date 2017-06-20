@@ -18,7 +18,7 @@ import org.hibernate.internal.util.StringHelper;
  */
 public enum ConnectionReleaseMode{
 	/**
-	 * Indicates that JDBC connection should be aggressively released afterQuery each
+	 * Indicates that JDBC connection should be aggressively released after each
 	 * SQL statement is executed. In this mode, the application <em>must</em>
 	 * explicitly close all iterators and scrollable results. This mode may
 	 * only be used with a JTA datasource.
@@ -26,7 +26,7 @@ public enum ConnectionReleaseMode{
 	AFTER_STATEMENT,
 
 	/**
-	 * Indicates that JDBC connections should be released afterQuery each transaction
+	 * Indicates that JDBC connections should be released after each transaction
 	 * ends (works with both JTA-registered synch and HibernateTransaction API).
 	 * This mode may not be used with an application server JTA datasource.
 	 * <p/>

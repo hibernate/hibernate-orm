@@ -19,7 +19,7 @@ ext {
     cdiVersion = '1.1'
 
     javassistVersion = '3.20.0-GA'
-    byteBuddyVersion = '1.6.6'
+    byteBuddyVersion = '1.6.14' // Improved JDK9 compatibility
 
     // Wildfly version targeted by module ZIP; Arquillian/Shrinkwrap versions used for CDI testing and testing the module ZIP
     wildflyVersion = '10.1.0.Final'
@@ -93,15 +93,15 @@ ext {
             h2:              "com.h2database:h2:${h2Version}",
             hsqldb:          "org.hsqldb:hsqldb:2.3.2",
             derby:           "org.apache.derby:derby:10.11.1.1",
-            postgresql:      'org.postgresql:postgresql:9.4-1202-jdbc41',
-            mysql:             'mysql:mysql-connector-java:6.0.5',
+            postgresql:      'org.postgresql:postgresql:42.1.1',
+            mysql:           'mysql:mysql-connector-java:6.0.5',
             mariadb:         'org.mariadb.jdbc:mariadb-java-client:1.5.7',
+
             oracle:          'com.oracle.jdbc:ojdbc7:12.1.0.2',
+            mssql:           'com.microsoft.sqlserver:mssql-jdbc:6.1.0.jre8',
+            db2:             'com.ibm.db2:db2jcc:10.5',
 
-            oracle:          'com.oracle.ojdbc:ojdbc7:12.1.0.2.0',
-            mssql:             'com.microsoft.sqlserver:mssql-jdbc:6.1.0.jre8',
-
-            informix:          'com.ibm.informix:jdbc:4.10.7.20160517',
+            informix:        'com.ibm.informix:jdbc:4.10.7.20160517',
             jboss_jta:       "org.jboss.jbossts:jbossjta:4.16.4.Final",
             xapool:          "com.experlog:xapool:1.5.0",
             mockito:         'org.mockito:mockito-core:2.7.5',

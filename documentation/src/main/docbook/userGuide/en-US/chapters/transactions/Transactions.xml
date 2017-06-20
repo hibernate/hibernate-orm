@@ -179,6 +179,11 @@
                 </listitem>
                 <listitem>
                     <para>
+                        <literal>SapNetWeaver</literal> - JtaPlatform for the SAP NetWeaver Application Server.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
                         <literal>SunOne</literal> - JtaPlatform for the SunOne Application Server.
                     </para>
                 </listitem>

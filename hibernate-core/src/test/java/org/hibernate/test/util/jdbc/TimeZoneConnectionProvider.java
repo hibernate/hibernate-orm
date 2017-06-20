@@ -10,6 +10,8 @@ import java.util.TimeZone;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
+import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
+
 /**
  * This {@link ConnectionProvider} extends any other ConnectionProvider that would be used by default taken the current configuration properties, and it
  * just sets a default TimeZone which is different than the current default one.

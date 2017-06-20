@@ -60,6 +60,11 @@ public class DB2400Dialect extends DB2Dialect {
 	}
 
 	@Override
+	public String getQuerySequencesString() {
+		return null;
+	}
+
+	@Override
 	@SuppressWarnings("deprecation")
 	public boolean supportsLimitOffset() {
 		return false;

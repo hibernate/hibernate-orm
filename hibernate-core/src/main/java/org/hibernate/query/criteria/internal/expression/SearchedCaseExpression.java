@@ -33,7 +33,6 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
 public class SearchedCaseExpression<R>
 		extends ExpressionImpl<R>
 		implements Case<R>, Serializable {
-	private Class<R> javaType; // overrides the javaType kept on tuple-impl so that we can adjust it
 	private List<WhenClause> whenClauses = new ArrayList<WhenClause>();
 	private Expression<? extends R> otherwiseResult;
 
@@ -59,7 +58,6 @@ public class SearchedCaseExpression<R>
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<R> javaType) {
 		super( criteriaBuilder, javaType );
-		this.javaType = javaType;
 	}
 
 	public Case<R> when(Expression<Boolean> condition, R result) {
@@ -77,15 +75,8 @@ public class SearchedCaseExpression<R>
 	public Case<R> when(Expression<Boolean> condition, Expression<? extends R> result) {
 		WhenClause whenClause = new WhenClause( condition, result );
 		whenClauses.add( whenClause );
-		adjustJavaType( result );
+		resetJavaType( result.getJavaType() );
 		return this;
-	}
-
-	@SuppressWarnings({"unchecked"})
-	private void adjustJavaType(Expression<? extends R> exp) {
-		if ( javaType == null ) {
-			javaType = (Class<R>) exp.getJavaType();
-		}
 	}
 
 	public Expression<R> otherwise(R result) {
@@ -94,7 +85,7 @@ public class SearchedCaseExpression<R>
 
 	public Expression<R> otherwise(Expression<? extends R> result) {
 		this.otherwiseResult = result;
-		adjustJavaType( result );
+		resetJavaType( result.getJavaType() );
 		return this;
 	}
 

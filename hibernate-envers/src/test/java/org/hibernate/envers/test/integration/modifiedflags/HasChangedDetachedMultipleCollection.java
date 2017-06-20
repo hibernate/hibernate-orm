@@ -99,7 +99,7 @@ public class HasChangedDetachedMultipleCollection extends AbstractModifiedFlagsE
 		em.close();
 		em = getEntityManager();
 
-		// No changes to detached entity (collections were empty beforeQuery).
+		// No changes to detached entity (collections were empty before).
 		em.getTransaction().begin();
 		mce1.setRefEntities1( new ArrayList<MultipleCollectionRefEntity1>() );
 		mce1.setRefEntities2( new ArrayList<MultipleCollectionRefEntity2>() );

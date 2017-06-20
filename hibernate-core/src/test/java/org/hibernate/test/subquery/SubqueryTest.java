@@ -11,13 +11,12 @@ package org.hibernate.test.subquery;
 
 import org.hibernate.QueryException;
 import org.hibernate.Session;
-import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.Type;
 import org.junit.Test;
@@ -31,7 +30,7 @@ import java.util.function.Consumer;
  *
  * @author Christian Beikov
  */
-@SkipForDialect(value = MariaDBDialect.class, comment = "This version of MariaDB doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery")
+@RequiresDialect(H2Dialect.class)
 public class SubqueryTest extends BaseCoreFunctionalTestCase {
 
     private static final SQLFunction LIMIT_FUNCTION = new SQLFunction() {

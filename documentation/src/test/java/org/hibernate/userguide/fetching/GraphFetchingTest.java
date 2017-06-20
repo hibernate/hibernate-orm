@@ -17,10 +17,13 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedSubgraph;
 import javax.persistence.OneToMany;
+import javax.persistence.QueryHint;
 
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.QueryHints;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -30,7 +33,9 @@ import org.junit.Test;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 
 /**
  * @author Vlad Mihalcea
@@ -72,6 +77,10 @@ public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
 			employee2.department = department;
 			entityManager.persist( employee2 );
 
+			Project project = new Project();
+			project.id = 1L;
+			project.employees.add( employee1 );
+			entityManager.persist( project );
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -90,6 +99,20 @@ public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
 			assertNotNull(employee);
 		} );
 
+		//tag::fetching-strategies-dynamic-fetching-entity-subgraph-example[]
+		Project project = doInJPA( this::entityManagerFactory, entityManager -> {
+			return entityManager.find(
+				Project.class,
+				1L,
+				Collections.singletonMap(
+					"javax.persistence.fetchgraph",
+					entityManager.getEntityGraph( "project.employees" )
+				)
+			);
+		} );
+		//end::fetching-strategies-dynamic-fetching-entity-subgraph-example[]
+		assertEquals(1, project.getEmployees().size());
+		assertEquals( Long.valueOf( 1L ), project.getEmployees().get( 0 ).getDepartment().getId() );
 	}
 
 	@Entity(name = "Department")
@@ -102,6 +125,22 @@ public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
 		private List<Employee> employees = new ArrayList<>();
 
 		//Getters and setters omitted for brevity
+
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public List<Employee> getEmployees() {
+			return employees;
+		}
+
+		public void setEmployees(List<Employee> employees) {
+			this.employees = employees;
+		}
 	}
 
 	//tag::fetching-strategies-dynamic-fetching-entity-graph-mapping-example[]
@@ -134,10 +173,69 @@ public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
 		private List<Project> projects = new ArrayList<>();
 
 		//Getters and setters omitted for brevity
+
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public String getUsername() {
+			return username;
+		}
+
+		public void setUsername(String username) {
+			this.username = username;
+		}
+
+		public String getPassword() {
+			return password;
+		}
+
+		public void setPassword(String password) {
+			this.password = password;
+		}
+
+		public int getAccessLevel() {
+			return accessLevel;
+		}
+
+		public void setAccessLevel(int accessLevel) {
+			this.accessLevel = accessLevel;
+		}
+
+		public Department getDepartment() {
+			return department;
+		}
+
+		public void setDepartment(Department department) {
+			this.department = department;
+		}
+
+		public List<Project> getProjects() {
+			return projects;
+		}
+
+		public void setProjects(List<Project> projects) {
+			this.projects = projects;
+		}
 	}
 
+	//tag::fetching-strategies-dynamic-fetching-entity-subgraph-mapping-example[]
 	@Entity(name = "Project")
-	public class Project {
+	@NamedEntityGraph(name = "project.employees",
+		attributeNodes = @NamedAttributeNode(
+			value = "employees",
+			subgraph = "project.employees.department"
+		),
+		subgraphs = @NamedSubgraph(
+			name = "project.employees.department",
+			attributeNodes = @NamedAttributeNode( "department" )
+		)
+	)
+	public static class Project {
 
 		@Id
 		private Long id;
@@ -146,5 +244,24 @@ public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
 		private List<Employee> employees = new ArrayList<>();
 
 		//Getters and setters omitted for brevity
+	//end::fetching-strategies-dynamic-fetching-entity-subgraph-mapping-example[]
+
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public List<Employee> getEmployees() {
+			return employees;
+		}
+
+		public void setEmployees(List<Employee> employees) {
+			this.employees = employees;
+		}
+	//tag::fetching-strategies-dynamic-fetching-entity-subgraph-mapping-example[]
 	}
+	//end::fetching-strategies-dynamic-fetching-entity-subgraph-mapping-example[]
 }

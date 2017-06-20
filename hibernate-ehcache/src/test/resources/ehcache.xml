@@ -26,9 +26,9 @@
         maxInMemory       - Sets the maximum number of objects that will be created in memory
         eternal           - Sets whether elements are eternal. If eternal,  timeouts are ignored and the element
                             is never expired.
-        timeToIdleSeconds - Sets the time to idle for an element beforeQuery it expires. Is only used
+        timeToIdleSeconds - Sets the time to idle for an element before it expires. Is only used
                             if the element is not eternal. Idle time is now - last accessed time
-        timeToLiveSeconds - Sets the time to live for an element beforeQuery it expires. Is only used
+        timeToLiveSeconds - Sets the time to live for an element before it expires. Is only used
                             if the element is not eternal. TTL is now - creation time
         overflowToDisk    - Sets whether elements can overflow to disk when the in-memory cache
                             has reached the maxInMemory limit.
@@ -52,9 +52,9 @@
         maxInMemory       - Sets the maximum number of objects that will be created in memory
         eternal           - Sets whether elements are eternal. If eternal,  timeouts are ignored and the element
                             is never expired.
-        timeToIdleSeconds - Sets the time to idle for an element beforeQuery it expires. Is only used
+        timeToIdleSeconds - Sets the time to idle for an element before it expires. Is only used
                             if the element is not eternal. Idle time is now - last accessed time
-        timeToLiveSeconds - Sets the time to live for an element beforeQuery it expires. Is only used
+        timeToLiveSeconds - Sets the time to live for an element before it expires. Is only used
                             if the element is not eternal. TTL is now - creation time
         overflowToDisk    - Sets whether elements can overflow to disk when the in-memory cache
                             has reached the maxInMemory limit.

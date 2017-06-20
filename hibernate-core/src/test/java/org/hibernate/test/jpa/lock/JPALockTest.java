@@ -9,12 +9,16 @@ package org.hibernate.test.jpa.lock;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.Item;
 import org.hibernate.test.jpa.MyEntity;
+import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -29,6 +33,23 @@ import static org.junit.Assert.fail;
  */
 @RequiresDialectFeature( DialectChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class )
 public class JPALockTest extends AbstractJPATest {
+
+	private SQLServerSnapshotIsolationConnectionProvider connectionProvider = new SQLServerSnapshotIsolationConnectionProvider();
+
+	@Override
+	public void configure(Configuration cfg) {
+		super.configure( cfg );
+		if( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() )) {
+			cfg.getProperties().put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
+		}
+	}
+
+	@Override
+	protected void releaseSessionFactory() {
+		super.releaseSessionFactory();
+		connectionProvider.stop();
+	}
+
 	/**
 	 * Test the equivalent of EJB3 LockModeType.READ
 	 * <p/>
@@ -37,11 +58,11 @@ public class JPALockTest extends AbstractJPATest {
 	 * If transaction T1 calls lock(entity, LockModeType.READ) on a versioned object, the entity
 	 * manager must ensure that neither of the following phenomena can occur:<ul>
 	 * <li>P1 (Dirty read): Transaction T1 modifies a row. Another transaction T2 then reads that row and
-	 * obtains the modified value, beforeQuery T1 has committed or rolled back. Transaction T2 eventually
+	 * obtains the modified value, before T1 has committed or rolled back. Transaction T2 eventually
 	 * commits successfully; it does not matter whether T1 commits or rolls back and whether it does
-	 * so beforeQuery or afterQuery T2 commits.
+	 * so before or after T2 commits.
 	 * <li>P2 (Non-repeatable read): Transaction T1 reads a row. Another transaction T2 then modifies or
-	 * deletes that row, beforeQuery T1 has committed. Both transactions eventually commit successfully.
+	 * deletes that row, before T1 has committed. Both transactions eventually commit successfully.
 	 * <p/>
 	 * This will generally be achieved by the entity manager acquiring a lock on the underlying database row.
 	 * Any such lock may be obtained immediately (so long as it is retained until commit completes), or the
@@ -110,7 +131,7 @@ public class JPALockTest extends AbstractJPATest {
 	 * If transaction T1 calls lock(entity, LockModeType.WRITE) on a versioned object, the entity
 	 * manager must avoid the phenomena P1 and P2 (as with LockModeType.READ) and must also force
 	 * an update (increment) to the entity's version column. A forced version update may be performed immediately,
-	 * or may be deferred until a flush or commit. If an entity is removed beforeQuery a deferred version
+	 * or may be deferred until a flush or commit. If an entity is removed before a deferred version
 	 * update was to have been applied, the forced version update is omitted, since the underlying database
 	 * row no longer exists.
 	 * <p/>
@@ -122,7 +143,7 @@ public class JPALockTest extends AbstractJPATest {
 	 * lock(entity, LockModeType.WRITE) on non-versioned objects will not be portable.
 	 * <p/>
 	 * Due to the requirement that LockModeType.WRITE needs to force a version increment,
-	 * a new Hibernate LockMode was added to support this behavior: {@link org.hibernate.LockMode#FORCE}.
+	 * a new Hibernate LockMode was added to support this behavior: {@link LockMode#FORCE}.
 	 */
 	@Test
 	public void testLockModeTypeWrite() {

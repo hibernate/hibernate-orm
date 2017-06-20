@@ -121,10 +121,12 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final boolean scrollableResultSetsEnabled;
 	private final boolean commentsEnabled;
 	private final PhysicalConnectionHandlingMode physicalConnectionHandlingMode;
+	private final boolean connectionProviderDisablesAutoCommit;
 	private final boolean wrapResultSetsEnabled;
 	private final TimeZone jdbcTimeZone;
 
 	private final Map<String, SQLFunction> sqlFunctions;
+	private boolean queryParametersValidationEnabled;
 
 	public SessionFactoryOptionsImpl(SessionFactoryOptionsState state) {
 		this.serviceRegistry = state.getServiceRegistry();
@@ -191,6 +193,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 
 		this.schemaAutoTooling = state.getSchemaAutoTooling();
 		this.physicalConnectionHandlingMode = state.getPhysicalConnectionHandlingMode();
+		this.connectionProviderDisablesAutoCommit = state.connectionProviderDisablesAutoCommit();
 		this.getGeneratedKeysEnabled = state.isGetGeneratedKeysEnabled();
 		this.jdbcBatchSize = state.getJdbcBatchSize();
 		this.jdbcBatchVersionedData = state.isJdbcBatchVersionedData();
@@ -202,6 +205,8 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.sqlFunctions = state.getCustomSqlFunctionMap();
 
 		this.jdbcTimeZone = state.getJdbcTimeZone();
+
+		this.queryParametersValidationEnabled = state.isQueryParametersValidationEnabled();
 	}
 
 	@Override
@@ -488,6 +493,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	}
 
 	@Override
+	public boolean doesConnectionProviderDisableAutoCommit() {
+		return connectionProviderDisablesAutoCommit;
+	}
+
+	@Override
 	public boolean isCommentsEnabled() {
 		return commentsEnabled;
 	}
@@ -526,5 +536,10 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public TimeZone getJdbcTimeZone() {
 		return jdbcTimeZone;
+	}
+
+	@Override
+	public boolean isQueryParametersValidationEnabled() {
+		return queryParametersValidationEnabled;
 	}
 }

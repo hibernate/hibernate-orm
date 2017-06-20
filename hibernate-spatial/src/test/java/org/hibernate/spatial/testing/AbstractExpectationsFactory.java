@@ -363,7 +363,7 @@ public abstract class AbstractExpectationsFactory {
 	/**
 	 * Returns the expected results of the convexhull function
 	 *
-	 * @param geom geometry with which each testsuite-suite geometry is unioned beforeQuery convexhull calculation
+	 * @param geom geometry with which each testsuite-suite geometry is unioned before convexhull calculation
 	 *
 	 * @return
 	 *

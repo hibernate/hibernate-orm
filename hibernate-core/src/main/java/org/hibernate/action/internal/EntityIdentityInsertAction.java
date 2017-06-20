@@ -91,7 +91,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 		}
 
 
-		//TODO: this bit actually has to be called afterQuery all cascades!
+		//TODO: this bit actually has to be called after all cascades!
 		//      but since identity insert is called *synchronously*,
 		//      instead of asynchronously as other actions, it isn't
 		/*if ( persister.hasCache() && !persister.isCacheInvalidationRequired() ) {

@@ -23,11 +23,7 @@ import org.hibernate.envers.query.projection.AuditProjection;
 import org.hibernate.envers.query.projection.internal.EntityAuditProjection;
 
 /**
- * TODO: ilike
- *
  * @author Adam Warski (adam at warski dot org)
- *
- * @see org.hibernate.criterion.Restrictions
  */
 @SuppressWarnings({"JavaDoc"})
 public class AuditEntity {

@@ -160,7 +160,7 @@ public class PropertyBinder {
 			);
 		}
 		if ( !declaringClassSet ) {
-			throw new AssertionFailure( "declaringClass has not been set beforeQuery a bind" );
+			throw new AssertionFailure( "declaringClass has not been set before a bind" );
 		}
 	}
 

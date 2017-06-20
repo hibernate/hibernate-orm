@@ -447,13 +447,12 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		
 		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
 
-		StringBuilder root = new StringBuilder( "alter table " )
-				.append( 
-						jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-								tableInfo.getName(),
-								dialect
-						) 
-				)
+		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				tableInfo.getName(),
+				dialect
+		);
+
+		StringBuilder root = new StringBuilder( dialect.getAlterTableString( tableName ) )
 				.append( ' ' )
 				.append( dialect.getAddColumnString() );
 
@@ -714,7 +713,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 			}
 
 			// NOTE : if the name is null, we will generate an implicit name during second pass processing
-			// afterQuery we know the referenced table name (which might not be resolved yet).
+			// after we know the referenced table name (which might not be resolved yet).
 			fk.setName( keyName );
 
 			foreignKeys.put( key, fk );

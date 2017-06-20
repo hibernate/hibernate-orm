@@ -7,6 +7,8 @@
 package org.hibernate.test.hql;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Rule;
@@ -65,6 +67,20 @@ public class JoinOnClauseTest extends BaseEntityManagerFunctionalTestCase {
 			List<Book> result = entityManager.createQuery( "SELECT DISTINCT b1 FROM Book b1 JOIN Book b2 ON b1.price = b2.price", Book.class )
 				.getResultList();
 			assertEquals(2, result.size());
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11435")
+	@FailureExpected( jiraKey = "HHH-11435" )
+	public void testOnClauseUsesNonDrivingTableAlias() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			try {
+				entityManager.createQuery("SELECT b1 FROM Book b1 JOIN Book b2 ON b1.author = author2 LEFT JOIN b2.author author2");
+				fail("Referring to a join alias in the on clause that is joined later should be invalid!");
+			} catch (IllegalArgumentException ex) {
+				// TODO: Assert it fails due to the alias not being defined
+			}
 		} );
 	}
 

@@ -23,6 +23,8 @@ public interface JdbcSessionContext {
 
 	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
 
+	boolean doesConnectionProviderDisableAutoCommit();
+
 	/**
 	 * @deprecated Use {@link #getPhysicalConnectionHandlingMode} instead
 	 */

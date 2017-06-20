@@ -56,7 +56,7 @@ public interface SingleColumnType<T> extends Type {
 
 	/**
 	 * Set a parameter value without worrying about the possibility of null
-	 * values.  Called from {@link #nullSafeSet} afterQuery nullness checks have
+	 * values.  Called from {@link #nullSafeSet} after nullness checks have
 	 * been performed.
 	 *
 	 * @param st The statement into which to bind the parameter value.

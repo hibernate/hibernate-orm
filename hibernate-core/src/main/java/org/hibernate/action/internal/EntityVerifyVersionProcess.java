@@ -15,7 +15,7 @@ import org.hibernate.pretty.MessageHelper;
 
 /**
  * A BeforeTransactionCompletionProcess impl to verify an entity version as part of
- * beforeQuery-transaction-completion processing
+ * before-transaction-completion processing
  *
  * @author Scott Marlow
  */

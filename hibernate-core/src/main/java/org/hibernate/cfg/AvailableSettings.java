@@ -324,9 +324,12 @@ public interface AvailableSettings {
 	String ISOLATION ="hibernate.connection.isolation";
 
 	/**
-	 * Names the {@literal JDBC} autocommit mode
+	 * Controls the autocommit mode of {@literal JDBC} Connections obtained
+	 * from a non-DataSource ConnectionProvider - assuming the ConnectionProvider
+	 * impl properly leverages this setting (the provided Hibernate impls all
+	 * do).
 	 */
-	String AUTOCOMMIT ="hibernate.connection.autocommit";
+	String AUTOCOMMIT = "hibernate.connection.autocommit";
 
 	/**
 	 * Maximum number of inactive connections for the built-in Hibernate connection pool.
@@ -341,6 +344,18 @@ public interface AvailableSettings {
 	 * For JNDI names, ses also {@link #JNDI_CLASS}, {@link #JNDI_URL}, {@link #JNDI_PREFIX}, etc.
 	 */
 	String DATASOURCE ="hibernate.connection.datasource";
+
+	/**
+	 * Allows a user to tell Hibernate that the Connections we obtain from the configured
+	 * ConnectionProvider will already have auto-commit disabled when we acquire them from
+	 * the provider.  When we get connections already in auto-commit, this allows us to circumvent
+	 * some operations in the interest of performance.
+	 * <p/>
+	 * Default value is {@code false} - do not skip, aka call setAutocommit
+	 *
+	 * @since 5.2.10
+	 */
+	String CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT= "hibernate.connection.provider_disables_autocommit";
 
 	/**
 	 * Names a prefix used to define arbitrary JDBC connection properties.  These properties are passed along to
@@ -897,7 +912,7 @@ public interface AvailableSettings {
 	String C3P0_ACQUIRE_INCREMENT = "hibernate.c3p0.acquire_increment";
 
 	/**
-	 * Idle time beforeQuery a C3P0 pooled connection is validated
+	 * Idle time before a C3P0 pooled connection is validated
 	 */
 	String C3P0_IDLE_TEST_PERIOD = "hibernate.c3p0.idle_test_period";
 
@@ -1277,7 +1292,7 @@ public interface AvailableSettings {
 	/**
 	 * Comma-separated names of the optional files containing SQL DML statements executed
 	 * during the SessionFactory creation.
-	 * File order matters, the statements of a give file are executed beforeQuery the statements of the
+	 * File order matters, the statements of a give file are executed before the statements of the
 	 * following files.
 	 * <p/>
 	 * These statements are only executed if the schema is created ie if <tt>hibernate.hbm2ddl.auto</tt>
@@ -1646,4 +1661,19 @@ public interface AvailableSettings {
 	 * @since 5.2.5
 	 */
 	String USE_LEGACY_LIMIT_HANDLERS = "hibernate.legacy_limit_handler";
+
+
+	/**
+	 * Setting which indicates if {@link org.hibernate.query.Query#setParameter} should not perform parameters validation
+	 *
+	 * This setting is applied only when the Session is bootstrapped via JPA {@link javax.persistence.EntityManagerFactory}
+	 *
+	 * </p>
+	 * Values are: {@code true} indicates the validation should be performed, {@code false} otherwise
+	 * <p>
+	 * The default value is {@code true} when the Session is bootstrapped via JPA {@link javax.persistence.EntityManagerFactory},
+	 * otherwise is {@code false}
+	 *
+	 */
+	String VALIDATE_QUERY_PARAMETERS = "hibernate.query.validate_parameters";
 }

@@ -37,7 +37,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
 /**
- * A convenience bas class for listeners responding to save events.
+ * A convenience base class for listeners responding to save events.
  *
  * @author Steve Ebersole.
  */
@@ -84,7 +84,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 	 * @param anything Generally cascade-specific information.
 	 * @param source The session which is the source of this save event.
 	 * @param requiresImmediateIdAccess does the event context require
-	 * access to the identifier immediately afterQuery execution of this method (if
+	 * access to the identifier immediately after execution of this method (if
 	 * not, post-insert style id generators may be postponed if we are outside
 	 * a transaction).
 	 *
@@ -137,7 +137,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 	 * @param anything Generally cascade-specific information.
 	 * @param source The session from which the event originated.
 	 * @param requiresImmediateIdAccess does the event context require
-	 * access to the identifier immediately afterQuery execution of this method (if
+	 * access to the identifier immediately after execution of this method (if
 	 * not, post-insert style id generators may be postponed if we are outside
 	 * a transaction).
 	 *
@@ -191,7 +191,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 	}
 
 	protected boolean invokeSaveLifecycle(Object entity, EntityPersister persister, EventSource source) {
-		// Sub-insertions should occur beforeQuery containing insertion so
+		// Sub-insertions should occur before containing insertion so
 		// Try to do the callback now
 		if ( persister.implementsLifecycle() ) {
 			LOG.debug( "Calling onSave()" );
@@ -214,7 +214,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 	 * @param anything Generally cascade-specific information.
 	 * @param source The session which is the source of the current event.
 	 * @param requiresImmediateIdAccess Is access to the identifier required immediately
-	 * afterQuery the completion of the save?  persist(), for example, does not require this...
+	 * after the completion of the save?  persist(), for example, does not require this...
 	 *
 	 * @return The id used to save the entity; may be null depending on the
 	 *         type of id generator used and the requiresImmediateIdAccess value
@@ -234,8 +234,8 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		boolean shouldDelayIdentityInserts = !inTxn && !requiresImmediateIdAccess;
 
 		// Put a placeholder in entries, so we don't recurse back and try to save() the
-		// same object again. QUESTION: should this be done beforeQuery onSave() is called?
-		// likewise, should it be done beforeQuery onUpdate()?
+		// same object again. QUESTION: should this be done before onSave() is called?
+		// likewise, should it be done before onUpdate()?
 		EntityEntry original = source.getPersistenceContext().addEntry(
 				entity,
 				Status.SAVING,
@@ -336,7 +336,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 	 * After the save, will te version number be incremented
 	 * if the instance is modified?
 	 *
-	 * @return True if the version will be incremented on an entity change afterQuery save;
+	 * @return True if the version will be incremented on an entity change after save;
 	 *         false otherwise.
 	 */
 	protected boolean isVersionIncrementDisabled() {

@@ -19,6 +19,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
@@ -64,13 +65,14 @@ public class UniqueConstraintGenerationTest {
 				.setOutputFile( output.getAbsolutePath() )
 				.create( EnumSet.of( TargetType.SCRIPT ), metadata );
 
-		if (ssr.getService(JdbcEnvironment.class).getDialect() instanceof DB2Dialect) {
+		if ( getDialect() instanceof DB2Dialect) {
 			assertThat(
 					"The test_entity_item table unique constraint has not been generated",
 					isCreateUniqueIndexGenerated("test_entity_item", "item"),
 					is(true)
 			);
-		} else {
+		}
+		else {
 			assertThat(
 					"The test_entity_item table unique constraint has not been generated",
 					isUniqueConstraintGenerated("test_entity_item", "item"),
@@ -85,9 +87,13 @@ public class UniqueConstraintGenerationTest {
 		);
 	}
 
+	private Dialect getDialect() {
+		return ssr.getService(JdbcEnvironment.class).getDialect();
+	}
+
 	private boolean isUniqueConstraintGenerated(String tableName, String columnName) throws IOException {
 		boolean matches = false;
-		final String regex = "alter table " + tableName + " add constraint uk_(.)* unique \\(" + columnName + "\\)";
+		final String regex = getDialect().getAlterTableString( tableName ) + " add constraint uk_(.)* unique \\(" + columnName + "\\)";
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase();
 		final String[] split = fileContent.split( System.lineSeparator() );

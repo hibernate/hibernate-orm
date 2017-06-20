@@ -90,7 +90,7 @@ public class CursorFromCallableTest extends BaseCoreFunctionalTestCase {
 		);
 		JdbcCoordinator jdbcCoordinator = ( (SessionImplementor) session ).getJdbcCoordinator();
 		Assert.assertFalse(
-				"Prepared statement and result set should be released afterQuery query execution.",
+				"Prepared statement and result set should be released after query execution.",
 				jdbcCoordinator.getResourceRegistry().hasRegisteredResources()
 		);
 		session.getTransaction().commit();

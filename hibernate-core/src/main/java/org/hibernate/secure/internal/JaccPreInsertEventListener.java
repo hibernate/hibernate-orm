@@ -11,7 +11,7 @@ import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.secure.spi.PermissibleAction;
 
 /**
- * Check security beforeQuery an insertion
+ * Check security before an insertion
  *
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  * @author Steve Ebersole

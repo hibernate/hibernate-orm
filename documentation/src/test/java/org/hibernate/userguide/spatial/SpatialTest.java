@@ -11,6 +11,7 @@ import javax.persistence.Id;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.spatial.dialect.postgis.PostgisDialect;
+import org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
@@ -30,10 +31,10 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(PostgisDialect.class)
+@RequiresDialect(PostgisPG95Dialect.class)
 public class SpatialTest extends BaseEntityManagerFunctionalTestCase {
 
-    GeometryFactory geometryFactory = new GeometryFactory();
+    private GeometryFactory geometryFactory = new GeometryFactory();
 
     @Override
     protected Class<?>[] getAnnotatedClasses() {

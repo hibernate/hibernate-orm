@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -25,6 +26,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -86,21 +88,41 @@ public final class Cascade {
 			final boolean hasUninitializedLazyProperties = persister.hasUninitializedLazyProperties( parent );
 			final int componentPathStackDepth = 0;
 			for ( int i = 0; i < types.length; i++) {
-				final CascadeStyle style = cascadeStyles[i];
-				final String propertyName = propertyNames[i];
+				final CascadeStyle style = cascadeStyles[ i ];
+				final String propertyName = propertyNames[ i ];
+				final boolean isUninitializedProperty =
+						hasUninitializedLazyProperties &&
+						!persister.getInstrumentationMetadata().isAttributeLoaded( parent, propertyName );
 
 				if ( style.doCascade( action ) ) {
-					Object child;
-
-					// For bytecode enhanced entities, need to fetch the attribute
-					if ( hasUninitializedLazyProperties && persister.getPropertyLaziness()[i] && action.performOnLazyProperty() ) {
-						LazyAttributeLoadingInterceptor interceptor = persister.getInstrumentationMetadata().extractInterceptor( parent );
-						child = interceptor.fetchAttribute( parent, propertyName );
+					final Object child;
+					if ( isUninitializedProperty  ) {
+						// parent is a bytecode enhanced entity.
+						// cascading to an uninitialized, lazy value.
+						if ( types[ i ].isCollectionType() ) {
+							// The collection does not need to be loaded from the DB.
+							// CollectionType#resolve will return an uninitialized PersistentCollection.
+							// The action will initialize the collection later, if necessary.
+							child = types[ i ].resolve( LazyPropertyInitializer.UNFETCHED_PROPERTY, eventSource, parent );
+							// TODO: it would be nice to be able to set the attribute in parent using
+							// persister.setPropertyValue( parent, i, child ).
+							// Unfortunately, that would cause the uninitialized collection to be
+							// loaded from the DB.
+						}
+						else if ( action.performOnLazyProperty() ) {
+							// The (non-collection) attribute needs to be initialized so that
+							// the action can be performed on the initialized attribute.
+							LazyAttributeLoadingInterceptor interceptor = persister.getInstrumentationMetadata().extractInterceptor( parent );
+							child = interceptor.fetchAttribute( parent, propertyName );
+						}
+						else {
+							// Nothing to do, so just skip cascading to this lazy (non-collection) attribute.
+							continue;
+						}
 					}
 					else {
 						child = persister.getPropertyValue( parent, i );
 					}
-
 					cascadeProperty(
 							action,
 							cascadePoint,
@@ -108,21 +130,37 @@ public final class Cascade {
 							componentPathStackDepth,
 							parent,
 							child,
-							types[i],
+							types[ i ],
 							style,
 							propertyName,
 							anything,
 							false
 					);
 				}
-				else if ( action.requiresNoCascadeChecking() ) {
-					action.noCascade(
-							eventSource,
-							parent,
-							persister,
-							types[i],
-							i
-					);
+				else {
+					if ( action.requiresNoCascadeChecking() ) {
+						action.noCascade(
+								eventSource,
+								parent,
+								persister,
+								types[i],
+								i
+						);
+					}
+					// If the property is uninitialized, then there cannot be any orphans.
+					if ( action.deleteOrphans() && !isUninitializedProperty ) {
+						cascadeLogicalOneToOneOrphanRemoval(
+								action,
+								eventSource,
+								componentPathStackDepth,
+								parent,
+								persister.getPropertyValue( parent, i ),
+								types[ i ],
+								style,
+								propertyName,
+								false
+						);
+					}
 				}
 			}
 
@@ -179,7 +217,30 @@ public final class Cascade {
 				);
 			}
 		}
-		
+
+		cascadeLogicalOneToOneOrphanRemoval(
+				action,
+				eventSource,
+				componentPathStackDepth,
+				parent,
+				child,
+				type,
+				style,
+				propertyName,
+				isCascadeDeleteEnabled );
+	}
+
+	private static void cascadeLogicalOneToOneOrphanRemoval(
+			final CascadingAction action,
+			final EventSource eventSource,
+			final int componentPathStackDepth,
+			final Object parent,
+			final Object child,
+			final Type type,
+			final CascadeStyle style,
+			final String propertyName,
+			final boolean isCascadeDeleteEnabled) throws HibernateException {
+
 		// potentially we need to handle orphan deletes for one-to-ones here...
 		if ( isLogicalOneToOne( type ) ) {
 			// We have a physical or logical one-to-one.  See if the attribute cascade settings and action-type require
@@ -189,7 +250,7 @@ public final class Cascade {
 				// because it is currently null.
 				final EntityEntry entry = eventSource.getPersistenceContext().getEntry( parent );
 				if ( entry != null && entry.getStatus() != Status.SAVING ) {
-					final Object loadedValue;
+					Object loadedValue;
 					if ( componentPathStackDepth == 0 ) {
 						// association defined on entity
 						loadedValue = entry.getLoadedValue( propertyName );
@@ -211,15 +272,21 @@ public final class Cascade {
 //							final String getPropertyPath = composePropertyPath( entityType.getPropertyName() );
 						loadedValue = null;
 					}
-					
+
 					// orphaned if the association was nulled (child == null) or receives a new value while the
 					// entity is managed (without first nulling and manually flushing).
 					if ( child == null || ( loadedValue != null && child != loadedValue ) ) {
-						final EntityEntry valueEntry = eventSource
-								.getPersistenceContext().getEntry( 
+						EntityEntry valueEntry = eventSource
+								.getPersistenceContext().getEntry(
 										loadedValue );
-						// Need to check this in case the context has
-						// already been flushed.  See HHH-7829.
+
+						if ( valueEntry == null && loadedValue instanceof HibernateProxy ) {
+							// un-proxy and re-associate for cascade operation
+							// useful for @OneToOne defined as FetchType.LAZY
+							loadedValue = eventSource.getPersistenceContext().unproxyAndReassociate( loadedValue );
+							valueEntry = eventSource.getPersistenceContext().getEntry( loadedValue );
+						}
+
 						if ( valueEntry != null ) {
 							final String entityName = valueEntry.getPersister().getEntityName();
 							if ( LOG.isTraceEnabled() ) {
@@ -227,17 +294,17 @@ public final class Cascade {
 								final String description = MessageHelper.infoString( entityName, id );
 								LOG.tracev( "Deleting orphaned entity instance: {0}", description );
 							}
-							
-							if (type.isAssociationType() && ((AssociationType)type).getForeignKeyDirection().equals(
-											ForeignKeyDirection.TO_PARENT
-							)) {
-								// If FK direction is to-parent, we must remove the orphan *beforeQuery* the queued update(s)
+
+							if ( type.isAssociationType() && ( (AssociationType) type ).getForeignKeyDirection().equals(
+									ForeignKeyDirection.TO_PARENT
+							) ) {
+								// If FK direction is to-parent, we must remove the orphan *before* the queued update(s)
 								// occur.  Otherwise, replacing the association on a managed entity, without manually
 								// nulling and flushing, causes FK constraint violations.
 								eventSource.removeOrphanBeforeUpdates( entityName, loadedValue );
 							}
 							else {
-								// Else, we must delete afterQuery the updates.
+								// Else, we must delete after the updates.
 								eventSource.delete( entityName, loadedValue, isCascadeDeleteEnabled, new HashSet() );
 							}
 						}

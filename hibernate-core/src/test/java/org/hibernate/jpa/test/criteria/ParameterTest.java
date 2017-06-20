@@ -9,8 +9,8 @@ package org.hibernate.jpa.test.criteria;
 import javax.persistence.EntityManager;
 import javax.persistence.Parameter;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.transaction.TransactionUtil;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
@@ -122,32 +123,20 @@ public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-10870")
 	public void testParameterInParameterList2() {
-		EntityManager em = getOrCreateEntityManager();
-		try {
-			em.getTransaction().begin();
-			final CriteriaQuery<MultiTypedBasicAttributesEntity> query = em.getCriteriaBuilder()
+		TransactionUtil.doInJPA( this::entityManagerFactory, em -> {
+			final CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+			final CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = criteriaBuilder
 					.createQuery( MultiTypedBasicAttributesEntity.class );
 
-			final Root<MultiTypedBasicAttributesEntity> root = query.from( MultiTypedBasicAttributesEntity.class );
-			root.get( "id" );
-			final ParameterExpression<Iterable> parameter = em.getCriteriaBuilder().parameter( Iterable.class );
-			root.in( new Expression[] {parameter} );
-			query.select( root );
+			final ParameterExpression<Iterable> parameter = criteriaBuilder.parameter( Iterable.class );
 
-			final TypedQuery<MultiTypedBasicAttributesEntity> query1 = em.createQuery( query );
+			final Root<MultiTypedBasicAttributesEntity> root = criteria.from( MultiTypedBasicAttributesEntity.class );
+			criteria.select( root ).where( root.get( "id" ).in( parameter ) );
+
+			final TypedQuery<MultiTypedBasicAttributesEntity> query1 = em.createQuery( criteria );
 			query1.setParameter( parameter, Arrays.asList( 1L, 2L, 3L ) );
 			query1.getResultList();
-
-			em.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Override

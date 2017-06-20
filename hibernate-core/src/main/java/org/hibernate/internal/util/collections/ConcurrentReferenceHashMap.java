@@ -65,7 +65,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * that a value never refers, either directly or indirectly, to its key, thereby
  * preventing reclamation. If this is unavoidable, then it is recommended to use
  * the same reference type in use for the key. However, it should be noted that
- * non-strong values may disappear beforeQuery their corresponding key.
+ * non-strong values may disappear before their corresponding key.
  * <p/>
  * While this table does allow the use of both strong keys and values, it is
  * recommended to use {@link java.util.concurrent.ConcurrentHashMap} for such a
@@ -211,7 +211,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 
 	/**
 	 * Number of unsynchronized retries in size and containsValue
-	 * methods beforeQuery resorting to locking. This is used to avoid
+	 * methods before resorting to locking. This is used to avoid
 	 * unbounded retries if tables undergo continuous modification
 	 * which would make it impossible to obtain an accurate result.
 	 */
@@ -489,7 +489,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 				 *     it is 0.
 				 *
 				 *   - All (synchronized) write operations should write to
-				 *     the "count" field afterQuery structurally changing any bin.
+				 *     the "count" field after structurally changing any bin.
 				 *     The operations must not take any action that could even
 				 *     momentarily cause a concurrent read operation to see
 				 *     inconsistent data. This is made easier by the nature of
@@ -1110,7 +1110,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 			}
 		}
 		// If mcsum happens to be zero, then we know we got a snapshot
-		// beforeQuery any modifications at all were made.  This is
+		// before any modifications at all were made.  This is
 		// probably common enough to bother tracking.
 		if ( mcsum != 0 ) {
 			for ( int i = 0; i < segments.length; ++i ) {

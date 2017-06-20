@@ -38,7 +38,7 @@ import org.jboss.logging.Logger;
 
 /**
  * The Hibernate-specific {@link org.junit.runner.Runner} implementation which layers {@link ExtendedFrameworkMethod}
- * support on top of the standard JUnit {@link FrameworkMethod} for extra information afterQuery checking to make sure the
+ * support on top of the standard JUnit {@link FrameworkMethod} for extra information after checking to make sure the
  * test should be run.
  *
  * @author Steve Ebersole

@@ -68,6 +68,7 @@ public class BidirectionalMapTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Id
 		private Long id;
+
 		@OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
 		@MapKey(name = "type")
 		@MapKeyEnumerated

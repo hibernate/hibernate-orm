@@ -35,20 +35,27 @@ It uses the terms _EE_ and _SE_ for these two approaches, but those terms are ve
 What the JPA spec calls EE bootstrapping implies the existence of a container (EE, OSGi, etc), who'll manage and inject the persistence context on behalf of the application.
 What it calls SE bootstrapping is everything else. We will use the terms container-bootstrapping and application-bootstrapping in this guide.
 
-[NOTE]
-====
-If you would like additional details on accessing and using `EntityManager` instances, sections 7.6 and 7.7 of the JPA 2.1 specification cover container-managed and application-managed `EntityManagers`, respectively.
-====
-
 For compliant container-bootstrapping, the container will build an `EntityManagerFactory` for each persistent-unit defined in the `META-INF/persistence.xml` configuration file
 and make that available to the application for injection via the `javax.persistence.PersistenceUnit` annotation or via JNDI lookup.
 
 [[bootstrap-jpa-compliant-PersistenceUnit-example]]
-.Injecting a EntityManagerFactory
+.Injecting the default `EntityManagerFactory`
 ====
 [source, JAVA, indent=0]
 ----
 include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceUnit-example]
+----
+====
+
+Or, in case you have multiple Persistence Units (e.g. multiple `persistence.xml` configuration files),
+you can inject a specific `EntityManagerFactory` by Unit name:
+
+[[bootstrap-jpa-compliant-PersistenceUnit-configurable-example]]
+.Injecting a specific `EntityManagerFactory`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceUnit-configurable-example]
 ----
 ====
 
@@ -67,7 +74,7 @@ For compliant application-bootstrapping, rather than the container building the 
 The application creates an `EntityManagerFactory` by calling the `createEntityManagerFactory` method:
 
 [[bootstrap-jpa-compliant-EntityManagerFactory-example]]
-.Application bootstrapped EntityManagerFactory
+.Application bootstrapped `EntityManagerFactory`
 ====
 [source, JAVA, indent=0]
 ----
@@ -80,6 +87,37 @@ include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-EntityManag
 If you don't want to provide a `persistence.xml` configuration file, JPA allows you to provide all the configuration options in a
 http://docs.oracle.com/javaee/7/api/javax/persistence/spi/PersistenceUnitInfo.html[PersistenceUnitInfo] implementation and call
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/HibernatePersistenceProvider.html#createContainerEntityManagerFactory-javax.persistence.spi.PersistenceUnitInfo-java.util.Map-[HibernatePersistenceProvider.html#createContainerEntityManagerFactory].
+====
+
+To inject the default Persistence Context, you can use the http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceContext.html[`@PersistenceContext`] annotation.
+
+[[bootstrap-jpa-compliant-PersistenceContext-example]]
+.Inject the default `EntityManager`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceContext-example, indent=0]
+----
+====
+
+To inject a specific Persistence Context,
+you can use the http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceContext.html[`@PersistenceContext`] annotation,
+and you can even pass `EntityManager`-specific properties using the
+http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceProperty.html[`@PersistenceProperty`] annotation.
+
+
+[[bootstrap-jpa-compliant-PersistenceContext-configurable-example]]
+.Inject a configurable `EntityManager`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceContext-configurable-example, indent=0]
+----
+====
+
+[NOTE]
+====
+If you would like additional details on accessing and using `EntityManager` instances, sections 7.6 and 7.7 of the JPA 2.1 specification cover container-managed and application-managed `EntityManagers`, respectively.
 ====
 
 [[bootstrap-jpa-xml-files]]

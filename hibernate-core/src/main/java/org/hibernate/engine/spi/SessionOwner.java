@@ -23,7 +23,7 @@ import org.hibernate.resource.transaction.backend.jta.internal.synchronization.M
 @Deprecated
 public interface SessionOwner {
 	/**
-	 * Should session automatically be closed afterQuery transaction completion?
+	 * Should session automatically be closed after transaction completion?
 	 *
 	 * @return {@literal true}/{@literal false} appropriately.
 	 */

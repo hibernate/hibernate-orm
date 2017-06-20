@@ -17,8 +17,8 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.hbm2ddl.TargetTypeHelper;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
@@ -62,12 +62,14 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 		alter table USER_SETTING add constraint FK_TO_USER foreign key (USERS_ID) references USERS
 		*/
 		checkAlterTableStatement( new AlterTableStatement(
+				ssr,
 				"USERS",
 				"FK_TO_USER_SETTING",
 				"USER_SETTING_ID",
 				"USER_SETTING"
 		) );
 		checkAlterTableStatement( new AlterTableStatement(
+				ssr,
 				"USER_SETTING",
 				"FK_TO_USER",
 				"USER_ID",
@@ -85,6 +87,7 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 		alter table GROUP add constraint FK_USER_GROUP foreign key (USER_ID) references USERS
 		*/
 		checkAlterTableStatement( new AlterTableStatement(
+				ssr,
 				"GROUP",
 				"FK_USER_GROUP",
 				"USER_ID",
@@ -103,12 +106,14 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
             alter table PERSON_PHONE add constraint PHONE_ID_FK foreign key (PHONE_ID) references PHONE
         */
 		checkAlterTableStatement( new AlterTableStatement(
+				ssr,
 				"PERSON_PHONE",
 				"PERSON_ID_FK",
 				"PERSON_ID",
 				"PERSON"
 		) );
 		checkAlterTableStatement( new AlterTableStatement(
+				ssr,
 				"PERSON_PHONE",
 				"PHONE_ID_FK",
 				"PHONE_ID",
@@ -127,12 +132,14 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
                 alter table EMPLOYEE_PROJECT add constraint FK_PROJECT foreign key (PROJECT_ID) references PROJECT
                 */
 		checkAlterTableStatement( new AlterTableStatement(
+				ssr,
 				"EMPLOYEE_PROJECT",
 				"FK_EMPLOYEE",
 				"EMPLOYEE_ID",
 				"EMPLOYEE"
 		) );
 		checkAlterTableStatement( new AlterTableStatement(
+				ssr,
 				"EMPLOYEE_PROJECT",
 				"FK_PROJECT",
 				"PROJECT_ID",
@@ -162,7 +169,6 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 		boolean found = false;
 		for ( String line : sqlLines ) {
 			if ( line.contains( expectedAlterTableStatement ) ) {
-				found = true;
 				return;
 			}
 		}
@@ -170,16 +176,19 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	private static class AlterTableStatement {
+		final StandardServiceRegistry ssr;
 		final String tableName;
 		final String fkConstraintName;
 		final String fkColumnName;
 		final String referenceTableName;
 
 		public AlterTableStatement(
+				StandardServiceRegistry ssr,
 				String tableName,
 				String fkConstraintName,
 				String fkColumnName,
 				String referenceTableName) {
+			this.ssr = ssr;
 			this.tableName = tableName;
 			this.fkConstraintName = fkConstraintName;
 			this.fkColumnName = fkColumnName;
@@ -187,7 +196,7 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 		}
 
 		public String toSQL() {
-			return "alter table " + tableName + " add constraint " + fkConstraintName + " foreign key (" + fkColumnName + ") references " + referenceTableName;
+			return ssr.getService( JdbcEnvironment.class ).getDialect().getAlterTableString( tableName ) + " add constraint " + fkConstraintName + " foreign key (" + fkColumnName + ") references " + referenceTableName;
 		}
 	}
 

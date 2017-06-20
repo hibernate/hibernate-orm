@@ -38,15 +38,21 @@ public class ExpectingInterceptor extends BaseCustomInterceptor {
    }
 
    public synchronized Condition when(BiPredicate<InvocationContext, VisitableCommand> predicate) {
-      Condition condition = new Condition(predicate, null);
+      Condition condition = new Condition(predicate, source(), null);
       conditions.add(condition);
       return condition;
    }
 
    public synchronized Condition whenFails(BiPredicate<InvocationContext, VisitableCommand> predicate) {
-      Condition condition = new Condition(predicate, Boolean.FALSE);
+      Condition condition = new Condition(predicate, source(), Boolean.FALSE);
       conditions.add(condition);
       return condition;
+   }
+
+   private static String source() {
+      StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+      StackTraceElement ste = stackTrace[3];
+      return ste.getFileName() + ":" + ste.getLineNumber();
    }
 
    @Override
@@ -64,7 +70,9 @@ public class ExpectingInterceptor extends BaseCustomInterceptor {
             for (Iterator<Condition> iterator = conditions.iterator(); iterator.hasNext(); ) {
                Condition condition = iterator.next();
                log.tracef("Testing condition %s", condition);
-               if ((condition.success == null || condition.success == succeeded) && condition.predicate.test(ctx, command)) {
+               if (condition.success != null && condition.success != succeeded) {
+                  log.trace("Condition test failed, succeeded: " + succeeded);
+               } else if (condition.predicate.test(ctx, command)) {
                   assert condition.action != null;
                   log.trace("Condition succeeded");
                   toExecute.add(condition.action);
@@ -86,12 +94,14 @@ public class ExpectingInterceptor extends BaseCustomInterceptor {
 
    public class Condition {
       private final BiPredicate<InvocationContext, VisitableCommand> predicate;
+      private final String source;
       private final Boolean success;
       private BooleanSupplier removeCheck;
       private Runnable action;
 
-      public Condition(BiPredicate<InvocationContext, VisitableCommand> predicate, Boolean success) {
+      public Condition(BiPredicate<InvocationContext, VisitableCommand> predicate, String source, Boolean success) {
          this.predicate = predicate;
+         this.source = source;
          this.success = success;
       }
 
@@ -120,7 +130,8 @@ public class ExpectingInterceptor extends BaseCustomInterceptor {
       @Override
       public String toString() {
          final StringBuilder sb = new StringBuilder("Condition{");
-         sb.append("predicate=").append(predicate);
+         sb.append("source=").append(source);
+         sb.append(", predicate=").append(predicate);
          sb.append(", success=").append(success);
          sb.append(", action=").append(action);
          sb.append('}');

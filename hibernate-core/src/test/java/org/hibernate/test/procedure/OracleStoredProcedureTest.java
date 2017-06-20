@@ -303,7 +303,6 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
     }
 
     @Test
-    @FailureExpected( jiraKey = "HHH-10898")
     public void testNamedNativeQueryStoredProcedureRefCursor() {
         EntityManager entityManager = createEntityManager();
         entityManager.getTransaction().begin();

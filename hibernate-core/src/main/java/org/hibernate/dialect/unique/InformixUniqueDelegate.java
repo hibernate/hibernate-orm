@@ -32,7 +32,8 @@ public class InformixUniqueDelegate extends DefaultUniqueDelegate {
 				metadata.getDatabase().getJdbcEnvironment().getDialect()
 		);
 		final String constraintName = dialect.quote( uniqueKey.getName() );
-		return "alter table " + tableName + " add constraint " + uniqueConstraintSql( uniqueKey ) + " constraint " + constraintName;
+		return dialect.getAlterTableString( tableName )
+				+ " add constraint " + uniqueConstraintSql( uniqueKey ) + " constraint " + constraintName;
 	}
 
 }

@@ -35,6 +35,7 @@ import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
+import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
@@ -348,7 +349,7 @@ public class DB2Dialect extends Dialect {
 			default:
 				literal = "0";
 		}
-		return "nullif(" + literal + ',' + literal + ')';
+		return "nullif(" + literal + ", " + literal + ')';
 	}
 
 	@Override
@@ -379,7 +380,10 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new GlobalTemporaryTableBulkIdStrategy(
+		// Prior to DB2 9.7, "real" global temporary tables that can be shared between sessions
+		// are *not* supported; even though the DB2 command says to declare a "global" temp table
+		// Hibernate treats it as a "local" temp table.
+		return new LocalTemporaryTableBulkIdStrategy(
 				new IdTableSupportStandardImpl() {
 					@Override
 					public String generateIdTableName(String baseName) {
@@ -396,7 +400,8 @@ public class DB2Dialect extends Dialect {
 						return "not logged";
 					}
 				},
-				AfterUseAction.CLEAN
+				AfterUseAction.DROP,
+				null
 		);
 	}
 

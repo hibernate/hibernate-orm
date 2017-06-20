@@ -55,7 +55,7 @@ public class QueryKey implements Serializable {
 	 * @param queryParameters The query parameters
 	 * @param filterKeys The keys of any enabled filters.
 	 * @param session The current session.
-	 * @param customTransformer The result transformer; should be null if data is not transformed beforeQuery being cached.
+	 * @param customTransformer The result transformer; should be null if data is not transformed before being cached.
 	 *
 	 * @return The generate query cache key.
 	 */

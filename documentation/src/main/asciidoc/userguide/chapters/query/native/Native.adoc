@@ -12,7 +12,7 @@ Hibernate also allows you to specify handwritten SQL (including stored procedure
 [[sql-jpa-query]]
 === Creating a native query using JPA
 
-Execution of native SQL queries is controlled via the `SQLQuery` interface, which is obtained by calling `Session.createSQLQuery()`.
+Execution of native SQL queries is controlled via the `NativeQuery` interface, which is obtained by calling `Session.createNativeQuery()`.
 The following sections describe how to use this API for querying.
 
 [[sql-scalar-query]]
@@ -536,6 +536,27 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-multiple-scalar-values-dto-
 ----
 ====
 
+You can also use the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedNativeQuery.html[`@NamedNativeQuery`] Hibernate annotation
+to customize the named query using various configurations such as fetch mode, cacheability, time out interval.
+
+[[sql-multiple-scalar-values-dto-NamedNativeQuery-hibernate-example]]
+.Multiple scalar values using `ConstructorResult` and Hibernate `NamedNativeQuery`
+====
+[source, JAVA, indent=0]
+----
+include::{modeldir}/Phone.java[tags=sql-multiple-scalar-values-dto-NamedNativeQuery-hibernate-example]
+----
+====
+
+[[sql-hibernate-multiple-scalar-values-dto-hibernate-named-query-example]]
+.Hibernate `NamedNativeQuery` named native query selecting multiple scalar values into a DTO
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-multiple-scalar-values-dto-hibernate-named-query-example]
+----
+====
+
 [[sql-entity-named-queries]]
 ==== Named SQL queries selecting entities
 
@@ -830,6 +851,32 @@ Since these servers can return multiple result sets and update counts,
 Hibernate will iterate the results and take the first result that is a result set as its return value, so everything else will be discarded.
 
 For SQL Server, if you can enable `SET NOCOUNT ON` in your procedure it will probably be more efficient, but this is not a requirement.
+====
+
+[[sql-sp-named-query]]
+=== Using named queries to call stored procedures
+
+Just like with SQL statements, you can also use named queries to call stored procedures.
+For this purpose, JPA defines the http://docs.oracle.com/javaee/7/api/javax/persistence/NamedStoredProcedureQuery.html[`@NamedStoredProcedureQuery`] annotation.
+
+[[sql-sp-ref-cursor-oracle-named-query-example]]
+.Oracle `REF_CURSOR` named query stored procedure
+====
+[source, JAVA, indent=0]
+----
+include::{modeldir}/Person.java[tags=sql-sp-ref-cursor-oracle-named-query-example]
+----
+====
+
+Calling this stored procedure is straightforward, as illustrated by the following example.
+
+[[sql-jpa-call-sp-ref-cursor-oracle-named-query-example]]
+.Calling an Oracle `REF_CURSOR` stored procedure using a JPA named query
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/OracleStoredProcedureTest.java[tags=sql-jpa-call-sp-ref-cursor-oracle-named-query-example]
+----
 ====
 
 [[sql-crud]]

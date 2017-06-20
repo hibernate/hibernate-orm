@@ -404,6 +404,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public void checkOpen() {
+		delegate.checkOpen();
+	}
+
+	@Override
+	public boolean isOpenOrWaitingForAutoClose() {
+		return delegate.isOpenOrWaitingForAutoClose();
+	}
+
+	@Override
 	public boolean shouldAutoClose() {
 		return delegate.shouldAutoClose();
 	}
@@ -411,6 +421,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public boolean isAutoCloseSessionEnabled() {
 		return delegate.isAutoCloseSessionEnabled();
+	}
+
+	@Override
+	public boolean isQueryParametersValidationEnabled() {
+		return delegate.isQueryParametersValidationEnabled();
 	}
 
 	@Override

@@ -14,7 +14,7 @@ import org.hibernate.type.Type;
 /**
  * Allows user code to inspect and/or change property values.
  *
- * Inspection occurs beforeQuery property values are written and afterQuery they are read
+ * Inspection occurs before property values are written and after they are read
  * from the database.
  *
  * There might be a single instance of <tt>Interceptor</tt> for a <tt>SessionFactory</tt>, or a new instance
@@ -37,7 +37,7 @@ import org.hibernate.type.Type;
  */
 public interface Interceptor {
 	/**
-	 * Called just beforeQuery an object is initialized. The interceptor may change the <tt>state</tt>, which will
+	 * Called just before an object is initialized. The interceptor may change the <tt>state</tt>, which will
 	 * be propagated to the persistent object. Note that when this method is called, <tt>entity</tt> will be
 	 * an empty uninitialized instance of the class.
 	 * <p/>
@@ -85,7 +85,7 @@ public interface Interceptor {
 			Type[] types) throws CallbackException;
 
 	/**
-	 * Called beforeQuery an object is saved. The interceptor may modify the <tt>state</tt>, which will be used for
+	 * Called before an object is saved. The interceptor may modify the <tt>state</tt>, which will be used for
 	 * the SQL <tt>INSERT</tt> and propagated to the persistent object.
 	 *
 	 * @param entity The entity instance whose state is being inserted
@@ -101,7 +101,7 @@ public interface Interceptor {
 	boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) throws CallbackException;
 
 	/**
-	 *  Called beforeQuery an object is deleted. It is not recommended that the interceptor modify the <tt>state</tt>.
+	 *  Called before an object is deleted. It is not recommended that the interceptor modify the <tt>state</tt>.
 	 *
 	 * @param entity The entity instance being deleted
 	 * @param id The identifier of the entity
@@ -114,7 +114,7 @@ public interface Interceptor {
 	void onDelete(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) throws CallbackException;
 
 	/**
-	 * Called beforeQuery a collection is (re)created.
+	 * Called before a collection is (re)created.
 	 *
 	 * @param collection The collection instance.
 	 * @param key The collection key value.
@@ -124,7 +124,7 @@ public interface Interceptor {
 	void onCollectionRecreate(Object collection, Serializable key) throws CallbackException;
 
 	/**
-	 * Called beforeQuery a collection is deleted.
+	 * Called before a collection is deleted.
 	 *
 	 * @param collection The collection instance.
 	 * @param key The collection key value.
@@ -134,7 +134,7 @@ public interface Interceptor {
 	void onCollectionRemove(Object collection, Serializable key) throws CallbackException;
 
 	/**
-	 * Called beforeQuery a collection is updated.
+	 * Called before a collection is updated.
 	 *
 	 * @param collection The collection instance.
 	 * @param key The collection key value.
@@ -144,7 +144,7 @@ public interface Interceptor {
 	void onCollectionUpdate(Object collection, Serializable key) throws CallbackException;
 
 	/**
-	 * Called beforeQuery a flush.
+	 * Called before a flush.
 	 *
 	 * @param entities The entities to be flushed.
 	 *
@@ -153,7 +153,7 @@ public interface Interceptor {
 	void preFlush(Iterator entities) throws CallbackException;
 
 	/**
-	 * Called afterQuery a flush that actually ends in execution of the SQL statements required to synchronize
+	 * Called after a flush that actually ends in execution of the SQL statements required to synchronize
 	 * in-memory state with the database.
 	 *
 	 * @param entities The entities that were flushed.
@@ -250,14 +250,14 @@ public interface Interceptor {
 	void afterTransactionBegin(Transaction tx);
 
 	/**
-	 * Called beforeQuery a transaction is committed (but not beforeQuery rollback).
+	 * Called before a transaction is committed (but not before rollback).
 	 *
 	 * @param tx The Hibernate transaction facade object
 	 */
 	void beforeTransactionCompletion(Transaction tx);
 
 	/**
-	 * Called afterQuery a transaction is committed or rolled back.
+	 * Called after a transaction is committed or rolled back.
 	 *
 	 * @param tx The Hibernate transaction facade object
 	 */

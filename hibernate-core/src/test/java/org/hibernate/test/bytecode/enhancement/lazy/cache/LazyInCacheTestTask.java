@@ -24,6 +24,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,7 +67,8 @@ public class LazyInCacheTestTask extends AbstractEnhancerTestTask {
 	protected void cleanup() {
 	}
 
-	@Entity
+	@Entity(name = "Order")
+	@Table(name = "ORDERS")
 	@Cache( usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE )
 	public static class Order {
 
@@ -81,13 +83,12 @@ public class LazyInCacheTestTask extends AbstractEnhancerTestTask {
 		List<Tag> tags = new ArrayList<>();
 
 		@Basic( fetch = FetchType.LAZY )
-		@Column
 		@Type( type = "org.hibernate.type.BinaryType" )
 		private byte[] data;
 
 	}
 
-	@Entity
+	@Entity(name = "Product")
 	public static class Product {
 
 		@Id
@@ -98,7 +99,7 @@ public class LazyInCacheTestTask extends AbstractEnhancerTestTask {
 
 	}
 
-	@Entity
+	@Entity(name = "Tag")
 	public class Tag {
 
 		@Id

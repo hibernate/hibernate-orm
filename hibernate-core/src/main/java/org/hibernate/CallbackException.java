@@ -9,7 +9,7 @@ package org.hibernate;
 /**
  * Intended to be thrown from {@link org.hibernate.classic.Lifecycle} and {@link Interceptor} callbacks.
  * <p/>
- * IMPL NOTE : This is a legacy exception type from back in the day beforeQuery Hibernate moved to a untyped (runtime)
+ * IMPL NOTE : This is a legacy exception type from back in the day before Hibernate moved to a untyped (runtime)
  * exception strategy.
  *
  * @author Gavin King

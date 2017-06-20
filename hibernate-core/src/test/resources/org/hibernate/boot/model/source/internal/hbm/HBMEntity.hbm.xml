@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.boot.model.source.internal.hbm">
+    <class name="HBMEntity" table="hbmentity" >
+    <id name="id" unsaved-value="0">
+        <generator class="sequence">
+            <param name="sequence">hbmentity_id_sequence</param>
+        </generator>
+    </id>
+    <many-to-one name="association" cascade="persist,save-update" not-null="true"/>
+    </class>
+
+</hibernate-mapping>

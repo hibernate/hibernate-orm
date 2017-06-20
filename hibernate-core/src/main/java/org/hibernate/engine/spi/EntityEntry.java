@@ -66,12 +66,12 @@ public interface EntityEntry {
 	Object getRowId();
 
 	/**
-	 * Handle updating the internal state of the entry afterQuery actually performing
+	 * Handle updating the internal state of the entry after actually performing
 	 * the database update.  Specifically we update the snapshot information and
 	 * escalate the lock mode
 	 *
 	 * @param entity The entity instance
-	 * @param updatedState The state calculated afterQuery the update (becomes the
+	 * @param updatedState The state calculated after the update (becomes the
 	 * new {@link #getLoadedState() loaded state}.
 	 * @param nextVersion The new version.
 	 */

@@ -115,14 +115,20 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 * Access to the cachres of HQL/JPQL and native query plans.
 	 *
 	 * @return The query plan cache
+	 *
+	 * @deprecated (since 5.2) it will be replaced with the new QueryEngine concept introduced in 6.0
 	 */
+	@Deprecated
 	QueryPlanCache getQueryPlanCache();
 
 	/**
 	 * Provides access to the named query repository
 	 *
 	 * @return The repository for named query definitions
+	 *
+	 * @deprecated (since 5.2) it will be replaced with the new QueryEngine concept introduced in 6.0
 	 */
+	@Deprecated
 	NamedQueryRepository getNamedQueryRepository();
 
 	/**
@@ -137,7 +143,10 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 * Retrieve the {@link Type} resolver associated with this factory.
 	 *
 	 * @return The type resolver
+	 *
+	 * @deprecated (since 5.2) No replacement, access to and handling of Types will be much different in 6.0
 	 */
+	@Deprecated
 	TypeResolver getTypeResolver();
 
 	/**

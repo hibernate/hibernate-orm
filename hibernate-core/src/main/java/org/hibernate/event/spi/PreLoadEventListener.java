@@ -9,7 +9,7 @@ package org.hibernate.event.spi;
 import java.io.Serializable;
 
 /**
- * Called beforeQuery injecting property values into a newly
+ * Called before injecting property values into a newly
  * loaded entity instance.
  *
  * @author Gavin King

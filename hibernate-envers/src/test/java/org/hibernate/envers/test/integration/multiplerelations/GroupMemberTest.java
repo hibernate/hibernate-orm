@@ -21,10 +21,14 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 import javax.persistence.Query;
 
+import org.hibernate.Session;
 import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.type.IntegerType;
+import org.hibernate.type.Type;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
@@ -83,8 +87,11 @@ public class GroupMemberTest extends BaseEnversJPAFunctionalTestCase {
 
 	private Integer getCurrentAuditUniqueGroupId() {
 		return TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			final Query query = entityManager.createNativeQuery(
-					"SELECT uniqueGroup_id FROM GroupMember_AUD ORDER BY rev DESC"
+			final Session session = entityManager.unwrap( Session.class );
+			final Query query = session.createSQLQuery(
+					"SELECT uniqueGroup_id FROM GroupMember_AUD ORDER BY rev DESC" ).addScalar(
+					"uniqueGroup_id",
+					IntegerType.INSTANCE
 			).setMaxResults( 1 );
 			final Object result = query.getSingleResult();
 			assertNotNull( result );

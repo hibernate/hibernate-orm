@@ -13,7 +13,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * A BeforeTransactionCompletionProcess impl to verify and increment an entity version as party
- * of beforeQuery-transaction-completion processing
+ * of before-transaction-completion processing
  *
  * @author Scott Marlow
  */
@@ -33,7 +33,7 @@ public class EntityIncrementVersionProcess implements BeforeTransactionCompletio
 	}
 
 	/**
-	 * Perform whatever processing is encapsulated here beforeQuery completion of the transaction.
+	 * Perform whatever processing is encapsulated here before completion of the transaction.
 	 *
 	 * @param session The session on which the transaction is preparing to complete.
 	 */

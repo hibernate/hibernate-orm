@@ -8,7 +8,7 @@ package org.hibernate.sql;
 
 
 /**
- * An old Sybase-style join (beforeQuery Sybase supported the ANSI style "inner join" etc syntax)
+ * An old Sybase-style join (before Sybase supported the ANSI style "inner join" etc syntax)
  * This is needed for Sybase 11.9.2 and earlier, using the HQL 2.* syntax with Collections.
  *
  * @author Colm O' Flaherty

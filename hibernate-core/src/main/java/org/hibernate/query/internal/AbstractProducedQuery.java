@@ -136,7 +136,11 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			ParameterMetadata parameterMetadata) {
 		this.producer = producer;
 		this.parameterMetadata = parameterMetadata;
-		this.queryParameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
+		this.queryParameterBindings = QueryParameterBindingsImpl.from(
+				parameterMetadata,
+				producer.getFactory(),
+				producer.isQueryParametersValidationEnabled()
+		);
 	}
 
 	@Override
@@ -429,7 +433,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		if ( value instanceof TypedParameterValue ) {
 			setParameter( parameter, ( (TypedParameterValue) value ).getValue(), ( (TypedParameterValue) value ).getType() );
 		}
-		else if ( value instanceof Collection ) {
+		else if ( value instanceof Collection && !isRegisteredAsBasicType( value.getClass() ) ) {
 			locateListBinding( parameter ).setBindValues( (Collection) value );
 		}
 		else {
@@ -447,7 +451,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		else if ( value == null ) {
 			locateBinding( parameter ).setBindValue( null, type );
 		}
-		else if ( value instanceof Collection ) {
+		else if ( value instanceof Collection && !isRegisteredAsBasicType( value.getClass() ) ) {
 			locateListBinding( parameter ).setBindValues( (Collection) value, type );
 		}
 		else {
@@ -475,7 +479,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			final TypedParameterValue  typedValueWrapper = (TypedParameterValue) value;
 			setParameter( name, typedValueWrapper.getValue(), typedValueWrapper.getType() );
 		}
-		else if ( value instanceof Collection ) {
+		else if ( value instanceof Collection && !isRegisteredAsBasicType( value.getClass() ) ) {
 			setParameterList( name, (Collection) value );
 		}
 		else {
@@ -492,7 +496,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			final TypedParameterValue typedParameterValue = (TypedParameterValue) value;
 			setParameter( position, typedParameterValue.getValue(), typedParameterValue.getType() );
 		}
-		if ( value instanceof Collection ) {
+		else if ( value instanceof Collection && !isRegisteredAsBasicType( value.getClass() ) ) {
 			setParameterList( Integer.toString( position ), (Collection) value );
 		}
 		else {
@@ -1572,5 +1576,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	protected ExceptionConverter getExceptionConverter(){
 		return producer.getExceptionConverter();
+	}
+
+	private boolean isRegisteredAsBasicType(Class cl) {
+		return producer.getFactory().getTypeResolver().basic( cl.getName() ) != null;
 	}
 }

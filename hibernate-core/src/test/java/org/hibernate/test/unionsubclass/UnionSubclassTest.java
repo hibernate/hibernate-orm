@@ -6,7 +6,9 @@
  */
 package org.hibernate.test.unionsubclass;
 
+import java.sql.Connection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Test;
 
@@ -14,21 +16,57 @@ import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Order;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.jdbc.Work;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.testing.util.ExceptionUtil;
+
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
  */
 @SuppressWarnings("unchecked")
 public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
+
+	private SQLServerSnapshotIsolationConnectionProvider connectionProvider =
+			new SQLServerSnapshotIsolationConnectionProvider();
+
+	@Override
+	public void configure(Configuration cfg) {
+		super.configure( cfg );
+		if( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() )) {
+			cfg.getProperties().put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
+		}
+	}
+
+	@Override
+	protected void releaseSessionFactory() {
+		super.releaseSessionFactory();
+		connectionProvider.stop();
+	}
+
+
 	@Override
 	public String[] getMappings() {
 		return new String[] { "unionsubclass/Beings.hbm.xml" };
@@ -76,8 +114,8 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		gavin.setLocation(mel);
 		mel.addBeing(gavin);
 		Human max = new Human();
-		max.setIdentity("max");
-		max.setSex('M');
+		max.setIdentity( "max" );
+		max.setSex( 'M' );
 		max.setLocation(mel);
 		mel.addBeing(gavin);
 		
@@ -403,5 +441,111 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-11740" )
+	public void testBulkOperationsWithDifferentConnections() throws Exception {
+		doInHibernate(
+				this::sessionFactory, s -> {
+					Location mars = new Location( "Mars" );
+					s.persist( mars );
+
+					Location earth = new Location( "Earth" );
+					s.persist( earth );
+
+					Hive hive = new Hive();
+					hive.setLocation( mars );
+					s.persist( hive );
+
+					Alien alien = new Alien();
+					alien.setIdentity( "Uncle Martin" );
+					alien.setSpecies( "Martian" );
+					alien.setHive( hive );
+					hive.getMembers().add( alien );
+					mars.addBeing( alien );
+
+					s.persist( alien );
+
+					Human human = new Human();
+					human.setIdentity( "Jane Doe" );
+					human.setSex( 'M' );
+					earth.addBeing( human );
+
+					s.persist( human );
+				}
+		);
+
+		// The following tests that bulk operations can be executed using 2 different
+		// connections.
+
+		doInHibernate( this::sessionFactory, s1 -> {
+			// Transaction used by s1 is already started.
+			// Assert that the Connection is already physically connected.
+			SharedSessionContractImplementor s1Implementor = (SharedSessionContractImplementor) s1;
+			assertTrue( s1Implementor.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() );
+
+			// Assert that the same Connection will be used for s1's entire transaction
+			assertEquals(
+					PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION,
+					s1Implementor.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode()
+			);
+
+			// Get the Connection s1 will use.
+			final Connection connection1 = s1Implementor.connection();
+
+			// Avoid a pessimistic lock exception by not doing anything with s1 until
+			// after a second Session (with a different connection) is used
+			// for a bulk operation.
+
+			doInHibernate( this::sessionFactory, s2 -> {
+				// Check same assertions for s2 as was done for s1.
+				SharedSessionContractImplementor s2Implementor = (SharedSessionContractImplementor) s2;
+				assertTrue( s2Implementor.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() );
+				assertEquals(
+						PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION,
+						s2Implementor.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode()
+				);
+
+				// Get the Connection s2 will use.
+				Connection connection2 = s2Implementor.connection();
+
+				// Assert that connection2 is not the same as connection1
+				assertNotSame( connection1, connection2 );
+
+				// Execute a bulk operation on s2 (using connection2)
+				assertEquals(
+						1,
+						s2.createQuery( "delete from Being where species = 'Martian'" ).executeUpdate()
+				);
+
+				// Assert the Connection has not changed
+				assertSame( connection2, s2Implementor.connection() );
+				}
+			);
+
+			// Assert that the Connection used by s1 has hot changed.
+			assertSame( connection1, s1Implementor.connection() );
+
+			// Execute a bulk operation on s1 (using connection1)
+			assertEquals(
+					1,
+					s1.createQuery( "update Being set identity = 'John Doe' where identity = 'Jane Doe'" )
+							.executeUpdate()
+			);
+
+			// Assert that the Connection used by s1 has hot changed.
+			assertSame( connection1, s1Implementor.connection() );
+
+		});
+
+		// Clean up
+		doInHibernate(
+				this::sessionFactory, s -> {
+					Human human = (Human) s.createQuery( "from Being" ).uniqueResult();
+					assertEquals( "John Doe", human.getIdentity() );
+					s.createQuery( "delete from Being" ).executeUpdate();
+					s.createQuery( "delete from Hive" ).executeUpdate();
+					s.createQuery( "delete from Location" ).executeUpdate();
+		} );
+	}
 }
 

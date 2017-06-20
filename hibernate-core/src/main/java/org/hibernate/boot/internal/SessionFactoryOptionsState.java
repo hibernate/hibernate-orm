@@ -155,6 +155,8 @@ public interface SessionFactoryOptionsState {
 
 	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
 
+	boolean connectionProviderDisablesAutoCommit();
+
 	/**
 	 * @deprecated Use {@link #getPhysicalConnectionHandlingMode()} instead
 	 */
@@ -174,4 +176,6 @@ public interface SessionFactoryOptionsState {
 	boolean isPreferUserTransaction();
 
 	TimeZone getJdbcTimeZone();
+
+	boolean isQueryParametersValidationEnabled();
 }

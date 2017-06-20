@@ -133,7 +133,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 		// Look for the hydrated form
 		final Object identifierHydratedForm = processingState.getIdentifierHydratedForm();
 		if ( identifierHydratedForm == null ) {
-			// we need to register the missing identifier, but that happens later afterQuery all readers have had a chance
+			// we need to register the missing identifier, but that happens later after all readers have had a chance
 			// to resolve its EntityKey
 			return;
 		}
@@ -328,6 +328,13 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 			rowId = concreteEntityPersister.hasRowId()
 					? resultSet.getObject( entityReferenceAliases.getColumnAliases().getRowIdAlias() )
 					: null;
+
+			if ( rowId != null && log.isTraceEnabled() ) {
+				log.tracev(
+						"extracted ROWID value: {0}",
+						rowId
+				);
+			}
 		}
 		catch (SQLException e) {
 			throw context.getSession().getFactory().getServiceRegistry().getService( JdbcServices.class ).getSqlExceptionHelper().convert(

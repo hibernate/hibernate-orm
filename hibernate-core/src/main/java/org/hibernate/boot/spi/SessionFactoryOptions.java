@@ -181,6 +181,10 @@ public interface SessionFactoryOptions {
 
 	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
 
+	default boolean doesConnectionProviderDisableAutoCommit() {
+		return false;
+	}
+
 	/**
 	 * @deprecated Use {@link #getPhysicalConnectionHandlingMode()} instead
 	 */
@@ -215,4 +219,8 @@ public interface SessionFactoryOptions {
 	boolean isReleaseResourcesOnCloseEnabled();
 
 	TimeZone getJdbcTimeZone();
+
+	default boolean isQueryParametersValidationEnabled(){
+		return isJpaBootstrap();
+	}
 }

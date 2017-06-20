@@ -245,7 +245,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
 	 *
 	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
-	 * query that existed in the session beforeQuery the query was executed.
+	 * query that existed in the session before the query was executed.
 	 *
 	 * @return {@code true} if the entities and proxies loaded by the query will be put
 	 * in read-only mode; {@code false} otherwise (they will be modifiable)
@@ -272,7 +272,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * proxy has, regardless of the session's current setting.
 	 *
 	 * The read-only/modifiable setting has no impact on entities/proxies
-	 * returned by the query that existed in the session beforeQuery the query was executed.
+	 * returned by the query that existed in the session before the query was executed.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -369,7 +369,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	/**
 	 * Return the query results as an <tt>Iterator</tt>. If the query
-	 * contains multiple results pre row, the results are returned in
+	 * contains multiple results per row, the results are returned in
 	 * an instance of <tt>Object[]</tt>.<br>
 	 * <br>
 	 * Entities returned as results are initialized on demand. The first

@@ -44,7 +44,7 @@ public class SerializableBlobProxy implements InvocationHandler, Serializable {
 	 */
 	public Blob getWrappedBlob() {
 		if ( blob == null ) {
-			throw new IllegalStateException( "Blobs may not be accessed afterQuery serialization" );
+			throw new IllegalStateException( "Blobs may not be accessed after serialization" );
 		}
 		else {
 			return blob;

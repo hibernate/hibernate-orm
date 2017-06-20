@@ -29,7 +29,7 @@ public interface Projection extends Serializable {
 	 * Render the SQL fragment to be used in the <tt>SELECT</tt> clause.
 	 *
 	 * @param criteria The local criteria to which this project is attached (for resolution).
-	 * @param position The number of columns rendered in the <tt>SELECT</tt> clause beforeQuery this projection.  Generally
+	 * @param position The number of columns rendered in the <tt>SELECT</tt> clause before this projection.  Generally
 	 * speaking this is useful to ensure uniqueness of the individual columns aliases.
 	 * @param criteriaQuery The overall criteria query instance.
 	 * @return The SQL fragment to plug into the <tt>SELECT</tt>

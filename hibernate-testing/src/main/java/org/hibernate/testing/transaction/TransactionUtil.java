@@ -6,6 +6,12 @@
  */
 package org.hibernate.testing.transaction;
 
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -13,15 +19,25 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SQLServerDialect;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Vlad Mihalcea
  */
 public class TransactionUtil {
+
+	private static final Logger log = Logger.getLogger( TransactionUtil.class );
 
 	/**
 	 * Hibernate transaction function
@@ -115,18 +131,22 @@ public class TransactionUtil {
 	 *
 	 * @param factorySupplier EntityManagerFactory supplier
 	 * @param function function
+	 * @param properties properties for entity manager bootstrapping
 	 * @param <T> result type
 	 *
 	 * @return result
 	 */
 	public static <T> T doInJPA(
 			Supplier<EntityManagerFactory> factorySupplier,
-			JPATransactionFunction<T> function) {
+			JPATransactionFunction<T> function,
+			Map properties) {
 		T result = null;
 		EntityManager entityManager = null;
 		EntityTransaction txn = null;
 		try {
-			entityManager = factorySupplier.get().createEntityManager();
+			entityManager = properties == null ?
+				factorySupplier.get().createEntityManager():
+				factorySupplier.get().createEntityManager(properties);
 			function.beforeTransactionCompletion();
 			txn = entityManager.getTransaction();
 			txn.begin();
@@ -149,6 +169,73 @@ public class TransactionUtil {
 	}
 
 	/**
+	 * Execute function in a JPA transaction
+	 *
+	 * @param factorySupplier EntityManagerFactory supplier
+	 * @param function function
+	 * @param <T> result type
+	 *
+	 * @return result
+	 */
+	public static <T> T doInJPA(
+			Supplier<EntityManagerFactory> factorySupplier,
+			JPATransactionFunction<T> function) {
+		return doInJPA( factorySupplier, function, null );
+	}
+
+	/**
+	 * Execute function in a JPA transaction without return value
+	 *
+	 * @param factorySupplier EntityManagerFactory supplier
+	 * @param function function
+	 * @param properties properties for entity manager bootstrapping
+	 */
+	public static void doInJPA(
+			Supplier<EntityManagerFactory> factorySupplier,
+			JPATransactionVoidFunction function,
+			Map properties) {
+		EntityManager entityManager = null;
+		EntityTransaction txn = null;
+		try {
+			entityManager = properties == null ?
+				factorySupplier.get().createEntityManager():
+				factorySupplier.get().createEntityManager(properties);
+			function.beforeTransactionCompletion();
+			txn = entityManager.getTransaction();
+			txn.begin();
+			function.accept( entityManager );
+			if ( !txn.getRollbackOnly() ) {
+				txn.commit();
+			}
+			else {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+		}
+		catch ( Throwable t ) {
+			if ( txn != null && txn.isActive() ) {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+			throw t;
+		}
+		finally {
+			function.afterTransactionCompletion();
+			if ( entityManager != null ) {
+				entityManager.close();
+			}
+		}
+	}
+
+	/**
 	 * Execute function in a JPA transaction without return value
 	 *
 	 * @param factorySupplier EntityManagerFactory supplier
@@ -157,28 +244,7 @@ public class TransactionUtil {
 	public static void doInJPA(
 			Supplier<EntityManagerFactory> factorySupplier,
 			JPATransactionVoidFunction function) {
-		EntityManager entityManager = null;
-		EntityTransaction txn = null;
-		try {
-			entityManager = factorySupplier.get().createEntityManager();
-			function.beforeTransactionCompletion();
-			txn = entityManager.getTransaction();
-			txn.begin();
-			function.accept( entityManager );
-			txn.commit();
-		}
-		catch ( Throwable e ) {
-			if ( txn != null && txn.isActive() ) {
-				txn.rollback();
-			}
-			throw e;
-		}
-		finally {
-			function.afterTransactionCompletion();
-			if ( entityManager != null ) {
-				entityManager.close();
-			}
-		}
+		doInJPA( factorySupplier, function, null );
 	}
 
 	/**
@@ -202,13 +268,28 @@ public class TransactionUtil {
 			txn = session.beginTransaction();
 
 			result = function.apply( session );
-			txn.commit();
-		}
-		catch ( Throwable e ) {
-			if ( txn != null ) {
-				txn.rollback();
+			if ( !txn.getRollbackOnly() ) {
+				txn.commit();
 			}
-			throw e;
+			else {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+		}
+		catch ( Throwable t ) {
+			if ( txn != null && txn.isActive() ) {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+			throw t;
 		}
 		finally {
 			function.afterTransactionCompletion();
@@ -236,13 +317,28 @@ public class TransactionUtil {
 			txn = session.beginTransaction();
 
 			function.accept( session );
-			txn.commit();
-		}
-		catch ( Throwable e ) {
-			if ( txn != null ) {
-				txn.rollback();
+			if ( !txn.getRollbackOnly() ) {
+				txn.commit();
 			}
-			throw e;
+			else {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+		}
+		catch ( Throwable t ) {
+			if ( txn != null && txn.isActive() ) {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+			throw t;
 		}
 		finally {
 			function.afterTransactionCompletion();
@@ -273,13 +369,28 @@ public class TransactionUtil {
 			txn = session.beginTransaction();
 
 			result = function.apply( session );
-			txn.commit();
-		}
-		catch ( Throwable e ) {
-			if ( txn != null ) {
-				txn.rollback();
+			if ( !txn.getRollbackOnly() ) {
+				txn.commit();
 			}
-			throw e;
+			else {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+		}
+		catch ( Throwable t ) {
+			if ( txn != null && txn.isActive() ) {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+			throw t;
 		}
 		finally {
 			function.afterTransactionCompletion();
@@ -307,13 +418,28 @@ public class TransactionUtil {
 			txn = session.beginTransaction();
 
 			function.accept( session );
-			txn.commit();
-		}
-		catch ( Throwable e ) {
-			if ( txn != null ) {
-				txn.rollback();
+			if ( !txn.getRollbackOnly() ) {
+				txn.commit();
 			}
-			throw e;
+			else {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+		}
+		catch ( Throwable t ) {
+			if ( txn != null && txn.isActive() ) {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+			throw t;
 		}
 		finally {
 			function.afterTransactionCompletion();
@@ -322,4 +448,55 @@ public class TransactionUtil {
 			}
 		}
 	}
+	/**
+	 * Set Session or Statement timeout
+	 * @param session Hibernate Session
+	 */
+	public static void setJdbcTimeout(Session session) {
+		setJdbcTimeout( session, TimeUnit.SECONDS.toMillis( 1 ) );
+	}
+
+	/**
+	 * Set Session or Statement timeout
+	 * @param session Hibernate Session
+	 */
+	public static void setJdbcTimeout(Session session, long millis) {
+
+		session.doWork( connection -> {
+			if ( Dialect.getDialect() instanceof PostgreSQL81Dialect ) {
+				try (Statement st = connection.createStatement()) {
+					//Prepared Statements fail for SET commands
+					st.execute(String.format( "SET statement_timeout TO %d", millis / 10));
+				}
+
+			}
+			else if( Dialect.getDialect() instanceof MySQLDialect ) {
+				try (PreparedStatement st = connection.prepareStatement("SET SESSION innodb_lock_wait_timeout = ?")) {
+					st.setLong( 1, TimeUnit.MILLISECONDS.toSeconds( millis ) );
+					st.execute();
+				}
+			}
+			else if( Dialect.getDialect() instanceof H2Dialect ) {
+				try (PreparedStatement st = connection.prepareStatement("SET LOCK_TIMEOUT ?")) {
+					st.setLong( 1, millis / 10 );
+					st.execute();
+				}
+			}
+			else if( Dialect.getDialect() instanceof SQLServerDialect ) {
+				try (Statement st = connection.createStatement()) {
+					//Prepared Statements fail for SET commands
+					st.execute(String.format( "SET LOCK_TIMEOUT %d", millis / 10));
+				}
+			}
+			else {
+				try {
+					connection.setNetworkTimeout( Executors.newSingleThreadExecutor(), (int) millis );
+				}
+				catch (Throwable ignore) {
+					ignore.fillInStackTrace();
+				}
+			}
+		} );
+	}
+
 }

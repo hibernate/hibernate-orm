@@ -109,12 +109,9 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 		}
 		// we can't use putForExternalRead since the PFER flag means that entry is not wrapped into context
 		// when it is present in the container. TombstoneCallInterceptor will deal with this.
-		if (!(value instanceof CacheEntry)) {
-			value = new VersionedEntry(value, version, txTimestamp);
-		}
-		// Apply the update locally first - if we're the backup owner, async propagation wouldn't change the value
-		// for the subsequent operation soon enough as it goes through primary owner
-		putFromLoadCache.put(key, value);
+		// Even if value is instanceof CacheEntry, we have to wrap it in VersionedEntry and add transaction timestamp.
+		// Otherwise, old eviction record wouldn't be overwritten.
+		putFromLoadCache.put(key, new VersionedEntry(value, version, txTimestamp));
 		return true;
 	}
 

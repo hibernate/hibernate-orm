@@ -225,15 +225,15 @@ public class Restrictions {
 	 * Apply a "between" constraint to the named property
 	 *
 	 * @param propertyName The name of the property
-	 * @param lo The low value
-	 * @param hi The high value
+	 * @param low The low value
+	 * @param high The high value
 	 *
 	 * @return The Criterion
 	 *
 	 * @see BetweenExpression
 	 */
-	public static Criterion between(String propertyName, Object lo, Object hi) {
-		return new BetweenExpression( propertyName, lo, hi );
+	public static Criterion between(String propertyName, Object low, Object high) {
+		return new BetweenExpression( propertyName, low, high );
 	}
 
 	/**

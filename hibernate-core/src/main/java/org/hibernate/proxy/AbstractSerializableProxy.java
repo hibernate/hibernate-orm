@@ -40,7 +40,7 @@ public abstract class AbstractSerializableProxy implements Serializable {
 	/**
 	 * Set the read-only/modifiable setting from this object in an AbstractLazyInitializer.
 	 *
-	 * This method should only be called during deserialization, beforeQuery associating the
+	 * This method should only be called during deserialization, before associating the
 	 * AbstractLazyInitializer with a session.
 	 *
 	 * @param li the read-only/modifiable setting to use when

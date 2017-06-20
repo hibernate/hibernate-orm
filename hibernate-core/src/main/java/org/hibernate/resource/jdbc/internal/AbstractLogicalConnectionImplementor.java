@@ -62,10 +62,12 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	@Override
 	public void begin() {
 		try {
-			log.trace( "Preparing to begin transaction via JDBC Connection.setAutoCommit(false)" );
-			getConnectionForTransactionManagement().setAutoCommit( false );
+			if ( !doConnectionsFromProviderHaveAutoCommitDisabled() ) {
+				log.trace( "Preparing to begin transaction via JDBC Connection.setAutoCommit(false)" );
+				getConnectionForTransactionManagement().setAutoCommit( false );
+				log.trace( "Transaction begun via JDBC Connection.setAutoCommit(false)" );
+			}
 			status = TransactionStatus.ACTIVE;
-			log.trace( "Transaction begun via JDBC Connection.setAutoCommit(false)" );
 		}
 		catch( SQLException e ) {
 			throw new TransactionException( "JDBC begin transaction failed: ", e );
@@ -95,14 +97,14 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	protected void resetConnection(boolean initiallyAutoCommit) {
 		try {
 			if ( initiallyAutoCommit ) {
-				log.trace( "re-enabling auto-commit on JDBC Connection afterQuery completion of JDBC-based transaction" );
+				log.trace( "re-enabling auto-commit on JDBC Connection after completion of JDBC-based transaction" );
 				getConnectionForTransactionManagement().setAutoCommit( true );
 				status = TransactionStatus.NOT_ACTIVE;
 			}
 		}
 		catch ( Exception e ) {
 			log.debug(
-					"Could not re-enable auto-commit on JDBC Connection afterQuery completion of JDBC-based transaction : " + e
+					"Could not re-enable auto-commit on JDBC Connection after completion of JDBC-based transaction : " + e
 			);
 		}
 	}
@@ -135,5 +137,9 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	@Override
 	public TransactionStatus getStatus(){
 		return status;
+	}
+
+	protected boolean doConnectionsFromProviderHaveAutoCommitDisabled() {
+		return false;
 	}
 }

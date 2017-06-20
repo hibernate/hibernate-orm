@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
@@ -290,7 +291,9 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 	 *
 	 * @param regionName region name
 	 *
-	 * @return SecondLevelCacheStatistics
+	 * @return SecondLevelCacheStatistics or null if the second level cache is not enabled
+	 *
+	 * @throws IllegalArgumentException if the region name could not be resolved
 	 */
 	public ConcurrentSecondLevelCacheStatisticsImpl getSecondLevelCacheStatistics(String regionName) {
 		ConcurrentSecondLevelCacheStatisticsImpl stat = secondLevelCacheStatistics.get( regionName );
@@ -303,7 +306,11 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 			final CollectionRegionAccessStrategy collectionRegionAccess = sessionFactory.getCache().getCollectionRegionAccess( regionName );
 
 			if ( entityRegionAccess == null && collectionRegionAccess == null ) {
-				final Region region = sessionFactory.getCache().getQueryCache( regionName ).getRegion();
+				final QueryCache queryCache = sessionFactory.getCache().getQueryCache( regionName );
+				if ( queryCache == null ) {
+					return null;
+				}
+				final Region region = queryCache.getRegion();
 				if ( region == null ) {
 					throw new IllegalArgumentException( "Could not resolve region name [" + regionName + "]" );
 				}

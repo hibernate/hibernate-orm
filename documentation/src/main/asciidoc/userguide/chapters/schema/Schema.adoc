@@ -159,3 +159,64 @@ include::{sourcedir}/ColumnDefaultTest.java[tag=schema-generation-column-default
 include::{extrasdir}/schema-generation-column-default-value-persist-example.sql[]
 ----
 ====
+
+[[schema-generation-columns-unique-constraint]]
+=== Columns unique constraint
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/UniqueConstraint.html[`@UniqueConstraint`] annotation is used to specify a unique constraint to be included by the automated schema generator for the primary or secondary table associated with the current annotated entity.
+
+Considering the following entity mapping, Hibernate generates the unique constraint DDL when creating the database schema:
+
+[[schema-generation-columns-unique-constraint-mapping-example]]
+.`@UniqueConstraint` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/UniqueConstraintTest.java[tag=schema-generation-columns-unique-constraint-mapping-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/schema-generation-columns-unique-constraint-mapping-example.sql[]
+----
+====
+
+With the `uk_book_title_author` unique constraint in place,
+it's no longer possible to add two books with the same title and for the same author.
+
+[[schema-generation-columns-unique-constraint-persist-example]]
+.`@UniqueConstraintTest` persist example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/UniqueConstraintTest.java[tag=schema-generation-columns-unique-constraint-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/schema-generation-columns-unique-constraint-persist-example.sql[]
+----
+====
+
+The second INSERT statement fails because of the unique constraint violation.
+
+[[schema-generation-columns-index]]
+=== Columns index
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Index.html[`@Index`] annotation is used by the automated schema generation tool to create a database index.
+
+Considering the following entity mapping, Hibernate generates the index when creating the database schema:
+
+[[schema-generation-columns-index-mapping-example]]
+.`@Index` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/IndexTest.java[tag=schema-generation-columns-index-mapping-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/schema-generation-columns-index-mapping-example.sql[]
+----
+====

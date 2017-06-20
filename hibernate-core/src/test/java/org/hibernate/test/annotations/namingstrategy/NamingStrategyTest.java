@@ -11,9 +11,14 @@ package org.hibernate.test.annotations.namingstrategy;
 import java.util.Locale;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -47,6 +52,7 @@ public class NamingStrategyTest extends BaseUnitTestCase {
 			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
+
     @Test
 	public void testWithCustomNamingStrategy() throws Exception {
 		new MetadataSources( serviceRegistry )
@@ -55,6 +61,27 @@ public class NamingStrategyTest extends BaseUnitTestCase {
 				.getMetadataBuilder()
 				.applyPhysicalNamingStrategy( new DummyNamingStrategy() )
 				.build();
+	}
+
+	@Test
+	public void testWithUpperCaseNamingStrategy() throws Exception {
+		Metadata metadata = new MetadataSources( serviceRegistry )
+				.addAnnotatedClass(A.class)
+				.getMetadataBuilder()
+				.applyPhysicalNamingStrategy( new PhysicalNamingStrategyStandardImpl() {
+					@Override
+					public Identifier toPhysicalColumnName(
+							Identifier name, JdbcEnvironment context) {
+						return new Identifier( name.getText().toUpperCase(), name.isQuoted() );
+					}
+				} )
+				.build();
+
+		PersistentClass entityBinding = metadata.getEntityBinding( A.class.getName() );
+		assertEquals("NAME",
+					 ((Selectable) entityBinding.getProperty( "name" ).getColumnIterator().next()).getText());
+		assertEquals("VALUE",
+					 ((Selectable) entityBinding.getProperty( "value" ).getColumnIterator().next()).getText());
 	}
 
     @Test

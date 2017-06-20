@@ -66,7 +66,7 @@ public class BinaryLogicOperatorNode extends AbstractSelectExpression implements
 	}
 
 	protected final void mutateRowValueConstructorSyntaxesIfNecessary(Type lhsType, Type rhsType) {
-		// TODO : this really needs to be delayed until afterQuery we definitively know all node types
+		// TODO : this really needs to be delayed until after we definitively know all node types
 		// where this is currently a problem is parameters for which where we cannot unequivocally
 		// resolve an expected type
 		SessionFactoryImplementor sessionFactory = getSessionFactoryHelper().getFactory();

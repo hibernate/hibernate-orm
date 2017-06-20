@@ -15,7 +15,7 @@ import org.hibernate.dialect.function.StaticPrecisionFspTimestampFunction;
  * @author Gail Badner
  * @deprecated Use "hibernate.dialect.storage_engine=innodb" environment variable or JVM system property instead.
  */
-@SuppressWarnings("deprecation")
+@Deprecated
 public class MySQL57InnoDBDialect extends MySQL5InnoDBDialect {
 	public MySQL57InnoDBDialect() {
 		super();

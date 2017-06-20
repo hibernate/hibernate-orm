@@ -126,7 +126,7 @@ public class UniqueConstraintDropTest {
 
 	private boolean checkDropConstraint(String tableName, String columnName) throws IOException {
 		boolean matches = false;
-		String regex = "alter table " + tableName + " drop constraint";
+		String regex = getDialect().getAlterTableString( tableName ) + " drop constraint";
 
 		if ( getDialect().supportsIfExistsBeforeConstraintName() ) {
 			regex += " if exists";

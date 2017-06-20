@@ -19,7 +19,7 @@ public interface SynchronizationRegistryImplementor extends SynchronizationRegis
 
 	/**
 	 * Delegates the {@link javax.transaction.Synchronization#afterCompletion} call to each registered Synchronization.  Will also
-	 * clear the registered Synchronizations afterQuery all have been notified.
+	 * clear the registered Synchronizations after all have been notified.
 	 *
 	 * @param status The transaction status, per {@link javax.transaction.Status} constants
 	 */
@@ -27,7 +27,7 @@ public interface SynchronizationRegistryImplementor extends SynchronizationRegis
 
 	/**
 	 * Clears all synchronizations from this registry.  Note that synchronizations are automatically cleared during
-	 * afterQuery-completion handling; see {@link #notifySynchronizationsAfterTransactionCompletion}
+	 * after-completion handling; see {@link #notifySynchronizationsAfterTransactionCompletion}
 	 */
 	void clearSynchronizations();
 }

@@ -10,7 +10,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
- * An event that occurs afterQuery a collection is updated
+ * An event that occurs after a collection is updated
  *
  * @author Gail Badner
  */

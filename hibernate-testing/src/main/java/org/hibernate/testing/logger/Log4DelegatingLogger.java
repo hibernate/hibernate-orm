@@ -9,6 +9,7 @@ package org.hibernate.testing.logger;
 import java.text.MessageFormat;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jboss.logging.Logger;
 
@@ -24,6 +25,7 @@ public final class Log4DelegatingLogger extends Logger {
 
 	// Synchronize access on the field
 	private final List<LogListener> enabledListeners = new LinkedList<LogListener>();
+	private final AtomicBoolean interceptEnabled = new AtomicBoolean( false );
 
 	Log4DelegatingLogger(final String name) {
 		super( name );
@@ -34,6 +36,7 @@ public final class Log4DelegatingLogger extends Logger {
 		synchronized ( enabledListeners ) {
 			if ( newListener != null ) {
 				enabledListeners.add( newListener );
+				interceptEnabled.set( true );
 			}
 		}
 	}
@@ -41,6 +44,7 @@ public final class Log4DelegatingLogger extends Logger {
 	void clearAllListeners() {
 		synchronized ( enabledListeners ) {
 			enabledListeners.clear();
+			interceptEnabled.set( false );
 		}
 	}
 
@@ -51,7 +55,9 @@ public final class Log4DelegatingLogger extends Logger {
 
 	protected void doLog(final Level level, final String loggerClassName, final Object message, final Object[] parameters, final Throwable thrown) {
 		final org.apache.log4j.Level translatedLevel = translate( level );
-		intercept( level, parameters == null || parameters.length == 0 ? String.valueOf( message ) : MessageFormat.format( String.valueOf( message ), parameters ), thrown );
+		if ( interceptEnabled.get() ) {
+			intercept( level, parameters == null || parameters.length == 0 ? String.valueOf( message ) : MessageFormat.format( String.valueOf( message ), parameters ), thrown );
+		}
 		if ( !logger.isEnabledFor( translatedLevel ) ) {
 			return;
 		}
@@ -79,7 +85,9 @@ public final class Log4DelegatingLogger extends Logger {
 
 	protected void doLogf(final Level level, final String loggerClassName, final String format, final Object[] parameters, final Throwable thrown) {
 		final org.apache.log4j.Level translatedLevel = translate( level );
-		intercept( level, parameters == null ? format : String.format( format, parameters ), thrown );
+		if ( interceptEnabled.get() ) {
+			intercept( level, parameters == null ? format : String.format( format, parameters ), thrown );
+		}
 		if ( !logger.isEnabledFor( translatedLevel ) ) {
 			return;
 		}

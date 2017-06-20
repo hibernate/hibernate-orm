@@ -18,6 +18,8 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
@@ -38,12 +40,14 @@ public class SchemaCreationTest {
 	private File output;
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;
+	private Dialect dialect;
 
 	@Before
 	public void setUp() throws IOException {
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
 		ssr = new StandardServiceRegistryBuilder().build();
+		dialect = ssr.getService(JdbcEnvironment.class).getDialect();
 	}
 
 	@After
@@ -73,15 +77,23 @@ public class SchemaCreationTest {
 		for ( String statement : sqlLines ) {
 			assertThat(
 					"Should not try to create the unique constraint for the non existing table element",
-					statement.toLowerCase().contains( "alter table element" ),
+					statement.toLowerCase()
+							.matches( dialect.getAlterTableString( "element" ) ),
 					is( false )
 			);
-			if (ssr.getService(JdbcEnvironment.class).getDialect() instanceof DB2Dialect) {
+			if ( dialect instanceof DB2Dialect) {
 				if (statement.toLowerCase().startsWith("create unique index")
 						&& statement.toLowerCase().contains("category (code)")) {
 					isUniqueConstraintCreated = true;
 				}
-			} else {
+			}
+			else if ( dialect instanceof PostgreSQL81Dialect) {
+				if (statement.toLowerCase().startsWith("alter table if exists category add constraint")
+						&& statement.toLowerCase().contains("unique (code)")) {
+					isUniqueConstraintCreated = true;
+				}
+			}
+			else {
 				if (statement.toLowerCase().startsWith("alter table category add constraint")
 						&& statement.toLowerCase().contains("unique (code)")) {
 					isUniqueConstraintCreated = true;

@@ -17,7 +17,7 @@ import org.hibernate.cfg.AvailableSettings;
 public interface IdentifierHelper {
 	/**
 	 * Essentially quotes the identifier if it needs to be.  Useful to apply global quoting,
-	 * as well as reserved word quoting afterQuery calls to naming strategies.
+	 * as well as reserved word quoting after calls to naming strategies.
 	 *
 	 * @param identifier The identifier for which to normalize quoting.
 	 *

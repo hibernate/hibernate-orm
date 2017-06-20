@@ -156,7 +156,7 @@ public abstract class EntityAction
 	}
 
 	/**
-	 * Reconnect to session afterQuery deserialization...
+	 * Reconnect to session after deserialization...
 	 *
 	 * @param session The session being deserialized
 	 */

@@ -380,6 +380,71 @@ include::{extrasdir}/collections-bidirectional-ordered-list-order-column-example
 
 When fetching the collection, Hibernate will use the fetched ordered columns to sort the elements according to the `@OrderColumn` mapping.
 
+[[collections-customizing-ordered-list-ordinal]]
+===== Customizing ordered list ordinal
+
+You can customize the ordinal of the underlying ordered list by using the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ListIndexBase.html[`@ListIndexBase`] annotation.
+
+[[collections-customizing-ordered-list-ordinal-mapping-example]]
+.`@ListIndexBase` mapping example
+====
+[source,java]
+----
+include::{sourcedir}/OrderColumnListIndexBaseTest.java[tags=collections-customizing-ordered-list-ordinal-mapping-example,indent=0]
+----
+====
+
+When inserting two `Phone` records, Hibernate is going to start the List index from 100 this time.
+
+[[collections-customizing-ordered-list-ordinal-persist-example]]
+.`@ListIndexBase` persist example
+====
+[source,java]
+----
+include::{sourcedir}/OrderColumnListIndexBaseTest.java[tags=collections-customizing-ordered-list-ordinal-persist-example,indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/collections-customizing-ordered-list-ordinal-persist-example.sql[]
+----
+====
+
+[[collections-customizing-ordered-by-sql-clause]]
+===== Customizing ORDER BY SQL clause
+
+While the JPA
+http://docs.oracle.com/javaee/7/api/javax/persistence/OrderBy.html[`@OrderBy`] annotation allows you to specify the entity attributes used for sorting
+when fetching the current annotated collection, the Hibernate specific
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OrderBy.html[`@OrderBy`] annotation is used to specify a *SQL* clause instead.
+
+In the following example, the `@OrderBy` annotations uses the `CHAR_LENGTH` SQL function to order the `Article` entities by the size of their contents.
+
+[[collections-customizing-ordered-by-sql-clause-mapping-example]]
+.`@OrderBy` mapping example
+====
+[source,java]
+----
+include::{sourcedir}/OrderedBySQLTest.java[tags=collections-customizing-ordered-by-sql-clause-mapping-example,indent=0]
+----
+====
+
+When fetching the `articles` collection, Hibernate uses the ORDER BY SQL clause provided by the mapping:
+
+[[collections-customizing-ordered-by-sql-clause-fetching-example]]
+.`@OrderBy` fetching example
+====
+[source,java]
+----
+include::{sourcedir}/OrderedBySQLTest.java[tags=collections-customizing-ordered-by-sql-clause-fetching-example,indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/collections-customizing-ordered-by-sql-clause-fetching-example.sql[]
+----
+====
+
 [[collections-set]]
 ==== Sets
 
@@ -520,12 +585,126 @@ include::{extrasdir}/collections-map-value-type-entity-key-add-example.sql[]
 ----
 ====
 
+[[collections-map-custom-key-type]]
+===== Maps with a custom key type
+
+Hibernate defines the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/MapKeyType.html[`@MapKeyType`] annotation
+which you can use to customize the `Map` key type.
+
+Considering you have the following tables in your database:
+
+[source,sql]
+----
+include::{extrasdir}/collections-map-custom-key-type-sql-example.sql[]
+----
+
+The `call_register` records the call history for every `person`.
+The `call_timestamp_epoch` column stores the phone call timestamp as a Unix timestamp since epoch.
+
+[NOTE]
+====
+The `@MapKeyColumn` annotation is used to define the table column holding the key
+while the `@Column` mapping gives the value of the `java.util.Map` in question.
+====
+
+Since we want to map all the calls by their associated `java.util.Date`, not by their timestamp since epoch which is a number, the entity mapping looks as follows:
+
+[[collections-map-custom-key-type-mapping-example]]
+.`@MapKeyType` mapping example
+====
+[source,java]
+----
+include::{sourcedir}/MapKeyTypeTest.java[tags=collections-map-custom-key-type-mapping-example,indent=0]
+----
+====
+
+The associated `TimestampEpochType` looks as follows:
+
+----
+include::{sourcedir}/type/TimestampEpochType.java[tags=collections-map-custom-key-type-mapping-example,indent=0]
+----
+
+The `TimestampEpochType` allows us to map a Unix timestamp since epoch to a `java.util.Date`.
+But, without the `@MapKeyType` Hibernate annotation, it would nt be possible to customize the `Map` key type.
+
+[[collections-map-key-class]]
+===== Maps having an interface type as the key
+
+Considering you have the following `PhoneNumber` interface with an implementation given by the `MobilePhone` class type:
+
+[[collections-map-key-class-type-mapping-example]]
+.`PhoneNumber` interface and the `MobilePhone` class type
+====
+[source,java]
+----
+include::{sourcedir}/MapKeyClassTest.java[tags=collections-map-key-class-type-mapping-example,indent=0]
+----
+====
+
+If you want to use the `PhoneNumber` interface as a `java.util.Map` key, then you need to supply the
+http://docs.oracle.com/javaee/7/api/javax/persistence/MapKeyClass.html[`@MapKeyClass`] annotation as well.
+
+[[collections-map-key-class-mapping-example]]
+.`@MapKeyClass` mapping example
+====
+[source,java]
+----
+include::{sourcedir}/MapKeyClassTest.java[tags=collections-map-key-class-mapping-example,indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/collections-map-key-class-mapping-example.sql[]
+----
+====
+
+When inserting a `Person` with a `callRegister` containing 2 `MobilePhone` references,
+Hibernate generates the following SQL statements:
+
+[[collections-map-key-class-persist-example]]
+.`@MapKeyClass` persist example
+====
+[source,java]
+----
+include::{sourcedir}/MapKeyClassTest.java[tags=collections-map-key-class-persist-example,indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/collections-map-key-class-persist-example.sql[]
+----
+====
+
+When fetching a `Person` and accessing the `callRegister` `Map`,
+Hibernate generates the following SQL statements:
+
+[[collections-map-key-class-fetch-example]]
+.`@MapKeyClass` fetch example
+====
+[source,java]
+----
+include::{sourcedir}/MapKeyClassTest.java[tags=collections-map-key-class-fetch-example,indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/collections-map-key-class-fetch-example.sql[]
+----
+====
+
 [[collections-map-unidirectional]]
 ===== Unidirectional maps
 
 A unidirectional map exposes a parent-child association from the parent-side only.
+
 The following example shows a unidirectional map which also uses a `@MapKeyTemporal` annotation.
 The map key is a timestamp and it's taken from the child entity table.
+
+[NOTE]
+====
+The `@MapKey` annotation is used to define the entity attribute used as a key of the `java.util.Map` in question.
+====
 
 [[collections-map-unidirectional-example]]
 .Unidirectional Map
@@ -545,6 +724,7 @@ include::{extrasdir}/collections-map-unidirectional-example.sql[]
 ===== Bidirectional maps
 
 Like most bidirectional associations, this relationship is owned by the child-side while the parent is the inverse side and can propagate its own state transitions to the child entities.
+
 In the following example, you can see that `@MapKeyEnumerated` was used so that the `Phone` enumeration becomes the map key.
 
 [[collections-map-bidirectional-example]]

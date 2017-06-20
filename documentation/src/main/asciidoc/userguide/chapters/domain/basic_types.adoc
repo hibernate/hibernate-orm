@@ -46,7 +46,7 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 |BlobType |BLOB |java.sql.Blob |blob, java.sql.Blob
 |ClobType |CLOB |java.sql.Clob |clob, java.sql.Clob
 |BinaryType |VARBINARY |byte[] |binary, byte[]
-|MaterializedBlobType |BLOB |byte[] |materized_blob
+|MaterializedBlobType |BLOB |byte[] |materialized_blob
 |ImageType |LONGVARBINARY |byte[] |image
 |WrapperBinaryType |VARBINARY |java.lang.Byte[] |wrapper-binary, Byte[], java.lang.Byte[]
 |CharArrayType |VARCHAR |char[] |characters, char[]
@@ -310,6 +310,17 @@ With the new `BitSetType` being registered as `bitset`, the entity mapping looks
 [source, JAVA, indent=0]
 ----
 include::{sourcedir}/basic/BitSetTypeTest.java[tags=basic-custom-type-BitSetType-mapping-example]
+----
+====
+
+Alternatively, use can use a `@TypeDef` ans skip the registration phase:
+
+[[basic-custom-type-BitSetTypeDef-mapping-example]]
+.Using `@TypeDef` to register a custom Type
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/BitSetTypeDefTest.java[tags=basic-custom-type-BitSetTypeDef-mapping-example]
 ----
 ====
 
@@ -1370,6 +1381,61 @@ include::{extrasdir}/basic/mapping-generated-CreationTimestamp-persist-example.s
 ----
 ====
 
+[[mapping-generated-UpdateTimestamp]]
+===== `@UpdateTimestamp` annotation
+
+The `@UpdateTimestamp` annotation instructs Hibernate to set the annotated entity attribute with the current timestamp value of the JVM
+when the entity is being persisted.
+
+The supported property types are:
+
+- `java.util.Date`
+- `java.util.Calendar`
+- `java.sql.Date`
+- `java.sql.Time`
+- `java.sql.Timestamp`
+
+[[mapping-generated-UpdateTimestamp-example]]
+.`@UpdateTimestamp` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/generated/UpdateTimestampTest.java[tags=mapping-generated-UpdateTimestamp-example]
+----
+====
+
+When the `Bid` entity is persisted, Hibernate is going to populate the underlying `updated_on` column with the current JVM timestamp value:
+
+[[mapping-generated-UpdateTimestamp-persist-example]]
+.`@UpdateTimestamp` persist example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/generated/UpdateTimestampTest.java[tags=mapping-generated-UpdateTimestamp-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-generated-UpdateTimestamp-persist-example.sql[]
+----
+====
+
+When updating the `Bid` entity, Hibernate is going to modify the `updated_on` column with the current JVM timestamp value:
+
+[[mapping-generated-UpdateTimestamp-update-example]]
+.`@UpdateTimestamp` update example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/generated/UpdateTimestampTest.java[tags=mapping-generated-UpdateTimestamp-update-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-generated-UpdateTimestamp-update-example.sql[]
+----
+====
+
 [[mapping-generated-ValueGenerationType]]
 ===== `@ValueGenerationType` meta-annotation
 
@@ -1586,6 +1652,50 @@ include::{sourcedir}/basic/WhereTest.java[tags=mapping-where-collection-query-ex
 [source, SQL, indent=0]
 ----
 include::{extrasdir}/basic/mapping-where-collection-query-example.sql[]
+----
+====
+
+[[mapping-where-join-table]]
+==== `@WhereJoinTable`
+
+Just like `@Where` annotation, `@WhereJoinTable` is used to filter out collections using a joined table (e.g. @ManyToMany association).
+
+[[mapping-where-join-table-example]]
+.`@WhereJoinTable` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/WhereJoinTableTest.java[tags=mapping-where-join-table-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-where-join-table-example.sql[]
+----
+====
+
+In the example above, the current week `Reader` entities are included in the `currentWeekReaders` collection
+which uses the `@WhereJoinTable` annotation to filter the joined table rows according to the provided SQL clause.
+
+Considering that the following two `Book_Reader` entries are added into our system:
+
+[[mapping-where-join-table-persist-example]]
+.`@WhereJoinTable` test data
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/WhereJoinTableTest.java[tags=mapping-where-join-table-persist-example]
+----
+====
+
+When fetching the `currentWeekReaders` collection, Hibernate is going to find one one entry:
+
+[[mapping-where-join-table-fetch-example]]
+.`@WhereJoinTable` fetch example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/WhereJoinTableTest.java[tags=mapping-where-join-table-fetch-example]
 ----
 ====
 
@@ -1925,7 +2035,7 @@ Therefore, the `@JoinFormula` annotation is used to define a custom join associa
 [[mapping-JoinColumnOrFormula]]
 ==== `@JoinColumnOrFormula` mapping
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnOrFormula.html[`@JoinColumnOrFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key when we need to tak into consideration a column value as well as a `@JoinFormula`.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnOrFormula.html[`@JoinColumnOrFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key when we need to take into consideration a column value as well as a `@JoinFormula`.
 
 [[mapping-JoinColumnOrFormula-example]]
 .`@JoinColumnOrFormula` mapping usage
@@ -1941,12 +2051,12 @@ include::{extrasdir}/basic/mapping-JoinColumnOrFormula-example.sql[]
 ----
 ====
 
-The `country` association in the `User` entity is mapped by the `language` property value and the the associated `Country` `is_default` column value.
+The `country` association in the `User` entity is mapped by the `language` property value and the associated `Country` `is_default` column value.
 
 Considering we have the following entities:
 
 [[mapping-JoinColumnOrFormula-persistence-example]]
-.`@JoinColumnOrFormula` mapping usage
+.`@JoinColumnOrFormula` persist example
 ====
 [source, JAVA, indent=0]
 ----
@@ -1957,7 +2067,7 @@ include::{sourcedir}/basic/JoinColumnOrFormulaTest.java[tags=mapping-JoinColumnO
 When fetching the `User` entities, the `country` property is mapped by the `@JoinColumnOrFormula` expression:
 
 [[mapping-JoinColumnOrFormula-fetching-example]]
-.`@JoinColumnOrFormula` mapping usage
+.`@JoinColumnOrFormula` fetching example
 ====
 [source, JAVA, indent=0]
 ----
@@ -1971,3 +2081,98 @@ include::{extrasdir}/basic/mapping-JoinColumnOrFormula-fetching-example.sql[]
 ====
 
 Therefore, the `@JoinColumnOrFormula` annotation is used to define a custom join association between the parent-child association.
+
+[[mapping-Target]]
+==== `@Target` mapping
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify the implementation class of a given association that is mapped via an interface.
+The
+http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html[`@ManyToOne`],
+http://docs.oracle.com/javaee/7/api/javax/persistence/OneToOne.html[`@OneToOne`],
+http://docs.oracle.com/javaee/7/api/javax/persistence/OneToMany.html[`@OneToMany`], and
+http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToMany.html[`@ManyToMany`]
+feature a http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html#targetEntity--[`targetEntity`] attribute to specify the actual class of the entiity association when an interface is used for the mapping.
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/ElementCollection.html[`@ElementCollection`] association has a http://docs.oracle.com/javaee/7/api/javax/persistence/ElementCollection.html#targetClass--[`targetClass`] attribute for the same purpose.
+
+However, for simple embeddable types, there is no such construct and so you need to use the Hibernate-specific `@Target` annotation instead.
+
+[[mapping-Target-example]]
+.`@Target` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/TargetTest.java[tags=mapping-Target-example]
+----
+====
+
+The `coordinates` embeddable type is mapped as the `Coordinates` interface.
+However, Hibernate needs to know the actual implementation tye, which is `GPS` in this case,
+hence the `@Target` annotation is used to provide this information.
+
+Assuming we have persisted the following `City` entity:
+
+[[mapping-Target-persist-example]]
+.`@Target` persist example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/TargetTest.java[tags=mapping-Target-persist-example]
+----
+====
+
+When fetching the `City` entity, the `coordinates` property is mapped by the `@Target` expression:
+
+[[mapping-Target-fetching-example]]
+.`@Target` fetching example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/TargetTest.java[tags=mapping-Target-fetching-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-Target-fetching-example.sql[]
+----
+====
+
+Therefore, the `@Target` annotation is used to define a custom join association between the parent-child association.
+
+[[mapping-Parent]]
+==== `@Parent` mapping
+
+The Hibernate-specific `@Parent` annotation allows you to reference the owner entity from within an embeddable.
+
+[[mapping-Parent-example]]
+.`@Parent` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/ParentTest.java[tags=mapping-Parent-example]
+----
+====
+
+Assuming we have persisted the following `City` entity:
+
+[[mapping-Parent-persist-example]]
+.`@Parent` persist example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/ParentTest.java[tags=mapping-Parent-persist-example]
+----
+====
+
+When fetching the `City` entity, the `city` property of the embeddable type acts as a back reference to the owning parent entity:
+
+[[mapping-Parent-fetching-example]]
+.`@Parent` fetching example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/ParentTest.java[tags=mapping-Parent-fetching-example]
+----
+====
+
+Therefore, the `@Parent` annotation is used to define the association between an embeddable type and the owning entity.

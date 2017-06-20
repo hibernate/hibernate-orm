@@ -4,7 +4,6 @@
 This guide covers Hibernate's ability to enhance an applications domain model, the ways to perform that
 enhancement and the capabilities introduced into the domain model by the enhancement.
 
-
 == The capabilities
 
 Hibernate will enhance the classes in an application's domain model in order to add one or more of the

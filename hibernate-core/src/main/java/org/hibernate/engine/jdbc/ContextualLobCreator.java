@@ -52,7 +52,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 			return blob;
 		}
 		catch ( SQLException e ) {
-			throw new JDBCException( "Unable to set BLOB bytes afterQuery creation", e );
+			throw new JDBCException( "Unable to set BLOB bytes after creation", e );
 		}
 	}
 
@@ -80,7 +80,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 			return clob;
 		}
 		catch ( SQLException e ) {
-			throw new JDBCException( "Unable to set CLOB string afterQuery creation", e );
+			throw new JDBCException( "Unable to set CLOB string after creation", e );
 		}
 	}
 
@@ -108,7 +108,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 			return nclob;
 		}
 		catch ( SQLException e ) {
-			throw new JDBCException( "Unable to set NCLOB string afterQuery creation", e );
+			throw new JDBCException( "Unable to set NCLOB string after creation", e );
 		}
 	}
 

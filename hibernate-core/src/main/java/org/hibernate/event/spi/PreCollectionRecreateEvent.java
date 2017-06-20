@@ -10,7 +10,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
- * An event that occurs beforeQuery a collection is recreated
+ * An event that occurs before a collection is recreated
  *
  * @author Gail Badner
  */

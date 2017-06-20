@@ -83,7 +83,7 @@ public class NonTransactionalDataAccessTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test(expected = TransactionRequiredException.class)
-	public void testFlushDisallowingutOfTransactionUpdateOperations() throws Exception {
+	public void testFlushDisallowingOutOfTransactionUpdateOperations() throws Exception {
 		allowUpdateOperationOutsideTransaction = "false";
 		rebuildSessionFactory();
 		prepareTest();
@@ -115,7 +115,7 @@ public class NonTransactionalDataAccessTest extends BaseCoreFunctionalTestCase {
 	@Entity(name = "MyEntity")
 	public static class MyEntity {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		long id;
 
 		String name;

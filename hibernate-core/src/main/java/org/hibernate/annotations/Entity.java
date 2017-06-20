@@ -43,7 +43,7 @@ public @interface Entity {
 	@Deprecated
 	boolean dynamicUpdate() default false;
 	/**
-	 *  Do a select to retrieve the entity beforeQuery any potential update.
+	 *  Do a select to retrieve the entity before any potential update.
 	 *  @deprecated Use {@link SelectBeforeUpdate} instead
 	 */
 	@Deprecated

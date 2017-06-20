@@ -78,8 +78,8 @@ public class VersionedCallInterceptor extends CallInterceptor {
 		}
 
 		Object newValue = command.getValue();
-		Object newVersion = null;
-		long newTimestamp = Long.MIN_VALUE;
+		Object newVersion;
+		long newTimestamp;
 		Object actualNewValue = newValue;
 		boolean isRemoval = false;
 		if (newValue instanceof VersionedEntry) {
@@ -93,8 +93,8 @@ public class VersionedCallInterceptor extends CallInterceptor {
 				actualNewValue = ve.getValue();
 			}
 		}
-		else if (newValue instanceof org.hibernate.cache.spi.entry.CacheEntry) {
-			newVersion = ((org.hibernate.cache.spi.entry.CacheEntry) newValue).getVersion();
+		else {
+			throw new IllegalArgumentException(String.valueOf(newValue));
 		}
 
 		if (newVersion == null) {
@@ -104,24 +104,20 @@ public class VersionedCallInterceptor extends CallInterceptor {
 		}
 		if (oldVersion == null) {
 			assert oldValue == null || oldTimestamp != Long.MIN_VALUE;
-			if (newTimestamp == Long.MIN_VALUE) {
-				// remove, knowing the version
-				setValue(e, newValue, expiringMetadata);
-			}
-			else if (newTimestamp <= oldTimestamp) {
+			if (newTimestamp <= oldTimestamp) {
 				// either putFromLoad or regular update/insert - in either case this update might come
 				// when it was evicted/region-invalidated. In both cases, with old timestamp we'll leave
 				// the invalid value
 				assert oldValue == null;
 			}
 			else {
-				setValue(e, newValue, defaultMetadata);
+				setValue(e, actualNewValue, defaultMetadata);
 			}
 			return null;
 		}
 		int compareResult = versionComparator.compare(newVersion, oldVersion);
 		if (isRemoval && compareResult >= 0) {
-			setValue(e, newValue, expiringMetadata);
+			setValue(e, actualNewValue, expiringMetadata);
 		}
 		else if (compareResult > 0) {
 			setValue(e, actualNewValue, defaultMetadata);
@@ -146,7 +142,10 @@ public class VersionedCallInterceptor extends CallInterceptor {
 	public Object visitSizeCommand(InvocationContext ctx, SizeCommand command) throws Throwable {
 		Set<Flag> flags = command.getFlags();
 		int size = 0;
-		AdvancedCache decoratedCache = cache.getAdvancedCache().withFlags(flags != null ? flags.toArray(new Flag[flags.size()]) : null);
+		AdvancedCache decoratedCache = cache.getAdvancedCache();
+		if (flags != null) {
+			decoratedCache = decoratedCache.withFlags(flags.toArray(new Flag[flags.size()]));
+		}
 		// In non-transactional caches we don't care about context
 		CloseableIterable<CacheEntry<Object, Void>> iterable = decoratedCache
 				.filterEntries(VersionedEntry.EXCLUDE_EMPTY_EXTRACT_VALUE).converter(NullValueConverter.getInstance());

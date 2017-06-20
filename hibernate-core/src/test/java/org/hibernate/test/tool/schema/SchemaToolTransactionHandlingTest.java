@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.tool.schema;
 
+import java.sql.SQLSyntaxErrorException;
 import java.util.Collections;
 import java.util.EnumSet;
 import javax.persistence.Entity;
@@ -22,6 +23,7 @@ import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoo
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
+import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.SchemaCreator;
 import org.hibernate.tool.schema.spi.SchemaDropper;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
@@ -89,12 +91,16 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 
 			final Metadata mappings = buildMappings( registry );
 			try {
-				schemaDropper.doDrop(
-						mappings,
-						ExecutionOptionsTestImpl.INSTANCE,
-						SourceDescriptorImpl.INSTANCE,
-						TargetDescriptorImpl.INSTANCE
-				);
+				try {
+					schemaDropper.doDrop(
+							mappings,
+							ExecutionOptionsTestImpl.INSTANCE,
+							SourceDescriptorImpl.INSTANCE,
+							TargetDescriptorImpl.INSTANCE
+					);
+				}catch (CommandAcceptanceException e){
+					//ignore may happen if sql drop does not support if exist
+				}
 				schemaCreator.doCreation(
 						mappings,
 						ExecutionOptionsTestImpl.INSTANCE,

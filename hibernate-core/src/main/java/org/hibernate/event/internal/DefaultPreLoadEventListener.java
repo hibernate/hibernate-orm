@@ -11,7 +11,7 @@ import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Called beforeQuery injecting property values into a newly
+ * Called before injecting property values into a newly
  * loaded entity instance.
  *
  * @author Gavin King

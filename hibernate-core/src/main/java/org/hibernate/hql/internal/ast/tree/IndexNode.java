@@ -65,7 +65,7 @@ public class IndexNode extends FromReferenceNode {
 	}
 
 	@Override
-	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent)
+	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent, AST parentPredicate)
 			throws SemanticException {
 		if ( isResolved() ) {
 			return;
@@ -81,7 +81,7 @@ public class IndexNode extends FromReferenceNode {
 		String collectionRole = ( (CollectionType) type ).getRole();
 		QueryableCollection queryableCollection = sessionFactoryHelper.requireQueryableCollection( collectionRole );
 		if ( !queryableCollection.hasIndex() ) {
-			throw new QueryException( "unindexed fromElement beforeQuery []: " + collectionNode.getPath() );
+			throw new QueryException( "unindexed fromElement before []: " + collectionNode.getPath() );
 		}
 
 		// Generate the inner join -- The elements need to be joined to the collection they are in.

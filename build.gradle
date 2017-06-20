@@ -58,7 +58,7 @@ allprojects {
 }
 
 ext {
-	hibernateTargetVersion = '5.2.9-SNAPSHOT'
+	hibernateTargetVersion = '5.2.11-SNAPSHOT'
 	expectedGradleVersion = '3.2.1'
 	baselineJavaVersion = '1.8'
 
@@ -86,6 +86,8 @@ idea {
 def osgiDescription() {
 	return "A module of the Hibernate O/RM project"
 }
+
+buildDir = "target"
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -169,7 +171,14 @@ subprojects { subProject ->
 
 		if (db.equalsIgnoreCase("oracle")) {
 			dependencies {
-				testRuntime( libraries.oracle )
+				testRuntime( libraries.oracle ) {
+					exclude group: 'com.oracle.jdbc', module: 'xmlparserv2'
+				}
+			}
+		}
+		if (db.equalsIgnoreCase("db2")) {
+			dependencies {
+				testRuntime( libraries.db2 )
 			}
 		}
 		// 6.6 gave me some NPE problems from within checkstyle...

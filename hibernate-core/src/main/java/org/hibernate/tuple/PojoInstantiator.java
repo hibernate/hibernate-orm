@@ -50,7 +50,11 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	}
 
 	public PojoInstantiator(Component component, ReflectionOptimizer.InstantiationOptimizer optimizer) {
-		this.mappedClass = component.getComponentClass();
+		this( component.getComponentClass(), optimizer );
+	}
+
+	public PojoInstantiator(Class componentClass, ReflectionOptimizer.InstantiationOptimizer optimizer) {
+		this.mappedClass = componentClass;
 		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
 		this.optimizer = optimizer;
 

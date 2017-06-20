@@ -58,8 +58,7 @@ import org.hibernate.dialect.PointbaseDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SAPDBDialect;
-import org.hibernate.dialect.Sybase11Dialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.dialect.TimesTenDialect;
@@ -2287,7 +2286,12 @@ public class FooBarTest extends LegacyTestCase {
 			s.createQuery( "select count(*) from Baz as baz where 1 in indices(baz.fooArray)" ).list();
 			s.createQuery( "select count(*) from Bar as bar where 'abc' in elements(bar.baz.fooArray)" ).list();
 			s.createQuery( "select count(*) from Bar as bar where 1 in indices(bar.baz.fooArray)" ).list();
-			if ( !(getDialect() instanceof DB2Dialect) &&  !(getDialect() instanceof Oracle8iDialect ) && !( getDialect() instanceof SybaseDialect ) && !( getDialect() instanceof Sybase11Dialect ) && !( getDialect() instanceof SybaseASE15Dialect ) && !( getDialect() instanceof PostgreSQLDialect ) && !(getDialect() instanceof PostgreSQL81Dialect) && !(getDialect() instanceof AbstractHANADialect)) {
+			if ( !(getDialect() instanceof DB2Dialect) &&
+					!( getDialect() instanceof Oracle8iDialect ) &&
+					!( SybaseDialect.class.isAssignableFrom( getDialect().getClass() ) ) &&
+					!( SQLServerDialect.class.isAssignableFrom( getDialect().getClass() ) ) &&
+					!( getDialect() instanceof PostgreSQLDialect ) && !(getDialect() instanceof PostgreSQL81Dialect ) &&
+					!( getDialect() instanceof AbstractHANADialect) ) {
 				// SybaseAnywhereDialect supports implicit conversions from strings to ints
 				s.createQuery(
 						"select count(*) from Bar as bar, bar.component.glarch.proxyArray as g where g.id in indices(bar.baz.fooArray)"
@@ -3304,7 +3308,7 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( g.getStrings().size()==1 );
 		assertTrue( g.getProxyArray().length==1 );
 		assertTrue( g.getProxySet().size()==1 );
-		assertTrue( "versioned collection beforeQuery", g.getVersion() == 1 );
+		assertTrue( "versioned collection before", g.getVersion() == 1 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -3314,14 +3318,14 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( g.getStrings().get(0).equals("foo") );
 		assertTrue( g.getProxyArray()[0]==g );
 		assertTrue( g.getProxySet().iterator().next()==g );
-		assertTrue( "versioned collection beforeQuery", g.getVersion() == 1 );
+		assertTrue( "versioned collection before", g.getVersion() == 1 );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection beforeQuery", g.getVersion() == 1 );
+		assertTrue( "versioned collection before", g.getVersion() == 1 );
 		g.getStrings().add( "bar" );
 		s.getTransaction().commit();
 		s.close();
@@ -3329,8 +3333,8 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection afterQuery", g.getVersion()==2 );
-		assertTrue( "versioned collection afterQuery", g.getStrings().size() == 2 );
+		assertTrue( "versioned collection after", g.getVersion()==2 );
+		assertTrue( "versioned collection after", g.getStrings().size() == 2 );
 		g.setProxyArray( null );
 		s.getTransaction().commit();
 		s.close();
@@ -3338,8 +3342,8 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection afterQuery", g.getVersion()==3 );
-		assertTrue( "versioned collection afterQuery", g.getProxyArray().length == 0 );
+		assertTrue( "versioned collection after", g.getVersion()==3 );
+		assertTrue( "versioned collection after", g.getProxyArray().length == 0 );
 		g.setFooComponents( new ArrayList() );
 		g.setProxyArray( null );
 		s.getTransaction().commit();
@@ -3348,7 +3352,7 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection afterQuery", g.getVersion()==4 );
+		assertTrue( "versioned collection after", g.getVersion()==4 );
 		s.delete(g);
 		s.flush();
 		assertTrue( s.createQuery( "from java.lang.Object" ).list().size()==0 );
@@ -4014,7 +4018,7 @@ public class FooBarTest extends LegacyTestCase {
 		finally {
 			s.close();
 		}
-		assertTrue( "lazy collection should have blown in the beforeQuery trans completion", ok );
+		assertTrue( "lazy collection should have blown in the before trans completion", ok );
 
 		s = openSession();
 		s.beginTransaction();
@@ -4053,6 +4057,7 @@ public class FooBarTest extends LegacyTestCase {
 		}
 		catch (Exception e) {
 			s.getTransaction().rollback();
+			throw e;
 		}
 		finally {
 			s.close();

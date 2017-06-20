@@ -233,7 +233,7 @@ public class SessionWithSharedConnectionTest extends BaseCoreFunctionalTestCase 
 				.autoClose( true )
 				.openSession();
 		
-		//the secondary session should be automatically closed afterQuery the commit
+		//the secondary session should be automatically closed after the commit
 		session.getTransaction().commit();
 		
 		assertFalse( secondarySession.isOpen() );

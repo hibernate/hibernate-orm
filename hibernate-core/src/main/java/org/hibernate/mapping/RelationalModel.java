@@ -12,8 +12,11 @@ import org.hibernate.engine.spi.Mapping;
 /**
  * A relational object which may be created using DDL
  * @author Gavin King
+ *
+ * @deprecated (since 5.2) not needed anymore.
  */
+@Deprecated
 public interface RelationalModel {
-	public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) throws HibernateException;
-	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema);
+	String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) throws HibernateException;
+	String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema);
 }

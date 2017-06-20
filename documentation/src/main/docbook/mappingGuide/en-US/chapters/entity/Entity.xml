@@ -249,7 +249,7 @@
             </para>
         </section>
 
-        <section xml:id="entity-pojo-optlock">
+        <section xml:id="locking-optimistic">
             <title>Mapping optimistic locking</title>
 
             <para>

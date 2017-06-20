@@ -45,7 +45,8 @@ public abstract class AbstractMapComponentNode extends FromReferenceNode impleme
 			boolean generateJoin,
 			boolean implicitJoin,
 			String classAlias,
-			AST parent) throws SemanticException {
+			AST parent,
+			AST parentPredicate) throws SemanticException {
 		if ( mapFromElement == null ) {
 			final FromReferenceNode mapReference = getMapReference();
 			mapReference.resolve( true, true );

@@ -66,7 +66,7 @@ public interface UserCollectionType {
 	 * and perhaps load factor).
 	 *
 	 * @param anticipatedSize The anticipated size of the instaniated collection
-	 * afterQuery we are done populating it.  Note, may be negative to indicate that
+	 * after we are done populating it.  Note, may be negative to indicate that
 	 * we not yet know anything about the anticipated size (i.e., when initializing
 	 * from a result set row by row).
 	 */

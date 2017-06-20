@@ -132,6 +132,7 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.CollectionBinder;
@@ -495,7 +496,8 @@ public final class AnnotationBinder {
 
 		//TODO: be more strict with secondarytable allowance (not for ids, not for secondary table join columns etc)
 		InheritanceState inheritanceState = inheritanceStatePerClass.get( clazzToProcess );
-		AnnotatedClassType classType = context.getMetadataCollector().getClassType( clazzToProcess );
+		final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
+		AnnotatedClassType classType = metadataCollector.getClassType( clazzToProcess );
 
 		//Queries declared in MappedSuperclass should be usable in Subclasses
 		if ( AnnotatedClassType.EMBEDDABLE_SUPERCLASS.equals( classType ) ) {
@@ -597,7 +599,7 @@ public final class AnnotationBinder {
 					: checkAnn.constraints();
 
 			EntityTableXref denormalizedTableXref = inheritanceState.hasDenormalizedTable()
-					? context.getMetadataCollector().getEntityTableXref( superEntity.getEntityName() )
+					? metadataCollector.getEntityTableXref( superEntity.getEntityName() )
 					: null;
 
 			entityBinder.bindTable(
@@ -617,7 +619,7 @@ public final class AnnotationBinder {
 			if ( inheritanceState.getType() == InheritanceType.SINGLE_TABLE ) {
 				// we at least need to properly set up the EntityTableXref
 				entityBinder.bindTableForDiscriminatedSubclass(
-						context.getMetadataCollector().getEntityTableXref( superEntity.getEntityName() )
+						metadataCollector.getEntityTableXref( superEntity.getEntityName() )
 				);
 			}
 		}
@@ -651,9 +653,7 @@ public final class AnnotationBinder {
 				onDeleteAppropriate = true;
 				final JoinedSubclass jsc = ( JoinedSubclass ) persistentClass;
 				SimpleValue key = new DependantValue(
-						context.getMetadataCollector()
-								.getTypeConfiguration()
-								.getMetadataBuildingContext(),
+						metadataCollector.getTypeConfiguration().getMetadataBuildingContext(),
 						jsc.getTable(),
 						jsc.getIdentifier()
 				);
@@ -676,8 +676,8 @@ public final class AnnotationBinder {
 					key.setCascadeDeleteEnabled( false );
 				}
 				//we are never in a second pass at that stage, so queue it
-				context.getMetadataCollector().addSecondPass( new JoinedSubclassFkSecondPass( jsc, inheritanceJoinedColumns, key, context ) );
-				context.getMetadataCollector().addSecondPass( new CreateKeySecondPass( jsc ) );
+				metadataCollector.addSecondPass( new JoinedSubclassFkSecondPass( jsc, inheritanceJoinedColumns, key, context ) );
+				metadataCollector.addSecondPass( new CreateKeySecondPass( jsc ) );
 			}
 
 			if ( isInheritanceRoot ) {
@@ -758,16 +758,17 @@ public final class AnnotationBinder {
 
 		if ( !inheritanceState.hasParents() ) {
 			final RootClass rootClass = ( RootClass ) persistentClass;
-			context.getMetadataCollector().addSecondPass( new CreateKeySecondPass( rootClass ) );
+			metadataCollector.addSecondPass( new CreateKeySecondPass( rootClass ) );
+			metadataCollector.addEntityMappingHierarchy( rootClass.getEntityMappingHierarchy() );
 		}
 		else {
 			superEntity.addSubclass( ( Subclass ) persistentClass );
 		}
 
-		context.getMetadataCollector().addEntityBinding( persistentClass );
+		metadataCollector.addEntityBinding( persistentClass );
 
 		//Process secondary tables and complementary definitions (ie o.h.a.Table)
-		context.getMetadataCollector().addSecondPass(
+		metadataCollector.addSecondPass(
 				new SecondaryTableSecondPass(
 						entityBinder,
 						propertyHolder,

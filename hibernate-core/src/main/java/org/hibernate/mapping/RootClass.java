@@ -89,7 +89,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	/**
-	 * @deprecated since 6.0, use {@link #setDeclaredIdentifierAttributeMapping()}.
+	 * @deprecated since 6.0, use {@link #setDeclaredIdentifierAttributeMapping(PersistentAttributeMapping)}.
 	 */
 	@Deprecated
 	public void setDeclaredIdentifierProperty(Property declaredIdentifierProperty) {

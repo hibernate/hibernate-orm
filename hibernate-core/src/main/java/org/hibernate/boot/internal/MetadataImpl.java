@@ -65,7 +65,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final TypeConfiguration typeConfiguration;
 
 	private final Map<String, EntityMappingHierarchy> entityMappingHierarchies;
-
 	private final Map<String,PersistentClass> entityBindingMap;
 	private final Map<Class, MappedSuperclass> mappedSuperclassMap;
 	private final Map<String,Collection> collectionBindingMap;

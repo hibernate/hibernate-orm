@@ -47,7 +47,7 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 		this.rootBuildingContext = rootBuildingContext;
 		final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
 
-		this.mappingDocuments = new ArrayList<MappingDocument>();
+		this.mappingDocuments = new ArrayList<>();
 
 		for ( Binding xmlBinding : xmlBindings ) {
 			if ( !JaxbHbmHibernateMapping.class.isInstance( xmlBinding.getRoot() ) ) {

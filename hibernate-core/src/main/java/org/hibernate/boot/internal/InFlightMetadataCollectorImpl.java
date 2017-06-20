@@ -215,20 +215,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public java.util.Collection<EntityMappingHierarchy> getEntityHierarchies() {
-		return entityMappingHierarchies.values();
-	}
-
-	@Override
-	public void addEntityMappingHierarchy(EntityMappingHierarchy entityMappingHierarchy) {
-		final String rootEntityName = entityMappingHierarchy.getRootType().getEntityName();
-		if ( entityMappingHierarchies.containsKey( rootEntityName ) ) {
-			throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY_HIERARCHY, rootEntityName );
-		}
-		this.entityMappingHierarchies.put( rootEntityName, entityMappingHierarchy );
-	}
-
-	@Override
 	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
 		throw new UnsupportedOperationException(
 				"#buildNamedQueryRepository should not be called on InFlightMetadataCollector" );
@@ -269,6 +255,25 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 						"we should better segment this in the API :)"
 		);
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Entity Hierarchy handling
+
+	@Override
+	public java.util.Collection<EntityMappingHierarchy> getEntityHierarchies() {
+		return entityMappingHierarchies.values();
+	}
+
+	@Override
+	public void addEntityMappingHierarchy(EntityMappingHierarchy entityMappingHierarchy) {
+		final String rootEntityName = entityMappingHierarchy.getRootType().getEntityName();
+		if ( entityMappingHierarchies.containsKey( rootEntityName ) ) {
+			throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY_HIERARCHY, rootEntityName );
+		}
+		this.entityMappingHierarchies.put( rootEntityName, entityMappingHierarchy );
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Entity handling

@@ -184,10 +184,11 @@ public class ModelBinder {
 	public void bindEntityHierarchy(EntityHierarchySourceImpl hierarchySource) {
 		final RootClass rootEntityDescriptor = new RootClass( metadataBuildingContext );
 		bindRootEntity( hierarchySource, rootEntityDescriptor );
-		hierarchySource.getRoot()
+		final InFlightMetadataCollector metadataCollector = hierarchySource.getRoot()
 				.getLocalMetadataBuildingContext()
-				.getMetadataCollector()
-				.addEntityBinding( rootEntityDescriptor );
+				.getMetadataCollector();
+		metadataCollector.addEntityBinding( rootEntityDescriptor );
+		metadataCollector.addEntityMappingHierarchy( rootEntityDescriptor.getEntityMappingHierarchy() );
 
 		switch ( hierarchySource.getHierarchyInheritanceType() ) {
 			case NO_INHERITANCE: {

@@ -314,10 +314,9 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			);
 
 			settings.getMultiTableBulkIdStrategy().prepare(
-					jdbcServices,
-					buildLocalConnectionAccess(),
-					metadata,
-					sessionFactoryOptions
+					metamodel,
+					sessionFactoryOptions,
+					buildLocalConnectionAccess()
 			);
 
 			SchemaManagementToolCoordinator.process(
@@ -727,7 +726,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		isClosed = true;
 
-		settings.getMultiTableBulkIdStrategy().release( serviceRegistry.getService( JdbcServices.class ), buildLocalConnectionAccess() );
+		settings.getMultiTableBulkIdStrategy().release( metamodel, buildLocalConnectionAccess() );
 
 		queryEngine.close();
 		cacheAccess.close();

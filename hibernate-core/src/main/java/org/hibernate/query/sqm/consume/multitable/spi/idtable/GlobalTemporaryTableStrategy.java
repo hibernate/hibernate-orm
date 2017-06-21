@@ -9,8 +9,8 @@ package org.hibernate.query.sqm.consume.multitable.spi.idtable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.Metamodel;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -63,7 +63,7 @@ public class GlobalTemporaryTableStrategy
 
 	@Override
 	public void prepare(
-			MetadataImplementor runtimeMetadata,
+			Metamodel runtimeMetadata,
 			SessionFactoryOptions sessionFactoryOptions,
 			JdbcConnectionAccess connectionAccess) {
 
@@ -101,12 +101,10 @@ public class GlobalTemporaryTableStrategy
 	@Override
 	protected IdTable generateIdTableDefinition(
 			EntityDescriptor entityDescriptor,
-			MetadataImplementor runtimeMetadata,
 			SessionFactoryOptions sessionFactoryOptions,
 			JdbcConnectionAccess connectionAccess) {
 		final IdTable idTable = super.generateIdTableDefinition(
 				entityDescriptor,
-				runtimeMetadata,
 				sessionFactoryOptions,
 				connectionAccess
 		);
@@ -143,9 +141,7 @@ public class GlobalTemporaryTableStrategy
 	}
 
 	@Override
-	public void release(
-			MetadataImplementor runtimeMetadata,
-			JdbcConnectionAccess connectionAccess) {
+	public void release(Metamodel runtimeMetadata, JdbcConnectionAccess connectionAccess) {
 		if ( idTableHelpers != null ) {
 			for ( IdTableHelper idTableHelper : idTableHelpers ) {
 				idTableHelper.dropIdTable( connectionAccess );

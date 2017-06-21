@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.consume.multitable.spi.idtable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.Metamodel;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -75,7 +75,7 @@ public class PersistentTableStrategy
 
 	@Override
 	public void prepare(
-			MetadataImplementor runtimeMetadata,
+			Metamodel runtimeMetadata,
 			SessionFactoryOptions sessionFactoryOptions,
 			JdbcConnectionAccess connectionAccess) {
 		final ServiceRegistry serviceRegistry = sessionFactoryOptions.getServiceRegistry();
@@ -114,17 +114,13 @@ public class PersistentTableStrategy
 	@Override
 	protected IdTable generateIdTableDefinition(
 			EntityDescriptor entityDescriptor,
-			MetadataImplementor runtimeMetadata,
 			SessionFactoryOptions sessionFactoryOptions,
 			JdbcConnectionAccess connectionAccess) {
 		final IdTable idTable = super.generateIdTableDefinition(
 				entityDescriptor,
-				runtimeMetadata,
 				sessionFactoryOptions,
 				connectionAccess
 		);
-
-
 
 		// see if the user explicitly requested specific transactionality via settings...
 		final IdTableManagementTransactionality transactionality;
@@ -176,7 +172,7 @@ public class PersistentTableStrategy
 
 	@Override
 	public void release(
-			MetadataImplementor runtimeMetadata,
+			Metamodel runtimeMetadata,
 			JdbcConnectionAccess connectionAccess) {
 		if ( idTableHelpers != null ) {
 			for ( IdTableHelper idTableHelper : idTableHelpers ) {

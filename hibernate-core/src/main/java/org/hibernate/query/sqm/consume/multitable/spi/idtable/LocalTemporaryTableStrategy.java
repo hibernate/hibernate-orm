@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.consume.multitable.spi.idtable;
 
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.Metamodel;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
@@ -75,7 +75,7 @@ public class LocalTemporaryTableStrategy extends AbstractTableBasedStrategy {
 
 	@Override
 	public void prepare(
-			MetadataImplementor runtimeMetadata,
+			Metamodel runtimeMetadata,
 			SessionFactoryOptions sessionFactoryOptions,
 			JdbcConnectionAccess connectionAccess) {
 		super.prepare( runtimeMetadata, sessionFactoryOptions, connectionAccess );

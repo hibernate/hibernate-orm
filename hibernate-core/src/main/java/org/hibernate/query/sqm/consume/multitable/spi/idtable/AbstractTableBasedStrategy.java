@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.Metamodel;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
@@ -34,13 +34,12 @@ public abstract class AbstractTableBasedStrategy implements IdTableStrategy {
 
 	@Override
 	public void prepare(
-			MetadataImplementor runtimeMetadata,
+			Metamodel runtimeMetadata,
 			SessionFactoryOptions sessionFactoryOptions,
 			JdbcConnectionAccess connectionAccess) {
 		runtimeMetadata.getTypeConfiguration().getEntityPersisterMap().values().forEach(
 				entityDescriptor -> generateIdTableDefinition(
 						entityDescriptor,
-						runtimeMetadata,
 						sessionFactoryOptions,
 						connectionAccess
 				)
@@ -53,7 +52,6 @@ public abstract class AbstractTableBasedStrategy implements IdTableStrategy {
 
 	protected IdTable generateIdTableDefinition(
 			EntityDescriptor entityDescriptor,
-			MetadataImplementor runtimeMetadata,
 			SessionFactoryOptions sessionFactoryOptions,
 			JdbcConnectionAccess connectionAccess) {
 		final IdTable idTable = new IdTable(
@@ -169,7 +167,7 @@ public abstract class AbstractTableBasedStrategy implements IdTableStrategy {
 	}
 
 	@Override
-	public void release(MetadataImplementor runtimeMetadata, JdbcConnectionAccess connectionAccess) {
+	public void release(Metamodel runtimeMetadata, JdbcConnectionAccess connectionAccess) {
 		idTableInfoMap.clear();
 	}
 

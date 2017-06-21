@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.consume.multitable.spi;
 
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.Metamodel;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
@@ -25,14 +25,6 @@ import org.hibernate.query.sqm.tree.SqmUpdateStatement;
  */
 public interface IdTableStrategy {
 
-	// todo (6.0) : Andrea, do we want to this to use the runtime model rather than the boot model here?
-	//		IIRC we passed the boot model because that was where schema tooling
-	// 		happened, but since we are changing that, maybe we should changes this
-	//		as well...
-	//
-	//		additionally (to ^^) there is the question of what exactly the strategy should do
-	//		in terms of table creation/dropping.
-
 	/**
 	 * Prepare the strategy for use.  Called one time as the SessionFactory
 	 * is being built.
@@ -41,7 +33,7 @@ public interface IdTableStrategy {
 	 * @param connectionAccess Access to a JDBC Connection if needed
 	 */
 	default void prepare(
-			MetadataImplementor runtimeMetadata,
+			Metamodel runtimeMetadata,
 			SessionFactoryOptions sessionFactoryOptions,
 			JdbcConnectionAccess connectionAccess) {
 		// by default, nothing to do...
@@ -54,7 +46,7 @@ public interface IdTableStrategy {
 	 * @param runtimeMetadata Access to the runtime mappings
 	 * @param connectionAccess Access to the JDBC Connection
 	 */
-	default void release(MetadataImplementor runtimeMetadata, JdbcConnectionAccess connectionAccess) {
+	default void release(Metamodel runtimeMetadata, JdbcConnectionAccess connectionAccess) {
 		// by default, nothing to do...
 	}
 

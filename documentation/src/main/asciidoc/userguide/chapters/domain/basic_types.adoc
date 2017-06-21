@@ -1851,6 +1851,40 @@ include::{extrasdir}/basic/mapping-filter-join-table-collection-query-example.sq
 ----
 ====
 
+[[mapping-column-filter-sql-fragment-alias]]
+==== `@Filter` with `@SqlFragmentAlias`
+
+When using the `@Filter` annotation and working with entities that are mapped onto multiple database tables,
+you will need to use the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SqlFragmentAlias.html[`@SqlFragmentAlias`] annotation
+if the `@Filter` defines a condition that uses predicates across multiple tables.
+
+[[mapping-filter-sql-fragment-alias-example]]
+.`@SqlFragmentAlias` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/FilterSqlFragementAliasTest.java[tags=mapping-filter-sql-fragment-alias-example]
+----
+====
+
+Now, when fetching the `Account` entities and activating the filter,
+Hibernate is going to apply the right table aliases to the filter predicates:
+
+[[mapping-filter-sql-fragment-alias-query-example]]
+.Fetching a collection filtered with `@SqlFragmentAlias`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/FilterSqlFragementAliasTest.java[tags=mapping-filter-sql-fragment-alias-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-filter-sql-fragment-alias-query-example.sql[]
+----
+====
+
 [[mapping-column-any]]
 ==== `@Any` mapping
 

@@ -33,10 +33,11 @@ These changes will only be a migration concern for applications directly using a
 * `org.hibernate.tool.schema.spi.SchemaManagementTool` or any of its delegates
 
 
-In order to improve performances during schema creation and validation 5.1.4 introduced a new default strategy
-called `grouped` to retrieve JDBC Metadata.
+In 5.1.4, a new strategy for retrieving database tables was introduced that improves SchemaMigrator and SchemaValidator
+performance. This strategy executes a single `java.sql.DatabaseMetaData#getTables(String, String, String, String[])`
+call to determine if each `javax.persistence.Entity` has a mapped database table.
+This strategy is the default, and uses the property setting `hibernate.hbm2ddl.jdbc_metadata_extraction_strategy=grouped`.
+This strategy may require `hibernate.default_schema` and/or `hibernate.default_catalog` to be provided.
 
-The grouped became the new default strategy and it may require the `default_schema` and/or `default_catalog` to be provided.
-
-An alternative to providing the default schema/catalog is to set `hibernate.hbm2ddl.jdbc_metadata_extraction_strategy`
-to `individually`.
+To use the old strategy, which executes a `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call for
+each javax.persistence.Entity, use the property setting `hibernate.hbm2ddl.jdbc_metadata_extraction_strategy=individually`.

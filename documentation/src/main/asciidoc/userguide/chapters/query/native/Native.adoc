@@ -136,7 +136,8 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-query-explicit-resul
 [[sql-entity-associations-query]]
 === Handling associations and collections
 
-If the entity is mapped with a `many-to-one` or a child-side `one-to-one` to another entity, it is required to also return this when performing the native query,
+If the entity is mapped with a `many-to-one` or a child-side `one-to-one` to another entity,
+it is required to also return this when performing the native query,
 otherwise a database specific _column not found_ error will occur.
 
 [[sql-jpa-entity-associations-query-many-to-one-example]]
@@ -157,28 +158,10 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-m
 ----
 ====
 
-This will allow the `Phone#person` to function properly.
-
-[NOTE]
-====
-The additional columns will automatically be returned when using the `*` notation.
-====
+This will allow the `Phone#person` to function properly since the `many-to-one` or `one-to-one`
+association is going to use a Proxy that will be initialized when being navigated for the first time.
 
 It is possible to eagerly join the `Phone` and the `Person` entities to avoid the possible extra roundtrip for initializing the `many-to-one` association.
-
-[[sql-jpa-entity-associations-query-many-to-one-join-example]]
-.JPA native query selecting entities with joined many-to-one association
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/SQLTest.java[tags=sql-jpa-entity-associations-query-many-to-one-join-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/sql-jpa-entity-associations-query-many-to-one-join-example.sql[]
-----
-====
 
 [[sql-hibernate-entity-associations-query-many-to-one-join-example]]
 .Hibernate native query selecting entities with joined many-to-one association

@@ -1,5 +1,7 @@
-SELECT id ,
-       number ,
-       type ,
-       person_id
-FROM   phone
+SELECT
+    *
+FROM
+    Phone ph
+JOIN
+    Person pr
+ON  ph.person_id = pr.id

@@ -43,6 +43,7 @@ import org.jboss.logging.Logger;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 /**
@@ -345,7 +346,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			.getResultList();
 
 			for(Phone phone : phones) {
-				Person person = phone.getPerson();
+				assertNotNull( phone.getPerson().getName() );
 			}
 			//end::sql-jpa-entity-associations-query-many-to-one-join-example[]
 			assertEquals(3, phones.size());
@@ -368,6 +369,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			for(Object[] tuple : tuples) {
 				Phone phone = (Phone) tuple[0];
 				Person person = (Person) tuple[1];
+				assertNotNull( person.getName() );
 			}
 			//end::sql-hibernate-entity-associations-query-many-to-one-join-example[]
 			assertEquals(3, tuples.size());

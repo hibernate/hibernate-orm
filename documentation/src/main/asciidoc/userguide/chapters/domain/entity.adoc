@@ -2,6 +2,7 @@
 === Entity types
 :sourcedir-locking: ../../../../../test/java/org/hibernate/userguide/locking
 :sourcedir-mapping: ../../../../../test/java/org/hibernate/userguide/mapping/basic
+:sourcedir-proxy: ../../../../../test/java/org/hibernate/userguide/proxy
 :extrasdir: extras
 
 .Usage of the word _entity_
@@ -312,7 +313,76 @@ include::{sourcedir-mapping}/SubselectTest.java[tag=mapping-Subselect-entity-ref
 ----
 ====
 
-The goala of the `@Synchronize` annotation in the `AccountSummary` entity mapping is to instruct Hibernate which database tables are needed by the
+The goal of the `@Synchronize` annotation in the `AccountSummary` entity mapping is to instruct Hibernate which database tables are needed by the
 underlying `@Subselect` SQL query. This way, when executing a HQL or JPQL which selects from the `AccountSummary` entity,
 Hibernate will trigger a Persistence Context flush if there are pending `Account`, `Client` or `AccountTransaction` entity state transitions.
+
+[[entity-tuplizer]]
+==== Dynamic entity proxies using the @Tuplizer annotation
+
+It is possible to map your entities as dynamic proxies using
+the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Tuplizer.html[`@Tuplizer`] annotation.
+
+In the following entity mapping, both the embeddable and the entity are mapped as interfaces, not Pojos.
+
+[[entity-tuplizer-entity-mapping]]
+.Dynamic entity proxy mapping
+====
+[source,java]
+----
+include::{sourcedir-proxy}/tuplizer/Cuisine.java[tag=entity-tuplizer-entity-mapping,indent=0]
+----
+
+[source,java]
+----
+include::{sourcedir-proxy}/tuplizer/Country.java[tag=entity-tuplizer-entity-mapping,indent=0]
+----
+====
+
+The `@Tuplizer` instructs Hibernate to use the `DynamicEntityTuplizer` and `DynamicEmbeddableTuplizer` to handle
+the associated entity and embeddable object types.
+
+Both the `Cuising` entity and the `Country` embeddable types are going to be instantiated as Java dynamic proxies,
+as you can see in the following `DynamicInstantiator` example:
+
+[[entity-tuplizer-instantiator]]
+.Instantiating entities and embeddables as dynamic proxies
+====
+[source,java]
+----
+include::{sourcedir-proxy}/tuplizer/DynamicEntityTuplizer.java[tag=entity-tuplizer-instantiator,indent=0]
+----
+
+[source,java]
+----
+include::{sourcedir-proxy}/tuplizer/DynamicEmbeddableTuplizer.java[tag=entity-tuplizer-instantiator,indent=0]
+----
+
+[source,java]
+----
+include::{sourcedir-proxy}/tuplizer/DynamicInstantiator.java[tag=entity-tuplizer-instantiator,indent=0]
+----
+
+[source,java]
+----
+include::{sourcedir-proxy}/tuplizer/ProxyHelper.java[tag=entity-tuplizer-instantiator,indent=0]
+----
+
+[source,java]
+----
+include::{sourcedir-proxy}/tuplizer/DataProxyHandler.java[tag=entity-tuplizer-instantiator,indent=0]
+----
+====
+
+With the `DynamicInstantiator` in place, we can work with the dynamic proxy entities just like with Pojo entities.
+
+[[entity-tuplizer-dynamic-proxy-example]]
+.Persisting entities and embeddables as dynamic proxies
+====
+[source,java]
+----
+include::{sourcedir-proxy}/tuplizer/TuplizerTest.java[tag=entity-tuplizer-dynamic-proxy-example,indent=0]
+----
+====
+
 

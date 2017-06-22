@@ -1298,7 +1298,7 @@ For entities, the tupelizer must implement the https://docs.jboss.org/hibernate/
 
 For embeddables, the tupelizer must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/component/ComponentTuplizer.html[`ComponentTuplizer`] interface.
 
-//TODO: Add example
+See the <<chapters/domain/entity.adoc#entity-tuplizer, `@Tuplizer` mapping>> section for more info.
 
 [[annotations-hibernate-tuplizers]]
 ==== `@Tuplizers`

@@ -157,6 +157,7 @@ public class ManyToManyWithDynamicFilterTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Entity(name = "Role")
+	@Table(name="Roles")
 	@FilterDef(name = "activeRoleFilter", defaultCondition = "active = true")
 	@Filter(name = "activeRoleFilter")
 	public static class Role extends AbstractEntity {

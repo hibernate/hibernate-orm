@@ -83,6 +83,17 @@ The specific dialects impacted by this change are restricted to the following.
 NOTE: If a dialect that extends any in the above list but overrides the limit handler implementation, then those
 dialects remain unchanged, e.g. SQLServer2005Dialect.
 
+== Changes to schema management tooling
+
+In 5.2.3, a new strategy for retrieving database tables was introduced that improves SchemaMigrator and SchemaValidator
+performance. This strategy executes a single `java.sql.DatabaseMetaData#getTables(String, String, String, String[])`
+call to determine if each `javax.persistence.Entity` has a mapped database table.
+This strategy is the default, and uses the property setting `hibernate.hbm2ddl.jdbc_metadata_extraction_strategy=grouped`.
+This strategy may require `hibernate.default_schema` and/or `hibernate.default_catalog` to be provided.
+
+To use the old strategy, which executes a `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call for
+each javax.persistence.Entity, use the property setting `hibernate.hbm2ddl.jdbc_metadata_extraction_strategy=individually`.
+
 
 == Misc
 

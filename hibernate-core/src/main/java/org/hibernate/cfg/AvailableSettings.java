@@ -1362,6 +1362,8 @@ public interface AvailableSettings {
 	 *
 	 * Valid options are defined by the {@link JdbcMetadaAccessStrategy} enum.
 	 *
+	 * {@link JdbcMetadaAccessStrategy#GROUPED} is the default value.
+	 *
 	 * @see JdbcMetadaAccessStrategy
 	 */
 	String HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY = "hibernate.hbm2ddl.jdbc_metadata_extraction_strategy";

@@ -17,6 +17,7 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Vlad Mihalcea
@@ -34,7 +35,12 @@ public class LocalDateTimeWithTemporalTimeTest extends BaseEntityManagerFunction
 	public void testLifecycle() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			DateEvent dateEvent = new DateEvent( LocalDateTime.now() );
+			dateEvent.id = 1L;
 			entityManager.persist( dateEvent );
+		} );
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			DateEvent dateEvent = entityManager.find( DateEvent.class, 1L );
+			assertNotNull(dateEvent.getTimestamp());
 		} );
 	}
 
@@ -42,7 +48,6 @@ public class LocalDateTimeWithTemporalTimeTest extends BaseEntityManagerFunction
 	public static class DateEvent {
 
 		@Id
-		@GeneratedValue
 		private Long id;
 
 		//throws org.hibernate.AnnotationException: @Temporal should only be set on a java.util.Date or java.util.Calendar property

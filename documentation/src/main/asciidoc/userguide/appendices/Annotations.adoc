@@ -1146,7 +1146,7 @@ For entities, the custom persister must implement the https://docs.jboss.org/hib
 
 For collections, the custom persister must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/collection/CollectionPersister.html[`CollectionPersister`] interface.
 
-//TODO: Add example
+See the <<chapters/domain/entity.adoc#entity-persister, `@Persister` mapping>> section for more info.
 
 [[annotations-hibernate-polymorphism]]
 ==== `@Polymorphism`

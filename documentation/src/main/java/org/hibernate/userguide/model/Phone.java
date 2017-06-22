@@ -57,7 +57,7 @@ import org.hibernate.annotations.NamedQuery;
         query = "SELECT pr.name AS name, count(*) AS phoneCount " +
                 "FROM Phone p " +
                 "JOIN Person pr ON pr.id = p.person_id " +
-                "GROUP BY p.person_id",
+                "GROUP BY pr.name",
         resultSetMapping = "person_phone_count",
         timeout = 1,
         readOnly = true

@@ -43,20 +43,21 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.exception.SerializationException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.xml.XmlDocument;
+import org.hibernate.metamodel.model.domain.internal.StandardInstantiatorFactory;
+import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
-import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.CustomType;
-import org.hibernate.exception.SerializationException;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
@@ -109,7 +110,7 @@ public class Configuration {
 	// used to build SF
 	private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
 	private EntityNotFoundDelegate entityNotFoundDelegate;
-	private EntityTuplizerFactory entityTuplizerFactory;
+	private InstantiatorFactory instantiatorFactory;
 	private Interceptor interceptor;
 	private SessionFactoryObserver sessionFactoryObserver;
 	private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
@@ -161,7 +162,7 @@ public class Configuration {
 
 		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
 
-		entityTuplizerFactory = new EntityTuplizerFactory(bootstrapContext);
+		instantiatorFactory = StandardInstantiatorFactory.INSTANCE;
 		interceptor = EmptyInterceptor.INSTANCE;
 		properties = new Properties(  );
 		properties.putAll( standardServiceRegistryBuilder.getSettings());
@@ -601,8 +602,8 @@ public class Configuration {
 		return this;
 	}
 
-	public EntityTuplizerFactory getEntityTuplizerFactory() {
-		return entityTuplizerFactory;
+	public InstantiatorFactory getInstantiatorFactory() {
+		return instantiatorFactory;
 	}
 
 	/**
@@ -696,6 +697,7 @@ public class Configuration {
 		final Metadata metadata = metadataBuilder.build();
 
 		final SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
+		sessionFactoryBuilder.applyInstantiatorFactory( getInstantiatorFactory() );
 		if ( interceptor != null && interceptor != EmptyInterceptor.INSTANCE ) {
 			sessionFactoryBuilder.applyInterceptor( interceptor );
 		}
@@ -704,9 +706,6 @@ public class Configuration {
 		}
 		if ( getEntityNotFoundDelegate() != null ) {
 			sessionFactoryBuilder.applyEntityNotFoundDelegate( getEntityNotFoundDelegate() );
-		}
-		if ( getEntityTuplizerFactory() != null ) {
-			sessionFactoryBuilder.applyEntityTuplizerFactory( getEntityTuplizerFactory() );
 		}
 		if ( getCurrentTenantIdentifierResolver() != null ) {
 			sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( getCurrentTenantIdentifierResolver() );

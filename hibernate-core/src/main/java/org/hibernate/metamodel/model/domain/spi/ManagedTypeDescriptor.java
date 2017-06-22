@@ -12,9 +12,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import javax.persistence.metamodel.ManagedType;
 
-import org.hibernate.EntityMode;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.tuple.Tuplizer;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 
 /**
@@ -35,8 +33,7 @@ public interface ManagedTypeDescriptor<T>
 
 	ManagedJavaDescriptor<T> getJavaTypeDescriptor();
 
-	EntityMode getEntityMode();
-	Tuplizer getTuplizer();
+	Instantiator getInstantiator();
 
 	PersistentAttribute<? super T, ?> findAttribute(String name);
 	PersistentAttribute<? super T, ?> findDeclaredAttribute(String name);

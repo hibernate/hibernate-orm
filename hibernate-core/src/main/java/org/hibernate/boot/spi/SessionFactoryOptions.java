@@ -23,14 +23,15 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.loader.BatchFetchStyle;
+import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.QueryLiteralRendering;
+import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
  * Aggregator of special options used to build the SessionFactory.
@@ -110,9 +111,9 @@ public interface SessionFactoryOptions {
 
 	boolean isIdentifierRollbackEnabled();
 
-	EntityMode getDefaultEntityMode();
+	Representation getDefaultRepresentation();
 
-	EntityTuplizerFactory getEntityTuplizerFactory();
+	InstantiatorFactory getInstantiatorFactory();
 
 	boolean isCheckNullability();
 

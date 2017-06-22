@@ -21,13 +21,14 @@ import java.util.stream.Collectors;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.MappedTableJoin;
 import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
+import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -42,6 +43,7 @@ import org.hibernate.loader.spi.MultiIdEntityLoader;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.loader.spi.SingleUniqueKeyEntityLoader;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.Representation;
 import org.hibernate.metamodel.model.domain.internal.EntityIdentifierCompositeAggregatedImpl;
 import org.hibernate.metamodel.model.domain.internal.EntityIdentifierSimpleImpl;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
@@ -53,9 +55,6 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.exec.results.internal.SqlSelectionGroupImpl;
-import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.exec.results.spi.SqlSelectionGroupEmpty;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultEntityImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
@@ -77,9 +76,9 @@ import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
-import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
-import org.hibernate.tuple.entity.BytecodeEnhancementMetadataPojoImpl;
-import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.sql.exec.results.internal.SqlSelectionGroupImpl;
+import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.exec.results.spi.SqlSelectionGroupEmpty;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 
@@ -98,38 +97,38 @@ public abstract class AbstractEntityDescriptor<T>
 	private final Table rootTable;
 	private final List<JoinedTableBinding> secondaryTableBindings;
 
+	private final Instantiator instantiator;
 	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
-	private final EntityTuplizer tuplizer;
 
 	private final String sqlAliasStem;
 
 	@SuppressWarnings("UnnecessaryBoxing")
 	public AbstractEntityDescriptor(
-			EntityMapping entityMapping,
+			EntityMapping bootMapping,
 			RuntimeModelCreationContext creationContext) throws HibernateException {
-		super( resolveJavaTypeDescriptor( creationContext, entityMapping ) );
+		super( resolveJavaTypeDescriptor( creationContext, bootMapping ) );
 
 		this.factory = creationContext.getSessionFactory();
 
-		this.navigableRole = new NavigableRole( entityMapping.getEntityName() );
+		this.navigableRole = new NavigableRole( bootMapping.getEntityName() );
 
-		this.rootTable = resolveRootTable( entityMapping, creationContext );
-		this.secondaryTableBindings = resolveSecondaryTableBindings( entityMapping, creationContext );
+		this.rootTable = resolveRootTable( bootMapping, creationContext );
+		this.secondaryTableBindings = resolveSecondaryTableBindings( bootMapping, creationContext );
 
-		if ( entityMapping.getEntityMode() == EntityMode.POJO ) {
-			this.bytecodeEnhancementMetadata = BytecodeEnhancementMetadataPojoImpl.from( entityMapping );
+		Representation representation = bootMapping.getExplicitRepresentation();
+		if ( representation == null ) {
+			// todo (6.0) - if we move #defaultRepresentation into MetadataBuilder we can inject that into the entiyt mapping
+			representation = creationContext.getSessionFactory()
+					.getSessionFactoryOptions()
+					.getDefaultRepresentation();
+		}
+
+		if ( representation == Representation.POJO ) {
+			this.bytecodeEnhancementMetadata = BytecodeEnhancementMetadataPojoImpl.from( bootMapping );
 		}
 		else {
-			this.bytecodeEnhancementMetadata = new BytecodeEnhancementMetadataNonPojoImpl( entityMapping.getEntityName() );
+			this.bytecodeEnhancementMetadata = new BytecodeEnhancementMetadataNonPojoImpl( bootMapping.getEntityName() );
 		}
-
-		this.tuplizer = creationContext.getSessionFactory().getSessionFactoryOptions().getEntityTuplizerFactory().createTuplizer(
-				entityMapping.getExplicitTuplizerClassName(),
-				entityMapping.getEntityMode(),
-				this,
-				entityMapping,
-				creationContext
-		);
 
 		log.debugf(
 				"Instantiated persister [%s] for entity [%s (%s)]",
@@ -137,6 +136,17 @@ public abstract class AbstractEntityDescriptor<T>
 				getJavaTypeDescriptor().getEntityName(),
 				getJavaTypeDescriptor().getJpaEntityName()
 		);
+
+		if ( bootMapping.getExplicitInstantiator() != null ) {
+			this.instantiator = bootMapping.getExplicitInstantiator();
+		}
+		else {
+			// todo (6.0) - resolve ReflectionOptimizer to pass in to creating the instantiator
+			this.instantiator = creationContext.getSessionFactory()
+					.getSessionFactoryOptions()
+					.getInstantiatorFactory()
+					.createEntityInstantiator( bootMapping, this, null );
+		}
 
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( getEntityName() );
 	}
@@ -246,11 +256,6 @@ public abstract class AbstractEntityDescriptor<T>
 	@Override
 	public Class<T> getBindableJavaType() {
 		return getJavaType();
-	}
-
-	@Override
-	public EntityTuplizer getTuplizer() {
-		return tuplizer;
 	}
 
 	@Override

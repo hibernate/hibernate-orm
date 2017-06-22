@@ -9,7 +9,6 @@ package org.hibernate.cfg;
 import java.util.Map;
 
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.EntityMode;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
 import org.hibernate.boot.Metadata;
@@ -19,9 +18,9 @@ import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.loader.BatchFetchStyle;
+import org.hibernate.metamodel.model.domain.Representation;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 import org.jboss.logging.Logger;
 
@@ -73,7 +72,7 @@ public final class Settings {
 			LOG.debugf( "Statistics: %s", enabledDisabled( sessionFactoryOptions.isStatisticsEnabled() ) );
 
 			LOG.debugf( "Deleted entity synthetic identifier rollback: %s", enabledDisabled( sessionFactoryOptions.isIdentifierRollbackEnabled() ) );
-			LOG.debugf( "Default entity-mode: %s", sessionFactoryOptions.getDefaultEntityMode() );
+			LOG.debugf( "Default domain representation: %s", sessionFactoryOptions.getDefaultRepresentation() );
 			LOG.debugf( "Check Nullability in Core (should be disabled when Bean Validation is on): %s", enabledDisabled( sessionFactoryOptions.isCheckNullability() ) );
 			LOG.debugf( "Allow initialization of lazy state outside session : %s", enabledDisabled( sessionFactoryOptions.isInitializeLazyStateOutsideTransactionsEnabled() ) );
 
@@ -152,12 +151,11 @@ public final class Settings {
 		return sessionFactoryOptions.isIdentifierRollbackEnabled();
 	}
 
-	public EntityMode getDefaultEntityMode() {
-		return sessionFactoryOptions.getDefaultEntityMode();
-	}
-
-	public EntityTuplizerFactory getEntityTuplizerFactory() {
-		return sessionFactoryOptions.getEntityTuplizerFactory();
+	public Representation getDefaultRepresentation() {
+		// todo (6.0) - move to MetamodelBuilder / options
+		// 		per discussion on SessionFactoryBuilder and options, this ought
+		// 		to be handled from there
+		return sessionFactoryOptions.getDefaultRepresentation();
 	}
 
 	public boolean isCheckNullability() {

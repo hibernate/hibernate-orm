@@ -117,7 +117,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public boolean containsEntity(String entityName, Serializable identifier) {
-		EntityDescriptor p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
+		EntityDescriptor p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityDescriptor( entityName );
 		if ( p.hasCache() ) {
 			EntityRegionAccessStrategy cache = p.getCacheAccessStrategy();
 			Object key = cache.generateCacheKey( identifier, p, sessionFactory, null ); // have to assume non tenancy
@@ -135,7 +135,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictEntity(String entityName, Serializable identifier) {
-		EntityDescriptor p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
+		EntityDescriptor p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityDescriptor( entityName );
 		if ( p.hasCache() ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf(
@@ -156,7 +156,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictEntityRegion(String entityName) {
-		EntityDescriptor p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
+		EntityDescriptor p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityDescriptor( entityName );
 		if ( p.hasCache() ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Evicting second-level cache: %s", p.getEntityName() );
@@ -177,7 +177,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictNaturalIdRegion(String entityName) {
-		EntityDescriptor p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
+		EntityDescriptor p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityDescriptor( entityName );
 		if ( p.hasNaturalIdCache() ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Evicting natural-id cache: %s", p.getEntityName() );

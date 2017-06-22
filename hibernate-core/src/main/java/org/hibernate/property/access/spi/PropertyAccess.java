@@ -16,12 +16,22 @@ package org.hibernate.property.access.spi;
  * @author Gavin King
  */
 public interface PropertyAccess {
+
+	// todo (6.0) think of this as the low-level api for directly accessing the underlying Getter/Setter
+	//		specifically in regards to higher-level requirements already having been
+	//		applied - meaning that things like `MappedIdentifierValueMarshaller` or
+	//		`AttributeConverter` have already been performed.
+
 	/**
 	 * Access to the PropertyAccessStrategy that created this PropertyAccess
 	 *
 	 * @return The PropertyAccessStrategy that created this PropertyAccess
 	 */
 	PropertyAccessStrategy getPropertyAccessStrategy();
+
+	// todo (6.0) : expose `Representation`?
+	//		Really this contract already handles Representation/EntityMode.  There is
+	//		no need for Tuplizer - this contract already handles that.
 
 	/**
 	 * Obtain the delegate for getting values for the described persistent property

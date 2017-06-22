@@ -157,7 +157,7 @@ public class CollectionCacheInvalidator
 		if ( obj != null ) {
 			id = session.getContextEntityIdentifier( obj );
 			if ( id == null ) {
-				id = session.getSessionFactory().getTypeConfiguration().findEntityPersister( obj.getClass() ).getIdentifier( obj, session );
+				id = session.getSessionFactory().getTypeConfiguration().findEntityDescriptor( obj.getClass() ).getIdentifier( obj, session );
 			}
 		}
 		return id;

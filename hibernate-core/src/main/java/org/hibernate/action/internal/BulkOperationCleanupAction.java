@@ -100,7 +100,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		spacesList.addAll( tableSpaces );
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		for ( EntityDescriptor persister : factory.getTypeConfiguration().getEntityPersisters() ) {
+		for ( EntityDescriptor persister : factory.getTypeConfiguration().getEntityDescriptors() ) {
 			final String[] affectedTableNames = persister.getAffectedTableNames();
 			if ( affectedEntity( tableSpaces, affectedTableNames ) ) {
 				spacesList.addAll( Arrays.asList( affectedTableNames ) );

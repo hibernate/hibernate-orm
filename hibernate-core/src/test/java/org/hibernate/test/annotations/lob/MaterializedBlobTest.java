@@ -34,7 +34,7 @@ public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testTypeSelection() {
-		EntityTypeImplementor persister = sessionFactory().getTypeConfiguration().findEntityPersister( MaterializedBlobEntity.class );
+		EntityTypeImplementor persister = sessionFactory().getTypeConfiguration().findEntityDescriptor( MaterializedBlobEntity.class );
 		Type type = persister.getPropertyType( "theBytes" );
 		assertEquals( StandardBasicTypes.MATERIALIZED_BLOB, type );
 	}

@@ -8,14 +8,12 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.persistence.metamodel.Type.PersistenceType;
 
-import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
@@ -32,8 +30,10 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.Representation;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.Instantiator;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
@@ -55,7 +55,8 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Prop
 	private boolean isKey;
 	private String roleName;
 
-	private Map<EntityMode,String> tuplizerImpls;
+	private Representation representation;
+	private Instantiator instantiator;
 
 	public Component(InFlightMetadataCollector metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
@@ -90,18 +91,13 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Prop
 	}
 
 	@Override
-	public EntityMode getRepresentationMode() {
-		if ( tuplizerImpls == null || tuplizerImpls.isEmpty() ) {
-			return null;
-		}
-
-		assert tuplizerImpls.size() == 1;
-		return tuplizerImpls.keySet().iterator().next();
+	public Representation getExplicitRepresentation() {
+		return representation;
 	}
 
 	@Override
-	public String getExplicitTuplizerClassName() {
-		return null;
+	public Instantiator getExplicitInstantiator() {
+		return instantiator;
 	}
 
 	public int getPropertySpan() {
@@ -279,30 +275,7 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Prop
 	}
 	
 	public boolean hasPojoRepresentation() {
-		return componentClassName!=null;
-	}
-
-	public void addTuplizer(EntityMode entityMode, String implClassName) {
-		if ( tuplizerImpls == null ) {
-			tuplizerImpls = new HashMap<EntityMode,String>();
-		}
-		tuplizerImpls.put( entityMode, implClassName );
-	}
-
-	public String getTuplizerImplClassName(EntityMode mode) {
-		// todo : remove this once ComponentMetamodel is complete and merged
-		if ( tuplizerImpls == null ) {
-			return null;
-		}
-		return tuplizerImpls.get( mode );
-	}
-
-	@SuppressWarnings("UnusedDeclaration")
-	public Map getTuplizerMap() {
-		if ( tuplizerImpls == null ) {
-			return null;
-		}
-		return java.util.Collections.unmodifiableMap( tuplizerImpls );
+		return componentClassName != null;
 	}
 
 	public Property getProperty(String propertyName) throws MappingException {

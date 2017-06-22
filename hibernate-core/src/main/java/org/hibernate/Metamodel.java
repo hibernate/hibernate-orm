@@ -31,7 +31,7 @@ public interface Metamodel extends javax.persistence.metamodel.Metamodel {
 	@Override
 	@SuppressWarnings("unchecked")
 	default <X> EntityType<X> entity(Class<X> cls) {
-		final EntityDescriptor entityPersister = getTypeConfiguration().findEntityPersister( cls );
+		final EntityDescriptor entityPersister = getTypeConfiguration().findEntityDescriptor( cls );
 		if ( entityPersister == null ) {
 			// per JPA, this condition needs to be an (illegal argument) exception
 			throw new IllegalArgumentException( "Not an entity: " + cls );
@@ -46,11 +46,11 @@ public interface Metamodel extends javax.persistence.metamodel.Metamodel {
 	 *
 	 * @return The entity descriptor
 	 *
-	 * @deprecated Use {@link TypeConfiguration#findEntityPersister(java.lang.String)} instead
+	 * @deprecated Use {@link TypeConfiguration#findEntityDescriptor(java.lang.String)} instead
 	 */
 	@Deprecated
 	default <X> EntityType<X> entity(String entityName) {
-		return getTypeConfiguration().findEntityPersister( entityName );
+		return getTypeConfiguration().findEntityDescriptor( entityName );
 	}
 
 	/**

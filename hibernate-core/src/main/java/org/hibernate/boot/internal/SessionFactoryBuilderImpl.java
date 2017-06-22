@@ -19,7 +19,6 @@ import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EmptyInterceptor;
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
@@ -50,6 +49,9 @@ import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.BatchFetchStyle;
+import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.internal.StandardInstantiatorFactory;
+import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
@@ -59,8 +61,6 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 import org.jboss.logging.Logger;
 
@@ -250,12 +250,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyDefaultEntityMode(EntityMode entityMode) {
-		this.options.defaultEntityMode = entityMode;
-		return this;
-	}
-
-	@Override
 	public SessionFactoryBuilder applyNullabilityChecking(boolean enabled) {
 		this.options.checkNullability = enabled;
 		return this;
@@ -268,16 +262,14 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
-		this.options.entityTuplizerFactory = entityTuplizerFactory;
+	public SessionFactoryBuilder applyDefaultRepresentation(Representation representation) {
+		this.options.defaultRepresentation = representation;
 		return this;
 	}
 
 	@Override
-	public SessionFactoryBuilder applyEntityTuplizer(
-			EntityMode entityMode,
-			Class<? extends EntityTuplizer> tuplizerClass) {
-		this.options.entityTuplizerFactory.registerDefaultTuplizerClass( entityMode, tuplizerClass );
+	public SessionFactoryBuilder applyInstantiatorFactory(InstantiatorFactory instantiatorFactory) {
+		this.options.instantiatorFactory = instantiatorFactory;
 		return this;
 	}
 
@@ -570,8 +562,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
 		private EntityNotFoundDelegate entityNotFoundDelegate;
 		private boolean identifierRollbackEnabled;
-		private EntityMode defaultEntityMode;
-		private EntityTuplizerFactory entityTuplizerFactory;
+		private Representation defaultRepresentation;
+		private InstantiatorFactory instantiatorFactory;
 		private boolean checkNullability;
 		private boolean initializeLazyStateOutsideTransactions;
 		private IdTableStrategy idTableStrategy;
@@ -627,7 +619,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		public SessionFactoryOptionsStateStandardImpl(
 				StandardServiceRegistry serviceRegistry,
 				BootstrapContext context) {
-			this.entityTuplizerFactory = new EntityTuplizerFactory( context );
 			this.serviceRegistry = serviceRegistry;
 			this.jpaBootstrap = context.isJpaBootstrap();
 
@@ -694,7 +685,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 			this.entityNotFoundDelegate = StandardEntityNotFoundDelegate.INSTANCE;
 			this.identifierRollbackEnabled = cfgService.getSetting( USE_IDENTIFIER_ROLLBACK, BOOLEAN, false );
-			this.defaultEntityMode = EntityMode.parse( (String) configurationSettings.get( DEFAULT_ENTITY_MODE ) );
+			this.defaultRepresentation = Representation.fromExternalName( (String) configurationSettings.get( DEFAULT_ENTITY_MODE ) );
+			this.instantiatorFactory = StandardInstantiatorFactory.INSTANCE;
 			this.checkNullability = cfgService.getSetting( CHECK_NULLABILITY, BOOLEAN, true );
 			this.initializeLazyStateOutsideTransactions = cfgService.getSetting( ENABLE_LAZY_LOAD_NO_TRANS, BOOLEAN, false );
 
@@ -1048,13 +1040,13 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 
 		@Override
-		public EntityMode getDefaultEntityMode() {
-			return defaultEntityMode;
+		public Representation getDefaultRepresentation() {
+			return defaultRepresentation;
 		}
 
 		@Override
-		public EntityTuplizerFactory getEntityTuplizerFactory() {
-			return entityTuplizerFactory;
+		public InstantiatorFactory getInstantiatorFactory() {
+			return instantiatorFactory;
 		}
 
 		@Override
@@ -1376,13 +1368,13 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public EntityMode getDefaultEntityMode() {
-		return options.getDefaultEntityMode();
+	public Representation getDefaultRepresentation() {
+		return options.getDefaultRepresentation();
 	}
 
 	@Override
-	public EntityTuplizerFactory getEntityTuplizerFactory() {
-		return options.getEntityTuplizerFactory();
+	public InstantiatorFactory getInstantiatorFactory() {
+		return options.getInstantiatorFactory();
 	}
 
 	@Override

@@ -83,7 +83,7 @@ public abstract class CriteriaTools {
 
 		if ( AuditId.IDENTIFIER_PLACEHOLDER.equals( propertyName ) ) {
 			final String identifierPropertyName = sessionFactory.getTypeConfiguration()
-					.findEntityPersister( entityName ).getIdentifierPropertyName();
+					.findEntityDescriptor( entityName ).getIdentifierPropertyName();
 			propertyName = auditService.getOptions().getOriginalIdPropName() + "." + identifierPropertyName;
 		}
 		else {
@@ -104,12 +104,12 @@ public abstract class CriteriaTools {
 	 */
 	private static List<String> identifierPropertyNames(SessionFactoryImplementor sessionFactory, String entityName) {
 		final String identifierPropertyName = sessionFactory.getTypeConfiguration()
-				.findEntityPersister( entityName ).getIdentifierPropertyName();
+				.findEntityDescriptor( entityName ).getIdentifierPropertyName();
 		if ( identifierPropertyName != null ) {
 			// Single id.
 			return Arrays.asList( identifierPropertyName );
 		}
-		final Type identifierType = sessionFactory.getTypeConfiguration().findEntityPersister( entityName ).getIdentifierType();
+		final Type identifierType = sessionFactory.getTypeConfiguration().findEntityDescriptor( entityName ).getIdentifierType();
 		if ( identifierType instanceof EmbeddedComponentType ) {
 			// Multiple ids.
 			final EmbeddedComponentType embeddedComponentType = (EmbeddedComponentType) identifierType;

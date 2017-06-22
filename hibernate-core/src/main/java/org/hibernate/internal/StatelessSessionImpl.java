@@ -181,7 +181,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public Object get(String entityName, Serializable id, LockMode lockMode) {
 		checkOpen();
 
-		Object result = getFactory().getTypeConfiguration().findEntityPersister( entityName )
+		Object result = getFactory().getTypeConfiguration().findEntityDescriptor( entityName )
 				.load( id, null, getNullSafeLockMode( lockMode ), this );
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
 			temporaryPersistenceContext.clear();
@@ -260,7 +260,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			String entityName,
 			Serializable id) throws HibernateException {
 		checkOpen();
-		return getFactory().getTypeConfiguration().findEntityPersister( entityName ).instantiate( id, this );
+		return getFactory().getTypeConfiguration().findEntityDescriptor( entityName ).instantiate( id, this );
 	}
 
 	@Override
@@ -270,7 +270,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			boolean eager,
 			boolean nullable) throws HibernateException {
 		checkOpen();
-		EntityDescriptor persister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
+		EntityDescriptor persister = getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
 		// first, try to load it from the temp PC associated to this SS
 		Object loaded = temporaryPersistenceContext.getEntity( generateEntityKey( id, persister ) );
 		if ( loaded != null ) {
@@ -409,10 +409,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			throws HibernateException {
 		checkOpen();
 		if ( entityName == null ) {
-			return getFactory().getTypeConfiguration().findEntityPersister( guessEntityName( object ) );
+			return getFactory().getTypeConfiguration().findEntityDescriptor( guessEntityName( object ) );
 		}
 		else {
-			return getFactory().getTypeConfiguration().findEntityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
+			return getFactory().getTypeConfiguration().findEntityDescriptor( entityName ).getSubclassEntityPersister( object, getFactory() );
 		}
 	}
 
@@ -561,7 +561,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	private OuterJoinLoadable getOuterJoinLoadable(String entityName) throws MappingException {
-		EntityDescriptor persister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
+		EntityDescriptor persister = getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
 		if ( !( persister instanceof OuterJoinLoadable ) ) {
 			throw new MappingException( "class persister is not OuterJoinLoadable: " + entityName );
 		}

@@ -14,7 +14,6 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Models a "piece" of the application's domain model that can be navigated
@@ -28,12 +27,6 @@ public interface Navigable<T> extends DomainType<T>, Selectable {
 	 */
 	NavigableContainer getContainer();
 
-	@Override
-	default Selection createSelection(Expression selectedExpression, String resultVariable) {
-		assert selectedExpression instanceof NavigableReference;
-		return new NavigableSelection( (NavigableReference) selectedExpression, resultVariable );
-	}
-
 	/**
 	 * The role for this Navigable which is unique across all
 	 * Navigables in the given TypeConfiguration.
@@ -44,7 +37,25 @@ public interface Navigable<T> extends DomainType<T>, Selectable {
 		return getNavigableRole().getNavigableName();
 	}
 
-	JavaTypeDescriptor<T> getJavaTypeDescriptor();
+	/**
+	 * Visitation (walking) contract
+	 *
+	 * @param visitor The "visitor" responsibility in the Visitor pattern
+	 */
+	void visitNavigable(NavigableVisitationStrategy visitor);
+
+
+	@Override
+	default Selection createSelection(Expression selectedExpression, String resultVariable) {
+		assert selectedExpression instanceof NavigableReference;
+		return new NavigableSelection( (NavigableReference) selectedExpression, resultVariable );
+	}
+
+	QueryResult generateQueryResult(
+			NavigableReference selectedExpression,
+			String resultVariable,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext);
 
 	/**
 	 * Obtain a loggable representation.
@@ -52,12 +63,4 @@ public interface Navigable<T> extends DomainType<T>, Selectable {
 	 * @return The loggable representation of this reference
 	 */
 	String asLoggableText();
-
-	void visitNavigable(NavigableVisitationStrategy visitor);
-
-	QueryResult generateQueryResult(
-			NavigableReference selectedExpression,
-			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
-			QueryResultCreationContext creationContext);
 }

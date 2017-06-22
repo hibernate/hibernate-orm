@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.model.domain.EmbeddedMapping;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
@@ -17,10 +16,12 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.Representation;
 import org.hibernate.metamodel.model.domain.spi.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
+import org.hibernate.metamodel.model.domain.spi.Instantiator;
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
@@ -31,7 +32,6 @@ import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.tuple.Tuplizer;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
@@ -45,8 +45,8 @@ public class EmbeddedTypeDescriptorImpl<T>
 	private final EmbeddedContainer container;
 	private final NavigableRole navigableRole;
 
-	private final EntityMode representationMode;
-	private final Tuplizer tuplizer;
+	private final Representation representationMode;
+	private final Instantiator instantiator;
 
 	public EmbeddedTypeDescriptorImpl(
 			EmbeddedMapping embeddedMapping,
@@ -59,26 +59,24 @@ public class EmbeddedTypeDescriptorImpl<T>
 
 		setTypeConfiguration( creationContext.getTypeConfiguration() );
 
-		this.representationMode = embeddedMapping.getValueMapping().getRepresentationMode();
-		this.tuplizer = resolveTuplizer( embeddedMapping.getValueMapping(), creationContext );
+		this.representationMode = embeddedMapping.getValueMapping().getExplicitRepresentation();
+		this.instantiator = resolveInstantiator( embeddedMapping.getValueMapping(), creationContext );
 	}
 
-	private Tuplizer resolveTuplizer(
+	private Instantiator resolveInstantiator(
 			EmbeddedValueMapping embeddedValueMapping,
 			RuntimeModelCreationContext creationContext) {
-		final String explicitTuplizerClassName = embeddedValueMapping.getExplicitTuplizerClassName();
-		if ( StringHelper.isNotEmpty( explicitTuplizerClassName ) ) {
-			return creationContext.getComponentTuplizerFactory().constructTuplizer(
-					explicitTuplizerClassName,
-					embeddedValueMapping
+		Instantiator instantiator = embeddedValueMapping.getExplicitInstantiator();
+		if ( instantiator == null ) {
+			instantiator = creationContext.getInstantiatorFactory().createEmbeddableInstantiator(
+					embeddedValueMapping,
+					this,
+					// todo (6.0) - resolve reflection optimizer
+					null
 			);
 		}
-		else {
-			return creationContext.getComponentTuplizerFactory().constructDefaultTuplizer(
-					embeddedValueMapping.getRepresentationMode(),
-					embeddedValueMapping
-			);
-		}
+
+		return instantiator;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -140,13 +138,8 @@ public class EmbeddedTypeDescriptorImpl<T>
 	}
 
 	@Override
-	public EntityMode getEntityMode() {
-		throw new NotYetImplementedException(  );
-	}
-
-	@Override
-	public Tuplizer getTuplizer() {
-		throw new NotYetImplementedException(  );
+	public Instantiator getInstantiator() {
+		return null;
 	}
 
 	@Override

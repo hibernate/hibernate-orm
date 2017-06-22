@@ -372,7 +372,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	private EntityDescriptor locateProperPersister(EntityDescriptor persister) {
-		return session.getFactory().getTypeConfiguration().findEntityPersister( persister.getHierarchy().getRootEntityType().getEntityName() );
+		return session.getFactory().getTypeConfiguration().findEntityDescriptor( persister.getHierarchy().getRootEntityType().getEntityName() );
 	}
 
 	@Override
@@ -599,7 +599,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	private void reassociateProxy(LazyInitializer li, HibernateProxy proxy) {
 		if ( li.getSession() != this.getSession() ) {
-			final EntityDescriptor persister = session.getFactory().getTypeConfiguration().findEntityPersister( li.getEntityName() );
+			final EntityDescriptor persister = session.getFactory().getTypeConfiguration().findEntityDescriptor( li.getEntityName() );
 			final EntityKey key = session.generateEntityKey( li.getIdentifier(), persister );
 		  	// any earlier proxy takes precedence
 			proxiesByKey.putIfAbsent( key, proxy );
@@ -1132,7 +1132,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Serializable getOwnerId(String entityName, String propertyName, Object childEntity, Map mergeMap) {
 		final String collectionRole = entityName + '.' + propertyName;
-		final EntityDescriptor persister = session.getFactory().getTypeConfiguration().findEntityPersister( entityName );
+		final EntityDescriptor persister = session.getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
 		final PersistentCollectionDescriptor collectionPersister = session.getFactory().getTypeConfiguration().findCollectionPersister( collectionRole );
 
 	    // try cache lookup first
@@ -1251,7 +1251,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object getIndexInOwner(String entity, String property, Object childEntity, Map mergeMap) {
-		final EntityDescriptor persister = session.getFactory().getTypeConfiguration().findEntityPersister( entity );
+		final EntityDescriptor persister = session.getFactory().getTypeConfiguration().findEntityDescriptor( entity );
 		final PersistentCollectionDescriptor cp = session.getFactory().getTypeConfiguration().findCollectionPersister( entity + '.' + property );
 
 	    // try cache lookup first

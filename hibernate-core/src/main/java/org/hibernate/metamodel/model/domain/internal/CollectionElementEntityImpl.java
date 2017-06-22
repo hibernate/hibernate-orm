@@ -48,7 +48,7 @@ public class CollectionElementEntityImpl<J>
 		this.elementClassification = elementClassification;
 
 		final ToOne value = (ToOne) mappingBinding.getElement();
-		this.entityDescriptor = creationContext.getTypeConfiguration().findEntityPersister( value.getReferencedEntityName() );
+		this.entityDescriptor = creationContext.getTypeConfiguration().findEntityDescriptor( value.getReferencedEntityName() );
 	}
 
 	@Override

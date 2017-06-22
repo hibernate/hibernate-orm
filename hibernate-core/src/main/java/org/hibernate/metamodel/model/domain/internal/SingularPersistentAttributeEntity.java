@@ -83,7 +83,7 @@ public class SingularPersistentAttributeEntity<O,J>
 					"Cannot create SingularPersistentAttributeEntity instance until after associated entity descriptor has been registered"
 			);
 		}
-		this.entityDescriptor = context.getTypeConfiguration().findEntityPersister( valueMapping.getReferencedEntityName() );
+		this.entityDescriptor = context.getTypeConfiguration().findEntityDescriptor( valueMapping.getReferencedEntityName() );
 		this.navigableRole = declaringType.getNavigableRole().append( name );
 
 		valueMapping.createForeignKey();

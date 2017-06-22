@@ -11,12 +11,9 @@ import javax.persistence.metamodel.EmbeddableType;
 
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.mapping.Component;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValueExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
@@ -93,11 +90,6 @@ public interface EmbeddedTypeDescriptor<T>
 	@Override
 	default boolean canCompositeContainCollections() {
 		return getContainer().canCompositeContainCollections();
-	}
-
-	@Override
-	default TableGroup resolveTableGroup(NavigableReferenceInfo embeddedReferenceInfo, TableGroupResolver tableGroupResolver) {
-		return getContainer().resolveTableGroup( embeddedReferenceInfo, tableGroupResolver );
 	}
 
 	@Override

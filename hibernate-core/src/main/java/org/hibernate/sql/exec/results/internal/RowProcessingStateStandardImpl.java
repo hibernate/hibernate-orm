@@ -8,8 +8,8 @@ package org.hibernate.sql.exec.results.internal;
 
 import java.sql.SQLException;
 
-import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.produce.result.spi.FetchEntityAttribute;
 import org.hibernate.sql.exec.results.internal.values.JdbcValuesSource;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.exec.results.spi.RowProcessingState;
@@ -60,7 +60,7 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 	}
 
 	@Override
-	public void registerNonExists(EntityFetch fetch) {
+	public void registerNonExists(FetchEntityAttribute fetch) {
 	}
 
 	@Override

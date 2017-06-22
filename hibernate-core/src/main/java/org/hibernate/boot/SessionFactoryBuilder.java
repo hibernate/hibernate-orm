@@ -10,7 +10,6 @@ import java.util.Map;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
@@ -20,6 +19,8 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.loader.BatchFetchStyle;
+import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
@@ -27,8 +28,6 @@ import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
  * The contract for building a {@link org.hibernate.SessionFactory} given a number of options.
@@ -207,20 +206,6 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyIdentifierRollbackSupport(boolean enabled);
 
 	/**
-	 * Applies the given entity mode as the default for the SessionFactory.
-	 *
-	 * @param entityMode The default entity mode to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_ENTITY_MODE
-	 *
-	 * @deprecated Different entity modes per entity is soon to be removed as a feature.
-	 */
-	@Deprecated
-	SessionFactoryBuilder applyDefaultEntityMode(EntityMode entityMode);
-
-	/**
 	 * Should attributes using columns marked as not-null be checked (by Hibernate) for nullness?
 	 *
 	 * @param enabled {@code true} indicates that Hibernate should perform nullness checking; {@code false} indicates
@@ -245,25 +230,20 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled);
 
 	/**
-	 * Specify the EntityTuplizerFactory to use.
+	 * Applies the default Representation to use for mappings
 	 *
-	 * @param entityTuplizerFactory The EntityTuplizerFactory to use.
+	 * todo (6.0) - this really ought to be moved to to MetadataBuilder
 	 *
-	 * @return {@code this}, for method chaining
+	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_ENTITY_MODE
 	 */
-	SessionFactoryBuilder applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory);
+	SessionFactoryBuilder applyDefaultRepresentation(Representation representation);
 
 	/**
-	 * Register the default {@link org.hibernate.tuple.entity.EntityTuplizer} to be applied to the SessionFactory.
+	 * Specify the InstantiatorFactory to use
 	 *
-	 * @param entityMode The entity mode that which this tuplizer will be applied.
-	 * @param tuplizerClass The custom tuplizer class.
-	 *
-	 * @return {@code this}, for method chaining
+	 * todo (6.0) - ?this really ought to be moved to to MetadataBuilder?
 	 */
-	SessionFactoryBuilder applyEntityTuplizer(
-			EntityMode entityMode,
-			Class<? extends EntityTuplizer> tuplizerClass);
+	SessionFactoryBuilder applyInstantiatorFactory(InstantiatorFactory instantiatorFactory);
 
 	/**
 	 * How should updates and deletes that span multiple tables be handled?

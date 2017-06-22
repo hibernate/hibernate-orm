@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -37,7 +36,9 @@ import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.Representation;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.Instantiator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
 
@@ -85,6 +86,10 @@ public abstract class PersistentClass
 	private Boolean isAbstract;
 	private boolean hasSubselectLoadableCollections;
 	private EmbeddedValueMapping identifierEmbeddedValueMapping;
+	private Representation explicitRepresentation;
+	private Instantiator explicitInstantiator;
+
+
 
 	// Custom SQL
 	private String customSQLInsert;
@@ -96,8 +101,6 @@ public abstract class PersistentClass
 	private String customSQLDelete;
 	private boolean customDeleteCallable;
 	private ExecuteUpdateResultCheckStyle deleteCheckStyle;
-
-	private java.util.Map<EntityMode, String> tuplizerImpls;
 
 	private MappedSuperclass superMappedSuperclass;
 	private EmbeddedValueMapping declaredIdentifierValueMapping;
@@ -968,14 +971,6 @@ public abstract class PersistentClass
 		this.jpaEntityName = jpaEntityName;
 	}
 
-	/**
-	 * @deprecated since 6.0, use {@link #getEntityMode()}.
-	 */
-	@Deprecated
-	public boolean hasPojoRepresentation() {
-		return getEntityMode() == EntityMode.POJO;
-	}
-
 	public boolean hasSubselectLoadableCollections() {
 		return hasSubselectLoadableCollections;
 	}
@@ -985,7 +980,8 @@ public abstract class PersistentClass
 	}
 
 	/**
-	 * @deprecated since 6.0, use {@link #getIdentifierEmbeddedValueMapping()}.
+	 * @deprecated since 6.0, use {@link #getEntityMappingHierarchy()} ->
+	 * {@link EntityMappingHierarchy#getIdentifierEmbeddedValueMapping}.
 	 */
 	@Deprecated
 	public Component getIdentifierMapper() {
@@ -1019,27 +1015,6 @@ public abstract class PersistentClass
 	@Deprecated
 	public void setIdentifierMapper(Component handle) {
 		getEntityMappingHierarchy().setIdentifierEmbeddedValueMapping( handle );
-	}
-
-	public void addTuplizer(EntityMode entityMode, String implClassName) {
-		if ( tuplizerImpls == null ) {
-			tuplizerImpls = new HashMap();
-		}
-		tuplizerImpls.put( entityMode, implClassName );
-	}
-
-	public String getTuplizerImplClassName(EntityMode mode) {
-		if ( tuplizerImpls == null ) {
-			return null;
-		}
-		return (String) tuplizerImpls.get( mode );
-	}
-
-	public java.util.Map getTuplizerMap() {
-		if ( tuplizerImpls == null ) {
-			return null;
-		}
-		return java.util.Collections.unmodifiableMap( tuplizerImpls );
 	}
 
 	public boolean hasNaturalId() {
@@ -1090,14 +1065,15 @@ public abstract class PersistentClass
 
 	// End of @Mappedsuperclass support
 
+
 	@Override
-	public EntityMode getEntityMode() {
-		return getEntityMappingHierarchy().getEntityMode();
+	public Representation getExplicitRepresentation() {
+		return explicitRepresentation;
 	}
 
 	@Override
-	public String getExplicitTuplizerClassName() {
-		return tuplizerImpls.get( getEntityMode() );
+	public Instantiator getExplicitInstantiator() {
+		return explicitInstantiator;
 	}
 
 	@Override

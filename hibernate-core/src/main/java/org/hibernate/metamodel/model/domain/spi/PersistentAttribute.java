@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 
@@ -37,6 +38,8 @@ public interface PersistentAttribute<O,T> extends Navigable<T>, javax.persistenc
 	default Class<T> getJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
 	}
+
+	PropertyAccess getPropertyAccess();
 
 	SqlSelectionGroup resolveSqlSelectionGroup(QueryResultCreationContext resolutionContext);
 }

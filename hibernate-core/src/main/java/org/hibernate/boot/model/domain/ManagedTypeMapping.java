@@ -9,6 +9,9 @@ package org.hibernate.boot.model.domain;
 import java.util.List;
 import javax.persistence.metamodel.Type.PersistenceType;
 
+import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.spi.Instantiator;
+
 /**
  * Corollary to what JPA calls a "managed type" as part of Hibernate's boot-time
  * metamodel.  Essentially a base class describing the commonality between an entity,
@@ -26,6 +29,10 @@ public interface ManagedTypeMapping {
 	 * The mappings persistence type.
 	 */
 	PersistenceType getPersistenceType();
+
+	Representation getExplicitRepresentation();
+
+	Instantiator getExplicitInstantiator();
 
 	/**
 	 * The ordering here is defined by the alphabetical ordering of the

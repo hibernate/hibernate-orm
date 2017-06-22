@@ -190,7 +190,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		}
 
 		final SessionFactoryImplementor sessionFactory = ( (SessionImplementor) session ).getFactory();
-		final Type propertyType = sessionFactory.getTypeConfiguration().findEntityPersister( entityName ).getPropertyType( propertyName );
+		final Type propertyType = sessionFactory.getTypeConfiguration().findEntityDescriptor( entityName ).getPropertyType( propertyName );
 		if ( propertyType.isCollectionType() ) {
 			CollectionType collectionPropertyType = (CollectionType) propertyType;
 			// Handling collection of components.
@@ -484,7 +484,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// SET REVEND = ?
 		final Number revisionNumber = auditService.getRevisionInfoNumberReader().getRevisionNumber( revision );
-		final Type revisionNumberType = sessionFactory.getTypeConfiguration().findEntityPersister( options.getRevisionInfoEntityName() ).getIdentifierType();
+		final Type revisionNumberType = sessionFactory.getTypeConfiguration().findEntityDescriptor( options.getRevisionInfoEntityName() ).getIdentifierType();
 		update.addColumn( rootAuditedEntityQueryable.toColumns( options.getRevisionEndFieldName() )[0] );
 		update.bind( revisionNumber, revisionNumberType );
 
@@ -585,7 +585,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	}
 
 	private Queryable getQueryable(String entityName, SessionImplementor sessionImplementor) {
-		return (Queryable) sessionImplementor.getFactory().getTypeConfiguration().findEntityPersister( entityName );
+		return (Queryable) sessionImplementor.getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
 	}
 
 	/**

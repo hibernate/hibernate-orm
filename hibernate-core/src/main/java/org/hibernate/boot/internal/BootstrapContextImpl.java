@@ -39,10 +39,9 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
-import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.tuple.component.ComponentTuplizerFactory;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
+import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -63,8 +62,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private final TypeConfiguration typeConfiguration;
 	private final BasicTypeProducerRegistryImpl basicTypeProducerRegistry;
 
-	private final EntityTuplizerFactory entityTuplizerFactory;
-	private final ComponentTuplizerFactory componentTuplizerFactory;
+	private InstantiatorFactory instantiatorFactory;
 
 	private final ClassLoaderAccessImpl classLoaderAccess;
 
@@ -96,9 +94,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 		this.typeConfiguration = new TypeConfiguration();
 
-		this.entityTuplizerFactory = generateEntityTuplizerFactory();
-		this.componentTuplizerFactory = generateComponentTuplizerFactory();
-
 		this.basicTypeProducerRegistry = new BasicTypeProducerRegistryImpl( typeConfiguration );
 
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
@@ -128,14 +123,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 				ArchiveDescriptorFactory.class,
 				configService.getSettings().get( AvailableSettings.SCANNER_ARCHIVE_INTERPRETER )
 		);
-	}
-
-	private EntityTuplizerFactory generateEntityTuplizerFactory() {
-		return new EntityTuplizerFactory( this );
-	}
-
-	private ComponentTuplizerFactory generateComponentTuplizerFactory() {
-		return new ComponentTuplizerFactory( this );
 	}
 
 	private JavaReflectionManager generateHcannReflectionManager() {
@@ -181,13 +168,8 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public EntityTuplizerFactory getEntityTuplizerFactory() {
-		return entityTuplizerFactory;
-	}
-
-	@Override
-	public ComponentTuplizerFactory getComponentTuplizerFactory() {
-		return componentTuplizerFactory;
+	public InstantiatorFactory getInstantiatorFactory() {
+		return instantiatorFactory;
 	}
 
 	@Override

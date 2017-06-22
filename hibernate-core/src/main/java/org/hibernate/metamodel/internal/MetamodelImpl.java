@@ -72,7 +72,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public <X> EntityType<X> entity(Class<X> cls) {
-		final EntityDescriptor entityPersister = getTypeConfiguration().findEntityPersister( cls );
+		final EntityDescriptor entityPersister = getTypeConfiguration().findEntityDescriptor( cls );
 		if ( entityPersister == null ) {
 			throw new IllegalArgumentException( "Not an entity: " + cls );
 		}
@@ -82,7 +82,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public <X> ManagedType<X> managedType(Class<X> cls) {
-		final EntityDescriptor entityPersister = getTypeConfiguration().findEntityPersister( cls );
+		final EntityDescriptor entityPersister = getTypeConfiguration().findEntityDescriptor( cls );
 		if ( entityPersister != null ) {
 			return entityPersister;
 		}
@@ -114,7 +114,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	public Set<ManagedType<?>> getManagedTypes() {
 		final Set<ManagedType<?>> managedTypes = new HashSet<>();
-		managedTypes.addAll( getTypeConfiguration().getEntityPersisters() );
+		managedTypes.addAll( getTypeConfiguration().getEntityDescriptors() );
 		managedTypes.addAll( getTypeConfiguration().getEmbeddablePersisters() );
 		managedTypes.addAll( jpaMappedSuperclassTypeMap.values() );
 		return managedTypes;
@@ -122,7 +122,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	@Override
 	public Set<EntityType<?>> getEntities() {
-		return new HashSet<>( getTypeConfiguration().getEntityPersisters() );
+		return new HashSet<>( getTypeConfiguration().getEntityDescriptors() );
 	}
 
 	@Override

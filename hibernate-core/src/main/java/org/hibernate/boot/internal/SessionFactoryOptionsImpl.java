@@ -11,7 +11,6 @@ import java.util.TimeZone;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
@@ -25,13 +24,14 @@ import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.loader.BatchFetchStyle;
+import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
  * Standard implementation of SessionFactoryOptions
@@ -76,8 +76,8 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final EntityNameResolver[] entityNameResolvers;
 	private final EntityNotFoundDelegate entityNotFoundDelegate;
 	private final boolean identifierRollbackEnabled;
-	private final EntityMode defaultEntityMode;
-	private final EntityTuplizerFactory entityTuplizerFactory;
+	private final Representation defaultRepresentation;
+	private final InstantiatorFactory instantiatorFactory;
 	private boolean checkNullability;
 	private final boolean initializeLazyStateOutsideTransactions;
 	private final IdTableStrategy idTableStrategy;
@@ -160,8 +160,8 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.entityNameResolvers = state.getEntityNameResolvers();
 		this.entityNotFoundDelegate = state.getEntityNotFoundDelegate();
 		this.identifierRollbackEnabled = state.isIdentifierRollbackEnabled();
-		this.defaultEntityMode = state.getDefaultEntityMode();
-		this.entityTuplizerFactory = state.getEntityTuplizerFactory();
+		this.defaultRepresentation = state.getDefaultRepresentation();
+		this.instantiatorFactory = state.getInstantiatorFactory();
 		this.checkNullability = state.isCheckNullability();
 		this.initializeLazyStateOutsideTransactions = state.isInitializeLazyStateOutsideTransactionsEnabled();
 		this.idTableStrategy = state.getIdTableStrategy();
@@ -293,12 +293,13 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	}
 
 	@Override
-	public EntityMode getDefaultEntityMode() {
-		return defaultEntityMode;
+	public Representation getDefaultRepresentation() {
+		return defaultRepresentation;
 	}
 
-	public EntityTuplizerFactory getEntityTuplizerFactory() {
-		return entityTuplizerFactory;
+	@Override
+	public InstantiatorFactory getInstantiatorFactory() {
+		return instantiatorFactory;
 	}
 
 	@Override

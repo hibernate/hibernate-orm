@@ -70,7 +70,7 @@ public interface MetamodelImplementor extends Metamodel {
 	 */
 	@Deprecated
 	default <T> EntityDescriptor<? extends T> locateEntityPersister(Class<T> byClass) {
-		return getTypeConfiguration().resolveEntityPersister( byClass );
+		return getTypeConfiguration().resolveEntityDescriptor( byClass );
 	}
 
 	/**
@@ -78,23 +78,23 @@ public interface MetamodelImplementor extends Metamodel {
 	 */
 	@Deprecated
 	default <T> EntityDescriptor<T> locateEntityPersister(String byName) {
-		return getTypeConfiguration().resolveEntityPersister( byName );
+		return getTypeConfiguration().resolveEntityDescriptor( byName );
 	}
 
 	/**
-	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#findEntityPersister(Class)}
+	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#findEntityDescriptor(Class)}
 	 */
 	@Deprecated
 	default <T> EntityDescriptor<? extends T> entityPersister(Class<T> entityClass) {
-		return getTypeConfiguration().findEntityPersister( entityClass );
+		return getTypeConfiguration().findEntityDescriptor( entityClass );
 	}
 
 	/**
-	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#findEntityPersister(String)}
+	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#findEntityDescriptor(String)}
 	 */
 	@Deprecated
 	default <T> EntityDescriptor<? extends T> entityPersister(String entityName) {
-		return getTypeConfiguration().findEntityPersister( entityName );
+		return getTypeConfiguration().findEntityDescriptor( entityName );
 	}
 
 	/**

@@ -8,7 +8,6 @@ package org.hibernate.boot.model.domain;
 
 import javax.persistence.metamodel.Type.PersistenceType;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.model.relational.MappedTable;
 
 /**
@@ -17,9 +16,6 @@ import org.hibernate.boot.model.relational.MappedTable;
 public interface EntityMapping extends IdentifiableTypeMapping {
 	String getEntityName();
 	String getJpaEntityName();
-
-	EntityMode getEntityMode();
-	String getExplicitTuplizerClassName();
 
 	Class getRuntimeEntityDescriptorClass();
 	void setEntityPersisterClass(Class entityPersisterClass);

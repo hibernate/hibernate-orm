@@ -98,7 +98,7 @@ public class TableCommentTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	private String getTableName() {
-		EntityTypeImplementor entityType = sessionFactory().getTypeConfiguration().findEntityPersister( TableWithComment.class );
+		EntityTypeImplementor entityType = sessionFactory().getTypeConfiguration().findEntityDescriptor( TableWithComment.class );
 		return ( (PhysicalTable) entityType.getPrimaryTable() ).getTableName().getText();
 	}
 

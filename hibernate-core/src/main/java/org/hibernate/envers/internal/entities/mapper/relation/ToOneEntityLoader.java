@@ -56,7 +56,7 @@ public final class ToOneEntityLoader {
 		final EntityDescriptor persister = versionsReader.getSessionImplementor()
 				.getFactory()
 				.getTypeConfiguration()
-				.findEntityPersister( entityName );
+				.findEntityDescriptor( entityName );
 		return persister.createProxy(
 				(Serializable) entityId,
 				new ToOneDelegateSessionImplementor( versionsReader, entityClass, entityId, revision, removed )
@@ -77,7 +77,7 @@ public final class ToOneEntityLoader {
 		final EntityDescriptor persister = versionsReader.getSessionImplementor()
 				.getFactory()
 				.getTypeConfiguration()
-				.findEntityPersister( entityName );
+				.findEntityDescriptor( entityName );
 		if ( persister.hasProxy() ) {
 			return createProxy( versionsReader, entityClass, entityName, entityId, revision, removed );
 		}

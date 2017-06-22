@@ -11,7 +11,6 @@ import java.util.TimeZone;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
@@ -24,13 +23,14 @@ import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.loader.BatchFetchStyle;
+import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
  * Convenience base class for custom implementors of SessionFactoryOptions, using delegation
@@ -126,13 +126,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public EntityMode getDefaultEntityMode() {
-		return delegate.getDefaultEntityMode();
+	public Representation getDefaultRepresentation() {
+		return delegate.getDefaultRepresentation();
 	}
 
 	@Override
-	public EntityTuplizerFactory getEntityTuplizerFactory() {
-		return delegate.getEntityTuplizerFactory();
+	public InstantiatorFactory getInstantiatorFactory() {
+		return delegate.getInstantiatorFactory();
 	}
 
 	@Override

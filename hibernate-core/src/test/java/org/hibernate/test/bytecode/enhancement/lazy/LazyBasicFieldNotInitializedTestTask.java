@@ -64,7 +64,7 @@ public class LazyBasicFieldNotInitializedTestTask extends AbstractEnhancerTestTa
 		s.beginTransaction();
 		Entity entity = s.get( Entity.class, entityId );
 		Assert.assertFalse( Hibernate.isPropertyInitialized( entity, "description" ) );
-		EntityTypeImplementor persister = ( (SessionFactoryImplementor) getFactory() ).getTypeConfiguration().findEntityPersister( Entity.class );
+		EntityTypeImplementor persister = ( (SessionFactoryImplementor) getFactory() ).getTypeConfiguration().findEntityDescriptor( Entity.class );
 		final boolean[] propertyLaziness = persister.getPropertyLaziness();
 		assertEquals( 1, propertyLaziness.length );
 		assertTrue( propertyLaziness[0] );

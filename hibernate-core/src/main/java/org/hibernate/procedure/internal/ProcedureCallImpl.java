@@ -485,12 +485,12 @@ public class ProcedureCallImpl<R>
 	private Type determineTypeToUse(ParameterRegistrationImplementor parameterRegistration) {
 		if ( parameterRegistration.getBind() != null ) {
 			if ( parameterRegistration.getBind().getBindType() != null ) {
-				return parameterRegistration.getBind().getBindType();
+				return (Type) parameterRegistration.getBind().getBindType();
 			}
 		}
 
 		if ( parameterRegistration.getHibernateType() != null ) {
-			return parameterRegistration.getHibernateType();
+			return (Type) parameterRegistration.getHibernateType();
 		}
 
 		return null;
@@ -530,17 +530,17 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> addSynchronizedEntityName(String entityName) {
-		addSynchronizedQuerySpaces( getSession().getFactory().getTypeConfiguration().findEntityPersister( entityName ) );
+		addSynchronizedQuerySpaces( getSession().getFactory().getTypeConfiguration().findEntityDescriptor( entityName ) );
 		return this;
 	}
 
 	protected void addSynchronizedQuerySpaces(EntityDescriptor persister) {
-		synchronizedQuerySpaces().addAll( Arrays.asList( (String[]) persister.getQuerySpaces() ) );
+		synchronizedQuerySpaces().addAll( Arrays.asList( persister.getAffectedTableNames() ) );
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> addSynchronizedEntityClass(Class entityClass) {
-		addSynchronizedQuerySpaces( getSession().getFactory().getTypeConfiguration().findEntityPersister( entityClass.getName() ) );
+		addSynchronizedQuerySpaces( getSession().getFactory().getTypeConfiguration().findEntityDescriptor( entityClass.getName() ) );
 		return this;
 	}
 

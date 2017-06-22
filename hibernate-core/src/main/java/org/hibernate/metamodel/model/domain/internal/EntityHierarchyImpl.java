@@ -261,7 +261,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	}
 
 	@Override
-	public EntityMode getRepresentationMode() {
+	public EntityMode getRepresentation() {
 		return entityMode;
 	}
 

@@ -32,7 +32,7 @@ public class BasicStructuredCachingOfConvertedValueTest extends BaseNonConfigCor
 	@TestForIssue( jiraKey = "HHH-9615" )
 	@SuppressWarnings("unchecked")
 	public void basicCacheStructureTest() {
-		EntityTypeImplementor persister = sessionFactory().getTypeConfiguration().findEntityPersister( Address.class );
+		EntityTypeImplementor persister = sessionFactory().getTypeConfiguration().findEntityDescriptor( Address.class );
 		EntityRegionImpl region = (EntityRegionImpl) persister.getCacheAccessStrategy().getRegion();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -333,12 +333,12 @@ public interface SessionFactoryImplementor
 
 	/**
 	 * @deprecated (since 5.2) Use
-	 * {@link #getTypeConfiguration()}} -> {@link TypeConfiguration#resolveEntityPersister(String)}
+	 * {@link #getTypeConfiguration()}} -> {@link TypeConfiguration#resolveEntityDescriptor(String)}
 	 * instead
 	 */
 	@Deprecated
 	default EntityDescriptor getEntityPersister(String entityName) throws MappingException {
-		return getTypeConfiguration().resolveEntityPersister( entityName );
+		return getTypeConfiguration().resolveEntityDescriptor( entityName );
 	}
 
 	/**
@@ -387,22 +387,22 @@ public interface SessionFactoryImplementor
 
 	/**
 	 * @deprecated (since 5.2) Use
-	 * {@link #getTypeConfiguration()}} -> {@link TypeConfiguration#resolveEntityPersister(Class)}
+	 * {@link #getTypeConfiguration()}} -> {@link TypeConfiguration#resolveEntityDescriptor(Class)}
 	 * instead
 	 */
 	@Deprecated
 	default EntityDescriptor locateEntityPersister(Class byClass) {
-		return getTypeConfiguration().resolveEntityPersister( byClass );
+		return getTypeConfiguration().resolveEntityDescriptor( byClass );
 	}
 
 	/**
 	 * @deprecated (since 5.2) Use
-	 * {@link #getTypeConfiguration()}} -> {@link TypeConfiguration#resolveEntityPersister(String)}
+	 * {@link #getTypeConfiguration()}} -> {@link TypeConfiguration#resolveEntityDescriptor(String)}
 	 * instead
 	 */
 	@Deprecated
 	default EntityDescriptor locateEntityPersister(String byName) {
-		return getTypeConfiguration().resolveEntityPersister( byName );
+		return getTypeConfiguration().resolveEntityDescriptor( byName );
 	}
 
 	/**
@@ -424,7 +424,7 @@ public interface SessionFactoryImplementor
 			entityName = importedName;
 		}
 
-		final EntityDescriptor referencedPersister = getTypeConfiguration().findEntityPersister( entityName );
+		final EntityDescriptor referencedPersister = getTypeConfiguration().findEntityDescriptor( entityName );
 		if ( referencedPersister != null ) {
 			return new String[] { referencedPersister.getEntityName() };
 		}
@@ -454,7 +454,7 @@ public interface SessionFactoryImplementor
 			name = importMap.get( name );
 		}
 
-		final EntityDescriptor entityPersister = getTypeConfiguration().resolveEntityPersister( name );
+		final EntityDescriptor entityPersister = getTypeConfiguration().resolveEntityDescriptor( name );
 		if ( entityPersister != null ) {
 			return entityPersister.getEntityName();
 		}

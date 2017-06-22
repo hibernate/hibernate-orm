@@ -101,7 +101,7 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 	private Type getPropertyType(SessionImplementor session, String entityName, String propertyName) {
 		// rather than rely on QueryException from calling getPropertyType(), this allows a non-failure way
 		// to determine whether to return null or lookup the value safely.
-		final EntityDescriptor persister = session.getSessionFactory().getTypeConfiguration().findEntityPersister( entityName );
+		final EntityDescriptor persister = session.getSessionFactory().getTypeConfiguration().findEntityDescriptor( entityName );
 		for ( String name : persister.getPropertyNames() ) {
 			if ( name.equals( propertyName ) ) {
 				return persister.getPropertyType( propertyName );

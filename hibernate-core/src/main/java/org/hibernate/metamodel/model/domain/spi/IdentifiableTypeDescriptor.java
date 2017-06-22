@@ -8,11 +8,9 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import javax.persistence.metamodel.IdentifiableType;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
  * Hibernate extension SPI for working with {@link IdentifiableType} implementations, which includes
@@ -31,14 +29,6 @@ public interface IdentifiableTypeDescriptor<T> extends InheritanceCapable<T>, Id
 	IdentifiableTypeDescriptor<? super T> getSuperclassType();
 
 	EntityHierarchy getHierarchy();
-
-	@Override
-	default EntityMode getEntityMode() {
-		return getHierarchy().getRepresentationMode();
-	}
-
-	@Override
-	EntityTuplizer getTuplizer();
 
 	/**
 	 * Called after all EntityPersister instance have been created and (at least partially) initialized.

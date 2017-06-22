@@ -95,7 +95,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 		if ( isUninitialized() && session != null && session.isOpen() ) {
 			final EntityKey key = session.generateEntityKey(
 					getIdentifier(),
-					session.getFactory().getTypeConfiguration().findEntityPersister( getEntityName() )
+					session.getFactory().getTypeConfiguration().findEntityDescriptor( getEntityName() )
 			);
 			final Object entity = session.getPersistenceContext().getEntity( key );
 			if ( entity != null ) {

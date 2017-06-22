@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.tuple.entity;
+package org.hibernate.bytecode.internal;
 
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
@@ -14,14 +14,13 @@ import org.hibernate.bytecode.spi.NotInstrumentedException;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.PersistentClass;
 
 /**
  * @author Steve Ebersole
  */
 public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementMetadata {
 	public static BytecodeEnhancementMetadata from(EntityMapping entityMapping) {
-		final Class mappedClass = entityMapping.getMappedClass();
+		final Class mappedClass = entityMapping.getRuntimeEntityDescriptorClass();
 		final boolean enhancedForLazyLoading = PersistentAttributeInterceptable.class.isAssignableFrom( mappedClass );
 		final LazyAttributesMetadata lazyAttributesMetadata = enhancedForLazyLoading
 				? LazyAttributesMetadata.from( entityMapping )

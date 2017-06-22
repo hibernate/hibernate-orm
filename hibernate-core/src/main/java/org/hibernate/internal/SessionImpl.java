@@ -1054,7 +1054,7 @@ public final class SessionImpl
 	@Override
 	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
 		if ( log.isDebugEnabled() ) {
-			EntityDescriptor persister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
+			EntityDescriptor persister = getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
 			log.debugf( "Initializing proxy: %s", MessageHelper.infoString( persister, id, getFactory() ) );
 		}
 		LoadEvent event = loadEvent;
@@ -1552,7 +1552,7 @@ public final class SessionImpl
 
 	@Override
 	public Object instantiate(String entityName, Serializable id) throws HibernateException {
-		return instantiate( getFactory().getTypeConfiguration().findEntityPersister( entityName ), id );
+		return instantiate( getFactory().getTypeConfiguration().findEntityDescriptor( entityName ), id );
 	}
 
 	/**
@@ -1578,7 +1578,7 @@ public final class SessionImpl
 	public EntityDescriptor getEntityPersister(final String entityName, final Object object) {
 		checkOpenOrWaitingForAutoClose();
 		if ( entityName == null ) {
-			return getFactory().getTypeConfiguration().findEntityPersister( guessEntityName( object ) );
+			return getFactory().getTypeConfiguration().findEntityDescriptor( guessEntityName( object ) );
 		}
 		else {
 			// try block is a hack around fact that currently tuplizers are not
@@ -1587,7 +1587,7 @@ public final class SessionImpl
 			// influence this decision if we were not able to based on the
 			// given entityName
 			try {
-				return getFactory().getTypeConfiguration().findEntityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
+				return getFactory().getTypeConfiguration().findEntityDescriptor( entityName ).getSubclassEntityPersister( object, getFactory() );
 			}
 			catch (HibernateException e) {
 				try {
@@ -1870,7 +1870,7 @@ public final class SessionImpl
 		}
 
 		final String entityName = criteria.getEntityOrClassName();
-		final EntityDescriptor entityPersister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
+		final EntityDescriptor entityPersister = getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
 
 		// Verify the entity actually has a natural id, needed for legacy support as NaturalIdentifier criteria
 		// queries did no natural id validation
@@ -1917,7 +1917,7 @@ public final class SessionImpl
 	}
 
 	private OuterJoinLoadable getOuterJoinLoadable(String entityName) throws MappingException {
-		EntityDescriptor persister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
+		EntityDescriptor persister = getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
 		if ( !( persister instanceof OuterJoinLoadable ) ) {
 			throw new MappingException( "class persister is not OuterJoinLoadable: " + entityName );
 		}
@@ -1968,7 +1968,7 @@ public final class SessionImpl
 						if ( entityName == null ) {
 							throw new IllegalArgumentException( "Could not resolve entity-name [" + object + "]" );
 						}
-						getSessionFactory().getTypeConfiguration().findEntityPersister( object.getClass() );
+						getSessionFactory().getTypeConfiguration().findEntityDescriptor( object.getClass() );
 					}
 					catch (HibernateException e) {
 						throw new IllegalArgumentException( "Not an entity [" + object.getClass() + "]", e );
@@ -2001,7 +2001,7 @@ public final class SessionImpl
 			if ( !HibernateProxy.class.isInstance( object ) && persistenceContext.getEntry( object ) == null ) {
 				// check if it is an entity -> if not throw an exception (per JPA)
 				try {
-					getSessionFactory().getTypeConfiguration().findEntityPersister( entityName );
+					getSessionFactory().getTypeConfiguration().findEntityDescriptor( entityName );
 				}
 				catch (HibernateException e) {
 					throw new IllegalArgumentException( "Not an entity [" + entityName + "] : " + object );
@@ -2876,11 +2876,11 @@ public final class SessionImpl
 	}
 
 	private <T> EntityDescriptor<? extends T> locateEntityPersister(Class<T> entityClass) {
-		return getFactory().getTypeConfiguration().findEntityPersister( entityClass );
+		return getFactory().getTypeConfiguration().findEntityDescriptor( entityClass );
 	}
 
 	private <T> EntityDescriptor<? extends T> locateEntityPersister(String entityName) {
-		return getFactory().getTypeConfiguration().findEntityPersister( entityName );
+		return getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
 	}
 
 	private abstract class BaseNaturalIdLoadAccessImpl<T> {

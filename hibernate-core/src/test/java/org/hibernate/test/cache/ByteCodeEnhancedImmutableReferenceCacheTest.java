@@ -52,7 +52,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 
 	@Test
 	public void testUseOfDirectReferencesInCache() throws Exception {
-		EntityDescriptor persister = (EntityDescriptor) sessionFactory().getTypeConfiguration().findEntityPersister( MyEnhancedReferenceData.class );
+		EntityDescriptor persister = (EntityDescriptor) sessionFactory().getTypeConfiguration().findEntityDescriptor( MyEnhancedReferenceData.class );
 		assertFalse( persister.getJavaTypeDescriptor().getMutabilityPlan().isMutable() );
 		assertTrue( persister.buildCacheEntry( null, null, null, null ).isReferenceEntry() );
 		assertFalse( persister.hasProxy() );

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
@@ -224,6 +225,16 @@ public interface EntityDescriptor<T>
 
 
 	String[] getAffectedTableNames();
+
+	/**
+	 * Does this entity map "across" multiple tables.  Generally this is
+	 * used to
+	 *
+	 * @return `true` indicates it does; `false` indicates it does not.
+	 */
+	boolean isMultiTable();
+
+	List<EntityNameResolver> getEntityNameResolvers();
 
 	/**
 	 * Determine whether this entity supports dynamic proxies.
@@ -709,12 +720,4 @@ public interface EntityDescriptor<T>
 	boolean canUseReferenceCacheEntries();
 
 	void registerAffectingFetchProfile(String fetchProfileName);
-
-	/**
-	 * Does this entity map "across" multiple tables.  Generally this is
-	 * used to
-	 *
-	 * @return `true` indicates it does; `false` indicates it does not.
-	 */
-	boolean isMultiTable();
 }

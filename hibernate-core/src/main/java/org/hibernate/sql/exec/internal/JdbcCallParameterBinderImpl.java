@@ -11,9 +11,12 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.ParameterBindingContext;
 import org.hibernate.type.ProcedureParameterNamedBinder;
 import org.hibernate.type.Type;
 
@@ -48,14 +51,13 @@ public class JdbcCallParameterBinderImpl implements JdbcParameterBinder {
 	public int bindParameterValue(
 			PreparedStatement statement,
 			int startPosition,
-			QueryParameterBindings queryParameterBindings,
-			SharedSessionContractImplementor session) throws SQLException {
+			ParameterBindingContext context) throws SQLException {
 		final QueryParameterBinding binding;
 		if ( parameterName != null ) {
-			binding = queryParameterBindings.getBinding( parameterName );
+			binding = context.getQueryParameterBindings().getBinding( parameterName );
 		}
 		else {
-			binding = queryParameterBindings.getBinding( parameterPosition );
+			binding = context.getQueryParameterBindings().getBinding( parameterPosition );
 		}
 
 		if ( binding == null ) {
@@ -69,19 +71,19 @@ public class JdbcCallParameterBinderImpl implements JdbcParameterBinder {
 		else  {
 			final Object bindValue = binding.getBindValue();
 
-			if ( binding.getBindValue() == null ) {
+			if ( bindValue == null ) {
 				log.debugf(
-						"Binding NULL to stored procedure IN/INOUT parameter [%s.%s]",
-						callName,
-						parameterName == null ? Integer.toString( parameterPosition ) : parameterName
+						"Binding NULL to IN/INOUT parameter [%s] for stored procedure `%s`",
+						parameterName == null ? Integer.toString( parameterPosition ) : parameterName,
+						callName
 				);
 			}
 			else {
 				log.debugf(
-						"Binding [%s] to stored procedure IN/INOUT parameter [%s.%s]",
+						"Binding [%s] to IN/INOUT parameter [%s] for stored procedure `%s`",
 						bindValue,
-						callName,
-						parameterName == null ? Integer.toString( parameterPosition ) : parameterName
+						parameterName == null ? Integer.toString( parameterPosition ) : parameterName,
+						callName
 				);
 			}
 

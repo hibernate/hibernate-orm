@@ -77,7 +77,7 @@ public class LazyAttributeLoadingInterceptor
 				new LazyInitializationWork() {
 					@Override
 					public Object doWork(SharedSessionContractImplementor session, boolean isTemporarySession) {
-						final EntityDescriptor persister = session.getFactory().getTypeConfiguration().findEntityPersister( getEntityName() );
+						final EntityDescriptor persister = session.getFactory().getTypeConfiguration().findEntityDescriptor( getEntityName() );
 
 						if ( isTemporarySession ) {
 							final Serializable id = persister.getIdentifier( target, null );

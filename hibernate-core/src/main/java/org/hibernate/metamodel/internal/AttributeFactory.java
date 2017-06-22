@@ -28,9 +28,13 @@ import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
+import org.hibernate.metamodel.model.domain.spi.VirtualPersistentAttribute;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
-import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.sql.NotYetImplementedException;
 
 /**
  * A factory for building {@link Attribute} instances.  Exposes 3 main services for building<ol>
@@ -232,21 +236,19 @@ public class AttributeFactory {
 		}
 	}
 
-	private EntityMetamodel getDeclarerEntityMetamodel(AbstractIdentifiableType<?> ownerType) {
+	private EntityDescriptor getDeclarerEntityDescriptor(AbstractIdentifiableType<?> ownerType) {
 		final Type.PersistenceType persistenceType = ownerType.getPersistenceType();
 		if ( persistenceType == Type.PersistenceType.ENTITY ) {
 			return context.getSessionFactory()
 					.getTypeConfiguration()
-					.findEntityPersister( ownerType.getTypeName() )
-					.getEntityMetamodel();
+					.findEntityDescriptor( ownerType.getTypeName() );
 		}
 		else if ( persistenceType == Type.PersistenceType.MAPPED_SUPERCLASS ) {
 			PersistentClass persistentClass =
 					context.getPersistentClassHostingProperties( (MappedSuperclassTypeImpl<?>) ownerType );
 			return context.getSessionFactory()
 					.getTypeConfiguration()
-					.findEntityPersister( persistentClass.getClassName() )
-					.getEntityMetamodel();
+					.findEntityDescriptor( persistentClass.getClassName() );
 		}
 		else {
 			throw new AssertionFailure( "Cannot get the metamodel for PersistenceType: " + persistenceType );
@@ -959,24 +961,33 @@ public class AttributeFactory {
 		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
 			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
-			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
-			if ( !entityMetamodel.getIdentifierProperty().isVirtual() ) {
+			final EntityDescriptor entityDescriptor = getDeclarerEntityDescriptor( identifiableType );
+			final EntityIdentifier identifierDescriptor = entityDescriptor.getIdentifierDescriptor();
+
+			if ( !EntityIdentifierCompositeNonAggregated.class.isInstance( identifierDescriptor.getIdAttribute() ) ) {
 				throw new IllegalArgumentException( "expecting IdClass mapping" );
 			}
-			org.hibernate.type.spi.Type type = entityMetamodel.getIdentifierProperty().getType();
-			if ( !EmbeddedComponentType.class.isInstance( type ) ) {
-				throw new IllegalArgumentException( "expecting IdClass mapping" );
-			}
 
-			final EmbeddedComponentType componentType = (EmbeddedComponentType) type;
-			final String attributeName = attributeContext.getPropertyMapping().getName();
+			final EntityIdentifierCompositeNonAggregated aggregatedIdentifierDescriptor = (EntityIdentifierCompositeNonAggregated) identifierDescriptor;
 
-			final Getter getter = componentType.getComponentTuplizer()
-					.getGetter( componentType.getPropertyIndex( attributeName ) );
+			// todo (6.0) - needs the IdClass handling discussed in EntityIdentifierCompositeNonAggregated
+			// 		something like:
+//			if ( aggregatedIdentifierDescriptor.getIdClassDescriptor() == null ) {
+//				throw new IllegalArgumentException( "expecting IdClass mapping" );
+//			}
 
-			return PropertyAccessMapImpl.GetterImpl.class.isInstance( getter )
-					? new MapMember( attributeName, attributeContext.getPropertyMapping().getType().getReturnedClass() )
-					: getter.getMember();
+			throw new NotYetImplementedException();
+
+//			final EmbeddedComponentType componentType = (EmbeddedComponentType) type;
+//			final String attributeName = attributeContext.getPropertyMapping().getName();
+//
+//			componentType
+//			final Getter getter = componentType.getComponentTuplizer()
+//					.getGetter( componentType.getPropertyIndex( attributeName ) );
+//
+//			return PropertyAccessMapImpl.GetterImpl.class.isInstance( getter )
+//					? new MapMember( attributeName, attributeContext.getPropertyMapping().getType().getReturnedClass() )
+//					: getter.getMember();
 		}
 	};
 
@@ -995,15 +1006,15 @@ public class AttributeFactory {
 			else if ( Type.PersistenceType.ENTITY == persistenceType
 					|| Type.PersistenceType.MAPPED_SUPERCLASS == persistenceType ) {
 				final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) ownerType;
-				final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
+				final EntityDescriptor entityDescriptor = getDeclarerEntityDescriptor( identifiableType );
 				final String propertyName = property.getName();
-				final Integer index = entityMetamodel.getPropertyIndexOrNull( propertyName );
+				final Integer index = entityDescriptor.getPropertyIndexOrNull( propertyName );
 				if ( index == null ) {
 					// just like in #determineIdentifierJavaMember , this *should* indicate we have an IdClass mapping
 					return virtualIdentifierMemberResolver.resolveMember( attributeContext );
 				}
 				else {
-					final Getter getter = entityMetamodel.getTuplizer().getGetter( index );
+					final Getter getter = entityDescriptor.getTuplizer().getGetter( index );
 					return PropertyAccessMapImpl.GetterImpl.class.isInstance( getter )
 							? new MapMember( propertyName, property.getType().getReturnedClass() )
 							: getter.getMember();
@@ -1019,7 +1030,7 @@ public class AttributeFactory {
 		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
 			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
-			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
+			final EntityMetamodel entityMetamodel = getDeclarerEntityDescriptor( identifiableType );
 			if ( !attributeContext.getPropertyMapping().getName()
 					.equals( entityMetamodel.getIdentifierProperty().getName() ) ) {
 				// this *should* indicate processing part of an IdClass...
@@ -1042,19 +1053,19 @@ public class AttributeFactory {
 		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
 			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
-			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
+			final EntityDescriptor entityDescriptor = getDeclarerEntityDescriptor( identifiableType );
+			final Getter getter = entityDescriptor.getHierarchy().getVersionDescriptor().getPropertyAccess().getGetter();
+
+			return getter.getMember();
 			final String versionPropertyName = attributeContext.getPropertyMapping().getName();
-			if ( !versionPropertyName.equals( entityMetamodel.getVersionProperty().getName() ) ) {
+
+			if ( !versionPropertyName.equals( entityDescriptor.getVersionProperty().getName() ) ) {
 				// this should never happen, but to be safe...
 				throw new IllegalArgumentException( "Given property did not match declared version property" );
 			}
 
-			final Getter getter = entityMetamodel.getTuplizer().getVersionGetter();
+			final Getter getter = entityDescriptor.getTuplizer().getVersionGetter();
 			if ( PropertyAccessMapImpl.GetterImpl.class.isInstance( getter ) ) {
-				return new MapMember(
-						versionPropertyName,
-						attributeContext.getPropertyMapping().getType().getReturnedClass()
-				);
 			}
 			else {
 				return getter.getMember();

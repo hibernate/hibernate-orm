@@ -89,6 +89,6 @@ public class ConversionHelper {
 		// assume the fact that the attribute/type are entity has already been validated
 		final EntityType entityType = (EntityType) ( ( SingularPersistentAttribute) joinedFromElement.getAttributeReference().getReferencedNavigable() ).getOrmType();
 		final String entityName = entityType.getAssociatedEntityName();
-		return factory.getTypeConfiguration().resolveEntityPersister( entityName );
+		return factory.getTypeConfiguration().resolveEntityDescriptor( entityName );
 	}
 }

@@ -54,7 +54,7 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 
 		this.data = data;
 		final String[] propertyNames = sessionImplementor.getFactory()
-				.getTypeConfiguration().findEntityPersister( getEntityName() )
+				.getTypeConfiguration().findEntityDescriptor( getEntityName() )
 				.getPropertyNames();
 		this.state = ArraysTools.mapToArray( data, propertyNames );
 	}

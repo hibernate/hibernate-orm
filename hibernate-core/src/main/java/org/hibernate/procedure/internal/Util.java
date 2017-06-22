@@ -177,7 +177,7 @@ public class Util {
 
 //		int i = 0;
 //		for ( Class resultClass : resultClasses ) {
-//			final EntityDescriptor entityDescriptor = context.getSessionFactory().getTypeConfiguration().findEntityPersister( resultClass.getName() );
+//			final EntityDescriptor entityDescriptor = context.getSessionFactory().getTypeConfiguration().findEntityDescriptor( resultClass.getName() );
 //			context.addQuerySpaces( (String[]) entityDescriptor.getAffectedTableNames() );
 //			context.addQueryResult( entityDescriptor.generateQueryResult(  )
 //					new QueryResultEntityImpl(
@@ -250,7 +250,7 @@ public class Util {
 //				}
 //				else if ( nativeQueryReturn instanceof NativeSQLQueryRootReturn ) {
 //					final NativeSQLQueryRootReturn rtn = (NativeSQLQueryRootReturn) nativeQueryReturn;
-//					final EntityDescriptor persister = context.getSessionFactory().getTypeConfiguration().findEntityPersister( rtn.getReturnEntityName() );
+//					final EntityDescriptor persister = context.getSessionFactory().getTypeConfiguration().findEntityDescriptor( rtn.getReturnEntityName() );
 //					final QueryResultEntityImpl entityReturn = new QueryResultEntityImpl(
 //							null,
 //							persister,

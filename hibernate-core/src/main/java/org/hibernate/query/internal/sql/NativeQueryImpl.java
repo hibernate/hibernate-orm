@@ -547,14 +547,14 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> addSynchronizedEntityName(String entityName) throws MappingException {
-		addQuerySpaces( getSession().getFactory().getTypeConfiguration().resolveEntityPersister( entityName ).getAffectedTableNames() );
+		addQuerySpaces( getSession().getFactory().getTypeConfiguration().resolveEntityDescriptor( entityName ).getAffectedTableNames() );
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public NativeQueryImplementor<R> addSynchronizedEntityClass(Class entityClass) throws MappingException {
-		addQuerySpaces( getSession().getFactory().getTypeConfiguration().resolveEntityPersister( entityClass ).getAffectedTableNames() );
+		addQuerySpaces( getSession().getFactory().getTypeConfiguration().resolveEntityDescriptor( entityClass ).getAffectedTableNames() );
 		return this;
 	}
 

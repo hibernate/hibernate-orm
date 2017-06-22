@@ -13,10 +13,9 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
-import org.hibernate.tuple.component.ComponentTuplizerFactory;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -40,8 +39,8 @@ public interface RuntimeModelCreationContext {
 		return getSessionFactory().getServiceRegistry().getService( MutableIdentifierGeneratorFactory.class );
 	}
 
-	EntityTuplizerFactory getEntityTuplizerFactory();
-	ComponentTuplizerFactory getComponentTuplizerFactory();
+	InstantiatorFactory getInstantiatorFactory();
+
 	PersistentCollectionTuplizerFactory getPersistentCollectionTuplizerFactory();
 
 	void registerEntityDescriptor(EntityDescriptor entityDescriptor);

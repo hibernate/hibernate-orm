@@ -35,12 +35,11 @@ import org.hibernate.metamodel.model.domain.internal.EntityHierarchyImpl;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.tuple.component.ComponentTuplizerFactory;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -234,7 +233,7 @@ public class RuntimeModelCreationProcess {
 
 		final EntityDescriptor<?> entityPersister = metadataBuildingContext.getBootstrapContext()
 				.getTypeConfiguration()
-				.findEntityPersister( definition.getEntityName() );
+				.findEntityDescriptor( definition.getEntityName() );
 		if ( entityPersister == null ) {
 			throw new IllegalArgumentException(
 					"Attempted to register named entity graph [" + definition.getRegisteredName()
@@ -351,13 +350,8 @@ public class RuntimeModelCreationProcess {
 		}
 
 		@Override
-		public EntityTuplizerFactory getEntityTuplizerFactory() {
-			return metadataBuildingContext.getBootstrapContext().getEntityTuplizerFactory();
-		}
-
-		@Override
-		public ComponentTuplizerFactory getComponentTuplizerFactory() {
-			return metadataBuildingContext.getBootstrapContext().getComponentTuplizerFactory();
+		public InstantiatorFactory getInstantiatorFactory() {
+			return metadataBuildingContext.getBootstrapContext().getInstantiatorFactory();
 		}
 
 		@Override

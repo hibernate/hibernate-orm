@@ -38,8 +38,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationProcess;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.query.sqm.tree.expression.LiteralSqmExpression;
@@ -47,7 +47,6 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.sqm.internal.PolymorphicEntityValuedExpressableTypeImpl;
-import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
@@ -174,7 +173,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	}
 
 	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
-		final EntityDescriptor<? extends T> entityPersister = findEntityPersister( entityClass );
+		final EntityDescriptor<? extends T> entityPersister = findEntityDescriptor( entityClass );
 		if ( entityPersister == null ) {
 			throw new IllegalArgumentException( "Given class is not an entity : " + entityClass.getName() );
 		}
@@ -208,7 +207,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	/**
 	 * Retrieve all EntityPersisters
 	 */
-	public Collection<EntityDescriptor<?>> getEntityPersisters() {
+	public Collection<EntityDescriptor<?>> getEntityDescriptors() {
 		return entityPersisterMap.values();
 	}
 
@@ -216,7 +215,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	 * Retrieve an EntityPersister by entity-name.  Returns {@code null} if not known.
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> EntityDescriptor<T> findEntityPersister(String entityName) {
+	public <T> EntityDescriptor<T> findEntityDescriptor(String entityName) {
 		if ( importMap.containsKey( entityName ) ) {
 			entityName = importMap.get( entityName );
 		}
@@ -226,8 +225,8 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	/**
 	 * Retrieve an EntityPersister by entity-name.  Throws exception if not known.
 	 */
-	public <T> EntityDescriptor<T> resolveEntityPersister(String entityName) throws UnknownEntityTypeException {
-		final EntityDescriptor<T> resolved = findEntityPersister( entityName );
+	public <T> EntityDescriptor<T> resolveEntityDescriptor(String entityName) throws UnknownEntityTypeException {
+		final EntityDescriptor<T> resolved = findEntityDescriptor( entityName );
 		if ( resolved != null ) {
 			return resolved;
 		}
@@ -235,14 +234,14 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		throw new UnknownEntityTypeException( "Could not resolve EntityPersister by entity name [" + entityName + "]" );
 	}
 
-	public <T> EntityDescriptor<? extends T> findEntityPersister(Class<T> javaType) {
-		EntityDescriptor<? extends T> entityPersister = findEntityPersister( javaType.getName() );
+	public <T> EntityDescriptor<? extends T> findEntityDescriptor(Class<T> javaType) {
+		EntityDescriptor<? extends T> entityPersister = findEntityDescriptor( javaType.getName() );
 		if ( entityPersister == null ) {
 			JavaTypeDescriptor javaTypeDescriptor = getJavaTypeDescriptorRegistry().getDescriptor( javaType );
 			if ( javaTypeDescriptor != null && javaTypeDescriptor instanceof MappedSuperclassJavaDescriptor ) {
 				String mappedEntityName = entityProxyInterfaceMap.get( javaTypeDescriptor );
 				if ( mappedEntityName != null ) {
-					entityPersister = findEntityPersister( mappedEntityName );
+					entityPersister = findEntityDescriptor( mappedEntityName );
 				}
 			}
 		}
@@ -250,8 +249,8 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		return entityPersister;
 	}
 
-	public <T> EntityDescriptor<? extends T> resolveEntityPersister(Class<T> javaType) {
-		final EntityDescriptor<? extends T> entityPersister = findEntityPersister( javaType );
+	public <T> EntityDescriptor<? extends T> resolveEntityDescriptor(Class<T> javaType) {
+		final EntityDescriptor<? extends T> entityPersister = findEntityDescriptor( javaType );
 		if ( entityPersister == null ) {
 			throw new UnknownEntityTypeException( "Could not resolve EntityPersister by Java type [" + javaType.getName() + "]" );
 		}
@@ -329,7 +328,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 			entityName = importMap.get( entityName );
 		}
 
-		final EntityDescriptor namedPersister = findEntityPersister( entityName );
+		final EntityDescriptor namedPersister = findEntityDescriptor( entityName );
 		if ( namedPersister != null ) {
 			return namedPersister;
 		}
@@ -830,18 +829,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	}
 
 	private void registerEntityNameResolvers(EntityDescriptor persister) {
-		if ( persister.getTuplizer() == null ) {
-			return;
-		}
-		registerEntityNameResolvers( persister.getTuplizer() );
-	}
-
-	private void registerEntityNameResolvers(EntityTuplizer tuplizer) {
-		EntityNameResolver[] resolvers = tuplizer.getEntityNameResolvers();
-		if ( resolvers == null ) {
-			return;
-		}
-		Collections.addAll( entityNameResolvers, resolvers );
+		this.entityNameResolvers.addAll( persister.getEntityNameResolvers() );
 	}
 
 }

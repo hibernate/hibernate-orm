@@ -6,11 +6,11 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.EntityMode;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.Representation;
 
 /**
  * Defines access to information across the entire entity hierarchy
@@ -18,6 +18,11 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
  * @author Steve Ebersole
  */
 public interface EntityHierarchy {
+	/**
+	 * What "entity mode" is in effect for this hierarchy?
+	 */
+	Representation getRepresentation();
+
 	/**
 	 * What style of inheritance, if any, is defined for this hierarchy?
 	 */
@@ -29,11 +34,6 @@ public interface EntityHierarchy {
 	 * @return The root entity for this hierarchy.
 	 */
 	<J> EntityDescriptor<J> getRootEntityType();
-
-	/**
-	 * What "entity mode" is in effect for this hierarchy?
-	 */
-	EntityMode getRepresentationMode();
 
 	/**
 	 * Retrieve the descriptor for the hierarchy's identifier.

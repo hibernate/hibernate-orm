@@ -10,7 +10,6 @@ import java.util.Map;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
@@ -21,6 +20,8 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.loader.BatchFetchStyle;
+import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
@@ -28,8 +29,6 @@ import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
  * Convenience base class for custom implementors of SessionFactoryBuilder, using delegation
@@ -138,13 +137,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
-	public T applyDefaultEntityMode(EntityMode entityMode) {
-		delegate.applyDefaultEntityMode( entityMode );
-		return getThis();
-	}
-
-	@Override
 	public T applyNullabilityChecking(boolean enabled) {
 		delegate.applyNullabilityChecking( enabled );
 		return getThis();
@@ -157,17 +149,15 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	}
 
 	@Override
-	public T applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
-		delegate.applyEntityTuplizerFactory( entityTuplizerFactory );
-		return getThis();
+	public SessionFactoryBuilder applyDefaultRepresentation(Representation representation) {
+		delegate.applyDefaultRepresentation( representation );
+		return this;
 	}
 
 	@Override
-	public T applyEntityTuplizer(
-			EntityMode entityMode,
-			Class<? extends EntityTuplizer> tuplizerClass) {
-		delegate.applyEntityTuplizer( entityMode, tuplizerClass );
-		return getThis();
+	public SessionFactoryBuilder applyInstantiatorFactory(InstantiatorFactory instantiatorFactory) {
+		delegate.applyInstantiatorFactory( instantiatorFactory );
+		return this;
 	}
 
 	@Override

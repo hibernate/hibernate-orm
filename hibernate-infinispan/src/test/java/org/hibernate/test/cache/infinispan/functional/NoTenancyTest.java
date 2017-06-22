@@ -40,7 +40,7 @@ public class NoTenancyTest extends SingleNodeTest {
 		  assertEquals(1, localCache.size());
 		  try (CloseableIterator iterator = localCache.keySet().iterator()) {
 		  	assertEquals(
-		  			sessionFactory().getTypeConfiguration().findEntityPersister( Item.class ).getIdentifierType().getJavaType(),
+		  			sessionFactory().getTypeConfiguration().findEntityDescriptor( Item.class ).getIdentifierType().getJavaType(),
 					iterator.next().getClass()
 			);
 		  }

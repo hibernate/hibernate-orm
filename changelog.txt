@@ -3,6 +3,32 @@ Hibernate 5.1 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changed in 5.1.8.Final (June 23, 2017)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/29300
+https://hibernate.atlassian.net/issues/?jql=project%20%3D%2010031%20AND%20fixVersion%20%3D%2029300%20ORDER%20BY%20priority%20DESC%2C%20key%20ASC
+
+** Bug
+    * [HHH-9329] - Join With SQL generation regression
+    * [HHH-10907] - Fix connection leak problem in hibernate-core tests
+    * [HHH-11133] - Audit tables storing incorrect discriminator value when using JOINED entity inheritance.
+    * [HHH-11157] - Invalid identifiers generated in org.hibernate.engine.internal.JoinSequence
+    * [HHH-11205] - char is not treated as nationalized character
+    * [HHH-11214] - ValidityAuditStrategy not audit properly nested collection with nulls
+    * [HHH-11215] - NullPointerException when reading an audited entity that has a collection of embeddables with a ManyToOne to an unaudited entity.
+    * [HHH-11230] - Aggregate on (mappedBy) joined column produces invalid query
+    * [HHH-11296] - Incorrect handling of NCLOB streaming
+    * [HHH-11401] - Subquery join rewrite produces wrong SQL in some cases
+    * [HHH-11502] - XML Mapped Entity with a ManyToOne association to a Annotation Mapped Entity -> NullPointerException
+    * [HHH-11536] - Fix unit tests failing on Oracle
+    * [HHH-11818] - ClassCastException when binding a MaterializedNClobType value as NClob
+    * [HHH-11832] - ManyToManyWithDynamicFilterTest fails on Sybase due to reserved word
+
+** Improvement
+    * [HHH-10946] - Add utility to detect connection leaks during testing
+    * [HHH-11450] - The testWithClause from WithClauseTest class fails on PostgreSQL
+    * [HHH-11585] - Batch ordering fails for bidirectional one-to-one associations
+
 Changed in 5.1.7.Final (May 21, 2017)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/28900

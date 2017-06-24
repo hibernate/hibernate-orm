@@ -5,6 +5,14 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.27 (2017.06.23)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    [HHH-10183] : Mapping for NVARCHAR in SqlServer not working with native queries; org.hibernate.MappingException: No Dialect mapping for JDBC type: -9
+    [BZ-1457508] : race condition and level 2 cache configuration in standalone*.xml or domain*.xml 
+
+
 Changes in version 4.2.26 (2017.03.21)
 ------------------------------------------------------------------------------------------------------------------------
 

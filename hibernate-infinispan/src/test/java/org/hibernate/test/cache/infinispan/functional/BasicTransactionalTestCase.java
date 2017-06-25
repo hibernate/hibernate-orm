@@ -69,7 +69,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
    @Override
    protected Class<?>[] getAnnotatedClasses() {
       return new Class[] {
-            Citizen.class, State.class,
+            Citizen.class, County.class, State.class,
             NaturalIdOnManyToOne.class
       };
    }
@@ -84,6 +84,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
             s.beginTransaction();
             s.createQuery( "delete NaturalIdOnManyToOne" ).executeUpdate();
             s.createQuery( "delete Citizen" ).executeUpdate();
+            s.createQuery( "delete County" ).executeUpdate();
             s.createQuery( "delete State" ).executeUpdate();
             s.getTransaction().commit();
             s.close();
@@ -114,16 +115,18 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
          }
       });
 
-      withTx(tm, new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            Session s = openSession();
-            Item loaded = (Item) s.load( Item.class, item.getId() );
-            assertEquals( 1, loaded.getItems().size() );
-            s.close();
-            return null;
-         }
-      });
+      withTx(
+			  tm, new Callable<Void>() {
+				  @Override
+				  public Void call() throws Exception {
+					  Session s = openSession();
+					  Item loaded = (Item) s.load( Item.class, item.getId() );
+					  assertEquals( 1, loaded.getItems().size() );
+					  s.close();
+					  return null;
+				  }
+			  }
+	  );
 
       withTx(tm, new Callable<Void>() {
          @Override
@@ -148,6 +151,123 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
             return null;
          }
       });
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "BZ-1389846")
+	public void testAAAEntityAndManyToOneCachedWhenLoaded() throws Exception {
+		Statistics stats = sessionFactory().getStatistics();
+
+		stats.clear();
+
+		State state = new State();
+		state.setName( "Washington" );
+		County county = new County();
+		county.setName( "King" );
+		county.setState( state );
+
+		Transaction txn = null;
+		Session s = null;
+
+		beginTx();
+		try {
+			s = openSession();
+			txn = s.beginTransaction();
+			s.persist( state );
+			s.persist( county );
+			txn.commit();
+			s.close();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+		}
+
+		stats.clear();
+
+/*
+		beginTx();
+		try {
+			s = openSession();
+			txn = s.beginTransaction();
+			// Load the County which has an eager many-to-one.
+			// This should load both the County and State entities from the 2lc.
+			county = (County) s.get( County.class, county.getId() );
+			assertTrue( Hibernate.isInitialized( county ) );
+			assertTrue( Hibernate.isInitialized( county.getState() ) );
+			txn.commit();
+			s.close();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+		}
+
+		assertEquals( 1, stats.getSecondLevelCacheStatistics( County.class.getName() ).getHitCount() );
+		assertEquals( 1, stats.getSecondLevelCacheStatistics( State.class.getName() ).getHitCount() );
+*/
+		sessionFactory().getCache().evictEntityRegions();
+		stats.clear();
+
+		Thread.sleep( 5000 );
+
+		beginTx();
+		try {
+			s = openSession();
+			txn = s.beginTransaction();
+			// Load the County which has an eager many-to-one from the database.
+			// This should put both the County and State entities into the 2lc.
+			county = (County) s.get( County.class, county.getId() );
+			assertTrue( Hibernate.isInitialized( county ) );
+			assertTrue( Hibernate.isInitialized( county.getState() ) );
+			txn.commit();
+			s.close();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+		}
+
+		assertEquals( 0, stats.getSecondLevelCacheStatistics( State.class.getName() ).getHitCount() );
+		assertEquals( 0, stats.getSecondLevelCacheStatistics( County.class.getName() ).getHitCount() );
+		assertEquals( 1, stats.getSecondLevelCacheStatistics( County.class.getName() ).getPutCount() );
+		assertEquals( 1, stats.getSecondLevelCacheStatistics( State.class.getName() ).getPutCount() );
+		assertEquals( 1, stats.getSecondLevelCacheStatistics( State.class.getName() ).getEntries().size() );
+		assertEquals( 1, stats.getSecondLevelCacheStatistics( County.class.getName() ).getEntries().size() );
+
+		stats.clear();
+
+		beginTx();
+		try {
+			s = openSession();
+			txn = s.beginTransaction();
+			// Load the County which has an eager many-to-one from the database.
+			// This should load both the County and State entities from the 2lc.
+			county = (County) s.get( County.class, county.getId() );
+			assertTrue( Hibernate.isInitialized( county ) );
+			assertTrue( Hibernate.isInitialized( county.getState() ) );
+			txn.commit();
+			s.close();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+		}
+
+		assertEquals( 1, stats.getSecondLevelCacheStatistics( State.class.getName() ).getHitCount() );
+		assertEquals( 1, stats.getSecondLevelCacheStatistics( County.class.getName() ).getHitCount() );
+		assertEquals( 0, stats.getSecondLevelCacheStatistics( State.class.getName() ).getPutCount() );
+		assertEquals( 0, stats.getSecondLevelCacheStatistics( County.class.getName() ).getPutCount() );
+		assertEquals( 1, stats.getSecondLevelCacheStatistics( State.class.getName() ).getEntries().size() );
+		assertEquals( 1, stats.getSecondLevelCacheStatistics( County.class.getName() ).getEntries().size() );
 	}
 
 	@Test

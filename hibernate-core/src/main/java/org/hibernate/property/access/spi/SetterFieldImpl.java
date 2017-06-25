@@ -14,6 +14,7 @@ import java.util.Locale;
 
 import org.hibernate.PropertyAccessException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
 
 /**
@@ -25,11 +26,13 @@ public class SetterFieldImpl implements Setter {
 	private final Class containerClass;
 	private final String propertyName;
 	private final Field field;
+	private final Method setterMethod;
 
 	public SetterFieldImpl(Class containerClass, String propertyName, Field field) {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.field = field;
+		this.setterMethod = ReflectHelper.setterMethodOrNull( containerClass, propertyName, field.getType() );
 	}
 
 	@Override
@@ -72,12 +75,12 @@ public class SetterFieldImpl implements Setter {
 
 	@Override
 	public String getMethodName() {
-		return null;
+		return setterMethod != null ? setterMethod.getName() : null;
 	}
 
 	@Override
 	public Method getMethod() {
-		return null;
+		return setterMethod;
 	}
 
 	private Object writeReplace() throws ObjectStreamException {
@@ -88,6 +91,7 @@ public class SetterFieldImpl implements Setter {
 		private final Class containerClass;
 		private final String propertyName;
 
+
 		private SerialForm(Class containerClass, String propertyName, Field field) {
 			super( field );
 			this.containerClass = containerClass;
@@ -97,5 +101,6 @@ public class SetterFieldImpl implements Setter {
 		private Object readResolve() {
 			return new SetterFieldImpl( containerClass, propertyName, resolveField() );
 		}
+
 	}
 }

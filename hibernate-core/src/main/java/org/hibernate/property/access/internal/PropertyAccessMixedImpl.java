@@ -24,6 +24,9 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterFieldImpl;
 import org.hibernate.property.access.spi.SetterMethodImpl;
 
+import static org.hibernate.internal.util.ReflectHelper.getterMethodOrNull;
+import static org.hibernate.internal.util.ReflectHelper.setterMethodOrNull;
+
 /**
  * A PropertyAccess based on mix of getter/setter method and/or field.
  *
@@ -79,24 +82,6 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 	protected static Field fieldOrNull(Class containerJavaType, String propertyName) {
 		try {
 			return ReflectHelper.findField( containerJavaType, propertyName );
-		}
-		catch (PropertyNotFoundException e) {
-			return null;
-		}
-	}
-
-	protected static Method getterMethodOrNull(Class containerJavaType, String propertyName) {
-		try {
-			return ReflectHelper.findGetterMethod( containerJavaType, propertyName );
-		}
-		catch (PropertyNotFoundException e) {
-			return null;
-		}
-	}
-
-	protected static Method setterMethodOrNull(Class containerJavaType, String propertyName, Class propertyJavaType) {
-		try {
-			return ReflectHelper.findSetterMethod( containerJavaType, propertyName, propertyJavaType );
 		}
 		catch (PropertyNotFoundException e) {
 			return null;

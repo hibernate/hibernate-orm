@@ -23,13 +23,6 @@
  */
 package org.hibernate.test.fileimport;
 
-import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
@@ -41,6 +34,12 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor;
+import org.junit.Test;
+
+import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -79,7 +78,8 @@ public class MultiLineImportFileTest extends BaseCoreFunctionalTestCase {
 		final String multiLineText = (String) s.createSQLQuery( "SELECT text FROM test_data WHERE id = 2" )
 				.uniqueResult();
 		//  "Multi-line comment line 1\n-- line 2'\n/* line 3 */"
-		final String expected = String.format( "Multi-line comment line 1\n-- line 2'\n/* line 3 */" );
+		final String expected = String.format( "Multi-line comment line 1" + System.lineSeparator() + "-- line 2'" +
+											   System.lineSeparator() + "/* line 3 */" );
 		assertEquals( "Multi-line string inserted incorrectly", expected, multiLineText );
 
 		String empty = (String) s.createSQLQuery( "SELECT text FROM test_data WHERE id = 3" ).uniqueResult();

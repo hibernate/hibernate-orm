@@ -23,6 +23,12 @@
  */
 package org.hibernate.collection.internal;
 
+import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.loader.CollectionAliases;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.type.Type;
+
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,12 +38,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.loader.CollectionAliases;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.Type;
 
 
 /**
@@ -345,8 +345,9 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	public boolean endRead() {
 		set.addAll(tempList);
 		tempList = null;
-		setInitialized();
-		return true;
+		// ensure that operationQueue is considered
+		// adding to/removing from a loaded list is not reflected in the .size()/.iterator() method (lazy="extra")
+        return super.endRead();
 	}
 
 	public Iterator entries(CollectionPersister persister) {

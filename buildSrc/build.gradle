@@ -28,9 +28,10 @@ apply plugin: 'idea'
 buildDir = "target"
 
 repositories {
-    mavenCentral()
+    // mavenCentral()
+    mavenRepo name: 'rsg', url: "https://maven.teamspace.local/content/groups/public/"
     mavenLocal()
-    mavenRepo name: "jboss", url: "http://repository.jboss.org/nexus/content/groups/public/"
+    // mavenRepo name: "jboss", url: "http://repository.jboss.org/nexus/content/groups/public/"
 }
 targetCompatibility = "1.6"
 sourceCompatibility = "1.6"

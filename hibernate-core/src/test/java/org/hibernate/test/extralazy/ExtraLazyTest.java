@@ -261,5 +261,169 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		assertNotNull(child2);
 		session2.close();
 	}
+
+	@Test
+	@TestForIssue(jiraKey="HHH-9933")
+	public void testSetSize() {
+		Session session1 = openSession();
+		Transaction tx1 = session1.beginTransaction();
+		session1.createQuery("delete Document").executeUpdate();
+		session1.createQuery("delete User").executeUpdate();
+		User user = new User("victor", "hugo");
+		session1.persist(user);
+		tx1.commit();
+		session1.close();
+		// END PREPARE SECTION
+
+		Session session2 = openSession();
+		User user2 = (User)session2.get(User.class, user.getName());
+		Document document = new Document("Les Miserables", "sad", user2);
+		assertEquals(1, user2.getDocuments().size());
+		session2.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey="HHH-9933")
+	public void testSetIterator() {
+		Session session1 = openSession();
+		Transaction tx1 = session1.beginTransaction();
+		session1.createQuery("delete Document").executeUpdate();
+		session1.createQuery("delete User").executeUpdate();
+		User user = new User("victor", "hugo");
+		session1.persist(user);
+		tx1.commit();
+		session1.close();
+		// END PREPARE SECTION
+
+		Session session2 = openSession();
+		User user2 = (User)session2.get(User.class, user.getName());
+		Document document = new Document("Les Miserables", "sad", user2);
+		assertTrue(user2.getDocuments().iterator().hasNext());
+		session2.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey="HHH-9933")
+	public void testSetIsEmpty() {
+		Session session1 = openSession();
+		Transaction tx1 = session1.beginTransaction();
+		session1.createQuery("delete Document").executeUpdate();
+		session1.createQuery("delete User").executeUpdate();
+		User user = new User("victor", "hugo");
+		session1.persist(user);
+		tx1.commit();
+		session1.close();
+		// END PREPARE SECTION
+
+		Session session2 = openSession();
+		User user2 = (User)session2.get(User.class, user.getName());
+		Document document = new Document("Les Miserables", "sad", user2);
+		assertFalse(user2.getDocuments().isEmpty());
+		session2.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey="HHH-9933")
+	public void testSetContains() {
+		Session session1 = openSession();
+		Transaction tx1 = session1.beginTransaction();
+		session1.createQuery("delete Document").executeUpdate();
+		session1.createQuery("delete User").executeUpdate();
+		User user = new User("victor", "hugo");
+		session1.persist(user);
+		tx1.commit();
+		session1.close();
+		// END PREPARE SECTION
+
+		Session session2 = openSession();
+		User user2 = (User)session2.get(User.class, user.getName());
+		Document document = new Document("Les Miserables", "sad", user2);
+		assertTrue(user2.getDocuments().contains(document));
+		session2.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey="HHH-9933")
+	public void testSetAdd() {
+		Session session1 = openSession();
+		Transaction tx1 = session1.beginTransaction();
+		session1.createQuery("delete Document").executeUpdate();
+		session1.createQuery("delete User").executeUpdate();
+		User user = new User("victor", "hugo");
+		session1.persist(user);
+		tx1.commit();
+		session1.close();
+		// END PREPARE SECTION
+
+		Session session2 = openSession();
+		User user2 = (User)session2.get(User.class, user.getName());
+		Document document = new Document();
+		document.setTitle("Les Miserables");
+		document.setContent("sad");
+		document.setOwner(user2);
+		assertTrue("not added", user2.getDocuments().add(document));
+		assertFalse("added", user2.getDocuments().add(document));
+		session2.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey="HHH-9933")
+	public void testSetRemove() {
+		Session session1 = openSession();
+		Transaction tx1 = session1.beginTransaction();
+		session1.createQuery("delete Document").executeUpdate();
+		session1.createQuery("delete User").executeUpdate();
+		User user = new User("victor", "hugo");
+		session1.persist(user);
+		tx1.commit();
+		session1.close();
+		// END PREPARE SECTION
+
+		Session session2 = openSession();
+		User user2 = (User)session2.get(User.class, user.getName());
+		Document document = new Document("Les Miserables", "sad", user2);
+		assertTrue("not removed", user2.getDocuments().remove(document));
+		session2.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey="HHH-9933")
+	public void testSetToArray() {
+		Session session1 = openSession();
+		Transaction tx1 = session1.beginTransaction();
+		session1.createQuery("delete Document").executeUpdate();
+		session1.createQuery("delete User").executeUpdate();
+		User user = new User("victor", "hugo");
+		session1.persist(user);
+		tx1.commit();
+		session1.close();
+		// END PREPARE SECTION
+
+		Session session2 = openSession();
+		User user2 = (User)session2.get(User.class, user.getName());
+		Document document = new Document("Les Miserables", "sad", user2);
+		assertEquals(1, user2.getDocuments().toArray().length);
+		session2.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey="HHH-9933")
+	public void testSetToArrayTyped() {
+		Session session1 = openSession();
+		Transaction tx1 = session1.beginTransaction();
+		session1.createQuery("delete Document").executeUpdate();
+		session1.createQuery("delete User").executeUpdate();
+		User user = new User("victor", "hugo");
+		session1.persist(user);
+		tx1.commit();
+		session1.close();
+		// END PREPARE SECTION
+
+		Session session2 = openSession();
+		User user2 = (User)session2.get(User.class, user.getName());
+		Document document = new Document("Les Miserables", "sad", user2);
+		assertEquals(1, user2.getDocuments().toArray(new Document[0]).length);
+		session2.close();
+	}
 }
 

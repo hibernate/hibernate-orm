@@ -155,7 +155,7 @@ public class LazyLoadingTest
 			client.getId();
 			assertThat(Hibernate.isInitialized(client), is(false));
 			client.getName();
-			assertThat(Hibernate.isInitialized(client), is(false));
+			assertThat(Hibernate.isInitialized(client), is(true));
 		});
 
 	}

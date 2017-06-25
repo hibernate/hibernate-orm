@@ -28,12 +28,12 @@ import java.util.HashMap;
 
 import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
-import javassist.util.proxy.Proxy;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.pojo.javassist.JavassistProxyFactory;
 
@@ -59,6 +59,7 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 
 	private static class BasicProxyFactoryImpl implements BasicProxyFactory {
 		private final Class proxyClass;
+		private final javassist.util.proxy.ProxyFactory proxyFactory;
 
 		public BasicProxyFactoryImpl(Class superClass, Class[] interfaces) {
 			if ( superClass == null && ( interfaces == null || interfaces.length < 1 ) ) {
@@ -72,13 +73,13 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 			if ( interfaces != null && interfaces.length > 0 ) {
 				factory.setInterfaces( interfaces );
 			}
-			proxyClass = factory.createClass();
+			proxyFactory = factory;
+			proxyClass = proxyFactory.createClass();
 		}
 
 		public Object getProxy() {
 			try {
-				final Proxy proxy = (Proxy) proxyClass.newInstance();
-				proxy.setHandler( new PassThroughHandler( proxy, proxyClass.getName() ) );
+				final Object proxy = proxyFactory.create( NO_PARAM_TYPES, NO_PARAM_VALUES, new PassThroughHandler( proxyClass.getName() ) );
 				return proxy;
 			}
 			catch ( Throwable t ) {
@@ -91,6 +92,8 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 		}
 	}
 
+	private static final Class[] NO_PARAM_TYPES = new Class[0];
+	private static final Object[] NO_PARAM_VALUES = new Object[0];
 	private static final MethodFilter FINALIZE_FILTER = new MethodFilter() {
 		public boolean isHandled(Method m) {
 			// skip finalize methods
@@ -100,11 +103,9 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 
 	private static class PassThroughHandler implements MethodHandler {
 		private HashMap data = new HashMap();
-		private final Object proxiedObject;
 		private final String proxiedClassName;
 
-		public PassThroughHandler(Object proxiedObject, String proxiedClassName) {
-			this.proxiedObject = proxiedObject;
+		public PassThroughHandler(String proxiedClassName) {
 			this.proxiedClassName = proxiedClassName;
 		}
 
@@ -118,7 +119,7 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 				return proxiedClassName + "@" + System.identityHashCode( object );
 			}
 			else if ( "equals".equals( name ) ) {
-				return proxiedObject == object;
+				return object == args[0];
 			}
 			else if ( "hashCode".equals( name ) ) {
 				return System.identityHashCode( object );

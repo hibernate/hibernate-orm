@@ -29,7 +29,6 @@ import java.lang.reflect.Method;
 
 import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
-import javassist.util.proxy.Proxy;
 import javassist.util.proxy.ProxyFactory;
 
 import org.hibernate.HibernateException;
@@ -49,6 +48,8 @@ import org.jboss.logging.Logger;
 public class JavassistLazyInitializer extends BasicLazyInitializer implements MethodHandler {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JavassistLazyInitializer.class.getName());
+	private static final Class[] NO_PARAM_TYPES = new Class[0];
+	private static final Object[] NO_PARAM_VALUES = new Object[0];
 
 	private static final MethodFilter FINALIZE_FILTER = new MethodFilter() {
 		public boolean isHandled(Method m) {
@@ -100,9 +101,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 			factory.setSuperclass( interfaces.length == 1 ? persistentClass : null );
 			factory.setInterfaces( interfaces );
 			factory.setFilter( FINALIZE_FILTER );
-			Class cl = factory.createClass();
-			final HibernateProxy proxy = ( HibernateProxy ) cl.newInstance();
-			( ( Proxy ) proxy ).setHandler( instance );
+			final HibernateProxy proxy = ( HibernateProxy ) factory.create( NO_PARAM_TYPES, NO_PARAM_VALUES, instance );
 			instance.constructed = true;
 			return proxy;
 		}
@@ -113,7 +112,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 	}
 
 	public static HibernateProxy getProxy(
-			final Class factory,
+			final ProxyFactory factory,
 			final String entityName,
 			final Class persistentClass,
 			final Class[] interfaces,
@@ -137,7 +136,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 
 		final HibernateProxy proxy;
 		try {
-			proxy = ( HibernateProxy ) factory.newInstance();
+			proxy = ( HibernateProxy ) factory.create( NO_PARAM_TYPES, NO_PARAM_VALUES, instance );
 		}
 		catch ( Exception e ) {
 			throw new HibernateException(
@@ -145,12 +144,11 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 					+ persistentClass.getName(), e
 			);
 		}
-		( ( Proxy ) proxy ).setHandler( instance );
 		instance.constructed = true;
 		return proxy;
 	}
 
-	public static Class getProxyFactory(
+	public static ProxyFactory getProxyFactory(
 			Class persistentClass,
 			Class[] interfaces) throws HibernateException {
 		// note: interfaces is assumed to already contain HibernateProxy.class
@@ -160,7 +158,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 			factory.setSuperclass( interfaces.length == 1 ? persistentClass : null );
 			factory.setInterfaces( interfaces );
 			factory.setFilter( FINALIZE_FILTER );
-			return factory.createClass();
+			return factory;
 		}
 		catch ( Throwable t ) {
 			LOG.error(LOG.javassistEnhancementFailed(persistentClass.getName()), t);

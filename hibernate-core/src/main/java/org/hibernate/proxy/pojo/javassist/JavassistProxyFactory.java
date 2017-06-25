@@ -47,7 +47,7 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 	private Method getIdentifierMethod;
 	private Method setIdentifierMethod;
 	private CompositeType componentIdType;
-	private Class factory;
+	private javassist.util.proxy.ProxyFactory factory;
 	private boolean overridesEquals;
 
 	public void postInstantiate(

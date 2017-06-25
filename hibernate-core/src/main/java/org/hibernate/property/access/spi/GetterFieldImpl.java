@@ -26,11 +26,13 @@ public class GetterFieldImpl implements Getter {
 	private final Class containerClass;
 	private final String propertyName;
 	private final Field field;
+	private final Method getterMethod;
 
-	public GetterFieldImpl(Class containerClass, String propertyName, Field field) {
+	public GetterFieldImpl(Class containerClass, String propertyName, Field field, Method getterMethod) {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.field = field;
+		this.getterMethod = getterMethod;
 	}
 
 	@Override
@@ -98,30 +100,30 @@ public class GetterFieldImpl implements Getter {
 
 	@Override
 	public String getMethodName() {
-		return null;
+		return getterMethod != null ? getterMethod.getName() : null;
 	}
 
 	@Override
 	public Method getMethod() {
-		return null;
+		return getterMethod;
 	}
 
 	private Object writeReplace() throws ObjectStreamException {
-		return new SerialForm( containerClass, propertyName, field );
+		return new SerialForm( containerClass, propertyName, field, getterMethod != null ? getterMethod.getName() : "" );
 	}
 
 	private static class SerialForm extends AbstractFieldSerialForm implements Serializable {
 		private final Class containerClass;
 		private final String propertyName;
 
-		private SerialForm(Class containerClass, String propertyName, Field field) {
-			super( field );
+		private SerialForm(Class containerClass, String propertyName, Field field, String methodName) {
+			super( field, methodName );
 			this.containerClass = containerClass;
 			this.propertyName = propertyName;
 		}
 
 		private Object readResolve() {
-			return new GetterFieldImpl( containerClass, propertyName, resolveField() );
+			return new GetterFieldImpl( containerClass, propertyName, resolveField(), resolveMethod() );
 		}
 	}
 }

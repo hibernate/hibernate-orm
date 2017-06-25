@@ -31,11 +31,11 @@ public class PropertyAccessEnhancedImpl extends PropertyAccessMixedImpl {
 	}
 
 	@Override
-	protected Setter fieldSetter(Class<?> containerJavaType, String propertyName, Field field) {
-		return resolveEnhancedSetterForField( containerJavaType, propertyName, field );
+	protected Setter fieldSetter(Class<?> containerJavaType, String propertyName, Field field, Method method ) {
+		return resolveEnhancedSetterForField( containerJavaType, propertyName, field, method );
 	}
 
-	private static Setter resolveEnhancedSetterForField(Class<?> containerClass, String propertyName, Field field) {
+	private static Setter resolveEnhancedSetterForField(Class<?> containerClass, String propertyName, Field field, Method method ) {
 		try {
 			String enhancedSetterName = EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + propertyName;
 			Method enhancedSetter = containerClass.getDeclaredMethod( enhancedSetterName, field.getType() );
@@ -44,7 +44,7 @@ public class PropertyAccessEnhancedImpl extends PropertyAccessMixedImpl {
 		}
 		catch (NoSuchMethodException e) {
 			// enhancedSetter = null --- field not enhanced: fallback to reflection using the field
-			return new SetterFieldImpl( containerClass, propertyName, field );
+			return new SetterFieldImpl( containerClass, propertyName, field, method );
 		}
 	}
 

@@ -25,11 +25,13 @@ public class SetterFieldImpl implements Setter {
 	private final Class containerClass;
 	private final String propertyName;
 	private final Field field;
+	private final Method setterMethod;
 
-	public SetterFieldImpl(Class containerClass, String propertyName, Field field) {
+	public SetterFieldImpl(Class containerClass, String propertyName, Field field, Method method) {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.field = field;
+		this.setterMethod = method;
 	}
 
 	@Override
@@ -72,30 +74,30 @@ public class SetterFieldImpl implements Setter {
 
 	@Override
 	public String getMethodName() {
-		return null;
+		return setterMethod != null ? setterMethod.getName() : null;
 	}
 
 	@Override
 	public Method getMethod() {
-		return null;
+		return setterMethod;
 	}
 
 	private Object writeReplace() throws ObjectStreamException {
-		return new SerialForm( containerClass, propertyName, field );
+		return new SerialForm( containerClass, propertyName, field, setterMethod != null ? setterMethod.getName() : "" );
 	}
 
 	private static class SerialForm extends AbstractFieldSerialForm implements Serializable {
 		private final Class containerClass;
 		private final String propertyName;
 
-		private SerialForm(Class containerClass, String propertyName, Field field) {
-			super( field );
+		private SerialForm(Class containerClass, String propertyName, Field field, String methodName) {
+			super( field, methodName);
 			this.containerClass = containerClass;
 			this.propertyName = propertyName;
 		}
 
 		private Object readResolve() {
-			return new SetterFieldImpl( containerClass, propertyName, resolveField() );
+			return new SetterFieldImpl( containerClass, propertyName, resolveField(), resolveMethod() );
 		}
 	}
 }

@@ -38,7 +38,9 @@ public class DirectPropertyAccessorTest extends BaseCoreFunctionalTestCase {
 		o = ( Order ) s.load( Order.class, 1 );
 		assertFalse( Hibernate.isInitialized( o ) );
 		o.getOrderNumber();
-		// If you mapped with field access, any method call initializes the proxy
+		// If you mapped with field access, any method, except id, call initializes the proxy
+		assertFalse( Hibernate.isInitialized( o ) );
+		o.getName();
 		assertTrue( Hibernate.isInitialized( o ) );
 		s.close();
 	}

@@ -83,21 +83,44 @@ public class SetterFieldImpl implements Setter {
 	}
 
 	private Object writeReplace() throws ObjectStreamException {
-		return new SerialForm( containerClass, propertyName, field, setterMethod != null ? setterMethod.getName() : "" );
+		return new SerialForm( containerClass, propertyName, field, setterMethod );
 	}
 
 	private static class SerialForm extends AbstractFieldSerialForm implements Serializable {
 		private final Class containerClass;
 		private final String propertyName;
+		private final String methodName;
+		private final Class argumentType;
 
-		private SerialForm(Class containerClass, String propertyName, Field field, String methodName) {
-			super( field, methodName);
+		private SerialForm(Class containerClass, String propertyName, Field field, Method method) {
+			super( field );
 			this.containerClass = containerClass;
 			this.propertyName = propertyName;
+			this.methodName = method != null ? method.getName() : null;
+			this.argumentType = method != null ? method.getParameterTypes()[0] : null;
 		}
 
 		private Object readResolve() {
 			return new SetterFieldImpl( containerClass, propertyName, resolveField(), resolveMethod() );
 		}
+
+		@SuppressWarnings("unchecked")
+		private Method resolveMethod() {
+			if (methodName == null && argumentType == null) {
+				return null;
+			}
+			try {
+				final Method method = declaringClass.getDeclaredMethod( methodName, argumentType );
+				method.setAccessible( true );
+				return method;
+			}
+			catch (NoSuchMethodException e) {
+				throw new PropertyAccessSerializationException(
+						"Unable to resolve setter method on deserialization : " + declaringClass.getName() + "#"
+								+ methodName + "(" + argumentType.getName() + ")"
+				);
+			}
+		}
+
 	}
 }

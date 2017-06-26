@@ -8,7 +8,6 @@ package org.hibernate.property.access.internal;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 import org.hibernate.property.access.spi.PropertyAccessSerializationException;
 
@@ -18,18 +17,16 @@ import org.hibernate.property.access.spi.PropertyAccessSerializationException;
  * @author Steve Ebersole
  */
 public abstract class AbstractFieldSerialForm implements Serializable {
-	private final Class declaringClass;
+	protected final Class declaringClass;
 	private final String fieldName;
-	private final String methodName;
 
-	protected AbstractFieldSerialForm(Field field, String methodName) {
-		this( field.getDeclaringClass(), field.getName(), methodName );
+	protected AbstractFieldSerialForm(Field field) {
+		this( field.getDeclaringClass(), field.getName() );
 	}
 
-	protected AbstractFieldSerialForm(Class declaringClass, String fieldName, String methodName ) {
+	protected AbstractFieldSerialForm(Class declaringClass, String fieldName ) {
 		this.declaringClass = declaringClass;
 		this.fieldName = fieldName;
-		this.methodName = methodName;
 	}
 
 	protected Field resolveField() {
@@ -41,20 +38,6 @@ public abstract class AbstractFieldSerialForm implements Serializable {
 		catch (NoSuchFieldException e) {
 			throw new PropertyAccessSerializationException(
 					"Unable to resolve field on deserialization : " + declaringClass.getName() + "#" + fieldName
-			);
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	protected Method resolveMethod() {
-		try {
-			final Method method = declaringClass.getDeclaredMethod( methodName );
-			method.setAccessible( true );
-			return method;
-		}
-		catch (NoSuchMethodException e) {
-			throw new PropertyAccessSerializationException(
-					"Unable to resolve method on deserialization : " + declaringClass.getName() + "#" + methodName
 			);
 		}
 	}

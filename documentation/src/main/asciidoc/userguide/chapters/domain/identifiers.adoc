@@ -1,6 +1,7 @@
 [[identifiers]]
 === Identifiers
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/identifier
+:sourcedir-associations: ../../../../../test/java/org/hibernate/userguide/associations
 :extrasdir: extras
 
 Identifiers model the primary key of an entity. They are used to uniquely identify each specific entity.
@@ -482,12 +483,22 @@ JPA 2.0 added support for derived identifiers which allow an entity to borrow th
 ====
 [source,java]
 ----
-include::{extrasdir}/id/DerivedIdentifier.java[]
+include::{sourcedir-associations}/OneToOneMapsIdTest.java[tag=identifiers-derived-mapsid, indent=0]
 ----
 ====
 
 In the example above, the `PersonDetails` entity uses the `id` column for both the entity identifier and for the many-to-one association to the `Person` entity.
 The value of the `PersonDetails` entity identifier is "derived" from the identifier of its parent `Person` entity.
+
+[[identifiers-derived-mapsid-persist-example]]
+.Derived identifier with `@MapsId` persist example
+====
+[source,java]
+----
+include::{sourcedir-associations}/OneToOneMapsIdTest.java[tag=identifiers-derived-mapsid-persist-example, indent=0]
+----
+====
+
 The `@MapsId` annotation can also reference columns from an `@EmbeddedId` identifier as well.
 
 The previous example can also be mapped using `@PrimaryKeyJoinColumn`.
@@ -497,13 +508,14 @@ The previous example can also be mapped using `@PrimaryKeyJoinColumn`.
 ====
 [source,java]
 ----
-include::{extrasdir}/id/CompositeIdAssociationPrimaryKeyJoinColumn.java[]
+include::{sourcedir-associations}/OneToOnePrimaryKeyJoinColumnTest.java[tag=identifiers-derived-primarykeyjoincolumn, indent=0]
 ----
 ====
 
 [NOTE]
 ====
-Unlike `@MapsId`, the application developer is responsible for ensuring that the identifier and the many-to-one (or one-to-one) association are in sync.
+Unlike `@MapsId`, the application developer is responsible for ensuring that the identifier and the many-to-one (or one-to-one) association are in sync
+as you can see in the `PersonDetails#setPerson` method.
 ====
 
 [[identifiers-rowid]]

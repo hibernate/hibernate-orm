@@ -24,12 +24,13 @@ public class SqmFromClause {
 		return fromElementSpaces;
 	}
 
-	public void addFromElementSpace(SqmFromElementSpace space) {
-
-	}
 	public SqmFromElementSpace makeFromElementSpace() {
 		final SqmFromElementSpace space = new SqmFromElementSpace( this );
-		fromElementSpaces.add( space );
+		addFromElementSpace( space );
 		return space;
+	}
+
+	public void addFromElementSpace(SqmFromElementSpace space) {
+		fromElementSpaces.add( space );
 	}
 }

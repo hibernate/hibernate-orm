@@ -4,23 +4,22 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.sql.ast.tree.spi.expression;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.spi.QueryParameterBinding;
-import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.exec.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
-import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.exec.results.internal.SqlSelectionReaderImpl;
+import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.ParameterBindingContext;
 
 import org.jboss.logging.Logger;
 
@@ -30,9 +29,9 @@ import org.jboss.logging.Logger;
 public abstract class AbstractParameter implements GenericParameter {
 	private static final Logger log = Logger.getLogger( AbstractParameter.class );
 
-	private final ExpressableType inferredType;
+	private final AllowableParameterType inferredType;
 
-	public AbstractParameter(ExpressableType inferredType) {
+	public AbstractParameter(AllowableParameterType inferredType) {
 		this.inferredType = inferredType;
 	}
 
@@ -68,17 +67,18 @@ public abstract class AbstractParameter implements GenericParameter {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public int bindParameterValue(
 			PreparedStatement statement,
 			int startPosition,
 			ParameterBindingContext bindingContext) throws SQLException {
-		final ExpressableType bindType;
+		final AllowableParameterType bindType;
 		final Object bindValue;
 
 		final QueryParameterBinding valueBinding = resolveBinding( bindingContext );
 		if ( valueBinding == null ) {
 			warnNoBinding();
-			bindType = valueBinding.getBindType();
+			bindType = null;
 			bindValue = null;
 		}
 		else {
@@ -99,9 +99,9 @@ public abstract class AbstractParameter implements GenericParameter {
 			warnNullBindValue();
 		}
 
-		throw new NotYetImplementedException(  );
-//		bindType.nullSafeSet( statement, bindValue, startPosition, session );
-//		return bindType.getColumnSpan();
+		bindType.getValueBinder().bind( statement, bindValue, startPosition, bindingContext.getSession() );
+
+		return bindType.getNumberOfJdbcParametersToBind();
 	}
 
 	protected abstract void warnNoBinding();

@@ -38,7 +38,7 @@ public class SqmEntityIdentifierReferenceSimple
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitEntityIdentifierBinding( this );
+		return walker.visitEntityIdentifierReference( this );
 	}
 
 	@Override

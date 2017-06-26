@@ -12,11 +12,12 @@ import javax.persistence.ParameterMode;
 
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -109,45 +110,19 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 	private void registerOutputParameter(
 			CallableStatement callableStatement,
 			SharedSessionContractImplementor session) {
-		if ( ormType.getColumnSpan() > 1 ) {
-			assert name == null;
-
-			// there is more than one column involved; see if the Hibernate Type can handle
-			// multi-param extraction...
-			if ( ProcedureParameterExtractionAware.class.isInstance( ormType ) ) {
-				final ProcedureParameterExtractionAware extractionAware = (ProcedureParameterExtractionAware) ormType;
-				if ( ! extractionAware.canDoExtraction() ) {
-					// it cannot...
-					throw new UnsupportedOperationException(
-							"Type [" + ormType + "] does support multi-parameter value extraction"
-					);
-				}
+		final SqlTypeDescriptor sqlTypeDescriptor = ( (BasicValuedExpressableType) ormType ).getBasicType()
+				.getColumnDescriptor()
+				.getSqlTypeDescriptor();
+		try {
+			if ( name != null ) {
+				callableStatement.registerOutParameter( name, sqlTypeDescriptor.getJdbcTypeCode() );
 			}
-
-			// todo : this needs CompositeType etal to be finished
-
-			try {
-				for ( int i = 0; i < ormType.getColumnSpan(); i++ ) {
-					callableStatement.registerOutParameter( jdbcParameterPositionStart + i, ormType.sqlTypes()[i] );
-				}
-			}
-			catch (SQLException e) {
-				throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "Unable to register CallableStatement out parameter" );
+			else {
+				callableStatement.registerOutParameter( jdbcParameterPositionStart, sqlTypeDescriptor.getJdbcTypeCode() );
 			}
 		}
-		else {
-			// again, needs Type to get finished (access to JDBC type code
-			try {
-				if ( name != null ) {
-					callableStatement.registerOutParameter( name, ormType.sqlTypes()[0] );
-				}
-				else {
-					callableStatement.registerOutParameter( jdbcParameterPositionStart, ormType.sqlTypes()[0] );
-				}
-			}
-			catch (SQLException e) {
-				throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "Unable to register CallableStatement out parameter" );
-			}
+		catch (SQLException e) {
+			throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "Unable to register CallableStatement out parameter" );
 		}
 	}
 }

@@ -27,7 +27,7 @@ public interface BasicValuedExpressableType<J>
 	BasicJavaDescriptor<J> getJavaTypeDescriptor();
 
 	@Override
-	default int getNumberOfJdbcParametersForRestriction() {
+	default int getNumberOfJdbcParametersToBind() {
 		return 1;
 	}
 

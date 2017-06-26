@@ -202,7 +202,7 @@ public class PathResolverBasicImpl extends AbstractNavigableBindingResolver {
 				subclassIndicator
 		);
 
-		joinBinding.addDowncast( new SqmDowncast( subclassIndicator ) );
+		joinBinding.addDowncast( new SqmDowncast( subclassIndicator.getEntityDescriptor() ) );
 
 		return new TreatedNavigableReference( joinBinding, subclassIndicator );
 	}

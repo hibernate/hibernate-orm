@@ -20,5 +20,5 @@ public interface OrderByTranslation {
 	 *
 	 * @return The fully translated and replaced fragment.
 	 */
-	public String injectAliases(OrderByAliasResolver aliasResolver);
+	String injectAliases(OrderByAliasResolver aliasResolver);
 }

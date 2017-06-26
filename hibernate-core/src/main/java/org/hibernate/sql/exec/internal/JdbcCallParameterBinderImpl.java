@@ -10,15 +10,11 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.spi.QueryParameterBinding;
-import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
-import org.hibernate.type.ProcedureParameterNamedBinder;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.spi.ValueBinder;
 
 import org.jboss.logging.Logger;
 
@@ -34,13 +30,13 @@ public class JdbcCallParameterBinderImpl implements JdbcParameterBinder {
 	private final String callName;
 	private final String parameterName;
 	private final int parameterPosition;
-	private final Type ormType;
+	private final AllowableParameterType ormType;
 
 	public JdbcCallParameterBinderImpl(
 			String callName,
 			String parameterName,
 			int parameterPosition,
-			Type ormType) {
+			AllowableParameterType ormType) {
 		this.callName = callName;
 		this.parameterName = parameterName;
 		this.parameterPosition = parameterPosition;
@@ -87,16 +83,28 @@ public class JdbcCallParameterBinderImpl implements JdbcParameterBinder {
 				);
 			}
 
+			// for the time being we assume the param is basic-type.  See discussion in other
+			//		ParameterBinder impls
+
+			final ValueBinder valueBinder = ormType.getValueBinder();
 			if ( parameterName != null ) {
-				( (ProcedureParameterNamedBinder) ormType ).nullSafeSet(
+				valueBinder.bind(
 						(CallableStatement) statement,
 						bindValue,
 						parameterName,
-						session
+						context.getSession()
+				);
+			}
+			else {
+				valueBinder.bind(
+						statement,
+						bindValue,
+						startPosition,
+						context.getSession()
 				);
 			}
 		}
 
-		return ormType.sqlTypes().length;
+		return ormType.getNumberOfJdbcParametersToBind();
 	}
 }

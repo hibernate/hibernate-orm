@@ -11,6 +11,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -19,7 +20,8 @@ import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 /**
  * Main entry point into building semantic queries.
  *
- * @see SessionFactoryImplementor#getSemanticQueryProducer
+ * @see {@link SessionFactoryImplementor#getQueryEngine()} ->
+ * {@link QueryEngine#getSemanticQueryProducer()}
  *
  * @author Steve Ebersole
  */

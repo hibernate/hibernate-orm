@@ -15,11 +15,6 @@ import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.query.sqm.tree.expression.CaseSearchedSqmExpression;
 import org.hibernate.query.sqm.tree.expression.CaseSimpleSqmExpression;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceAny;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceBasic;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEmbedded;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEntity;
-import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.CollectionSizeSqmExpression;
 import org.hibernate.query.sqm.tree.expression.ConcatSqmExpression;
 import org.hibernate.query.sqm.tree.expression.ConstantEnumSqmExpression;
@@ -37,15 +32,12 @@ import org.hibernate.query.sqm.tree.expression.LiteralNullSqmExpression;
 import org.hibernate.query.sqm.tree.expression.LiteralStringSqmExpression;
 import org.hibernate.query.sqm.tree.expression.LiteralTrueSqmExpression;
 import org.hibernate.query.sqm.tree.expression.NamedParameterSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.SqmExtractFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
 import org.hibernate.query.sqm.tree.expression.ParameterizedEntityTypeSqmExpression;
 import org.hibernate.query.sqm.tree.expression.PositionalParameterSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SubQuerySqmExpression;
 import org.hibernate.query.sqm.tree.expression.UnaryOperationSqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.AbstractSpecificSqmCollectionIndexReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReference;
@@ -54,34 +46,42 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmMapEntryBinding;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceBasic;
+import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceAny;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceBasic;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEmbedded;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEntity;
 import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmBitLengthFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentDateFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimeFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimestampFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmExtractFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLengthFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLocateFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLowerFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmModFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSqrtFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmUpperFunction;
-import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
@@ -660,7 +660,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitEntityIdentifierBinding(SqmEntityIdentifierReference expression) {
+	public T visitEntityIdentifierReference(SqmEntityIdentifierReference expression) {
 		return (T) expression;
 	}
 
@@ -682,5 +682,10 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	@Override
 	public T visitAnyValuedSingularAttribute(SqmSingularAttributeReferenceAny sqmAttributeReference) {
 		return (T) sqmAttributeReference;
+	}
+
+	@Override
+	public T visitPluralAttribute(SqmPluralAttributeReference reference) {
+		return (T) reference;
 	}
 }

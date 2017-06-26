@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.spi.NavigablePath;
@@ -42,6 +43,7 @@ import org.hibernate.query.sqm.tree.expression.PositionalParameterSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.UnaryOperationSqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceAny;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceBasic;
@@ -96,8 +98,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.exec.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
@@ -146,6 +146,7 @@ import org.hibernate.sql.ast.tree.spi.expression.UpperFunction;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReference;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.FromClause;
@@ -167,6 +168,8 @@ import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
+import org.hibernate.sql.exec.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -669,6 +672,20 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
+	public PluralAttributeReference visitPluralAttribute(SqmPluralAttributeReference reference) {
+		final NavigableContainerReference containerReference = (NavigableContainerReference) getNavigableReferenceStack().getCurrent();
+		final PluralAttributeReference attributeReference = new PluralAttributeReference(
+				containerReference,
+				reference.getReferencedNavigable(),
+				containerReference.getNavigablePath().append( reference.getReferencedNavigable().getNavigableName() )
+		);
+
+		navigableReferenceStack.push( attributeReference );
+
+		return attributeReference;
+	}
+
+	@Override
 	public QueryLiteral visitLiteralStringExpression(LiteralStringSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
@@ -797,7 +814,7 @@ public abstract class BaseSqmToSqlAstConverter
 	public NamedParameter visitNamedParameterExpression(NamedParameterSqmExpression expression) {
 		return new NamedParameter(
 				expression.getName(),
-				expression.getExpressionType()
+				(AllowableParameterType) expression.getExpressionType()
 		);
 	}
 
@@ -805,7 +822,7 @@ public abstract class BaseSqmToSqlAstConverter
 	public PositionalParameter visitPositionalParameterExpression(PositionalParameterSqmExpression expression) {
 		return new PositionalParameter(
 				expression.getPosition(),
-				expression.getExpressionType()
+				(AllowableParameterType) expression.getExpressionType()
 		);
 	}
 

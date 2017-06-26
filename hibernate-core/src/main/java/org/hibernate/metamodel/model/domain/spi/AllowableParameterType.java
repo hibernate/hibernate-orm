@@ -7,10 +7,16 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.type.descriptor.spi.ValueBinder;
+import org.hibernate.type.descriptor.spi.ValueExtractor;
 
 /**
  * @author Steve Ebersole
  */
 public interface AllowableParameterType<T> extends ExpressableType<T> {
-	int getNumberOfJdbcParametersForRestriction();
+	ValueBinder getValueBinder();
+	ValueExtractor getValueExtractor();
+
+	// todo (6.0) - move this to ValueBinder?
+	int getNumberOfJdbcParametersToBind();
 }

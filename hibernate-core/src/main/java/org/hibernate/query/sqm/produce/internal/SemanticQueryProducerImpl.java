@@ -13,10 +13,11 @@ import javax.persistence.criteria.CriteriaUpdate;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.QueryException;
-import org.hibernate.query.sqm.hql.internal.antlr.HqlParser;
 import org.hibernate.query.sqm.produce.internal.criteria.CriteriaInterpreter;
 import org.hibernate.query.sqm.produce.internal.hql.HqlParseTreeBuilder;
+import org.hibernate.query.sqm.produce.internal.hql.HqlParseTreePrinter;
 import org.hibernate.query.sqm.produce.internal.hql.SemanticQueryBuilder;
+import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlParser;
 import org.hibernate.query.sqm.produce.spi.ParsingContext;
 import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
@@ -42,6 +43,9 @@ public class SemanticQueryProducerImpl implements SemanticQueryProducer {
 
 		// first, ask Antlr to build the parse tree
 		final HqlParser parser = HqlParseTreeBuilder.INSTANCE.parseHql( query );
+
+		// Log the parse tree (if enabled)
+		HqlParseTreePrinter.logStatementParseTree( parser );
 
 		// then we perform semantic analysis and build the semantic representation...
 		try {

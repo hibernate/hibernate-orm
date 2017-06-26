@@ -6,15 +6,12 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 import org.hibernate.query.spi.QueryParameterBinding;
-import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.ast.consume.spi.ParameterBindingResolutionContext;
 import org.hibernate.sql.ast.produce.sqm.spi.ParameterSpec;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
 /**
  * @author Steve Ebersole
@@ -23,12 +20,6 @@ public interface GenericParameter extends ParameterSpec, JdbcParameterBinder, Ex
 	@Override
 	JdbcParameterBinder getParameterBinder();
 
-	@Override
-	int bindParameterValue(
-			PreparedStatement statement,
-			int startPosition,
-			ParameterBindingContext context) throws SQLException;
-
-	QueryParameterBinding resolveBinding(ParameterBindingContext context);
+	QueryParameterBinding resolveBinding(ParameterBindingResolutionContext context);
 
 }

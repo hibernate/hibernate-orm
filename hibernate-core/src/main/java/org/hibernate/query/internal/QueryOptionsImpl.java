@@ -31,6 +31,9 @@ import org.hibernate.query.spi.MutableQueryOptions;
  * @author Steve Ebersole
  */
 public class QueryOptionsImpl implements MutableQueryOptions {
+
+	// todo (6.0) - handle `MutableQueryOptions` responsibility as a builder
+
 	private Integer timeout;
 	private FlushMode flushMode;
 	private String comment;

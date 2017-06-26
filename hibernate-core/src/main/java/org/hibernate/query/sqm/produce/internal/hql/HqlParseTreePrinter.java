@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.produce.internal.hql;
 
-import org.hibernate.query.sqm.hql.internal.antlr.HqlParser;
-import org.hibernate.query.sqm.hql.internal.antlr.HqlParserBaseListener;
+import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlParser;
+import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlParserBaseListener;
 
 import org.jboss.logging.Logger;
 
@@ -21,12 +21,21 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 public class HqlParseTreePrinter extends HqlParserBaseListener {
 	private static final Logger HQL_LOGGER = Logger.getLogger( "org.hibernate.sqm.hql.parseTree" );
 
-	public static void logParseTree(HqlParser parser) {
+	public static void logStatementParseTree(HqlParser parser) {
 		if ( !HQL_LOGGER.isDebugEnabled() ) {
 			return;
 		}
 
 		ParseTreeWalker.DEFAULT.walk( new HqlParseTreePrinter( parser ), parser.statement() );
+		parser.reset();
+	}
+
+	public static void logOrderByParseTree(HqlParser parser) {
+		if ( !HQL_LOGGER.isDebugEnabled() ) {
+			return;
+		}
+
+		ParseTreeWalker.DEFAULT.walk( new HqlParseTreePrinter( parser ), parser.orderByClause() );
 		parser.reset();
 	}
 

@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.produce.internal.hql;
 
-import org.hibernate.query.sqm.hql.internal.antlr.HqlParser;
-import org.hibernate.query.sqm.hql.internal.antlr.HqlLexer;
+import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlLexer;
+import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlParser;
 
 import org.jboss.logging.Logger;
 
@@ -31,15 +31,11 @@ public class HqlParseTreeBuilder {
 		HqlLexer hqlLexer = new HqlLexer( new ANTLRInputStream( hql ) );
 
 		// Build the parser...
-		final HqlParser parser = new HqlParser( new CommonTokenStream( hqlLexer ) ) {
+		return new HqlParser( new CommonTokenStream( hqlLexer ) ) {
 			@Override
 			protected void logUseOfReservedWordAsIdentifier(Token token) {
 				log.debugf( "Encountered use of reserved word as identifier : " + token.getText() );
 			}
 		};
-
-		HqlParseTreePrinter.logParseTree( parser );
-
-		return parser;
 	}
 }

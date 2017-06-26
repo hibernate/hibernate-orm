@@ -55,7 +55,7 @@ public interface BasicType<T>
 	}
 
 	@Override
-	default int getNumberOfJdbcParametersForRestriction() {
+	default int getNumberOfJdbcParametersToBind() {
 		return 1;
 	}
 

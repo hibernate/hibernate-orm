@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.query.sqm.tree.expression.CaseSearchedSqmExpression;
 import org.hibernate.query.sqm.tree.expression.CaseSimpleSqmExpression;
+import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceAny;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceBasic;
@@ -156,7 +157,7 @@ public interface SemanticQueryWalker<T> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// expressions - navigable
 
-	T visitEntityIdentifierBinding(SqmEntityIdentifierReference sqmEntityIdentifierBinding);
+	T visitEntityIdentifierReference(SqmEntityIdentifierReference sqmEntityIdentifierBinding);
 
 	T visitBasicValuedSingularAttribute(SqmSingularAttributeReferenceBasic sqmAttributeReference);
 
@@ -165,6 +166,12 @@ public interface SemanticQueryWalker<T> {
 	T visitEmbeddableValuedSingularAttribute(SqmSingularAttributeReferenceEmbedded sqmAttributeReference);
 
 	T visitAnyValuedSingularAttribute(SqmSingularAttributeReferenceAny sqmAttributeReference);
+
+	T visitPluralAttribute(SqmPluralAttributeReference reference);
+
+	// todo (6.0) : split this based on the element type like we did for singular attributes
+
+	T visitPluralAttributeElementBinding(SqmCollectionElementReference binding);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -291,7 +298,6 @@ public interface SemanticQueryWalker<T> {
 
 	T visitPluralAttributeSizeFunction(CollectionSizeSqmExpression function);
 
-	T visitPluralAttributeElementBinding(SqmCollectionElementReference binding);
 
 	T visitPluralAttributeIndexFunction(SqmCollectionIndexReference function);
 

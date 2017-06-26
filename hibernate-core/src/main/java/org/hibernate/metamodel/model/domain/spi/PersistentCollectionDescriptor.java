@@ -110,6 +110,8 @@ public interface PersistentCollectionDescriptor<O,C,E>
 
 	NavigableRole getNavigableRole();
 
+	PluralPersistentAttribute getDescribedAttribute() ;
+
 	/**
 	 * @deprecated Use {@link #getNavigableRole()} instead.
 	 */

@@ -6,74 +6,145 @@
  */
 package org.hibernate.sql.ordering.antlr;
 
-import org.hibernate.NullPrecedence;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.hql.internal.ast.util.ASTPrinter;
-import org.hibernate.internal.util.StringHelper;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
+import org.hibernate.query.QueryParameter;
+import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.sql.ast.consume.SyntaxException;
+import org.hibernate.sql.ast.consume.spi.AbstractSqlAstWalker;
+import org.hibernate.sql.ast.consume.spi.ConversionContext;
+import org.hibernate.sql.ast.tree.spi.assign.Assignment;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
 
 import org.jboss.logging.Logger;
 
-import antlr.collections.AST;
-
 /**
- * Extension of the Antlr-generated tree walker for rendering the parsed order-by tree back to String form.
- * {@link #out(antlr.collections.AST)} is the sole semantic action here and it is used to utilize our
- * split between text (tree debugging text) and "renderable text" (text to use during rendering).
+ * Final step in the boot-time aspect of interpreting order-by fragment into
+ * the intermediate SQL fragment (with embedded templates for later replacement).
  *
  * @author Steve Ebersole
  */
-public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
+public class OrderByFragmentRenderer extends AbstractSqlAstWalker {
+	private static final Logger LOG = CoreLogging.logger( OrderByFragmentRenderer.class );
 
-	private static final Logger LOG = Logger.getLogger( OrderByFragmentRenderer.class.getName() );
-	private static final ASTPrinter printer = new ASTPrinter( GeneratedOrderByFragmentRendererTokenTypes.class );
-
-	private final SessionFactoryImplementor sessionFactory;
-
-	public OrderByFragmentRenderer(SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
-	}
-
-	@Override
-	protected void out(AST ast) {
-		out( ( (Node) ast ).getRenderableText() );
-	}
-
-
-	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	private int traceDepth = 0;
-
-	@Override
-	public void traceIn(String ruleName, AST tree) {
-		if ( inputState.guessing > 0 ) {
-			return;
-		}
-		String prefix = StringHelper.repeat( '-', ( traceDepth++ * 2 ) ) + "-> ";
-		String traceText = ruleName + " (" + buildTraceNodeName( tree ) + ")";
-		LOG.trace( prefix + traceText );
-	}
-
-	private String buildTraceNodeName(AST tree) {
-		return tree == null
-				? "???"
-				: tree.getText() + " [" + printer.getTokenTypeName( tree.getType() ) + "]";
-	}
-
-	@Override
-	public void traceOut(String ruleName, AST tree) {
-		if ( inputState.guessing > 0 ) {
-			return;
-		}
-		String prefix = "<-" + StringHelper.repeat( '-', ( --traceDepth * 2 ) ) + " ";
-		LOG.trace( prefix + ruleName );
-	}
-
-	@Override
-	protected String renderOrderByElement(String expression, String collation, String order, String nulls) {
-		final NullPrecedence nullPrecedence = NullPrecedence.parse(
-				nulls,
-				sessionFactory.getSessionFactoryOptions().getDefaultNullPrecedence()
+	public static OrderByTranslation renderOrderByFragment(
+			TranslationContext translationContext,
+			PersistentCollectionDescriptor collectionDescriptor,
+			List<SortSpecification> sortSpecifications) {
+		final OrderByFragmentRenderer renderer = new OrderByFragmentRenderer(
+				translationContext,
+				collectionDescriptor
 		);
-		return sessionFactory.getDialect().renderOrderByElement( expression, collation, order, nullPrecedence );
+
+		for ( SortSpecification sortSpecification : sortSpecifications ) {
+			renderer.visitSortSpecification( sortSpecification );
+		}
+
+		return new OrderByTranslationImpl(
+				renderer.getSql(),
+				renderer.referencedColumns
+		);
 	}
+
+	private final TranslationContext context;
+	private final PersistentCollectionDescriptor collectionDescriptor;
+
+	private List<PhysicalColumn> referencedColumns;
+
+	public OrderByFragmentRenderer(
+			TranslationContext context,
+			PersistentCollectionDescriptor collectionDescriptor) {
+		this.context = context;
+		this.collectionDescriptor = collectionDescriptor;
+	}
+
+	@Override
+	protected ConversionContext getConversionContext() {
+		return context;
+	}
+
+
+	@Override
+	public void visitColumnReference(ColumnReference columnReference) {
+		final String sqlFragment;
+
+		final Column column = columnReference.getColumn();
+		if ( !PhysicalColumn.class.isInstance( column ) ) {
+			LOG.debugf( "@OrderBy fragment referred to formula [%s]; passing through", column.getExpression() );
+			sqlFragment = column.getExpression();
+		}
+		else {
+			final PhysicalColumn physicalColumn = (PhysicalColumn) column;
+
+			if ( referencedColumns == null ) {
+				referencedColumns = new ArrayList<>();
+			}
+			referencedColumns.add( physicalColumn );
+
+			sqlFragment = OrderByTranslationImpl.determinePlaceholderText( physicalColumn );
+		}
+
+		appendSql( sqlFragment );
+	}
+
+	@Override
+	public void visitColumnReferenceExpression(ColumnReference columnReference) {
+		visitColumnReference( columnReference );
+	}
+
+	@Override
+	public void visitAssignment(Assignment assignment) {
+		throw new SyntaxException( "Encountered unexpected assignment clause" );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ParameterBindingResolutionContext - parameters not allowed
+
+	@Override
+	public <T> Collection<T> getLoadIdentifiers() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public QueryParameterBindings getQueryParameterBindings() {
+		return NO_PARAM_BINDINGS;
+	}
+
+	private static QueryParameterBindings NO_PARAM_BINDINGS = new QueryParameterBindings() {
+		@Override
+		public boolean isBound(QueryParameter parameter) {
+			return false;
+		}
+
+		@Override
+		public <T> QueryParameterBinding<T> getBinding(QueryParameter<T> parameter) {
+			return null;
+		}
+
+		@Override
+		public <T> QueryParameterBinding<T> getBinding(String name) {
+			return null;
+		}
+
+		@Override
+		public <T> QueryParameterBinding getBinding(int position) {
+			return null;
+		}
+
+		@Override
+		public void validate() {
+
+		}
+	};
+
 }

@@ -6,41 +6,12 @@
  */
 package org.hibernate.sql.ordering.antlr;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.consume.spi.ConversionContext;
 
 /**
  * Contract for contextual information required to perform translation.
 *
 * @author Steve Ebersole
 */
-public interface TranslationContext {
-	/**
-	 * Retrieves the <tt>session factory</tt> for this context.
-	 *
-	 * @return The <tt>session factory</tt>
-	 */
-	public SessionFactoryImplementor getSessionFactory();
-
-	/**
-	 * Retrieves the <tt>dialect</tt> for this context.
-	 *
-	 * @return The <tt>dialect</tt>
-	 */
-	public Dialect getDialect();
-
-	/**
-	 * Retrieves the <tt>SQL function registry/tt> for this context.
-	 *
-	 * @return The SQL function registry.
-	 */
-	public SqmFunctionRegistry getSqlFunctionRegistry();
-
-	/**
-	 * Retrieves the <tt>column mapper</tt> for this context.
-	 *
-	 * @return The <tt>column mapper</tt>
-	 */
-	public ColumnMapper getColumnMapper();
+public interface TranslationContext extends ConversionContext{
 }

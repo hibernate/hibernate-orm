@@ -44,6 +44,7 @@ import org.hibernate.sql.ast.tree.spi.expression.UpperFunction;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeElementReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeIndexReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReference;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.tree.spi.from.FromClause;
@@ -99,9 +100,11 @@ public interface SqlAstWalker {
 
 	void visitTableReferenceJoin(TableReferenceJoin tableReferenceJoin);
 
+	void visitEntityExpression(EntityReference entityExpression);
+
 	void visitSingularAttributeReference(SingularAttributeReference attributeExpression);
 
-	void visitEntityExpression(EntityReference entityExpression);
+	void visitPluralAttribute(PluralAttributeReference pluralAttributeReference);
 
 	void visitPluralAttributeElement(PluralAttributeElementReference elementExpression);
 

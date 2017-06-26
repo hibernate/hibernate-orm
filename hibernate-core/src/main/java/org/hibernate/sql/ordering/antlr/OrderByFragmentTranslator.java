@@ -6,11 +6,17 @@
  */
 package org.hibernate.sql.ordering.antlr;
 
-import java.io.StringReader;
-import java.util.Set;
+import java.util.List;
 
-import org.hibernate.HibernateException;
-import org.hibernate.hql.internal.ast.util.ASTPrinter;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.query.sqm.produce.internal.hql.HqlParseTreeBuilder;
+import org.hibernate.query.sqm.produce.internal.hql.HqlParseTreePrinter;
+import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlParser;
+import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
+import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
+import org.hibernate.sql.ast.produce.sqm.spi.Callback;
+import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
 
 import org.jboss.logging.Logger;
 
@@ -20,78 +26,73 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class OrderByFragmentTranslator {
+public class OrderByFragmentTranslator implements SqlAstBuildingContext {
 	private static final Logger LOG = Logger.getLogger( OrderByFragmentTranslator.class.getName() );
 
 	/**
 	 * Perform the translation of the user-supplied fragment, returning the translation.
 	 * <p/>
-	 * The important distinction to this split between (1) translating and (2) resolving aliases is that
-	 * both happen at different times
+	 * The important distinction to this split between (1) translating and (2) resolving the
+	 * "concrete SQL aliases" is that both happen at different times:
 	 *
+	 * 	1. The fragment is "translated" as part of bootstrap process, which means passing
+	 * 		it through this OrderByFragmentTranslator.  The translation involves adding
+	 * 		"placeholder" tokens for injecting the table aliases later in step 2
+	 * 2. During runtime, as we need to embed the order-by fragment into larger
+	 * 		SQL SELECT queries, those placeholders will be replaced by simple
+	 * 		String replacement techniques.
 	 *
 	 * @param context Context giving access to delegates needed during translation.
 	 * @param fragment The user-supplied order-by fragment
 	 *
 	 * @return The translation.
 	 */
-	public static OrderByTranslation translate(TranslationContext context, String fragment) {
-		GeneratedOrderByLexer lexer = new GeneratedOrderByLexer( new StringReader( fragment ) );
-
-		// Perform the parsing (and some analysis/resolution).  Another important aspect is the collection
-		// of "column references" which are important later to seek out replacement points in the
-		// translated fragment.
-		OrderByFragmentParser parser = new OrderByFragmentParser( lexer, context );
-		try {
-			parser.orderByFragment();
-		}
-		catch ( HibernateException e ) {
-			throw e;
-		}
-		catch ( Throwable t ) {
-			throw new HibernateException( "Unable to parse order-by fragment", t );
-		}
-
-		if ( LOG.isTraceEnabled() ) {
-			ASTPrinter printer = new ASTPrinter( OrderByTemplateTokenTypes.class );
-			LOG.trace( printer.showAsString( parser.getAST(), "--- {order-by fragment} ---" ) );
-		}
-
-		// Render the parsed tree to text.
-		OrderByFragmentRenderer renderer = new OrderByFragmentRenderer( context.getSessionFactory() );
-		try {
-			renderer.orderByFragment( parser.getAST() );
-		}
-		catch ( HibernateException e ) {
-			throw e;
-		}
-		catch ( Throwable t ) {
-			throw new HibernateException( "Unable to render parsed order-by fragment", t );
-		}
-
-		return new StandardOrderByTranslationImpl( renderer.getRenderedFragment(), parser.getColumnReferences() );
+	public static OrderByTranslation translate(
+			TranslationContext context,
+			PersistentCollectionDescriptor collectionDescriptor,
+			String fragment) {
+		return new OrderByFragmentTranslator( context, collectionDescriptor )
+				.translateFragment( fragment );
 	}
 
-	public static class StandardOrderByTranslationImpl implements OrderByTranslation {
-		private final String sqlTemplate;
-		private final Set<String> columnReferences;
 
-		public StandardOrderByTranslationImpl(String sqlTemplate, Set<String> columnReferences) {
-			this.sqlTemplate = sqlTemplate;
-			this.columnReferences = columnReferences;
-		}
+	private final TranslationContext translationContext;
+	private final PersistentCollectionDescriptor collectionDescriptor;
 
-		@Override
-		public String injectAliases(OrderByAliasResolver aliasResolver) {
-			String sql = sqlTemplate;
-			for ( String columnReference : columnReferences ) {
-				final String replacementToken = "{" + columnReference + "}";
-				sql = sql.replace(
-						replacementToken,
-						aliasResolver.resolveTableAlias( columnReference ) + '.' + columnReference
-				);
-			}
-			return sql;
-		}
+	protected OrderByFragmentTranslator(
+			TranslationContext translationContext,
+			PersistentCollectionDescriptor collectionDescriptor) {
+		this.translationContext = translationContext;
+		this.collectionDescriptor = collectionDescriptor;
+	}
+
+	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return translationContext.getSessionFactory();
+	}
+
+	@Override
+	public Callback getCallback() {
+		return afterLoadAction -> {};
+	}
+
+	private OrderByTranslation translateFragment(String fragment) {
+		final HqlParser parseTree = HqlParseTreeBuilder.INSTANCE.parseHql( fragment );
+
+		HqlParseTreePrinter.logOrderByParseTree( parseTree );
+
+		final SqmOrderByClause sqmOrderByClause = OrderByFragmentParser.convertOrderByFragmentParseTree(
+				translationContext,
+				collectionDescriptor,
+				parseTree.orderByClause()
+		);
+
+		final List<SortSpecification> sortSpecifications = OrderByFragmentConverter.convertOrderByFragmentSqmTree(
+				this,
+				sqmOrderByClause
+		);
+
+		return OrderByFragmentRenderer.renderOrderByFragment( translationContext, collectionDescriptor, sortSpecifications );
+
 	}
 }

@@ -6,14 +6,14 @@
  */
 package org.hibernate.sql.ast.consume.spi;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+
 /**
- * Access to appending SQL fragments to an in-flight buffer
- *
  * @author Steve Ebersole
  */
-public interface SqlAppender {
+public interface ConversionContext {
 	/**
-	 * Add the passed fragment into the in-flight buffer
+	 * Retrieves the SessionFactory for this context.
 	 */
-	void appendSql(String fragment);
+	SessionFactoryImplementor getSessionFactory();
 }

@@ -6,10 +6,9 @@
  */
 package org.hibernate.sql.exec.spi;
 
-import java.util.Collection;
-
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.sql.ast.consume.spi.ParameterBindingResolutionContext;
 
 /**
  * Contextual information for performing JDBC parameter binding.  Generally
@@ -17,12 +16,11 @@ import org.hibernate.query.spi.QueryParameterBindings;
  *
  * @author Steve Ebersole
  */
-public interface ParameterBindingContext {
-	// todo (6.0) : consider more deeply this `#getLoadIdentifier` solution.  seems like there must be a better way.
-
-	<T> Collection<T> getLoadIdentifiers();
-
-	QueryParameterBindings getQueryParameterBindings();
-
+public interface ParameterBindingContext extends ParameterBindingResolutionContext {
 	SharedSessionContractImplementor getSession();
+
+	@Override
+	default SessionFactoryImplementor getSessionFactory() {
+		return getSession().getFactory();
+	}
 }

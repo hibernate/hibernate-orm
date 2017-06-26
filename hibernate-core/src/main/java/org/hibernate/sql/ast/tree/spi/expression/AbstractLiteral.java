@@ -9,17 +9,15 @@ package org.hibernate.sql.ast.tree.spi.expression;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.exec.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
-import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
+import org.hibernate.sql.exec.results.internal.SqlSelectionReaderImpl;
+import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.ParameterBindingContext;
 
 /**
  * We classify literals different based on their source so that we can handle then differently
@@ -71,15 +69,16 @@ public abstract class AbstractLiteral
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public int bindParameterValue(
 			PreparedStatement statement,
 			int startPosition,
-			QueryParameterBindings queryParameterBindings,
-			SharedSessionContractImplementor session) throws SQLException {
-		throw new NotYetImplementedException(  );
-//		getType()
-//		getType().
-//		getType().nullSafeSet( statement, getValue(), startPosition, session );
-//		return getType().getColumnSpan();
+			ParameterBindingContext context) throws SQLException {
+		getType().getBasicType()
+				.getColumnDescriptor()
+				.getSqlTypeDescriptor()
+				.getBinder( getType().getJavaTypeDescriptor() )
+				.bind( statement, value, startPosition, context.getSession() );
+		return getType().getNumberOfJdbcParametersToBind();
 	}
 }

@@ -215,9 +215,30 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	private ParameterCollector parameterCollector;
 
 
-	private  SemanticQueryBuilder(ParsingContext parsingContext) {
+	protected SemanticQueryBuilder(ParsingContext parsingContext) {
 		this.parsingContext = parsingContext;
 	}
+
+	public ParsingContext getParsingContext() {
+		return parsingContext;
+	}
+
+	protected <T> void primeStack(Stack<T> stack, T initialValue) {
+		stack.push( initialValue );
+	}
+
+	protected Stack<NavigableBindingResolver> getPathResolverStack() {
+		return pathResolverStack;
+	}
+
+	protected Stack<ParameterDeclarationContext> getParameterDeclarationContextStack() {
+		return parameterDeclarationContextStack;
+	}
+
+	protected Stack<QuerySpecProcessingState> getQuerySpecProcessingStateStack() {
+		return querySpecProcessingStateStack;
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Grammar rules

@@ -6,13 +6,18 @@
  */
 package org.hibernate.sql.ordering.antlr;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
+
 /**
  * Given a column reference, resolve the table alias to apply to the column to qualify it.
  */
 public interface OrderByAliasResolver {
+	SessionFactoryImplementor getSessionFactory();
+
 	/**
 	 * Given a column reference, resolve the table alias to apply to the column to qualify it.
 	 *
 	 */
-	public String resolveTableAlias(String columnReference);
+	String resolveTableAlias(PhysicalColumn referencedColumn);
 }

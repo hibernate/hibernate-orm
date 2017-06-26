@@ -10,9 +10,11 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
+import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
-import org.hibernate.type.ProcedureParameterExtractionAware;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.spi.ValueExtractor;
 
 /**
  * Standard implementation of JdbcCallParameterExtractor
@@ -23,13 +25,13 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 	private final String callableName;
 	private final String parameterName;
 	private final int parameterPosition;
-	private final Type ormType;
+	private final AllowableParameterType ormType;
 
 	public JdbcCallParameterExtractorImpl(
 			String callableName,
 			String parameterName,
 			int parameterPosition,
-			Type ormType) {
+			AllowableParameterType ormType) {
 		this.callableName = callableName;
 		this.parameterName = parameterName;
 		this.parameterPosition = parameterPosition;
@@ -52,20 +54,26 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 			CallableStatement callableStatement,
 			boolean shouldUseJdbcNamedParameters,
 			SharedSessionContractImplementor session) {
+		if ( !BasicValuedExpressableType.class.isInstance( ormType ) ) {
+			throw new NotYetImplementedException(
+					"Support for JDBC CallableStatement parameter extraction not yet supported for non-basic types"
+			);
+		}
+
 		final boolean useNamed = shouldUseJdbcNamedParameters
-				&& ProcedureParameterExtractionAware.class.isInstance( ormType )
 				&& parameterName != null;
+
+		final ValueExtractor valueExtractor = ( (BasicValuedExpressableType) ormType ).getBasicType()
+				.getColumnDescriptor()
+				.getSqlTypeDescriptor()
+				.getExtractor( ormType.getJavaTypeDescriptor() );
 
 		try {
 			if ( useNamed ) {
-				return (T) ( (ProcedureParameterExtractionAware) ormType ).extract(
-						callableStatement,
-						new String[] {parameterName},
-						session
-				);
+				return (T) valueExtractor.extract( callableStatement, parameterName, session );
 			}
 			else {
-				return (T) callableStatement.getObject( parameterPosition );
+				return (T) valueExtractor.extract( callableStatement, parameterPosition, session );
 			}
 		}
 		catch (SQLException e) {

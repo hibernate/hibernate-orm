@@ -4,14 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.sql.ast.tree.spi.expression;
 
 import org.hibernate.QueryException;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.spi.QueryParameterBinding;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.ast.consume.spi.ParameterBindingResolutionContext;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.exec.spi.ParameterBindingContext;
 
 import org.jboss.logging.Logger;
 
@@ -23,7 +23,7 @@ public class PositionalParameter extends AbstractParameter {
 
 	private final int position;
 
-	public PositionalParameter(int position, ExpressableType inferredType) {
+	public PositionalParameter(int position, AllowableParameterType inferredType) {
 		super( inferredType );
 		this.position = position;
 	}
@@ -33,7 +33,7 @@ public class PositionalParameter extends AbstractParameter {
 	}
 
 	@Override
-	public QueryParameterBinding resolveBinding(ParameterBindingContext context) {
+	public QueryParameterBinding resolveBinding(ParameterBindingResolutionContext context) {
 		return context.getQueryParameterBindings().getBinding( position );
 	}
 

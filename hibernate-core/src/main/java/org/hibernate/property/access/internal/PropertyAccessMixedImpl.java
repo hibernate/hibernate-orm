@@ -46,23 +46,25 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 		switch ( propertyAccessType ) {
 			case FIELD: {
 				Field field = fieldOrNull( containerJavaType, propertyName );
+				Method getterMethod = ReflectHelper.getterMethodOrNull( containerJavaType, propertyName );
+				Method setterMethod = getterMethod != null ? ReflectHelper.setterMethodOrNull( containerJavaType, propertyName, getterMethod.getReturnType() ) : null;
 				if ( field == null ) {
 					throw new PropertyAccessBuildingException(
 						"Could not locate field for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
 					);
 				}
-				this.getter = fieldGetter( containerJavaType, propertyName, field );
-				this.setter = fieldSetter( containerJavaType, propertyName, field );
+				this.getter = fieldGetter( containerJavaType, propertyName, field, getterMethod );
+				this.setter = fieldSetter( containerJavaType, propertyName, field, setterMethod );
 				break;
 			}
 			case PROPERTY: {
-				Method getterMethod = getterMethodOrNull( containerJavaType, propertyName );
+				Method getterMethod = ReflectHelper.getterMethodOrNull( containerJavaType, propertyName );
 				if ( getterMethod == null ) {
 					throw new PropertyAccessBuildingException(
 						"Could not locate getter for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
 					);
 				}
-				Method setterMethod = setterMethodOrNull( containerJavaType, propertyName, getterMethod.getReturnType() );
+				Method setterMethod = ReflectHelper.setterMethodOrNull( containerJavaType, propertyName, getterMethod.getReturnType() );
 
 				this.getter = propertyGetter( containerJavaType, propertyName, getterMethod );
 				this.setter = propertySetter( containerJavaType, propertyName, setterMethod );
@@ -85,31 +87,13 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 		}
 	}
 
-	protected static Method getterMethodOrNull(Class containerJavaType, String propertyName) {
-		try {
-			return ReflectHelper.findGetterMethod( containerJavaType, propertyName );
-		}
-		catch (PropertyNotFoundException e) {
-			return null;
-		}
-	}
-
-	protected static Method setterMethodOrNull(Class containerJavaType, String propertyName, Class propertyJavaType) {
-		try {
-			return ReflectHelper.findSetterMethod( containerJavaType, propertyName, propertyJavaType );
-		}
-		catch (PropertyNotFoundException e) {
-			return null;
-		}
-	}
-
 	protected static AccessType getAccessType(Class<?> containerJavaType, String propertyName) {
 		Field field = fieldOrNull( containerJavaType, propertyName );
 		AccessType fieldAccessType = getAccessTypeOrNull( field );
 		if ( fieldAccessType != null ) {
 			return fieldAccessType;
 		}
-		AccessType methodAccessType = getAccessTypeOrNull( getterMethodOrNull( containerJavaType, propertyName ) );
+		AccessType methodAccessType = getAccessTypeOrNull( ReflectHelper.getterMethodOrNull( containerJavaType, propertyName ) );
 		if ( methodAccessType != null ) {
 			return methodAccessType;
 		}
@@ -131,12 +115,12 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 
 	// --- //
 
-	protected Getter fieldGetter(Class<?> containerJavaType, String propertyName, Field field) {
-		return new GetterFieldImpl( containerJavaType, propertyName, field );
+	protected Getter fieldGetter(Class<?> containerJavaType, String propertyName, Field field, Method method ) {
+		return new GetterFieldImpl( containerJavaType, propertyName, field, method );
 	}
 
-	protected Setter fieldSetter(Class<?> containerJavaType, String propertyName, Field field) {
-		return new SetterFieldImpl( containerJavaType, propertyName, field );
+	protected Setter fieldSetter(Class<?> containerJavaType, String propertyName, Field field, Method method ) {
+		return new SetterFieldImpl( containerJavaType, propertyName, field, method );
 	}
 
 	protected Getter propertyGetter(Class<?> containerJavaType, String propertyName, Method method) {

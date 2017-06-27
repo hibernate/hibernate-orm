@@ -29,7 +29,7 @@ import static org.junit.Assert.fail;
  */
 public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
-	public void testGetLoad() {
+	public void testGet() {
 		clearCounts();
 
 		EntityManager em = getOrCreateEntityManager();
@@ -62,22 +62,42 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		s = ( Session ) em.getDelegate();
-		emp = ( Employer ) s.load( Employer.class, emp.getId() );
-		emp.getId();
-		assertFalse( Hibernate.isInitialized( emp ) );
-		node = ( Node ) s.load( Node.class, node.getName() );
-		assertEquals( node.getName(), "foo" );
-		assertFalse( Hibernate.isInitialized( node ) );
+		emp = ( Employer ) s.get( Employer.class.getName(), emp.getId() );
+		assertTrue( Hibernate.isInitialized( emp ) );
+		node = ( Node ) s.get( Node.class.getName(), node.getName() );
+		assertTrue( Hibernate.isInitialized( node ) );
+		em.getTransaction().commit();
+		em.close();
+
+		assertFetchCount( 0 );
+	}
+
+	@Test
+	public void testLoad() {
+		clearCounts();
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Session s = ( Session ) em.getDelegate();
+
+		Employer emp = new Employer();
+		s.persist( emp );
+		Node node = new Node( "foo" );
+		Node parent = new Node( "bar" );
+		parent.addChild( node );
+		s.persist( parent );
 		em.getTransaction().commit();
 		em.close();
 
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		s = ( Session ) em.getDelegate();
-		emp = ( Employer ) s.get( Employer.class.getName(), emp.getId() );
-		assertTrue( Hibernate.isInitialized( emp ) );
-		node = ( Node ) s.get( Node.class.getName(), node.getName() );
-		assertTrue( Hibernate.isInitialized( node ) );
+		emp = ( Employer ) s.load( Employer.class, emp.getId() );
+		emp.getId();
+		assertFalse( Hibernate.isInitialized( emp ) );
+		node = ( Node ) s.load( Node.class, node.getName() );
+		assertEquals( node.getName(), "foo" );
+		assertFalse( Hibernate.isInitialized( node ) );
 		em.getTransaction().commit();
 		em.close();
 
@@ -123,6 +143,34 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-11838")
+	public void testLoadGetId() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Session s = ( Session ) em.getDelegate();
+		Workload workload = new Workload();
+		s.persist(workload);
+		em.getTransaction().commit();
+		em.close();
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		s = ( Session ) em.getDelegate();
+
+		Workload proxy = s.load(Workload.class, workload.id);
+		proxy.getId();
+
+		assertFalse( Hibernate.isInitialized( proxy ) );
+
+		proxy.getName();
+
+		assertTrue( Hibernate.isInitialized( proxy ) );
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	protected void addConfigOptions(Map options) {
@@ -136,6 +184,11 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 				"org/hibernate/jpa/test/ops/Node.hbm.xml",
 				"org/hibernate/jpa/test/ops/Employer.hbm.xml"
 		};
+	}
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Workload.class };
 	}
 }
 

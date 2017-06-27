@@ -25,11 +25,13 @@ public class SetterFieldImpl implements Setter {
 	private final Class containerClass;
 	private final String propertyName;
 	private final Field field;
+	private final Method setterMethod;
 
-	public SetterFieldImpl(Class containerClass, String propertyName, Field field) {
+	public SetterFieldImpl(Class containerClass, String propertyName, Field field, Method method) {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.field = field;
+		this.setterMethod = method;
 	}
 
 	@Override
@@ -72,30 +74,53 @@ public class SetterFieldImpl implements Setter {
 
 	@Override
 	public String getMethodName() {
-		return null;
+		return setterMethod != null ? setterMethod.getName() : null;
 	}
 
 	@Override
 	public Method getMethod() {
-		return null;
+		return setterMethod;
 	}
 
 	private Object writeReplace() throws ObjectStreamException {
-		return new SerialForm( containerClass, propertyName, field );
+		return new SerialForm( containerClass, propertyName, field, setterMethod );
 	}
 
 	private static class SerialForm extends AbstractFieldSerialForm implements Serializable {
 		private final Class containerClass;
 		private final String propertyName;
+		private final String methodName;
+		private final Class argumentType;
 
-		private SerialForm(Class containerClass, String propertyName, Field field) {
+		private SerialForm(Class containerClass, String propertyName, Field field, Method method) {
 			super( field );
 			this.containerClass = containerClass;
 			this.propertyName = propertyName;
+			this.methodName = method != null ? method.getName() : null;
+			this.argumentType = method != null ? method.getParameterTypes()[0] : null;
 		}
 
 		private Object readResolve() {
-			return new SetterFieldImpl( containerClass, propertyName, resolveField() );
+			return new SetterFieldImpl( containerClass, propertyName, resolveField(), resolveMethod() );
 		}
+
+		@SuppressWarnings("unchecked")
+		private Method resolveMethod() {
+			if (methodName == null && argumentType == null) {
+				return null;
+			}
+			try {
+				final Method method = declaringClass.getDeclaredMethod( methodName, argumentType );
+				method.setAccessible( true );
+				return method;
+			}
+			catch (NoSuchMethodException e) {
+				throw new PropertyAccessSerializationException(
+						"Unable to resolve setter method on deserialization : " + declaringClass.getName() + "#"
+								+ methodName + "(" + argumentType.getName() + ")"
+				);
+			}
+		}
+
 	}
 }

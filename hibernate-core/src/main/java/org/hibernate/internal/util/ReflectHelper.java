@@ -542,6 +542,24 @@ public final class ReflectHelper {
 		}
 	}
 
+	public static Method getterMethodOrNull(Class containerJavaType, String propertyName) {
+		try {
+			return findGetterMethod( containerJavaType, propertyName );
+		}
+		catch (PropertyNotFoundException e) {
+			return null;
+		}
+	}
+
+	public static Method setterMethodOrNull(Class containerJavaType, String propertyName, Class propertyJavaType) {
+		try {
+			return findSetterMethod( containerJavaType, propertyName, propertyJavaType );
+		}
+		catch (PropertyNotFoundException e) {
+			return null;
+		}
+	}
+
 	public static Method findSetterMethod(Class containerClass, String propertyName, Class propertyType) {
 		Class checkClass = containerClass;
 		Method setter = null;

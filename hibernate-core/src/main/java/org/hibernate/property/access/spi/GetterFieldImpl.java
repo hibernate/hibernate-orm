@@ -26,11 +26,13 @@ public class GetterFieldImpl implements Getter {
 	private final Class containerClass;
 	private final String propertyName;
 	private final Field field;
+	private final Method getterMethod;
 
-	public GetterFieldImpl(Class containerClass, String propertyName, Field field) {
+	public GetterFieldImpl(Class containerClass, String propertyName, Field field, Method getterMethod) {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.field = field;
+		this.getterMethod = getterMethod;
 	}
 
 	@Override
@@ -98,30 +100,50 @@ public class GetterFieldImpl implements Getter {
 
 	@Override
 	public String getMethodName() {
-		return null;
+		return getterMethod != null ? getterMethod.getName() : null;
 	}
 
 	@Override
 	public Method getMethod() {
-		return null;
+		return getterMethod;
 	}
 
 	private Object writeReplace() throws ObjectStreamException {
-		return new SerialForm( containerClass, propertyName, field );
+		return new SerialForm( containerClass, propertyName, field, getterMethod );
 	}
 
 	private static class SerialForm extends AbstractFieldSerialForm implements Serializable {
 		private final Class containerClass;
 		private final String propertyName;
+		private final String methodName;
 
-		private SerialForm(Class containerClass, String propertyName, Field field) {
+		private SerialForm(Class containerClass, String propertyName, Field field, Method method) {
 			super( field );
 			this.containerClass = containerClass;
 			this.propertyName = propertyName;
+			this.methodName = method != null ? method.getName() : null;
 		}
 
 		private Object readResolve() {
-			return new GetterFieldImpl( containerClass, propertyName, resolveField() );
+			return new GetterFieldImpl( containerClass, propertyName, resolveField(), resolveMethod() );
 		}
+
+		@SuppressWarnings("unchecked")
+		private Method resolveMethod() {
+			if (methodName == null) {
+				return null;
+			}
+			try {
+				final Method method = declaringClass.getDeclaredMethod( methodName );
+				method.setAccessible( true );
+				return method;
+			}
+			catch (NoSuchMethodException e) {
+				throw new PropertyAccessSerializationException(
+						"Unable to resolve getter method on deserialization : " + declaringClass.getName() + "#" + methodName
+				);
+			}
+		}
+
 	}
 }

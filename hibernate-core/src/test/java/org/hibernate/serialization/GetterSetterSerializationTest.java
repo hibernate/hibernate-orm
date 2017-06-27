@@ -39,10 +39,12 @@ public class GetterSetterSerializationTest {
 	public void testPrivateFieldGetter() throws Exception {
 		final AnEntity entity = new AnEntity( new PK( 1L ) );
 
+		final String propertyName = "pk";
 		final Getter getter = new GetterFieldImpl(
 				AnEntity.class,
-				"pk",
-				ReflectHelper.findField( AnEntity.class, "pk")
+				propertyName,
+				ReflectHelper.findField( AnEntity.class, propertyName),
+				ReflectHelper.findGetterMethod(AnEntity.class, propertyName)
 		);
 		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		final ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -60,15 +62,18 @@ public class GetterSetterSerializationTest {
 	public void testPrivateFieldSetter() throws Exception {
 		AnEntity entity = new AnEntity( new PK( 1L ) );
 
+		final String propertyName = "pk";
 		final Getter getter = new GetterFieldImpl(
 				AnEntity.class,
-				"pk",
-				ReflectHelper.findField( AnEntity.class, "pk")
+				propertyName,
+				ReflectHelper.findField( AnEntity.class, propertyName),
+				ReflectHelper.findGetterMethod(AnEntity.class, propertyName)
 		);
 		final Setter setter = new SetterFieldImpl(
 				AnEntity.class,
-				"pk",
-				ReflectHelper.findField( AnEntity.class, "pk")
+				propertyName,
+				ReflectHelper.findField( AnEntity.class, propertyName),
+				ReflectHelper.findSetterMethod(AnEntity.class, propertyName, PK.class)
 		);
 
 		final ByteArrayOutputStream baos = new ByteArrayOutputStream();

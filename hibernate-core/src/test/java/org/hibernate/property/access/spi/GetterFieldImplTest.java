@@ -45,7 +45,7 @@ public class GetterFieldImplTest {
 		try {
 			Field field = Target.class.getDeclaredField( property );
 			field.setAccessible( true );
-			return new GetterFieldImpl( Target.class, property, field );
+			return new GetterFieldImpl( Target.class, property, field, null );
 		}
 		catch (NoSuchFieldException e) {
 			throw new IllegalArgumentException( e );

@@ -17,14 +17,14 @@ import org.hibernate.property.access.spi.PropertyAccessSerializationException;
  * @author Steve Ebersole
  */
 public abstract class AbstractFieldSerialForm implements Serializable {
-	private final Class declaringClass;
+	protected final Class declaringClass;
 	private final String fieldName;
 
 	protected AbstractFieldSerialForm(Field field) {
 		this( field.getDeclaringClass(), field.getName() );
 	}
 
-	protected AbstractFieldSerialForm(Class declaringClass, String fieldName) {
+	protected AbstractFieldSerialForm(Class declaringClass, String fieldName ) {
 		this.declaringClass = declaringClass;
 		this.fieldName = fieldName;
 	}

@@ -27,6 +27,8 @@ public class Order implements Serializable {
 	@Id
 	private int orderNumber;
 
+	private String name;
+
 	@OneToMany( fetch = FetchType.LAZY )
 	private Set<Item> items = new HashSet<Item>();
 	
@@ -40,5 +42,13 @@ public class Order implements Serializable {
 	
 	public Set<Item> getItems() {
 		return items;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }

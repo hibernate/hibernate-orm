@@ -6,8 +6,7 @@
  */
 package org.hibernate.test.lazyload;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.Serializable;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -18,9 +17,12 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Oleksander Dukhno
@@ -42,7 +44,10 @@ public class LazyLoadingTest
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Parent.class,
-				Child.class
+				Child.class,
+				Client.class,
+				Address.class,
+				Account.class
 		};
 	}
 
@@ -100,4 +105,58 @@ public class LazyLoadingTest
 		assertEquals( CHILDREN_SIZE, j );
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-11838")
+	public void testGetIdOneToOne() {
+		Serializable clientId = doInHibernate(this::sessionFactory, s -> {
+			Address address = new Address();
+			s.save(address);
+			Client client = new Client(address);
+			return s.save(client);
+		});
+
+		Serializable addressId = doInHibernate(this::sessionFactory, s -> {
+			Client client = s.get(Client.class, clientId);
+			Address address = client.getAddress();
+			address.getId();
+			assertThat(Hibernate.isInitialized(address), is(true));
+			address.getStreet();
+			assertThat(Hibernate.isInitialized(address), is(true));
+			return address.getId();
+		});
+
+		doInHibernate(this::sessionFactory, s -> {
+			Address address = s.get(Address.class, addressId);
+			Client client = address.getClient();
+			client.getId();
+			assertThat(Hibernate.isInitialized(client), is(false));
+			client.getName();
+			assertThat(Hibernate.isInitialized(client), is(true));
+		});
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11838")
+	public void testGetIdManyToOne() {
+		Serializable accountId = doInHibernate(this::sessionFactory, s -> {
+			Address address = new Address();
+			s.save(address);
+			Client client = new Client(address);
+			Account account = new Account();
+			client.addAccount(account);
+			s.save(account);
+			s.save(client);
+			return account.getId();
+		});
+
+		doInHibernate(this::sessionFactory, s -> {
+			Account account = s.load(Account.class, accountId);
+			Client client = account.getClient();
+			client.getId();
+			assertThat(Hibernate.isInitialized(client), is(false));
+			client.getName();
+			assertThat(Hibernate.isInitialized(client), is(true));
+		});
+
+	}
 }

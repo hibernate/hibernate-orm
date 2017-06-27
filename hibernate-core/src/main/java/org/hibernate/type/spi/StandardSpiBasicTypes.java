@@ -28,7 +28,6 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 
-import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.descriptor.java.internal.BigDecimalJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.BigIntegerJavaDescriptor;
@@ -102,7 +101,7 @@ import org.hibernate.type.internal.BooleanBasicTypeImpl;
  * @author Gavin King
  * @author Steve Ebersole
  */
-@SuppressWarnings( {"UnusedDeclaration"})
+@SuppressWarnings({"UnusedDeclaration"})
 public final class StandardSpiBasicTypes {
 	private StandardSpiBasicTypes() {
 	}
@@ -630,7 +629,7 @@ public final class StandardSpiBasicTypes {
 	);
 
 
-	public static void prime(TypeConfiguration typeConfiguration, BasicTypeProducerRegistry basicTypeProducerRegistry) {
+	public static void prime(TypeConfiguration typeConfiguration) {
 
 		// todo (6.0) : possibly use this as an opportunity to register cast-target names (HQL,JPQL)
 
@@ -641,7 +640,6 @@ public final class StandardSpiBasicTypes {
 				BOOLEAN,
 				"org.hibernate.type.BooleanType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"boolean", boolean.class.getName(), Boolean.class.getName()
 		);
 
@@ -649,7 +647,6 @@ public final class StandardSpiBasicTypes {
 				NUMERIC_BOOLEAN,
 				"org.hibernate.type.NumericBooleanType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"numeric_boolean"
 		);
 
@@ -657,7 +654,6 @@ public final class StandardSpiBasicTypes {
 				TRUE_FALSE,
 				"org.hibernate.type.TrueFalseType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"true_false"
 		);
 
@@ -665,7 +661,6 @@ public final class StandardSpiBasicTypes {
 				YES_NO,
 				"org.hibernate.type.YesNoType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"yes_no"
 		);
 
@@ -677,7 +672,6 @@ public final class StandardSpiBasicTypes {
 				BYTE,
 				"org.hibernate.type.ByteType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"byte", byte.class.getName(), Byte.class.getName()
 		);
 
@@ -685,7 +679,6 @@ public final class StandardSpiBasicTypes {
 				BINARY,
 				"org.hibernate.type.BinaryType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"binary", "byte[]", byte[].class.getName()
 		);
 
@@ -693,7 +686,6 @@ public final class StandardSpiBasicTypes {
 				WRAPPER_BINARY,
 				"org.hibernate.type.WrapperBinaryType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"wrapper-binary", "Byte[]", Byte[].class.getName()
 		);
 
@@ -701,7 +693,6 @@ public final class StandardSpiBasicTypes {
 				IMAGE,
 				"org.hibernate.type.ImageType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"image"
 		);
 
@@ -709,7 +700,7 @@ public final class StandardSpiBasicTypes {
 				BLOB,
 				"org.hibernate.type.BlobType",
 				typeConfiguration,
-				basicTypeProducerRegistry, "blob",
+				"blob",
 				Blob.class.getName()
 		);
 
@@ -717,7 +708,6 @@ public final class StandardSpiBasicTypes {
 				MATERIALIZED_BLOB,
 				"org.hibernate.type.MaterializedBlobType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"materialized_blob"
 		);
 
@@ -725,7 +715,6 @@ public final class StandardSpiBasicTypes {
 				WRAPPED_MATERIALIZED_BLOB,
 				"org.hibernate.type.MaterializedBlobType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"wrapped_materialized_blob"
 		);
 
@@ -737,7 +726,6 @@ public final class StandardSpiBasicTypes {
 				SHORT,
 				"org.hibernate.type.ShortType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"short", short.class.getName(), Short.class.getName()
 		);
 
@@ -745,7 +733,6 @@ public final class StandardSpiBasicTypes {
 				INTEGER,
 				"org.hibernate.type.IntegerType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"integer", int.class.getName(), Integer.class.getName()
 		);
 
@@ -753,7 +740,6 @@ public final class StandardSpiBasicTypes {
 				LONG,
 				"org.hibernate.type.LongType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"long", long.class.getName(), Long.class.getName()
 		);
 
@@ -761,7 +747,6 @@ public final class StandardSpiBasicTypes {
 				FLOAT,
 				"org.hibernate.type.FloatType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"float", float.class.getName(), Float.class.getName()
 		);
 
@@ -769,7 +754,6 @@ public final class StandardSpiBasicTypes {
 				DOUBLE,
 				"org.hibernate.type.DoubleType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"double", double.class.getName(), Double.class.getName()
 		);
 
@@ -777,7 +761,6 @@ public final class StandardSpiBasicTypes {
 				BIG_INTEGER,
 				"org.hibernate.type.BigIntegerType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"big_integer", BigInteger.class.getName()
 		);
 
@@ -785,7 +768,6 @@ public final class StandardSpiBasicTypes {
 				BIG_DECIMAL,
 				"org.hibernate.type.BigDecimalType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"big_decimal", BigDecimal.class.getName()
 		);
 
@@ -797,7 +779,6 @@ public final class StandardSpiBasicTypes {
 				CHARACTER,
 				"org.hibernate.type.CharacterType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"character", char.class.getName(), Character.class.getName()
 		);
 
@@ -805,7 +786,6 @@ public final class StandardSpiBasicTypes {
 				CHARACTER_NCHAR,
 				null,
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"character_nchar"
 		);
 
@@ -813,7 +793,6 @@ public final class StandardSpiBasicTypes {
 				STRING,
 				"org.hibernate.type.StringType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"string", String.class.getName()
 		);
 
@@ -821,7 +800,6 @@ public final class StandardSpiBasicTypes {
 				NSTRING,
 				"org.hibernate.type.StringNVarcharType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"nstring"
 		);
 
@@ -829,7 +807,6 @@ public final class StandardSpiBasicTypes {
 				CHAR_ARRAY,
 				"org.hibernate.type.CharArrayType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"characters", "char[]", char[].class.getName()
 		);
 
@@ -837,7 +814,6 @@ public final class StandardSpiBasicTypes {
 				CHARACTER_ARRAY,
 				"org.hibernate.type.CharacterArrayType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"wrapper-characters", Character[].class.getName(), "Character[]"
 		);
 
@@ -845,7 +821,6 @@ public final class StandardSpiBasicTypes {
 				TEXT,
 				"org.hibernate.type.TextType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"text"
 		);
 
@@ -853,7 +828,6 @@ public final class StandardSpiBasicTypes {
 				NTEXT,
 				"org.hibernate.type.NTextType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"ntext"
 		);
 
@@ -861,7 +835,6 @@ public final class StandardSpiBasicTypes {
 				CLOB,
 				"org.hibernate.type.ClobType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"clob", Clob.class.getName()
 		);
 
@@ -869,7 +842,6 @@ public final class StandardSpiBasicTypes {
 				NCLOB,
 				"org.hibernate.type.NClobType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"nclob", NClob.class.getName()
 		);
 
@@ -877,7 +849,6 @@ public final class StandardSpiBasicTypes {
 				MATERIALIZED_CLOB,
 				"org.hibernate.type.MaterializedClobType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"materialized_clob"
 		);
 
@@ -885,7 +856,6 @@ public final class StandardSpiBasicTypes {
 				MATERIALIZED_CLOB_CHAR_ARRAY,
 				"org.hibernate.type.PrimitiveCharacterArrayClobType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"materialized_clob_char_array"
 		);
 
@@ -893,7 +863,6 @@ public final class StandardSpiBasicTypes {
 				MATERIALIZED_CLOB_CHARACTER_ARRAY,
 				"org.hibernate.type.CharacterArrayClobType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"materialized_clob_character_array"
 		);
 
@@ -901,7 +870,6 @@ public final class StandardSpiBasicTypes {
 				MATERIALIZED_NCLOB,
 				"org.hibernate.type.MaterializedNClobType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"materialized_nclob"
 		);
 
@@ -909,7 +877,6 @@ public final class StandardSpiBasicTypes {
 				MATERIALIZED_NCLOB_CHARACTER_ARRAY,
 				"org.hibernate.type.CharacterArrayNClobType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"materialized_nclob_character_array"
 		);
 
@@ -917,7 +884,6 @@ public final class StandardSpiBasicTypes {
 				MATERIALIZED_NCLOB_CHAR_ARRAY,
 				"org.hibernate.type.PrimitiveCharacterArrayNClobType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"materialized_nclob_char_array"
 		);
 
@@ -929,7 +895,6 @@ public final class StandardSpiBasicTypes {
 				DURATION,
 				"org.hibernate.type.DurationType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				Duration.class.getSimpleName(), Duration.class.getName()
 		);
 
@@ -937,7 +902,6 @@ public final class StandardSpiBasicTypes {
 				LOCAL_DATE_TIME,
 				"org.hibernate.type.LocalDateTimeType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				LocalDateTime.class.getSimpleName(), LocalDateTime.class.getName()
 		);
 
@@ -945,7 +909,6 @@ public final class StandardSpiBasicTypes {
 				LOCAL_DATE,
 				"org.hibernate.type.LocalDateType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				LocalDate.class.getSimpleName(), LocalDate.class.getName()
 		);
 
@@ -953,7 +916,6 @@ public final class StandardSpiBasicTypes {
 				LOCAL_TIME,
 				"org.hibernate.type.LocalTimeType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				LocalTime.class.getSimpleName(), LocalTime.class.getName()
 		);
 
@@ -961,7 +923,6 @@ public final class StandardSpiBasicTypes {
 				OFFSET_DATE_TIME,
 				"org.hibernate.type.OffsetDateTimeType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				OffsetDateTime.class.getSimpleName(), OffsetDateTime.class.getName()
 		);
 
@@ -969,7 +930,6 @@ public final class StandardSpiBasicTypes {
 				OFFSET_TIME,
 				"org.hibernate.type.OffsetTimeType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				OffsetTime.class.getSimpleName(), OffsetTime.class.getName()
 		);
 
@@ -977,7 +937,6 @@ public final class StandardSpiBasicTypes {
 				ZONED_DATE_TIME,
 				"org.hibernate.type.ZonedDateTimeType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				ZonedDateTime.class.getSimpleName(), ZonedDateTime.class.getName()
 		);
 
@@ -985,7 +944,6 @@ public final class StandardSpiBasicTypes {
 				DATE,
 				"org.hibernate.type.DateType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"date", java.sql.Date.class.getName()
 		);
 
@@ -993,7 +951,6 @@ public final class StandardSpiBasicTypes {
 				TIME,
 				"org.hibernate.type.TimeType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"time", java.sql.Time.class.getName()
 		);
 
@@ -1001,7 +958,6 @@ public final class StandardSpiBasicTypes {
 				TIMESTAMP,
 				"org.hibernate.type.TimestampType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"timestamp", java.sql.Timestamp.class.getName(), Date.class.getName()
 		);
 
@@ -1009,7 +965,6 @@ public final class StandardSpiBasicTypes {
 				CALENDAR,
 				"org.hibernate.type.CalendarType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"calendar", Calendar.class.getName(), GregorianCalendar.class.getName()
 		);
 
@@ -1017,7 +972,6 @@ public final class StandardSpiBasicTypes {
 				CALENDAR_DATE,
 				"org.hibernate.type.CalendarDateType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"calendar_date"
 		);
 
@@ -1025,7 +979,6 @@ public final class StandardSpiBasicTypes {
 				CALENDAR_TIME,
 				"org.hibernate.type.CalendarTimeType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"calendar_date"
 		);
 
@@ -1033,11 +986,8 @@ public final class StandardSpiBasicTypes {
 				INSTANT,
 				"org.hibernate.type.InstantType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"instant", Instant.class.getName()
 		);
-
-
 
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1047,7 +997,6 @@ public final class StandardSpiBasicTypes {
 				UUID_BINARY,
 				"org.hibernate.type.UUIDBinaryType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"uuid-binary", UUID.class.getName()
 		);
 
@@ -1055,7 +1004,6 @@ public final class StandardSpiBasicTypes {
 				UUID_CHAR,
 				"org.hibernate.type.UUIDCharType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"uuid-char"
 		);
 
@@ -1067,7 +1015,6 @@ public final class StandardSpiBasicTypes {
 				CLASS,
 				"org.hibernate.type.ClassType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"class", Class.class.getName()
 		);
 
@@ -1075,7 +1022,6 @@ public final class StandardSpiBasicTypes {
 				CURRENCY,
 				"org.hibernate.type.CurrencyType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"currency", Currency.class.getSimpleName(), Currency.class.getName()
 		);
 
@@ -1083,7 +1029,6 @@ public final class StandardSpiBasicTypes {
 				LOCALE,
 				"org.hibernate.type.LocaleType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"locale",
 				Locale.class.getName()
 		);
@@ -1092,7 +1037,6 @@ public final class StandardSpiBasicTypes {
 				SERIALIZABLE,
 				"org.hibernate.type.SerializableType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"serializable", Serializable.class.getName()
 		);
 
@@ -1100,7 +1044,6 @@ public final class StandardSpiBasicTypes {
 				TIMEZONE,
 				"org.hibernate.type.TimeZoneType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"timezone", TimeZone.class.getName()
 		);
 
@@ -1108,7 +1051,6 @@ public final class StandardSpiBasicTypes {
 				URL,
 				"org.hibernate.type.UrlType",
 				typeConfiguration,
-				basicTypeProducerRegistry,
 				"url", java.net.URL.class.getName()
 		);
 
@@ -1126,23 +1068,16 @@ public final class StandardSpiBasicTypes {
 			BasicType type,
 			String legacyTypeClassName,
 			TypeConfiguration typeConfiguration,
-			BasicTypeProducerRegistry basicTypeProducerRegistry,
 			String... registrationKeys) {
 		typeConfiguration.getBasicTypeRegistry().register( type );
 
+		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+
 		// we add these
 		if ( StringHelper.isNotEmpty( legacyTypeClassName ) ) {
-			basicTypeProducerRegistry.register(
-					type,
-					BasicTypeProducerRegistry.DuplicationStrategy.OVERWRITE,
-					legacyTypeClassName
-			);
+			basicTypeRegistry.register( type, legacyTypeClassName );
 		}
 
-		basicTypeProducerRegistry.register(
-				type,
-				BasicTypeProducerRegistry.DuplicationStrategy.OVERWRITE,
-				registrationKeys
-		);
+		basicTypeRegistry.register( type, registrationKeys );
 	}
 }

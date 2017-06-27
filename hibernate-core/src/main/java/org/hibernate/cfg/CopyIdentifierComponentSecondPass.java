@@ -200,7 +200,6 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 				if ( joinColumn != null ) {
 					joinColumn.linkWithValue( value );
 				}
-				column.setSqlTypeDescriptor( value.getBasicTypeParameters().getSqlTypeDescriptor() );
 				if ( value.getTable() != null ) {
 					column.setTableName( value.getTable().getNameIdentifier() );
 				}

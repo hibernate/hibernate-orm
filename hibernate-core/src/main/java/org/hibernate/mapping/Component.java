@@ -29,6 +29,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.Representation;
@@ -36,7 +37,10 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Instantiator;
 import org.hibernate.property.access.spi.Setter;
+import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * The mapping for a component, composite element,
@@ -55,6 +59,7 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Embe
 	private Map metaAttributes;
 	private boolean isKey;
 	private String roleName;
+	private EmbeddableJavaDescriptor javaTypeDescriptor;
 
 	private Representation representation;
 	private Instantiator instantiator;
@@ -78,12 +83,18 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Embe
 	public Component(InFlightMetadataCollector metadata, Table table, PersistentClass owner) throws MappingException {
 		super( metadata.getTypeConfiguration().getMetadataBuildingContext(), table );
 		this.owner = owner;
+		resolveJavaTypeDescriptor( metadata );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public EmbeddableJavaDescriptor getJavaTypeDescriptor() {
-		return (EmbeddableJavaDescriptor) super.getJavaTypeDescriptor();
+		return javaTypeDescriptor;
+	}
+
+	@Override
+	public SqlTypeDescriptor[] getColumnsSqlTypeDescriptors() {
+		return new SqlTypeDescriptor[0];
 	}
 
 	@Override
@@ -211,8 +222,7 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Embe
 	}
 
 	@Override
-	public void setTypeUsingReflection(String className, String propertyName)
-		throws MappingException {
+	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
 	}
 
 	@Override
@@ -266,15 +276,15 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Embe
 		}
 		return result;
 	}
-	
+
 	public boolean isKey() {
 		return isKey;
 	}
-	
+
 	public void setKey(boolean isKey) {
 		this.isKey = isKey;
 	}
-	
+
 	public boolean hasPojoRepresentation() {
 		return componentClassName != null;
 	}
@@ -512,5 +522,30 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Embe
 	@Override
 	public String getEmbeddableClassName() {
 		return componentClassName;
+	}
+
+	private void resolveJavaTypeDescriptor(InFlightMetadataCollector metadata) {
+		JavaTypeDescriptorRegistry jtdr = metadata.getTypeConfiguration().getJavaTypeDescriptorRegistry();
+		EmbeddableJavaDescriptor jtd = (EmbeddableJavaDescriptor) jtdr.getDescriptor( componentClassName );
+		if ( jtd == null ) {
+			final Class javaType;
+			if ( StringHelper.isEmpty( componentClassName ) ) {
+				javaType = null;
+			}
+			else {
+				javaType = metadata.getMetadataBuildingOptions()
+						.getServiceRegistry()
+						.getService( ClassLoaderService.class )
+						.classForName( componentClassName );
+			}
+
+			jtd = new EmbeddableJavaDescriptorImpl(
+					componentClassName,
+					javaType,
+					null
+			);
+			jtdr.addDescriptor( jtd );
+		}
+		javaTypeDescriptor = jtd;
 	}
 }

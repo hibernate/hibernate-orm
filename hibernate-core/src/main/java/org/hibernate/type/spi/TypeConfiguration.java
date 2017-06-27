@@ -107,7 +107,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 
 	public TypeConfiguration(BootstrapContext bootstrapContext) {
 		this();
-		StandardBasicTypes.prime( this, bootstrapContext.getBasicTypeProducerRegistry() );
+		StandardBasicTypes.prime( this );
 	}
 
 	public TypeConfiguration() {

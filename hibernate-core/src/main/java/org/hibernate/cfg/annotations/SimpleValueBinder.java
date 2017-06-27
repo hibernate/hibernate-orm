@@ -30,6 +30,7 @@ import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.type.spi.BasicTypeProducer;
 import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -45,6 +46,7 @@ import org.hibernate.cfg.SetSimpleValueTypeSecondPass;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
@@ -89,7 +91,6 @@ public class SimpleValueBinder<T> {
 	// BasicType info
 
 	private BasicJavaDescriptor<T> javaDescriptor;
-	private SqlTypeDescriptor sqlTypeDescriptor;
 	private AttributeConverterDescriptor converterDescriptor;
 	private boolean isVersion;
 	private boolean isNationalized;
@@ -427,7 +428,7 @@ public class SimpleValueBinder<T> {
 	public void fillSimpleValue() {
 		LOG.debugf( "Starting fillSimpleValue for %s", propertyName );
 
-		final BasicTypeResolver resolver;
+		final BasicTypeProducer producer;
 
 		if ( converterDescriptor != null ) {
 			if ( ! BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
@@ -447,26 +448,26 @@ public class SimpleValueBinder<T> {
 					propertyName
 			);
 
-			resolver = buildingContext.getBootstrapContext().getBasicTypeResolverRegistry().makeUnregisteredProducer();
-			simpleValue.setJpaAttributeConverterDescriptor( converterDescriptor );
+			producer = buildingContext.getBootstrapContext().getBasicTypeResolverRegistry().makeUnregisteredProducer();
+			((BasicValue)simpleValue).setJpaAttributeConverterDescriptor( converterDescriptor );
 		}
 		else {
 			if ( !BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
-				resolver = buildingContext.getBootstrapContext().getBasicTypeResolverRegistry().resolve( explicitType );
+				producer = buildingContext.getBootstrapContext().getBasicTypeProducerRegistry().resolve( explicitType );
 			}
 			else {
-				BasicTypeResolver test = buildingContext.getBootstrapContext().getBasicTypeResolverRegistry().resolve( returnedClassName );
+				BasicTypeProducer test = buildingContext.getBootstrapContext().getBasicTypeProducerRegistry().resolve( returnedClassName );
 				if ( test != null ) {
-					resolver = test;
+					producer = test;
 				}
 				else {
-					test = buildingContext.getBootstrapContext().getBasicTypeResolverRegistry().resolve( defaultType );
+					test = buildingContext.getBootstrapContext().getBasicTypeProducerRegistry().resolve( defaultType );
 
 					if ( test != null ) {
-						resolver = test;
+						producer = test;
 					}
 					else {
-						resolver = buildingContext.getBootstrapContext().getBasicTypeResolverRegistry().makeUnregisteredProducer();
+						producer = buildingContext.getBootstrapContext().getBasicTypeProducerRegistry().makeUnregisteredProducer();
 					}
 				}
 			}
@@ -540,6 +541,14 @@ public class SimpleValueBinder<T> {
 		this.accessType = accessType;
 	}
 
+	private static class BasicTypeResolverImpl implements BasicTypeResolver{
+
+		@Override
+		public <T> BasicType<T> resolveBasicType() {
+			return null;
+		}
+	}
+
 
 	private static class BasicTypeResolverExplicitImpl implements BasicTypeResolver {
 		// todo (6.0) : ? shouldn't this be convertible as well?
@@ -576,8 +585,7 @@ public class SimpleValueBinder<T> {
 			}
 			else {
 				return buildingContext.getBootstrapContext().getTypeConfiguration()
-						.getBasicTypeRegistry()
-						.getBasicTypeForCast( name );
+						.getBasicTypeRegistry().getBasicType( name );
 			}
 		}
 	}

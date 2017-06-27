@@ -92,7 +92,7 @@ public class BasicTypeImpl<T> implements BasicType<T>, SqlSelectionReader<T> {
 			ResultSet resultSet,
 			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
 			SqlSelection sqlSelection) throws SQLException {
-		return (T) getValueExtractor().extract(
+		return getValueExtractor().extract(
 				resultSet,
 				sqlSelection.getJdbcResultSetIndex(),
 				jdbcValuesSourceProcessingState.getPersistenceContext()
@@ -105,7 +105,7 @@ public class BasicTypeImpl<T> implements BasicType<T>, SqlSelectionReader<T> {
 			CallableStatement statement,
 			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
 			int jdbcParameterIndex) throws SQLException {
-		return (T) getValueExtractor().extract(
+		return getValueExtractor().extract(
 				statement,
 				jdbcParameterIndex,
 				jdbcValuesSourceProcessingState.getPersistenceContext()
@@ -118,7 +118,7 @@ public class BasicTypeImpl<T> implements BasicType<T>, SqlSelectionReader<T> {
 			CallableStatement statement,
 			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
 			String jdbcParameterName) throws SQLException {
-		return (T) getValueExtractor().extract(
+		return getValueExtractor().extract(
 				statement,
 				jdbcParameterName,
 				jdbcValuesSourceProcessingState.getPersistenceContext()
@@ -131,7 +131,7 @@ public class BasicTypeImpl<T> implements BasicType<T>, SqlSelectionReader<T> {
 	}
 
 	@Override
-	public ValueExtractor getValueExtractor() {
+	public ValueExtractor<T> getValueExtractor() {
 		return getColumnDescriptor().getSqlTypeDescriptor().getExtractor( getJavaTypeDescriptor() );
 	}
 }

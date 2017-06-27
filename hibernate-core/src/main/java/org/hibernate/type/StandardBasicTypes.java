@@ -27,10 +27,6 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 
-import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
-import org.hibernate.type.descriptor.java.internal.ByteArrayJavaDescriptor;
-import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
-import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -392,8 +388,8 @@ public final class StandardBasicTypes {
 	 */
 	public static final Type<java.net.URL> URL = StandardSpiBasicTypes.URL;
 
-	public static void prime(TypeConfiguration typeConfiguration, BasicTypeProducerRegistry basicTypeProducerRegistry) {
-		StandardSpiBasicTypes.prime( typeConfiguration, basicTypeProducerRegistry );
+	public static void prime(TypeConfiguration typeConfiguration) {
+		StandardSpiBasicTypes.prime( typeConfiguration );
 	}
 
 }

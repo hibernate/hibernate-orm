@@ -13,72 +13,11 @@ import javax.persistence.EnumType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.type.descriptor.java.internal.BigDecimalJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.BigIntegerJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.BlobJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.BooleanJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.ByteArrayJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.ByteJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.CalendarDateJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.CalendarTimeJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.CharacterArrayJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.CharacterJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.ClassJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.ClobJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.CurrencyJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.DoubleJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.DurationJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.FloatJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.InstantJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.IntegerJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.JdbcDateJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.JdbcTimeJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.JdbcTimestampJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.LocalDateJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.LocalDateTimeJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.LocalTimeJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.LocaleJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.LongJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.NClobJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.OffsetDateTimeJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.OffsetTimeJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.PrimitiveByteArrayJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.PrimitiveCharacterArrayJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.SerializableJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.ShortJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.StringJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.TimeZoneJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.UUIDJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.UrlJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.ZonedDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
-import org.hibernate.type.descriptor.sql.spi.BigIntSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.BinarySqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.BooleanSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.CharSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.DateSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.DoubleSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.FloatSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.LongNVarcharSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.LongVarbinarySqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.LongVarcharSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.NCharSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.NClobSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.NVarcharSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.NumericSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.spi.TimeSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.TimestampSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.VarbinarySqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 import org.hibernate.type.internal.BasicTypeImpl;
 
 /**
@@ -97,7 +36,7 @@ import org.hibernate.type.internal.BasicTypeImpl;
 public class BasicTypeRegistry {
 	private final TypeConfiguration typeConfiguration;
 
-	private final Map<Class,BasicType> javaTypeToBasicTypeXref = new ConcurrentHashMap<>();
+	private final Map<String,BasicType> registry = new ConcurrentHashMap<>();
 	private final JdbcRecommendedSqlTypeMappingContext baseJdbcRecommendedSqlTypeMappingContext;
 
 	public BasicTypeRegistry(TypeConfiguration typeConfiguration) {
@@ -123,7 +62,6 @@ public class BasicTypeRegistry {
 				return typeConfiguration;
 			}
 		};
-		registerBasicTypes();
 	}
 
 	public TypeConfiguration getTypeConfiguration() {
@@ -134,7 +72,6 @@ public class BasicTypeRegistry {
 		return baseJdbcRecommendedSqlTypeMappingContext;
 	}
 
-
 	/**
 	 * Returns the default BasicType for the given Java type
 	 *
@@ -144,10 +81,14 @@ public class BasicTypeRegistry {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> BasicType<T> getBasicType(Class<T> javaType) {
-		return javaTypeToBasicTypeXref.computeIfAbsent(
-				javaType,
+		return registry.computeIfAbsent(
+				javaType.getName(),
 				k -> createBasicType( javaType )
 		);
+	}
+
+	public BasicType getBasicType(String key) {
+		return registry.get( key );
 	}
 
 	private <T> BasicType createBasicType(Class<T> javaType) {
@@ -193,9 +134,6 @@ public class BasicTypeRegistry {
 
 		return new BasicTypeImpl<T>( javaTypeDescriptor, recommendedSqlType );
 	}
-
-
-
 
 
 	@SuppressWarnings("unchecked")
@@ -287,7 +225,7 @@ public class BasicTypeRegistry {
 			BasicJavaDescriptor<T> javaTypeDescriptor,
 			SqlTypeDescriptor sqlTypeDescriptor) {
 		final BasicTypeImpl<T> basicType = new BasicTypeImpl<>( javaTypeDescriptor, sqlTypeDescriptor );
-		javaTypeToBasicTypeXref.put( javaTypeDescriptor.getJavaType(), basicType );
+		registry.put( javaTypeDescriptor.getJavaType().getName(), basicType );
 		return basicType;
 	}
 
@@ -308,84 +246,17 @@ public class BasicTypeRegistry {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private void registerBasicTypes() {
-		registerBasicType( BooleanJavaDescriptor.INSTANCE, BooleanSqlDescriptor.INSTANCE );
-		registerBasicType( IntegerJavaDescriptor.INSTANCE, IntegerSqlDescriptor.INSTANCE );
-		registerBasicType( BooleanJavaDescriptor.INSTANCE, CharSqlDescriptor.INSTANCE );
-
-		registerBasicType( ByteJavaDescriptor.INSTANCE, TinyIntSqlDescriptor.INSTANCE );
-		registerBasicType( CharacterJavaDescriptor.INSTANCE, CharSqlDescriptor.INSTANCE );
-		registerBasicType( ShortJavaDescriptor.INSTANCE, SmallIntSqlDescriptor.INSTANCE );
-		registerBasicType( IntegerJavaDescriptor.INSTANCE, IntegerSqlDescriptor.INSTANCE );
-		registerBasicType( LongJavaDescriptor.INSTANCE, BigIntSqlDescriptor.INSTANCE );
-		registerBasicType( FloatJavaDescriptor.INSTANCE, FloatSqlDescriptor.INSTANCE );
-		registerBasicType( DoubleJavaDescriptor.INSTANCE, DoubleSqlDescriptor.INSTANCE );
-		registerBasicType( BigDecimalJavaDescriptor.INSTANCE, NumericSqlDescriptor.INSTANCE );
-		registerBasicType( BigIntegerJavaDescriptor.INSTANCE, NumericSqlDescriptor.INSTANCE );
-
-		registerBasicType( StringJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
-		registerBasicType( StringJavaDescriptor.INSTANCE, NVarcharSqlDescriptor.INSTANCE );
-		registerBasicType( CharacterJavaDescriptor.INSTANCE, NCharSqlDescriptor.INSTANCE );
-		registerBasicType( UrlJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
-
-		registerBasicType( DurationJavaDescriptor.INSTANCE, BigIntSqlDescriptor.INSTANCE );
-
-		registerTemporalType( InstantJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE );
-		registerTemporalType( LocalDateTimeJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE );
-		registerTemporalType( LocalDateJavaDescriptor.INSTANCE, DateSqlDescriptor.INSTANCE );
-		registerTemporalType( LocalTimeJavaDescriptor.INSTANCE, TimeSqlDescriptor.INSTANCE );
-		registerTemporalType( OffsetDateTimeJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE );
-		registerTemporalType( OffsetTimeJavaDescriptor.INSTANCE, TimeSqlDescriptor.INSTANCE );
-		registerTemporalType( ZonedDateTimeJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE );
-
-		registerTemporalType( JdbcDateJavaDescriptor.INSTANCE, DateSqlDescriptor.INSTANCE );
-		registerTemporalType( JdbcTimeJavaDescriptor.INSTANCE, TimeSqlDescriptor.INSTANCE );
-		registerTemporalType( JdbcTimestampJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE );
-		registerTemporalType( CalendarTimeJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE );
-		registerTemporalType( CalendarDateJavaDescriptor.INSTANCE, DateSqlDescriptor.INSTANCE );
-
-		registerBasicType( LocaleJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
-		registerBasicType( CurrencyJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
-		registerBasicType( TimeZoneJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
-		registerBasicType( ClassJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
-		registerBasicType( UUIDJavaDescriptor.INSTANCE, BinarySqlDescriptor.INSTANCE );
-		registerBasicType( UUIDJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
-
-		registerBasicType( PrimitiveByteArrayJavaDescriptor.INSTANCE, VarbinarySqlDescriptor.INSTANCE );
-		registerBasicType( ByteArrayJavaDescriptor.INSTANCE, VarbinarySqlDescriptor.INSTANCE );
-		registerBasicType( PrimitiveByteArrayJavaDescriptor.INSTANCE, LongVarbinarySqlDescriptor.INSTANCE );
-		registerBasicType( PrimitiveCharacterArrayJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
-		registerBasicType( CharacterArrayJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
-		registerBasicType( StringJavaDescriptor.INSTANCE, LongVarcharSqlDescriptor.INSTANCE );
-		registerBasicType( StringJavaDescriptor.INSTANCE, LongNVarcharSqlDescriptor.INSTANCE );
-		registerBasicType( BlobJavaDescriptor.INSTANCE, BlobSqlDescriptor.DEFAULT );
-		registerBasicType( PrimitiveByteArrayJavaDescriptor.INSTANCE, BlobSqlDescriptor.DEFAULT );
-		registerBasicType( ClobJavaDescriptor.INSTANCE, ClobSqlDescriptor.DEFAULT );
-		registerBasicType( NClobJavaDescriptor.INSTANCE, NClobSqlDescriptor.DEFAULT );
-		registerBasicType( StringJavaDescriptor.INSTANCE, ClobSqlDescriptor.DEFAULT );
-		registerBasicType( StringJavaDescriptor.INSTANCE, NClobSqlDescriptor.DEFAULT );
-		registerBasicType( SerializableJavaDescriptor.INSTANCE, VarbinarySqlDescriptor.INSTANCE );
-
-		// todo : ObjectType
-		// composed of these two types.
-		// StringType.INSTANCE = ( StringTypeDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE )
-		// SerializableType.INSTANCE = ( SerializableTypeDescriptor.INSTANCE, VarbinaryTypeDescriptor.INSTANCE )
-		// based on AnyType
-
-		// Immutable types
-	}
-
-	private void registerBasicType(BasicJavaDescriptor javaTypeDescriptor, SqlTypeDescriptor sqlTypeDescriptor) {
-		createBasicType( javaTypeDescriptor, sqlTypeDescriptor );
-	}
-
-
-	private void registerTemporalType(TemporalJavaDescriptor javaDescriptor, SqlTypeDescriptor sqlDescriptor) {
-		createBasicType( javaDescriptor, sqlDescriptor );
-	}
-
 	public void register(BasicType type) {
-		javaTypeToBasicTypeXref.put( type.getJavaTypeDescriptor().getJavaType(), type );
+		registry.put( type.getJavaTypeDescriptor().getJavaType().getName(), type );
+	}
+
+	public void register(BasicType type, String key) {
+		registry.put( key, type );
+	}
+
+	public void register(BasicType type, String... keys) {
+		for ( String key : keys ) {
+			registry.put( key, type );
+		}
 	}
 }

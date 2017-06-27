@@ -93,7 +93,6 @@ public class RelationalObjectBinder {
 			else {
 				final DerivedValueSource formulaSource = (DerivedValueSource) relationalValueSource;
 				final Formula formula = new Formula( formulaSource.getExpression() );
-				formula.setSqlTypeDescriptor( simpleValue.getBasicTypeParameters().getSqlTypeDescriptor() );
 				simpleValue.addFormula( formula );
 			}
 		}
@@ -117,7 +116,7 @@ public class RelationalObjectBinder {
 		}
 
 		final Column column = new Column( logicalName );
-		column.setSqlTypeDescriptor( simpleValue.getBasicTypeParameters().getSqlTypeDescriptor() );
+		column.setBasicValue( simpleValue );
 
 		if ( table != null ) {
 			table.addColumn( column );

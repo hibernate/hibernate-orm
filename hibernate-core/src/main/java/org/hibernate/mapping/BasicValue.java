@@ -19,6 +19,8 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -39,6 +41,16 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 
 	public BasicValue(MetadataBuildingContext buildingContext, MappedTable table) {
 		super( buildingContext, table );
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return resolveType().getJavaTypeDescriptor();
+	}
+
+	@Override
+	public SqlTypeDescriptor[] getColumnsSqlTypeDescriptors() {
+		return new SqlTypeDescriptor[] {resolveType().getColumnDescriptor().getSqlTypeDescriptor()};
 	}
 
 	public AttributeConverterDescriptor getAttributeConverterDescriptor() {

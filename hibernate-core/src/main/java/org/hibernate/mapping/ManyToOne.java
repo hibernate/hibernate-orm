@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * A many-to-one association mapping
@@ -23,6 +24,11 @@ public class ManyToOne extends ToOne {
 	
 	public ManyToOne(MetadataBuildingContext metadata, Table table) {
 		super( metadata, table );
+	}
+
+	@Override
+	public SqlTypeDescriptor[] getColumnsSqlTypeDescriptors() {
+
 	}
 
 	public void createForeignKey() throws MappingException {

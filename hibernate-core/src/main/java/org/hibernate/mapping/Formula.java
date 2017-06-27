@@ -25,6 +25,7 @@ public class Formula implements Selectable, Serializable {
 	private static int formulaUniqueInteger;
 
 	private String formula;
+	private BasicValue value;
 	private SqlTypeDescriptor sqlTypeDescriptor;
 
 	public Formula(String formula) {

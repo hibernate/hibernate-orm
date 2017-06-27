@@ -487,7 +487,7 @@ include::{sourcedir-associations}/OneToOneMapsIdTest.java[tag=identifiers-derive
 ----
 ====
 
-In the example above, the `PersonDetails` entity uses the `id` column for both the entity identifier and for the many-to-one association to the `Person` entity.
+In the example above, the `PersonDetails` entity uses the `id` column for both the entity identifier and for the one-to-one association to the `Person` entity.
 The value of the `PersonDetails` entity identifier is "derived" from the identifier of its parent `Person` entity.
 
 [[identifiers-derived-mapsid-persist-example]]

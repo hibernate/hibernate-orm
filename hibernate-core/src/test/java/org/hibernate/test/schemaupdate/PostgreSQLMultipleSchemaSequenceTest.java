@@ -94,15 +94,11 @@ public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 				catch (SQLException e) {
 					fail(e.getMessage());
 				}
-
-				StandardServiceRegistry ssr2 = new StandardServiceRegistryBuilder()
-						.applySetting( AvailableSettings.URL, Environment.getProperties().get(AvailableSettings.URL) + "?currentSchema=" + extraSchemaName )
-						.build();
-
 				try {
-					final MetadataImplementor metadata2 = (MetadataImplementor) new MetadataSources( ssr2 )
+					final MetadataImplementor metadata2 = (MetadataImplementor) new MetadataSources( ssr1 )
 							.addAnnotatedClass( Box.class )
-							.buildMetadata();
+							.getMetadataBuilder().applyImplicitSchemaName(extraSchemaName)
+							.build();
 
 					try {
 						new SchemaExport()
@@ -110,12 +106,12 @@ public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 								.create( EnumSet.of( TargetType.DATABASE, TargetType.SCRIPT ), metadata2 );
 					}
 					finally {
-						final ConnectionProvider connectionProvider2 = ssr2.getService( ConnectionProvider.class );
 						DdlTransactionIsolatorTestingImpl ddlTransactionIsolator2 = new DdlTransactionIsolatorTestingImpl(
-								ssr2,
-								new JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess( connectionProvider2 )
+								ssr1,
+								new JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess( connectionProvider1 )
 						);
 						try(Statement statement = ddlTransactionIsolator2.getIsolatedConnection().createStatement()) {
+							statement.execute( String.format( "SET search_path TO %s", extraSchemaName ) );
 							try(ResultSet resultSet = statement.executeQuery( "SELECT NEXTVAL('SEQ_TEST')" )) {
 								while ( resultSet.next() ) {
 									Long sequenceValue = resultSet.getLong( 1 );
@@ -133,7 +129,7 @@ public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 					}
 				}
 				finally {
-					StandardServiceRegistryBuilder.destroy( ssr2 );
+					//StandardServiceRegistryBuilder.destroy( ssr2 );
 				}
 
 			}

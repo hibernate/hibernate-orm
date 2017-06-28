@@ -53,17 +53,17 @@ According to JPA, the valid types for these attributes are limited to:
 ====
 [source,java]
 ----
-include::{extrasdir}/entity/Version.java[]
+include::{sourcedir}/OptimisticLockingTest.java[tags=locking-optimistic-entity-mapping-example,indent=0]
 ----
 
 [source,java]
 ----
-include::{extrasdir}/entity/Timestamp.java[]
+include::{sourcedir}/OptimisticLockingTimestampTest.java[tags=locking-optimistic-entity-mapping-example,indent=0]
 ----
 
 [source,java]
 ----
-include::{extrasdir}/entity/Instant.java[]
+include::{sourcedir}/OptimisticLockingInstantTest.java[tags=locking-optimistic-entity-mapping-example,indent=0]
 ----
 ====
 
@@ -75,9 +75,9 @@ The version number mechanism for optimistic locking is provided through a `@Vers
 [[locking-optimistic-version-number-example]]
 .@Version annotation
 ====
-[source, JAVA, indent=0]
+[source, JAVA,indent=0]
 ----
-include::{sourcedir}/OptimisticLockingTest.java[tags=locking-optimistic-version-number-example]
+include::{sourcedir}/OptimisticLockingTest.java[tags=locking-optimistic-version-number-example,indent=0]
 ----
 ====
 
@@ -104,9 +104,9 @@ Timestamping is automatically used if you the `@Version` annotation on a `Date` 
 [[locking-optimistic-version-timestamp-example]]
 .Using timestamps for optimistic locking
 ====
-[source, JAVA, indent=0]
+[source, JAVA,indent=0]
 ----
-include::{sourcedir}/OptimisticLockingTest.java[tags=locking-optimistic-version-timestamp-example]
+include::{sourcedir}/OptimisticLockingTest.java[tags=locking-optimistic-version-timestamp-example,indent=0]
 ----
 ====
 
@@ -120,9 +120,9 @@ if you use the `@org.hibernate.annotations.Generated(GenerationTime.ALWAYS)` or 
 [[locking-optimistic-version-timestamp-source-mapping-example]]
 .Database-generated version timestamp mapping
 ====
-[source, JAVA, indent=0]
+[source, JAVA,indent=0]
 ----
-include::{sourcedir}/VersionSourceTest.java[tags=locking-optimistic-version-timestamp-source-mapping-example]
+include::{sourcedir}/VersionSourceTest.java[tags=locking-optimistic-version-timestamp-source-mapping-example,indent=0]
 ----
 ====
 
@@ -131,12 +131,12 @@ Now, when persisting a `Person` entity, Hibernate calls the database-specific cu
 [[locking-optimistic-version-timestamp-source-persist-example]]
 .Database-generated version timestamp example
 ====
-[source, JAVA, indent=0]
+[source, JAVA,indent=0]
 ----
-include::{sourcedir}/VersionSourceTest.java[tags=locking-optimistic-version-timestamp-source-persist-example]
+include::{sourcedir}/VersionSourceTest.java[tags=locking-optimistic-version-timestamp-source-persist-example,indent=0]
 ----
 
-[source, SQL, indent=0]
+[source, SQL,indent=0]
 ----
 include::{extrasdir}/locking-optimistic-version-timestamp-source-persist-example.sql[]
 ----
@@ -153,9 +153,9 @@ as illustrated in the following example.
 [[locking-optimistic-exclude-attribute-mapping-example]]
 .@OptimisticLock mapping example
 ====
-[source, JAVA, indent=0]
+[source, JAVA,indent=0]
 ----
-include::{sourcedir}/OptimisticLockTest.java[tags=locking-optimistic-exclude-attribute-mapping-example]
+include::{sourcedir}/OptimisticLockTest.java[tags=locking-optimistic-exclude-attribute-mapping-example,indent=0]
 ----
 ====
 
@@ -165,12 +165,12 @@ the two concurrent transactions are not going to conflict as illustrated by the 
 [[locking-optimistic-exclude-attribute-example]]
 .@OptimisticLock exlude attribute example
 ====
-[source, JAVA, indent=0]
+[source, JAVA,indent=0]
 ----
-include::{sourcedir}/OptimisticLockTest.java[tags=locking-optimistic-exclude-attribute-example]
+include::{sourcedir}/OptimisticLockTest.java[tags=locking-optimistic-exclude-attribute-example,indent=0]
 ----
 
-[source, SQL, indent=0]
+[source, SQL,indent=0]
 ----
 include::{extrasdir}/locking-optimistic-exclude-attribute-example.sql[]
 ----
@@ -355,12 +355,12 @@ The scope can either be `NORMAL` (default value) or `EXTENDED`. The `EXTENDED` s
 [[locking-jpa-query-hints-timeout-example]]
 .`javax.persistence.lock.timeout` example
 ====
-[source, JAVA, indent=0]
+[source, JAVA,indent=0]
 ----
-include::{sourcedir}/ExplicitLockingTest.java[tags=locking-jpa-query-hints-timeout-example]
+include::{sourcedir}/ExplicitLockingTest.java[tags=locking-jpa-query-hints-timeout-example,indent=0]
 ----
 
-[source, SQL, indent=0]
+[source, SQL,indent=0]
 ----
 include::{extrasdir}/locking-jpa-query-hints-timeout-example.sql[]
 ----
@@ -388,12 +388,12 @@ The following example shows how to obtain shared database lock without waiting f
 [[locking-buildLockRequest-example]]
 .`buildLockRequest` example
 ====
-[source, JAVA, indent=0]
+[source, JAVA,indent=0]
 ----
-include::{sourcedir}/ExplicitLockingTest.java[tags=locking-buildLockRequest-example]
+include::{sourcedir}/ExplicitLockingTest.java[tags=locking-buildLockRequest-example,indent=0]
 ----
 
-[source, SQL, indent=0]
+[source, SQL,indent=0]
 ----
 include::{extrasdir}/locking-buildLockRequest-example.sql[]
 ----
@@ -414,12 +414,12 @@ For this reason, Hibernate uses secondary selects to lock the previously fetched
 [[locking-follow-on-example]]
 .Follow-on-locking example
 ====
-[source, JAVA, indent=0]
+[source, JAVA,indent=0]
 ----
-include::{sourcedir}/ExplicitLockingTest.java[tags=locking-follow-on-example]
+include::{sourcedir}/ExplicitLockingTest.java[tags=locking-follow-on-example,indent=0]
 ----
 
-[source, SQL, indent=0]
+[source, SQL,indent=0]
 ----
 include::{extrasdir}/locking-follow-on-example.sql[]
 ----
@@ -433,12 +433,12 @@ To avoid the N+1 query problem, a separate query can be used to apply the lock u
 [[locking-follow-on-secondary-query-example]]
 .Secondary query entity locking
 ====
-[source, JAVA, indent=0]
+[source, JAVA,indent=0]
 ----
-include::{sourcedir}/ExplicitLockingTest.java[tags=locking-follow-on-secondary-query-example]
+include::{sourcedir}/ExplicitLockingTest.java[tags=locking-follow-on-secondary-query-example,indent=0]
 ----
 
-[source, SQL, indent=0]
+[source, SQL,indent=0]
 ----
 include::{extrasdir}/locking-follow-on-secondary-query-example.sql[]
 ----
@@ -454,12 +454,12 @@ Even more important is that you can overrule the default follow-on-locking detec
 [[locking-follow-on-explicit-example]]
 .Disabling the follow-on-locking mechanism explicitly
 ====
-[source, JAVA, indent=0]
+[source, JAVA,indent=0]
 ----
-include::{sourcedir}/ExplicitLockingTest.java[tags=locking-follow-on-explicit-example]
+include::{sourcedir}/ExplicitLockingTest.java[tags=locking-follow-on-explicit-example,indent=0]
 ----
 
-[source, SQL, indent=0]
+[source, SQL,indent=0]
 ----
 include::{extrasdir}/locking-follow-on-explicit-example.sql[]
 ----

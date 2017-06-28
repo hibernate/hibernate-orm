@@ -1,6 +1,7 @@
 [[naturalid]]
 === Natural Ids
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/identifier
+:extrasdir: extras
 
 Natural ids represent domain model unique identifiers that have a meaning in the real world too.
 Even if a natural id does not make a good primary key (surrogate keys being usually preferred), it's still useful to tell Hibernate about it.
@@ -9,29 +10,33 @@ As we will see later, Hibernate provides a dedicated, efficient API for loading 
 [[naturalid-mapping]]
 ==== Natural Id Mapping
 
-Natural ids are defined in terms of one or more persistent attributes.
+Natural ids are defined in terms of on
+e or more persistent attributes.
 
+[[naturalid-simple-basic-attribute-mapping-example]]
 .Natural id using single basic attribute
 ====
 [source,java]
 ----
-include::{sourcedir}/natural_id/SimpleBasicNaturalIdMapping.java[]
+include::{sourcedir}/SimpleNaturalIdTest.java[tags=naturalid-simple-basic-attribute-mapping-example,indent=0]
 ----
 ====
 
+[[naturalid-single-embedded-attribute-mapping-example]]
 .Natural id using single embedded attribute
 ====
 [source,java]
 ----
-include::{sourcedir}/natural_id/SimpleCompositeNaturalIdMapping.java[]
+include::{sourcedir}/CompositeNaturalIdTest.java[tags=naturalid-single-embedded-attribute-mapping-example,indent=0]
 ----
 ====
 
+[[naturalid-multiple-attribute-mapping-example]]
 .Natural id using multiple persistent attributes
 ====
 [source,java]
 ----
-include::{sourcedir}/natural_id/NonSimpleNaturalIdMapping.java[]
+include::{sourcedir}/MultipleNaturalIdTest.java[tags=naturalid-multiple-attribute-mapping-example,indent=0]
 ----
 ====
 
@@ -46,11 +51,22 @@ This is represented by the `org.hibernate.NaturalIdLoadAccess` contract obtained
 If the entity does not define a natural id, trying to load an entity by its natural id will throw an exception.
 ====
 
+[[naturalid-load-access-example]]
 .Using NaturalIdLoadAccess
 ====
 [source,java]
 ----
-include::{sourcedir}/natural_id/NaturalIdLoadAccessUsage.java[]
+include::{sourcedir}/SimpleNaturalIdTest.java[tags=naturalid-load-access-example,indent=0]
+----
+
+[source,java]
+----
+include::{sourcedir}/CompositeNaturalIdTest.java[tags=naturalid-load-access-example,indent=0]
+----
+
+[source,java]
+----
+include::{sourcedir}/MultipleNaturalIdTest.java[tags=naturalid-load-access-example,indent=0]
 ----
 ====
 
@@ -68,17 +84,26 @@ We will discuss the last method available on NaturalIdLoadAccess ( `setSynchroni
 
 Because the `Company` and `PostalCarrier` entities define "simple" natural ids, we can load them as follows:
 
-.Using SimpleNaturalIdLoadAccess
+[[naturalid-simple-load-access-example]]
+.Loading by simple natural id
 ====
 [source,java]
 ----
-include::{sourcedir}/natural_id/SimpleNaturalIdLoadAccessUsage.java[]
+include::{sourcedir}/SimpleNaturalIdTest.java[tags=naturalid-simple-load-access-example,indent=0]
+----
+
+[source,java]
+----
+include::{sourcedir}/CompositeNaturalIdTest.java[tags=naturalid-simple-load-access-example,indent=0]
 ----
 ====
 
-Here we see the use of the `org.hibernate.SimpleNaturalIdLoadAccess` contract, obtained via `Session#bySimpleNaturalId().
+Here we see the use of the `org.hibernate.SimpleNaturalIdLoadAccess` contract,
+obtained via `Session#bySimpleNaturalId().
+
 `SimpleNaturalIdLoadAccess` is similar to `NaturalIdLoadAccess` except that it does not define the using method.
-Instead, because these "simple" natural ids are defined based on just one attribute we can directly pass the corresponding value of that natural id attribute directly to the `load()` and `getReference()` methods.
+Instead, because these _simple_ natural ids are defined based on just one attribute we can directly pass
+the corresponding natural id attribute value directly to the `load()` and `getReference()` methods.
 
 [NOTE]
 ====
@@ -90,18 +115,21 @@ If the entity does not define a natural id, or if the natural id is not of a "si
 
 A natural id may be mutable or immutable. By default the `@NaturalId` annotation marks an immutable natural id attribute.
 An immutable natural id is expected to never change its value.
+
 If the value(s) of the natural id attribute(s) change, `@NaturalId(mutable=true)` should be used instead.
 
-.Mutable natural id
+[[naturalid-mutable-mapping-example]]
+.Mutable natural id mapping
 ====
 [source,java]
 ----
-include::{sourcedir}/natural_id/MutableNaturalIdMapping.java[]
+include::{sourcedir}/MutableNaturalIdTest.java[tags=naturalid-mutable-mapping-example,indent=0]
 ----
 ====
 
 Within the Session, Hibernate maintains a mapping from natural id values to entity identifiers (PK) values.
 If natural ids values changed, it is possible for this mapping to become out of date until a flush occurs.
+
 To work around this condition, Hibernate will attempt to discover any such pending changes and adjust them when the `load()` or `getReference()` methods are executed.
 To be clear: this is only pertinent for mutable natural ids.
 
@@ -112,11 +140,12 @@ If an application is certain that none of its mutable natural ids already associ
 This will force Hibernate to circumvent the checking of mutable natural ids.
 ====
 
+[[naturalid-mutable-synchronized-example]]
 .Mutable natural id synchronization use-case
 ====
 [source,java]
 ----
-include::{sourcedir}/natural_id/MutableNaturalIdSynchronization.java[]
+include::{sourcedir}/MutableNaturalIdTest.java[tags=naturalid-mutable-synchronized-example,indent=0]
 ----
 ====
 
@@ -127,6 +156,6 @@ Not only can this NaturalId-to-PK resolution be cached in the Session, but we ca
 ====
 [source,java]
 ----
-include::{sourcedir}/natural_id/NaturalIdCaching.java[]
+include::{sourcedir}/CacheableNaturalIdTest.java[tags=naturalid-cacheable-mapping-example,indent=0]
 ----
 ====

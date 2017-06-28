@@ -48,6 +48,8 @@ According to JPA, the valid types for these attributes are limited to:
 * `long` or `Long`
 * `java.sql.Timestamp`
 
+However, Hibernate allows you to use even Java 8 Date/Time types, such as `Instant`.
+
 [[locking-optimistic-version-example]]
 .`@Version` annotation mapping
 ====

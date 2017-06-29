@@ -296,7 +296,7 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected void afterMetadataSourcesApplied(MetadataSources metadataSources) {
 	}
 
-	private void initialize(MetadataBuilder metadataBuilder) {
+	protected void initialize(MetadataBuilder metadataBuilder) {
 		metadataBuilder.enableNewIdentifierGeneratorSupport( true );
 		metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
 	}

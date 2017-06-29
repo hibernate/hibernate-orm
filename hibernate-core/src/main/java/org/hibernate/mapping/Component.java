@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EmbeddedMapping;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
@@ -44,7 +45,7 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Component extends SimpleValue implements EmbeddedValueMapping, PropertyContainer, MetaAttributable {
+public class Component extends SimpleValue implements EmbeddedValueMapping, EmbeddedMapping, PropertyContainer, MetaAttributable {
 	private List<PersistentAttributeMapping> properties = new ArrayList<>();
 	private String componentClassName;
 	private boolean embedded;
@@ -501,5 +502,15 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Prop
 	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.EMBEDDABLE;
+	}
+
+	@Override
+	public EmbeddedValueMapping getValueMapping() {
+		return this;
+	}
+
+	@Override
+	public String getEmbeddableClassName() {
+		return componentClassName;
 	}
 }

@@ -67,6 +67,8 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( ListJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( MapJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( SetJavaDescriptor.INSTANCE );
+		target.addBaselineDescriptor( SortedMapJavaDescriptor.INSTANCE );
+		target.addBaselineDescriptor( SortedSetJavaDescriptor.INSTANCE );
 
 	}
 }

@@ -30,8 +30,8 @@ public abstract class BaseEnversFunctionalTestCase extends BaseNonConfigCoreFunc
 	@Parameterized.Parameters
 	public static List<Object[]> data() {
 		return Arrays.asList(
-				new Object[] {null},
-				new Object[] {"org.hibernate.envers.strategy.ValidityAuditStrategy"}
+				new Object[]{ null },
+				new Object[]{ "org.hibernate.envers.strategy.ValidityAuditStrategy" }
 		);
 	}
 
@@ -66,6 +66,10 @@ public abstract class BaseEnversFunctionalTestCase extends BaseNonConfigCoreFunc
 		super.addSettings( settings );
 
 		settings.put( EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, "false" );
+
+		if ( getAuditStrategy() != null ) {
+			settings.put( EnversSettings.AUDIT_STRATEGY, getAuditStrategy() );
+		}
 	}
 
 	@Override

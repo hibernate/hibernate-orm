@@ -49,8 +49,7 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 		};
 	}
 
-	@Test
-	public void test() {
+	protected void prepareTest() {
 		doInHibernate( this::sessionFactory, session -> {
 			Person person = new Person();
 			person.id = 1L;
@@ -59,6 +58,15 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 			person.addPhone( new Phone( "027-123-4567" ) );
 			person.addPhone( new Phone( "028-234-9876" ) );
 		} );
+	}
+
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
+
+	@Test
+	public void test() {
 
 		doInHibernate( this::sessionFactory, session -> {
 			sqlStatementInterceptor.getSqlQueries().clear();
@@ -95,17 +103,38 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
 			assertTrue( sqlQuery.contains( " distinct " ) );
 		} );
+	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-11726" )
+	public void testDistinctPassThroughFalse() {
 		doInHibernate( this::sessionFactory, session -> {
 			sqlStatementInterceptor.getSqlQueries().clear();
 			List<Person> persons = session.createQuery(
-				"select distinct p from Person p left join fetch p.phones " )
-			.setHint( QueryHints.HINT_PASS_DISTINCT_THROUGH, false )
-			.getResultList();
+					"select distinct p from Person p left join fetch p.phones ")
+					.setHint(QueryHints.HINT_PASS_DISTINCT_THROUGH, false)
+					.setMaxResults(5)
+					.getResultList();
 			assertEquals(1, persons.size());
 			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
-			assertFalse( sqlQuery.contains( " distinct " ) );
-		} );
+			assertFalse(sqlQuery.contains(" distinct "));
+		});
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11726" )
+	public void testDistinctPassThroughTrue() {
+		doInHibernate( this::sessionFactory, session -> {
+			sqlStatementInterceptor.getSqlQueries().clear();
+			List<Person> persons = session.createQuery(
+					"select distinct p from Person p left join fetch p.phones ")
+					.setHint(QueryHints.HINT_PASS_DISTINCT_THROUGH, true)
+					.setMaxResults(5)
+					.getResultList();
+			assertEquals(1, persons.size());
+			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
+			assertTrue(sqlQuery.contains(" distinct "));
+		});
 	}
 
 	@Entity(name = "Person")

@@ -652,6 +652,7 @@ public final class QueryParameters {
 		copy.processedSQL = this.processedSQL;
 		copy.processedPositionalParameterTypes = this.processedPositionalParameterTypes;
 		copy.processedPositionalParameterValues = this.processedPositionalParameterValues;
+		copy.passDistinctThrough = this.passDistinctThrough;
 		return copy;
 	}
 

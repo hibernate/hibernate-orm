@@ -26,8 +26,6 @@ import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
-import org.hibernate.boot.model.type.internal.BasicTypeProducerRegistryImpl;
-import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
@@ -60,7 +58,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private final StandardServiceRegistry serviceRegistry;
 
 	private final TypeConfiguration typeConfiguration;
-	private final BasicTypeProducerRegistryImpl basicTypeProducerRegistry;
 
 	private InstantiatorFactory instantiatorFactory;
 
@@ -93,8 +90,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.metadataBuildingOptions = metadataBuildingOptions;
 
 		this.typeConfiguration = new TypeConfiguration();
-
-		this.basicTypeProducerRegistry = new BasicTypeProducerRegistryImpl( typeConfiguration );
 
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		this.classLoaderAccess = new ClassLoaderAccessImpl( classLoaderService );
@@ -204,11 +199,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public BasicTypeProducerRegistry getBasicTypeProducerRegistry() {
-		return basicTypeProducerRegistry;
-	}
-
-	@Override
 	public ClassmateContext getClassmateContext() {
 		return classmateContext;
 	}
@@ -265,7 +255,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	@Override
 	public void release() {
-		basicTypeProducerRegistry.release();
 		classmateContext.release();
 		classLoaderAccess.release();
 

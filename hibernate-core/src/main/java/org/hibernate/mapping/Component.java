@@ -93,11 +93,6 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Embe
 	}
 
 	@Override
-	public SqlTypeDescriptor[] getColumnsSqlTypeDescriptors() {
-		return new SqlTypeDescriptor[0];
-	}
-
-	@Override
 	public String getName() {
 		return componentClassName;
 	}

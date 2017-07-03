@@ -16,8 +16,6 @@ import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
-import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
-import org.hibernate.boot.model.type.spi.BasicTypeResolverRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
@@ -48,10 +46,6 @@ public interface BootstrapContext {
 	 * the assumed value.  We only need to call this to mark that as true.
 	 */
 	void markAsJpaBootstrap();
-
-	BasicTypeProducerRegistry getBasicTypeProducerRegistry();
-
-	BasicTypeResolverRegistry getBasicTypeResolverRegistry();
 
 	InstantiatorFactory getInstantiatorFactory();
 

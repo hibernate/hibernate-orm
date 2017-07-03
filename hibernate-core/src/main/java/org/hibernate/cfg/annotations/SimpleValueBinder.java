@@ -99,7 +99,7 @@ public class SimpleValueBinder<T> {
 	private TemporalType temporalPrecision;
 
 	private BasicTypeResolver basicTypeResolver;
-	private SimpleValue simpleValue;
+	private BasicValue simpleValue;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -427,79 +427,80 @@ public class SimpleValueBinder<T> {
 
 	public void fillSimpleValue() {
 		LOG.debugf( "Starting fillSimpleValue for %s", propertyName );
+		simpleValue.setBasicTypeResolver( basicTypeResolver );
 
-		final BasicTypeProducer producer;
-
-		if ( converterDescriptor != null ) {
-			if ( ! BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
-				throw new AnnotationException(
-						String.format(
-								"AttributeConverter and explicit Type cannot be applied to same attribute [%s.%s];" +
-										"remove @Type or specify @Convert(disableConversion = true)",
-								persistentClassName,
-								propertyName
-						)
-				);
-			}
-			LOG.debugf(
-					"Applying JPA AttributeConverter [%s] to [%s:%s]",
-					converterDescriptor,
-					persistentClassName,
-					propertyName
-			);
-
-			producer = buildingContext.getBootstrapContext().getBasicTypeResolverRegistry().makeUnregisteredProducer();
-			((BasicValue)simpleValue).setJpaAttributeConverterDescriptor( converterDescriptor );
-		}
-		else {
-			if ( !BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
-				producer = buildingContext.getBootstrapContext().getBasicTypeProducerRegistry().resolve( explicitType );
-			}
-			else {
-				BasicTypeProducer test = buildingContext.getBootstrapContext().getBasicTypeProducerRegistry().resolve( returnedClassName );
-				if ( test != null ) {
-					producer = test;
-				}
-				else {
-					test = buildingContext.getBootstrapContext().getBasicTypeProducerRegistry().resolve( defaultType );
-
-					if ( test != null ) {
-						producer = test;
-					}
-					else {
-						producer = buildingContext.getBootstrapContext().getBasicTypeProducerRegistry().makeUnregisteredProducer();
-					}
-				}
-			}
-		}
-
-		simpleValue.setBasicTypeResolver( resolver );
-
-		if ( persistentClassName != null || converterDescriptor != null ) {
-			try {
-				simpleValue.setTypeUsingReflection( persistentClassName, propertyName );
-			}
-			catch (Exception e) {
-				throw new MappingException(
-						String.format(
-								Locale.ROOT,
-								"Unable to determine basic type mapping via reflection [%s -> %s]",
-								persistentClassName,
-								propertyName
-						),
-						e
-				);
-			}
-		}
-
-		if ( !simpleValue.isTypeSpecified() && isVersion() ) {
-			simpleValue.setTypeName( "integer" );
-		}
-
-		// HHH-5205
-		if ( timeStampVersionType != null ) {
-			simpleValue.setTypeName( timeStampVersionType );
-		}
+//		if ( converterDescriptor != null ) {
+//			if ( ! BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
+//				throw new AnnotationException(
+//						String.format(
+//								"AttributeConverter and explicit Type cannot be applied to same attribute [%s.%s];" +
+//										"remove @Type or specify @Convert(disableConversion = true)",
+//								persistentClassName,
+//								propertyName
+//						)
+//				);
+//			}
+//			LOG.debugf(
+//					"Applying JPA AttributeConverter [%s] to [%s:%s]",
+//					converterDescriptor,
+//					persistentClassName,
+//					propertyName
+//			);
+//
+//			basicTypeResolver = new
+//
+//			producer = buildingContext.getBootstrapContext().getBasicTypeResolverRegistry().makeUnregisteredProducer();
+//			((BasicValue)simpleValue).setJpaAttributeConverterDescriptor( converterDescriptor );
+//		}
+//		else {
+//			if ( !BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
+//				producer = buildingContext.getBootstrapContext().getBasicTypeProducerRegistry().resolve( explicitType );
+//			}
+//			else {
+//				BasicTypeProducer test = buildingContext.getBootstrapContext().getBasicTypeProducerRegistry().resolve( returnedClassName );
+//				if ( test != null ) {
+//					producer = test;
+//				}
+//				else {
+//					test = buildingContext.getBootstrapContext().getBasicTypeProducerRegistry().resolve( defaultType );
+//
+//					if ( test != null ) {
+//						producer = test;
+//					}
+//					else {
+//						producer = buildingContext.getBootstrapContext().getBasicTypeProducerRegistry().makeUnregisteredProducer();
+//					}
+//				}
+//			}
+//		}
+//
+//		simpleValue.setBasicTypeResolver( resolver );
+//
+//		if ( persistentClassName != null || converterDescriptor != null ) {
+//			try {
+//				simpleValue.setTypeUsingReflection( persistentClassName, propertyName );
+//			}
+//			catch (Exception e) {
+//				throw new MappingException(
+//						String.format(
+//								Locale.ROOT,
+//								"Unable to determine basic type mapping via reflection [%s -> %s]",
+//								persistentClassName,
+//								propertyName
+//						),
+//						e
+//				);
+//			}
+//		}
+//
+//		if ( !simpleValue.isTypeSpecified() && isVersion() ) {
+//			simpleValue.setTypeName( "integer" );
+//		}
+//
+//		// HHH-5205
+//		if ( timeStampVersionType != null ) {
+//			simpleValue.setTypeName( timeStampVersionType );
+//		}
 		
 //		if ( simpleValue.getTypeName() != null && simpleValue.getTypeName().length() > 0
 //				&& simpleValue.getBuildingContext().basicType( simpleValue.getTypeName() ) == null ) {

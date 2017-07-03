@@ -26,11 +26,6 @@ public class ManyToOne extends ToOne {
 		super( metadata, table );
 	}
 
-	@Override
-	public SqlTypeDescriptor[] getColumnsSqlTypeDescriptors() {
-
-	}
-
 	public void createForeignKey() throws MappingException {
 		// the case of a foreign key to something other than the pk is handled in createPropertyRefConstraints
 		if (referencedPropertyName==null && !hasFormula() ) {

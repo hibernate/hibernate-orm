@@ -99,7 +99,7 @@ public class SimpleValueBinder<T> {
 	private TemporalType temporalPrecision;
 
 	private BasicTypeResolver basicTypeResolver;
-	private BasicValue simpleValue;
+	private SimpleValue simpleValue;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

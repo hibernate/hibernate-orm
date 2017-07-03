@@ -16,7 +16,7 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface EmbeddedValueMapping extends ValueMapping {
+public interface EmbeddedValueMapping extends ValueMapping, ManagedTypeMapping {
 	<X> EmbeddedTypeDescriptor<X> makeRuntimeDescriptor(
 			EmbeddedContainer embeddedContainer,
 			String localName,

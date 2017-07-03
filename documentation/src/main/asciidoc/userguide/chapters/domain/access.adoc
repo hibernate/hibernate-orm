@@ -1,6 +1,7 @@
 [[access]]
 ==== Access strategies
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/access
+:extrasdir: extras
 
 As a JPA provider, Hibernate can introspect both the entity attributes (instance fields) or the accessors (instance properties).
 By default, the placement of the `@Id` annotation gives the default access strategy.
@@ -18,11 +19,12 @@ Embeddable types inherit the access strategy from their parent entities.
 [[field-based-access]]
 ===== Field-based access
 
+[[access-field-mapping-example]]
 .Field-based access
 ====
 [source,java]
 ----
-include::{sourcedir}/access/SimpleEntityFieldAccess.java[]
+include::{sourcedir}/FieldAccessTest.java[tag=access-field-mapping-example, indent=0]
 ----
 ====
 
@@ -32,18 +34,19 @@ To exclude a field from being part of the entity persistent state, the field mus
 [NOTE]
 ====
 Another advantage of using field-based access is that some entity attributes can be hidden from outside the entity.
-An example of such attribute is the entity `@Version` field, which must not be manipulated by the data access layer.
+An example of such attribute is the entity `@Version` field, which, usually, does not need to be manipulated by the data access layer.
 With field-based access, we can simply omit the getter and the setter for this version field, and Hibernate can still leverage the optimistic concurrency control mechanism.
 ====
 
 [[property-based-access]]
 ===== Property-based access
 
+[[access-property-mapping-example]]
 .Property-based access
 ====
 [source,java]
 ----
-include::{sourcedir}/access/SimpleEntityPropertyAccess.java[]
+include::{sourcedir}/PropertyAccessTest.java[tag=access-property-mapping-example, indent=0]
 ----
 ====
 
@@ -55,11 +58,12 @@ Every other method that will be added to the entity (e.g. helper methods for syn
 The default access strategy mechanism can be overridden with the JPA `@Access` annotation.
 In the following example, the `@Version` attribute is accessed by its field and not by its getter, like the rest of entity attributes.
 
+[[access-property-override-mapping-example]]
 .Overriding access strategy
 ====
 [source,java]
 ----
-include::{sourcedir}/access/SimpleEntityPropertyAccessOverride.java[]
+include::{sourcedir}/PropertyAccessOverrideTest.java[tag=access-property-override-mapping-example, indent=0]
 ----
 ====
 
@@ -72,30 +76,33 @@ This applies to both simple embeddable types as well as for collection of embedd
 The embeddable types can overrule the default implicit access strategy (inherited from the owning entity).
 In the following example, the embeddable uses property-based access, no matter what access strategy the owning entity is choosing:
 
+[[access-embeddable-mapping-example]]
 .Embeddable with exclusive access strategy
 ====
 [source,java]
 ----
-include::{sourcedir}/access/EmbeddableAccessType.java[]
+include::{sourcedir}/EmbeddableAccessTest.java[tag=access-embeddable-mapping-example, indent=0]
 ----
 ====
 
-The owning entity can use field-based access, while the embeddable uses property-based access as it has chosen explicitly:
+The owning entity can use field-based access while the embeddable uses property-based access as it has chosen explicitly:
 
+[[access-embedded-mapping-example]]
 .Entity including a single embeddable type
 ====
 [source,java]
 ----
-include::{sourcedir}/access/EmbeddedAccessType.java[]
+include::{sourcedir}/EmbeddableAccessTest.java[tag=access-embedded-mapping-example, indent=0]
 ----
 ====
 
 This works also for collection of embeddable types:
 
+[[access-element-collection-mapping-example]]
 .Entity including a collection of embeddable types
 ====
 [source,java]
 ----
-include::{sourcedir}/access/ElementCollectionAccessType.java[]
+include::{sourcedir}/ElementCollectionAccessTest.java[tag=access-element-collection-mapping-example, indent=0]
 ----
 ====

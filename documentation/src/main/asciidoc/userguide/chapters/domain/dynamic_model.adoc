@@ -1,6 +1,8 @@
 [[dynamic-model]]
 === Dynamic Model
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/dynamic
+:mappingdir: ../../../../../test/resources/org/hibernate/userguide/mapping/dynamic
+:extrasdir: extras
 
 [IMPORTANT]
 ====
@@ -12,18 +14,47 @@ On the other hand, Hibernate can work with both POJO entities as well as with dy
 ==== Dynamic mapping models
 
 Persistent entities do not necessarily have to be represented as POJO/JavaBean classes.
-Hibernate also supports dynamic models (using `Map`s of `Map`s at runtime).
+Hibernate also supports dynamic models (using `Map` of `Maps` at runtime).
 With this approach, you do not write persistent classes, only mapping files.
 
 A given entity has just one entity mode within a given SessionFactory.
 This is a change from previous versions which allowed to define multiple entity modes for an entity and to select which to load.
 Entity modes can now be mixed within a domain model; a dynamic entity might reference a POJO entity, and vice versa.
 
-.Working with Dynamic Domain Models
+[[mapping-model-dynamic-example]]
+.Dynamic domain model Hibernate mapping
+====
+[source,xml]
+----
+include::{mappingdir}/Book.hbm.xml[tag=mapping-model-dynamic-example, indent=0]
+----
+====
+
+After you defined your entity mapping, you need to instruct Hibernate to use the dynamic mapping mode:
+
+[[mapping-model-dynamic-setting-example]]
+.Dynamic domain model Hibernate mapping
 ====
 [source,java]
 ----
-include::{sourcedir}/dynamic/listing10.java[]
+include::{sourcedir}/DynamicEntityTest.java[tag=mapping-model-dynamic-setting-example, indent=0]
+----
+====
+
+When you are going to save the following `Book` dynamic entity,
+Hibernate is going to generate the following SQL statement:
+
+[[mapping-model-dynamic-setting-example]]
+.Persist dynamic entity
+====
+[source,java]
+----
+include::{sourcedir}/DynamicEntityTest.java[tag=mapping-model-dynamic-example, indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/dynamic/mapping-model-dynamic-example.sql[indent=0]
 ----
 ====
 

@@ -51,11 +51,12 @@ Any types used for identifier attributes beyond this list will not be portable.
 Values for simple identifiers can be assigned, as we have seen in the examples above.
 The expectation for assigned identifier values is that the application assigns (sets them on the entity attribute) prior to calling save/persist.
 
-.Simple assigned identifier
+[[identifiers-simple-assigned-mapping-example]]
+.Simple assigned entity identifier
 ====
 [source,java]
 ----
-include::{extrasdir}/id/SimpleAssigned.java[]
+include::{sourcedir}/AssignedIdentifierTest.java[tag=identifiers-simple-assigned-mapping-example, indent=0]
 ----
 ====
 
@@ -64,11 +65,12 @@ include::{extrasdir}/id/SimpleAssigned.java[]
 
 Values for simple identifiers can be generated. To denote that an identifier attribute is generated, it is annotated with `javax.persistence.GeneratedValue`
 
+[[identifiers-simple-generated-mapping-example]]
 .Simple generated identifier
 ====
 [source,java]
 ----
-include::{extrasdir}/id/SimpleGenerated.java[]
+include::{sourcedir}/GeneratedIdentifierTest.java[tag=identifiers-simple-generated-mapping-example, indent=0]
 ----
 ====
 
@@ -106,28 +108,31 @@ Note especially that collections and one-to-ones are never appropriate.
 Modeling a composite identifier using an EmbeddedId simply means defining an embeddable to be a composition for the one or more attributes making up the identifier,
 and then exposing an attribute of that embeddable type on the entity.
 
-.Basic EmbeddedId
+[[identifiers-basic-embeddedid-mapping-example]]
+.Basic `@EmbeddedId`
 ====
 [source,java]
 ----
-include::{extrasdir}/id/EmbeddedId1.java[]
+include::{sourcedir}/EmbeddedIdTest.java[tag=identifiers-basic-embeddedid-mapping-example, indent=0]
 ----
 ====
 
-As mentioned before, EmbeddedIds can even contain ManyToOne attributes.
+As mentioned before, EmbeddedIds can even contain `@ManyToOne` attributes.
 
-.EmbeddedId with ManyToOne
+[[identifiers-basic-embeddedid-manytoone-mapping-example]]
+.`@EmbeddedId` with `@ManyToOne`
 ====
 [source,java]
 ----
-include::{extrasdir}/id/EmbeddedId2.java[]
+include::{sourcedir}/EmbeddedIdManyToOneTest.java[tag=identifiers-basic-embeddedid-manytoone-mapping-example, indent=0]
 ----
 ====
 
 [NOTE]
 ====
-Hibernate supports directly modeling the ManyToOne in the PK class, whether EmbeddedId or IdClass.
-However that is not portably supported by the JPA specification.
+Hibernate supports directly modeling the ManyToOne in the PK class, whether `@EmbeddedId` or `@IdClass`.
+
+However, that is not portably supported by the JPA specification.
 In JPA terms one would use "derived identifiers"; for details, see <<identifiers-derived>>.
 ====
 
@@ -137,37 +142,41 @@ In JPA terms one would use "derived identifiers"; for details, see <<identifiers
 Modeling a composite identifier using an IdClass differs from using an EmbeddedId in that the entity defines each individual attribute making up the composition.
 The IdClass simply acts as a "shadow".
 
-.Basic IdClass
+[[identifiers-basic-idclass-mapping-example]]
+.Basic `@IdClass`
 ====
 [source,java]
 ----
-include::{extrasdir}/id/IdClass1.java[]
+include::{sourcedir}/IdClassTest.java[tag=identifiers-basic-idclass-mapping-example, indent=0]
 ----
 ====
 
 Non-aggregated composite identifiers can also contain ManyToOne attributes as we saw with aggregated ones (still non-portably).
 
-.IdClass with ManyToOne
+[[identifiers-basic-idclass-manytoone-mapping-example]]
+.IdClass with `@ManyToOne`
 ====
 [source,java]
 ----
-include::{extrasdir}/id/IdClass2.java[]
+include::{sourcedir}/IdClassManyToOneTest.java[tag=identifiers-basic-idclass-manytoone-mapping-example, indent=0]
 ----
 ====
 
 With non-aggregated composite identifiers, Hibernate also supports "partial" generation of the composite values.
 
-.IdClass with partial generation
+[[identifiers-basic-idclass-generatedvalue-mapping-example]]
+.`@IdClass` with partial identifier generation using `@GeneratedValue`
 ====
 [source,java]
 ----
-include::{extrasdir}/id/IdClass3.java[]
+include::{sourcedir}/IdClassGeneratedValueTest.java[tag=identifiers-basic-idclass-generatedvalue-mapping-example, indent=0]
 ----
 ====
 
 [NOTE]
 ====
 This feature exists because of a highly questionable interpretation of the JPA specification made by the SpecJ committee.
+
 Hibernate does not feel that JPA defines support for this, but added the feature simply to be usable in SpecJ benchmarks.
 Use of this feature may or may not be portable from a JPA perspective.
 ====
@@ -178,22 +187,24 @@ Use of this feature may or may not be portable from a JPA perspective.
 Hibernate allows defining a composite identifier out of entity associations.
 In the following example, the `PersonAddress` entity identifier is formed of two `@ManyToOne` associations.
 
+[[identifiers-composite-id-mapping-example]]
 .Composite identifiers with associations
 ====
 [source,java]
 ----
-include::{extrasdir}/id/CompositeIdAssociations.java[]
+include::{sourcedir}/IdManyToOneTest.java[tag=identifiers-composite-id-mapping-example, indent=0]
 ----
 ====
 
 Although the mapping is much simpler than using an `@EmbeddedId` or an `@IdClass`, there's no separation between the entity instance and the actual identifier.
 To query this entity, an instance of the entity itself must be supplied to the persistence context.
 
-.Composite identifiers with associations query
+[[identifiers-composite-id-fetching-example]]
+.Fetchcing with composite identifiers
 ====
 [source,java]
 ----
-include::{extrasdir}/id/CompositeIdAssociationsQuery.java[]
+include::{sourcedir}/IdManyToOneTest.java[tag=identifiers-composite-id-fetching-example, indent=0]
 ----
 ====
 
@@ -383,22 +394,24 @@ These strategies are defined by the `org.hibernate.id.UUIDGenerationStrategy` co
 The default strategy is a version 4 (random) strategy according to IETF RFC 4122.
 Hibernate does ship with an alternative strategy which is a RFC 4122 version 1 (time-based) strategy (using ip address rather than mac address).
 
+[[identifiers-generators-uuid-mapping-example]]
 .Implicitly using the random UUID strategy
 ====
 [source,java]
 ----
-include::{extrasdir}/id/UUIDRandom.java[]
+include::{sourcedir}/UuidGeneratedValueTest.java[tag=identifiers-generators-uuid-mapping-example, indent=0]
 ----
 ====
 
 To specify an alternative generation strategy, we'd have to define some configuration via `@GenericGenerator`.
 Here we choose the RFC 4122 version 1 compliant strategy named `org.hibernate.id.uuid.CustomVersionOneStrategy`.
 
+[[identifiers-generators-custom-uuid-mapping-example]]
 .Implicitly using the random UUID strategy
 ====
 [source,java]
 ----
-include::{extrasdir}/id/UUIDCustomVersionOneStrategy.java[]
+include::{sourcedir}/UuidCustomGeneratedValueTest.java[tag=identifiers-generators-custom-uuid-mapping-example, indent=0]
 ----
 ====
 

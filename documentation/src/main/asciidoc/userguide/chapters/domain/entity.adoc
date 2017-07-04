@@ -1,7 +1,7 @@
 ﻿[[entity]]
 === Entity types
 :sourcedir-locking: ../../../../../test/java/org/hibernate/userguide/locking
-:sourcedir-mapping: ../../../../../test/java/org/hibernate/userguide/mapping/basic
+:sourcedir-mapping: ../../../../../test/java/org/hibernate/userguide/mapping/
 :sourcedir-proxy: ../../../../../test/java/org/hibernate/userguide/proxy
 :sourcedir-persister: ../../../../../test/java/org/hibernate/userguide/persister
 :extrasdir: extras
@@ -99,11 +99,12 @@ We recommend that you declare consistently-named identifier attributes on persis
 
 The placement of the `@Id` annotation marks the <<chapters/domain/access.adoc#access,persistence state access strategy>>.
 
-.Identifier
+[[entity-pojo-identifier-mapping-example]]
+.Identifier mapping
 ====
 [source,java]
 ----
-include::{extrasdir}/entity/Identifier.java[]
+include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-identifier-mapping-example, indent=0]
 ----
 ====
 
@@ -116,11 +117,12 @@ The main piece in mapping the entity is the `javax.persistence.Entity` annotatio
 The `@Entity` annotation defines just one attribute `name` which is used to give a specific entity name for use in JPQL queries.
 By default, the entity name represents the unqualified name of the entity class itself.
 
-.Simple `@Entity`
+[[entity-pojo-mapping-example]]
+.Simple `@Entity` mapping
 ====
 [source,java]
 ----
-include::{extrasdir}/entity/SimpleEntity.java[]
+include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-mapping-example, indent=0]
 ----
 ====
 
@@ -129,11 +131,12 @@ The identifier uniquely identifies each row in that table.
 By default, the name of the table is assumed to be the same as the name of the entity.
 To explicitly give the name of the table or to specify other information about the table, we would use the `javax.persistence.Table` annotation.
 
+[[entity-pojo-table-mapping-example]]
 .Simple `@Entity` with `@Table`
 ====
 [source,java]
 ----
-include::{extrasdir}/entity/SimpleEntityWithTable.java[]
+include::{sourcedir-mapping}/identifier/SimpleEntityTableTest.java[tag=entity-pojo-table-mapping-example, indent=0]
 ----
 ====
 
@@ -162,88 +165,109 @@ Hibernate, however, works hard to make sure that does not happen within a given 
 In fact, Hibernate guarantees equivalence of persistent identity (database row) and Java identity inside a particular session scope.
 So if we ask a Hibernate `Session` to load that specific Person multiple times we will actually get back the same __instance__:
 
+[[entity-pojo-identity-scope-example]]
 .Scope of identity
 ====
 [source,java]
 ----
-include::{extrasdir}/entity/listing1.java[]
+include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-identity-scope-example, indent=0]
 ----
 ====
 
-Consider another example using a persistent `java.util.Set`:
+Consider we have a `Library` parent entity which contains a `java.util.Set` of `Book` entities:
 
+[[entity-pojo-set-mapping-example]]
+Library entity mapping
+====
+[source,java]
+----
+include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-set-mapping-example, indent=0]
+----
+====
+
+[[entity-pojo-set-identity-scope-example]]
 .Set usage with Session-scoped identity
 ====
 [source,java]
 ----
-include::{extrasdir}/entity/listing3.java[]
+include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-set-identity-scope-example, indent=0]
 ----
 ====
 
 However, the semantic changes when we mix instances loaded from different Sessions:
 
+[[entity-pojo-multi-session-identity-scope-example]]
 .Mixed Sessions
 ====
 [source,java]
 ----
-include::{extrasdir}/entity/listing2.java[]
+include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-multi-session-identity-scope-example, indent=0]
 ----
 
 [source,java]
 ----
-include::{extrasdir}/entity/listing4.java[]
+include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-multi-session-set-identity-scope-example, indent=0]
 ----
 ====
 
-Specifically the outcome in this last example will depend on whether the `Person` class implemented equals/hashCode, and, if so, how.
+Specifically the outcome in this last example will depend on whether the `Book` class
+implemented equals/hashCode, and, if so, how.
+
+If the `Book` class did not override the default equals/hashCode,
+then the two `Book` object reference are not going to be equal since their references are different.
 
 Consider yet another case:
 
+[[entity-pojo-transient-set-identity-scope-example]]
 .Sets with transient entities
 ====
 [source,java]
 ----
-include::{extrasdir}/entity/listing5.java[]
+include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-transient-set-identity-scope-example, indent=0]
 ----
 ====
 
-In cases where you will be dealing with entities outside of a Session (whether they be transient or detached), especially in cases where you will be using them in Java collections,
+In cases where you will be dealing with entities outside of a Session (whether they be transient or detached),
+especially in cases where you will be using them in Java collections,
 you should consider implementing equals/hashCode.
 
 A common initial approach is to use the entity's identifier attribute as the basis for equals/hashCode calculations:
 
+[[entity-pojo-naive-equals-hashcode-example]]
 .Naive equals/hashCode implementation
 ====
 [source,java]
 ----
-include::{extrasdir}/entity/listing6.java[]
+include::{sourcedir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-example, indent=0]
 ----
 ====
 
-It turns out that this still breaks when adding transient instance of `Person` to a set as we saw in the last example:
+It turns out that this still breaks when adding transient instance of `Book` to a set as we saw in the last example:
 
-.Still trouble
+[[entity-pojo-naive-equals-hashcode-example]]
+.Auto-generated identifiers with Sets and naive equals/hashCode
 ====
 [source,java]
 ----
-include::{extrasdir}/entity/listing7.java[]
+include::{sourcedir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-persist-example, indent=0]
 ----
 ====
 
 The issue here is a conflict between the use of generated identifier, the contract of `Set` and the equals/hashCode implementations.
 `Set` says that the equals/hashCode value for an object should not change while the object is part of the `Set`.
-But that is exactly what happened here because the equals/hasCode are based on the (generated) id, which was not set until the `session.getTransaction().commit()` call.
+But that is exactly what happened here because the equals/hasCode are based on the (generated) id, which was not set until the JPA transaction is committed.
 
 Note that this is just a concern when using generated identifiers.
 If you are using assigned identifiers this will not be a problem, assuming the identifier value is assigned prior to adding to the `Set`.
 
 Another option is to force the identifier to be generated and set prior to adding to the `Set`:
 
-.Forcing identifier generation
+[[entity-pojo-naive-equals-hashcode-persist-force-flush-example]]
+.Forcing the flush before adding to the Set
 ====
 [source,java]
 ----
-include::{extrasdir}/entity/listing8.java[]
+include::{sourcedir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-persist-force-flush-example, indent=0]
 ----
 ====
 
@@ -251,11 +275,23 @@ But this is often not feasible.
 
 The final approach is to use a "better" equals/hashCode implementation, making use of a natural-id or business-key.
 
-.Better equals/hashCode with natural-id
+[[entity-pojo-natural-id-equals-hashcode-example]]
+.Natural Id equals/hashCode
 ====
 [source,java]
 ----
-include::{extrasdir}/entity/listing9.java[]
+include::{sourcedir-mapping}/identifier/NaturalIdEqualsHashCodeEntityTest.java[tag=entity-pojo-natural-id-equals-hashcode-example, indent=0]
+----
+====
+
+This time, when adding a `Book` to the `Library` `Set`, you can retrieve the `Book` even after it's being persisted:
+
+[[entity-pojo-natural-id-equals-hashcode-persist-example]]
+.Natural Id equals/hashCode persist example
+====
+[source,java]
+----
+include::{sourcedir-mapping}/identifier/NaturalIdEqualsHashCodeEntityTest.java[tag=entity-pojo-natural-id-equals-hashcode-persist-example, indent=0]
 ----
 ====
 
@@ -283,7 +319,7 @@ You can map an entity to a SQL query using the https://docs.jboss.org/hibernate/
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/SubselectTest.java[tag=mapping-Subselect-example,indent=0]
+include::{sourcedir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-example,indent=0]
 ----
 ====
 
@@ -299,7 +335,7 @@ So, if we have the following `AccountTransaction` record, the `AccountSummary` b
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/SubselectTest.java[tag=mapping-Subselect-entity-find-example,indent=0]
+include::{sourcedir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-entity-find-example,indent=0]
 ----
 ====
 
@@ -310,7 +346,7 @@ If we add a new `AccountTransaction` entity and refresh the `AccountSummary` ent
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/SubselectTest.java[tag=mapping-Subselect-entity-refresh-example,indent=0]
+include::{sourcedir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-entity-refresh-example,indent=0]
 ----
 ====
 

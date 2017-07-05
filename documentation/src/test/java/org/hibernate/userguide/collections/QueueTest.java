@@ -77,7 +77,7 @@ public class QueueTest extends BaseEntityManagerFunctionalTestCase {
 		@CollectionType( type = "org.hibernate.userguide.collections.type.QueueType")
 		private Collection<Phone> phones = new LinkedList<>();
 
-		//Getters and setters are omitted for brevity
+		//Constructors are omitted for brevity
 
 	//end::collections-custom-collection-mapping-example[]
 
@@ -88,10 +88,10 @@ public class QueueTest extends BaseEntityManagerFunctionalTestCase {
 			this.id = id;
 		}
 
+	//tag::collections-custom-collection-mapping-example[]
 		public Queue<Phone> getPhones() {
 			return (Queue<Phone>) phones;
 		}
-	//tag::collections-custom-collection-mapping-example[]
 	}
 
 	@Entity(name = "Phone")
@@ -131,6 +131,7 @@ public class QueueTest extends BaseEntityManagerFunctionalTestCase {
 			return number;
 		}
 
+	//tag::collections-custom-collection-mapping-example[]
 		@Override
 		public int compareTo(Phone o) {
 			return number.compareTo( o.getNumber() );
@@ -152,7 +153,6 @@ public class QueueTest extends BaseEntityManagerFunctionalTestCase {
 		public int hashCode() {
 			return Objects.hash( number );
 		}
-	//tag::collections-custom-collection-mapping-example[]
 	}
 	//end::collections-custom-collection-mapping-example[]
 }

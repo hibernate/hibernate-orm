@@ -82,9 +82,11 @@ public class InsertOrderingWithBidirectionalMapsIdOneToOne
 		PreparedStatement addressPreparedStatement = connectionProvider.getPreparedStatement(
 				"insert into Address (ID) values (?)" );
 		verify( addressPreparedStatement, times( 2 ) ).addBatch();
+		verify( addressPreparedStatement, times( 1 ) ).executeBatch();
 		PreparedStatement personPreparedStatement = connectionProvider.getPreparedStatement(
 				"insert into Person (address_ID) values (?)" );
 		verify( personPreparedStatement, times( 2 ) ).addBatch();
+		verify( personPreparedStatement, times( 1 ) ).executeBatch();
 	}
 
 	@Entity(name = "Address")

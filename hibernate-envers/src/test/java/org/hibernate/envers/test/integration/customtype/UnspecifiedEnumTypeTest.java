@@ -103,7 +103,7 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 
 		@SuppressWarnings("unchecked")
 		List<Object[]> values = session
-				.createSQLQuery( "SELECT enum1, enum2 FROM enum_entity_aud ORDER BY rev ASC" )
+				.createSQLQuery( "SELECT enum1, enum2 FROM ENUM_ENTITY_AUD ORDER BY rev ASC" )
 				.list();
 		session.close();
 

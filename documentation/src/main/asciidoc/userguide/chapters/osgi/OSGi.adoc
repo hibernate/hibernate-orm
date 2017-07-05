@@ -1,6 +1,7 @@
 [[osgi]]
 == OSGi
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/osgi
+:extrasdir: extras
 
 === OSGi Specification and Environment
 
@@ -73,7 +74,7 @@ You can deploy the `DataSource` manually (Karaf has a `deploy` dir), or through 
 ====
 [source,xml]
 ----
-include::{sourcedir}/datasource-h2.xml[]
+include::{extrasdir}/datasource-h2.xml[]
 ----
 ====
 
@@ -103,7 +104,7 @@ The container takes the name of your persistence unit, then automatically inject
 ====
 [source,xml]
 ----
-include::{sourcedir}/blueprint.xml[]
+include::{extrasdir}/blueprint.xml[]
 ----
 ====
 
@@ -137,11 +138,12 @@ The service handles the OSGi `ClassLoader`, discovered extension points, scannin
 Manually creating an `EntityManagerFactory` is guaranteed to NOT work during runtime!
 ====
 
+[[osgi-discover-EntityManagerFactory]]
 .Discover/Use `EntityManagerFactory`
 ====
 [source,java]
 ----
-include::{sourcedir}/UnmanagedJPAHibernateUtil.java[]
+include::{sourcedir}/jpa/HibernateUtil.java[tag=osgi-discover-EntityManagerFactory, indent=0]
 ----
 ====
 
@@ -170,11 +172,12 @@ It is VITAL that your `SessionFactory` be obtained through the service, rather t
 Manually creating a `SessionFactory` is guaranteed to NOT work during runtime!
 ====
 
+[[osgi-discover-SessionFactory]]
 .Discover/Use `SessionFactory`
 ====
 [source,java]
 ----
-include::{sourcedir}/NativeHibernateUtil.java[]
+include::{sourcedir}/_native/HibernateUtil.java[tag=osgi-discover-SessionFactory, indent=0]
 ----
 ====
 
@@ -207,7 +210,7 @@ Add `OSGI-INF/blueprint/blueprint.xml` to your classpath. Envers' blueprint is a
 ====
 [source,xml]
 ----
-include::{sourcedir}/extension_point_blueprint.xml[]
+include::{extrasdir}/extension_point_blueprint.xml[]
 ----
 ====
 

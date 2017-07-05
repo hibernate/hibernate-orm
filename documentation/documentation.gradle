@@ -71,6 +71,8 @@ dependencies {
 	testRuntime( libraries.mariadb )
 	testRuntime( libraries.mssql )
 
+	testCompile "org.osgi:org.osgi.core:4.3.1"
+
 	if (db.equalsIgnoreCase("oracle")) {
 		dependencies {
 			testRuntime( libraries.oracle ) {

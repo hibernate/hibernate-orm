@@ -96,5 +96,13 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 		if ( jdbcDatabaseMetaData != null ) {
 			jdbcDatabaseMetaData = null;
 		}
+		
+		if ( jdbcConnection != null ) {
+			try {
+				jdbcConnectionAccess.releaseConnection( jdbcConnection );
+			}
+			catch (SQLException ignore) {
+			}
+		}
 	}
 }

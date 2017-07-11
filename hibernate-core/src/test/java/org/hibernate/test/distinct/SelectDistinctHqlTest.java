@@ -110,7 +110,7 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 					.getResultList();
 			assertEquals(1, persons.size());
 			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
-			asertFalse(sqlQuery.contains(" distinct "));
+			assertFalse(sqlQuery.contains(" distinct "));
 		});
 	}
 

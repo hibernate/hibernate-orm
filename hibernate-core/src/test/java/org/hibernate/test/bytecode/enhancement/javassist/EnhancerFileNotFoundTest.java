@@ -6,64 +6,61 @@
  */
 package org.hibernate.test.bytecode.enhancement.javassist;
 
+import javassist.CtClass;
+import org.hibernate.bytecode.enhance.internal.javassist.EnhancerImpl;
+import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
+
 import java.io.FileNotFoundException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import javassist.CtClass;
-
-import org.hibernate.bytecode.enhance.internal.javassist.EnhancerImpl;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
 
 /**
  * @author Vlad Mihalcea
  */
-public class EnhancerFileNotFoundTest extends BaseUnitTestCase {
+public class EnhancerFileNotFoundTest {
 
-	public static class Enhancer extends EnhancerImpl {
+    @Test
+    @TestForIssue( jiraKey = "HHH-11307" )
+    public void test() throws Exception {
+        Enhancer enhancer = new Enhancer( new DefaultEnhancementContext() );
+        try {
+            Class<?> clazz = getClass().getClassLoader().loadClass( Hidden.class.getName() );
+            String resourceName = clazz.getName().replace( '.', '/' ) + ".class";
+            URL url = getClass().getClassLoader().getResource( resourceName );
+            if ( url != null ) {
+                Files.delete( Paths.get( url.toURI() ) );
+                enhancer.loadCtClassFromClass( clazz );
+            }
+            fail( "Should throw FileNotFoundException!" );
+        } catch ( Exception expected ) {
+            assertSame( FileNotFoundException.class, expected.getCause().getClass() );
+        }
+    }
 
-		public Enhancer(EnhancementContext enhancementContext) {
-			super( enhancementContext );
-		}
+    // --- //
 
-		@Override
-		public CtClass loadCtClassFromClass(Class<?> aClass) {
-			return super.loadCtClassFromClass( aClass );
-		}
-	}
+    private static class Enhancer extends EnhancerImpl {
 
-	@Test
-	@TestForIssue(jiraKey = "HHH-11307")
-	public void test()
-			throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-		EnhancementContext enhancementContextMock = mock( EnhancementContext.class );
+        public Enhancer(EnhancementContext enhancementContext) {
+            super( enhancementContext );
+        }
 
-		Enhancer enhancer = new Enhancer( enhancementContextMock );
-		try {
-			Class<?> clazz = Hidden.class;
-			String resourceName =  Hidden.class.getName().replace( '.', '/' ) + ".class";
-			URL url = getClass().getClassLoader().getResource( resourceName );
-			Files.delete( Paths.get(url.toURI()) );
-			enhancer.loadCtClassFromClass( clazz );
-			fail("Should throw FileNotFoundException!");
-		}
-		catch ( Exception expected ) {
-			assertEquals( FileNotFoundException.class, expected.getCause().getClass() );
-		}
-	}
+        @Override
+        // change visibility protected -> public
+        public CtClass loadCtClassFromClass(Class<?> aClass) {
+            return super.loadCtClassFromClass( aClass );
+        }
+    }
 
-	private static class Hidden {
+    // --- //
 
-	}
-
+    private static class Hidden {
+    }
 }

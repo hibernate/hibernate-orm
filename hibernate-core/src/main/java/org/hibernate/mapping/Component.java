@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.domain.EmbeddedMapping;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
@@ -49,7 +48,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Component extends SimpleValue implements EmbeddedValueMapping, EmbeddedMapping, PropertyContainer, MetaAttributable {
+public class Component extends SimpleValue implements EmbeddedValueMapping, PropertyContainer, MetaAttributable {
 	private List<PersistentAttributeMapping> properties = new ArrayList<>();
 	private String componentClassName;
 	private boolean embedded;
@@ -90,7 +89,20 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Embe
 	@SuppressWarnings("unchecked")
 	public EmbeddableJavaDescriptor getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
+
 	}
+
+//	@Override
+//	public SqlTypeDescriptor[] getColumnsSqlTypeDescriptors() {
+//		final List<PersistentAttributeMapping> persistentAttributes = getPersistentAttributes();
+//		SqlTypeDescriptor[] sqlTypeDescriptors = new SqlTypeDescriptor[persistentAttributes.size()];
+//		for(PersistentAttributeMapping persistentAttributeMapping : persistentAttributes){
+//			persistentAttributeMapping.getValueMapping().getJavaTypeDescriptor().getJdbcRecommendedSqlType(
+//					getMetadataBuildingContext().getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry().getBaseJdbcRecommendedSqlTypeMappingContext());
+//
+//		}
+//		return new SqlTypeDescriptor[0];
+//	}
 
 	@Override
 	public String getName() {
@@ -507,16 +519,6 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Embe
 	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.EMBEDDABLE;
-	}
-
-	@Override
-	public EmbeddedValueMapping getValueMapping() {
-		return this;
-	}
-
-	@Override
-	public String getEmbeddableClassName() {
-		return componentClassName;
 	}
 
 	private void resolveJavaTypeDescriptor(InFlightMetadataCollector metadata) {

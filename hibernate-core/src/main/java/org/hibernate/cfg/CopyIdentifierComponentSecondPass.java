@@ -16,12 +16,12 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.SimpleValue;
 
 import org.jboss.logging.Logger;
 
@@ -154,9 +154,9 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 		//property.setOptional( property.isOptional() );
 		property.setPersistentClass( component.getOwner() );
 		property.setPropertyAccessorName( referencedProperty.getPropertyAccessorName() );
-		SimpleValue value = new SimpleValue( buildingContext, component.getTable() );
+		BasicValue value = new BasicValue( buildingContext, component.getTable() );
 		property.setValue( value );
-		final SimpleValue referencedValue = (SimpleValue) referencedProperty.getValue();
+		final BasicValue referencedValue = (BasicValue) referencedProperty.getValue();
 		value.setTypeName( referencedValue.getTypeName() );
 		value.setTypeParameters( referencedValue.getTypeParameters() );
 		final Iterator<Selectable> columns = referencedValue.getColumnIterator();

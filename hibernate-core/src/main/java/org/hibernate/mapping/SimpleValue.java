@@ -23,6 +23,7 @@ import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BasicTypeResolverConvertibleSupport;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -66,12 +67,8 @@ public abstract class SimpleValue implements KeyValue {
 	private boolean alternateUniqueKey;
 	private boolean cascadeDeleteEnabled;
 
-	public SimpleValue(MetadataBuildingContext buildingContext) {
-		this.buildingContext = buildingContext;
-	}
-
 	public SimpleValue(MetadataBuildingContext buildingContext, MappedTable table) {
-		this( buildingContext );
+		this.buildingContext = buildingContext;
 		this.table = table;
 	}
 
@@ -79,8 +76,6 @@ public abstract class SimpleValue implements KeyValue {
 	public MetadataBuildingContext getMetadataBuildingContext() {
 		return buildingContext;
 	}
-
-	public abstract SqlTypeDescriptor[] getColumnsSqlTypeDescriptors();
 
 	/**
 	 * @deprecated Use {@link #getMetadataBuildingContext()} instead

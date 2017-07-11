@@ -116,7 +116,6 @@ public class RelationalObjectBinder {
 		}
 
 		final Column column = new Column( logicalName );
-		column.setBasicValue( simpleValue );
 
 		if ( table != null ) {
 			table.addColumn( column );

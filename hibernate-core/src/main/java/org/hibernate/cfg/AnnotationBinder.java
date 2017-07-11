@@ -148,9 +148,9 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.IsThisStillNeededException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Any;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.DependantValue;
@@ -728,7 +728,7 @@ public final class AnnotationBinder {
 
 		final boolean subclassAndSingleTableStrategy = inheritanceState.getType() == InheritanceType.SINGLE_TABLE
 				&& inheritanceState.hasParents();
-		Set<String> idPropertiesIfIdClass = new HashSet<String>();
+		Set<String> idPropertiesIfIdClass = new HashSet<>();
 		boolean isIdClass = mapAsIdClass(
 				inheritanceStatePerClass,
 				inheritanceState,
@@ -914,7 +914,7 @@ public final class AnnotationBinder {
 			InheritanceState.ElementsToProcess elementsToProcess,
 			boolean subclassAndSingleTableStrategy,
 			Set<String> idPropertiesIfIdClass) {
-		Set<String> missingIdProperties = new HashSet<String>( idPropertiesIfIdClass );
+		Set<String> missingIdProperties = new HashSet<>( idPropertiesIfIdClass );
 		for ( PropertyData propertyAnnotatedElement : elementsToProcess.getElements() ) {
 			String propertyName = propertyAnnotatedElement.getPropertyName();
 			if ( !idPropertiesIfIdClass.contains( propertyName ) ) {
@@ -1461,7 +1461,6 @@ public final class AnnotationBinder {
 		}
 	}
 
-
 	private static void bindDiscriminatorColumnToRootPersistentClass(
 			RootClass rootClass,
 			Ejb3DiscriminatorColumn discriminatorColumn,
@@ -1474,7 +1473,7 @@ public final class AnnotationBinder {
 			}
 			discriminatorColumn.setJoins( secondaryTables );
 			discriminatorColumn.setPropertyHolder( propertyHolder );
-			SimpleValue discriminatorColumnBinding = new SimpleValue( context, rootClass.getTable() );
+			BasicValue discriminatorColumnBinding = new BasicValue( context, rootClass.getTable() );
 			rootClass.setDiscriminator( discriminatorColumnBinding );
 			discriminatorColumn.linkWithValue( discriminatorColumnBinding );
 			discriminatorColumnBinding.setTypeName( discriminatorColumn.getDiscriminatorTypeName() );
@@ -2330,10 +2329,10 @@ public final class AnnotationBinder {
 	}
 
 	private static void setVersionInformation(XProperty property, PropertyBinder propertyBinder) {
-		propertyBinder.getSimpleValueBinder().setVersion( true );
+		propertyBinder.getBasicValueBinder().setVersion( true );
 		if ( property.isAnnotationPresent( Source.class ) ) {
 			Source source = property.getAnnotation( Source.class );
-			propertyBinder.getSimpleValueBinder().setTimestampVersionType( source.value().typeName() );
+			propertyBinder.getBasicValueBinder().setTimestampVersionType( source.value().typeName() );
 		}
 	}
 
@@ -2751,51 +2750,30 @@ public final class AnnotationBinder {
 		final String propertyName = inferredData.getPropertyName();
 		HashMap<String, IdGenerator> localGenerators = new HashMap<String, IdGenerator>();
 
-		if ( isComposite ) {
-			id = fillComponent(
-					propertyHolder,
-					inferredData,
-					baseInferredData,
-					propertyAccessor,
-					false,
-					entityBinder,
-					isEmbedded,
-					isIdentifierMapper,
-					false,
-					buildingContext,
-					inheritanceStatePerClass
-			);
-			Component componentId = ( Component ) id;
-			componentId.setKey( true );
-			if ( rootClass.getIdentifier() != null ) {
-				throw new AnnotationException( componentId.getComponentClassName() + " must not have @Id properties when used as an @EmbeddedId" );
-			}
-			if ( componentId.getPropertySpan() == 0 ) {
-				throw new AnnotationException( componentId.getComponentClassName() + " has no persistent id property" );
-			}
-			//tuplizers
-			XProperty property = inferredData.getProperty();
-			setupComponentTuplizer( property, componentId );
+		id = fillComponent(
+				propertyHolder,
+				inferredData,
+				baseInferredData,
+				propertyAccessor,
+				false,
+				entityBinder,
+				isEmbedded,
+				isIdentifierMapper,
+				false,
+				buildingContext,
+				inheritanceStatePerClass
+		);
+		Component componentId = (Component) id;
+		componentId.setKey( true );
+		if ( rootClass.getIdentifier() != null ) {
+			throw new AnnotationException( componentId.getComponentClassName() + " must not have @Id properties when used as an @EmbeddedId" );
 		}
-		else {
-			// todo (6.0) : I think this branch is never used.  Remove.
-			//		For the moment I comment it out and throw an exception so that we can verify this.
-
-			throw new IsThisStillNeededException();
-
-//			for ( Ejb3Column column : columns ) {
-//				column.forceNotNull(); //this is an id
-//			}
-//			SimpleValueBinder value = new SimpleValueBinder();
-//			value.setPropertyName( propertyName );
-//			value.setReturnedClassName( inferredData.getTypeName() );
-//			value.setColumns( columns );
-//			value.setPersistentClassName( persistentClassName );
-//			value.setBuildingContext( buildingContext );
-//			value.setType( inferredData.getProperty(), inferredData.getClassOrElement(), persistentClassName, null );
-//			value.setAccessType( propertyAccessor );
-//			id = value.make();
+		if ( componentId.getPropertySpan() == 0 ) {
+			throw new AnnotationException( componentId.getComponentClassName() + " has no persistent id property" );
 		}
+		//tuplizers
+		XProperty property = inferredData.getProperty();
+		setupComponentTuplizer( property, componentId );
 
 		rootClass.setIdentifier( id );
 		BinderHelper.makeIdGenerator(

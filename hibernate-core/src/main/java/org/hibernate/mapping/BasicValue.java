@@ -35,10 +35,6 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 	private AttributeConverterDescriptor attributeConverterDescriptor;
 	private BasicTypeResolver basicTypeResolver;
 
-	public BasicValue(MetadataBuildingContext buildingContext) {
-		super( buildingContext );
-	}
-
 	public BasicValue(MetadataBuildingContext buildingContext, MappedTable table) {
 		super( buildingContext, table );
 	}
@@ -48,9 +44,8 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 		return resolveType().getJavaTypeDescriptor();
 	}
 
-	@Override
-	public SqlTypeDescriptor[] getColumnsSqlTypeDescriptors() {
-		return new SqlTypeDescriptor[] {resolveType().getColumnDescriptor().getSqlTypeDescriptor()};
+	public SqlTypeDescriptor getColumnsSqlTypeDescriptors() {
+		return resolveType().getColumnDescriptor().getSqlTypeDescriptor();
 	}
 
 	public AttributeConverterDescriptor getAttributeConverterDescriptor() {

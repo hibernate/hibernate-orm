@@ -45,7 +45,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private String defaultValue;
 	private String customWrite;
 	private String customRead;
-	private SimpleValue value;
+	private BasicValue value;
 	private SqlTypeDescriptor sqlTypeDescriptor;
 	private Identifier tableName;
 
@@ -213,7 +213,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	@Override
 	public SqlTypeDescriptor getSqlTypeDescriptor() {
 		if ( sqlTypeDescriptor == null ) {
-			sqlTypeDescriptor = value.getColumnsSqlTypeDescriptors()[typeIndex];
+			sqlTypeDescriptor = value.getColumnsSqlTypeDescriptors();
 		}
 		return sqlTypeDescriptor;
 	}

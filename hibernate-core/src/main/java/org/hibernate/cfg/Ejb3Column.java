@@ -364,8 +364,8 @@ public class Ejb3Column {
 		else {
 			table = value.getTable();
 			final Column mappingColumn = getMappingColumn();
-			if(table!= null) {
-				mappingColumn.setTableName( table.getNameIdentifier());
+			if ( table != null ) {
+				mappingColumn.setTableName( table.getNameIdentifier() );
 			}
 			value.addColumn( mappingColumn );
 			table.addColumn( mappingColumn );

@@ -57,8 +57,8 @@ public class IdBagBinder extends BagBinder {
 		CollectionId collectionIdAnn = property.getAnnotation( CollectionId.class );
 
 		if ( collectionIdAnn != null ) {
-			SimpleValueBinder simpleValue = new SimpleValueBinder(
-					SimpleValueBinder.Kind.COLLECTION_ID,
+			BasicValueBinder valueBinder = new BasicValueBinder(
+					BasicValueBinder.Kind.COLLECTION_ID,
 					buildingContext
 			);
 
@@ -85,18 +85,18 @@ public class IdBagBinder extends BagBinder {
 				idColumn.setNullable(false);
 			}
 			Table table = collection.getCollectionTable();
-			simpleValue.setTable( table );
-			simpleValue.setColumns( idColumns );
+			valueBinder.setTable( table );
+			valueBinder.setColumns( idColumns );
 			Type typeAnn = collectionIdAnn.type();
 			if ( typeAnn != null && !BinderHelper.isEmptyAnnotationValue( typeAnn.type() ) ) {
-				simpleValue.setExplicitType( typeAnn );
+				valueBinder.setExplicitType( typeAnn );
 			}
 			else {
 				throw new AnnotationException( "@CollectionId is missing type: "
 						+ StringHelper.qualify( propertyHolder.getPath(), propertyName ) );
 			}
 
-			SimpleValue id = simpleValue.make();
+			SimpleValue id = valueBinder.make();
 			( (IdentifierCollection) collection ).setIdentifier( id );
 			String generator = collectionIdAnn.generator();
 			String generatorType;

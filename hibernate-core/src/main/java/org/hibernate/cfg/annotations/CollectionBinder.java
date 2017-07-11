@@ -1508,8 +1508,8 @@ public abstract class CollectionBinder {
 			else {
 				holder.prepare( property );
 
-				SimpleValueBinder elementBinder = new SimpleValueBinder(
-						SimpleValueBinder.Kind.COLLECTION_ELEMENT,
+				BasicValueBinder elementBinder = new BasicValueBinder(
+						BasicValueBinder.Kind.COLLECTION_ELEMENT,
 						buildingContext
 				);
 				elementBinder.setReturnedClassName( collType.getName() );

@@ -40,4 +40,6 @@ public class ExportableColumn extends Column {
 		setSqlTypeDescriptor( type.getColumnDescriptor().getSqlTypeDescriptor() );
 		setSqlType( dbTypeDeclaration );
 	}
+
+
 }

@@ -12,7 +12,6 @@ import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.type.Type;
 
 /**
  * A Hibernate "any" type (ie. polymorphic association to

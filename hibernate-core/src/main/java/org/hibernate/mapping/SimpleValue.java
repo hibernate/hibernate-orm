@@ -96,17 +96,17 @@ public abstract class SimpleValue implements KeyValue {
 		this.cascadeDeleteEnabled = cascadeDeleteEnabled;
 	}
 
-//	public void addColumn(Column column) {
-//		if ( !columns.contains( column ) ) {
-//			columns.add( column );
-//		}
-//		if ( getTable() != null ) {
-//			column.setTableName( getTable().getNameIdentifier() );
-//		}
-//		column.setTypeIndex( columns.size() - 1 );
-//	}
+	public void addColumn(Column column) {
+		if ( !columns.contains( column ) ) {
+			columns.add( column );
+		}
+		if ( getTable() != null ) {
+			column.setTableName( getTable().getNameIdentifier() );
+		}
+		setSqlTypeDescriptorResolver(column);
+	}
 
-	public abstract void addColumn(Column column);
+	protected abstract void setSqlTypeDescriptorResolver(Column column);
 
 	public void addFormula(Formula formula) {
 		columns.add( formula );

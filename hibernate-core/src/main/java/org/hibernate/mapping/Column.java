@@ -210,7 +210,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		return sqlTypeDescriptor;
 	}
 
-	public void setSqlTypeCodeResolver(SimpleValue.SqlTypeDescriptorResolver sqlTypeCodeResolver) {
+	public void setSqlTypeDescriptorResolver(SimpleValue.SqlTypeDescriptorResolver sqlTypeCodeResolver) {
 		this.sqlTypeCodeResolver = sqlTypeCodeResolver;
 	}
 
@@ -311,7 +311,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		copy.setDefaultValue( defaultValue );
 		copy.setCustomRead( customRead );
 		copy.setCustomWrite( customWrite );
-		copy.setSqlTypeCodeResolver( sqlTypeCodeResolver );
+		copy.setSqlTypeDescriptorResolver( sqlTypeCodeResolver );
 		return copy;
 	}
 

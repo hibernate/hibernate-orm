@@ -83,14 +83,8 @@ public class Any extends SimpleValue {
 	}
 
 	@Override
-	public void addColumn(Column column) {
-		if ( !columns.contains( column ) ) {
-			columns.add( column );
-		}
-		if ( getTable() != null ) {
-			column.setTableName( getTable().getNameIdentifier() );
-		}
-		column.setSqlTypeCodeResolver( new SqlTypeDescriptorResolverImpl( columns.size() - 1  ) );
+	protected void setSqlTypeDescriptorResolver(Column column) {
+		column.setSqlTypeDescriptorResolver( new Any.SqlTypeDescriptorResolverImpl( columns.size() - 1  ) );
 	}
 
 	@Override

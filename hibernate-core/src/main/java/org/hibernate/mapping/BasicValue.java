@@ -85,6 +85,20 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 	}
 
 	@Override
+	protected void setSqlTypeDescriptorResolver(Column column) {
+		column.setSqlTypeDescriptorResolver( new SqlTypeDescriptorResolverImpl( ) );
+
+	}
+
+	public class SqlTypeDescriptorResolverImpl implements SqlTypeDescriptorResolver {
+		@Override
+		public SqlTypeDescriptor resolveSqlTypeDescriptor() {
+			return resolveType().getColumnDescriptor().getSqlTypeDescriptor();
+		}
+	}
+
+
+	@Override
 	public void addFormula(Formula formula) {
 		if ( getMappedColumns().size() > 0 ) {
 			throw new MappingException( "Attempt to add additional MappedColumn to BasicValueMapping" );

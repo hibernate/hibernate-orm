@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey.ColumnMappings;
 import org.hibernate.metamodel.model.relational.spi.Table;
@@ -22,5 +23,5 @@ public interface DatabaseObjectResolver {
 
 	Column resolveColumn(MappedColumn mappedColumn);
 
-	ColumnMappings resolveColumnMappings(List<MappedColumn> columns, List<MappedColumn> otherColumns);
+	ColumnMappings resolveColumnMappings(List<Selectable> columns, List<Selectable> otherColumns);
 }

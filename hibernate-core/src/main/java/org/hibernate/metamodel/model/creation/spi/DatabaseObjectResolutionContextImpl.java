@@ -13,6 +13,7 @@ import java.util.Map;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
@@ -55,7 +56,7 @@ public class DatabaseObjectResolutionContextImpl
 
 	@Override
 	public ForeignKey.ColumnMappings resolveColumnMappings(
-			List<MappedColumn> columns, List<MappedColumn> otherColumns) {
+			List<Selectable> columns, List<Selectable> otherColumns) {
 		throw new NotYetImplementedException(  );
 	}
 

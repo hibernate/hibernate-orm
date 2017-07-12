@@ -23,6 +23,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.Representation;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
@@ -261,8 +262,8 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	}
 
 	@Override
-	public EntityMode getRepresentation() {
-		return entityMode;
+	public Representation getRepresentation() {
+		return entityMode.asRepresentation();
 	}
 
 	@Override

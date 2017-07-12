@@ -9,12 +9,15 @@ package org.hibernate.id;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.mapping.Column;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
  */
 public class ExportableColumn extends Column {
+
+	private BasicType type;
 
 	public ExportableColumn(Database database, MappedTable table, String name, BasicType type) {
 		this(
@@ -37,9 +40,13 @@ public class ExportableColumn extends Column {
 			setTableName( table.getNameIdentifier() );
 		}
 
-		setSqlTypeDescriptor( type.getColumnDescriptor().getSqlTypeDescriptor() );
 		setSqlType( dbTypeDeclaration );
+		this.type = type;
 	}
 
+	@Override
+	public SqlTypeDescriptor getSqlTypeDescriptor() {
+		return type.getColumnDescriptor().getSqlTypeDescriptor();
+	}
 
 }

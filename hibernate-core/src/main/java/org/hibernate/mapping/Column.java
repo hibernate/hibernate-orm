@@ -33,7 +33,6 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private int length = DEFAULT_LENGTH;
 	private int precision = DEFAULT_PRECISION;
 	private int scale = DEFAULT_SCALE;
-	private int typeIndex;
 	private Identifier name;
 	private boolean nullable = true;
 	private boolean unique;
@@ -45,8 +44,9 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private String defaultValue;
 	private String customWrite;
 	private String customRead;
-	private BasicValue value;
 	private SqlTypeDescriptor sqlTypeDescriptor;
+	private SimpleValue.SqlTypeDescriptorResolver sqlTypeCodeResolver;
+
 	private Identifier tableName;
 
 	public Column(String columnName) {
@@ -96,14 +96,6 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	public void setNullable(boolean nullable) {
 		this.nullable = nullable;
-	}
-
-	public int getTypeIndex() {
-		return typeIndex;
-	}
-
-	public void setTypeIndex(int typeIndex) {
-		this.typeIndex = typeIndex;
 	}
 
 	public boolean isUnique() {
@@ -213,17 +205,13 @@ public class Column implements Selectable, Serializable, Cloneable {
 	@Override
 	public SqlTypeDescriptor getSqlTypeDescriptor() {
 		if ( sqlTypeDescriptor == null ) {
-			sqlTypeDescriptor = value.getColumnsSqlTypeDescriptors();
+			sqlTypeDescriptor = sqlTypeCodeResolver.resolveSqlTypeDescriptor();
 		}
 		return sqlTypeDescriptor;
 	}
 
-	public void setBasicValue(BasicValue value){
-		this.value = value;
-	}
-
-	public void setSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor){
-		this.sqlTypeDescriptor = sqlTypeDescriptor;
+	public void setSqlTypeCodeResolver(SimpleValue.SqlTypeDescriptorResolver sqlTypeCodeResolver) {
+		this.sqlTypeCodeResolver = sqlTypeCodeResolver;
 	}
 
 	@Override
@@ -313,7 +301,6 @@ public class Column implements Selectable, Serializable, Cloneable {
 		copy.setTableName( tableName );
 		copy.setLength( length );
 		copy.setScale( scale );
-		copy.setTypeIndex( typeIndex );
 		copy.setNullable( nullable );
 		copy.setPrecision( precision );
 		copy.setUnique( unique );
@@ -324,7 +311,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		copy.setDefaultValue( defaultValue );
 		copy.setCustomRead( customRead );
 		copy.setCustomWrite( customWrite );
-		copy.setSqlTypeDescriptor( sqlTypeDescriptor );
+		copy.setSqlTypeCodeResolver( sqlTypeCodeResolver );
 		return copy;
 	}
 

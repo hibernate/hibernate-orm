@@ -11,19 +11,16 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
 import javax.persistence.EnumType;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BasicTypeResolverConvertibleSupport;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -51,21 +48,22 @@ public abstract class SimpleValue implements KeyValue {
 
 	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
 
+	protected final List<Selectable> columns = new ArrayList<>();
+	protected String typeName;
+	protected Properties typeParameters;
+	protected MappedTable table;
+	protected boolean cascadeDeleteEnabled;
+
 	private final MetadataBuildingContext buildingContext;
-
-	private final List<MappedColumn> columns = new ArrayList<>();
-
-	private String typeName;
-	private Properties typeParameters;
 
 	private Properties identifierGeneratorProperties;
 	private String identifierGeneratorStrategy = DEFAULT_ID_GEN_STRATEGY;
 	private String nullValue;
-	private MappedTable table;
 	private String foreignKeyName;
 	private String foreignKeyDefinition;
 	private boolean alternateUniqueKey;
-	private boolean cascadeDeleteEnabled;
+
+	private IdentifierGenerator identifierGenerator;
 
 	public SimpleValue(MetadataBuildingContext buildingContext, MappedTable table) {
 		this.buildingContext = buildingContext;
@@ -98,15 +96,17 @@ public abstract class SimpleValue implements KeyValue {
 		this.cascadeDeleteEnabled = cascadeDeleteEnabled;
 	}
 
-	public void addColumn(Column column) {
-		if ( !columns.contains( column ) ) {
-			columns.add( column );
-		}
-		if ( getTable() != null ) {
-			column.setTableName( getTable().getNameIdentifier() );
-		}
-		column.setTypeIndex( columns.size() - 1 );
-	}
+//	public void addColumn(Column column) {
+//		if ( !columns.contains( column ) ) {
+//			columns.add( column );
+//		}
+//		if ( getTable() != null ) {
+//			column.setTableName( getTable().getNameIdentifier() );
+//		}
+//		column.setTypeIndex( columns.size() - 1 );
+//	}
+
+	public abstract void addColumn(Column column);
 
 	public void addFormula(Formula formula) {
 		columns.add( formula );
@@ -135,15 +135,15 @@ public abstract class SimpleValue implements KeyValue {
 	@Override
 	@Deprecated
 	public Iterator<Selectable> getColumnIterator() {
-		return columns.stream().map( column -> (Selectable) column ).collect( Collectors.toList() ).iterator();
+		return columns.iterator();
 	}
 
 	@Override
-	public List<MappedColumn> getMappedColumns() {
+	public List<Selectable> getMappedColumns() {
 		return Collections.unmodifiableList( columns );
 	}
 
-	public List<MappedColumn> getConstraintColumns() {
+	public List<Selectable> getConstraintColumns() {
 		return columns;
 	}
 
@@ -165,12 +165,10 @@ public abstract class SimpleValue implements KeyValue {
 	@Override
 	public void createForeignKeyOfEntity(String entityName) {
 		if ( !hasFormula() && !"none".equals(getForeignKeyName())) {
-			ForeignKey fk = table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName, getForeignKeyDefinition() );
+			final ForeignKey fk = table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName, getForeignKeyDefinition() );
 			fk.setCascadeDeleteEnabled(cascadeDeleteEnabled);
 		}
 	}
-
-	private IdentifierGenerator identifierGenerator;
 
 	@Override
 	public IdentifierGenerator createIdentifierGenerator(
@@ -523,17 +521,19 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public boolean[] getColumnInsertability() {
-		boolean[] result = new boolean[ getColumnSpan() ];
+		final boolean[] columnInsertability = new boolean[ getColumnSpan() ];
 		int i = 0;
-		Iterator iter = getColumnIterator();
-		while ( iter.hasNext() ) {
-			Selectable s = (Selectable) iter.next();
-			result[i++] = !s.isFormula();
+		for(Selectable column : columns){
+			columnInsertability[i++] = !column.isFormula();
 		}
-		return result;
+		return columnInsertability;
 	}
 
 	public boolean[] getColumnUpdateability() {
 		return getColumnInsertability();
+	}
+
+	public interface SqlTypeDescriptorResolver {
+		SqlTypeDescriptor resolveSqlTypeDescriptor();
 	}
 }

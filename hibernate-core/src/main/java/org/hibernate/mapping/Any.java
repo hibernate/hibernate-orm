@@ -12,6 +12,8 @@ import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * A Hibernate "any" type (ie. polymorphic association to
@@ -78,5 +80,38 @@ public class Any extends SimpleValue {
 			discriminatorMap = new HashMap<>();
 		}
 		discriminatorMap.put( discriminatorValue, mappedEntityName );
+	}
+
+	@Override
+	public void addColumn(Column column) {
+		if ( !columns.contains( column ) ) {
+			columns.add( column );
+		}
+		if ( getTable() != null ) {
+			column.setTableName( getTable().getNameIdentifier() );
+		}
+		column.setSqlTypeCodeResolver( new SqlTypeDescriptorResolverImpl( columns.size() - 1  ) );
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return null;
+	}
+
+	public class SqlTypeDescriptorResolverImpl implements SqlTypeDescriptorResolver {
+		BasicTypeResolver[] typesResolvers = new BasicTypeResolver[2];
+
+		private int index;
+
+		public SqlTypeDescriptorResolverImpl(int index) {
+			this.index = index;
+			typesResolvers[0] = discriminatorTypeResolver;
+			typesResolvers[1] = keyTypeResolver;
+		}
+
+		@Override
+		public SqlTypeDescriptor resolveSqlTypeDescriptor() {
+			return typesResolvers[index].resolveBasicType().getColumnDescriptor().getSqlTypeDescriptor();
+		}
 	}
 }

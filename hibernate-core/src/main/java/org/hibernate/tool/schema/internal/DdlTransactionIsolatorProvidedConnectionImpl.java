@@ -49,6 +49,11 @@ class DdlTransactionIsolatorProvidedConnectionImpl implements DdlTransactionIsol
 
 	@Override
 	public void release() {
-		jdbcContext.getJdbcConnectionAccess().releaseConnection(getIsolatedConnection());
+		try {
+			jdbcContext.getJdbcConnectionAccess().releaseConnection(getIsolatedConnection());
+		} catch (SQLException e) {
+			// should never happen
+			throw new SchemaManagementException( "Error releasing user-provided Connection via JdbcConnectionAccessProvidedConnectionImpl", e );
+		}
 	}
 }

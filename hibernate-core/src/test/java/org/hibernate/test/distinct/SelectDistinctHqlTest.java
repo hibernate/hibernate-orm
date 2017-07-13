@@ -95,17 +95,23 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
 			assertTrue( sqlQuery.contains( " distinct " ) );
 		} );
+	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-11726" )
+	public void testDistinctPassThrough() {
+		// This should be returning false ref. HHH-11726
 		doInHibernate( this::sessionFactory, session -> {
 			sqlStatementInterceptor.getSqlQueries().clear();
 			List<Person> persons = session.createQuery(
-				"select distinct p from Person p left join fetch p.phones " )
-			.setHint( QueryHints.HINT_PASS_DISTINCT_THROUGH, false )
-			.getResultList();
+					"select distinct p from Person p left join fetch p.phones ")
+					.setHint(QueryHints.HINT_PASS_DISTINCT_THROUGH, false)
+					.setMaxResults(5)
+					.getResultList();
 			assertEquals(1, persons.size());
 			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
-			assertFalse( sqlQuery.contains( " distinct " ) );
-		} );
+			assertFalse(sqlQuery.contains(" distinct "));
+		});
 	}
 
 	@Entity(name = "Person")

@@ -79,7 +79,7 @@ public final class JdbcToHibernateTypeHelper {
 			   return returnNullable?Long.class.getName():"long";
 		   }
 		   else {
-			   return "big_decimal";
+			   return "big_integer";
 		   }
 	   }
 	   

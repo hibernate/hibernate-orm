@@ -86,17 +86,15 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 
 	@Override
 	protected void setSqlTypeDescriptorResolver(Column column) {
-		column.setSqlTypeDescriptorResolver( new SqlTypeDescriptorResolverImpl( ) );
-
+		column.setSqlTypeDescriptorResolver( new BasicValueSqlTypeDescriptorResolver( ) );
 	}
 
-	public class SqlTypeDescriptorResolverImpl implements SqlTypeDescriptorResolver {
+	public class BasicValueSqlTypeDescriptorResolver implements SqlTypeDescriptorResolver {
 		@Override
 		public SqlTypeDescriptor resolveSqlTypeDescriptor() {
 			return resolveType().getColumnDescriptor().getSqlTypeDescriptor();
 		}
 	}
-
 
 	@Override
 	public void addFormula(Formula formula) {

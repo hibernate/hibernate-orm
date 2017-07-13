@@ -39,7 +39,6 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * The mapping for a component, composite element,
@@ -92,18 +91,6 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Prop
 
 	}
 
-//	@Override
-//	public SqlTypeDescriptor[] getColumnsSqlTypeDescriptors() {
-//		final List<PersistentAttributeMapping> persistentAttributes = getPersistentAttributes();
-//		SqlTypeDescriptor[] sqlTypeDescriptors = new SqlTypeDescriptor[persistentAttributes.size()];
-//		for(PersistentAttributeMapping persistentAttributeMapping : persistentAttributes){
-//			persistentAttributeMapping.getValueMapping().getJavaTypeDescriptor().getJdbcRecommendedSqlType(
-//					getMetadataBuildingContext().getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry().getBaseJdbcRecommendedSqlTypeMappingContext());
-//
-//		}
-//		return new SqlTypeDescriptor[0];
-//	}
-
 	@Override
 	public String getName() {
 		return componentClassName;
@@ -133,6 +120,11 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Prop
 
 	@Override
 	public void addColumn(Column column) {
+		throw new UnsupportedOperationException("Cant add a column to a component");
+	}
+
+	@Override
+	protected void setSqlTypeDescriptorResolver(Column column) {
 		throw new UnsupportedOperationException("Cant add a column to a component");
 	}
 
@@ -282,6 +274,15 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Prop
 			i+=chunk.length;
 		}
 		return result;
+	}
+
+	@Override
+	public java.util.List<Selectable> getMappedColumns() {
+		final java.util.List<Selectable> columns = new ArrayList<>();
+		for ( PersistentAttributeMapping p : properties ) {
+			columns.addAll( p.getValueMapping().getMappedColumns() );
+		}
+		return columns;
 	}
 
 	public boolean isKey() {

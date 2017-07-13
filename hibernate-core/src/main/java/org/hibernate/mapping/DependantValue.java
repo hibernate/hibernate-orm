@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * A value which is "typed" by reference to some other
@@ -24,6 +25,24 @@ public class DependantValue extends BasicValue {
 	public DependantValue(MetadataBuildingContext buildingContext, MappedTable table, KeyValue prototype) {
 		super( buildingContext, table );
 		this.wrappedValue = prototype;
+	}
+
+	@Override
+	protected void setSqlTypeDescriptorResolver(Column column) {
+		column.setSqlTypeDescriptorResolver( new DependantValueSqlTypeDescriptorResolver( columns.size() - 1 ) );
+	}
+
+	public class DependantValueSqlTypeDescriptorResolver implements SqlTypeDescriptorResolver {
+		private int index;
+
+		public DependantValueSqlTypeDescriptorResolver(int index) {
+			this.index = index;
+		}
+
+		@Override
+		public SqlTypeDescriptor resolveSqlTypeDescriptor() {
+			return ( (Column) wrappedValue.getMappedColumns().get( index ) ).getSqlTypeDescriptor();
+		}
 	}
 
 	public void setTypeUsingReflection(String className, String propertyName) {}

@@ -12,6 +12,8 @@ import java.util.Iterator;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * A one-to-one association mapping
@@ -51,6 +53,44 @@ public class OneToOne extends ToOne {
 		if ( constrained && referencedPropertyName==null) {
 			//TODO: handle the case of a foreign key to something other than the pk
 			createForeignKeyOfEntity( getReferencedEntityName() );
+		}
+	}
+
+	@Override
+	protected void setSqlTypeDescriptorResolver(Column column) {
+		column.setSqlTypeDescriptorResolver( new OneToOneTypeDescriptorResolverImpl( columns.size() - 1 ) );
+	}
+
+	public class OneToOneTypeDescriptorResolverImpl implements SqlTypeDescriptorResolver {
+
+		private int index;
+
+		public OneToOneTypeDescriptorResolverImpl(int index) {
+			this.index = index;
+		}
+
+		@Override
+		public SqlTypeDescriptor resolveSqlTypeDescriptor() {
+			if ( getColumnIterator().hasNext() ) {
+				final PersistentClass referencedPersistentClass = getMetadataBuildingContext()
+						.getMetadataCollector()
+						.getEntityBinding( getReferencedEntityName() );
+
+				if ( referenceToPrimaryKey || referencedPropertyName == null ) {
+					return ( (Column) referencedPersistentClass.getIdentifier()
+							.getMappedColumns()
+							.get( index ) ).getSqlTypeDescriptor();
+				}
+				else {
+					final Property referencedProperty = referencedPersistentClass.getReferencedProperty(
+							getReferencedPropertyName() );
+					return ( (Column) referencedProperty.getValue()
+							.getMappedColumns().get( index ) ).getSqlTypeDescriptor();
+				}
+			}
+			else {
+				throw new IllegalStateException( "No SqlType code to resolve for " + entityName );
+			}
 		}
 	}
 
@@ -117,5 +157,20 @@ public class OneToOne extends ToOne {
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
-	
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		final PersistentClass referencedPersistentClass = getMetadataBuildingContext()
+				.getMetadataCollector()
+				.getEntityBinding( getReferencedEntityName() );
+
+		if ( referenceToPrimaryKey || referencedPropertyName == null ) {
+			return referencedPersistentClass.getIdentifier().getJavaTypeDescriptor();
+		}
+		else {
+			return referencedPersistentClass.getReferencedProperty( getReferencedPropertyName() )
+					.getValue()
+					.getJavaTypeDescriptor();
+		}
+	}
 }

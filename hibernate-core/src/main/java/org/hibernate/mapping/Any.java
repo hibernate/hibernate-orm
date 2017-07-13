@@ -84,7 +84,7 @@ public class Any extends SimpleValue {
 
 	@Override
 	protected void setSqlTypeDescriptorResolver(Column column) {
-		column.setSqlTypeDescriptorResolver( new Any.SqlTypeDescriptorResolverImpl( columns.size() - 1  ) );
+		column.setSqlTypeDescriptorResolver( new AnySqlTypeDescriptorResolver( columns.size() - 1  ) );
 	}
 
 	@Override
@@ -92,12 +92,12 @@ public class Any extends SimpleValue {
 		return null;
 	}
 
-	public class SqlTypeDescriptorResolverImpl implements SqlTypeDescriptorResolver {
+	public class AnySqlTypeDescriptorResolver implements SqlTypeDescriptorResolver {
 		BasicTypeResolver[] typesResolvers = new BasicTypeResolver[2];
 
 		private int index;
 
-		public SqlTypeDescriptorResolverImpl(int index) {
+		public AnySqlTypeDescriptorResolver(int index) {
 			this.index = index;
 			typesResolvers[0] = discriminatorTypeResolver;
 			typesResolvers[1] = keyTypeResolver;

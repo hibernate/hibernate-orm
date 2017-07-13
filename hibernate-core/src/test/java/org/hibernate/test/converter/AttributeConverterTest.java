@@ -25,15 +25,20 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.AttributeConverterDescriptorNonAutoApplicableImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.ast.tree.JavaConstantNode;
 import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.metamodel.model.creation.spi.DatabaseObjectResolutionContextImpl;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
@@ -95,7 +100,10 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 		try {
 			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr ).buildMetadata();
-			SimpleValue simpleValue = new SimpleValue( metadata );
+			BasicValue simpleValue = new BasicValue(
+					metadata.getTypeConfiguration().getMetadataBuildingContext(),
+					null
+			);
 			simpleValue.setJpaAttributeConverterDescriptor(
 					new AttributeConverterDescriptorNonAutoApplicableImpl( new StringClobConverter() )
 			);
@@ -605,4 +613,5 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			return Instant.fromJavaMillis( dbData.getTime() );
 		}
 	}
+
 }

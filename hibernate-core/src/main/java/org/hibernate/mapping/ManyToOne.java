@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -24,6 +25,38 @@ public class ManyToOne extends ToOne {
 	
 	public ManyToOne(MetadataBuildingContext metadata, Table table) {
 		super( metadata, table );
+	}
+
+	@Override
+	protected void setSqlTypeDescriptorResolver(Column column) {
+		column.setSqlTypeDescriptorResolver( new ManyToOneSqlTypeDescriptorResolver( columns.size() - 1 ) );
+	}
+
+	public class ManyToOneSqlTypeDescriptorResolver implements SqlTypeDescriptorResolver {
+		private int index;
+
+		public ManyToOneSqlTypeDescriptorResolver(int index) {
+			this.index = index;
+		}
+
+		@Override
+		public SqlTypeDescriptor resolveSqlTypeDescriptor() {
+			final PersistentClass referencedPersistentClass = getMetadataBuildingContext()
+					.getMetadataCollector()
+					.getEntityBinding( getReferencedEntityName() );
+			if ( referenceToPrimaryKey || referencedPropertyName == null ) {
+				return ( (Column) referencedPersistentClass.getIdentifier()
+						.getMappedColumns()
+						.get( index ) ).getSqlTypeDescriptor();
+			}
+			else {
+				final Property referencedProperty = referencedPersistentClass.getReferencedProperty(
+						getReferencedPropertyName() );
+				return ( (Column) referencedProperty.getValue()
+						.getMappedColumns()
+						.get( index ) ).getSqlTypeDescriptor();
+			}
+		}
 	}
 
 	public void createForeignKey() throws MappingException {
@@ -88,5 +121,20 @@ public class ManyToOne extends ToOne {
 
 	public boolean isLogicalOneToOne() {
 		return isLogicalOneToOne;
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		final PersistentClass referencedPersistentClass = getMetadataBuildingContext()
+				.getMetadataCollector()
+				.getEntityBinding( getReferencedEntityName() );
+		if ( referenceToPrimaryKey || referencedPropertyName == null ) {
+			return referencedPersistentClass.getIdentifier().getJavaTypeDescriptor();
+		}
+		else {
+			return referencedPersistentClass.getReferencedProperty( getReferencedPropertyName() )
+					.getValue()
+					.getJavaTypeDescriptor();
+		}
 	}
 }

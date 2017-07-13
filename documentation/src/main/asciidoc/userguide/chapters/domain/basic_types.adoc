@@ -75,7 +75,7 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 |LocalTimeType |TIME |java.time.LocalTime |LocalTime, java.time.LocalTime
 |OffsetDateTimeType |TIMESTAMP |java.time.OffsetDateTime |OffsetDateTime, java.time.OffsetDateTime
 |OffsetTimeType |TIME |java.time.OffsetTime |OffsetTime, java.time.OffsetTime
-|OffsetTimeType |TIMESTAMP |java.time.ZonedDateTime |ZonedDateTime, java.time.ZonedDateTime
+|ZonedDateTimeType |TIMESTAMP |java.time.ZonedDateTime |ZonedDateTime, java.time.ZonedDateTime
 |=================================================================================================
 
 .Hibernate Spatial BasicTypes

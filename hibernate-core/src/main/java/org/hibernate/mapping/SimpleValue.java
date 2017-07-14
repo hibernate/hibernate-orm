@@ -516,10 +516,6 @@ public abstract class SimpleValue implements KeyValue {
 		return getClass().getName() + '(' + columns.toString() + ')';
 	}
 
-	public Object accept(ValueVisitor visitor) {
-		return visitor.accept(this);
-	}
-
 	public boolean[] getColumnInsertability() {
 		final boolean[] columnInsertability = new boolean[ getColumnSpan() ];
 		int i = 0;

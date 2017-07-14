@@ -14,6 +14,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;
 import org.hibernate.mapping.Bag;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.IdentifierBag;
@@ -25,7 +26,6 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PrimitiveArray;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Set;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ValueVisitor;
 
@@ -59,25 +59,25 @@ public class ValueVisitorTest extends BaseUnitTestCase {
 		final MetadataImplementor metadata =
 				(MetadataImplementor) new MetadataSources( serviceRegistry )
 		.buildMetadata();
-		final Table tbl = new Table();
+		final Table table = new Table();
 		final RootClass rootClass = new RootClass( metadataBuildingContext );
 
 		ValueVisitor vv = new ValueVisitorValidator();
 
-		new Any( metadata, tbl ).accept( vv );
-		new Array( metadata, rootClass ).accept( vv );
-		new Bag( metadata, rootClass ).accept( vv );
-		new Component( metadata, rootClass ).accept( vv );
-		new DependantValue( metadata.getTypeConfiguration().getMetadataBuildingContext(), tbl, null ).accept( vv );
-		new IdentifierBag( metadata, rootClass ).accept( vv );
-		new List( metadata, rootClass ).accept( vv );
-		new ManyToOne( metadata, tbl ).accept( vv );
-		new Map( metadata, rootClass ).accept( vv );
-		new OneToMany( metadata, rootClass ).accept( vv );
-		new OneToOne( metadata, tbl, rootClass ).accept( vv );
-		new PrimitiveArray( metadata, rootClass ).accept( vv );
-		new Set( metadata, rootClass ).accept( vv );
-		new SimpleValue( metadata ).accept( vv );
+		new Any( metadata.getTypeConfiguration().getMetadataBuildingContext(), table ).accept( vv );
+		new Array( metadata.getTypeConfiguration().getMetadataBuildingContext(), rootClass ).accept( vv );
+		new Bag( metadata.getTypeConfiguration().getMetadataBuildingContext(), rootClass ).accept( vv );
+		new Component( metadata.getTypeConfiguration().getMetadataBuildingContext(), rootClass ).accept( vv );
+		new DependantValue( metadata.getTypeConfiguration().getMetadataBuildingContext(), table, null ).accept( vv );
+		new IdentifierBag( metadata.getTypeConfiguration().getMetadataBuildingContext(), rootClass ).accept( vv );
+		new List( metadata.getTypeConfiguration().getMetadataBuildingContext(), rootClass ).accept( vv );
+		new ManyToOne( metadata.getTypeConfiguration().getMetadataBuildingContext(), table ).accept( vv );
+		new Map( metadata.getTypeConfiguration().getMetadataBuildingContext(), rootClass ).accept( vv );
+		new OneToMany( metadata.getTypeConfiguration().getMetadataBuildingContext(), rootClass ).accept( vv );
+		new OneToOne( metadata.getTypeConfiguration().getMetadataBuildingContext(), table, rootClass ).accept( vv );
+		new PrimitiveArray( metadata.getTypeConfiguration().getMetadataBuildingContext(), rootClass ).accept( vv );
+		new Set( metadata.getTypeConfiguration().getMetadataBuildingContext(), rootClass ).accept( vv );
+		new BasicValue( metadata.getTypeConfiguration().getMetadataBuildingContext(), table ).accept( vv );
 	}
 
 	static public class ValueVisitorValidator implements ValueVisitor {
@@ -133,8 +133,8 @@ public class ValueVisitorTest extends BaseUnitTestCase {
 			return validate( Any.class, any );
 		}
 
-		public Object accept(SimpleValue value) {
-			return validate( SimpleValue.class, value );
+		public Object accept(BasicValue value) {
+			return validate( BasicValue.class, value );
 		}
 
 		public Object accept(Component component) {

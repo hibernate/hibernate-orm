@@ -25,8 +25,8 @@ import static org.junit.Assert.assertEquals;
 public class NamingStrategyTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
-		metadataBuilder.applyImplicitNamingStrategy( (ImplicitNamingStrategy) TestNamingStrategy.INSTANCE );
-		metadataBuilder.applyPhysicalNamingStrategy( (PhysicalNamingStrategy) TestNamingStrategy.INSTANCE );
+		metadataBuilder.applyImplicitNamingStrategy( TestNamingStrategy.INSTANCE );
+		metadataBuilder.applyPhysicalNamingStrategy( TestNamingStrategy.INSTANCE );
 	}
 
     @Override

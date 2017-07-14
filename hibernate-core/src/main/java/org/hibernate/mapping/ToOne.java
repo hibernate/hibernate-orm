@@ -67,10 +67,6 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	public boolean isTypeSpecified() {
 		return referencedEntityName!=null;
 	}
-	
-	public Object accept(ValueVisitor visitor) {
-		return visitor.accept(this);
-	}
 
 	@Override
 	public boolean isValid() throws MappingException {

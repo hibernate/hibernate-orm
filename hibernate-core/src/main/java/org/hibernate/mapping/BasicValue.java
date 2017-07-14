@@ -89,6 +89,11 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 		column.setSqlTypeDescriptorResolver( new BasicValueSqlTypeDescriptorResolver( ) );
 	}
 
+	@Override
+	public Object accept(ValueVisitor visitor) {
+		return visitor.accept(this);
+	}
+
 	public class BasicValueSqlTypeDescriptorResolver implements SqlTypeDescriptorResolver {
 		@Override
 		public SqlTypeDescriptor resolveSqlTypeDescriptor() {
@@ -107,7 +112,9 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 	public void setTypeName(String typeName) {
 		if ( typeName != null && typeName.startsWith( AttributeConverterDescriptor.EXPLICIT_TYPE_NAME_PREFIX ) ) {
 			final String converterClassName = typeName.substring( AttributeConverterDescriptor.EXPLICIT_TYPE_NAME_PREFIX.length() );
-			final ClassLoaderService cls = getMetadataBuildingContext().getMetadataCollector().getMetadataBuildingOptions()
+			final ClassLoaderService cls = getMetadataBuildingContext()
+					.getMetadataCollector()
+					.getMetadataBuildingOptions()
 					.getServiceRegistry()
 					.getService( ClassLoaderService.class );
 			try {

@@ -12,13 +12,14 @@ import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -27,6 +28,8 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+import org.hibernate.type.descriptor.sql.spi.BigIntSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -145,12 +148,19 @@ public abstract class AbstractFunctionalTest extends BaseNonConfigCoreFunctional
 				RootClass rootClazz = clazz.getRootClass();
 				Property versionProperty = new Property();
 				versionProperty.setName("version");
-				SimpleValue value = new SimpleValue( (InFlightMetadataCollector) metadata, rootClazz.getTable());
+				BasicValue value = new BasicValue(
+						( (MetadataImplementor) metadata ).getTypeConfiguration().getMetadataBuildingContext(),
+						rootClazz.getTable()
+				);
 				value.setTypeName("long");
 				Column column = new Column("version");
-				column.setSqlTypeDescriptor( value.getBasicTypeParameters().getSqlTypeDescriptor() );
+				column.setSqlTypeDescriptorResolver( new SimpleValue.SqlTypeDescriptorResolver() {
+					@Override
+					public SqlTypeDescriptor resolveSqlTypeDescriptor() {
+						return BigIntSqlDescriptor.INSTANCE;
+					}
+				} );
 				value.addColumn(column);
-				rootClazz.getTable().addColumn(column);
 				versionProperty.setValue(value);
 				rootClazz.setVersion(versionProperty);
 				rootClazz.addProperty(versionProperty);

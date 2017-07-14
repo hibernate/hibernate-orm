@@ -22,7 +22,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
@@ -62,24 +62,24 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Prop
 	private Representation representation;
 	private Instantiator instantiator;
 
-	public Component(InFlightMetadataCollector metadata, PersistentClass owner) throws MappingException {
+	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
 	}
 
-	public Component(InFlightMetadataCollector metadata, Component component) throws MappingException {
+	public Component(MetadataBuildingContext metadata, Component component) throws MappingException {
 		this( metadata, component.getTable(), component.getOwner() );
 	}
 
-	public Component(InFlightMetadataCollector metadata, Join join) throws MappingException {
+	public Component(MetadataBuildingContext metadata, Join join) throws MappingException {
 		this( metadata, join.getTable(), join.getPersistentClass() );
 	}
 
-	public Component(InFlightMetadataCollector metadata, Collection collection) throws MappingException {
+	public Component(MetadataBuildingContext metadata, Collection collection) throws MappingException {
 		this( metadata, collection.getCollectionTable(), collection.getOwner() );
 	}
 
-	public Component(InFlightMetadataCollector metadata, Table table, PersistentClass owner) throws MappingException {
-		super( metadata.getTypeConfiguration().getMetadataBuildingContext(), table );
+	public Component(MetadataBuildingContext metadata, Table table, PersistentClass owner) throws MappingException {
+		super( metadata, table );
 		this.owner = owner;
 		resolveJavaTypeDescriptor( metadata );
 	}
@@ -88,7 +88,6 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Prop
 	@SuppressWarnings("unchecked")
 	public EmbeddableJavaDescriptor getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
-
 	}
 
 	@Override
@@ -522,28 +521,25 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Prop
 		return PersistenceType.EMBEDDABLE;
 	}
 
-	private void resolveJavaTypeDescriptor(InFlightMetadataCollector metadata) {
-		JavaTypeDescriptorRegistry jtdr = metadata.getTypeConfiguration().getJavaTypeDescriptorRegistry();
-		EmbeddableJavaDescriptor jtd = (EmbeddableJavaDescriptor) jtdr.getDescriptor( componentClassName );
-		if ( jtd == null ) {
+	private void resolveJavaTypeDescriptor(MetadataBuildingContext metadata) {
+		final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry = metadata.getMetadataCollector()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry();
+		EmbeddableJavaDescriptor typeDescriptor = (EmbeddableJavaDescriptor) javaTypeDescriptorRegistry
+				.getDescriptor( componentClassName );
+		if ( typeDescriptor == null ) {
 			final Class javaType;
 			if ( StringHelper.isEmpty( componentClassName ) ) {
 				javaType = null;
 			}
 			else {
-				javaType = metadata.getMetadataBuildingOptions()
-						.getServiceRegistry()
-						.getService( ClassLoaderService.class )
+				javaType = metadata.getBootstrapContext().getServiceRegistry().getService( ClassLoaderService.class )
 						.classForName( componentClassName );
 			}
 
-			jtd = new EmbeddableJavaDescriptorImpl(
-					componentClassName,
-					javaType,
-					null
-			);
-			jtdr.addDescriptor( jtd );
+			typeDescriptor = new EmbeddableJavaDescriptorImpl( componentClassName, javaType, null );
+			javaTypeDescriptorRegistry.addDescriptor( typeDescriptor );
 		}
-		javaTypeDescriptor = jtd;
+		javaTypeDescriptor = typeDescriptor;
 	}
 }

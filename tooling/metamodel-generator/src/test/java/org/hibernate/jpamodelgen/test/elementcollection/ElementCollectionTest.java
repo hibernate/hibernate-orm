@@ -12,9 +12,9 @@ import org.hibernate.jpamodelgen.test.util.WithClasses;
 import org.hibernate.jpamodelgen.test.util.WithMappingFiles;
 import org.junit.Test;
 
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMapAttributesInMetaModelFor;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertNoSourceFileGeneratedFor;
+import javax.persistence.metamodel.ListAttribute;
+
+import static org.hibernate.jpamodelgen.test.util.TestUtil.*;
 
 /**
  * @author Hardy Ferentschik
@@ -58,5 +58,12 @@ public class ElementCollectionTest extends CompilationTest {
 		assertMapAttributesInMetaModelFor(
 				Hostel.class, "cleaners", Room.class, Cleaner.class, "Wrong type in map attribute."
 		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11871")
+	@WithClasses({ Homework.class, Room.class, Cleaner.class })
+	public void testJavaBeanAttributeNotOverwritten() {
+		assertAttributeTypeInMetaModelHasRawType( Homework.class, "paths", ListAttribute.class, "attribute type should be List" );
 	}
 }

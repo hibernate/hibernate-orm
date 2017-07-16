@@ -7,6 +7,7 @@
 package org.hibernate.jpamodelgen.test.elementcollection;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -17,7 +18,18 @@ import java.util.TreeSet;
 @Entity
 public class Homework {
 
+    private int id;
+
     private List<String> paths;
+
+    @Id
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public List<String> getPaths() {
         return paths;

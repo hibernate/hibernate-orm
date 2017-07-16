@@ -62,8 +62,8 @@ public class ElementCollectionTest extends CompilationTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11871")
-	@WithClasses({ Homework.class, Room.class, Cleaner.class })
+	@WithClasses({ Homework.class})
 	public void testJavaBeanAttributeNotOverwritten() {
-		assertAttributeTypeInMetaModelHasRawType( Homework.class, "paths", ListAttribute.class, "attribute type should be List" );
+		assertAttributeTypeInMetaModelHasRawType( Homework.class, "paths", ListAttribute.class, "generated attribute type should be ListAttribute" );
 	}
 }

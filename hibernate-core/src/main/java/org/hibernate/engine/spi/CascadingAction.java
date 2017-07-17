@@ -11,7 +11,6 @@ import java.util.Iterator;
 import org.hibernate.HibernateException;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
 /**

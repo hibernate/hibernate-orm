@@ -87,20 +87,13 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 				addConstraintToColumns( columns );
 			}
 			else {
-				addConstraintToColumn(
-						buildingContext.getMetadataCollector()
-							.getLogicalColumnName( table, column.getMappingColumn().getQuotedName() )
-				);
+				addConstraintToColumn( column.getMappingColumn().getQuotedName() );
 			}
 		}
 	}
 
 	private void addConstraintToColumn(final String columnName ) {
-		Column column = table.getColumn(
-				new Column(
-						buildingContext.getMetadataCollector().getPhysicalColumnName( table, columnName )
-				)
-		);
+		Column column = table.getColumn( new Column( columnName ) );
 		if ( column == null ) {
 			throw new AnnotationException(
 					"@Index references a unknown column: " + columnName

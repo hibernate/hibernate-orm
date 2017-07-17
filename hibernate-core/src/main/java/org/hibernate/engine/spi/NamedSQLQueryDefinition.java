@@ -11,7 +11,6 @@ import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 
 /**
  * Definition of a named native SQL query, defined in the mapping metadata.

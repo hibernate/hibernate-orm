@@ -71,7 +71,8 @@ public class QueryKey implements Serializable {
 		final Object[] values = new Object[positionalParameterCount];
 		for ( int i = 0; i < positionalParameterCount; i++ ) {
 			types[i] = queryParameters.getPositionalParameterTypes()[i];
-			values[i] = types[i].getMutabilityPlan().disassemble( queryParameters.getPositionalParameterValues()[i] );
+			values[i] = types[i].getJavaTypeDescriptor().getMutabilityPlan()
+					.disassemble( queryParameters.getPositionalParameterValues()[i] );
 		}
 
 		// disassemble named parameters
@@ -86,9 +87,8 @@ public class QueryKey implements Serializable {
 						namedParameterEntry.getKey(),
 						new TypedValue(
 								namedParameterEntry.getValue().getType(),
-								namedParameterEntry.getValue().getType().getMutabilityPlan().disassemble(
-										namedParameterEntry.getValue().getValue()
-								)
+								namedParameterEntry.getValue().getType().getJavaTypeDescriptor().getMutabilityPlan()
+										.disassemble( namedParameterEntry.getValue().getValue() )
 						)
 				);
 			}
@@ -192,7 +192,11 @@ public class QueryKey implements Serializable {
 		result = 37 * result + ( firstRow==null ? 0 : firstRow.hashCode() );
 		result = 37 * result + ( maxRows==null ? 0 : maxRows.hashCode() );
 		for ( int i=0; i< positionalParameterValues.length; i++ ) {
-			result = 37 * result + ( positionalParameterValues[i]==null ? 0 : positionalParameterTypes[i].getHashCode( positionalParameterValues[i] ) );
+			result = 37 * result + ( positionalParameterValues[i] == null ?
+					0 :
+					positionalParameterTypes[i]
+							.getJavaTypeDescriptor()
+							.extractHashCode( positionalParameterValues[i] ) );
 		}
 		result = 37 * result + ( namedParameters==null ? 0 : namedParameters.hashCode() );
 		result = 37 * result + ( filterKeys ==null ? 0 : filterKeys.hashCode() );
@@ -231,10 +235,13 @@ public class QueryKey implements Serializable {
 				return false;
 			}
 			for ( int i = 0; i < positionalParameterTypes.length; i++ ) {
-				if ( positionalParameterTypes[i].getReturnedClass() != that.positionalParameterTypes[i].getReturnedClass() ) {
+				if ( positionalParameterTypes[i].getJavaTypeDescriptor()
+						.getJavaType() != that.positionalParameterTypes[i].getJavaTypeDescriptor().getJavaType() ) {
 					return false;
 				}
-				if ( !positionalParameterTypes[i].isEqual( positionalParameterValues[i], that.positionalParameterValues[i] ) ) {
+				if ( !positionalParameterTypes[i]
+						.getJavaTypeDescriptor()
+						.areEqual( positionalParameterValues[i], that.positionalParameterValues[i] ) ) {
 					return false;
 				}
 			}

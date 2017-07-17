@@ -55,10 +55,7 @@ import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.CompositeCustomType;
-import org.hibernate.type.CustomType;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
 /**

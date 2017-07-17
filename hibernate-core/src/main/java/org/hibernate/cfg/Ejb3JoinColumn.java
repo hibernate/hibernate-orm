@@ -253,7 +253,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn();
 			joinColumn.setBuildingContext( buildingContext );
 			joinColumn.setJoinAnnotation( ann, null );
-			if ( StringHelper.isEmpty( joinColumn.getLogicalColumnName() )
+			if ( StringHelper.isEmpty( joinColumn.getLogicalColumnName().getText() )
 				&& ! StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
 				joinColumn.setLogicalColumnName( propertyName + suffixForDefaultColumnName );
 			}
@@ -337,10 +337,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
 
 		Column col = (Column) identifier.getColumnIterator().next();
-		String defaultName = context.getMetadataCollector().getLogicalColumnName(
-				identifier.getTable(),
-				col.getQuotedName()
-		);
+		String defaultName = col.getQuotedName();
 
 		if ( pkJoinAnn != null || joinAnn != null ) {
 			String colName;
@@ -459,11 +456,8 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			Column referencedColumn,
 			PersistentClass referencedEntity,
 			SimpleValue value) {
-		String logicalReferencedColumn = getBuildingContext().getMetadataCollector().getLogicalColumnName(
-				referencedEntity.getTable(),
-				referencedColumn.getQuotedName()
-		);
-		String columnName = buildDefaultColumnName( referencedEntity, logicalReferencedColumn );
+		final String logicalReferencedColumn = referencedColumn.getQuotedName();
+		final Identifier columnName = buildDefaultColumnName( referencedEntity, logicalReferencedColumn );
 
 		//yuk side effect on an implicit column
 		setLogicalColumnName( columnName );
@@ -741,7 +735,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	public void linkValueUsingAColumnCopy(Column column, SimpleValue value) {
 		initMappingColumn(
 				//column.getName(),
-				column.getQuotedName(),
+				column.getName(),
 				null, column.getLength(),
 				column.getPrecision(),
 				column.getScale(),

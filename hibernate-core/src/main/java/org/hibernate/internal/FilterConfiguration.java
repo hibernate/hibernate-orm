@@ -12,7 +12,6 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.persister.entity.Joinable;
 
 /**
  * @author Rob Worsnop

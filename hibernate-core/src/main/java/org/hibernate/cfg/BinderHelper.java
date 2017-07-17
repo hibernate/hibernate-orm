@@ -266,8 +266,8 @@ public class BinderHelper {
 			if ( properties != null ) {
                         //todo how about properties.size() == 1, this should be much simpler
 				Component embeddedComp = columnOwner instanceof PersistentClass ?
-						new Component( context.getMetadataCollector(), (PersistentClass) columnOwner ) :
-						new Component( context.getMetadataCollector(), (Join) columnOwner );
+						new Component( context, (PersistentClass) columnOwner ) :
+						new Component( context, (Join) columnOwner );
 				embeddedComp.setEmbedded( true );
 				embeddedComp.setComponentClassName( embeddedComp.getOwner().getClassName() );
 				for (Property property : properties) {
@@ -360,8 +360,8 @@ public class BinderHelper {
 			Object columnOwner,
 			Ejb3JoinColumn[] columns,
 			MetadataBuildingContext context) {
-		Map<Column, Set<Property>> columnsToProperty = new HashMap<Column, Set<Property>>();
-		List<Column> orderedColumns = new ArrayList<Column>( columns.length );
+		Map<Column, Set<Property>> columnsToProperty = new HashMap<>();
+		List<Column> orderedColumns = new ArrayList<>( columns.length );
 		Table referencedTable = null;
 		if ( columnOwner instanceof PersistentClass ) {
 			referencedTable = ( (PersistentClass) columnOwner ).getTable();
@@ -378,14 +378,9 @@ public class BinderHelper {
 		}
 		//build the list of column names
 		for (Ejb3JoinColumn column1 : columns) {
-			Column column = new Column(
-					context.getMetadataCollector().getPhysicalColumnName(
-							referencedTable,
-							column1.getReferencedColumn()
-					)
-			);
+			Column column = new Column( column1.getReferencedColumn() );
 			orderedColumns.add( column );
-			columnsToProperty.put( column, new HashSet<Property>() );
+			columnsToProperty.put( column, new HashSet<>() );
 		}
 		boolean isPersistentClass = columnOwner instanceof PersistentClass;
 		Iterator it = isPersistentClass ?
@@ -653,7 +648,7 @@ public class BinderHelper {
 		if ( id.getColumnSpan() == 1 ) {
 			params.setProperty(
 					PersistentIdentifierGenerator.PK,
-					( (org.hibernate.mapping.Column) id.getColumnIterator().next() ).getName()
+					( (org.hibernate.mapping.Column) id.getColumnIterator().next() ).getName().getText()
 			);
 		}
 		// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
@@ -740,8 +735,7 @@ public class BinderHelper {
 			Type metaType = context.getMetadataCollector().heuristicType( value.getMetaType() );
 			for (MetaValue metaValue : metaAnnDef.metaValues()) {
 				try {
-					Object discrim = ((Type)metaType).getJavaTypeDescriptor().fromString( metaValue
-							.value() );
+					Object discrim = metaType.getJavaTypeDescriptor().fromString( metaValue.value() );
 					String entityName = metaValue.targetEntity().getName();
 					values.put( discrim, entityName );
 				}

@@ -2705,7 +2705,7 @@ public final class AnnotationBinder {
 			boolean isComponentEmbedded,
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context) {
-		Component comp = new Component( context.getMetadataCollector(), propertyHolder.getPersistentClass() );
+		Component comp = new Component( context, propertyHolder.getPersistentClass() );
 		comp.setEmbedded( isComponentEmbedded );
 		//yuk
 		comp.setTable( propertyHolder.getTable() );

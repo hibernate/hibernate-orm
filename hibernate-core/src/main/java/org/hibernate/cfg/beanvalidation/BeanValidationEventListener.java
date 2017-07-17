@@ -17,7 +17,6 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -28,6 +27,7 @@ import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.model.domain.Representation;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 import org.jboss.logging.Logger;
@@ -48,8 +48,7 @@ public class BeanValidationEventListener
 	);
 
 	private ValidatorFactory factory;
-	private ConcurrentHashMap<EntityDescriptor, Set<String>> associationsPerEntityPersister =
-			new ConcurrentHashMap<EntityDescriptor, Set<String>>();
+	private ConcurrentHashMap<EntityDescriptor, Set<String>> associationsPerEntityPersister = new ConcurrentHashMap<>();
 	private GroupsPerOperation groupsPerOperation;
 	boolean initialized;
 
@@ -78,7 +77,7 @@ public class BeanValidationEventListener
 
 	public boolean onPreInsert(PreInsertEvent event) {
 		validate(
-				event.getEntity(), event.getPersister().getEntityMode(), event.getPersister(),
+				event.getEntity(), event.getPersister().getHierarchy().getRepresentation(), event.getPersister(),
 				event.getSession().getFactory(), GroupsPerOperation.Operation.INSERT
 		);
 		return false;
@@ -86,7 +85,7 @@ public class BeanValidationEventListener
 
 	public boolean onPreUpdate(PreUpdateEvent event) {
 		validate(
-				event.getEntity(), event.getPersister().getEntityMode(), event.getPersister(),
+				event.getEntity(), event.getPersister().getHierarchy().getRepresentation(), event.getPersister(),
 				event.getSession().getFactory(), GroupsPerOperation.Operation.UPDATE
 		);
 		return false;
@@ -94,15 +93,15 @@ public class BeanValidationEventListener
 
 	public boolean onPreDelete(PreDeleteEvent event) {
 		validate(
-				event.getEntity(), event.getPersister().getEntityMode(), event.getPersister(),
+				event.getEntity(), event.getPersister().getHierarchy().getRepresentation(), event.getPersister(),
 				event.getSession().getFactory(), GroupsPerOperation.Operation.DELETE
 		);
 		return false;
 	}
 
-	private <T> void validate(T object, EntityMode mode, EntityDescriptor persister,
-			SessionFactoryImplementor sessionFactory, GroupsPerOperation.Operation operation) {
-		if ( object == null || mode != EntityMode.POJO ) {
+	private <T> void validate(T object, Representation representation, EntityDescriptor persister,
+							  SessionFactoryImplementor sessionFactory, GroupsPerOperation.Operation operation) {
+		if ( object == null || representation != Representation.POJO ) {
 			return;
 		}
 		TraversableResolver tr = new HibernateTraversableResolver(

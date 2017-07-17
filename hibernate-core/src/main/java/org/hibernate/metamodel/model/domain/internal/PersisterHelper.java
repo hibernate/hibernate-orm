@@ -68,7 +68,7 @@ public class PersisterHelper {
 			ManagedTypeDescriptor declarer,
 			PersistentAttributeMapping attributeMapping,
 			RuntimeModelCreationContext persisterCreationContext) {
-		if ( declarer.getEntityMode() == EntityMode.MAP ) {
+		if ( declarer.getRegetEntityMode() == EntityMode.MAP ) {
 			return PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess( null, attributeMapping.getName() );
 		}
 

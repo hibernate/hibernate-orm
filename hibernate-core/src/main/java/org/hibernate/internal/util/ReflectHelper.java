@@ -308,7 +308,7 @@ public final class ReflectHelper {
 			if ( params.length == types.length ) {
 				boolean found = true;
 				for ( int j = 0; j < params.length; j++ ) {
-					final boolean ok = types[j] == null || params[j].isAssignableFrom( types[j].getReturnedClass() ) || (
+					final boolean ok = types[j] == null || params[j].isAssignableFrom( types[j].getJavaTypeDescriptor().getJavaType() ) || (
 							types[j] instanceof Primitive &&
 									params[j] == ( (Primitive) types[j].getJavaTypeDescriptor() ).getPrimitiveClass()
 					);

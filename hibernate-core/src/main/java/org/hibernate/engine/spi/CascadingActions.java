@@ -21,8 +21,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;

@@ -110,7 +110,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 		//property.setOptional( property.isOptional() );
 		property.setPersistentClass( component.getOwner() );
 		property.setPropertyAccessorName( referencedProperty.getPropertyAccessorName() );
-		Component value = new Component( buildingContext.getMetadataCollector(), component.getOwner() );
+		Component value = new Component( buildingContext, component.getOwner() );
 
 		property.setValue( value );
 		final Component referencedValue = (Component) referencedProperty.getValue();

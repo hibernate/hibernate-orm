@@ -6,7 +6,8 @@
  */
 package org.hibernate.internal;
 
-import org.hibernate.persister.entity.AbstractEntityPersister;
+
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * @author Rob Worsnop
@@ -26,7 +27,7 @@ public class DynamicFilterAliasGenerator implements FilterAliasGenerator {
 			return rootAlias;
 		}
 		else {
-			return AbstractEntityPersister.generateTableAlias(
+			return EntityDescriptor.generateTableAlias(
 					rootAlias,
 					AbstractEntityPersister.getTableId( table, tables )
 			);

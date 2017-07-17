@@ -15,8 +15,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.HibernateIterator;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.hql.internal.HolderInstantiator;
-import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.Type;
 
 /**

@@ -15,8 +15,6 @@ import org.hibernate.dialect.pagination.SQL2008StandardLimitHandler;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.MaterializedBlobType;
-import org.hibernate.type.WrappedMaterializedBlobType;
 
 /**
  * An SQL dialect for Oracle 12c.

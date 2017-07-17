@@ -58,32 +58,32 @@ public class VarArgsSQLFunction implements SqmFunctionTemplate {
 		this( null, begin, sep, end );
 	}
 
-	@Override
-	public boolean hasArguments() {
-		return true;
-	}
-
-	@Override
-	public boolean hasParenthesesIfNoArguments() {
-		return true;
-	}
-
-	@Override
-	public Type getReturnType(Type firstArgumentType) throws QueryException {
-		return registeredType == null ? firstArgumentType : registeredType;
-	}
-
-	@Override
-	public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor factory) {
-		final StringBuilder buf = new StringBuilder().append( begin );
-		for ( int i = 0; i < arguments.size(); i++ ) {
-			buf.append( transformArgument( (String) arguments.get( i ) ) );
-			if ( i < arguments.size() - 1 ) {
-				buf.append( sep );
-			}
-		}
-		return buf.append( end ).toString();
-	}
+//	@Override
+//	public boolean hasArguments() {
+//		return true;
+//	}
+//
+//	@Override
+//	public boolean hasParenthesesIfNoArguments() {
+//		return true;
+//	}
+//
+//	@Override
+//	public Type getReturnType(Type firstArgumentType) throws QueryException {
+//		return registeredType == null ? firstArgumentType : registeredType;
+//	}
+//
+//	@Override
+//	public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor factory) {
+//		final StringBuilder buf = new StringBuilder().append( begin );
+//		for ( int i = 0; i < arguments.size(); i++ ) {
+//			buf.append( transformArgument( (String) arguments.get( i ) ) );
+//			if ( i < arguments.size() - 1 ) {
+//				buf.append( sep );
+//			}
+//		}
+//		return buf.append( end ).toString();
+//	}
 
 	/**
 	 * Called from {@link #render} to allow applying a change or transformation

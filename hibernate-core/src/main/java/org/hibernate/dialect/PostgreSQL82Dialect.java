@@ -12,7 +12,6 @@ import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
 import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTempTableExporter;
 import org.hibernate.query.sqm.consume.multitable.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.PostgresUUIDType;
 
 /**
  * An SQL dialect for Postgres 8.2 and later, adds support for "if exists" when dropping tables

@@ -6,6 +6,7 @@
  */
 package org.hibernate.mapping;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,8 +17,10 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.MappedTableJoin;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.internal.AbstractMappedSuperclassMapping;
+import org.hibernate.cfg.NotYetImplementedException;
 
 /**
  * Represents a @MappedSuperclass.
@@ -248,5 +251,10 @@ public class MappedSuperclass extends AbstractMappedSuperclassMapping implements
 	@Override
 	public int nextSubclassId() {
 		throw new MappingException( "This should not be called on a MappedSuperclass" );
+	}
+
+	@Override
+	public Collection<MappedTableJoin> getSecondaryTables() {
+		throw new NotYetImplementedException( "Mapped superclass secondary tables is not implemented yet" );
 	}
 }

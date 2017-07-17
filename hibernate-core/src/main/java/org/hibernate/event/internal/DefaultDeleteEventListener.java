@@ -121,7 +121,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 
 			entityEntry = persistenceContext.addEntity(
 					entity,
-					(persister.isMutable() ? Status.MANAGED : Status.READ_ONLY),
+					( persister.getHierarchy().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 					persister.getPropertyValues( entity ),
 					key,
 					version,

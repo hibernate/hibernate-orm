@@ -239,10 +239,10 @@ public class BatchFetchQueue {
 	public void addBatchLoadableCollection(PersistentCollection collection, CollectionEntry ce) {
 		final PersistentCollectionDescriptor persister = ce.getLoadedPersister();
 
-		LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( persister.getRole() );
+		LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( persister.getNavigableRole().getFullPath() );
 		if ( map == null ) {
 			map = new LinkedHashMap<>( 16 );
-			batchLoadableCollections.put( persister.getRole(), map );
+			batchLoadableCollections.put( persister.getNavigableRole().getFullPath(), map );
 		}
 		map.put( ce, collection );
 	}
@@ -253,7 +253,7 @@ public class BatchFetchQueue {
 	 * if necessary
 	 */
 	public void removeBatchLoadableCollection(CollectionEntry ce) {
-		LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( ce.getLoadedPersister().getRole() );
+		LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( ce.getLoadedPersister().getNavigableRole().getFullPath() );
 		if ( map != null ) {
 			map.remove( ce );
 		}
@@ -279,7 +279,7 @@ public class BatchFetchQueue {
 		int end = -1;
 		boolean checkForEnd = false;
 
-		final LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( collectionPersister.getRole() );
+		final LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( collectionPersister.getNavigableRole().getFullPath() );
 		if ( map != null ) {
 			for ( Entry<CollectionEntry, PersistentCollection> me : map.entrySet() ) {
 				final CollectionEntry ce = me.getKey();

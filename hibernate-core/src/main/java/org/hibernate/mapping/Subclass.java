@@ -7,13 +7,10 @@
 package org.hibernate.mapping;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
@@ -292,32 +289,6 @@ public class Subclass extends PersistentClass {
 	public boolean hasSubselectLoadableCollections() {
 		return super.hasSubselectLoadableCollections() || 
 			getSuperclass().hasSubselectLoadableCollections();
-	}
-
-	public String getTuplizerImplClassName(EntityMode mode) {
-		String impl = super.getTuplizerImplClassName( mode );
-		if ( impl == null ) {
-			impl = getSuperclass().getTuplizerImplClassName( mode );
-		}
-		return impl;
-	}
-
-	public Map getTuplizerMap() {
-		Map specificTuplizerDefs = super.getTuplizerMap();
-		Map superclassTuplizerDefs = getSuperclass().getTuplizerMap();
-		if ( specificTuplizerDefs == null && superclassTuplizerDefs == null ) {
-			return null;
-		}
-		else {
-			Map combined = new HashMap();
-			if ( superclassTuplizerDefs != null ) {
-				combined.putAll( superclassTuplizerDefs );
-			}
-			if ( specificTuplizerDefs != null ) {
-				combined.putAll( specificTuplizerDefs );
-			}
-			return java.util.Collections.unmodifiableMap( combined );
-		}
 	}
 
 	/**

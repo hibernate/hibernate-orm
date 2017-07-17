@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.cfg.beanvalidation;
+
 import java.lang.annotation.ElementType;
 import java.util.HashSet;
 import java.util.Set;

@@ -19,7 +19,6 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.type.TypeHelper;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**

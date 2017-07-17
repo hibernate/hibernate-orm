@@ -139,7 +139,7 @@ public class EmbeddedTypeDescriptorImpl<T>
 
 	@Override
 	public Instantiator getInstantiator() {
-		return null;
+		return instantiator;
 	}
 
 	@Override

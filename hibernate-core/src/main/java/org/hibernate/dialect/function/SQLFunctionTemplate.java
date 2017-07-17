@@ -6,10 +6,6 @@
  */
 package org.hibernate.dialect.function;
 
-import java.util.List;
-
-import org.hibernate.QueryException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.type.Type;
 
@@ -53,28 +49,29 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 		this.hasParenthesesIfNoArgs = hasParenthesesIfNoArgs;
 	}
 
-	@Override
-	public String render(Type argumentType, List args, SessionFactoryImplementor factory) {
-		return renderer.render( args, factory );
-	}
-
-	@Override
-	public Type getReturnType(Type argumentType) throws QueryException {
-		return type;
-	}
-
-	@Override
-	public boolean hasArguments() {
-		return renderer.getAnticipatedNumberOfArguments() > 0;
-	}
-
-	@Override
-	public boolean hasParenthesesIfNoArguments() {
-		return hasParenthesesIfNoArgs;
-	}
+//	@Override
+//	public String render(Type argumentType, List args, SessionFactoryImplementor factory) {
+//		return renderer.render( args, factory );
+//	}
+//
+//	@Override
+//	public Type getReturnType(Type argumentType) throws QueryException {
+//		return type;
+//	}
+//
+//	@Override
+//	public boolean hasArguments() {
+//		return renderer.getAnticipatedNumberOfArguments() > 0;
+//	}
+//
+//	@Override
+//	public boolean hasParenthesesIfNoArguments() {
+//		return hasParenthesesIfNoArgs;
+//	}
 	
 	@Override
 	public String toString() {
 		return renderer.getTemplate();
 	}
+
 }

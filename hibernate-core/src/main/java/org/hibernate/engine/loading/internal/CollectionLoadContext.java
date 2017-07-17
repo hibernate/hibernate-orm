@@ -94,7 +94,7 @@ public class CollectionLoadContext {
 		final CollectionKey collectionKey = new CollectionKey( persister, key, em );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Starting attempt to find loading collection [{0}]",
-					MessageHelper.collectionInfoString( persister.getRole(), key ) );
+					MessageHelper.collectionInfoString( persister.getNavigableRole().getFullPath(), key ) );
 		}
 		final LoadingCollectionEntry loadingCollectionEntry = loadContexts.locateLoadingCollectionEntry( collectionKey );
 		if ( loadingCollectionEntry == null ) {
@@ -206,14 +206,14 @@ public class CollectionLoadContext {
 		final boolean debugEnabled = LOG.isDebugEnabled();
 		if ( matchedCollectionEntries == null ) {
 			if ( debugEnabled ) {
-				LOG.debugf( "No collections were found in result set for role: %s", persister.getRole() );
+				LOG.debugf( "No collections were found in result set for role: %s", persister.getNavigableRole().getFullPath() );
 			}
 			return;
 		}
 
 		final int count = matchedCollectionEntries.size();
 		if ( debugEnabled ) {
-			LOG.debugf( "%s collections were found in result set for role: %s", count, persister.getRole() );
+			LOG.debugf( "%s collections were found in result set for role: %s", count, persister.getNavigableRole().getFullPath() );
 		}
 
 		for ( LoadingCollectionEntry matchedCollectionEntry : matchedCollectionEntries ) {
@@ -221,7 +221,7 @@ public class CollectionLoadContext {
 		}
 
 		if ( debugEnabled ) {
-			LOG.debugf( "%s collections initialized for role: %s", count, persister.getRole() );
+			LOG.debugf( "%s collections initialized for role: %s", count, persister.getNavigableRole().getFullPath() );
 		}
 	}
 
@@ -267,7 +267,7 @@ public class CollectionLoadContext {
 			);
 		}
 		if ( session.getFactory().getStatistics().isStatisticsEnabled() ) {
-			session.getFactory().getStatistics().loadCollection( persister.getRole() );
+			session.getFactory().getStatistics().loadCollection( persister.getNavigableRole().getFullPath() );
 		}
 	}
 

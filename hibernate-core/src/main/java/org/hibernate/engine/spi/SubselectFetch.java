@@ -13,8 +13,6 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.persister.entity.Loadable;
-import org.hibernate.persister.entity.PropertyMapping;
 
 /**
  * @author Gavin King

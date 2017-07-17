@@ -7,7 +7,7 @@
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
 
 /**
  * Descriptor for an attribute which is enabled for bytecode lazy fetching
@@ -21,7 +21,7 @@ public class LazyAttributeDescriptor {
 			int lazyIndex) {
 		String fetchGroupName = attributeMapping.getLazyGroup();
 		if ( fetchGroupName == null ) {
-			fetchGroupName = attributeMapping.getValueMapping().getType().isCollectionType()
+			fetchGroupName = attributeMapping.getValueMapping().getJavaTypeDescriptor() instanceof CollectionJavaDescriptor
 					? attributeMapping.getName()
 					: "DEFAULT";
 		}
@@ -30,7 +30,6 @@ public class LazyAttributeDescriptor {
 				attributeIndex,
 				lazyIndex,
 				attributeMapping.getName(),
-				attributeMapping.getValueMapping().getType(),
 				fetchGroupName
 		);
 	}
@@ -38,20 +37,17 @@ public class LazyAttributeDescriptor {
 	private final int attributeIndex;
 	private final int lazyIndex;
 	private final String name;
-	private final Type type;
 	private final String fetchGroupName;
 
 	private LazyAttributeDescriptor(
 			int attributeIndex,
 			int lazyIndex,
 			String name,
-			Type type,
 			String fetchGroupName) {
 		assert attributeIndex >= lazyIndex;
 		this.attributeIndex = attributeIndex;
 		this.lazyIndex  = lazyIndex;
 		this.name = name;
-		this.type = type;
 		this.fetchGroupName = fetchGroupName;
 	}
 
@@ -80,15 +76,6 @@ public class LazyAttributeDescriptor {
 	 */
 	public String getName() {
 		return name;
-	}
-
-	/**
-	 * Access to the attribute's type
-	 *
-	 * @return The attribute type
-	 */
-	public Type getType() {
-		return type;
 	}
 
 	/**

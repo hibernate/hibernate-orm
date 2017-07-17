@@ -14,7 +14,6 @@ import java.util.Map;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 
 public class NamedSQLQueryDefinitionBuilder extends NamedQueryDefinitionBuilder {
 	private NativeSQLQueryReturn[] queryReturns;

@@ -28,6 +28,8 @@ import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.sql.exec.results.internal.RowReaderNoResultsExpectedImpl;
 import org.hibernate.sql.ast.tree.spi.select.QueryResult;
 
+import net.bytebuddy.asm.Advice;
+
 import static org.hibernate.procedure.internal.ProcedureCallMementoImpl.ParameterMemento;
 
 /**
@@ -94,7 +96,7 @@ public class NamedProcedureCallDefinition {
 						}
 
 						@Override
-						public void addQueryReturns(Return... queryReturns) {
+						public void addQueryResult(QueryResult... queryReturns) {
 							Collections.addAll( collQueryResults, queryReturns );
 						}
 
@@ -120,7 +122,7 @@ public class NamedProcedureCallDefinition {
 						}
 
 						@Override
-						public void addQueryReturns(Return... queryReturns) {
+						public void addQueryReturns(QueryResult... queryReturns) {
 							Collections.addAll( collQueryResults, queryReturns );
 						}
 

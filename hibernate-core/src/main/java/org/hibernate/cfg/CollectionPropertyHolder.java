@@ -419,8 +419,8 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		}
 
 		if ( collection.getElement() != null ) {
-			if ( collection.getElement().getType() != null ) {
-				return collection.getElement().getType().getReturnedClass();
+			if ( collection.getElement().getJavaTypeDescriptor() != null ) {
+				return collection.getElement().getJavaTypeDescriptor().getJavaType();
 			}
 		}
 
@@ -477,8 +477,8 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 		final IndexedCollection indexedCollection = (IndexedCollection) collection;
 		if ( indexedCollection.getIndex() != null ) {
-			if ( indexedCollection.getIndex().getType() != null ) {
-				return indexedCollection.getIndex().getType().getReturnedClass();
+			if ( indexedCollection.getIndex().getJavaTypeDescriptor() != null ) {
+				return indexedCollection.getIndex().getJavaTypeDescriptor().getJavaType();
 			}
 		}
 

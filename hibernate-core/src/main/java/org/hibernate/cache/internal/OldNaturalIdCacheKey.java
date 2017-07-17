@@ -15,7 +15,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.Type;
 
 /**

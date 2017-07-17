@@ -53,6 +53,6 @@ public class LoadingCollectionEntry {
 
 	@Override
 	public String toString() {
-		return getClass().getName() + "<rs=" + resultSet + ", coll=" + MessageHelper.collectionInfoString( persister.getRole(), key ) + ">@" + Integer.toHexString( hashCode() );
+		return getClass().getName() + "<rs=" + resultSet + ", coll=" + MessageHelper.collectionInfoString( persister.getNavigableRole().getFullPath(), key ) + ">@" + Integer.toHexString( hashCode() );
 	}
 }

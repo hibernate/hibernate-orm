@@ -20,7 +20,6 @@ import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
 import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTempTableExporter;

@@ -61,6 +61,7 @@ import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
+import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.jpa.spi.TupleBuilderTransformer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
@@ -781,7 +782,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
 	protected <T> NativeQueryImplementor createNativeQuery(NamedSQLQueryDefinition queryDefinition, Class<T> resultType) {
-		if ( resultType != null ) {
+		if ( resultType != null && !Tuple.class.equals(resultType)) {
 			resultClassChecking( resultType, queryDefinition );
 		}
 
@@ -790,6 +791,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				this,
 				factory.getQueryPlanCache().getSQLParameterMetadata( queryDefinition.getQueryString(), false )
 		);
+		if (Tuple.class.equals(resultType)) {
+			query.setResultTransformer(new NativeQueryTupleTransformer());
+		}
 		query.setHibernateFlushMode( queryDefinition.getFlushMode() );
 		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getName() );
 		if ( queryDefinition.getLockOptions() != null ) {
@@ -876,11 +880,19 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		try {
 			NativeQueryImplementor query = createNativeQuery( sqlString );
-			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
+			handleNativeQueryResult(query, resultClass);
 			return query;
 		}
 		catch ( RuntimeException he ) {
 			throw exceptionConverter.convert( he );
+		}
+	}
+
+	private void handleNativeQueryResult(NativeQueryImplementor query, Class resultClass) {
+		if (Tuple.class.equals(resultClass)) {
+			query.setResultTransformer(new NativeQueryTupleTransformer());
+		} else {
+			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
 		}
 	}
 

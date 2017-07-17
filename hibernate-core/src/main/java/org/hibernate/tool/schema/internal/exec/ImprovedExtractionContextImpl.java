@@ -96,5 +96,6 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 		if ( jdbcDatabaseMetaData != null ) {
 			jdbcDatabaseMetaData = null;
 		}
+		ddlTransactionIsolator.release();
 	}
 }

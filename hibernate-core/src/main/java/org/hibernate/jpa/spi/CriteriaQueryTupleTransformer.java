@@ -140,6 +140,7 @@ public class CriteriaQueryTupleTransformer extends BasicTransformerAdapter {
 		}
 
 		public Object[] toArray() {
+			// todo : make a copy?
 			return tuples;
 		}
 

@@ -230,11 +230,6 @@ public abstract class AbstractEntityDescriptor<T>
 	}
 
 	@Override
-	public Representation getRepresentation() {
-		return null;
-	}
-
-	@Override
 	public Instantiator getInstantiator() {
 		return instantiator;
 	}
@@ -350,7 +345,7 @@ public abstract class AbstractEntityDescriptor<T>
 
 	@Override
 	public SingleIdEntityLoader getSingleIdLoader(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers) {
-		if ( customQueryLoader != null ) {
+		if ( 	customQueryLoader != null ) {
 			// if the user specified that we should use a custom query for loading this entity, we need
 			// 		to always use that custom loader.
 			return customQueryLoader;

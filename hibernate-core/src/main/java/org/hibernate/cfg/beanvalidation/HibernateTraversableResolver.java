@@ -8,6 +8,7 @@ package org.hibernate.cfg.beanvalidation;
 
 import java.lang.annotation.ElementType;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.validation.Path;
@@ -16,9 +17,13 @@ import javax.validation.TraversableResolver;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.type.Type;
-
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.type.descriptor.java.internal.AnyTypeJavaDescriptor;
+import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 /**
  * Use Hibernate metadata to ignore cascade on entities.
  * cascade on embeddable objects or collection of embeddable objects are accepted
@@ -36,37 +41,27 @@ public class HibernateTraversableResolver implements TraversableResolver {
 			SessionFactoryImplementor factory) {
 		this.associations = associationsPerEntityPersister.get( persister );
 		if (this.associations == null) {
-			this.associations = new HashSet<String>();
-			addAssociationsToTheSetForAllProperties( persister.getPropertyNames(), persister.getPropertyTypes(), "", factory );
+			this.associations = new HashSet<>();
+			addAssociationsToTheSetForAllProperties( persister.getAttributesByName() );
 			associationsPerEntityPersister.put( persister, associations );
 		}
 	}
 
-	private void addAssociationsToTheSetForAllProperties(String[] names, Type[] types, String prefix, SessionFactoryImplementor factory) {
-		final int length = names.length;
-		for( int index = 0 ; index < length; index++ ) {
-			addAssociationsToTheSetForOneProperty( names[index], types[index], prefix, factory );
+	private void addAssociationsToTheSetForAllProperties(Map<String,PersistentAttribute> attributesByName) {
+		for(String attributeName : attributesByName.keySet()){
+			addAssociationsToTheSetForOneProperty(attributeName, attributesByName.get( attributeName ));
 		}
 	}
 
-	private void addAssociationsToTheSetForOneProperty(String name, Type type, String prefix, SessionFactoryImplementor factory) {
-
-		if ( type.isCollectionType() ) {
-			CollectionType collType = (CollectionType) type;
-			Type assocType = collType.getElementType( factory );
-			addAssociationsToTheSetForOneProperty(name, assocType, prefix, factory);
+	private void addAssociationsToTheSetForOneProperty(String name, PersistentAttribute attribute) {
+		final org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor javaTypeDescriptor = attribute.getJavaTypeDescriptor();
+		if ( javaTypeDescriptor instanceof CollectionJavaDescriptor || javaTypeDescriptor instanceof EntityJavaDescriptor || javaTypeDescriptor instanceof AnyTypeJavaDescriptor ) {
+			associations.add( attribute.getNavigableRole().getFullPath() );
 		}
-		//ToOne association
-		else if ( type.isEntityType() || type.isAnyType() ) {
-			associations.add( prefix + name );
-		}
-		else if ( type.isComponentType() ) {
-			EmbeddedType componentType = (EmbeddedType) type;
-			addAssociationsToTheSetForAllProperties(
-					componentType.getPropertyNames(),
-					componentType.getSubtypes(),
-					(prefix.equals( "" ) ? name : prefix + name) + ".",
-					factory);
+		else if ( javaTypeDescriptor instanceof EmbeddableJavaDescriptor ) {
+			final Map attributesByName = ( (SingularPersistentAttributeEmbedded) attribute ).getEmbeddedDescriptor()
+					.getAttributesByName();
+			addAssociationsToTheSetForAllProperties( attributesByName );
 		}
 	}
 

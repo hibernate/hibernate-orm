@@ -18,6 +18,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * Algorithms related to foreign key constraint transparency
@@ -76,13 +77,13 @@ public final class ForeignKeys {
 			if ( value == null ) {
 				return null;
 			}
-			else if ( type.getClassification().equals( Type.Classification.ENTITY ) ) {
-				final EntityType entityType = (EntityType) type;
+			else if ( type.getJavaTypeDescriptor() instanceof EntityJavaDescriptor ) {
+				final EntityJavaDescriptor entityType = (EntityJavaDescriptor) type.getJavaTypeDescriptor();
 				if ( entityType.isOneToOne() ) {
 					return value;
 				}
 				else {
-					final String entityName = entityType.getAssociatedEntityName();
+					final String entityName = entityType.getEntityName();
 					return isNullifiable( entityName, value ) ? null : value;
 				}
 			}
@@ -306,13 +307,14 @@ public final class ForeignKeys {
 			boolean isEarlyInsert,
 			SharedSessionContractImplementor session) {
 		final Nullifier nullifier = new Nullifier( entity, false, isEarlyInsert, session );
-		final EntityDescriptor persister = session.getEntityPersister( entityName, entity );
-		final String[] propertyNames = persister.getPropertyNames();
-		final Type[] types = persister.getPropertyTypes();
-		final boolean[] nullability = persister.getPropertyNullability();
+		final EntityDescriptor descriptor = session.getEntityPersister( entityName, entity );
+		final String[] propertyNames = descriptor.getPropertyNames();
+		final Type[] types = descriptor.getPropertyTypes();
+		final boolean[] nullability = descriptor.getPropertyNullability();
 		final NonNullableTransientDependencies nonNullableTransientEntities = new NonNullableTransientDependencies();
 		for ( int i = 0; i < types.length; i++ ) {
 			collectNonNullableTransientEntities(
+					descriptor,
 					nullifier,
 					values[i],
 					propertyNames[i],
@@ -326,6 +328,7 @@ public final class ForeignKeys {
 	}
 
 	private static void collectNonNullableTransientEntities(
+			EntityDescriptor descriptor,
 			Nullifier nullifier,
 			Object value,
 			String propertyName,

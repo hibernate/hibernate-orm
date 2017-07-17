@@ -12,6 +12,7 @@ import java.util.Map;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.BasicType;
 
 /**
  * An SQL <tt>UPDATE</tt> statement
@@ -132,8 +133,13 @@ public class Update {
 		return this;
 	}
 
-	public Update addColumn(String columnName, Object value, Type type, SharedSessionContractImplementor session) throws Exception {
-		return addColumn( columnName, type.getJdbcLiteralFormatter().toJdbcLiteral( value, dialect, session ) );
+	public Update addColumn(String columnName, Object value, BasicType type, SharedSessionContractImplementor session) throws Exception {
+		return addColumn( columnName,
+						  type.getColumnDescriptor()
+								  .getSqlTypeDescriptor()
+								  .getJdbcLiteralFormatter( type.getJavaTypeDescriptor() )
+								  .toJdbcLiteral( value, dialect, session )
+		);
 	}
 
 	public Update addWhereColumns(String[] columnNames) {

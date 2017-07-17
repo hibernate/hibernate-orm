@@ -6,7 +6,11 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.io.Serializable;
+import java.util.Iterator;
+
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.JavaTypeDescriptor;
 import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.relational.Database;
@@ -20,6 +24,7 @@ import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.Any;
@@ -56,6 +61,7 @@ import static org.hibernate.metamodel.model.domain.internal.PersisterHelper.inte
 public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements PersistentCollectionDescriptor<O,C,E> {
 	private final SessionFactoryImplementor sessionFactory;
 	private final ManagedTypeDescriptor source;
+
 	private final NavigableRole navigableRole;
 	private final CollectionClassification collectionClassification;
 
@@ -81,6 +87,9 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 
 	private final String sqlAliasStem;
 
+	private final org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor keyJavaTypeDescriptor;
+
+	private final Serializable[] spaces;
 
 	public AbstractPersistentCollectionDescriptor(
 			Collection collectionBinding,
@@ -104,6 +113,18 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 		else {
 			cacheEntryStructure = UnstructuredCacheEntry.INSTANCE;
 		}
+
+		int spacesSize = 1 + collectionBinding.getSynchronizedTables().size();
+		spaces = new String[spacesSize];
+		spaces[0] = collectionBinding.getMappedTable().getNameIdentifier().render( sessionFactory.getServiceRegistry()
+																						   .getService( JdbcServices.class )
+																						   .getDialect() );
+		Iterator iter = collectionBinding.getSynchronizedTables().iterator();
+		for ( int i = 1; i < spacesSize; i++ ) {
+			spaces[i] = (String) iter.next();
+		}
+
+		this.keyJavaTypeDescriptor = collectionBinding.getKey().getJavaTypeDescriptor();
 
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( navigableName );
 	}
@@ -246,6 +267,16 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 	@Override
 	public String getSqlAliasStem() {
 		return sqlAliasStem;
+	}
+
+	@Override
+	public org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor getKeyJavaTypeDescriptor() {
+		return keyJavaTypeDescriptor;
+	}
+
+	@Override
+	public Serializable[] getCollectionSpaces() {
+		return spaces;
 	}
 
 	@Override

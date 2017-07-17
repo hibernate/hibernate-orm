@@ -11,8 +11,6 @@ import java.util.Locale;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.Loadable;
 import org.hibernate.sql.ConditionFragment;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 

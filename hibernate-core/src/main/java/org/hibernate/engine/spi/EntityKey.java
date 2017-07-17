@@ -58,7 +58,7 @@ public final class EntityKey implements Serializable {
 		int result = 17;
 		final String rootEntityName = persister.getRootEntityName();
 		result = 37 * result + ( rootEntityName != null ? rootEntityName.hashCode() : 0 );
-		result = 37 * result + persister.getIdentifierType().getHashCode( identifier );
+		result = 37 * result + persister.getIdentifierType().getJavaTypeDescriptor().extractHashCode( identifier );
 		return result;
 	}
 
@@ -90,7 +90,7 @@ public final class EntityKey implements Serializable {
 	}
 
 	private boolean sameIdentifier(final EntityKey otherKey) {
-		return persister.getIdentifierType().isEqual( otherKey.identifier, this.identifier, persister.getFactory() );
+		return persister.getIdentifierType().getJavaTypeDescriptor().areEqual( otherKey.identifier, this.identifier );
 	}
 
 	private boolean samePersistentType(final EntityKey otherKey) {

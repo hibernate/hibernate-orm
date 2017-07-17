@@ -45,7 +45,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		this.persister = persister;
 		this.session = session;
 		this.key = key;
-		this.collectionRole = persister.getRole();
+		this.collectionRole = persister.getNavigableRole().getFullPath();
 		this.collection = collection;
 	}
 
@@ -156,7 +156,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		}
 		else {
 			//then by fk
-			return persister.getKeyType().getComparator().compare( key, action.key );
+			return persister.getKeyJavaTypeDescriptor().getComparator().compare( key, action.key );
 		}
 	}
 

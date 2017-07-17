@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import java.io.Serializable;
+
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.NavigablePath;
 
@@ -16,14 +18,14 @@ import org.hibernate.query.NavigablePath;
  *
  * @author Steve Ebersole
  */
-public class NavigableRole {
+public class NavigableRole implements Serializable {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = "_identifierMapper";
 
 	private final NavigableRole parent;
 	private final String navigableName;
 	private final String fullPath;
 
-	public NavigableRole(NavigableRole parent, String navigableName) {
+	public NavigableRole(NavigableRole parent, String naviganavigableNamebleName) {
 		this.parent = parent;
 		this.navigableName = navigableName;
 

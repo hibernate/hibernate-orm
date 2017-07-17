@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.loader.spi.Loader;
 import org.hibernate.type.Type;
 
 /**

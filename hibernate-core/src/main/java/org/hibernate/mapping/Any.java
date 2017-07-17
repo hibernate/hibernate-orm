@@ -27,6 +27,7 @@ public class Any extends SimpleValue {
 	private BasicTypeResolver keyTypeResolver;
 
 	private BasicTypeResolver discriminatorTypeResolver;
+
 	private Map<Object,String> discriminatorMap;
 
 	public Any(MetadataBuildingContext metadata, Table table) {

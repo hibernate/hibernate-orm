@@ -124,7 +124,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 			else {
 
 				final boolean isEqual = !entityEntry.getPersister().getIdentifierType()
-						.isEqual( requestedId, entityEntry.getId(), factory );
+						.getJavaTypeDescriptor().areEqual( requestedId, entityEntry.getId() );
 
 				if ( isEqual ) {
 					throw new PersistentObjectException(
@@ -267,7 +267,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 			EntityDescriptor persister) throws HibernateException {
 
 		final boolean traceEnabled = LOG.isTraceEnabled();
-		if ( traceEnabled && !persister.isMutable() ) {
+		if ( traceEnabled && !persister.getJavaTypeDescriptor().getMutabilityPlan().isMutable() ) {
 			LOG.trace( "Immutable instance passed to performUpdate()" );
 		}
 

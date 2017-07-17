@@ -15,8 +15,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.hql.internal.HolderInstantiator;
-import org.hibernate.loader.Loader;
+import org.hibernate.loader.spi.Loader;
 import org.hibernate.type.Type;
 
 /**

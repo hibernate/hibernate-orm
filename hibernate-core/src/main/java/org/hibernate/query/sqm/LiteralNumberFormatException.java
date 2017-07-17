@@ -14,7 +14,7 @@ public class LiteralNumberFormatException extends SemanticException {
 		super( message );
 	}
 
-	public LiteralNumberFormatException(String message, Throwable cause) {
+	public LiteralNumberFormatException(String message, Exception cause) {
 		super( message, cause );
 	}
 }

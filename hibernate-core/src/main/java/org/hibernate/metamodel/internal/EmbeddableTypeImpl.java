@@ -9,6 +9,9 @@ package org.hibernate.metamodel.internal;
 import java.io.Serializable;
 import javax.persistence.metamodel.EmbeddableType;
 
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
+
 /**
  * @author Emmanuel Bernard
  */
@@ -17,12 +20,12 @@ public class EmbeddableTypeImpl<X>
 		implements EmbeddableType<X>, Serializable {
 
 	private final AbstractManagedType parent;
-	private final ComponentType hibernateType;
+	private final EmbeddableJavaDescriptor javaTypeDescriptor;
 
-	public EmbeddableTypeImpl(Class<X> javaType, AbstractManagedType parent, ComponentType hibernateType) {
+	public EmbeddableTypeImpl(Class<X> javaType, AbstractManagedType parent, EmbeddableJavaDescriptor javaTypeDescriptor) {
 		super( javaType, null, null );
 		this.parent = parent;
-		this.hibernateType = hibernateType;
+		this.javaTypeDescriptor = javaTypeDescriptor;
 	}
 
 	public PersistenceType getPersistenceType() {
@@ -33,7 +36,7 @@ public class EmbeddableTypeImpl<X>
 		return parent;
 	}
 
-	public ComponentType getHibernateType() {
-		return hibernateType;
+	public EmbeddableJavaDescriptor getJavaTypeDescriptor(){
+		return javaTypeDescriptor;
 	}
 }

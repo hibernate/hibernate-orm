@@ -13,7 +13,7 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Defines the contract for caches capable of storing query results.  These
@@ -46,7 +46,7 @@ public interface QueryCache {
 	 */
 	boolean put(
 			QueryKey key,
-			Type[] returnTypes,
+			JavaTypeDescriptor[] returnTypes,
 			List result,
 			boolean isNaturalKeyLookup,
 			SharedSessionContractImplementor session) throws HibernateException;
@@ -66,7 +66,7 @@ public interface QueryCache {
 	 */
 	List get(
 			QueryKey key,
-			Type[] returnTypes,
+			JavaTypeDescriptor[] returnTypes,
 			boolean isNaturalKeyLookup,
 			Set<Serializable> spaces,
 			SharedSessionContractImplementor session) throws HibernateException;

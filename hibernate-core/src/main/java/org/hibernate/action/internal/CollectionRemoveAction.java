@@ -105,7 +105,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 		postRemove();
 
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatistics().removeCollection( getPersister().getRole() );
+			getSession().getFactory().getStatistics().removeCollection( getPersister().getNavigableRole().getFullPath() );
 		}
 	}
 

@@ -165,7 +165,7 @@ public class CollectionCacheInvalidator
 
 	private void evict(Serializable id, PersistentCollectionDescriptor collectionPersister, EventSource session) {
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( "Evict CollectionRegion " + collectionPersister.getRole() + " for id " + id );
+			LOG.debug( "Evict CollectionRegion " + collectionPersister.getNavigableRole().getFullPath() + " for id " + id );
 		}
 		AfterTransactionCompletionProcess afterTransactionProcess = new CollectionEvictCacheAction(
 				collectionPersister,

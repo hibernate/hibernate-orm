@@ -100,7 +100,7 @@ public final class Template {
 				sqlWhereString,
 				placeholder,
 				dialect,
-				new SqmFunctionRegistry( dialect, java.util.Collections.<String, SqmFunctionTemplate>emptyMap() )
+				new SqmFunctionRegistry( )
 		);
 	}
 

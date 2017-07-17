@@ -31,10 +31,16 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
-import org.hibernate.metamodel.model.domain.spi.VirtualPersistentAttribute;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.AnyTypeJavaDescriptor;
+import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
+
+import org.apache.tools.ant.taskdefs.Java;
 
 /**
  * A factory for building {@link Attribute} instances.  Exposes 3 main services for building<ol>
@@ -208,15 +214,15 @@ public class AttributeFactory {
 				);
 			}
 			case ENTITY: {
-				final EntityType type = (EntityType) typeContext.getValue().getType();
-				return (Type<Y>) context.locateEntityType( type.getAssociatedEntityName() );
+				final EntityJavaDescriptor javaTypeDescriptor = (EntityJavaDescriptor) typeContext.getValue().getJavaTypeDescriptor();
+				return (Type<Y>) context.locateEntityType( javaTypeDescriptor.getEntityName() );
 			}
 			case EMBEDDABLE: {
 				final Component component = (Component) typeContext.getValue();
 				final EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<Y>(
 						typeContext.getBindableType(),
 						typeContext.getAttributeMetadata().getOwnerType(),
-						(ComponentType) typeContext.getValue().getType()
+						(EmbeddableJavaDescriptor) typeContext.getValue().getJavaTypeDescriptor()
 				);
 				context.registerEmbeddedableType( embeddableType );
 				final Iterator<Property> subProperties = component.getPropertyIterator();
@@ -451,10 +457,10 @@ public class AttributeFactory {
 		LOG.trace( "    Determined member [" + member + "]" );
 
 		final Value value = attributeContext.getPropertyMapping().getValue();
-		final org.hibernate.type.spi.Type type = value.getType();
-		LOG.trace( "    Determined type [name=" + type.getName() + ", class=" + type.getClass().getName() + "]" );
+		JavaTypeDescriptor javaTypeDescriptor = value.getJavaTypeDescriptor();
+		LOG.trace( "    Determined javaTypeDescriptor [name=" + javaTypeDescriptor.getTypeName() + ", class=" + javaTypeDescriptor.getJavaType().getName() + "]" );
 
-		if ( type.isAnyType() ) {
+		if ( javaTypeDescriptor instanceof AnyTypeJavaDescriptor ) {
 			// ANY mappings are currently not supported in the JPA metamodel; see HHH-6589
 			if ( context.isIgnoreUnsupported() ) {
 				return null;
@@ -463,9 +469,9 @@ public class AttributeFactory {
 				throw new UnsupportedOperationException( "ANY not supported" );
 			}
 		}
-		else if ( type.isAssociationType() ) {
+		else if ( javaTypeDescriptor.isAssociationType() ) {
 			// collection or entity
-			if ( type.isEntityType() ) {
+			if ( javaTypeDescriptor.isEntityType() ) {
 				// entity
 				return new SingularAttributeMetadataImpl<X, Y>(
 						attributeContext.getPropertyMapping(),
@@ -478,10 +484,10 @@ public class AttributeFactory {
 			if ( value instanceof Collection ) {
 				final Collection collValue = (Collection) value;
 				final Value elementValue = collValue.getElement();
-				final org.hibernate.type.spi.Type elementType = elementValue.getType();
+				JavaTypeDescriptor elementType = elementValue.getJavaTypeDescriptor();
 
-				// First, determine the type of the elements and use that to help determine the
-				// collection type)
+				// First, determine the javaTypeDescriptor of the elements and use that to help determine the
+				// collection javaTypeDescriptor)
 				final Attribute.PersistentAttributeType elementPersistentAttributeType;
 				final Attribute.PersistentAttributeType persistentAttributeType;
 				if ( elementType.isAnyType() ) {
@@ -510,10 +516,10 @@ public class AttributeFactory {
 
 				final Attribute.PersistentAttributeType keyPersistentAttributeType;
 
-				// Finally, we determine the type of the map key (if needed)
+				// Finally, we determine the javaTypeDescriptor of the map key (if needed)
 				if ( value instanceof Map ) {
 					final Value keyValue = ( (Map) value ).getIndex();
-					final org.hibernate.type.spi.Type keyType = keyValue.getType();
+					JavaTypeDescriptor keyType = keyValue.getJavaTypeDescriptor();
 
 					if ( keyType.isAnyType() ) {
 						if ( context.isIgnoreUnsupported() ) {
@@ -572,7 +578,7 @@ public class AttributeFactory {
 			);
 		}
 		else {
-			// basic type
+			// basic javaTypeDescriptor
 			return new SingularAttributeMetadataImpl<X, Y>(
 					attributeContext.getPropertyMapping(),
 					attributeContext.getOwnerType(),
@@ -621,7 +627,7 @@ public class AttributeFactory {
 
 			if ( member == null ) {
 				// assume we have a MAP entity-mode "class"
-				declaredType = propertyMapping.getType().getReturnedClass();
+				declaredType = propertyMapping.getValueMapping().getJavaTypeDescriptor().getJavaType();
 			}
 			else if ( Field.class.isInstance( member ) ) {
 				declaredType = ( (Field) member ).getType();
@@ -667,7 +673,7 @@ public class AttributeFactory {
 		}
 
 		public boolean isPlural() {
-			return propertyMapping.getType().isCollectionType();
+			return propertyMapping.getValueMapping().getJavaTypeDescriptor() instanceof CollectionJavaDescriptor;
 		}
 
 		public Property getPropertyMapping() {
@@ -677,37 +683,6 @@ public class AttributeFactory {
 
 	@SuppressWarnings({"unchecked"})
 	protected <Y> Class<Y> accountForPrimitiveTypes(Class<Y> declaredType) {
-//		if ( !declaredType.isPrimitive() ) {
-//			return declaredType;
-//		}
-//
-//		if ( Boolean.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Boolean.class;
-//		}
-//		if ( Character.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Character.class;
-//		}
-//		if( Byte.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Byte.class;
-//		}
-//		if ( Short.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Short.class;
-//		}
-//		if ( Integer.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Integer.class;
-//		}
-//		if ( Long.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Long.class;
-//		}
-//		if ( Float.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Float.class;
-//		}
-//		if ( Double.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Double.class;
-//		}
-//
-//		throw new IllegalArgumentException( "Unexpected type [" + declaredType + "]" );
-		// if the field is defined as int, return int not Integer...
 		return declaredType;
 	}
 
@@ -1030,7 +1005,7 @@ public class AttributeFactory {
 		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
 			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
-			final EntityMetamodel entityMetamodel = getDeclarerEntityDescriptor( identifiableType );
+			final EntityDescriptor entityMetamodel = getDeclarerEntityDescriptor( identifiableType );
 			if ( !attributeContext.getPropertyMapping().getName()
 					.equals( entityMetamodel.getIdentifierProperty().getName() ) ) {
 				// this *should* indicate processing part of an IdClass...

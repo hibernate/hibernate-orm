@@ -158,7 +158,7 @@ public abstract class AbstractScrollableResults implements ScrollableResultsImpl
 			throw new HibernateException( "query specifies a holder class" );
 		}
 
-		if ( returnType.getReturnedClass() == types[col].getReturnedClass() ) {
+		if ( returnType.getJavaTypeDescriptor().getJavaType() == types[col].getJavaTypeDescriptor().getJavaType() ) {
 			return get( col );
 		}
 		else {
@@ -183,7 +183,7 @@ public abstract class AbstractScrollableResults implements ScrollableResultsImpl
 			throw new HibernateException( "query specifies a holder class" );
 		}
 
-		if ( returnType.getReturnedClass().isAssignableFrom( types[col].getReturnedClass() ) ) {
+		if ( returnType.getJavaTypeDescriptor().getJavaType().isAssignableFrom( types[col].getJavaTypeDescriptor().getJavaType() ) ) {
 			return get( col );
 		}
 		else {
@@ -297,9 +297,9 @@ public abstract class AbstractScrollableResults implements ScrollableResultsImpl
 			Type returnType) throws HibernateException {
 		throw new HibernateException(
 				"incompatible column types: " +
-						type.getName() +
+						type.getJavaTypeDescriptor().getTypeName() +
 						", " +
-						returnType.getName()
+						returnType.getJavaTypeDescriptor().getTypeName()
 		);
 	}
 

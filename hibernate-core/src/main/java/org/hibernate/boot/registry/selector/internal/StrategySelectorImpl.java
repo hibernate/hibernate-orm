@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -140,6 +141,16 @@ public class StrategySelectorImpl implements StrategySelector {
 				strategy,
 				strategyReference,
 				(Callable<T>) () -> defaultValue
+		);
+	}
+
+	@Override
+	public <T> T resolveDefaultableStrategy(
+			Class<T> strategy, Object strategyReference, Supplier<T> defaultValueSupplier) {
+		return resolveDefaultableStrategy(
+				strategy,
+				strategyReference,
+				(Callable<T>) () -> defaultValueSupplier.get()
 		);
 	}
 

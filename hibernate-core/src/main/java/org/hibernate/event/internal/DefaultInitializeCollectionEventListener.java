@@ -79,7 +79,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 
 				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
 					source.getFactory().getStatisticsImplementor().fetchCollection(
-							ce.getLoadedPersister().getRole()
+							ce.getLoadedPersister().getNavigableRole().getFullPath()
 					);
 				}
 			}

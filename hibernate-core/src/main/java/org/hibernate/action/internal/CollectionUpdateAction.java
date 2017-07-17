@@ -90,7 +90,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 		postUpdate();
 
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatistics().updateCollection( getPersister().getRole() );
+			getSession().getFactory().getStatistics().updateCollection( getPersister().getNavigableRole().getFullPath() );
 		}
 	}
 	

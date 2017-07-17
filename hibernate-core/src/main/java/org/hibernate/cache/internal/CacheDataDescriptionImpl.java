@@ -8,10 +8,11 @@ package org.hibernate.cache.internal;
 
 import java.util.Comparator;
 
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.spi.IncomparableComparator;
 
 /**
@@ -23,7 +24,7 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 	private final boolean mutable;
 	private final boolean versioned;
 	private final Comparator versionComparator;
-	private final Type keyType;
+	private final JavaTypeDescriptor keyType;
 
 	/**
 	 * Constructs a CacheDataDescriptionImpl instance.  Generally speaking, code should use one of the
@@ -33,7 +34,11 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 	 * @param versionComparator The described data's version value comparator (if versioned).
 	 * @param keyType
 	 */
-	public CacheDataDescriptionImpl(boolean mutable, boolean versioned, Comparator versionComparator, Type keyType) {
+	public CacheDataDescriptionImpl(
+			boolean mutable,
+			boolean versioned,
+			Comparator versionComparator,
+			JavaTypeDescriptor keyType) {
 		this.mutable = mutable;
 		this.versioned = versioned;
 		this.versionComparator = versionComparator;
@@ -62,7 +67,7 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 	}
 
 	@Override
-	public Type getKeyType() {
+	public JavaTypeDescriptor getKeyType() {
 		return keyType;
 	}
 
@@ -76,11 +81,11 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 	public static CacheDataDescriptionImpl decode(PersistentClass model) {
 		return new CacheDataDescriptionImpl(
 				model.isMutable(),
-				model.isVersioned(),
-				model.isVersioned()
-						? ( model.getVersion().getType() ).getComparator()
+				model.hasVersionAttributeMapping(),
+				model.hasVersionAttributeMapping()
+						? getComparator( model.getVersionAttributeMapping() )
 						: null,
-				model.getIdentifier().getType()
+				model.getIdentifier().getJavaTypeDescriptor()
 		);
 	}
 
@@ -94,12 +99,15 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 	public static CacheDataDescriptionImpl decode(Collection model) {
 		return new CacheDataDescriptionImpl(
 				model.isMutable(),
-				model.getOwner().isVersioned(),
-				model.getOwner().isVersioned()
-						? ( model.getOwner().getVersion().getType() ).getComparator()
+				model.getOwner().hasVersionAttributeMapping(),
+				model.getOwner().hasVersionAttributeMapping()
+						? getComparator(  model.getOwner().getVersionAttributeMapping() )
 						: null,
-				model.getKey().getType()
+				model.getKey().getJavaTypeDescriptor()
 		);
 	}
 
+	private static Comparator getComparator(PersistentAttributeMapping versionAttributeMapping) {
+		return versionAttributeMapping.getValueMapping().getJavaTypeDescriptor().getComparator();
+	}
 }

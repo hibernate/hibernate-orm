@@ -1610,7 +1610,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 			rtn.collectionsByKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
-				rtn.collectionsByKey.put( CollectionKey.deserialize( ois, session ), (PersistentCollection) ois.readObject() );
+				rtn.collectionsByKey.put( CollectionKey.deserialize( ois ), (PersistentCollection) ois.readObject() );
 			}
 
 			count = ois.readInt();

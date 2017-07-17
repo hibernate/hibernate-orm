@@ -10,7 +10,6 @@ import java.io.Serializable;
 
 import org.hibernate.Cache;
 import org.hibernate.HibernateException;
-import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.UpdateTimestampsCache;

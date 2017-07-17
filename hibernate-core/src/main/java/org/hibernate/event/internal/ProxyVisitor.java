@@ -45,7 +45,7 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 			final Serializable id
 	) {
 		return isCollectionSnapshotValid(snapshot) &&
-				persister.getRole().equals( snapshot.getRole() ) &&
+				persister.getNavigableRole().getFullPath().equals( snapshot.getRole() ) &&
 				id.equals( snapshot.getKey() );
 	}
 

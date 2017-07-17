@@ -26,7 +26,7 @@ import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * The standard implementation of the Hibernate QueryCache interface.  This
@@ -117,7 +117,7 @@ public class StandardQueryCache implements QueryCache {
 	@SuppressWarnings({ "unchecked" })
 	public boolean put(
 			final QueryKey key,
-			final Type[] returnTypes,
+			final JavaTypeDescriptor[] returnTypes,
 			final List result,
 			final boolean isNaturalKeyLookup,
 			final SharedSessionContractImplementor session) throws HibernateException {
@@ -137,7 +137,7 @@ public class StandardQueryCache implements QueryCache {
 		final boolean isSingleResult = returnTypes.length == 1;
 		for ( Object aResult : result ) {
 			final Serializable cacheItem = isSingleResult
-					? returnTypes[0].disassemble( aResult, session, null )
+					? returnTypes[0].getMutabilityPlan().disassemble( aResult )
 					: TypeHelper.disassemble( (Object[]) aResult, returnTypes, null, session, null );
 			cacheable.add( cacheItem );
 			if ( TRACING ) {
@@ -160,7 +160,7 @@ public class StandardQueryCache implements QueryCache {
 	@SuppressWarnings({ "unchecked" })
 	public List get(
 			final QueryKey key,
-			final Type[] returnTypes,
+			final JavaTypeDescriptor[] returnTypes,
 			final boolean isNaturalKeyLookup,
 			final Set<Serializable> spaces,
 			final SharedSessionContractImplementor session) throws HibernateException {
@@ -208,7 +208,7 @@ public class StandardQueryCache implements QueryCache {
 			final List cacheable,
 			final boolean isNaturalKeyLookup,
 			boolean singleResult,
-			final Type[] returnTypes,
+			final JavaTypeDescriptor[] returnTypes,
 			final SharedSessionContractImplementor session) throws HibernateException {
 
 		try {
@@ -273,7 +273,7 @@ public class StandardQueryCache implements QueryCache {
 		return "StandardQueryCache(" + cacheRegion.getName() + ')';
 	}
 
-	private static void logCachedResultDetails(QueryKey key, Set querySpaces, Type[] returnTypes, List result) {
+	private static void logCachedResultDetails(QueryKey key, Set querySpaces, JavaTypeDescriptor[] returnTypes, List result) {
 		if ( !TRACING ) {
 			return;
 		}
@@ -288,25 +288,25 @@ public class StandardQueryCache implements QueryCache {
 		}
 		else {
 			final StringBuilder returnTypeInfo = new StringBuilder();
-			for ( Type returnType : returnTypes ) {
+			for ( JavaTypeDescriptor returnType : returnTypes ) {
 				returnTypeInfo.append( "typename=" )
-						.append( returnType.getName() )
+						.append( returnType.getTypeName() )
 						.append( " class=" )
-						.append( returnType.getReturnedClass().getName() )
+						.append( returnType.getJavaType().getName() )
 						.append( ' ' );
 			}
 			LOG.trace( "unexpected returnTypes is " + returnTypeInfo.toString() + "! result" );
 		}
 	}
 
-	private static void logCachedResultRowDetails(Type[] returnTypes, Object result) {
+	private static void logCachedResultRowDetails(JavaTypeDescriptor[] returnTypes, Object result) {
 		logCachedResultRowDetails(
 				returnTypes,
 				( result instanceof Object[] ? (Object[]) result : new Object[] { result } )
 		);
 	}
 
-	private static void logCachedResultRowDetails(Type[] returnTypes, Object[] tuple) {
+	private static void logCachedResultRowDetails(JavaTypeDescriptor[] returnTypes, Object[] tuple) {
 		if ( !TRACING ) {
 			return;
 		}
@@ -343,10 +343,10 @@ public class StandardQueryCache implements QueryCache {
 			else {
 				for ( int j = 0; j < tuple.length; j++ ) {
 					if ( tuple[j] != null && returnTypes != null
-							&& ! returnTypes[j].getReturnedClass().isInstance( tuple[j] ) ) {
+							&& ! returnTypes[j].getJavaType().isInstance( tuple[j] ) ) {
 						LOG.trace(
 								"Unexpected tuple value type! transformer= expected="
-										+ returnTypes[j].getReturnedClass().getName()
+										+ returnTypes[j].getJavaType().getName()
 										+ " got="
 										+ tuple[j].getClass().getName()
 						);

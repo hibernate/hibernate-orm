@@ -9,6 +9,7 @@ package org.hibernate.cache.spi;
 import java.util.Comparator;
 
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Describes attributes regarding the type of data to be cached.
@@ -21,7 +22,7 @@ public interface CacheDataDescription {
 	 *
 	 * @return {@code true} if the data is mutable; {@code false} otherwise.
 	 */
-	public boolean isMutable();
+	boolean isMutable();
 
 	/**
 	 * Is the data to be cached considered versioned?
@@ -31,7 +32,7 @@ public interface CacheDataDescription {
 	 *
 	 * @return {@code true} if the data is versioned; {@code false} otherwise.
 	 */
-	public boolean isVersioned();
+	boolean isVersioned();
 
 	/**
 	 * Get the comparator used to compare two different version values.  May return {@code null} <b>if</b>
@@ -39,11 +40,11 @@ public interface CacheDataDescription {
 	 *
 	 * @return The comparator for versions, or {@code null}
 	 */
-	public Comparator getVersionComparator();
+	Comparator getVersionComparator();
 
 	/**
 	 * @return Type of the key that will be used as the key in the cache, or {@code null} if the natural comparison
 	 * ({@link Object#hashCode()} and {@link Object#equals(Object)} methods should be used.
 	 */
-	Type getKeyType();
+	JavaTypeDescriptor getKeyType();
 }

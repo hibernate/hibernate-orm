@@ -12,9 +12,10 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import org.hibernate.EntityMode;
+import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Uniquely identifies a collection instance in a particular session.
@@ -22,38 +23,30 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public final class CollectionKey implements Serializable {
-	private final String role;
+	private final NavigableRole role;
 	private final Serializable key;
-	private final Type keyType;
-	private final SessionFactoryImplementor factory;
+	private final JavaTypeDescriptor keyType;
 	private final int hashCode;
-	private EntityMode entityMode;
 
 	public CollectionKey(PersistentCollectionDescriptor persister, Serializable key) {
 		this(
-				persister.getRole(),
+				persister.getNavigableRole(),
 				key,
-				persister.getKeyType(),
-				persister.getOwnerEntityPersister().getEntityMetamodel().getEntityMode(),
-				persister.getFactory()
+				persister.getKeyJavaTypeDescriptor()
 		);
 	}
 
 	public CollectionKey(PersistentCollectionDescriptor persister, Serializable key, EntityMode em) {
-		this( persister.getRole(), key, persister.getKeyType(), em, persister.getFactory() );
+		this( persister.getNavigableRole(), key, persister.getKeyJavaTypeDescriptor());
 	}
 
 	private CollectionKey(
-			String role,
+			NavigableRole role,
 			Serializable key,
-			Type keyType,
-			EntityMode entityMode,
-			SessionFactoryImplementor factory) {
+			JavaTypeDescriptor keyType) {
 		this.role = role;
 		this.key = key;
 		this.keyType = keyType;
-		this.entityMode = entityMode;
-		this.factory = factory;
 		//cache the hash-code
 		this.hashCode = generateHashCode();
 	}
@@ -61,12 +54,20 @@ public final class CollectionKey implements Serializable {
 	private int generateHashCode() {
 		int result = 17;
 		result = 37 * result + role.hashCode();
-		result = 37 * result + keyType.getHashCode( key );
+		result = 37 * result + keyType.extractHashCode( key );
 		return result;
 	}
 
-
+	/**
+	 * @deprecated (since 6.0) use {@link #getNavigableRole}
+	 */
+	@Deprecated
 	public String getRole() {
+		return role.getFullPath();
+	}
+
+
+	public NavigableRole getNavigableRole(){
 		return role;
 	}
 
@@ -76,7 +77,7 @@ public final class CollectionKey implements Serializable {
 
 	@Override
 	public String toString() {
-		return "CollectionKey" + MessageHelper.collectionInfoString( role, key );
+		return "CollectionKey" + MessageHelper.collectionInfoString( role.getFullPath(), key );
 	}
 
 	@Override
@@ -90,7 +91,7 @@ public final class CollectionKey implements Serializable {
 
 		final CollectionKey that = (CollectionKey) other;
 		return that.role.equals( role )
-				&& keyType.isEqual( that.key, key, factory );
+				&& keyType.areEqual( that.key, key );
 	}
 
 	@Override
@@ -111,7 +112,6 @@ public final class CollectionKey implements Serializable {
 		oos.writeObject( role );
 		oos.writeObject( key );
 		oos.writeObject( keyType );
-		oos.writeObject( entityMode.toString() );
 	}
 
 	/**
@@ -119,7 +119,6 @@ public final class CollectionKey implements Serializable {
 	 * Session/PersistenceContext for increased performance.
 	 *
 	 * @param ois The stream from which to read the entry.
-	 * @param session The session being deserialized.
 	 *
 	 * @return The deserialized CollectionKey
 	 *
@@ -127,14 +126,11 @@ public final class CollectionKey implements Serializable {
 	 * @throws ClassNotFoundException
 	 */
 	public static CollectionKey deserialize(
-			ObjectInputStream ois,
-			SessionImplementor session) throws IOException, ClassNotFoundException {
+			ObjectInputStream ois) throws IOException, ClassNotFoundException {
 		return new CollectionKey(
-				(String) ois.readObject(),
+				(NavigableRole) ois.readObject(),
 				(Serializable) ois.readObject(),
-				(Type) ois.readObject(),
-				EntityMode.parse( (String) ois.readObject() ),
-				(session == null ? null : session.getFactory())
+				(JavaTypeDescriptor) ois.readObject()
 		);
 	}
 }

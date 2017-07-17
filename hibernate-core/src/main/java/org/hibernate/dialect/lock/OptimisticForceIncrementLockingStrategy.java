@@ -14,7 +14,7 @@ import org.hibernate.action.internal.EntityIncrementVersionProcess;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.metamodel.model.domain.spi.Lockable;
 
 /**
  * An optimistic locking strategy that forces an increment of the version (afterQuery verifying that version hasn't changed).

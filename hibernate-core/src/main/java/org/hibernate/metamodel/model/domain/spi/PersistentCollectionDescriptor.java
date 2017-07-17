@@ -9,8 +9,10 @@ package org.hibernate.metamodel.model.domain.spi;
 import java.io.Serializable;
 import javax.persistence.metamodel.PluralAttribute;
 
+import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.PersistentCollectionTuplizer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.spi.CollectionLoader;
@@ -22,6 +24,7 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.spi.TableReferenceContributor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * A strategy for persisting a collection role. Defines a contract between
@@ -240,6 +243,8 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	@Override
 	ManagedTypeDescriptor getContainer();
 
+	JavaTypeDescriptor getKeyJavaTypeDescriptor();
+
 	// consider whether we want to keep any of this legacy stuff
 
 //	/**
@@ -331,19 +336,21 @@ public interface PersistentCollectionDescriptor<O,C,E>
 //	 * propogated to the database.
 //	 */
 //	boolean isInverse();
-//	/**
-//	 * Completely remove the persistent state of the collection
-//	 */
-//	void remove(Serializable id, SharedSessionContractImplementor session)
-//		throws HibernateException;
-//	/**
-//	 * (Re)create the collection's persistent state
-//	 */
-//	void recreate(
-//			PersistentCollection collection,
-//			Serializable key,
-//			SharedSessionContractImplementor session)
-//		throws HibernateException;
+
+	/**
+	 * Completely remove the persistent state of the collection
+	 */
+	void remove(Serializable id, SharedSessionContractImplementor session) throws HibernateException;
+
+	/**
+	 * (Re)create the collection's persistent state
+	 */
+	void recreate(
+			PersistentCollection collection,
+			Serializable key,
+			SharedSessionContractImplementor session)
+		throws HibernateException;
+
 //	/**
 //	 * Delete the persistent state of any elements that were removed from
 //	 * the collection
@@ -405,10 +412,10 @@ public interface PersistentCollectionDescriptor<O,C,E>
 //
 //	boolean hasManyToManyOrdering();
 //
-//	/**
-//	 * Get the "space" that holds the persistent state
-//	 */
-//	Serializable[] getCollectionSpaces();
+	/**
+	 * Get the "space" that holds the persistent state
+	 */
+	Serializable[] getCollectionSpaces();
 //
 //	CollectionMetadata getCollectionMetadata();
 //

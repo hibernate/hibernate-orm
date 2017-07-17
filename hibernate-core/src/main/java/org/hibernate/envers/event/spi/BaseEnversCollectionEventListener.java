@@ -24,7 +24,6 @@ import org.hibernate.envers.internal.synchronization.work.CollectionChangeWorkUn
 import org.hibernate.envers.internal.synchronization.work.FakeBidirectionalRelationWorkUnit;
 import org.hibernate.envers.internal.synchronization.work.PersistentCollectionChangeWorkUnit;
 import org.hibernate.event.spi.AbstractCollectionEvent;
-import org.hibernate.persister.collection.AbstractCollectionPersister;
 
 /**
  * Base class for Envers' collection event related listeners
@@ -56,7 +55,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 			final AuditProcess auditProcess = getAuditService().getAuditProcess( event.getSession() );
 
 			final String entityName = event.getAffectedOwnerEntityName();
-			final String ownerEntityName = ( (AbstractCollectionPersister) collectionEntry.getLoadedPersister() ).getOwnerEntityName();
+			final String ownerEntityName = (  collectionEntry.getLoadedPersister() ).getOwnerEntityName();
 			final String referencingPropertyName = collectionEntry.getRole().substring( ownerEntityName.length() + 1 );
 
 			// Checking if this is not a "fake" many-to-one bidirectional relation. The relation description may be

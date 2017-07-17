@@ -34,13 +34,10 @@ import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.jdbc.ReturningWork;
-import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
-import org.hibernate.persister.entity.Queryable;
-import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.sql.Update;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
@@ -190,11 +187,14 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		}
 
 		final SessionFactoryImplementor sessionFactory = ( (SessionImplementor) session ).getFactory();
-		final Type propertyType = sessionFactory.getTypeConfiguration().findEntityDescriptor( entityName ).getPropertyType( propertyName );
-		if ( propertyType.isCollectionType() ) {
-			CollectionType collectionPropertyType = (CollectionType) propertyType;
+		final EntityDescriptor<Object> entityDescriptor = sessionFactory.getTypeConfiguration().findEntityDescriptor(
+				entityName );
+		final Type propertyType = entityDescriptor.getPropertyType( propertyName );
+		if ( propertyType.getClassification() ==  Type.Classification.COLLECTION ) {
+			final PluralPersistentAttribute attribute = (PluralPersistentAttribute) entityDescriptor.getAttribute(
+					propertyName );
 			// Handling collection of components.
-			if ( collectionPropertyType.getElementType( sessionFactory ) instanceof ComponentType ) {
+			if ( attribute.getElementType() instanceof javax.persistence.metamodel.EmbeddableType ) {
 				// Adding restrictions to compare data outside of primary key.
 				// todo: is it necessary that non-primary key attributes be compared?
 				for ( Map.Entry<String, Object> dataEntry : persistentCollectionChangeData.getData().entrySet() ) {

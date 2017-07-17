@@ -5,18 +5,21 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.criterion;
+
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.Loadable;
-import org.hibernate.persister.entity.PropertyMapping;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.sql.ConditionFragment;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
+
+import net.bytebuddy.description.annotation.AnnotationDescription;
 
 /**
  * Base expression implementation for (not) emptiness checking of collection properties
@@ -47,10 +50,15 @@ public abstract class AbstractEmptinessExpression implements Criterion {
 		final String sqlAlias = criteriaQuery.getSQLAlias( criteria, propertyName );
 
 		final SessionFactoryImplementor factory = criteriaQuery.getFactory();
-		final QueryableCollection collectionPersister = getQueryableCollection( entityName, actualPropertyName, factory );
+		final EntityDescriptor entityPersister = factory.getTypeConfiguration().findEntityDescriptor( entityName );
+
+		final Navigable navigable = entityPersister.findNavigable( actualPropertyName );
+
+		final PersistentCollectionDescriptor collectionPersister = factory.getTypeConfiguration()
+				.findCollectionPersister( navigable.getNavigableRole().getFullPath() );
 
 		final String[] collectionKeys = collectionPersister.getKeyColumnNames();
-		final String[] ownerKeys = ( (Loadable) factory.getEntityPersister( entityName ) ).getIdentifierColumnNames();
+		final String[] ownerKeys = ( (AnnotationDescription.Loadable) entityPersister ).getIdentifierColumnNames();
 
 		final String innerSelect = "(select 1 from " + collectionPersister.getTableName() + " where "
 				+ new ConditionFragment().setTableAlias( sqlAlias ).setCondition( ownerKeys, collectionKeys ).toFragmentString()
@@ -62,7 +70,7 @@ public abstract class AbstractEmptinessExpression implements Criterion {
 	}
 
 
-	protected QueryableCollection getQueryableCollection(
+	protected PersistentCollectionDescriptor getQueryableCollection(
 			String entityName,
 			String propertyName,
 			SessionFactoryImplementor factory) throws HibernateException {

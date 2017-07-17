@@ -44,10 +44,6 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 		return resolveType().getJavaTypeDescriptor();
 	}
 
-	public SqlTypeDescriptor getColumnsSqlTypeDescriptors() {
-		return resolveType().getColumnDescriptor().getSqlTypeDescriptor();
-	}
-
 	public AttributeConverterDescriptor getAttributeConverterDescriptor() {
 		return attributeConverterDescriptor;
 	}

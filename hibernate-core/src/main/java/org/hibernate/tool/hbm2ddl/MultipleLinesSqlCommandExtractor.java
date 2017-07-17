@@ -9,8 +9,6 @@ package org.hibernate.tool.hbm2ddl;
 import java.io.Reader;
 import java.util.List;
 
-import org.hibernate.hql.internal.antlr.SqlStatementLexer;
-import org.hibernate.hql.internal.antlr.SqlStatementParser;
 
 /**
  * Class responsible for extracting SQL statements from import script. Supports instructions/comments and quoted

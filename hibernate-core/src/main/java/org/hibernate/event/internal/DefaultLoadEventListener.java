@@ -854,7 +854,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		boolean isReadOnly = session.isDefaultReadOnly();
-		if ( persister.isMutable() ) {
+		if ( persister.getJavaTypeDescriptor().getMutabilityPlan().isMutable() ) {
 			Object proxy = persistenceContext.getProxy( entityKey );
 			if ( proxy != null ) {
 				// there is already a proxy for this impl

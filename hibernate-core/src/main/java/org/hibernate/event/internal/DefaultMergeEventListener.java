@@ -39,7 +39,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.TypeHelper;
 
 /**
  * Defines the default copy event listener used by hibernate for copying entities
@@ -278,7 +277,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		else {
 			// check that entity id = requestedId
 			Serializable entityId = persister.getIdentifier( entity, source );
-			if ( !persister.getIdentifierType().isEqual( id, entityId, source.getFactory() ) ) {
+			if ( !persister.getIdentifierType().getJavaTypeDescriptor().areEqual( id, entityId ) ) {
 				throw new HibernateException( "merge requested with id not matching id of passed entity" );
 			}
 		}
@@ -291,7 +290,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			source.getLoadQueryInfluencers().setEnabledInternalFetchProfileType( InternalFetchProfileType.MERGE );
 			//we must clone embedded composite identifiers, or
 			//we will get back the same instance that we pass in
-			final Serializable clonedIdentifier = (Serializable) persister.getIdentifierType()
+			final Serializable clonedIdentifier = (Serializable) persister.getIdentifierType().getJavaTypeDescriptor()
 					.getMutabilityPlan().deepCopy( id );
 			result = source.get( entityName, clonedIdentifier );
 		}

@@ -15,6 +15,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.PessimisticLockException;
+
 import org.hibernate.StaleStateException;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -133,7 +134,7 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
             log.info("Exception thrown: ", e);
             markRollbackOnly(s);
             return false;
-         } catch (PessimisticLockException e) {
+         } catch (PessimisticLockException | org.hibernate.PessimisticLockException e) {
             log.info("Exception thrown: ", e);
             markRollbackOnly(s);
             return false;

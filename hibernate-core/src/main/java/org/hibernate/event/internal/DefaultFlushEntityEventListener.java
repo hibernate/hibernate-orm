@@ -164,7 +164,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 			// Search for collections by reachability, updating their role.
 			// We don't want to touch collections reachable from a deleted object
-			if ( persister.`hasCollections() ) {
+			if ( persister.hasCollections() ) {
 				new FlushVisitor( session, entity ).processEntityPropertyValues( values, types );
 			}
 		}

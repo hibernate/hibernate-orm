@@ -266,7 +266,7 @@ public class CascadeStyles {
 		final CascadeStyle old = STYLES.put( name, cascadeStyle );
 		if ( old != null ) {
 			log.debugf(
-					"External cascade style regsitration [%s : %s] overrode base registration [%s]",
+					"External cascade style registration [%s : %s] overrode base registration [%s]",
 					name,
 					cascadeStyle,
 					old

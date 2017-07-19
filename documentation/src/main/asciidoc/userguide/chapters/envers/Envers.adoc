@@ -31,7 +31,7 @@ Instead of annotating the whole class and auditing all properties, you can annot
 This will cause only these properties to be audited.
 
 The audit (history) of an entity can be accessed using the `AuditReader` interface, which can be obtained having an open `EntityManager` or `Session` via the `AuditReaderFactory`.
-See the [Javadocs](https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReaderFactory.html) for these classes for details on the functionality offered.
+See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReaderFactory.html[Javadocs] for these classes for details on the functionality offered.
 
 [[envers-configuration]]
 === Configuration
@@ -130,7 +130,7 @@ If you have a mapping with secondary tables, audit tables for them will be gener
 If you wish to overwrite this behavior, you can use the `@SecondaryAuditTable` and `@SecondaryAuditTables` annotations.
 
 If you'd like to override auditing behavior of some fields/properties inherited from `@MappedSuperclass` or in an embedded component,
-you can apply the `@AuditOverride( s )` annotation on the subtype or usage site of the component.
+you can apply the `@AuditOverride` annotation on the subtype or usage site of the component.
 
 If you want to audit a relation mapped with `@OneToMany` and `@JoinColumn`,
 please see <<envers-mappingexceptions>> for a description of the additional `@AuditJoinTable` annotation that you'll probably want to use.
@@ -190,20 +190,24 @@ You can, however, supply your own approach to collecting this information which 
 There are two things you need to make this work:
 
 . First, you will need to tell Envers about the entity you wish to use.
-  Your entity must use the `@org.hibernate.envers.RevisionEntity` annotation.
-  It must define the two attributes described above annotated with `@org.hibernate.envers.RevisionNumber` and `@org.hibernate.envers.RevisionTimestamp`, respectively.
-  You can extend from `org.hibernate.envers.DefaultRevisionEntity`, if you wish, to inherit all these required behaviors.
+Your entity must use the `@org.hibernate.envers.RevisionEntity` annotation.
+It must define the two attributes described above annotated with `@org.hibernate.envers.RevisionNumber` and `@org.hibernate.envers.RevisionTimestamp`, respectively.
+You can extend from `org.hibernate.envers.DefaultRevisionEntity`, if you wish, to inherit all these required behaviors.
 +
-  Simply add the custom revision entity as you do your normal entities and Envers will _find it_.
+Simply add the custom revision entity as you do your normal entities and Envers will *find it*.
 +
 NOTE: It is an error for there to be multiple entities marked as `@org.hibernate.envers.RevisionEntity`
 
-. Second, you need to tell Envers how to create instances of your revision entity which is handled by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/RevisionListener.html#newRevision-java.lang.Object-[`newRevision( Object revisionEntity )`] method of the `org.hibernate.envers.RevisionListener` interface.
+. Second, you need to tell Envers how to create instances of your revision entity which is handled by the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/RevisionListener.html#newRevision-java.lang.Object-[`newRevision( Object revisionEntity )`]
+method of the `org.hibernate.envers.RevisionListener` interface.
 +
-  You tell Envers your custom `org.hibernate.envers.RevisionListener` implementation to use by specifying it on the `@org.hibernate.envers.RevisionEntity` annotation, using the value attribute.
-  If your `RevisionListener` class is inaccessible from `@RevisionEntity` (e.g. it exists in a different module), set `org.hibernate.envers.revision_listener` property to its fully qualified class name.
-  Class name defined by the configuration parameter overrides revision entity's value attribute.
+You tell Envers your custom `org.hibernate.envers.RevisionListener` implementation to use by specifying it on the `@org.hibernate.envers.RevisionEntity` annotation, using the value attribute.
+If your `RevisionListener` class is inaccessible from `@RevisionEntity` (e.g. it exists in a different module),
+set `org.hibernate.envers.revision_listener` property to its fully qualified class name.
+Class name defined by the configuration parameter overrides revision entity's value attribute.
 
+====
 [source,java]
 ----
 @RevisionEntity( MyCustomRevisionListener.class )
@@ -211,21 +215,25 @@ public class MyCustomRevisionEntity {
     ...
 }
 
-public class MyCustomRevisionListener implements RevisionListener {
+public class MyCustomRevisionListener
+    implements RevisionListener {
+
     public void newRevision( Object revisionEntity ) {
-        MyCustomRevisionEntity customRevisionEntity = ( MyCustomRevisionEntity ) revisionEntity;
+        MyCustomRevisionEntity customRevisionEntity =
+            ( MyCustomRevisionEntity ) revisionEntity;
     }
 }
 ----
+====
 
 .ExampleRevEntity.java
 ====
 [source,java]
 ----
-package `org.hibernate.envers.example;`
+package org.hibernate.envers.example;
 
-import `org.hibernate.envers.RevisionEntity;`
-import `org.hibernate.envers.DefaultRevisionEntity;`
+import org.hibernate.envers.RevisionEntity;
+import org.hibernate.envers.DefaultRevisionEntity;
 
 import javax.persistence.Entity;
 
@@ -244,9 +252,9 @@ public class ExampleRevEntity extends DefaultRevisionEntity {
 ====
 [source,java]
 ----
-package `org.hibernate.envers.example;`
+package org.hibernate.envers.example;
 
-import `org.hibernate.envers.RevisionListener;`
+import org.hibernate.envers.RevisionListener;
 import org.jboss.seam.security.Identity;
 import org.jboss.seam.Component;
 
@@ -1019,17 +1027,19 @@ The following audit information is available, sorted on in order of occurrence:
 [[envers-partitioning-example-column]]
 === Determining a suitable partitioning column
 
-To partition this data, the 'level of relevancy' must be defined. Consider the following:
+To partition this data, the _level of relevancy_ must be defined. Consider the following:
 
 . For fiscal year 2006 there is only one revision.
-  It has the oldest _revision timestamp_ of all audit rows, but should still be regarded as relevant because it's the latest modification for this fiscal year in the salary table (its _end revision timestamp_ is null).
+It has the oldest _revision timestamp_ of all audit rows,
+but should still be regarded as relevant because it's the latest modification for this fiscal year in the salary table (its _end revision timestamp_ is null).
 +
-  Also, note that it would be very unfortunate if in 2011 there would be an update of the salary for fiscal year 2006 (which is possible in until at least 10 years after the fiscal year),
-  and the audit information would have been moved to a slow disk (based on the age of the __revision timestamp__).
-  Remember that, in this case, Envers will have to update the _end revision timestamp_ of the most recent audit row.
+Also, note that it would be very unfortunate if in 2011 there would be an update of the salary for fiscal year 2006 (which is possible in until at least 10 years after the fiscal year),
+and the audit information would have been moved to a slow disk (based on the age of the __revision timestamp__).
+Remember that, in this case, Envers will have to update the _end revision timestamp_ of the most recent audit row.
 . There are two revisions in the salary of fiscal year 2007 which both have nearly the same _revision timestamp_ and a different __end revision timestamp__.
-  On first sight, it is evident that the first revision was a mistake and probably not relevant.
-  The only relevant revision for 2007 is the one with _end revision timestamp_ null.
+
+On first sight, it is evident that the first revision was a mistake and probably not relevant.
+The only relevant revision for 2007 is the one with _end revision timestamp_ null.
 
 Based on the above, it is evident that only the _end revision timestamp_ is suitable for audit table partitioning.
 The _revision timestamp_ is not suitable.

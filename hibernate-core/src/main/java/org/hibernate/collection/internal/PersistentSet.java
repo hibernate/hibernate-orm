@@ -384,7 +384,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 		// note that it might be better to iterate the snapshot but this is safe,
 		// assuming the user implements equals() properly, as required by the Set
 		// contract!
-		return oldValue == null || elemType.isDirty( oldValue, entry, getSession() );
+		return ( oldValue == null && entry != null ) || elemType.isDirty( oldValue, entry, getSession() );
 	}
 
 	@Override
@@ -434,7 +434,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean entryExists(Object key, int i) {
-		return true;
+		return key != null;
 	}
 
 	@Override

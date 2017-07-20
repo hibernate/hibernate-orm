@@ -15,6 +15,8 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 
@@ -170,10 +172,33 @@ public class AnnotationMetaEntity implements MetaEntity {
 		List<? extends Element> fieldsOfClass = ElementFilter.fieldsIn( element.getEnclosedElements() );
 		addPersistentMembers( fieldsOfClass, AccessType.FIELD );
 
-		List<? extends Element> methodsOfClass = ElementFilter.methodsIn( element.getEnclosedElements() );
+		List<? extends Element> rawMethodsOfClass = ElementFilter.methodsIn( element.getEnclosedElements() );
+		List<Element> methodsOfClass = new ArrayList<Element>();
+		for (Element rawMethodOfClass: rawMethodsOfClass) {
+			if (methodRespectsJavaBeansConvention(rawMethodOfClass)) {
+				methodsOfClass.add(rawMethodOfClass);
+			}
+		}
 		addPersistentMembers( methodsOfClass, AccessType.PROPERTY );
 
 		initialized = true;
+	}
+
+	/**
+	 * Should generate code only for persistent attributes.
+	 * Thus, methods should follow conventions of JavaBeans components.
+	 * See HHH-11871.
+	 * @param methodOfClass
+	 * @return
+	 */
+	private boolean methodRespectsJavaBeansConvention(Element methodOfClass) {
+		ExecutableType methodType = (ExecutableType) methodOfClass.asType();
+		String methodSimpleName = methodOfClass.getSimpleName().toString();
+		List<? extends TypeMirror> methodParameterTypes = methodType.getParameterTypes();
+
+		return (methodSimpleName.startsWith("set") && methodParameterTypes.size() == 1)
+				||
+				((methodSimpleName.startsWith("get") || methodSimpleName.startsWith("is")) && methodParameterTypes.isEmpty());
 	}
 
 	private void addPersistentMembers(List<? extends Element> membersOfClass, AccessType membersKind) {

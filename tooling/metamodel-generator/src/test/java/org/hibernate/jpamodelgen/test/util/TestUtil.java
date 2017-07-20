@@ -18,6 +18,7 @@ import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
+import javax.persistence.metamodel.ListAttribute;
 import javax.tools.Diagnostic;
 
 import org.jboss.logging.Logger;
@@ -95,6 +96,27 @@ public class TestUtil {
 				"Types do not match: " + buildErrorString( errorString, clazz ),
 				expectedType,
 				actualType
+		);
+	}
+
+	public static void assertListAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType, String errorString) {
+		Field field = getFieldFromMetamodelFor( clazz, fieldName );
+		assertNotNull( "Cannot find field '" + fieldName + "' in " + clazz.getName(), field );
+		ParameterizedType type = (ParameterizedType) field.getGenericType();
+		Type rawType = type.getRawType();
+
+		assertEquals(
+			"Types do not match: " + buildErrorString( errorString, clazz ),
+			ListAttribute.class,
+			rawType
+		);
+
+		Type genericType = type.getActualTypeArguments()[1];
+
+		assertEquals(
+				"Types do not match: " + buildErrorString( errorString, clazz ),
+				expectedType,
+				genericType
 		);
 	}
 

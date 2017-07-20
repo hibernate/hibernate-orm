@@ -428,6 +428,15 @@ Can specify either the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/
 |`hibernate.jdbc.fetch_size` |`0` or an integer |A non-zero value determines the JDBC fetch size, by calling `Statement.setFetchSize()`.
 |`hibernate.jdbc.use_scrollable_resultset` |`true` or `false` |Enables Hibernate to use JDBC2 scrollable resultsets. This property is only relevant for user-supplied JDBC connections. Otherwise, Hibernate uses connection metadata.
 |`hibernate.jdbc.use_streams_for_binary` |`true` or `false` (default value) |Use streams when writing or reading `binary` or `serializable` types to or from JDBC. This is a system-level property.
+|`hibernate.jdbc.use_string_for_clob` |`true` or `false` (default value) |
+
+By default, the `Dialect#useInputStreamToInsertBlob()` option is used to save Clob object types.
+
+`org.hibernate.dialect.PostgreSQL81Dialect#useInputStreamToInsertBlob()` does not use Clob binary streaming by default,
+and that's where the `hibernate.jdbc.use_string_for_clob` property can be used
+to save the Clob using the `org.hibernate.type.descriptor.sql.ClobTypeDescriptor#STRING_BINDING`, so, instead of saving an OID,
+the actual `String` value is saved in the `text` column.
+
 |`hibernate.jdbc.use_get_generated_keys` |`true` or `false` |Allows Hibernate to use JDBC3 `PreparedStatement.getGeneratedKeys()` to retrieve natively-generated keys after insert. You need the JDBC3+ driver and JRE1.4+. Disable this property if your driver has problems with the Hibernate identifier generators. By default, it tries to detect the driver capabilities from connection metadata.
 |`hibernate.jdbc.wrap_result_sets` |`true` or `false` (default value) |Enable wrapping of JDBC result sets in order to speed up column name lookups for broken JDBC drivers.
 |`hibernate.enable_lazy_load_no_trans` |`true` or `false` (default value) |

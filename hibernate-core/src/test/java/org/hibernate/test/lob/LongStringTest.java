@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.query.Query;
 
@@ -100,7 +101,8 @@ public abstract class LongStringTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(Oracle8iDialect.class)
-	@TestForIssue( jiraKey = "HHH-11477")
+	@SkipForDialect(PostgreSQL81Dialect.class)
+	@TestForIssue( jiraKey = "HHH-11477" )
 	public void testUsingLobPropertyInHqlQuery() {
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
 			LongStringHolder entity = new LongStringHolder();
@@ -120,6 +122,7 @@ public abstract class LongStringTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(Oracle8iDialect.class)
+	@SkipForDialect(PostgreSQL81Dialect.class)
 	@TestForIssue( jiraKey = "HHH-11477")
 	public void testSelectLobPropertyInHqlQuery() {
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {

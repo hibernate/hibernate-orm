@@ -178,4 +178,6 @@ public interface SessionFactoryOptionsState {
 	TimeZone getJdbcTimeZone();
 
 	boolean isQueryParametersValidationEnabled();
+
+	boolean isUseStringForClobBinding();
 }

@@ -1187,4 +1187,9 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	public TimeZone getJdbcTimeZone() {
 		return delegate.getJdbcTimeZone();
 	}
+
+	@Override
+	public boolean useStringForCLobBinding() {
+		return delegate.useStringForCLobBinding();
+	}
 }

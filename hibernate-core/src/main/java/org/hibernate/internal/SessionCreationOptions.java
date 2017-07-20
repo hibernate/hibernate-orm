@@ -66,4 +66,6 @@ public interface SessionCreationOptions {
 	ManagedFlushChecker getManagedFlushChecker();
 
 	boolean isQueryParametersValidationEnabled();
+
+	boolean isUseStringForClobBinding();
 }

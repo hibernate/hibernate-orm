@@ -891,7 +891,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private void handleNativeQueryResult(NativeQueryImplementor query, Class resultClass) {
 		if (Tuple.class.equals(resultClass)) {
 			query.setResultTransformer(new NativeQueryTupleTransformer());
-		} else {
+		} 
+		else {
 			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
 		}
 	}

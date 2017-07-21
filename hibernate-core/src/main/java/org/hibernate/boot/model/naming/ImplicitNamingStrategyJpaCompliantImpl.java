@@ -148,7 +148,12 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 					+ source.getReferencedColumnName().getText();
 		}
 		else {
-			name = transformAttributePath( source.getAttributePath() )
+			//HHH-11826: ImplicitNamingStrategyComponentPathImpl generates invalid SQL for Entity with Embedded ElementCollection
+			String attributePath = transformAttributePath( source.getAttributePath() );
+			if(attributePath.contains( "_collection&&element_" )) {
+				attributePath = attributePath.replace( "_collection&&element_", "_" );
+			}
+			name = attributePath
 					+ '_'
 					+ source.getReferencedColumnName().getText();
 		}

@@ -14,15 +14,15 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 /**
  * @author Steve Ebersole
  */
-public class DirectResultSetAccess implements JdbcValuesSourceResultSetImpl.ResultSetAccess {
-	private final SharedSessionContractImplementor persistenceContext;
+public class DirectResultSetAccess extends AbstractResultSetAccess {
 	private final PreparedStatement resultSetSource;
 	private final ResultSet resultSet;
 
 	public DirectResultSetAccess(
 			SharedSessionContractImplementor persistenceContext,
-			PreparedStatement resultSetSource, ResultSet resultSet) {
-		this.persistenceContext = persistenceContext;
+			PreparedStatement resultSetSource,
+			ResultSet resultSet) {
+		super( persistenceContext );
 		this.resultSetSource = resultSetSource;
 		this.resultSet = resultSet;
 
@@ -36,6 +36,9 @@ public class DirectResultSetAccess implements JdbcValuesSourceResultSetImpl.Resu
 
 	@Override
 	public void release() {
-		persistenceContext.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( resultSet, resultSetSource );
+		getPersistenceContext().getJdbcCoordinator()
+				.getLogicalConnection()
+				.getResourceRegistry()
+				.release( resultSet, resultSetSource );
 	}
 }

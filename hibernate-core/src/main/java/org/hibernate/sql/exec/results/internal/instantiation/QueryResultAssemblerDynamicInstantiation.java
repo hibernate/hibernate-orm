@@ -6,32 +6,32 @@
  */
 package org.hibernate.sql.exec.results.internal.instantiation;
 
-import java.sql.SQLException;
 import java.util.List;
 
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.exec.results.spi.RowProcessingState;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
+import org.hibernate.sql.exec.results.spi.RowProcessingState;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class QueryResultAssemblerDynamicInstantiation implements QueryResultAssembler {
-	private final Class target;
+	private final JavaTypeDescriptor javaTypeDescriptor;
 
-	public QueryResultAssemblerDynamicInstantiation(Class target, List<SqlSelection> sqlSelections) {
-
-		this.target = target;
+	public QueryResultAssemblerDynamicInstantiation(JavaTypeDescriptor javaTypeDescriptor, List<SqlSelection> sqlSelections) {
+		this.javaTypeDescriptor = javaTypeDescriptor;
 	}
 
 	@Override
-	public Class getReturnedJavaType() {
-		return target;
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return javaTypeDescriptor;
 	}
 
 	@Override
-	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) throws SQLException {
-		return null;
+	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+		throw new NotYetImplementedException(  );
 	}
 }

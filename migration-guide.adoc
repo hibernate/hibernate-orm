@@ -51,6 +51,9 @@ from an API perspective.
 		to "persister" are replaced with "more appropriate names"
 	* `org.hibernate.mapping` deprecated in favor of the new `org.hibernate.boot.model` package
 	* `org.hibernate.dialect.function.SQLFunction` -> `org.hibernate.query.sqm.produce.function.SqmFunctionTemplate`
+	* Removal of `org.hibernate.loader.custom.CustomQuery` support in favor of the generalized
+		`org.hibernate.sql.exec.spi.JdbcOperation` handling via the Session's JdbcCoordinator
+
 
 == Removed deprecations
 
@@ -141,3 +144,8 @@ Once the column exists, you can:
 * there is really nothing SQM-specific in most of the `org.hibernate.sql.sqm.exec.spi` contracts.  Let's get
 	them finished up, clean them up and consider moving to a new `org.hibernate.sql.exec.spi` package.  Much of
 	this is usable from NativeQuery as well...
+
+
+== additional "JPA compliance" checks
+
+* ConstructorResult arguments should only be ColumnResults type.

@@ -21,7 +21,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+import org.hibernate.query.sql.ReturnableResultRegistration;
 import org.hibernate.type.Type;
 
 /**
@@ -59,6 +59,38 @@ import org.hibernate.type.Type;
  */
 public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	/**
+	 * Retrieve the returns associated with this query.  Note that the returned
+	 * descriptors represents the live, in-flight view of these returns.  Meaning
+	 * that, given code such as:
+	 *
+	 * [code]
+	 * ----
+	 * NativeQuery qry = ...;
+	 * RootReturn root = qry.addRoot( "a", MyEntity.class );
+	 * EntityResultRegistration rootReg = qry.getQueryReturns().get( 0 );
+	 * ----
+	 *
+	 * the `rootReg` reference is linked to the `root` reference such that
+	 * changes made through the `root` reference will be immediately
+	 * visible via the `rootReg` reference.
+	 *
+	 * Additionally, the returned list itself however is not live.  Meaning that
+	 * registrations added after the list is obtained will not be available in
+	 * that list; instead this method needs to be called again to gain access to
+	 * those.
+	 *
+	 * @return The return descriptors
+	 */
+	List<ReturnableResultRegistration> getQueryReturns();
+
+	/**
+	 * Is this native-SQL query known to be callable?
+	 *
+	 * @return {@code true} if the query is known to be callable; {@code false} otherwise.
+	 */
+	boolean isCallable();
+
+	/**
 	 * Use a predefined named result-set mapping.  This might be defined by a {@code <result-set/>} element in a
 	 * Hibernate <tt>hbm.xml</tt> file or through a {@link javax.persistence.SqlResultSetMapping} annotation.
 	 *
@@ -69,25 +101,14 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	org.hibernate.query.NativeQuery<T> setResultSetMapping(String name);
 
 	/**
-	 * Is this native-SQL query known to be callable?
-	 *
-	 * @return {@code true} if the query is known to be callable; {@code false} otherwise.
-	 */
-	boolean isCallable();
-
-	/**
-	 * Retrieve the returns associated with this query.
-	 *
-	 * @return The return descriptors
-	 */
-	List<NativeSQLQueryReturn> getQueryReturns();
-
-	/**
-	 * Declare a scalar query result. Hibernate will attempt to automatically detect the underlying type.
+	 * Declare a scalar query result. Hibernate will attempt to automatically
+	 * detect the underlying type.
 	 * <p/>
-	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or {@link javax.persistence.ColumnResult}
+	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
+	 * {@link javax.persistence.ColumnResult} in annotations
 	 *
-	 * @param columnAlias The column alias in the result-set to be processed as a scalar result
+	 * @param columnAlias The column alias in the result-set to be processed
+	 * 		as a scalar result
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -96,9 +117,11 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	/**
 	 * Declare a scalar query result.
 	 * <p/>
-	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or {@link javax.persistence.ColumnResult}
+	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
+	 * {@link javax.persistence.ColumnResult} in annotations
 	 *
-	 * @param columnAlias The column alias in the result-set to be processed as a scalar result
+	 * @param columnAlias The column alias in the result-set to be processed
+	 * 		as a scalar result
 	 * @param type The Hibernate type as which to treat the value.
 	 *
 	 * @return {@code this}, for method chaining
@@ -106,7 +129,8 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	org.hibernate.query.NativeQuery<T> addScalar(String columnAlias, Type type);
 
 	/**
-	 * Add a new root return mapping, returning a {@link org.hibernate.query.NativeQuery.RootReturn} to allow further definition.
+	 * Add a new root return mapping, returning a {@link RootReturn} to allow
+	 * further definition.
 	 *
 	 * @param tableAlias The SQL table alias to map to this entity
 	 * @param entityName The name of the entity.
@@ -243,10 +267,27 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	org.hibernate.query.NativeQuery<T> addJoin(String tableAlias, String path, LockMode lockMode);
 
 	/**
-	 * Allows access to further control how properties within a root or join fetch are mapped back from the result set.
-	 * Generally used in composite value scenarios.
+	 * Simple unification interface for all returns from the various `#addXYZ` methods .
+	 * Allows control over the "shape" of that particular part of the fetch graph.
+	 *
+	 * Some GraphNodes can be query results, while others simply describe a part
+	 * of one of the results.
 	 */
-	interface ReturnProperty {
+	interface ResultNode {
+	}
+
+	/**
+	 * ResultNode which can be a query result
+	 */
+	interface ReturnableResultNode extends ResultNode {
+	}
+
+	/**
+	 * Allows access to further control how properties within a root or join
+	 * fetch are mapped back from the result set.   Generally used in composite
+	 * value scenarios.
+	 */
+	interface ReturnProperty extends ResultNode {
 		/**
 		 * Add a column alias to this property mapping.
 		 *
@@ -258,9 +299,10 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	}
 
 	/**
-	 * Allows access to further control how root returns are mapped back from result sets.
+	 * Allows access to further control how root returns are mapped back from
+	 * result sets.
 	 */
-	interface RootReturn {
+	interface RootReturn extends ReturnableResultNode {
 		/**
 		 * Set the lock mode for this return.
 		 *
@@ -269,6 +311,8 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 		 * @return {@code this}, for method chaining
 		 */
 		RootReturn setLockMode(LockMode lockMode);
+
+		RootReturn addIdColumnAliases(String... aliases);
 
 		/**
 		 * Name the column alias that identifies the entity's discriminator.
@@ -300,9 +344,10 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	}
 
 	/**
-	 * Allows access to further control how join fetch returns are mapped back from result sets.
+	 * Allows access to further control how join fetch returns are mapped back
+	 * from result sets.
 	 */
-	interface FetchReturn {
+	interface FetchReturn extends ResultNode {
 		/**
 		 * Set the lock mode for this return.
 		 *

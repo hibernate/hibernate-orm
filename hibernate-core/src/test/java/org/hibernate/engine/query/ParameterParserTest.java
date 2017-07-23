@@ -7,7 +7,7 @@
 package org.hibernate.engine.query;
 
 import org.hibernate.query.internal.sql.NativeQueryParameterMetadataBuilder;
-import org.hibernate.query.internal.sql.ParameterParser;
+import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.spi.ParameterRecognizer;
 
 import org.hibernate.testing.TestForIssue;

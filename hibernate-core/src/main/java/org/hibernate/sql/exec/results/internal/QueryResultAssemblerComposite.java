@@ -6,16 +6,16 @@
  */
 package org.hibernate.sql.exec.results.internal;
 
-import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.tree.internal.select.QueryResultCompositeImpl;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
 import org.hibernate.sql.exec.results.spi.RowProcessingState;
-import org.hibernate.sql.ast.produce.result.internal.QueryResultCompositeImpl;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -36,16 +36,16 @@ public class QueryResultAssemblerComposite implements QueryResultAssembler {
 	}
 
 	@Override
-	public Class getReturnedJavaType() {
-		return returnComposite.getReturnedJavaType();
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return returnComposite.getJavaTypeDescriptor();
 	}
 
 	@Override
-	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) throws SQLException {
+	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
 		// for now has to be a very basic CompositeType (aka one-level && attributes of BasicType)
 		final Object[] values = new Object[ sqlSelections.size() ];
 		for ( int i = 0; i < sqlSelections.size(); i++ ) {
-			values[i] = rowProcessingState.getJdbcValues()[ sqlSelections.get( i ).getValuesArrayPosition() ];
+			values[i] = rowProcessingState.getJdbcValue( sqlSelections.get( i ) );
 		}
 
 		throw new NotYetImplementedException(  );

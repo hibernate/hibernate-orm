@@ -6,17 +6,19 @@
  */
 package org.hibernate.query.sqm.produce.internal.hql.navigable;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.domain.AbstractSqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmDowncast;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
+import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Models an "incidental downcast", as opposed to an intrinsic downcast.  An
@@ -33,8 +35,9 @@ import org.hibernate.query.sqm.tree.from.SqmFromExporter;
  *
  * @author Steve Ebersole
  */
-public class TreatedNavigableReference extends AbstractSqmNavigableReference implements SqmNavigableReference,
-		SqmNavigableContainerReference {
+public class TreatedNavigableReference
+		extends AbstractSqmNavigableReference
+		implements SqmNavigableReference, SqmNavigableContainerReference {
 	private final SqmNavigableReference baseBinding;
 	private final EntityValuedExpressableType subclassIndicator;
 
@@ -42,7 +45,7 @@ public class TreatedNavigableReference extends AbstractSqmNavigableReference imp
 		this.baseBinding = baseBinding;
 		this.subclassIndicator = subclassIndicator;
 
-		baseBinding.addDowncast( new SqmDowncast( subclassIndicator ) );
+		baseBinding.addDowncast( new SqmDowncast( subclassIndicator.getEntityDescriptor() ) );
 	}
 
 	public EntityValuedExpressableType getSubclassIndicator() {
@@ -50,7 +53,7 @@ public class TreatedNavigableReference extends AbstractSqmNavigableReference imp
 	}
 
 	@Override
-	public Navigable getReferencedNavigable() {
+	public NavigableContainer getReferencedNavigable() {
 		return subclassIndicator;
 	}
 
@@ -92,5 +95,25 @@ public class TreatedNavigableReference extends AbstractSqmNavigableReference imp
 	@Override
 	public void injectExportedFromElement(SqmFrom sqmFrom) {
 		( (SqmFromExporter) baseBinding ).injectExportedFromElement( sqmFrom );
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return subclassIndicator.getJavaTypeDescriptor();
+	}
+
+	@Override
+	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
+		return this;
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return subclassIndicator.getPersistenceType();
+	}
+
+	@Override
+	public Class getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
 	}
 }

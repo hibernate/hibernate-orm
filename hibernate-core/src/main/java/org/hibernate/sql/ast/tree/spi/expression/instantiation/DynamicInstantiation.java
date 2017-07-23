@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.exec.results.internal.instantiation.ArgumentReader;
@@ -24,15 +25,16 @@ import org.hibernate.sql.exec.results.internal.instantiation.QueryResultAssemble
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.ConversionException;
-import org.hibernate.sql.ast.produce.result.internal.QueryResultDynamicInstantiationImpl;
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultGenerator;
-import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.internal.select.QueryResultDynamicInstantiationImpl;
+import org.hibernate.sql.ast.tree.spi.select.QueryResult;
+import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.internal.NonNavigableSelectionSupport;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -154,7 +156,7 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 		}
 	}
 
-	private static class DynamicInstantiationQueryResultGenerator implements QueryResultGenerator {
+	private static class DynamicInstantiationQueryResultGenerator implements NonNavigableSelectionSupport.QueryResultGenerator {
 		private final DynamicInstantiationSelection dynamicInstantiationSelection;
 
 		public DynamicInstantiationQueryResultGenerator(DynamicInstantiationSelection dynamicInstantiationSelection) {
@@ -212,11 +214,18 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 			boolean areAnyArgumentsAliased,
 			List<String> duplicatedAliases,
 			List<ArgumentReader> argumentReaders) {
+
+		// todo (6.0) - need some form of access to SF/TypeConfiguration here...
+		final JavaTypeDescriptor targetJavaDescriptor = null;
+
 		if ( List.class.equals( target ) ) {
 			if ( log.isDebugEnabled() && areAnyArgumentsAliased ) {
 				log.debug( "One or more arguments for List dynamic instantiation (`new list(...)`) specified an alias; ignoring" );
 			}
-			return new QueryResultAssemblerListImpl( argumentReaders );
+			return new QueryResultAssemblerListImpl(
+					(BasicJavaDescriptor<List>) resolveJavaTypeDescriptor( List.class ),
+					argumentReaders
+			);
 		}
 		else if ( Map.class.equals( target ) ) {
 			if ( ! areAllArgumentsAliased ) {
@@ -227,7 +236,10 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 						"Map dynamic instantiation contained arguments with duplicated aliases [" + StringHelper.join( ",", duplicatedAliases ) + "]"
 				);
 			}
-			return new QueryResultAssemblerMapImpl( argumentReaders );
+			return new QueryResultAssemblerMapImpl(
+					(BasicJavaDescriptor<Map>) resolveJavaTypeDescriptor( Map.class ),
+					argumentReaders
+			);
 		}
 		else {
 			// find a constructor matching argument types
@@ -239,24 +251,32 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 
 				for ( int i = 0; i < arguments.size(); i++ ) {
 					final ArgumentReader argumentReader = argumentReaders.get( i );
+					final JavaTypeDescriptor argumentTypeDescriptor = resolveJavaTypeDescriptor(
+							constructor.getParameterTypes()[i]
+					);
+
 					// todo : move Compatibility from SQM into ORM?  It is only used here
 					final boolean assignmentCompatible = Compatibility.areAssignmentCompatible(
-							constructor.getParameterTypes()[i],
-							argumentReader.getReturnedJavaType()
+							argumentTypeDescriptor,
+							argumentReader.getJavaTypeDescriptor()
 					);
 					if ( !assignmentCompatible ) {
 						log.debugf(
 								"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
 								i,
-								constructor.getParameterTypes()[i],
-								argumentReader.getReturnedJavaType()
+								constructor.getParameterTypes()[i].getName(),
+								argumentTypeDescriptor.getJavaType().getName()
 						);
 						continue constructor_loop;
 					}
 				}
 
 				constructor.setAccessible( true );
-				return new QueryResultAssemblerConstructorImpl( constructor, argumentReaders );
+				return new QueryResultAssemblerConstructorImpl(
+						constructor,
+						resolveJavaTypeDescriptor( constructor.getDeclaringClass() ),
+						argumentReaders
+				);
 			}
 
 			log.debugf(
@@ -275,7 +295,12 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 				);
 			}
 
-			return new QueryResultAssemblerInjectionImpl( target, argumentReaders );
+			return new QueryResultAssemblerInjectionImpl( resolveJavaTypeDescriptor( target ), argumentReaders );
 		}
+	}
+
+	private static <T> JavaTypeDescriptor<T> resolveJavaTypeDescriptor(Class<T> javaType) {
+		// todo (6.0) - need some form of access to SF/TypeConfiguration here...
+		throw new NotYetImplementedException(  );
 	}
 }

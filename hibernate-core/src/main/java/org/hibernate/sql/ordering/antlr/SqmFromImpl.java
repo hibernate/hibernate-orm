@@ -11,7 +11,7 @@ import java.util.Locale;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.spi.ParsingContext;

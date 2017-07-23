@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.NavigablePath;
 
 /**
  * @author Steve Ebersole

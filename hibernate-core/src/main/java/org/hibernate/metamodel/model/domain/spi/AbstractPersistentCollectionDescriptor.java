@@ -31,6 +31,7 @@ import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.internal.CollectionElementBasicImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionElementEmbeddedImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionElementEntityImpl;

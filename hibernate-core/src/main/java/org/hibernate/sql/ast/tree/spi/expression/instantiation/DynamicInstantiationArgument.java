@@ -8,8 +8,8 @@ package org.hibernate.sql.ast.tree.spi.expression.instantiation;
 
 import org.hibernate.sql.exec.results.internal.instantiation.ArgumentReader;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 
 /**

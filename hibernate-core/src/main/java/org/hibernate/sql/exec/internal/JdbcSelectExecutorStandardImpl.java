@@ -24,6 +24,8 @@ import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.sql.ast.tree.spi.select.QueryResult;
+import org.hibernate.sql.ast.tree.spi.select.ResultSetAccess;
 import org.hibernate.sql.exec.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.exec.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.exec.results.internal.RowReaderStandardImpl;
@@ -31,7 +33,6 @@ import org.hibernate.sql.exec.results.internal.values.DeferredResultSetAccess;
 import org.hibernate.sql.exec.results.internal.values.JdbcValuesSource;
 import org.hibernate.sql.exec.results.internal.values.JdbcValuesSourceCacheHit;
 import org.hibernate.sql.exec.results.internal.values.JdbcValuesSourceResultSetImpl;
-import org.hibernate.sql.exec.results.internal.values.JdbcValuesSourceResultSetImpl.ResultSetAccess;
 import org.hibernate.sql.exec.results.spi.Initializer;
 import org.hibernate.sql.exec.results.spi.InitializerSource;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
@@ -42,7 +43,6 @@ import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.exec.spi.PreparedStatementCreator;
 import org.hibernate.sql.exec.spi.RowTransformer;
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 
 import org.jboss.logging.Logger;
 
@@ -198,6 +198,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			RowTransformer<R> rowTransformer,
 			PreparedStatementCreator statementCreator,
 			ResultsConsumer<T,R> resultsConsumer) {
+
+		// todo (6.0) - if we want native-query processing to hook in here we need to define a "type discovery" tie-in
+		//		as part of this process.  Logical spot seems to be during the ctor of
+		//		`JdbcValuesSourceResultSetImpl`
+
 		final JdbcValuesSource jdbcValuesSource = resolveJdbcValuesSource(
 				jdbcSelect,
 				executionContext,
@@ -241,7 +246,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		final List<QueryResultAssembler> returnAssemblers = new ArrayList<>();
 		final List<Initializer> initializers = new ArrayList<>();
-		for ( QueryResult queryReturn : jdbcSelect.getReturns() ) {
+		for ( QueryResult queryReturn : jdbcValuesSource.getResultSetMapping().getQueryResults() ) {
 			returnAssemblers.add( queryReturn.getResultAssembler() );
 
 			if ( queryReturn instanceof InitializerSource ) {
@@ -325,7 +330,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			return new JdbcValuesSourceResultSetImpl(
 					resultSetAccess,
 					executionContext.getQueryOptions(),
-					jdbcSelect.getSqlSelections(),
+					jdbcSelect.getResultSetMapping().resolve( resultSetAccess, executionContext.getSession() ),
 					executionContext.getSession()
 			);
 		}

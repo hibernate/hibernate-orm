@@ -17,20 +17,20 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
-import org.hibernate.metamodel.model.domain.spi.NavigableRole;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
-import org.hibernate.sql.ast.produce.result.internal.FetchCompositeAttributeImpl;
-import org.hibernate.sql.ast.produce.result.internal.QueryResultCompositeImpl;
-import org.hibernate.sql.ast.produce.result.spi.Fetch;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.internal.select.FetchCompositeAttributeImpl;
+import org.hibernate.sql.ast.tree.internal.select.QueryResultCompositeImpl;
+import org.hibernate.sql.ast.tree.spi.select.Fetch;
+import org.hibernate.sql.ast.tree.spi.select.FetchParent;
+import org.hibernate.sql.ast.tree.spi.select.QueryResult;
+import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
@@ -151,7 +151,7 @@ public class SingularPersistentAttributeEmbedded<O,J>
 			String resultVariable,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return new QueryResultCompositeImpl( selectedExpression, resultVariable, embeddedDescriptor );
+		return new QueryResultCompositeImpl( resultVariable, embeddedDescriptor );
 	}
 
 	@Override

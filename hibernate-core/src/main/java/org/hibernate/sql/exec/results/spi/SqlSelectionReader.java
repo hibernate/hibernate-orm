@@ -17,6 +17,11 @@ import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
  * via this contract; various other contracts may consume those basic vales into compositions
  * like an entity, embeddable or collection.
  *
+ * SqlSelectionReader generally "wraps" a {@link org.hibernate.type.descriptor.spi.ValueExtractor}
+ * and dispatches its calls to that wrapped ValueExtractor.  The SqlSelectionReader result
+ * is generally used to populate the "current row JDBC values" array
+ * ({@link RowProcessingState#getJdbcValue})
+ *
  * @author Steve Ebersole
  */
 public interface SqlSelectionReader<T> {

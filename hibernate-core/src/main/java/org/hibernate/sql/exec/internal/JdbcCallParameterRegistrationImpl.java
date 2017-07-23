@@ -12,11 +12,11 @@ import javax.persistence.ParameterMode;
 
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -27,7 +27,7 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 	private final int jdbcParameterPositionStart;
 	private final ParameterMode parameterMode;
 	private final int jdbcTypeCode;
-	private final Type ormType;
+	private final AllowableParameterType ormType;
 	private final JdbcParameterBinder parameterBinder;
 	private final JdbcCallParameterExtractorImpl parameterExtractor;
 	private final JdbcCallRefCursorExtractorImpl refCursorExtractor;
@@ -37,7 +37,7 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 			int jdbcParameterPositionStart,
 			ParameterMode parameterMode,
 			int jdbcTypeCode,
-			Type ormType,
+			AllowableParameterType ormType,
 			JdbcParameterBinder parameterBinder,
 			JdbcCallParameterExtractorImpl parameterExtractor,
 			JdbcCallRefCursorExtractorImpl refCursorExtractor) {

@@ -9,7 +9,8 @@ package org.hibernate.sql.exec.results.internal;
 import java.sql.SQLException;
 
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.produce.result.spi.FetchEntityAttribute;
+import org.hibernate.sql.ast.tree.spi.select.FetchEntityAttribute;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.exec.results.internal.values.JdbcValuesSource;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.exec.results.spi.RowProcessingState;
@@ -42,7 +43,6 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 		return resultSetProcessingState;
 	}
 
-//	@Override
 	public boolean next() throws SQLException {
 		if ( jdbcValuesSource.next( this ) ) {
 			currentRowJdbcValues = jdbcValuesSource.getCurrentRowJdbcValues();
@@ -55,8 +55,8 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 	}
 
 	@Override
-	public Object[] getJdbcValues() {
-		return currentRowJdbcValues;
+	public Object getJdbcValue(SqlSelection sqlSelection) {
+		return currentRowJdbcValues[ sqlSelection.getValuesArrayPosition() ];
 	}
 
 	@Override

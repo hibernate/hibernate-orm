@@ -13,13 +13,13 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.produce.result.internal.FetchCollectionAttributeImpl;
-import org.hibernate.sql.ast.produce.result.internal.QueryResultCollectionImpl;
-import org.hibernate.sql.ast.produce.result.spi.Fetch;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.internal.select.FetchCollectionAttributeImpl;
+import org.hibernate.sql.ast.tree.internal.select.QueryResultCollectionImpl;
+import org.hibernate.sql.ast.tree.spi.select.Fetch;
+import org.hibernate.sql.ast.tree.spi.select.FetchParent;
+import org.hibernate.sql.ast.tree.spi.select.QueryResult;
+import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -149,7 +149,7 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new QueryResultCollectionImpl(
-				selectedExpression,
+				getPersistentCollectionMetadata(),
 				resultVariable,
 				sqlSelectionResolver,
 				creationContext

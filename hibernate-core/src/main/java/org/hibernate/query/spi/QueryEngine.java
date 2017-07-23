@@ -9,6 +9,7 @@ package org.hibernate.query.spi;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -23,6 +24,7 @@ import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public class QueryEngine {
 	private final SessionFactoryImplementor sessionFactory;
 

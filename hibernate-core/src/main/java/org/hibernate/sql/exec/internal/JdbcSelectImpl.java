@@ -8,10 +8,9 @@ package org.hibernate.sql.exec.internal;
 
 import java.util.List;
 
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
-import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.exec.spi.ResultSetMapping;
 
 /**
  * @author Steve Ebersole
@@ -19,18 +18,15 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 public class JdbcSelectImpl implements JdbcSelect {
 	private final String sql;
 	private final List<JdbcParameterBinder> parameterBinders;
-	private final List<SqlSelection> sqlSelections;
-	private final List<QueryResult> returns;
+	private final ResultSetMapping resultSetMapping;
 
 	public JdbcSelectImpl(
 			String sql,
 			List<JdbcParameterBinder> parameterBinders,
-			List<SqlSelection> sqlSelections,
-			List<QueryResult> returns) {
+			ResultSetMapping resultSetMapping) {
 		this.sql = sql;
 		this.parameterBinders = parameterBinders;
-		this.sqlSelections = sqlSelections;
-		this.returns = returns;
+		this.resultSetMapping = resultSetMapping;
 	}
 
 	@Override
@@ -44,12 +40,7 @@ public class JdbcSelectImpl implements JdbcSelect {
 	}
 
 	@Override
-	public List<SqlSelection> getSqlSelections() {
-		return sqlSelections;
-	}
-
-	@Override
-	public List<QueryResult> getReturns() {
-		return returns;
+	public ResultSetMapping getResultSetMapping() {
+		return resultSetMapping;
 	}
 }

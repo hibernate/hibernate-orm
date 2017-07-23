@@ -14,25 +14,24 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.procedure.UnknownSqlResultSetMappingException;
+import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.tree.internal.select.QueryResultScalarImpl;
+import org.hibernate.sql.ast.tree.spi.select.FetchParent;
+import org.hibernate.sql.ast.tree.spi.select.QueryResult;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
+import org.hibernate.sql.exec.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.exec.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.exec.results.internal.instantiation.ArgumentReader;
 import org.hibernate.sql.exec.results.internal.instantiation.QueryResultAssemblerConstructorImpl;
 import org.hibernate.sql.exec.results.internal.instantiation.QueryResultAssemblerListImpl;
-import org.hibernate.sql.exec.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.exec.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
 
 import org.jboss.logging.Logger;
@@ -284,8 +283,13 @@ public class Util {
 		}
 
 		private QueryResultAssembler buildDynamicInstantiationAssembler(NativeSQLQueryConstructorReturn nativeQueryReturn) {
-			final Class target = nativeQueryReturn.getTargetClass();
-			if ( Map.class.equals( target ) ) {
+			final JavaTypeDescriptor resultType = context.getSessionFactory()
+					.getTypeConfiguration()
+					.getJavaTypeDescriptorRegistry()
+					.getDescriptor( nativeQueryReturn.getTargetClass() );
+			final Class targetJavaType = resultType.getJavaType();
+
+			if ( Map.class.equals( targetJavaType ) ) {
 				throw new HibernateException( "Map dynamic-instantiations not allowed for native/procedure queries" );
 			}
 
@@ -302,13 +306,13 @@ public class Util {
 				argumentReaders.add( new ArgumentReader( argumentReturn.getResultAssembler(), null ) );
 			}
 
-			if ( List.class.equals( target ) ) {
-				return new QueryResultAssemblerListImpl( argumentReaders );
+			if ( List.class.equals( targetJavaType ) ) {
+				return new QueryResultAssemblerListImpl( (BasicJavaDescriptor<List>) resultType, argumentReaders );
 			}
 			else {
 				// find a constructor matching argument types
 				constructor_loop:
-				for ( Constructor constructor : target.getDeclaredConstructors() ) {
+				for ( Constructor constructor : targetJavaType.getDeclaredConstructors() ) {
 					if ( constructor.getParameterTypes().length != argumentReaders.size() ) {
 						continue;
 					}
@@ -317,28 +321,36 @@ public class Util {
 						final ArgumentReader argumentReader = argumentReaders.get( i );
 						// todo : move Compatibility from SQM into ORM?  It is only used here
 						final boolean assignmentCompatible = Compatibility.areAssignmentCompatible(
-								constructor.getParameterTypes()[i],
-								argumentReader.getReturnedJavaType()
+								resolveJavaTypeDescriptor( constructor.getParameterTypes()[i] ),
+								argumentReader.getJavaTypeDescriptor()
 						);
 						if ( !assignmentCompatible ) {
 							log.debugf(
 									"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
 									i,
 									constructor.getParameterTypes()[i],
-									argumentReader.getReturnedJavaType()
+									argumentReader.getJavaTypeDescriptor().getJavaType().getName()
 							);
 							continue constructor_loop;
 						}
 					}
 
 					constructor.setAccessible( true );
-					return new QueryResultAssemblerConstructorImpl( constructor, argumentReaders );
+					return new QueryResultAssemblerConstructorImpl( constructor, resultType, argumentReaders );
 				}
 
 				throw new HibernateException(
-						"Could not locate appropriate constructor for dynamic instantiation of [" + target.getName() + "]"
+						"Could not locate appropriate constructor for dynamic instantiation of [" + targetJavaType.getName() + "]"
 				);
 			}
+		}
+
+		@SuppressWarnings("unchecked")
+		private JavaTypeDescriptor resolveJavaTypeDescriptor(Class javaType) {
+			return context.getSessionFactory()
+					.getTypeConfiguration()
+					.getJavaTypeDescriptorRegistry()
+					.getDescriptor( javaType );
 		}
 	}
 }

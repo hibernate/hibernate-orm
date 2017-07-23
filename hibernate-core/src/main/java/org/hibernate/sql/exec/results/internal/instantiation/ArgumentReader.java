@@ -6,11 +6,10 @@
  */
 package org.hibernate.sql.exec.results.internal.instantiation;
 
-import java.sql.SQLException;
-
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.exec.results.spi.RowProcessingState;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
+import org.hibernate.sql.exec.results.spi.RowProcessingState;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -29,11 +28,12 @@ public class ArgumentReader implements QueryResultAssembler {
 	}
 
 	@Override
-	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) throws SQLException {
+	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
 		return returnAssembler.assemble( rowProcessingState, options );
 	}
 
-	public Class getReturnedJavaType() {
-		return returnAssembler.getReturnedJavaType();
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return returnAssembler.getJavaTypeDescriptor();
 	}
 }

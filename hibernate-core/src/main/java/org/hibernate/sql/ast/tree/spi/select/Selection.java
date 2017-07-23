@@ -7,9 +7,6 @@
 package org.hibernate.sql.ast.tree.spi.select;
 
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
 
@@ -19,6 +16,14 @@ import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
 public interface Selection extends SqlAstNode {
 	Expression getSelectedExpression();
 
+	/**
+	 * The (optional) "result variable" for the selection.  This is the JPA
+	 * term for the selection's alias; JPA uses this term to more easily
+	 * distinguish it from the alias used to qualify any domain references
+	 * (think "table alias"), which it terms an "identification variable".
+	 *
+	 * May return `null`
+	 */
 	String getResultVariable();
 
 	QueryResult createQueryResult(

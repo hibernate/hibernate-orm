@@ -6,16 +6,25 @@
  */
 package org.hibernate.sql.exec.results.spi;
 
-import java.sql.SQLException;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
- * Responsible for "assembling" a result for inclusion in the domain query result.
+ * Responsible for "assembling" a result for inclusion in the domain query
+ * result.  "Assembling" the result basically means building the result object
+ * (whatever that means for a specific result type) and returning it for
+ * injection into the result "row" currently being processed
  *
  * @author Steve Ebersole
  */
 public interface QueryResultAssembler {
-	// todo (6.0) : ? - (like on QueryResult) JavaTypeDescriptor or ExpressableType instead of Java type?
-	// todo (6.0) : is this even needed in any form?
-	Class getReturnedJavaType();
-	Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) throws SQLException;
+	/**
+	 * The main "assembly" contract.  Assemble the result and return it.
+	 */
+	Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options);
+
+	/**
+	 * The JavaTypeDescriptor describing the Java type that this assembler
+	 * assembles.
+	 */
+	JavaTypeDescriptor getJavaTypeDescriptor();
 }

@@ -6,30 +6,33 @@
  */
 package org.hibernate.sql.exec.results.internal;
 
-import java.sql.SQLException;
-
-import org.hibernate.sql.ast.produce.result.internal.QueryResultEntityImpl;
+import org.hibernate.sql.exec.results.spi.EntityReferenceInitializer;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.exec.results.spi.RowProcessingState;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
+import org.hibernate.sql.exec.results.spi.RowProcessingState;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class QueryResultAssemblerEntity implements QueryResultAssembler {
-	private final QueryResultEntityImpl returnEntity;
+	private final JavaTypeDescriptor javaTypeDescriptor;
+	private final EntityReferenceInitializer initializer;
 
-	public QueryResultAssemblerEntity(QueryResultEntityImpl returnEntity) {
-		this.returnEntity = returnEntity;
+	public QueryResultAssemblerEntity(
+			JavaTypeDescriptor javaTypeDescriptor,
+			EntityReferenceInitializer initializer) {
+		this.javaTypeDescriptor = javaTypeDescriptor;
+		this.initializer = initializer;
 	}
 
 	@Override
-	public Class getReturnedJavaType() {
-		return returnEntity.getReturnedJavaType();
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return javaTypeDescriptor;
 	}
 
 	@Override
-	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) throws SQLException {
-		return returnEntity.getInitializer().getEntityInstance();
+	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+		return initializer.getEntityInstance();
 	}
 }

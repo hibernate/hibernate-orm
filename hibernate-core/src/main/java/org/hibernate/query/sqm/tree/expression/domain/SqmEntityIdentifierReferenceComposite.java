@@ -6,10 +6,14 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import javax.persistence.metamodel.Type;
+
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierComposite;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -70,4 +74,25 @@ public class SqmEntityIdentifierReferenceComposite
 	public String asLoggableText() {
 		return navigable.asLoggableText();
 	}
+
+	@Override
+	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
+		return this;
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return navigable.getJavaTypeDescriptor();
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.EMBEDDABLE;
+	}
+
+	@Override
+	public Class getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
+
 }

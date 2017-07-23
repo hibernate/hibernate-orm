@@ -14,5 +14,8 @@ import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
  * @author Steve Ebersole
  */
 public interface SqlSelectable {
+	/**
+	 * Get the reader capable of reading values of this "selectable"
+	 */
 	SqlSelectionReader getSqlSelectionReader();
 }

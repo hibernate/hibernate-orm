@@ -27,7 +27,7 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.NavigablePath;
 
 /**
  * PropertyHolder for composites (Embeddable/Embedded).

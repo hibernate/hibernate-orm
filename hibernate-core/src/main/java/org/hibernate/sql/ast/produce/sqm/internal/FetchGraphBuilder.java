@@ -18,14 +18,14 @@ import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.query.spi.EntityGraphQueryHint;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
-import org.hibernate.sql.ast.produce.result.spi.Fetch;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
+import org.hibernate.sql.ast.tree.spi.select.Fetch;
+import org.hibernate.sql.ast.tree.spi.select.FetchParent;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
@@ -226,8 +226,8 @@ public class FetchGraphBuilder {
 
 		final FetchParent fetchAsFetchParent = (FetchParent) fetch;
 
-		assert fetch.getFetchedNavigableReference().getNavigable() instanceof PersistentAttribute;
-		final PersistentAttribute persistentAttribute = (PersistentAttribute) fetch.getFetchedNavigableReference().getNavigable();
+		assert fetch.getFetchedNavigable() instanceof PersistentAttribute;
+		final PersistentAttribute persistentAttribute = (PersistentAttribute) fetch.getFetchedNavigable();
 
 		final SubGraphImplementor subGraph = fetchedAttributeNode.extractSubGraph( persistentAttribute );
 

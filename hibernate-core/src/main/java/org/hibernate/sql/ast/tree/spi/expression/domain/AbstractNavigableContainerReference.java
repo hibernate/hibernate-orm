@@ -11,7 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.NavigablePath;
 
 /**
  * @author Steve Ebersole

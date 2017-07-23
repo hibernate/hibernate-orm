@@ -7,7 +7,7 @@
 package org.hibernate.sql.exec.results.spi;
 
 /**
- * An FetchInitializer is a specialized Initializer for a ResolvedFetch.
+ * An FetchInitializer is a specialized Initializer for a Fetch.
  * It adds an additional read phase for linking the fetched value into
  * the owner.
  *

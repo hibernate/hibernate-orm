@@ -43,6 +43,17 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 */
 	LogicalConnectionImplementor getLogicalConnection();
 
+
+	// todo (6.0) - see potential groupings below
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo (6.0) - Batching?
+	// 			#getBatching() ->
+	//					#getBatch(BatchKey)
+	//					#executeBatch
+	//					#abortBatch
+
 	/**
 	 * Get a batch instance.
 	 *
@@ -61,6 +72,12 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 * Abort the currently managed batch (if any)
 	 */
 	void abortBatch();
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo (6.0) - Executor?
+	//		see `org.hibernate.sql.exec.spi.JdbcSelectExecutor` and
+	// 			`org.hibernate.sql.exec.spi.JdbcMutationExecutor`
 
 	/**
 	 * Obtain the statement preparer associated with this JDBC coordinator.

@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.produce.internal;
 import java.util.List;
 
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
+import org.hibernate.sql.ast.tree.spi.select.QueryResult;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
 
 /**

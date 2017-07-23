@@ -18,7 +18,7 @@ import javax.persistence.StoredProcedureParameter;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.procedure.ProcedureCallMemento;
@@ -26,7 +26,7 @@ import org.hibernate.procedure.internal.ProcedureCallMementoImpl;
 import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.sql.exec.results.internal.RowReaderNoResultsExpectedImpl;
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
+import org.hibernate.sql.ast.tree.spi.select.QueryResult;
 
 import static org.hibernate.procedure.internal.ProcedureCallMementoImpl.ParameterMemento;
 

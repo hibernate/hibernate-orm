@@ -6,9 +6,7 @@
  */
 package org.hibernate.sql.exec.results.internal.values;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 import org.hibernate.CacheMode;
 import org.hibernate.cache.spi.QueryCache;
@@ -16,7 +14,8 @@ import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.Limit;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
+import org.hibernate.sql.ast.tree.spi.select.ResolvedResultSetMapping;
+import org.hibernate.sql.ast.tree.spi.select.ResultSetAccess;
 import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.exec.results.internal.caching.QueryCachePutManager;
 import org.hibernate.sql.exec.results.internal.caching.QueryCachePutManagerDisabledImpl;
@@ -29,16 +28,12 @@ import org.hibernate.sql.exec.results.spi.RowProcessingState;
  * @author Steve Ebersole
  */
 public class JdbcValuesSourceResultSetImpl extends AbstractJdbcValuesSource {
-	public interface ResultSetAccess {
-		ResultSet getResultSet();
-		void release();
-	}
 
 	private final ResultSetAccess resultSetAccess;
-	private final List<SqlSelection> sqlSelections;
+	private final ResolvedResultSetMapping resultSetMapping;
 	private final SharedSessionContractImplementor persistenceContext;
 
-	// todo : manage limit-based skips
+	// todo (6.0) - manage limit-based skips
 
 	private final int numberOfRowsToProcess;
 
@@ -51,11 +46,11 @@ public class JdbcValuesSourceResultSetImpl extends AbstractJdbcValuesSource {
 	public JdbcValuesSourceResultSetImpl(
 			ResultSetAccess resultSetAccess,
 			QueryOptions queryOptions,
-			List<SqlSelection> sqlSelections,
+			ResolvedResultSetMapping resultSetMapping,
 			SharedSessionContractImplementor persistenceContext) {
 		super( resolveQueryCachePutManager( persistenceContext, queryOptions ) );
 		this.resultSetAccess = resultSetAccess;
-		this.sqlSelections = sqlSelections;
+		this.resultSetMapping = resultSetMapping;
 		this.persistenceContext = persistenceContext;
 
 		this.numberOfRowsToProcess = interpretNumberOfRowsToProcess( queryOptions );
@@ -135,13 +130,13 @@ public class JdbcValuesSourceResultSetImpl extends AbstractJdbcValuesSource {
 	}
 
 	private Object[] readCurrentRowValues(RowProcessingState rowProcessingState) throws SQLException {
-		final int numberOfSqlSelections = sqlSelections.size();
+		final int numberOfSqlSelections = resultSetMapping.getSqlSelections().size();
 		final Object[] row = new Object[numberOfSqlSelections];
 		for ( int i = 0; i < numberOfSqlSelections; i++ ) {
-			row[i] = sqlSelections.get( i ).getSqlSelectable().getSqlSelectionReader().read(
+			row[i] = resultSetMapping.getSqlSelections().get( i ).getSqlSelectable().getSqlSelectionReader().read(
 					resultSetAccess.getResultSet(),
 					rowProcessingState.getJdbcValuesSourceProcessingState(),
-					sqlSelections.get( i )
+					resultSetMapping.getSqlSelections().get( i )
 			);
 		}
 		return row;

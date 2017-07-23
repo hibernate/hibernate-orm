@@ -6,10 +6,9 @@
  */
 package org.hibernate.sql.ast.tree.internal;
 
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultGenerator;
-import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.spi.select.QueryResult;
+import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 
@@ -44,5 +43,16 @@ public abstract class NonNavigableSelectionSupport implements Selection {
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return getQueryResultGenerator().generateQueryResult( sqlSelectionResolver, creationContext );
+	}
+
+	/**
+	 * Only used as part of org.hibernate.sql.ast.tree.internal.NonNavigableSelectionSupport
+	 *
+	 * @author Steve Ebersole
+	 */
+	public interface QueryResultGenerator {
+		QueryResult generateQueryResult(
+				SqlSelectionResolver sqlSelectionResolver,
+				QueryResultCreationContext creationContext);
 	}
 }

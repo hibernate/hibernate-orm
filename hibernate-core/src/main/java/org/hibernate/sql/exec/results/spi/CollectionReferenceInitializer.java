@@ -8,7 +8,7 @@ package org.hibernate.sql.exec.results.spi;
 
 import java.sql.ResultSet;
 
-import org.hibernate.sql.ast.produce.result.spi.CollectionReference;
+import org.hibernate.sql.ast.tree.spi.select.CollectionReference;
 
 /**
  * @author Steve Ebersole

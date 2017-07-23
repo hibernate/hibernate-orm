@@ -8,10 +8,14 @@
 package org.hibernate.query.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
-import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.sql.internal.NativeSelectQueryPlanImpl;
+import org.hibernate.query.sql.spi.NativeNonSelectQueryDefinition;
+import org.hibernate.query.sql.spi.NativeNonSelectQueryPlan;
+import org.hibernate.query.sql.spi.NativeSelectQueryDefinition;
+import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
 import org.hibernate.service.Service;
+import org.hibernate.sql.NotYetImplementedException;
 
 /**
  * Service contract for dealing with native queries.
@@ -31,14 +35,26 @@ public interface NativeQueryInterpreter extends Service {
 	void recognizeParameters(String nativeQuery, ParameterRecognizer recognizer);
 
 	/**
-	 * Creates a new query plan for the specified native query.
-	 *
-	 * @param specification Describes the query to create a plan for
-	 * @param sessionFactory The current session factory
-	 *
-	 * @return A query plan for the specified native query.
+	 * Creates a new query plan for the passed native query definition
 	 */
-	NativeSQLQueryPlan createQueryPlan(
-			NativeSQLQuerySpecification specification,
-			SessionFactoryImplementor sessionFactory);
+	default <R> NativeSelectQueryPlan<R> createQueryPlan(
+			NativeSelectQueryDefinition<R> queryDefinition,
+			SessionFactoryImplementor sessionFactory) {
+		return new NativeSelectQueryPlanImpl<>(
+				queryDefinition.getSqlString(),
+				queryDefinition.isCallable(),
+				queryDefinition.getParameterBinders(),
+				queryDefinition.getResultSetMapping(),
+				queryDefinition.getRowTransformer()
+		);
+	}
+
+	/**
+	 * Creates a new query plan for the passed native query values
+	 */
+	default NativeNonSelectQueryPlan createQueryPlan(
+			NativeNonSelectQueryDefinition queryDefinition,
+			SessionFactoryImplementor sessionFactory) {
+		throw new NotYetImplementedException(  );
+	}
 }

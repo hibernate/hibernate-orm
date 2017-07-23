@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.exec.results.spi;
 
-import org.hibernate.sql.ast.produce.result.spi.EntityReference;
+import org.hibernate.sql.ast.tree.spi.select.EntityReference;
 
 /**
  * @author Steve Ebersole

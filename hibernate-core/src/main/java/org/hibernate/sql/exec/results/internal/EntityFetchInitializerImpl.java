@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.produce.result.spi.FetchEntityAttribute;
+import org.hibernate.sql.ast.tree.spi.select.FetchEntityAttribute;
 import org.hibernate.sql.exec.results.spi.FetchInitializer;
 import org.hibernate.sql.exec.results.spi.InitializerParent;
 import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;

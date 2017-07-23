@@ -41,7 +41,7 @@ import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.NavigablePath;
 
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;
 import static org.hibernate.envers.internal.tools.Tools.newHashSet;

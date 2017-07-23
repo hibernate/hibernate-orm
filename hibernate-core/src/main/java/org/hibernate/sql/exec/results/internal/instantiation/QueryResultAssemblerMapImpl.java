@@ -7,7 +7,6 @@
 
 package org.hibernate.sql.exec.results.internal.instantiation;
 
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,8 +14,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.exec.results.spi.RowProcessingState;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
+import org.hibernate.sql.exec.results.spi.RowProcessingState;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * A ReturnAssembler implementation for handling dynamic-instantiations targeting a Map
@@ -24,9 +25,13 @@ import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
  * @author Steve Ebersole
  */
 public class QueryResultAssemblerMapImpl implements QueryResultAssembler {
+	private final BasicJavaDescriptor<Map> mapJavaDescriptor;
 	private final List<ArgumentReader> argumentReaders;
 
-	public QueryResultAssemblerMapImpl(List<ArgumentReader> argumentReaders) {
+	public QueryResultAssemblerMapImpl(
+			BasicJavaDescriptor<Map> mapJavaDescriptor,
+			List<ArgumentReader> argumentReaders) {
+		this.mapJavaDescriptor = mapJavaDescriptor;
 		this.argumentReaders = argumentReaders;
 
 		final Set<String> aliases = new HashSet<>();
@@ -43,14 +48,14 @@ public class QueryResultAssemblerMapImpl implements QueryResultAssembler {
 	}
 
 	@Override
-	public Class getReturnedJavaType() {
-		return Map.class;
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return mapJavaDescriptor;
 	}
 
 	@Override
 	public Object assemble(
 			RowProcessingState rowProcessingState,
-			JdbcValuesSourceProcessingOptions options) throws SQLException {
+			JdbcValuesSourceProcessingOptions options) {
 		final HashMap<String,Object> result = new HashMap<>();
 
 		for ( ArgumentReader argumentReader : argumentReaders ) {

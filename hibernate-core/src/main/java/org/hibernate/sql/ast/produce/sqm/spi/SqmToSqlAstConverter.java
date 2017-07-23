@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.produce.sqm.spi;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
 
 /**
  * Specialized SemanticQueryWalker (SQM visitor) for producing

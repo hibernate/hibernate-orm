@@ -97,6 +97,7 @@ public class SqlSelectionReaderImpl implements SqlSelectionReader {
 				ResultSet resultSet,
 				JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
 				int position) throws SQLException {
+			// todo (6.0) - we should cache the SqlTypeDescriptor in the ctor...
 			final SqlTypeDescriptor sqlDescriptor = jdbcValuesSourceProcessingState.getPersistenceContext()
 					.getFactory()
 					.getMetamodel()
@@ -242,7 +243,7 @@ public class SqlSelectionReaderImpl implements SqlSelectionReader {
 			return extractRawJdbcValue(
 					resultSet,
 					determineJavaTypeDescriptor( expressableType ),
-					expressableType.getSqlTypeDescriptor(),
+					expressableType.getBasicType().getColumnDescriptor().getSqlTypeDescriptor(),
 					jdbcValuesSourceProcessingState,
 					position
 			);
@@ -257,7 +258,7 @@ public class SqlSelectionReaderImpl implements SqlSelectionReader {
 			return extractRawJdbcParameterValue(
 					statement,
 					determineJavaTypeDescriptor( expressableType ),
-					expressableType.getSqlTypeDescriptor(),
+					expressableType.getBasicType().getColumnDescriptor().getSqlTypeDescriptor(),
 					jdbcValuesSourceProcessingState,
 					jdbcParameterIndex
 			);
@@ -272,7 +273,7 @@ public class SqlSelectionReaderImpl implements SqlSelectionReader {
 			return extractRawJdbcParameterValue(
 					statement,
 					determineJavaTypeDescriptor( expressableType ),
-					expressableType.getSqlTypeDescriptor(),
+					expressableType.getBasicType().getColumnDescriptor().getSqlTypeDescriptor(),
 					jdbcValuesSourceProcessingState,
 					jdbcParameterName
 			);

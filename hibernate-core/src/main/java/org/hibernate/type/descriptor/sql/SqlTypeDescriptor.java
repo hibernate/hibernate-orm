@@ -12,6 +12,12 @@ package org.hibernate.type.descriptor.sql;
  * @author Steve Ebersole
  */
 public interface SqlTypeDescriptor {
+
+	// todo (6.0) - is this needed?
+	//		currently its only usage is for org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor
+	//		to extend it.  Perhaps we planned/intended to expose this as an API
+	//		somewhere?
+
 	/**
 	 * Retrieve the JDBC/SQL type-code that this descriptor represents.
 	 * <p/>

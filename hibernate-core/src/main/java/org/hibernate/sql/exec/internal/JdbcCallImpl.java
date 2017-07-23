@@ -12,21 +12,20 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
-import org.hibernate.sql.exec.spi.InFlightJdbcOperation;
+import org.hibernate.sql.exec.spi.InFlightJdbcCall;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.ResultSetMapping;
 
 /**
  * Models the actual call, allowing iterative building of the parts.
  *
  * @author Steve Ebersole
  */
-public class JdbcCallImpl implements InFlightJdbcOperation {
+public class JdbcCallImpl implements InFlightJdbcCall {
 	private final String callableName;
 	private final ParameterStrategy parameterStrategy;
 
@@ -35,8 +34,8 @@ public class JdbcCallImpl implements InFlightJdbcOperation {
 	private List<JdbcParameterBinder> parameterBinders;
 	private List<JdbcCallParameterExtractor> parameterExtractors;
 	private List<JdbcCallRefCursorExtractor> refCursorExtractors;
-	private List<SqlSelection> sqlSelections;
-	private List<QueryResult> queryReturns;
+
+	private List<ResultSetMapping> resultSetMappings;
 
 	public JdbcCallImpl(String callableName, ParameterStrategy parameterStrategy) {
 		this.callableName = callableName;
@@ -74,13 +73,8 @@ public class JdbcCallImpl implements InFlightJdbcOperation {
 	}
 
 	@Override
-	public List<SqlSelection> getSqlSelections() {
-		return sqlSelections;
-	}
-
-	@Override
-	public List<QueryResult> getReturns() {
-		return queryReturns;
+	public List<ResultSetMapping> getResultSetMappings() {
+		return resultSetMappings == null ? Collections.emptyList() : Collections.unmodifiableList( resultSetMappings );
 	}
 
 	@Override
@@ -138,21 +132,5 @@ public class JdbcCallImpl implements InFlightJdbcOperation {
 			refCursorExtractors = new ArrayList<>();
 		}
 		refCursorExtractors.add( extractor );
-	}
-
-	@Override
-	public void addSqlSelection(SqlSelection sqlSelection) {
-		if ( sqlSelections == null ) {
-			sqlSelections = new ArrayList<>();
-		}
-		sqlSelections.add( sqlSelection );
-	}
-
-	@Override
-	public void addQueryReturn(QueryResult queryReturn) {
-		if ( queryReturns == null ) {
-			queryReturns  = new ArrayList<>();
-		}
-		queryReturns.add( queryReturn );
 	}
 }

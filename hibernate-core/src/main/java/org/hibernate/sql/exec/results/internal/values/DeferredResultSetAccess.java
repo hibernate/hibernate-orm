@@ -21,7 +21,7 @@ import org.hibernate.sql.exec.spi.PreparedStatementCreator;
 /**
  * @author Steve Ebersole
  */
-public class DeferredResultSetAccess implements JdbcValuesSourceResultSetImpl.ResultSetAccess {
+public class DeferredResultSetAccess extends AbstractResultSetAccess {
 	private final JdbcSelect jdbcSelect;
 	private final ExecutionContext executionContext;
 	private final PreparedStatementCreator statementCreator;
@@ -33,6 +33,7 @@ public class DeferredResultSetAccess implements JdbcValuesSourceResultSetImpl.Re
 			JdbcSelect jdbcSelect,
 			ExecutionContext executionContext,
 			PreparedStatementCreator statementCreator) {
+		super( executionContext.getSession() );
 		this.executionContext = executionContext;
 		this.jdbcSelect = jdbcSelect;
 		this.statementCreator = statementCreator;
@@ -47,10 +48,10 @@ public class DeferredResultSetAccess implements JdbcValuesSourceResultSetImpl.Re
 	}
 
 	private void executeQuery() {
-		final LogicalConnectionImplementor logicalConnection = executionContext.getSession().getJdbcCoordinator().getLogicalConnection();
+		final LogicalConnectionImplementor logicalConnection = getPersistenceContext().getJdbcCoordinator().getLogicalConnection();
 		final Connection connection = logicalConnection.getPhysicalConnection();
 
-		final JdbcServices jdbcServices = executionContext.getSession().getFactory().getServiceRegistry().getService( JdbcServices.class );
+		final JdbcServices jdbcServices = getPersistenceContext().getFactory().getServiceRegistry().getService( JdbcServices.class );
 
 		final String sql = jdbcSelect.getSql();
 		try {
@@ -100,7 +101,7 @@ public class DeferredResultSetAccess implements JdbcValuesSourceResultSetImpl.Re
 	@Override
 	public void release() {
 		if ( resultSet != null ) {
-			executionContext.getSession().getJdbcCoordinator()
+			getPersistenceContext().getJdbcCoordinator()
 					.getLogicalConnection()
 					.getResourceRegistry()
 					.release( resultSet, preparedStatement );
@@ -108,7 +109,7 @@ public class DeferredResultSetAccess implements JdbcValuesSourceResultSetImpl.Re
 		}
 
 		if ( preparedStatement != null ) {
-			executionContext.getSession().getJdbcCoordinator()
+			getPersistenceContext().getJdbcCoordinator()
 					.getLogicalConnection()
 					.getResourceRegistry()
 					.release( preparedStatement );

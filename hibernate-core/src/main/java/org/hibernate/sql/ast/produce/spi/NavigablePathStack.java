@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.produce.spi;
 
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.NavigablePath;
 
 import org.jboss.logging.Logger;
 import org.jboss.logging.MDC;

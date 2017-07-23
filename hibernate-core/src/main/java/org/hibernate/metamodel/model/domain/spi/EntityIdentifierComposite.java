@@ -12,5 +12,5 @@ import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValueExpressableType;
  * @author Steve Ebersole
  */
 public interface EntityIdentifierComposite<O,J>
-		extends EntityIdentifier<O,J>, EmbeddedValueExpressableType<J> {
+		extends EntityIdentifier<O,J>, EmbeddedValuedNavigable<J>, EmbeddedValueExpressableType<J> {
 }

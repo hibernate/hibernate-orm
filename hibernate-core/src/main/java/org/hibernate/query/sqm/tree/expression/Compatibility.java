@@ -9,6 +9,8 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+
 /**
  * @author Steve Ebersole
  */
@@ -146,5 +148,15 @@ public class Compatibility {
 
 		return potentialFloating == float.class
 				|| potentialFloating == double.class;
+	}
+
+	public static boolean areAssignmentCompatible(
+			JavaTypeDescriptor to,
+			JavaTypeDescriptor from) {
+
+		// todo (6.0) - base this in the descriptor.
+		// 		`JavaTypeDescriptor#assignableFrom` ?
+
+		return areAssignmentCompatible( to.getJavaType(), from.getJavaType() );
 	}
 }

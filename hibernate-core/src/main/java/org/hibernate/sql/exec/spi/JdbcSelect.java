@@ -6,11 +6,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
-import java.util.List;
-
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 
 /**
  * Represents the {@link SqlSelectAstToJdbcSelectConverter}'s interpretation of a select query
@@ -18,6 +14,9 @@ import org.hibernate.sql.ast.produce.result.spi.QueryResult;
  * @author Steve Ebersole
  */
 public interface JdbcSelect extends JdbcOperation {
-	List<SqlSelection> getSqlSelections();
-	List<QueryResult> getReturns();
+	/**
+	 * Retrieve the descriptor for performing the mapping
+	 * of the JDBC ResultSet back to object query results.
+	 */
+	ResultSetMapping getResultSetMapping();
 }

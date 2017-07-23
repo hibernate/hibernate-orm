@@ -8,17 +8,20 @@ package org.hibernate.sql.exec.results.internal.values;
 
 import java.sql.SQLException;
 
+import org.hibernate.sql.ast.tree.spi.select.ResolvedResultSetMapping;
 import org.hibernate.sql.exec.results.spi.RowProcessingState;
 
 /**
  * Provides unified access to query results (JDBC values - see
- * {@link RowProcessingState#getJdbcValues()} whether they come from
+ * {@link RowProcessingState#getJdbcValue} whether they come from
  * query cache or ResultSet.  Implementations also manage any cache puts
  * if required.
  *
  * @author Steve Ebersole
  */
 public interface JdbcValuesSource {
+	ResolvedResultSetMapping getResultSetMapping();
+
 	// todo : ? - add ResultSet.previous() and ResultSet.absolute(int) style methods (to support ScrollableResults)?
 
 	/**

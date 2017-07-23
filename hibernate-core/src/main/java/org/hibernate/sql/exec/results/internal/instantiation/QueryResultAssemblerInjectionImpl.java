@@ -8,28 +8,29 @@ package org.hibernate.sql.exec.results.internal.instantiation;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.internal.util.beans.BeanInfoHelper;
-import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.exec.results.spi.RowProcessingState;
-import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
 import org.hibernate.query.sqm.tree.expression.Compatibility;
+import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
+import org.hibernate.sql.exec.results.spi.RowProcessingState;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class QueryResultAssemblerInjectionImpl implements QueryResultAssembler {
-	private final Class target;
+	private final JavaTypeDescriptor target;
 	private final List<BeanInjection> beanInjections = new ArrayList<>();
 
-	public QueryResultAssemblerInjectionImpl(Class target, List<ArgumentReader> argumentReaders) {
+	public QueryResultAssemblerInjectionImpl(JavaTypeDescriptor target, List<ArgumentReader> argumentReaders) {
 		this.target = target;
+		final Class targetJavaType = target.getJavaType();
 
 		BeanInfoHelper.visitBeanInfo(
-				target,
+				targetJavaType,
 				beanInfo -> {
 					// needs to be ordered by argument order!
 					//	todo : is this ^^ true anymore considering move to positional reads and SqlSelectionDescriptor?
@@ -62,7 +63,11 @@ public class QueryResultAssemblerInjectionImpl implements QueryResultAssembler {
 						}
 
 						// see if we can find a Field with the given name...
-						final Field field = findField( target, argumentReader.getAlias(), argumentReader.getReturnedJavaType() );
+						final Field field = findField(
+								targetJavaType,
+								argumentReader.getAlias(),
+								argumentReader.getReturnedJavaType()
+						);
 						if ( field != null ) {
 							beanInjections.add(
 									new BeanInjection(
@@ -74,7 +79,7 @@ public class QueryResultAssemblerInjectionImpl implements QueryResultAssembler {
 						else {
 							throw new InstantiationException(
 									"Unable to determine dynamic instantiation injection strategy for " +
-											target.getName() + "#" + argumentReader.getAlias()
+											targetJavaType.getName() + "#" + argumentReader.getAlias()
 							);
 						}
 					}
@@ -102,14 +107,15 @@ public class QueryResultAssemblerInjectionImpl implements QueryResultAssembler {
 	}
 
 	@Override
-	public Class getReturnedJavaType() {
-		return null;
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return target;
 	}
 
 	@Override
-	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) throws SQLException {
+	@SuppressWarnings("unchecked")
+	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
 		try {
-			final Object result = target.newInstance();
+			final Object result = target.getJavaType().newInstance();
 			for ( BeanInjection beanInjection : beanInjections ) {
 				beanInjection.getBeanInjector().inject(
 						result,
@@ -119,7 +125,7 @@ public class QueryResultAssemblerInjectionImpl implements QueryResultAssembler {
 			return result;
 		}
 		catch (IllegalAccessException | java.lang.InstantiationException e) {
-			throw new InstantiationException( "Could not call default constructor [" + target.getSimpleName() + "]", e );
+			throw new InstantiationException( "Could not call default constructor [" + target.getJavaType().getSimpleName() + "]", e );
 		}
 	}
 }

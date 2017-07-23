@@ -17,12 +17,12 @@ import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.persister.entity.Loadable;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.sql.ast.produce.result.spi.EntityReference;
+import org.hibernate.sql.ast.tree.spi.select.EntityReference;
 import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.exec.results.spi.EntityReferenceInitializer;
 import org.hibernate.sql.exec.results.spi.InitializerParent;
@@ -82,16 +82,16 @@ public abstract class AbstractEntityReferenceInitializer
 	}
 
 	private Object buildIdentifierHydratedForm(RowProcessingState rowProcessingState) {
-		final SqlSelectionGroup sqlSelectionGroup = sqlSelectionGroupMap.get( entityReference.getEntityMetadata().getHierarchy().getIdentifierDescriptor() );
+		final SqlSelectionGroup sqlSelectionGroup = sqlSelectionGroupMap.get( entityReference.getEntityDescriptor().getHierarchy().getIdentifierDescriptor() );
 
 		final int selectionsConsumed = sqlSelectionGroup.getSqlSelections().size();
 		if ( selectionsConsumed == 1 ) {
-			return rowProcessingState.getJdbcValues()[ sqlSelectionGroup.getSqlSelections().get( 0 ).getValuesArrayPosition() ];
+			return rowProcessingState.getJdbcValue( sqlSelectionGroup.getSqlSelections().get( 0 ) );
 		}
 		else {
 			final Object[] value = new Object[selectionsConsumed];
 			for ( int i = 0; i < selectionsConsumed; i++ ){
-				value[i] = rowProcessingState.getJdbcValues()[ sqlSelectionGroup.getSqlSelections().get( i ).getValuesArrayPosition() ];
+				value[i] = rowProcessingState.getJdbcValue( sqlSelectionGroup.getSqlSelections().get( i ) );
 			}
 			return value;
 		}
@@ -159,13 +159,11 @@ public abstract class AbstractEntityReferenceInitializer
 		final Object rowId;
 		if ( concretePersister.getHierarchy().getRowIdDescriptor() != null ) {
 			final SqlSelectionGroup sqlSelectionGroup = sqlSelectionGroupMap.get(
-					entityReference.getEntityMetadata().getHierarchy().getRowIdDescriptor()
+					entityReference.getEntityDescriptor().getHierarchy().getRowIdDescriptor()
 			);
 
 			numberOfNonIdentifierAttributes -= 1;
-			rowId = rowProcessingState.getJdbcValues()[sqlSelectionGroup.getSqlSelections()
-					.get( 0 )
-					.getValuesArrayPosition()];
+			rowId = rowProcessingState.getJdbcValue( sqlSelectionGroup.getSqlSelections().get( 0 ) );
 
 			if ( rowId == null ) {
 				throw new HibernateException(
@@ -204,12 +202,12 @@ public abstract class AbstractEntityReferenceInitializer
 				else {
 					final int numberOfSelections = selectionGroup.getSqlSelections().size();
 					if ( numberOfSelections == 1 ) {
-						hydratedValue = rowProcessingState.getJdbcValues()[ selectionGroup.getSqlSelections().get( 0 ).getValuesArrayPosition() ];
+						hydratedValue = rowProcessingState.getJdbcValue( selectionGroup.getSqlSelections().get( 0 ) );
 					}
 					else {
 						final Object[] sliceValues = new Object[ numberOfSelections ];
 						for ( int x = 0; x < numberOfSelections; x++ ) {
-							sliceValues[x] = rowProcessingState.getJdbcValues()[ selectionGroup.getSqlSelections().get( x ).getValuesArrayPosition() ];
+							sliceValues[x] = rowProcessingState.getJdbcValue( selectionGroup.getSqlSelections().get( x ) );
 						}
 						hydratedValue = sliceValues;
 					}
@@ -257,7 +255,7 @@ public abstract class AbstractEntityReferenceInitializer
 	private EntityDescriptor resolveConcreteEntityPersister(
 			RowProcessingState rowProcessingState,
 			SharedSessionContractImplementor persistenceContext) throws WrongClassException {
-		final EntityDescriptor persister = getEntityReference().getEntityMetadata();
+		final EntityDescriptor persister = getEntityReference().getEntityDescriptor();
 		if ( persister.getHierarchy().getDiscriminatorDescriptor() == null ) {
 			return persister;
 		}
@@ -266,9 +264,7 @@ public abstract class AbstractEntityReferenceInitializer
 		// simple assert here since this should have been validate when building the metamodel
 		assert selectionGroup.getSqlSelections().size() == 1;
 
-		final Object discriminatorValue = rowProcessingState.getJdbcValues()[
-				selectionGroup.getSqlSelections().get( 0 ).getValuesArrayPosition()
-		];
+		final Object discriminatorValue = rowProcessingState.getJdbcValue( selectionGroup.getSqlSelections().get( 0 ) );
 
 		final Loadable legacyLoadable = (Loadable) persister.getEntityDescriptor();
 		final String result = legacyLoadable.getSubclassForDiscriminatorValue( discriminatorValue );

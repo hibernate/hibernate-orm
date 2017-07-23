@@ -39,7 +39,7 @@ import org.hibernate.query.SynchronizeableQuery;
  * assumptions as well.  For example, on PGSQL, whenever we see a REF_CURSOR mode
  * parameter, we know that:<ul>
  *     <li>
- *         this will be a function call (so we call {@link #markAsFunctionCall()} implicitly) because
+ *         this will be a function call (so we call {@link #markAsFunctionCall} implicitly) because
  *         that is the only way PGSQL supports returning REF_CURSOR results.
  *     </li>
  *     <li>there can be only one REF_CURSOR mode parameter</li>

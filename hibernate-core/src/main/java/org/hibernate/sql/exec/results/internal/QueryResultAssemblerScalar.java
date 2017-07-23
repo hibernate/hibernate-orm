@@ -6,15 +6,14 @@
  */
 package org.hibernate.sql.exec.results.internal;
 
-import java.sql.SQLException;
-
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
+import org.hibernate.sql.ast.tree.spi.select.QueryResultScalar;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultScalar;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.exec.results.spi.RowProcessingState;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
+import org.hibernate.sql.exec.results.spi.RowProcessingState;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -29,19 +28,16 @@ public class QueryResultAssemblerScalar implements QueryResultAssembler {
 	}
 
 	@Override
-	public Class getReturnedJavaType() {
-		// todo (6.0) : remove the ReturnAssembler#getReturnedJavaType method.
-		//		It is only used for resolving dynamic-instantiation arguments which should
-		//		not be modeled as Returns anyway...
-		return returnScalar.getReturnedJavaType();
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return returnScalar.getJavaTypeDescriptor();
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public Object assemble(
 			RowProcessingState rowProcessingState,
-			JdbcValuesSourceProcessingOptions options) throws SQLException {
-		final Object rawJdbcValue = rowProcessingState.getJdbcValues()[sqlSelection.getValuesArrayPosition()];
+			JdbcValuesSourceProcessingOptions options) {
+		final Object rawJdbcValue = rowProcessingState.getJdbcValue( sqlSelection );
 
 		if ( returnScalar.getType() instanceof ConvertibleNavigable ) {
 			final AttributeConverterDefinition attributeConverter = ( (ConvertibleNavigable) returnScalar.getType() ).getAttributeConverter();

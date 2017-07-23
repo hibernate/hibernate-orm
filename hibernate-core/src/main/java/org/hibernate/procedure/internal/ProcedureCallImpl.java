@@ -28,7 +28,8 @@ import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
+import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
@@ -55,7 +56,7 @@ import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
+import org.hibernate.sql.ast.tree.spi.select.QueryResult;
 import org.hibernate.sql.exec.internal.JdbcCallImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterBinderImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
@@ -410,7 +411,7 @@ public class ProcedureCallImpl<R>
 				);
 			}
 			else {
-				final Type ormType = determineTypeToUse( registration );
+				final AllowableParameterType ormType = determineTypeToUse( registration );
 				if ( ormType == null ) {
 					throw new ParameterMisuseException( "Could not determine Hibernate Type for parameter : " + registration );
 				}
@@ -482,15 +483,15 @@ public class ProcedureCallImpl<R>
 		return parameterStrategy;
 	}
 
-	private Type determineTypeToUse(ParameterRegistrationImplementor parameterRegistration) {
+	private AllowableParameterType determineTypeToUse(ParameterRegistrationImplementor parameterRegistration) {
 		if ( parameterRegistration.getBind() != null ) {
 			if ( parameterRegistration.getBind().getBindType() != null ) {
-				return (Type) parameterRegistration.getBind().getBindType();
+				return parameterRegistration.getBind().getBindType();
 			}
 		}
 
 		if ( parameterRegistration.getHibernateType() != null ) {
-			return (Type) parameterRegistration.getHibernateType();
+			return parameterRegistration.getHibernateType();
 		}
 
 		return null;

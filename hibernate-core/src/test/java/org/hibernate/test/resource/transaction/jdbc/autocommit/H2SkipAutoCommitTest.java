@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.resource.transaction.jdbc.autocommit;
 
+import java.util.HashMap;
 import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
@@ -21,13 +22,30 @@ import org.hibernate.test.util.ReflectionUtil;
 @RequiresDialect(H2Dialect.class)
 public class H2SkipAutoCommitTest extends AbstractSkipAutoCommitTest {
 
+	public static void main(String... args) {
+		HashMap map = new HashMap();
+		map.put( "name", "first" );
+		map.put( "name", "second" );
+		System.out.printf( "name -> %s", map.get( "name" ) );
+	}
+
 	@Override
 	protected DataSource dataSource() {
-		DataSource dataSource = ReflectionUtil.newInstance( "org.h2.jdbcx.JdbcDataSource" );
-		ReflectionUtil.setProperty( dataSource, "URL", Environment.getProperties().getProperty( AvailableSettings.URL ) );
-		ReflectionUtil.setProperty( dataSource, "user", Environment.getProperties().getProperty( AvailableSettings.USER ) );
-		ReflectionUtil.setProperty( dataSource, "password", Environment.getProperties().getProperty( AvailableSettings.PASS ) );
+		final String url = Environment.getProperties().getProperty( AvailableSettings.URL );
+		final String username = Environment.getProperties().getProperty( AvailableSettings.USER );
+		final String password = Environment.getProperties().getProperty( AvailableSettings.PASS );
 
+		final DataSource dataSource = ReflectionUtil.newInstance( "org.h2.jdbcx.JdbcDataSource" );
+		injectValue( dataSource, "URL", url );
+		injectValue( dataSource, "user", username );
+		injectValue( dataSource, "password", password );
 		return dataSource;
+	}
+
+	private void injectValue(DataSource dataSource, String name, String value) {
+		if ( value == null ) {
+			return;
+		}
+		ReflectionUtil.setProperty( dataSource, name, value );
 	}
 }

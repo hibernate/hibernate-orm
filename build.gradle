@@ -39,7 +39,6 @@ plugins {
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply from: "./libraries.gradle"
-apply from: "./databases.gradle"
 
 allprojects {
     repositories {
@@ -169,20 +168,20 @@ subprojects { subProject ->
 		testRuntime( libraries.mssql )
 		testRuntime( libraries.informix )
 
-		if (db.equalsIgnoreCase("oracle")) {
-			dependencies {
+		// 6.6 gave me some NPE problems from within checkstyle...
+		checkstyle 'com.puppycrawl.tools:checkstyle:6.5'
+
+		if ( project.hasProperty( 'db' ) ) {
+			final String db = project.property( 'db' )
+			if ( 'oracle'.equals( db )) {
 				testRuntime( libraries.oracle ) {
 					exclude group: 'com.oracle.jdbc', module: 'xmlparserv2'
 				}
 			}
-		}
-		if (db.equalsIgnoreCase("db2")) {
-			dependencies {
+			else if ( 'db2'.equals( db ) ) {
 				testRuntime( libraries.db2 )
 			}
 		}
-		// 6.6 gave me some NPE problems from within checkstyle...
-		checkstyle 'com.puppycrawl.tools:checkstyle:6.5'
 	}
 
 	// mac-specific stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -246,6 +245,11 @@ subprojects { subProject ->
 		task.systemProperties['hibernate.test.validatefailureexpected'] = true
 		task.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate.") }
 
+		if ( project.hasProperty( 'db' ) ) {
+			// be sure we pass it along to the tests
+			task.systemProperties['db'] = project.property( 'db' )
+		}
+
 // uncomment to help identify pauses in test executions : where they occur
 //		task.beforeTest { descriptor ->
 //			println "Starting test: " + descriptor
@@ -262,17 +266,6 @@ subprojects { subProject ->
 				include '**/*.xml'
 			}
 			into sourceSets.test.output.classesDir
-		}
-		copy {
-			from file('src/test/resources')
-			into file( "${buildDir}/resources/test" )
-			exclude 'src/test/resources/arquillian.xml'
-			exclude 'src/test/resources/hibernate.properties'
-		}
-		copy {
-			from file('src/test/resources/hibernate.properties')
-			into file( "${buildDir}/resources/test" )
-			filter( ReplaceTokens, tokens: dbBundle[db] )
 		}
 	} )
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

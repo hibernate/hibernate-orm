@@ -203,7 +203,13 @@ task copyBundleResources (type: Copy) {
     ext.bundlesTargetDir = file( "${buildDir}/bundles" )
     from file('src/test/bundles')
     into bundlesTargetDir
-    ext.bundleTokens = dbBundle[db]
+    if ( hasProperty( 'db' ) ) {
+        final String db = property( 'db' );
+        ext.bundleTokens = dbBundle[db]
+    }
+    else {
+        ext.bundleTokens = [:]
+    }
     ext.bundleTokens["buildDirName"] = buildDir.absolutePath
     filter( ReplaceTokens, tokens: bundleTokens);
     doFirst {

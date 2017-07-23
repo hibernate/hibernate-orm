@@ -18,13 +18,6 @@ dependencies {
     testRuntime( libraries.expression_language_api )
     testRuntime( libraries.expression_language_impl )
 
-    if (db.equalsIgnoreCase("oracle")) {
-        dependencies {
-            testRuntime( libraries.oracle ) {
-                exclude group: 'com.oracle.jdbc', module: 'xmlparserv2'
-            }
-        }
-    }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Java 9 ftw!

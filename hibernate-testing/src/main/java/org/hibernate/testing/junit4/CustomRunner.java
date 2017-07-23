@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
@@ -106,16 +108,54 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.junit.runners.ParentRunner#classBlock(org.junit.runner.notification.RunNotifier)
-	 */
 	@Override
 	protected Statement classBlock(RunNotifier notifier) {
 		log.info( BeforeClass.class.getSimpleName() + ": " + getName() );
 
-		return super.classBlock( notifier );
+		final Statement superBlock = super.classBlock( notifier );
+
+		// if the test env specified a `db` property, use that to load any
+		//		database-specific config properties into Sys props for the
+		//		test to be able to pick up
+
+		final String requestedDb = System.getProperty( "db" );
+		if ( requestedDb == null ) {
+			return superBlock;
+		}
+
+		return new Statement() {
+			@Override
+			public void evaluate() throws Throwable {
+				final Properties overridden = overrideSettings( requestedDb );
+
+				try {
+					superBlock.evaluate();
+				}
+				finally {
+					System.getProperties().putAll( overridden );
+				}
+			}
+
+			private Properties overrideSettings(String requestedDb) {
+				final Properties overrides = DatabaseOverrideSettings.INSTANCE.getDatabaseOverrides( requestedDb );
+				final Properties overridden = new Properties();
+
+				final Map sysProps = System.getProperties();
+
+				for ( Map.Entry entry : overrides.entrySet() ) {
+					Object currentValue = sysProps.get( entry.getKey() );
+					if ( currentValue == null ) {
+						currentValue = "";
+					}
+
+					overridden.put( entry.getKey(), currentValue );
+
+					sysProps.put( entry.getKey(), entry.getValue() );
+				}
+
+				return overridden;
+			}
+		};
 	}
 
 	@Override

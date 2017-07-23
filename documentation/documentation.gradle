@@ -73,14 +73,6 @@ dependencies {
 
 	testCompile "org.osgi:org.osgi.core:4.3.1"
 
-	if (db.equalsIgnoreCase("oracle")) {
-		dependencies {
-			testRuntime( libraries.oracle ) {
-				exclude group: 'com.oracle.jdbc', module: 'xmlparserv2'
-			}
-		}
-	}
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Java 9 ftw!
 	if ( JavaVersion.current().isJava9Compatible() ) {

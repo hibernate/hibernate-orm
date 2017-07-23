@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.hibernate.boot.cfgxml.internal.ConfigLoader;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
@@ -20,6 +21,8 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
@@ -36,11 +39,14 @@ import org.hibernate.service.spi.ServiceContributor;
  * @see org.hibernate.boot.registry.BootstrapServiceRegistryBuilder
  */
 public class StandardServiceRegistryBuilder {
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( StandardServiceRegistryBuilder.class );
+
 	/**
 	 * The default resource name for a hibernate configuration xml file.
 	 */
 	public static final String DEFAULT_CFG_RESOURCE_NAME = "hibernate.cfg.xml";
 
+	// todo : split into `explicitSettings` and `externallySuppliedSettings`
 	private final Map settings;
 	private final List<StandardServiceInitiator> initiators = standardInitiatorList();
 	private final List<ProvidedService> providedServices = new ArrayList<ProvidedService>();
@@ -272,8 +278,8 @@ public class StandardServiceRegistryBuilder {
 		applyServiceContributingIntegrators();
 		applyServiceContributors();
 
-		final Map settingsCopy = new HashMap();
-		settingsCopy.putAll( settings );
+		final Map settingsCopy = collectSettings();
+
 		settingsCopy.put( org.hibernate.boot.cfgxml.spi.CfgXmlAccessService.LOADED_CONFIG_KEY, aggregatedCfgXml );
 		Environment.verifyProperties( settingsCopy );
 		ConfigurationHelper.resolvePlaceHolders( settingsCopy );
@@ -285,6 +291,44 @@ public class StandardServiceRegistryBuilder {
 				providedServices,
 				settingsCopy
 		);
+	}
+
+	@SuppressWarnings("unchecked")
+	private Map collectSettings() {
+
+		// Collected together the "configuration values" Map that will be
+		// 		passed to the ConfigurationService and used as the base set
+		// 		of config values for the SessionFactory.  These values come
+		// 		from the following sources (order by precedence, lowest to
+		// 		highest):
+		final HashMap collected = new HashMap();
+
+		//	1) external sources - `externallySuppliedSettings`
+		//			- lowest
+		collected.putAll( settings );
+
+		//	2) sys-props
+		//		- overrides external sources
+		applySysProps( collected );
+
+		//	3) explicit values defined here - `explicitSettings`
+		//		- overrides externals sources and sys-props
+		// todo : add this distinction
+		// todo : this should also cover all "configure" calls (loading properties and cfg.xml)
+
+		return collected;
+	}
+
+	@SuppressWarnings("unchecked")
+	private void applySysProps(Map map) {
+		try {
+			// NOTE : HHH-8383 should only affect Environment, not here
+			final Properties systemProperties = System.getProperties();
+			map.putAll( systemProperties );
+		}
+		catch (SecurityException se) {
+			log.unableToCopySystemProperties();
+		}
 	}
 
 	@SuppressWarnings("deprecation")
@@ -317,7 +361,7 @@ public class StandardServiceRegistryBuilder {
 	 */
 	@Deprecated
 	public Map getSettings() {
-		return settings;
+		return collectSettings();
 	}
 
 	/**

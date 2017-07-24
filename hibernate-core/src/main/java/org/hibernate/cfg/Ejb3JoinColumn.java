@@ -704,6 +704,12 @@ public class Ejb3JoinColumn extends Ejb3Column {
 					}
 			);
 
+			// HHH-11826 magic
+			if ( columnIdentifier.getText().contains( "_collection&&element_" ) ) {
+				columnIdentifier = Identifier.toIdentifier( columnIdentifier.getText().replace( "_collection&&element_", "_" ),
+														columnIdentifier.isQuoted() );
+			}
+
 			//one element was quoted so we quote
 			if ( isRefColumnQuoted || StringHelper.isQuoted( logicalTableName ) ) {
 				columnIdentifier = Identifier.quote( columnIdentifier );

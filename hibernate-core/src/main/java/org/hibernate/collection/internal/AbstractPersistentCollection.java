@@ -137,7 +137,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 								final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
 
 								if ( entry != null ) {
-									final PersistentCollectionDescriptor persister = entry.getLoadedPersister();
+									final PersistentCollectionDescriptor persister = entry.getLoadedPersistentCollectionDescriptor();
 									if ( persister.isExtraLazy() ) {
 										if ( hasQueuedOperations() ) {
 											session.flush();
@@ -273,7 +273,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 						@Override
 						public Boolean doWork() {
 							final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
-							final PersistentCollectionDescriptor persister = entry.getLoadedPersister();
+							final PersistentCollectionDescriptor persister = entry.getLoadedPersistentCollectionDescriptor();
 							if ( persister.isExtraLazy() ) {
 								if ( hasQueuedOperations() ) {
 									session.flush();
@@ -301,7 +301,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 						@Override
 						public Boolean doWork() {
 							final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
-							final PersistentCollectionDescriptor persister = entry.getLoadedPersister();
+							final PersistentCollectionDescriptor persister = entry.getLoadedPersistentCollectionDescriptor();
 							if ( persister.isExtraLazy() ) {
 								if ( hasQueuedOperations() ) {
 									session.flush();
@@ -333,7 +333,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				@Override
 				public Object doWork() {
 					final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
-					final PersistentCollectionDescriptor persister = entry.getLoadedPersister();
+					final PersistentCollectionDescriptor persister = entry.getLoadedPersistentCollectionDescriptor();
 					isExtraLazy = persister.isExtraLazy();
 					if ( isExtraLazy ) {
 						if ( hasQueuedOperations() ) {
@@ -422,7 +422,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	@SuppressWarnings({"JavaDoc"})
 	protected boolean isInverseCollection() {
 		final CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( this );
-		return ce != null && ce.getLoadedPersister().isInverse();
+		return ce != null && ce.getLoadedPersistentCollectionDescriptor().isInverse();
 	}
 
 	/**
@@ -434,8 +434,8 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		final CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( this );
 		return ce != null
 				&&
-				ce.getLoadedPersister().isInverse() &&
-				!ce.getLoadedPersister().hasOrphanDelete();
+				ce.getLoadedPersistentCollectionDescriptor().isInverse() &&
+				!ce.getLoadedPersistentCollectionDescriptor().hasOrphanDelete();
 	}
 
 	/**
@@ -446,8 +446,8 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	protected boolean isInverseOneToManyOrNoOrphanDelete() {
 		final CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( this );
 		return ce != null
-				&& ce.getLoadedPersister().isInverse()
-				&& ( ce.getLoadedPersister().isOneToMany() || !ce.getLoadedPersister().hasOrphanDelete() );
+				&& ce.getLoadedPersistentCollectionDescriptor().isInverse()
+				&& ( ce.getLoadedPersistentCollectionDescriptor().isOneToMany() || !ce.getLoadedPersistentCollectionDescriptor().hasOrphanDelete() );
 	}
 
 	/**
@@ -667,7 +667,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			if ( ce != null ) {
 				sb.append(
 						MessageHelper.collectionInfoString(
-								ce.getLoadedPersister(),
+								ce.getLoadedPersistentCollectionDescriptor(),
 								this,
 								ce.getLoadedKey(),
 								session

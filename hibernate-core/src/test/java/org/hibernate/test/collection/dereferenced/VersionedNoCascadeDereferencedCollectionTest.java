@@ -85,7 +85,7 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 		CollectionEntry ceManiesOrig = getCollectionEntry( s, maniesEEOneStateOrig );
 		assertNotNull( ceManiesOrig );
 		assertEquals( role, ceManiesOrig.getRole() );
-		assertSame( sessionFactory().getCollectionPersister( role ), ceManiesOrig.getLoadedPersister() );
+		assertSame( sessionFactory().getCollectionPersister( role ), ceManiesOrig.getLoadedPersistentCollectionDescriptor() );
 		assertEquals( one.getId(), ceManiesOrig.getKey() );
 
 		s.flush();
@@ -101,7 +101,7 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 
 		// Ensure the original CollectionEntry has role, persister, and key set to null.
 		assertNull( ceManiesOrig.getRole() );
-		assertNull( ceManiesOrig.getLoadedPersister() );
+		assertNull( ceManiesOrig.getLoadedPersistentCollectionDescriptor() );
 		assertNull( ceManiesOrig.getKey() );
 
 		// Ensure the PersistentCollection (that was previously returned by eeOne.getLoadedState())
@@ -159,7 +159,7 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 		CollectionEntry ceManies = getCollectionEntry( s, maniesEEOneStateOrig );
 		assertNotNull( ceManies );
 		assertEquals( role, ceManies.getRole() );
-		assertSame( sessionFactory().getCollectionPersister( role ), ceManies.getLoadedPersister() );
+		assertSame( sessionFactory().getCollectionPersister( role ), ceManies.getLoadedPersistentCollectionDescriptor() );
 		assertEquals( one.getId(), ceManies.getKey() );
 
 		// nullify collection
@@ -178,7 +178,7 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 
 		// Ensure the original CollectionEntry has role, persister, and key set to null.
 		assertNull( ceManies.getRole() );
-		assertNull( ceManies.getLoadedPersister() );
+		assertNull( ceManies.getLoadedPersistentCollectionDescriptor() );
 		assertNull( ceManies.getKey() );
 
 		// Ensure the PersistentCollection (that was previously returned by eeOne.getLoadedState())
@@ -235,7 +235,7 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 		CollectionEntry ceManiesOrig = getCollectionEntry( s, maniesEEOneStateOrig );
 		assertNotNull( ceManiesOrig );
 		assertEquals( role, ceManiesOrig.getRole() );
-		assertSame( sessionFactory().getCollectionPersister( role ), ceManiesOrig.getLoadedPersister() );
+		assertSame( sessionFactory().getCollectionPersister( role ), ceManiesOrig.getLoadedPersistentCollectionDescriptor() );
 		assertEquals( one.getId(), ceManiesOrig.getKey() );
 
 		// replace collection
@@ -251,7 +251,7 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 
 		// Ensure the original CollectionEntry has role, persister, and key set to null.
 		assertNull( ceManiesOrig.getRole() );
-		assertNull( ceManiesOrig.getLoadedPersister() );
+		assertNull( ceManiesOrig.getLoadedPersistentCollectionDescriptor() );
 		assertNull( ceManiesOrig.getKey() );
 
 		// Ensure the PersistentCollection (that was previously returned by eeOne.getLoadedState())
@@ -272,7 +272,7 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 		CollectionEntry ceManiesAfterReplace = getCollectionEntry( s, (PersistentCollection) one.getManies() );
 		assertNotNull( ceManiesAfterReplace );
 		assertEquals( role, ceManiesAfterReplace.getRole() );
-		assertSame( sessionFactory().getCollectionPersister( role ), ceManiesAfterReplace.getLoadedPersister() );
+		assertSame( sessionFactory().getCollectionPersister( role ), ceManiesAfterReplace.getLoadedPersistentCollectionDescriptor() );
 		assertEquals( one.getId(), ceManiesAfterReplace.getKey() );
 
 		// Ensure the session in maniesEEOneStateOrig has been unset.

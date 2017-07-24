@@ -12,7 +12,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import org.hibernate.EntityMode;
-import org.hibernate.metamodel.model.domain.spi.NavigableRole;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -28,16 +28,16 @@ public final class CollectionKey implements Serializable {
 	private final JavaTypeDescriptor keyType;
 	private final int hashCode;
 
-	public CollectionKey(PersistentCollectionDescriptor persister, Serializable key) {
+	public CollectionKey(PersistentCollectionDescriptor collectionDescriptor, Serializable key) {
 		this(
-				persister.getNavigableRole(),
+				collectionDescriptor.getNavigableRole(),
 				key,
-				persister.getKeyJavaTypeDescriptor()
+				collectionDescriptor.getKeyJavaTypeDescriptor()
 		);
 	}
 
-	public CollectionKey(PersistentCollectionDescriptor persister, Serializable key, EntityMode em) {
-		this( persister.getNavigableRole(), key, persister.getKeyJavaTypeDescriptor());
+	public CollectionKey(PersistentCollectionDescriptor collectionDescriptor, Serializable key, EntityMode em) {
+		this( collectionDescriptor.getNavigableRole(), key, collectionDescriptor.getKeyJavaTypeDescriptor());
 	}
 
 	private CollectionKey(

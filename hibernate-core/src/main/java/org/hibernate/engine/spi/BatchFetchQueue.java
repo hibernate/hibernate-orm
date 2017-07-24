@@ -237,7 +237,7 @@ public class BatchFetchQueue {
 	 * it to the queue.
 	 */
 	public void addBatchLoadableCollection(PersistentCollection collection, CollectionEntry ce) {
-		final PersistentCollectionDescriptor persister = ce.getLoadedPersister();
+		final PersistentCollectionDescriptor persister = ce.getLoadedPersistentCollectionDescriptor();
 
 		LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( persister.getNavigableRole().getFullPath() );
 		if ( map == null ) {
@@ -253,7 +253,7 @@ public class BatchFetchQueue {
 	 * if necessary
 	 */
 	public void removeBatchLoadableCollection(CollectionEntry ce) {
-		LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( ce.getLoadedPersister().getNavigableRole().getFullPath() );
+		LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( ce.getLoadedPersistentCollectionDescriptor().getNavigableRole().getFullPath() );
 		if ( map != null ) {
 			map.remove( ce );
 		}

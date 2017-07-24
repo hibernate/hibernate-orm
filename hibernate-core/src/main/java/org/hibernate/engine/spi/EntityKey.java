@@ -33,7 +33,7 @@ public final class EntityKey implements Serializable {
 
 	private final Serializable identifier;
 	private final int hashCode;
-	private final EntityDescriptor persister;
+	private final EntityDescriptor entityDescriptor;
 
 	/**
 	 * Construct a unique identifier for an entity class instance.
@@ -43,10 +43,10 @@ public final class EntityKey implements Serializable {
 	 * {@link SessionImplementor#generateEntityKey} method was added to hide the session-specific changes.
 	 *
 	 * @param id The entity id
-	 * @param persister The entity persister
+	 * @param entityDescriptor The entity entityDescriptor
 	 */
-	public EntityKey(Serializable id, EntityDescriptor persister) {
-		this.persister = persister;
+	public EntityKey(Serializable id, EntityDescriptor entityDescriptor) {
+		this.entityDescriptor = entityDescriptor;
 		if ( id == null ) {
 			throw new AssertionFailure( "null identifier" );
 		}
@@ -56,14 +56,14 @@ public final class EntityKey implements Serializable {
 
 	private int generateHashCode() {
 		int result = 17;
-		final String rootEntityName = persister.getRootEntityName();
+		final String rootEntityName = entityDescriptor.getRootEntityName();
 		result = 37 * result + ( rootEntityName != null ? rootEntityName.hashCode() : 0 );
-		result = 37 * result + persister.getIdentifierType().getJavaTypeDescriptor().extractHashCode( identifier );
+		result = 37 * result + entityDescriptor.getIdentifierType().getJavaTypeDescriptor().extractHashCode( identifier );
 		return result;
 	}
 
 	public boolean isBatchLoadable() {
-		return persister.isBatchLoadable();
+		return entityDescriptor.isBatchLoadable();
 	}
 
 	public Serializable getIdentifier() {
@@ -71,7 +71,7 @@ public final class EntityKey implements Serializable {
 	}
 
 	public String getEntityName() {
-		return persister.getEntityName();
+		return entityDescriptor.getEntityName();
 	}
 
 	@Override
@@ -90,15 +90,15 @@ public final class EntityKey implements Serializable {
 	}
 
 	private boolean sameIdentifier(final EntityKey otherKey) {
-		return persister.getIdentifierType().getJavaTypeDescriptor().areEqual( otherKey.identifier, this.identifier );
+		return entityDescriptor.getIdentifierType().getJavaTypeDescriptor().areEqual( otherKey.identifier, this.identifier );
 	}
 
 	private boolean samePersistentType(final EntityKey otherKey) {
-		if ( otherKey.persister == persister ) {
+		if ( otherKey.entityDescriptor == entityDescriptor ) {
 			return true;
 		}
 		else {
-			return EqualsHelper.equals( otherKey.persister.getRootEntityName(), persister.getRootEntityName() );
+			return EqualsHelper.equals( otherKey.entityDescriptor.getRootEntityName(), entityDescriptor.getRootEntityName() );
 		}
 	}
 
@@ -110,7 +110,7 @@ public final class EntityKey implements Serializable {
 	@Override
 	public String toString() {
 		return "EntityKey" +
-				MessageHelper.infoString( this.persister, identifier, persister.getFactory() );
+				MessageHelper.infoString( this.entityDescriptor, identifier, entityDescriptor.getFactory() );
 	}
 
 	/**
@@ -123,7 +123,7 @@ public final class EntityKey implements Serializable {
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		oos.writeObject( identifier );
-		oos.writeObject( persister.getEntityName() );
+		oos.writeObject( entityDescriptor.getEntityName() );
 	}
 
 	/**

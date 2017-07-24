@@ -51,7 +51,7 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 
 	protected static PersistentCollectionDescriptor getLoadedCollectionPersister(PersistentCollection collection, EventSource source ) {
 		CollectionEntry ce = source.getPersistenceContext().getCollectionEntry( collection );
-		return ( ce == null ? null : ce.getLoadedPersister() );		
+		return ( ce == null ? null : ce.getLoadedPersistentCollectionDescriptor() );
 	}
 
 	protected static Object getLoadedOwnerOrNull( PersistentCollection collection, EventSource source ) {

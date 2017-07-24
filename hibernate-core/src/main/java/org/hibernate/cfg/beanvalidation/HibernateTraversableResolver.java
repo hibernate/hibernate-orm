@@ -16,7 +16,6 @@ import javax.validation.TraversableResolver;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.common.AssertionFailure;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
@@ -24,6 +23,7 @@ import org.hibernate.type.descriptor.java.internal.AnyTypeJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
+
 /**
  * Use Hibernate metadata to ignore cascade on entities.
  * cascade on embeddable objects or collection of embeddable objects are accepted
@@ -36,14 +36,13 @@ public class HibernateTraversableResolver implements TraversableResolver {
 	private Set<String> associations;
 
 	public HibernateTraversableResolver(
-			EntityDescriptor persister,
-			ConcurrentHashMap<EntityDescriptor, Set<String>> associationsPerEntityPersister,
-			SessionFactoryImplementor factory) {
-		this.associations = associationsPerEntityPersister.get( persister );
+			EntityDescriptor entityDescriptor,
+			ConcurrentHashMap<EntityDescriptor, Set<String>> associationsPerEntityPersister) {
+		this.associations = associationsPerEntityPersister.get( entityDescriptor );
 		if (this.associations == null) {
 			this.associations = new HashSet<>();
-			addAssociationsToTheSetForAllProperties( persister.getAttributesByName() );
-			associationsPerEntityPersister.put( persister, associations );
+			addAssociationsToTheSetForAllProperties( entityDescriptor.getAttributesByName() );
+			associationsPerEntityPersister.put( entityDescriptor, associations );
 		}
 	}
 

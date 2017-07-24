@@ -40,6 +40,6 @@ public final class QueuedOperationCollectionAction extends CollectionAction {
 
 	@Override
 	public void execute() throws HibernateException {
-		getPersister().processQueuedOps( getCollection(), getKey(), getSession() );
+		getPersistentCollectionDescriptor().processQueuedOps( getCollection(), getKey(), getSession() );
 	}
 }

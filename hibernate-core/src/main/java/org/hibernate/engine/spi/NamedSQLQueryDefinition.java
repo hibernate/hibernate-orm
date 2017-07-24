@@ -11,7 +11,6 @@ import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.query.sql.spi.ReturnableResultNodeImplementor;
 
 /**
  * Definition of a named native SQL query, defined in the mapping metadata.
@@ -21,7 +20,7 @@ import org.hibernate.query.sql.spi.ReturnableResultNodeImplementor;
  */
 public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 
-	private ReturnableResultNodeImplementor[] queryReturns;
+	private NativeSQLQueryReturn[] queryReturns;
 	private final List<String> querySpaces;
 	private final boolean callable;
 	private String resultSetRef;
@@ -52,7 +51,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 	public NamedSQLQueryDefinition(
 			String name,
 			String query,
-			ReturnableResultNodeImplementor[] queryReturns,
+			NativeSQLQueryReturn[] queryReturns,
 			List<String> querySpaces,
 			boolean cacheable,
 			String cacheRegion,
@@ -161,7 +160,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 			String resultSetRef,
 			List<String> querySpaces,
 			boolean callable,
-			ReturnableResultNodeImplementor[] queryReturns) {
+			NativeSQLQueryReturn[] queryReturns) {
 		super(
 				name,
 				query.trim(), /* trim done to workaround stupid oracle bug that cant handle whitespaces beforeQuery a { in a sp */
@@ -184,7 +183,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 		this.queryReturns = queryReturns;
 	}
 
-	public ReturnableResultNodeImplementor[] getQueryReturns() {
+	public NativeSQLQueryReturn[] getQueryReturns() {
 		return queryReturns;
 	}
 
@@ -223,13 +222,13 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 		);
 	}
 
-	public void addQueryReturns(ReturnableResultNodeImplementor[] queryReturnsToAdd) {
+	public void addQueryReturns(NativeSQLQueryReturn[] queryReturnsToAdd) {
 		if ( queryReturnsToAdd != null && queryReturnsToAdd.length > 0 ) {
 			int initialQueryReturnsLength = 0;
 			if ( this.queryReturns != null ) {
 				initialQueryReturnsLength = this.queryReturns.length;
 			}
-			ReturnableResultNodeImplementor[] allQueryReturns = new ReturnableResultNodeImplementor[initialQueryReturnsLength + queryReturnsToAdd.length];
+			NativeSQLQueryReturn[] allQueryReturns = new NativeSQLQueryReturn[initialQueryReturnsLength + queryReturnsToAdd.length];
 
 			int i = 0;
 			for ( i = 0; i < initialQueryReturnsLength; i++ ) {

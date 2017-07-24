@@ -1134,7 +1134,7 @@ public class ActionQueue {
 		private void addParentChildEntityNames(AbstractEntityInsertAction action, BatchIdentifier batchIdentifier) {
 			Object[] propertyValues = action.getState();
 
-			for ( Attribute<?, ?> attribute : action.getPersister().getAttributes() ) {
+			for ( Attribute<?, ?> attribute : action.getEntityDescriptor().getAttributes() ) {
 
 			}
 

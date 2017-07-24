@@ -67,7 +67,7 @@ public class CollectionCacheInvalidator
 	}
 
 	@Override
-	public boolean requiresPostCommitHanding(EntityDescriptor persister) {
+	public boolean requiresPostCommitHanding(EntityDescriptor entityDescriptor) {
 		return true;
 	}
 
@@ -96,11 +96,11 @@ public class CollectionCacheInvalidator
 		eventListenerRegistry.appendListeners( EventType.POST_UPDATE, this );
 	}
 
-	private void evictCache(Object entity, EntityDescriptor persister, EventSource session, Object[] oldState) {
+	private void evictCache(Object entity, EntityDescriptor entityDescriptor, EventSource session, Object[] oldState) {
 		try {
-			SessionFactoryImplementor factory = persister.getFactory();
+			SessionFactoryImplementor factory = entityDescriptor.getFactory();
 
-			Set<String> collectionRoles = factory.getMetamodel().getTypeConfiguration().getCollectionRolesByEntityParticipant( persister.getEntityName() );
+			Set<String> collectionRoles = factory.getMetamodel().getTypeConfiguration().getCollectionRolesByEntityParticipant( entityDescriptor.getEntityName() );
 			if ( collectionRoles == null || collectionRoles.isEmpty() ) {
 				return;
 			}
@@ -114,14 +114,14 @@ public class CollectionCacheInvalidator
 				String mappedBy = collectionPersister.getMappedByProperty();
 				if ( !collectionPersister.isManyToMany() &&
 						mappedBy != null && !mappedBy.isEmpty() ) {
-					int i = persister.getEntityMetamodel().getPropertyIndex( mappedBy );
+					int i = entityDescriptor.getEntityMetamodel().getPropertyIndex( mappedBy );
 					Serializable oldId = null;
 					if ( oldState != null ) {
 						// in case of updating an entity we perhaps have to decache 2 entity collections, this is the
 						// old one
 						oldId = getIdentifier( session, oldState[i] );
 					}
-					Object ref = persister.getPropertyValue( entity, i );
+					Object ref = entityDescriptor.getPropertyValue( entity, i );
 					Serializable id = getIdentifier( session, ref );
 
 					// only evict if the related entity has changed
@@ -179,11 +179,11 @@ public class CollectionCacheInvalidator
 	//execute the same process as invalidation with collection operations
 	private static final class CollectionEvictCacheAction extends CollectionAction {
 		protected CollectionEvictCacheAction(
-				PersistentCollectionDescriptor persister,
+				PersistentCollectionDescriptor collectionDescriptor,
 				PersistentCollection collection,
 				Serializable key,
 				SharedSessionContractImplementor session) {
-			super( persister, collection, key, session );
+			super( collectionDescriptor, collection, key, session );
 		}
 
 		@Override

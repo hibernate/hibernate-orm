@@ -78,18 +78,18 @@ public class DefaultCacheKeysFactory {
 
 	public static CacheKeysFactory INSTANCE = new CacheKeysFactory() {
 		@Override
-		public Object createCollectionKey(Object id, PersistentCollectionDescriptor persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-			return DefaultCacheKeysFactory.createCollectionKey(id, persister, factory, tenantIdentifier);
+		public Object createCollectionKey(Object id, PersistentCollectionDescriptor collectionDescriptor, SessionFactoryImplementor factory, String tenantIdentifier) {
+			return DefaultCacheKeysFactory.createCollectionKey(id, collectionDescriptor, factory, tenantIdentifier);
 		}
 
 		@Override
-		public Object createEntityKey(Object id, EntityDescriptor persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-			return DefaultCacheKeysFactory.createEntityKey(id, persister, factory, tenantIdentifier);
+		public Object createEntityKey(Object id, EntityDescriptor entityDescriptor, SessionFactoryImplementor factory, String tenantIdentifier) {
+			return DefaultCacheKeysFactory.createEntityKey(id, entityDescriptor, factory, tenantIdentifier);
 		}
 
 		@Override
-		public Object createNaturalIdKey(Object[] naturalIdValues, EntityDescriptor persister, SharedSessionContractImplementor session) {
-			return DefaultCacheKeysFactory.createNaturalIdKey(naturalIdValues, persister, session);
+		public Object createNaturalIdKey(Object[] naturalIdValues, EntityDescriptor entityDescriptor, SharedSessionContractImplementor session) {
+			return DefaultCacheKeysFactory.createNaturalIdKey(naturalIdValues, entityDescriptor, session);
 		}
 
 		@Override

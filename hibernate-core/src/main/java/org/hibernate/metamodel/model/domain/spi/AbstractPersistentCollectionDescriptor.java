@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.JavaTypeDescriptor;
 import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.relational.Database;
@@ -116,9 +115,11 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 
 		int spacesSize = 1 + collectionBinding.getSynchronizedTables().size();
 		spaces = new String[spacesSize];
-		spaces[0] = collectionBinding.getMappedTable().getNameIdentifier().render( sessionFactory.getServiceRegistry()
-																						   .getService( JdbcServices.class )
-																						   .getDialect() );
+		spaces[0] = collectionBinding
+				.getMappedTable()
+				.getNameIdentifier()
+				.render( sessionFactory.getServiceRegistry().getService( JdbcServices.class ).getDialect() );
+		
 		Iterator iter = collectionBinding.getSynchronizedTables().iterator();
 		for ( int i = 1; i < spacesSize; i++ ) {
 			spaces[i] = (String) iter.next();

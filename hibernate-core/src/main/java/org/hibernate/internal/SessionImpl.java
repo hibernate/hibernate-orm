@@ -1647,7 +1647,7 @@ public final class SessionImpl
 		}
 
 		CollectionEntry entry = persistenceContext.getCollectionEntryOrNull( collection );
-		final PersistentCollectionDescriptor roleBeforeFlush = ( entry == null ) ? null : entry.getLoadedPersister();
+		final PersistentCollectionDescriptor roleBeforeFlush = ( entry == null ) ? null : entry.getLoadedPersistentCollectionDescriptor();
 
 		FilterQueryPlan plan = null;
 		if ( roleBeforeFlush == null ) {
@@ -1655,7 +1655,7 @@ public final class SessionImpl
 			// get its state into the database in order to execute query
 			flush();
 			entry = persistenceContext.getCollectionEntryOrNull( collection );
-			PersistentCollectionDescriptor roleAfterFlush = ( entry == null ) ? null : entry.getLoadedPersister();
+			PersistentCollectionDescriptor roleAfterFlush = ( entry == null ) ? null : entry.getLoadedPersistentCollectionDescriptor();
 			if ( roleAfterFlush == null ) {
 				throw new QueryException( "The collection was unreferenced" );
 			}
@@ -1679,7 +1679,7 @@ public final class SessionImpl
 				// might need to run a different filter entirely afterQuery the flush
 				// because the collection role may have changed
 				entry = persistenceContext.getCollectionEntryOrNull( collection );
-				PersistentCollectionDescriptor roleAfterFlush = ( entry == null ) ? null : entry.getLoadedPersister();
+				PersistentCollectionDescriptor roleAfterFlush = ( entry == null ) ? null : entry.getLoadedPersistentCollectionDescriptor();
 				if ( roleBeforeFlush != roleAfterFlush ) {
 					if ( roleAfterFlush == null ) {
 						throw new QueryException( "The collection was dereferenced" );
@@ -1696,7 +1696,7 @@ public final class SessionImpl
 
 		if ( parameters != null ) {
 			parameters.getPositionalParameterValues()[0] = entry.getLoadedKey();
-			parameters.getPositionalParameterTypes()[0] = entry.getLoadedPersister().getKeyType();
+			parameters.getPositionalParameterTypes()[0] = entry.getLoadedPersistentCollectionDescriptor().getKeyType();
 		}
 
 		return plan;

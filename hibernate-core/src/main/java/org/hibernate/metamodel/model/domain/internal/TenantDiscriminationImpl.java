@@ -48,11 +48,6 @@ public class TenantDiscriminationImpl implements TenantDiscrimination {
 	}
 
 	@Override
-	public int getNumberOfJdbcParametersForRestriction() {
-		return container.getNumberOfJdbcParametersForRestriction();
-	}
-
-	@Override
 	public NavigableContainer getContainer() {
 		return container;
 	}

@@ -7,8 +7,6 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.sql.JoinType;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 
 /**
  * @author Steve Ebersole
@@ -42,11 +40,4 @@ public abstract class AbstractCollectionElement<J> implements CollectionElement<
 		return NAVIGABLE_NAME;
 	}
 
-	@Override
-	public void applyTableReferenceJoins(
-			JoinType joinType,
-			SqlAliasBase sqlAliasBase,
-			TableReferenceJoinCollector collector) {
-		// only relevant for ONE-TO-MANY and MANY-TO-MANY - noop in the general case
-	}
 }

@@ -25,7 +25,7 @@ public class NavigableRole implements Serializable {
 	private final String navigableName;
 	private final String fullPath;
 
-	public NavigableRole(NavigableRole parent, String naviganavigableNamebleName) {
+	public NavigableRole(NavigableRole parent, String navigableName) {
 		this.parent = parent;
 		this.navigableName = navigableName;
 

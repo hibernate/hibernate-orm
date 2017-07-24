@@ -119,7 +119,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 				.getMappedTable()
 				.getNameIdentifier()
 				.render( sessionFactory.getServiceRegistry().getService( JdbcServices.class ).getDialect() );
-		
+
 		Iterator iter = collectionBinding.getSynchronizedTables().iterator();
 		for ( int i = 1; i < spacesSize; i++ ) {
 			spaces[i] = (String) iter.next();

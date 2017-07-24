@@ -139,7 +139,7 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.model.domain.Representation;
 import org.hibernate.naming.Identifier;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.tuple.GeneratedValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.type.ForeignKeyDirection;

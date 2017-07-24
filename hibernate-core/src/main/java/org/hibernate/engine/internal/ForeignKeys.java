@@ -7,6 +7,10 @@
 package org.hibernate.engine.internal;
 
 import java.io.Serializable;
+import java.util.Set;
+
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -14,7 +18,12 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.internal.AttributeImplementor;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.Type;
@@ -54,13 +63,13 @@ public final class ForeignKeys {
 		/**
 		 * Nullify all references to entities that have not yet been inserted in the database, where the foreign key
 		 * points toward that entity.
-		 *
-		 * @param values The entity attribute values
-		 * @param types The entity attribute types
-		 */
-		public void nullifyTransientReferences(final Object[] values, final Type[] types) {
-			for ( int i = 0; i < types.length; i++ ) {
-				values[i] = nullifyTransientReferences( values[i], types[i] );
+		 *  @param values The entity attribute values
+		 * @param attributes The entity attributes */
+		public  void nullifyTransientReferences(final Object[] values, final Set<PersistentAttribute<?, ?>> attributes) {
+			int i = 0;
+			for(PersistentAttribute attribute : attributes){
+				values[i] = nullifyTransientReferences( values[i], attribute );
+				i ++;
 			}
 		}
 
@@ -69,44 +78,50 @@ public final class ForeignKeys {
 		 * input argument otherwise.  This is how Hibernate avoids foreign key constraint violations.
 		 *
 		 * @param value An entity attribute value
-		 * @param type An entity attribute type
+		 * @param attribute An entity attribute
 		 *
 		 * @return {@code null} if the argument is an unsaved entity; otherwise return the argument.
 		 */
-		private Object nullifyTransientReferences(final Object value, final Type type) {
+		private Object nullifyTransientReferences(final Object value, final PersistentAttribute attribute) {
 			if ( value == null ) {
 				return null;
 			}
-			else if ( type.getJavaTypeDescriptor() instanceof EntityJavaDescriptor ) {
-				final EntityJavaDescriptor entityType = (EntityJavaDescriptor) type.getJavaTypeDescriptor();
-				if ( entityType.isOneToOne() ) {
+			else if ( attribute.getDeclaringType() instanceof EntityType ) {
+				if ( attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE ) {
 					return value;
 				}
 				else {
-					final String entityName = entityType.getEntityName();
+					final String entityName = ( (EntityType) attribute.getDeclaringType() ).getName();
 					return isNullifiable( entityName, value ) ? null : value;
 				}
 			}
-			else if ( type.getClassification().equals( Type.Classification.ANY ) ) {
-				return isNullifiable( null, value ) ? null : value;
-			}
-			else if ( type.isComponentType() ) {
-				final EmbeddedType actype = (EmbeddedType) type;
-				final Object[] subvalues = actype.getPropertyValues( value, session );
-				final Type[] subtypes = actype.getSubtypes();
-				boolean substitute = false;
-				for ( int i = 0; i < subvalues.length; i++ ) {
-					final Object replacement = nullifyTransientReferences( subvalues[i], subtypes[i] );
-					if ( replacement != subvalues[i] ) {
-						substitute = true;
-						subvalues[i] = replacement;
+			else if ( attribute instanceof SingularPersistentAttribute )
+			{
+				final SingularPersistentAttribute.SingularAttributeClassification singularAttributeClassification = ( (SingularPersistentAttribute) attribute )
+						.getAttributeTypeClassification();
+				if( singularAttributeClassification == SingularPersistentAttribute.SingularAttributeClassification.ANY )
+				{
+					return isNullifiable( null, value ) ? null : value;
+				}else if( singularAttributeClassification == SingularPersistentAttribute.SingularAttributeClassification.EMBEDDED){
+					SingularPersistentAttributeEmbedded embedded = (SingularPersistentAttributeEmbedded) attribute;
+					final EmbeddedTypeDescriptor embeddedDescriptor = embedded.getEmbeddedDescriptor();
+					final Object[] subvalues = embeddedDescriptor.getPropertyValues(  value );
+
+					final Type[] subtypes = actype.getSubtypes();
+					boolean substitute = false;
+					for ( int i = 0; i < subvalues.length; i++ ) {
+						final Object replacement = nullifyTransientReferences( subvalues[i], subtypes[i] );
+						if ( replacement != subvalues[i] ) {
+							substitute = true;
+							subvalues[i] = replacement;
+						}
 					}
+					if ( substitute ) {
+						// todo : need to account for entity mode on the CompositeType interface :(
+						actype.setPropertyValues( value, subvalues, EntityMode.POJO );
+					}
+					return value;
 				}
-				if ( substitute ) {
-					// todo : need to account for entity mode on the CompositeType interface :(
-					actype.setPropertyValues( value, subvalues, EntityMode.POJO );
-				}
-				return value;
 			}
 			else {
 				return value;

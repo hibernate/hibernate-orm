@@ -110,24 +110,24 @@ public final class MessageHelper {
 	/**
 	 * Generate an info message string relating to a particular entity,.
 	 *
-	 * @param persister The persister for the entity
+	 * @param entityDescriptor The entityDescriptor for the entity
 	 * @param id The entity id value
 	 * @param identifierJavaTypeDescriptor The entity identifier JavaTypeDescriptor
 	 * @param factory The session factory
 	 * @return An info string, in the form [FooBar#1]
 	 */
 	public static String infoString(
-			EntityDescriptor persister,
+			EntityDescriptor entityDescriptor,
 			Object id, 
 			JavaTypeDescriptor identifierJavaTypeDescriptor,
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
-		if( persister == null ) {
+		if( entityDescriptor == null ) {
 			s.append( "<null EntityPersister>" );
 		}
 		else {
-			s.append( persister.getEntityName() );
+			s.append( entityDescriptor.getEntityName() );
 		}
 		s.append( '#' );
 

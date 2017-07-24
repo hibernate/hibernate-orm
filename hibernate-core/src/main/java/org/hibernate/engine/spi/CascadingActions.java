@@ -371,19 +371,19 @@ public class CascadingActions {
 		public void noCascade(
 				EventSource session,
 				Object parent,
-				EntityDescriptor persister,
+				EntityDescriptor entityDescriptor,
 				Type propertyType,
 				int propertyIndex) {
 			if ( propertyType.getClassification().equals( Type.Classification.ENTITY ) ) {
-				Object child = persister.getPropertyValue( parent, propertyIndex );
-				String childEntityName = ( (EntityType) propertyType ).getAssociatedEntityName();
+				Object child = entityDescriptor.getPropertyValue( parent, propertyIndex );
+				String childEntityName = entityDescriptor.getEntityName();
 
 				if ( child != null
 						&& !isInManagedState( child, session )
 						&& !(child instanceof HibernateProxy) //a proxy cannot be transient and it breaks ForeignKeys.isTransient
 						&& ForeignKeys.isTransient( childEntityName, child, null, session ) ) {
-					String parentEntiytName = persister.getEntityName();
-					String propertyName = persister.getPropertyNames()[propertyIndex];
+					String parentEntiytName = entityDescriptor.getEntityName();
+					String propertyName = entityDescriptor.getPropertyNames()[propertyIndex];
 					throw new TransientPropertyValueException(
 							"object references an unsaved transient instance - save the transient instance beforeQuery flushing",
 							childEntityName,
@@ -459,7 +459,7 @@ public class CascadingActions {
 		}
 
 		@Override
-		public void noCascade(EventSource session, Object parent, EntityDescriptor persister, Type propertyType, int propertyIndex) {
+		public void noCascade(EventSource session, Object parent, EntityDescriptor entityDescriptor, Type propertyType, int propertyIndex) {
 		}
 
 		@Override

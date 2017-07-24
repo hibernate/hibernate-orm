@@ -38,6 +38,7 @@ import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -231,6 +232,11 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 	@Override
 	public Type[] getPropertyTypes() {
 		return new Type[0];
+	}
+
+	@Override
+	public JavaTypeDescriptor[] getPropertyJavaTypeDescriptors() {
+		return null;
 	}
 
 	@Override

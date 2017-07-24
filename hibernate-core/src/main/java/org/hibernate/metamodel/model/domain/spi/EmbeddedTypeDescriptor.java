@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain.spi;
 import java.util.List;
 import javax.persistence.metamodel.EmbeddableType;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.mapping.Component;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -101,4 +102,29 @@ public interface EmbeddedTypeDescriptor<T>
 	default int getNumberOfJdbcParametersForRestriction() {
 		return getEmbeddedDescriptor().getNumberOfJdbcParametersForRestriction();
 	}
+
+	/**
+	 * Set the given values to the mapped properties of the given object
+	 */
+	void setPropertyValues(Object object, Object[] values);
+
+	/**
+	 * Set the value of a particular property
+	 */
+	void setPropertyValue(Object object, int i, Object value);
+
+	/**
+	 * Return the (loaded) values of the mapped properties of the object (not including backrefs)
+	 */
+	Object[] getPropertyValues(Object object);
+
+	/**
+	 * Get the value of a particular property
+	 */
+	Object getPropertyValue(Object object, int i) throws HibernateException;
+
+	/**
+	 * Get the value of a particular property
+	 */
+	Object getPropertyValue(Object object, String propertyName);
 }

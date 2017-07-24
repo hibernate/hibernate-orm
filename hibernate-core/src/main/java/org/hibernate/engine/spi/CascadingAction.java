@@ -74,11 +74,11 @@ public interface CascadingAction {
 	 *
 	 * @param session The session witin which the cascade is occurring.
 	 * @param parent The property value owner
-	 * @param persister The entity persister for the owner
+	 * @param entityDescriptor The entity entityDescriptor for the owner
 	 * @param propertyType The property type
 	 * @param propertyIndex The index of the property within the owner.
 	 */
-	void noCascade(EventSource session, Object parent, EntityDescriptor persister, Type propertyType, int propertyIndex);
+	void noCascade(EventSource session, Object parent, EntityDescriptor entityDescriptor, Type propertyType, int propertyIndex);
 
 	/**
 	 * Should this action be performed (or noCascade consulted) in the case of lazy properties.

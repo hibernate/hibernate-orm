@@ -27,6 +27,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Delegate responsible for, in conjunction with the various
@@ -76,7 +77,7 @@ public final class Cascade {
 				LOG.tracev( "Processing cascade {0} for: {1}", action, persister.getEntityName() );
 			}
 
-			final Type[] types = persister.getPropertyTypes();
+			final JavaTypeDescriptor[] types = persister.getPropertyJavaTypeDescriptors();
 			final String[] propertyNames = persister.getPropertyNames();
 			final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
 			final boolean hasUninitializedLazyProperties = persister.hasUninitializedLazyProperties( parent );
@@ -138,7 +139,7 @@ public final class Cascade {
 			final int componentPathStackDepth,
 			final Object parent,
 			final Object child,
-			final Type type,
+			final JavaTypeDescriptor javaTypeDescriptor,
 			final CascadeStyle style,
 			final String propertyName,
 			final Object anything,

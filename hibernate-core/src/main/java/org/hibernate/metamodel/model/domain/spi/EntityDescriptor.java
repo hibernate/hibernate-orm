@@ -47,6 +47,7 @@ import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
@@ -347,6 +348,8 @@ public interface EntityDescriptor<T>
 	 * Get the Hibernate types of the class properties
 	 */
 	Type[] getPropertyTypes();
+
+	JavaTypeDescriptor[] getPropertyJavaTypeDescriptors();
 
 	/**
 	 * Get the names of the class properties - doesn't have to be the names of the

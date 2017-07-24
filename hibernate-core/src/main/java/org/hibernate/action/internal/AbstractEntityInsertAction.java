@@ -7,6 +7,7 @@
 package org.hibernate.action.internal;
 
 import java.io.Serializable;
+import java.util.Set;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.internal.ForeignKeys;
@@ -19,6 +20,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 
 /**
  * A base class for entity insert actions.
@@ -110,8 +112,10 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	protected final void nullifyTransientReferencesIfNotAlready() {
 		if ( ! areTransientReferencesNullified ) {
+			final Set<PersistentAttribute<?, ?>> persistentAttributes = (Set<PersistentAttribute<?, ?>>) getEntityDescriptor()
+					.getPersistentAttributes();
 			new ForeignKeys.Nullifier( getInstance(), false, isEarlyInsert(), getSession() )
-					.nullifyTransientReferences( getState(), getEntityDescriptor().getPropertyTypes() );
+					.nullifyTransientReferences( getState(), persistentAttributes );
 			new Nullability( getSession() ).checkNullability( getState(), getEntityDescriptor(), false );
 			areTransientReferencesNullified = true;
 		}

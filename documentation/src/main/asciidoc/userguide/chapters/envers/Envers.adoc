@@ -1,6 +1,7 @@
 [[envers]]
 == Envers
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/envers
+:extrasdir: extras
 
 === Basics
 
@@ -27,8 +28,82 @@ Envers automatically creates audit tables if `hibernate.hbm2ddl.auto` option is 
 Appropriate DDL statements can also be generated with an Ant task in <<envers-generateschema>>.
 ====
 
+Considering we have a `Customer` entity, when annotating it with the `Audited` annotation,
+Hibernate is going to generate the following tables using the `hibernate.hbm2ddl.auto` schema tool:
+
+[[envers-audited-mapping-example]]
+.Basic Envers entity mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/AuditTest.java[tags=envers-audited-mapping-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/envers-audited-mapping-example.sql[]
+----
+====
+
 Instead of annotating the whole class and auditing all properties, you can annotate only some persistent properties with `@Audited`.
 This will cause only these properties to be audited.
+
+Now, considering the previous `Customer` entity,
+let's see how Envers auditing works when inserting, updating, and deleting the entity in question.
+
+[[envers-audited-insert-example]]
+.Auditing the entity `INSERT` operation
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/AuditTest.java[tags=envers-audited-insert-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/envers-audited-insert-example.sql[]
+----
+====
+
+[[envers-audited-update-example]]
+.Auditing the entity `UPDATE` operation
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/AuditTest.java[tags=envers-audited-update-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/envers-audited-update-example.sql[]
+----
+====
+
+[[envers-audited-delete-example]]
+.Auditing the entity `DELETE` operation
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/AuditTest.java[tags=envers-audited-delete-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/envers-audited-delete-example.sql[]
+----
+====
+
+The `REVTYPE` column value is taken from the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/RevisionType.html[`RevisionType`] Enum.
+
+[[envers-revtype-column]]
+.`REVTYPE` column values
+[width="100%",cols="20%,20%,60%",]
+|=================================
+|Database column value |Associated `RevisionType` Enum value |Description
+|0 | `ADD` |A database table row was inserted.
+|1 | `MOD` |A database table row was updated.
+|1 | `DEL` |A database table row was deleted.
+|=================================
 
 The audit (history) of an entity can be accessed using the `AuditReader` interface, which can be obtained having an open `EntityManager` or `Session` via the `AuditReaderFactory`.
 See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReaderFactory.html[Javadocs] for these classes for details on the functionality offered.

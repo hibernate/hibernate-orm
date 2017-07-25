@@ -8,7 +8,7 @@ package org.hibernate.procedure;
 
 import javax.persistence.TemporalType;
 
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 
 /**
  * Describes an input value binding for any IN/INOUT parameters.
@@ -21,7 +21,7 @@ public interface ParameterBind<T> {
 	 */
 	T getValue();
 
-	Type getBindType();
+	AllowableParameterType<T> getBindType();
 
 	/**
 	 * If {@code <T>} represents a DATE/TIME type value, JPA usually allows specifying the particular parts of

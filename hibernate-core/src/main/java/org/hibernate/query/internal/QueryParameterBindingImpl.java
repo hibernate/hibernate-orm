@@ -10,10 +10,10 @@ package org.hibernate.query.internal;
 import java.util.Collection;
 import javax.persistence.TemporalType;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
-import org.hibernate.type.Type;
 
 /**
  * The standard Hibernate QueryParameterBinding implementation
@@ -27,7 +27,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	private boolean isBound;
 	private boolean isMultiValued;
 
-	private Type bindType;
+	private AllowableParameterType bindType;
 
 	private T bindValue;
 	private Collection<T> bindValues;
@@ -39,7 +39,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	}
 
 	public QueryParameterBindingImpl(
-			Type bindType,
+			AllowableParameterType bindType,
 			QueryParameter<T> queryParameter,
 			QueryParameterBindingTypeResolver typeResolver) {
 		this.bindType = bindType;
@@ -48,7 +48,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	}
 
 	@Override
-	public Type getBindType() {
+	public AllowableParameterType getBindType() {
 		return bindType;
 	}
 
@@ -94,7 +94,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	}
 
 	@Override
-	public void setBindValue(T value, Type clarifiedType) {
+	public void setBindValue(T value, AllowableParameterType<T> clarifiedType) {
 		setBindValue( value );
 		if ( clarifiedType != null ) {
 			this.bindType = clarifiedType;
@@ -135,7 +135,8 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	}
 
 	@Override
-	public void setBindValues(Collection<T> values, Type clarifiedType) {
+	public void setBindValues(
+			Collection<T> values, AllowableParameterType<T> clarifiedType) {
 		setBindValues( values );
 		if ( clarifiedType != null ) {
 			this.bindType = clarifiedType;

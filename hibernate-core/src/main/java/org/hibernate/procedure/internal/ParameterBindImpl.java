@@ -12,7 +12,6 @@ import org.hibernate.procedure.spi.ParameterBindImplementor;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryParameterBindingImpl;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
-import org.hibernate.type.Type;
 
 /**
  * Implementation of the {@link ParameterBind} contract.
@@ -39,7 +38,7 @@ public class ParameterBindImpl<T> extends QueryParameterBindingImpl<T> implement
 	}
 
 	@Override
-	public Type getBindType() {
+	public AllowableParameterType<T> getBindType() {
 		return super.getBindType();
 	}
 }

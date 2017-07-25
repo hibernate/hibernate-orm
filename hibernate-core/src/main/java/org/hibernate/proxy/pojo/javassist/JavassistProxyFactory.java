@@ -21,7 +21,6 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.type.spi.EmbeddedType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 

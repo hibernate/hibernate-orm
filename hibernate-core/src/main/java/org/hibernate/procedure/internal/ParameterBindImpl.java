@@ -6,6 +6,7 @@
  */
 package org.hibernate.procedure.internal;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.procedure.ParameterBind;
 import org.hibernate.procedure.spi.ParameterBindImplementor;
 import org.hibernate.query.QueryParameter;
@@ -26,7 +27,7 @@ public class ParameterBindImpl<T> extends QueryParameterBindingImpl<T> implement
 	}
 
 	public ParameterBindImpl(
-			Type bindType,
+			AllowableParameterType bindType,
 			QueryParameter<T> queryParameter,
 			QueryParameterBindingTypeResolver typeResolver) {
 		super( bindType, queryParameter, typeResolver );

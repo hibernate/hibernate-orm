@@ -12,7 +12,6 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * Contract for run-time, proxy-based lazy initialization proxies.

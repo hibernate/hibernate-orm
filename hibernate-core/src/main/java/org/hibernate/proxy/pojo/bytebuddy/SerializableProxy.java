@@ -11,7 +11,6 @@ import java.lang.reflect.Method;
 
 import org.hibernate.proxy.AbstractSerializableProxy;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.type.spi.EmbeddedType;
 
 public final class SerializableProxy extends AbstractSerializableProxy {
 	private final Class persistentClass;

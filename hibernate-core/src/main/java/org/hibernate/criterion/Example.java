@@ -18,7 +18,6 @@ import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.Type;
 
 /**

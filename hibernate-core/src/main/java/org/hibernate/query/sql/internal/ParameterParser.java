@@ -7,7 +7,6 @@
 package org.hibernate.query.sql.internal;
 
 import org.hibernate.QueryException;
-import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.spi.ParameterRecognizer;
 

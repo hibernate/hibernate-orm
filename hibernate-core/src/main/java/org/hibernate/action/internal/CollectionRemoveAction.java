@@ -93,7 +93,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 			// is replaced by null or a different collection
 			// (if the collection is uninitialized, hibernate has no way of
 			// knowing if the collection is actually empty without querying the db)
-			getPersister().remove( getKey(), getSession() );
+			getPersistentCollectionDescriptor().remove( getKey(), getSession() );
 		}
 		
 		final PersistentCollection collection = getCollection();
@@ -105,7 +105,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 		postRemove();
 
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatistics().removeCollection( getPersister().getRole() );
+			getSession().getFactory().getStatistics().removeCollection( getPersistentCollectionDescriptor().getNavigableRole().getFullPath() );
 		}
 	}
 
@@ -115,7 +115,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 			return;
 		}
 		final PreCollectionRemoveEvent event = new PreCollectionRemoveEvent(
-				getPersister(),
+				getPersistentCollectionDescriptor(),
 				getCollection(),
 				eventSource(),
 				affectedOwner
@@ -131,7 +131,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 			return;
 		}
 		final PostCollectionRemoveEvent event = new PostCollectionRemoveEvent(
-				getPersister(),
+				getPersistentCollectionDescriptor(),
 				getCollection(),
 				eventSource(),
 				affectedOwner

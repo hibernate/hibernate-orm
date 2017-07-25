@@ -13,7 +13,6 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.proxy.AbstractLazyInitializer;
-import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * Lazy initializer for POJOs

@@ -19,7 +19,6 @@ import javax.validation.ValidatorFactory;
 
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.PreDeleteEvent;
 import org.hibernate.event.spi.PreDeleteEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
@@ -78,7 +77,7 @@ public class BeanValidationEventListener
 	public boolean onPreInsert(PreInsertEvent event) {
 		validate(
 				event.getEntity(), event.getPersister().getHierarchy().getRepresentation(), event.getPersister(),
-				event.getSession().getFactory(), GroupsPerOperation.Operation.INSERT
+				GroupsPerOperation.Operation.INSERT
 		);
 		return false;
 	}
@@ -86,7 +85,7 @@ public class BeanValidationEventListener
 	public boolean onPreUpdate(PreUpdateEvent event) {
 		validate(
 				event.getEntity(), event.getPersister().getHierarchy().getRepresentation(), event.getPersister(),
-				event.getSession().getFactory(), GroupsPerOperation.Operation.UPDATE
+				GroupsPerOperation.Operation.UPDATE
 		);
 		return false;
 	}
@@ -94,22 +93,22 @@ public class BeanValidationEventListener
 	public boolean onPreDelete(PreDeleteEvent event) {
 		validate(
 				event.getEntity(), event.getPersister().getHierarchy().getRepresentation(), event.getPersister(),
-				event.getSession().getFactory(), GroupsPerOperation.Operation.DELETE
+				GroupsPerOperation.Operation.DELETE
 		);
 		return false;
 	}
 
-	private <T> void validate(T object, Representation representation, EntityDescriptor persister,
-							  SessionFactoryImplementor sessionFactory, GroupsPerOperation.Operation operation) {
+	private <T> void validate(
+			T object,
+			Representation representation,
+			EntityDescriptor entityDescriptor,
+			GroupsPerOperation.Operation operation) {
 		if ( object == null || representation != Representation.POJO ) {
 			return;
 		}
-		TraversableResolver tr = new HibernateTraversableResolver(
-				persister, associationsPerEntityPersister, sessionFactory
-		);
-		Validator validator = factory.usingContext()
-				.traversableResolver( tr )
-				.getValidator();
+		final TraversableResolver tr = new HibernateTraversableResolver( entityDescriptor, associationsPerEntityPersister );
+		final Validator validator = factory.usingContext().traversableResolver( tr ).getValidator();
+
 		final Class<?>[] groups = groupsPerOperation.get( operation );
 		if ( groups.length > 0 ) {
 			final Set<ConstraintViolation<T>> constraintViolations = validator.validate( object, groups );

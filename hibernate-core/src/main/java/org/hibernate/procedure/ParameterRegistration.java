@@ -9,6 +9,7 @@ package org.hibernate.procedure;
 import javax.persistence.TemporalType;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.type.Type;
 
@@ -46,9 +47,9 @@ public interface ParameterRegistration<T> extends QueryParameter<T> {
 	 * Set the Hibernate Type associated with this parameter.  Affects
 	 * the return from {@link #getHibernateType()}.
 	 *
-	 * @param type The Hibernate Type.
+	 * @param type The AllowableParameterType .
 	 */
-	void setHibernateType(Type type);
+	void setHibernateType(AllowableParameterType type);
 
 	/**
 	 * Retrieve the binding associated with this parameter.  The binding is only relevant for INPUT parameters.  Can

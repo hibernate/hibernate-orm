@@ -24,7 +24,6 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.ProxyConfiguration;
-import org.hibernate.type.spi.EmbeddedType;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.NamingStrategy;

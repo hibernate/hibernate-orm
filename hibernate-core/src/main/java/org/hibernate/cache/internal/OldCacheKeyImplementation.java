@@ -8,8 +8,8 @@ package org.hibernate.cache.internal;
 
 import java.io.Serializable;
 
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.type.Type;
 
 /**
  * Allows multiple entity classes / collection roles to be stored in the same cache region. Also allows for composite
@@ -26,7 +26,7 @@ import org.hibernate.type.Type;
 @Deprecated
 final class OldCacheKeyImplementation implements Serializable {
 	private final Object id;
-	private final Type type;
+	private final JavaTypeDescriptor javaTypeDescriptor;
 	private final String entityOrRoleName;
 	private final String tenantId;
 	private final int hashCode;
@@ -37,24 +37,24 @@ final class OldCacheKeyImplementation implements Serializable {
 	 * name, not a subclass entity name.
 	 *
 	 * @param id The identifier associated with the cached data
-	 * @param type The Hibernate type mapping
+	 * @param javaTypeDescriptor The Hibernate javaTypeDescriptor mapping
 	 * @param entityOrRoleName The entity or collection-role name.
 	 * @param tenantId The tenant identifier associated this data.
 	 */
 	OldCacheKeyImplementation(
 			final Object id,
-			final Type type,
+			final JavaTypeDescriptor javaTypeDescriptor,
 			final String entityOrRoleName,
 			final String tenantId) {
 		this.id = id;
-		this.type = type;
+		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.entityOrRoleName = entityOrRoleName;
 		this.tenantId = tenantId;
-		this.hashCode = calculateHashCode( type );
+		this.hashCode = calculateHashCode( javaTypeDescriptor );
 	}
 
-	private int calculateHashCode(Type type) {
-		int result = type.getHashCode( id );
+	private int calculateHashCode(JavaTypeDescriptor type) {
+		int result = type.extractHashCode( id );
 		result = 31 * result + ( tenantId != null ? tenantId.hashCode() : 0 );
 		return result;
 	}
@@ -77,7 +77,7 @@ final class OldCacheKeyImplementation implements Serializable {
 		}
 		final OldCacheKeyImplementation that = (OldCacheKeyImplementation) other;
 		return EqualsHelper.equals( entityOrRoleName, that.entityOrRoleName )
-				&& type.isEqual( id, that.id)
+				&& javaTypeDescriptor.areEqual( id, that.id)
 				&& EqualsHelper.equals( tenantId, that.tenantId );
 	}
 

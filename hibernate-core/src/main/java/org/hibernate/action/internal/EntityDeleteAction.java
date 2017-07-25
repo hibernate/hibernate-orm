@@ -62,7 +62,7 @@ public class EntityDeleteAction extends EntityAction {
 
 		// beforeQuery remove we need to remove the local (transactional) natural id cross-reference
 		naturalIdValues = session.getPersistenceContext().getNaturalIdHelper().removeLocalNaturalIdCrossReference(
-				getPersister(),
+				getEntityDescriptor(),
 				getId(),
 				state
 		);
@@ -71,7 +71,7 @@ public class EntityDeleteAction extends EntityAction {
 	@Override
 	public void execute() throws HibernateException {
 		final Serializable id = getId();
-		final EntityDescriptor persister = getPersister();
+		final EntityDescriptor persister = getEntityDescriptor();
 		final SharedSessionContractImplementor session = getSession();
 		final Object instance = getInstance();
 
@@ -122,7 +122,7 @@ public class EntityDeleteAction extends EntityAction {
 		postDelete();
 
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() && !veto ) {
-			getSession().getFactory().getStatistics().deleteEntity( getPersister().getEntityName() );
+			getSession().getFactory().getStatistics().deleteEntity( getEntityDescriptor().getEntityName() );
 		}
 	}
 
@@ -132,7 +132,7 @@ public class EntityDeleteAction extends EntityAction {
 		if ( listenerGroup.isEmpty() ) {
 			return veto;
 		}
-		final PreDeleteEvent event = new PreDeleteEvent( getInstance(), getId(), state, getPersister(), eventSource() );
+		final PreDeleteEvent event = new PreDeleteEvent( getInstance(), getId(), state, getEntityDescriptor(), eventSource() );
 		for ( PreDeleteEventListener listener : listenerGroup.listeners() ) {
 			veto |= listener.onPreDelete( event );
 		}
@@ -148,7 +148,7 @@ public class EntityDeleteAction extends EntityAction {
 				getInstance(),
 				getId(),
 				state,
-				getPersister(),
+				getEntityDescriptor(),
 				eventSource()
 		);
 		for ( PostDeleteEventListener listener : listenerGroup.listeners() ) {
@@ -165,7 +165,7 @@ public class EntityDeleteAction extends EntityAction {
 				getInstance(),
 				getId(),
 				state,
-				getPersister(),
+				getEntityDescriptor(),
 				eventSource()
 		);
 		for ( PostDeleteEventListener listener : listenerGroup.listeners() ) {
@@ -186,7 +186,7 @@ public class EntityDeleteAction extends EntityAction {
 
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) throws HibernateException {
-		EntityDescriptor entityPersister = getPersister();
+		EntityDescriptor entityPersister = getEntityDescriptor();
 		if ( entityPersister.hasCache() ) {
 			EntityRegionAccessStrategy cache = entityPersister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
@@ -204,7 +204,7 @@ public class EntityDeleteAction extends EntityAction {
 	protected boolean hasPostCommitEventListeners() {
 		final EventListenerGroup<PostDeleteEventListener> group = listenerGroup( EventType.POST_COMMIT_DELETE );
 		for ( PostDeleteEventListener listener : group.listeners() ) {
-			if ( listener.requiresPostCommitHanding( getPersister() ) ) {
+			if ( listener.requiresPostCommitHanding( getEntityDescriptor() ) ) {
 				return true;
 			}
 		}

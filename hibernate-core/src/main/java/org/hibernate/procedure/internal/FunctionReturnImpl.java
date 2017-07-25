@@ -13,6 +13,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.ParameterBindImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
@@ -31,14 +32,14 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 public class FunctionReturnImpl implements FunctionReturnImplementor {
 	private final ProcedureCallImplementor procedureCall;
 	private int jdbcTypeCode;
-	private Type ormType;
+	private AllowableParameterType ormType;
 
 	public FunctionReturnImpl(ProcedureCallImplementor procedureCall, int jdbcTypeCode) {
 		this.procedureCall = procedureCall;
 		this.jdbcTypeCode = jdbcTypeCode;
 	}
 
-	public FunctionReturnImpl(ProcedureCallImplementor procedureCall, Type ormType) {
+	public FunctionReturnImpl(ProcedureCallImplementor procedureCall, AllowableParameterType ormType) {
 		this.procedureCall = procedureCall;
 		setHibernateType( ormType );
 	}
@@ -49,7 +50,7 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 	}
 
 	public JdbcCallParameterRegistration toJdbcCallParameterRegistration(SharedSessionContractImplementor persistenceContext) {
-		final Type ormType;
+		final AllowableParameterType ormType;
 		final JdbcCallRefCursorExtractorImpl refCursorExtractor;
 		final JdbcCallParameterExtractorImpl parameterExtractor;
 
@@ -65,7 +66,7 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 					.getDescriptor( getJdbcTypeCode() );
 			final JavaTypeDescriptor javaTypeMapping = sqlTypeDescriptor
 					.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
-			ormType = typeConfiguration.heuristicType( javaTypeMapping.getTypeName() );
+			ormType = typeConfiguration.getBasicTypeRegistry().getBasicType( javaTypeMapping.getJavaType() );
 			parameterExtractor = new JdbcCallParameterExtractorImpl( procedureCall.getProcedureName(), null, 0, ormType );
 			refCursorExtractor = null;
 		}
@@ -84,14 +85,7 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 	}
 
 	@Override
-	public void setHibernateType(Type ormType) {
-		assert ormType.sqlTypes().length == 1;
-		this.ormType = ormType;
-		this.jdbcTypeCode = ormType.sqlTypes()[0];
-	}
-
-	@Override
-	public Type getHibernateType() {
+	public AllowableParameterType getHibernateType() {
 		return ormType;
 	}
 
@@ -133,5 +127,10 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 	@Override
 	public void enablePassingNulls(boolean enabled) {
 		throw new HibernateException( "enablePassingNulls is not valid on a function return" );
+	}
+
+	@Override
+	public void setHibernateType(AllowableParameterType type) {
+		this.ormType = type;
 	}
 }

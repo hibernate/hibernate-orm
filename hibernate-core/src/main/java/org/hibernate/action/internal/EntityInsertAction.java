@@ -67,14 +67,14 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 
 	@Override
 	protected EntityKey getEntityKey() {
-		return getSession().generateEntityKey( getId(), getPersister() );
+		return getSession().generateEntityKey( getId(), getEntityDescriptor() );
 	}
 
 	@Override
 	public void execute() throws HibernateException {
 		nullifyTransientReferencesIfNotAlready();
 
-		final EntityDescriptor persister = getPersister();
+		final EntityDescriptor persister = getEntityDescriptor();
 		final SharedSessionContractImplementor session = getSession();
 		final Object instance = getInstance();
 		final Serializable id = getId();
@@ -131,7 +131,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		postInsert();
 
 		if ( factory.getStatistics().isStatisticsEnabled() && !veto ) {
-			factory.getStatistics().insertEntity( getPersister().getEntityName() );
+			factory.getStatistics().insertEntity( getEntityDescriptor().getEntityName() );
 		}
 
 		markExecuted();
@@ -157,7 +157,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 				getInstance(),
 				getId(),
 				getState(),
-				getPersister(),
+				getEntityDescriptor(),
 				eventSource()
 		);
 		for ( PostInsertEventListener listener : listenerGroup.listeners() ) {
@@ -174,7 +174,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 				getInstance(),
 				getId(),
 				getState(),
-				getPersister(),
+				getEntityDescriptor(),
 				eventSource()
 		);
 		for ( PostInsertEventListener listener : listenerGroup.listeners() ) {
@@ -200,7 +200,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		if ( listenerGroup.isEmpty() ) {
 			return veto;
 		}
-		final PreInsertEvent event = new PreInsertEvent( getInstance(), getId(), getState(), getPersister(), eventSource() );
+		final PreInsertEvent event = new PreInsertEvent( getInstance(), getId(), getState(), getEntityDescriptor(), eventSource() );
 		for ( PreInsertEventListener listener : listenerGroup.listeners() ) {
 			veto |= listener.onPreInsert( event );
 		}
@@ -209,7 +209,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) throws HibernateException {
-		final EntityDescriptor persister = getPersister();
+		final EntityDescriptor persister = getEntityDescriptor();
 		if ( success && isCachePutEnabled( persister, getSession() ) ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 			SessionFactoryImplementor sessionFactoryImplementor = session.getFactory();
@@ -240,7 +240,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 	protected boolean hasPostCommitEventListeners() {
 		final EventListenerGroup<PostInsertEventListener> group = listenerGroup( EventType.POST_COMMIT_INSERT );
 		for ( PostInsertEventListener listener : group.listeners() ) {
-			if ( listener.requiresPostCommitHanding( getPersister() ) ) {
+			if ( listener.requiresPostCommitHanding( getEntityDescriptor() ) ) {
 				return true;
 			}
 		}

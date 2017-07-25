@@ -72,18 +72,18 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			final LoadEvent event,
 			final LoadEventListener.LoadType loadType) throws HibernateException {
 
-		final EntityDescriptor persister = getPersister( event );
+		final EntityDescriptor entityDescriptor = getPersister( event );
 
-		if ( persister == null ) {
-			throw new HibernateException( "Unable to locate persister: " + event.getEntityClassName() );
+		if ( entityDescriptor == null ) {
+			throw new HibernateException( "Unable to locate entityDescriptor: " + event.getEntityClassName() );
 		}
 
-		final Class idClass = persister.getIdentifierType().getJavaTypeDescriptor().getJavaType();
+		final Class idClass = entityDescriptor.getIdentifierType().getJavaTypeDescriptor().getJavaType();
 		if ( idClass != null && !idClass.isInstance( event.getEntityId() ) ) {
-			checkIdClass( persister, event, loadType, idClass );
+			checkIdClass( entityDescriptor, event, loadType, idClass );
 		}
 
-		doOnLoad( persister, event, loadType );
+		doOnLoad( entityDescriptor, event, loadType );
 	}
 
 	private EntityDescriptor getPersister(final LoadEvent event ) {
@@ -101,24 +101,24 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	}
 
 	private void doOnLoad(
-			final EntityDescriptor persister,
+			final EntityDescriptor entityDescriptor,
 			final LoadEvent event,
 			final LoadEventListener.LoadType loadType) {
 
 		try {
-			final EntityKey keyToLoad = event.getSession().generateEntityKey( event.getEntityId(), persister );
+			final EntityKey keyToLoad = event.getSession().generateEntityKey( event.getEntityId(), entityDescriptor );
 			if ( loadType.isNakedEntityReturned() ) {
 				//do not return a proxy!
 				//(this option indicates we are initializing a proxy)
-				event.setResult( load( event, persister, keyToLoad, loadType ) );
+				event.setResult( load( event, entityDescriptor, keyToLoad, loadType ) );
 			}
 			else {
 				//return a proxy if appropriate
 				if ( event.getLockMode() == LockMode.NONE ) {
-					event.setResult( proxyOrLoad( event, persister, keyToLoad, loadType ) );
+					event.setResult( proxyOrLoad( event, entityDescriptor, keyToLoad, loadType ) );
 				}
 				else {
-					event.setResult( lockAndLoad( event, persister, keyToLoad, loadType, event.getSession() ) );
+					event.setResult( lockAndLoad( event, entityDescriptor, keyToLoad, loadType, event.getSession() ) );
 				}
 			}
 		}
@@ -129,16 +129,16 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	}
 
 	private void checkIdClass(
-			final EntityDescriptor persister,
+			final EntityDescriptor entityDescriptor,
 			final LoadEvent event,
 			final LoadEventListener.LoadType loadType,
 			final Class idClass) {
 				// we may have the kooky jpa requirement of allowing find-by-id where
 			// "id" is the "simple pk value" of a dependent objects parent.  This
 			// is part of its generally goofy "derived identity" "feature"
-			if ( persister.getEntityMetamodel().getIdentifierProperty().isEmbedded() ) {
+			if ( entityDescriptor.getEntityMetamodel().getIdentifierProperty().isEmbedded() ) {
 				final EmbeddedComponentType dependentIdType =
-						(EmbeddedComponentType) persister.getEntityMetamodel().getIdentifierProperty().getType();
+						(EmbeddedComponentType) entityDescriptor.getEntityMetamodel().getIdentifierProperty().getType();
 				if ( dependentIdType.getSubtypes().length == 1 ) {
 					final Type singleSubType = dependentIdType.getSubtypes()[0];
 					if ( singleSubType.getClassification().equals( Type.Classification.ENTITY ) ) {
@@ -149,7 +149,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 							loadByDerivedIdentitySimplePkValue(
 									event,
 									loadType,
-									persister,
+									entityDescriptor,
 									dependentIdType,
 									event.getSession().getFactory().getEntityPersister( dependentParentType.getAssociatedEntityName() )
 							);
@@ -159,7 +159,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				}
 			}
 			throw new TypeMismatchException(
-					"Provided id of the wrong type for class " + persister.getEntityName() + ". Expected: " + idClass
+					"Provided id of the wrong type for class " + entityDescriptor.getEntityName() + ". Expected: " + idClass
 							+ ", got " + event.getEntityId().getClass()
 			);
 	}
@@ -185,7 +185,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 * Performs the load of an entity.
 	 *
 	 * @param event The initiating load request event
-	 * @param persister The persister corresponding to the entity to be loaded
+	 * @param entityDescriptor The entityDescriptor corresponding to the entity to be loaded
 	 * @param keyToLoad The key of the entity to be loaded
 	 * @param options The defined load options
 	 *
@@ -195,7 +195,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 */
 	private Object load(
 			final LoadEvent event,
-			final EntityDescriptor persister,
+			final EntityDescriptor entityDescriptor,
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options) {
 
@@ -204,16 +204,16 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				throw new PersistentObjectException(
 						"attempted to load into an instance that was already associated with the session: " +
 								MessageHelper.infoString(
-										persister,
+										entityDescriptor,
 										event.getEntityId(),
 										event.getSession().getFactory()
 								)
 				);
 			}
-			persister.setIdentifier( event.getInstanceToLoad(), event.getEntityId(), event.getSession() );
+			entityDescriptor.setIdentifier( event.getInstanceToLoad(), event.getEntityId(), event.getSession() );
 		}
 
-		final Object entity = doLoad( event, persister, keyToLoad, options );
+		final Object entity = doLoad( event, entityDescriptor, keyToLoad, options );
 
 		boolean isOptionalInstance = event.getInstanceToLoad() != null;
 
@@ -235,7 +235,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 * generate a new proxy, or perform an actual load.
 	 *
 	 * @param event The initiating load request event
-	 * @param persister The persister corresponding to the entity to be loaded
+	 * @param entityDescriptor The entityDescriptor corresponding to the entity to be loaded
 	 * @param keyToLoad The key of the entity to be loaded
 	 * @param options The defined load options
 	 *
@@ -243,20 +243,20 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 */
 	private Object proxyOrLoad(
 			final LoadEvent event,
-			final EntityDescriptor persister,
+			final EntityDescriptor entityDescriptor,
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options) {
 
 		if ( traceEnabled ) {
 			LOG.tracev(
 					"Loading entity: {0}",
-					MessageHelper.infoString( persister, event.getEntityId(), event.getSession().getFactory() )
+					MessageHelper.infoString( entityDescriptor, event.getEntityId(), event.getSession().getFactory() )
 			);
 		}
 
 		// this class has no proxies (so do a shortcut)
-		if ( !persister.hasProxy() ) {
-			return load( event, persister, keyToLoad, options );
+		if ( !entityDescriptor.hasProxy() ) {
+			return load( event, entityDescriptor, keyToLoad, options );
 		}
 
 		final PersistenceContext persistenceContext = event.getSession().getPersistenceContext();
@@ -264,15 +264,15 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		// look for a proxy
 		Object proxy = persistenceContext.getProxy( keyToLoad );
 		if ( proxy != null ) {
-			return returnNarrowedProxy( event, persister, keyToLoad, options, persistenceContext, proxy );
+			return returnNarrowedProxy( event, entityDescriptor, keyToLoad, options, persistenceContext, proxy );
 		}
 
 		if ( options.isAllowProxyCreation() ) {
-			return createProxyIfNecessary( event, persister, keyToLoad, options, persistenceContext );
+			return createProxyIfNecessary( event, entityDescriptor, keyToLoad, options, persistenceContext );
 		}
 
 		// return a newly loaded object
-		return load( event, persister, keyToLoad, options );
+		return load( event, entityDescriptor, keyToLoad, options );
 	}
 
 	/**
@@ -280,7 +280,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 * is necessary.
 	 *
 	 * @param event The initiating load request event
-	 * @param persister The persister corresponding to the entity to be loaded
+	 * @param entityDescriptor The entityDescriptor corresponding to the entity to be loaded
 	 * @param keyToLoad The key of the entity to be loaded
 	 * @param options The defined load options
 	 * @param persistenceContext The originating session
@@ -290,7 +290,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 */
 	private Object returnNarrowedProxy(
 			final LoadEvent event,
-			final EntityDescriptor persister,
+			final EntityDescriptor entityDescriptor,
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options,
 			final PersistenceContext persistenceContext,
@@ -304,15 +304,15 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		}
 		Object impl = null;
 		if ( !options.isAllowProxyCreation() ) {
-			impl = load( event, persister, keyToLoad, options );
+			impl = load( event, entityDescriptor, keyToLoad, options );
 			if ( impl == null ) {
 				event.getSession()
 						.getFactory()
 						.getEntityNotFoundDelegate()
-						.handleEntityNotFound( persister.getEntityName(), keyToLoad.getIdentifier() );
+						.handleEntityNotFound( entityDescriptor.getEntityName(), keyToLoad.getIdentifier() );
 			}
 		}
-		return persistenceContext.narrowProxy( proxy, persister, keyToLoad, impl );
+		return persistenceContext.narrowProxy( proxy, entityDescriptor, keyToLoad, impl );
 	}
 
 	/**
@@ -321,7 +321,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 * with the persistence context, and return the just-created proxy.
 	 *
 	 * @param event The initiating load request event
-	 * @param persister The persister corresponding to the entity to be loaded
+	 * @param entityDescriptor The entityDescriptor corresponding to the entity to be loaded
 	 * @param keyToLoad The key of the entity to be loaded
 	 * @param options The defined load options
 	 * @param persistenceContext The originating session
@@ -330,7 +330,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 */
 	private Object createProxyIfNecessary(
 			final LoadEvent event,
-			final EntityDescriptor persister,
+			final EntityDescriptor entityDescriptor,
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options,
 			final PersistenceContext persistenceContext) {
@@ -353,7 +353,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			LOG.trace( "Creating new proxy for entity" );
 		}
 		// return new uninitialized proxy
-		Object proxy = persister.createProxy( event.getEntityId(), event.getSession() );
+		Object proxy = entityDescriptor.createProxy( event.getEntityId(), event.getSession() );
 		persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( keyToLoad );
 		persistenceContext.addProxy( keyToLoad, proxy );
 		return proxy;
@@ -364,7 +364,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 * given id in that cache and then perform the load.
 	 *
 	 * @param event The initiating load request event
-	 * @param persister The persister corresponding to the entity to be loaded
+	 * @param entityDescriptor The entityDescriptor corresponding to the entity to be loaded
 	 * @param keyToLoad The key of the entity to be loaded
 	 * @param options The defined load options
 	 * @param source The originating session
@@ -375,21 +375,21 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 */
 	private Object lockAndLoad(
 			final LoadEvent event,
-			final EntityDescriptor persister,
+			final EntityDescriptor entityDescriptor,
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options,
 			final SessionImplementor source) {
 		SoftLock lock = null;
 		final Object ck;
-		final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-		if ( persister.hasCache() ) {
+		final EntityRegionAccessStrategy cache = entityDescriptor.getCacheAccessStrategy();
+		if ( entityDescriptor.hasCache() ) {
 			ck = cache.generateCacheKey(
 					event.getEntityId(),
-					persister,
+					entityDescriptor,
 					source.getFactory(),
 					source.getTenantIdentifier()
 			);
-			lock = persister.getCacheAccessStrategy().lockItem( source, ck, null );
+			lock = entityDescriptor.getCacheAccessStrategy().lockItem( source, ck, null );
 		}
 		else {
 			ck = null;
@@ -397,15 +397,15 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 
 		Object entity;
 		try {
-			entity = load( event, persister, keyToLoad, options );
+			entity = load( event, entityDescriptor, keyToLoad, options );
 		}
 		finally {
-			if ( persister.hasCache() ) {
+			if ( entityDescriptor.hasCache() ) {
 				cache.unlockItem( source, ck, lock );
 			}
 		}
 
-		return event.getSession().getPersistenceContext().proxyFor( persister, keyToLoad, entity );
+		return event.getSession().getPersistenceContext().proxyFor( entityDescriptor, keyToLoad, entity );
 	}
 
 
@@ -416,7 +416,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 * attempt is made to load it directly from the datasource.
 	 *
 	 * @param event The load event
-	 * @param persister The persister for the entity being requested for load
+	 * @param entityDescriptor The entityDescriptor for the entity being requested for load
 	 * @param keyToLoad The EntityKey representing the entity to be loaded.
 	 * @param options The load options.
 	 *
@@ -424,14 +424,14 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 */
 	private Object doLoad(
 			final LoadEvent event,
-			final EntityDescriptor persister,
+			final EntityDescriptor entityDescriptor,
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options) {
 
 		if ( traceEnabled ) {
 			LOG.tracev(
 					"Attempting to resolve: {0}",
-					MessageHelper.infoString( persister, event.getEntityId(), event.getSession().getFactory() )
+					MessageHelper.infoString( entityDescriptor, event.getEntityId(), event.getSession().getFactory() )
 			);
 		}
 
@@ -450,18 +450,18 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			if ( traceEnabled ) {
 				LOG.tracev(
 						"Resolved object in session cache: {0}",
-						MessageHelper.infoString( persister, event.getEntityId(), event.getSession().getFactory() )
+						MessageHelper.infoString( entityDescriptor, event.getEntityId(), event.getSession().getFactory() )
 				);
 			}
 			return entity;
 		}
 
-		entity = loadFromSecondLevelCache( event, persister, keyToLoad );
+		entity = loadFromSecondLevelCache( event, entityDescriptor, keyToLoad );
 		if ( entity != null ) {
 			if ( traceEnabled ) {
 				LOG.tracev(
 						"Resolved object in second-level cache: {0}",
-						MessageHelper.infoString( persister, event.getEntityId(), event.getSession().getFactory() )
+						MessageHelper.infoString( entityDescriptor, event.getEntityId(), event.getSession().getFactory() )
 				);
 			}
 		}
@@ -469,19 +469,19 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			if ( traceEnabled ) {
 				LOG.tracev(
 						"Object not resolved in any cache: {0}",
-						MessageHelper.infoString( persister, event.getEntityId(), event.getSession().getFactory() )
+						MessageHelper.infoString( entityDescriptor, event.getEntityId(), event.getSession().getFactory() )
 				);
 			}
-			entity = loadFromDatasource( event, persister );
+			entity = loadFromDatasource( event, entityDescriptor );
 		}
 
-		if ( entity != null && persister.hasNaturalIdentifier() ) {
+		if ( entity != null && entityDescriptor.hasNaturalIdentifier() ) {
 			event.getSession().getPersistenceContext().getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
-					persister,
+					entityDescriptor,
 					event.getEntityId(),
 					event.getSession().getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues(
 							entity,
-							persister
+							entityDescriptor
 					)
 			);
 		}
@@ -495,14 +495,14 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 * underlying datasource.
 	 *
 	 * @param event The load event
-	 * @param persister The persister for the entity being requested for load
+	 * @param entityDescriptor The entityDescriptor for the entity being requested for load
 	 *
 	 * @return The object loaded from the datasource, or null if not found.
 	 */
 	private Object loadFromDatasource(
 			final LoadEvent event,
-			final EntityDescriptor persister) {
-		Object entity = persister.load(
+			final EntityDescriptor entityDescriptor) {
+		Object entity = entityDescriptor.load(
 				event.getEntityId(),
 				event.getInstanceToLoad(),
 				event.getLockOptions(),
@@ -553,10 +553,10 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				}
 			}
 			if ( options.isAllowNulls() ) {
-				final EntityDescriptor persister = event.getSession()
+				final EntityDescriptor entityDescriptor = event.getSession()
 						.getFactory()
 						.getEntityPersister( keyToLoad.getEntityName() );
-				if ( !persister.isInstance( old ) ) {
+				if ( !entityDescriptor.isInstance( old ) ) {
 					return INCONSISTENT_RTN_CLASS_MARKER;
 				}
 			}
@@ -570,17 +570,17 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 * Attempts to load the entity from the second-level cache.
 	 *
 	 * @param event The load event
-	 * @param persister The persister for the entity being requested for load
+	 * @param entityDescriptor The entityDescriptor for the entity being requested for load
 	 *
 	 * @return The entity from the second-level cache, or null.
 	 */
 	private Object loadFromSecondLevelCache(
 			final LoadEvent event,
-			final EntityDescriptor persister,
+			final EntityDescriptor entityDescriptor,
 			final EntityKey entityKey) {
 
 		final SessionImplementor source = event.getSession();
-		final boolean useCache = persister.hasCache()
+		final boolean useCache = entityDescriptor.hasCache()
 				&& source.getCacheMode().isGetEnabled()
 				&& event.getLockMode().lessThan( LockMode.READ );
 
@@ -589,24 +589,24 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			return null;
 		}
 
-		final Object ce = getFromSharedCache( event, persister, source );
+		final Object ce = getFromSharedCache( event, entityDescriptor, source );
 
 		if ( ce == null ) {
 			// nothing was found in cache
 			return null;
 		}
 
-		return processCachedEntry( event, persister, ce, source, entityKey );
+		return processCachedEntry( event, entityDescriptor, ce, source, entityKey );
 	}
 
 	private Object processCachedEntry(
 			final LoadEvent event,
-			final EntityDescriptor persister,
+			final EntityDescriptor entityDescriptor,
 			final Object ce,
 			final SessionImplementor source,
 			final EntityKey entityKey) {
 
-		CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure( ce, source.getFactory() );
+		CacheEntry entry = (CacheEntry) entityDescriptor.getCacheEntryStructure().destructure( ce, source.getFactory() );
 		if(entry.isReferenceEntry()) {
 			if( event.getInstanceToLoad() != null ) {
 				throw new HibernateException(
@@ -619,13 +619,13 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			}
 		}
 		else {
-			Object entity = convertCacheEntryToEntity( entry, event.getEntityId(), persister, event, entityKey );
+			Object entity = convertCacheEntryToEntity( entry, event.getEntityId(), entityDescriptor, event, entityKey );
 
-			if ( !persister.isInstance( entity ) ) {
+			if ( !entityDescriptor.isInstance( entity ) ) {
 				throw new WrongClassException(
 						"loaded object was of wrong class " + entity.getClass(),
 						event.getEntityId(),
-						persister.getEntityName()
+						entityDescriptor.getEntityName()
 				);
 			}
 
@@ -635,17 +635,17 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 
 	private Object getFromSharedCache(
 		final LoadEvent event,
-		final EntityDescriptor persister,
+		final EntityDescriptor entityDescriptor,
 		SessionImplementor source ) {
-		final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+		final EntityRegionAccessStrategy cache = entityDescriptor.getCacheAccessStrategy();
 		final Object ck = cache.generateCacheKey(
 				event.getEntityId(),
-				persister,
+				entityDescriptor,
 				source.getFactory(),
 				source.getTenantIdentifier()
 		);
 
-		final Object ce = CacheHelper.fromSharedCache( source, ck, persister.getCacheAccessStrategy() );
+		final Object ce = CacheHelper.fromSharedCache( source, ck, entityDescriptor.getCacheAccessStrategy() );
 		if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
 			if ( ce == null ) {
 				source.getFactory().getStatisticsImplementor().secondLevelCacheMiss(
@@ -707,7 +707,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	private Object convertCacheEntryToEntity(
 			CacheEntry entry,
 			Serializable entityId,
-			EntityDescriptor persister,
+			EntityDescriptor entityDescriptor,
 			LoadEvent event,
 			EntityKey entityKey) {
 
@@ -719,7 +719,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			LOG.tracef(
 					"Converting second-level cache entry [%s] into entity : %s",
 					entry,
-					MessageHelper.infoString( persister, entityId, factory )
+					MessageHelper.infoString( entityDescriptor, entityId, factory )
 			);
 		}
 
@@ -792,7 +792,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		PostLoadEvent postLoadEvent = event.getPostLoadEvent()
 				.setEntity( entity )
 				.setId( entityId )
-				.setPersister( persister );
+				.setPersister( entityDescriptor );
 
 		for ( PostLoadEventListener listener : postLoadEventListeners( session ) ) {
 			listener.onPostLoad( postLoadEvent );
@@ -804,7 +804,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	private Object assembleCacheEntry(
 			final StandardCacheEntryImpl entry,
 			final Serializable id,
-			final EntityDescriptor persister,
+			final EntityDescriptor entityDescriptor,
 			final LoadEvent event) throws HibernateException {
 
 		final Object optionalObject = event.getInstanceToLoad();
@@ -814,7 +814,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		if ( traceEnabled ) {
 			LOG.tracev(
 					"Assembling entity from second-level cache: {0}",
-					MessageHelper.infoString( persister, id, factory )
+					MessageHelper.infoString( entityDescriptor, id, factory )
 			);
 		}
 
@@ -854,7 +854,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		boolean isReadOnly = session.isDefaultReadOnly();
-		if ( persister.isMutable() ) {
+		if ( entityDescriptor.getJavaTypeDescriptor().getMutabilityPlan().isMutable() ) {
 			Object proxy = persistenceContext.getProxy( entityKey );
 			if ( proxy != null ) {
 				// there is already a proxy for this impl
@@ -887,7 +887,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		PostLoadEvent postLoadEvent = event.getPostLoadEvent()
 				.setEntity( result )
 				.setId( id )
-				.setPersister( persister );
+				.setPersister( entityDescriptor );
 
 		for ( PostLoadEventListener listener : postLoadEventListeners( session ) ) {
 			listener.onPostLoad( postLoadEvent );

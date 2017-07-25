@@ -32,11 +32,6 @@ public class QueryResultCollectionImpl extends AbstractCollectionReference imple
 	}
 
 	@Override
-	public String getSelectedExpressionDescription() {
-		return getNavigableReference().toString();
-	}
-
-	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return getNavigableReference().getType().getJavaTypeDescriptor();
 	}

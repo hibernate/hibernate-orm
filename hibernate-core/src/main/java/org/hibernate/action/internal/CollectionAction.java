@@ -30,7 +30,7 @@ import org.hibernate.pretty.MessageHelper;
  * @author Gavin King
  */
 public abstract class CollectionAction implements Executable, Serializable, Comparable {
-	private transient PersistentCollectionDescriptor persister;
+	private transient PersistentCollectionDescriptor collectionDescriptor;
 	private transient SharedSessionContractImplementor session;
 	private final PersistentCollection collection;
 
@@ -38,14 +38,14 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	private final String collectionRole;
 
 	protected CollectionAction(
-			final PersistentCollectionDescriptor persister,
+			final PersistentCollectionDescriptor collectionDescriptor,
 			final PersistentCollection collection, 
 			final Serializable key, 
 			final SharedSessionContractImplementor session) {
-		this.persister = persister;
+		this.collectionDescriptor = collectionDescriptor;
 		this.session = session;
 		this.key = key;
-		this.collectionRole = persister.getRole();
+		this.collectionRole = collectionDescriptor.getNavigableRole().getFullPath();
 		this.collection = collection;
 	}
 
@@ -59,14 +59,14 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	 * @param session The session being deserialized
 	 */
 	public void afterDeserialize(SharedSessionContractImplementor session) {
-		if ( this.session != null || this.persister != null ) {
+		if ( this.session != null || this.collectionDescriptor != null ) {
 			throw new IllegalStateException( "already attached to a session." );
 		}
 		// IMPL NOTE: non-flushed changes code calls this method with session == null...
 		// guard against NullPointerException
 		if ( session != null ) {
 			this.session = session;
-			this.persister = session.getFactory().getTypeConfiguration().findCollectionPersister( collectionRole );
+			this.collectionDescriptor = session.getFactory().getTypeConfiguration().findCollectionPersister( collectionRole );
 		}
 	}
 
@@ -75,17 +75,17 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		// we need to obtain the lock beforeQuery any actions are executed, since this may be an inverse="true"
 		// bidirectional association and it is one of the earlier entity actions which actually updates
 		// the database (this action is responsible for second-level cache invalidation only)
-		if ( persister.hasCache() ) {
-			final CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+		if ( collectionDescriptor.hasCache() ) {
+			final CollectionRegionAccessStrategy cache = collectionDescriptor.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
 					key,
-					persister,
+					collectionDescriptor,
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
 			final SoftLock lock = cache.lockItem( session, ck, null );
 			// the old behavior used key as opposed to getKey()
-			afterTransactionProcess = new CacheCleanupProcess( key, persister, lock );
+			afterTransactionProcess = new CacheCleanupProcess( key, collectionDescriptor, lock );
 		}
 	}
 
@@ -103,11 +103,11 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 
 	@Override
 	public Serializable[] getPropertySpaces() {
-		return persister.getCollectionSpaces();
+		return collectionDescriptor.getCollectionSpaces();
 	}
 
-	protected final PersistentCollectionDescriptor getPersister() {
-		return persister;
+	protected final PersistentCollectionDescriptor getPersistentCollectionDescriptor() {
+		return collectionDescriptor;
 	}
 
 	protected final Serializable getKey() {
@@ -128,11 +128,11 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	}
 
 	protected final void evict() throws CacheException {
-		if ( persister.hasCache() ) {
-			final CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+		if ( collectionDescriptor.hasCache() ) {
+			final CollectionRegionAccessStrategy cache = collectionDescriptor.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
-					key, 
-					persister,
+					key,
+					collectionDescriptor,
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
@@ -156,27 +156,27 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		}
 		else {
 			//then by fk
-			return persister.getKeyType().getComparator().compare( key, action.key );
+			return collectionDescriptor.getKeyJavaTypeDescriptor().getComparator().compare( key, action.key );
 		}
 	}
 
 	private static class CacheCleanupProcess implements AfterTransactionCompletionProcess {
 		private final Serializable key;
-		private final PersistentCollectionDescriptor persister;
+		private final PersistentCollectionDescriptor collectionDescriptor;
 		private final SoftLock lock;
 
-		private CacheCleanupProcess(Serializable key, PersistentCollectionDescriptor persister, SoftLock lock) {
+		private CacheCleanupProcess(Serializable key, PersistentCollectionDescriptor collectionDescriptor, SoftLock lock) {
 			this.key = key;
-			this.persister = persister;
+			this.collectionDescriptor = collectionDescriptor;
 			this.lock = lock;
 		}
 
 		@Override
 		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-			final CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final CollectionRegionAccessStrategy cache = collectionDescriptor.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
 					key,
-					persister,
+					collectionDescriptor,
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);

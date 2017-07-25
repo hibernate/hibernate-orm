@@ -8,8 +8,8 @@ package org.hibernate.sql.exec.internal;
 
 import javax.persistence.ParameterMode;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
-import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
@@ -17,7 +17,7 @@ import org.hibernate.type.Type;
 public class JdbcCallFunctionReturnImpl extends JdbcCallParameterRegistrationImpl implements JdbcCallFunctionReturn {
 	public JdbcCallFunctionReturnImpl(
 			int jdbcTypeCode,
-			Type ormType,
+			AllowableParameterType ormType,
 			JdbcCallParameterExtractorImpl parameterExtractor,
 			JdbcCallRefCursorExtractorImpl refCursorExtractor) {
 		super(

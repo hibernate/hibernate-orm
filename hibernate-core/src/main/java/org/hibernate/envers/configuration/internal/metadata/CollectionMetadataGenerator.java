@@ -62,6 +62,7 @@ import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Tools;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedCollection;
@@ -72,15 +73,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
-import org.hibernate.type.internal.BagType;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.internal.ListType;
-import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.internal.MapType;
-import org.hibernate.type.internal.SetType;
-import org.hibernate.type.internal.SortedMapType;
-import org.hibernate.type.internal.SortedSetType;
-import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
@@ -147,15 +139,14 @@ public final class CollectionMetadataGenerator {
 	}
 
 	void addCollection() {
-		final Type type = propertyValue.getType();
 		final Value value = propertyValue.getElement();
 
-		final boolean oneToManyAttachedType = type instanceof BagType || type instanceof SetType || type instanceof MapType || type instanceof ListType;
-		final boolean inverseOneToMany = (value instanceof OneToMany) && (propertyValue.isInverse());
-		final boolean owningManyToOneWithJoinTableBidirectional = (value instanceof ManyToOne) && (propertyAuditingData.getRelationMappedBy() != null);
-		final boolean fakeOneToManyBidirectional = (value instanceof OneToMany) && (propertyAuditingData.getAuditMappedBy() != null);
+		final boolean oneToManyAttachedType = propertyValue instanceof Collection;
+		final boolean inverseOneToMany = ( value instanceof OneToMany ) && propertyValue.isInverse();
+		final boolean owningManyToOneWithJoinTableBidirectional = ( value instanceof ManyToOne ) && propertyAuditingData.getRelationMappedBy() != null;
+		final boolean fakeOneToManyBidirectional = (value instanceof OneToMany) && propertyAuditingData.getAuditMappedBy() != null;
 
-		if ( oneToManyAttachedType && (inverseOneToMany || fakeOneToManyBidirectional || owningManyToOneWithJoinTableBidirectional) ) {
+		if ( oneToManyAttachedType && ( inverseOneToMany || fakeOneToManyBidirectional || owningManyToOneWithJoinTableBidirectional ) ) {
 			// A one-to-many relation mapped using @ManyToOne and @OneToMany(mappedBy="...")
 			addOneToManyAttached( fakeOneToManyBidirectional );
 		}
@@ -536,8 +527,7 @@ public final class CollectionMetadataGenerator {
 			QueryGeneratorBuilder queryGeneratorBuilder,
 			String prefix,
 			JoinColumn[] joinColumns) {
-		final Type type = value.getType();
-		if ( type instanceof ManyToOneType ) {
+		if ( value instanceof ManyToOne || value instanceof OneToMany ) {
 			final String prefixRelated = prefix + "_";
 
 			final String referencedEntityName = MappingTools.getReferencedEntityName( value );
@@ -575,7 +565,7 @@ public final class CollectionMetadataGenerator {
 					queryGeneratorBuilder.getCurrentIndex()
 			);
 		}
-		else if ( type instanceof ComponentType ) {
+		else if ( value instanceof Component ) {
 			// Collection of embeddable elements.
 			final Component component = (Component) value;
 			final Class componentClass = ReflectionTools.loadClass(
@@ -671,7 +661,7 @@ public final class CollectionMetadataGenerator {
 				);
 			}
 			else {
-				mainGenerator.throwUnsupportedTypeException( type, referencingEntityName, propertyName );
+				mainGenerator.throwUnsupportedTypeException( value, referencingEntityName, propertyName );
 				// Impossible to get here.
 				throw new AssertionError();
 			}
@@ -682,65 +672,71 @@ public final class CollectionMetadataGenerator {
 			CommonCollectionMapperData commonCollectionMapperData,
 			MiddleComponentData elementComponentData,
 			MiddleComponentData indexComponentData) {
-		final Type type = propertyValue.getType();
 		final boolean embeddableElementType = isEmbeddableElementType();
-		if ( type instanceof SortedSetType ) {
-			currentMapper.addComposite(
-					propertyAuditingData.getPropertyData(),
-					new SortedSetCollectionMapper(
-							commonCollectionMapperData,
-							TreeSet.class,
-							SortedSetProxy.class,
-							elementComponentData,
-							propertyValue.getComparator(),
-							embeddableElementType,
-							embeddableElementType
-					)
-			);
+		final boolean lobMapElementType = isLobMapElementType();
+		if ( propertyValue instanceof org.hibernate.mapping.Set ) {
+			final org.hibernate.mapping.Set collection = (org.hibernate.mapping.Set) propertyValue;
+			if ( collection.isSorted() ) {
+				currentMapper.addComposite(
+						propertyAuditingData.getPropertyData(),
+						new SortedSetCollectionMapper(
+								commonCollectionMapperData,
+								TreeSet.class,
+								SortedSetProxy.class,
+								elementComponentData,
+								propertyValue.getComparator(),
+								embeddableElementType,
+								embeddableElementType
+						)
+				);
+			}
+			else {
+				currentMapper.addComposite(
+						propertyAuditingData.getPropertyData(),
+						new BasicCollectionMapper<Set>(
+								commonCollectionMapperData,
+								HashSet.class,
+								SetProxy.class,
+								elementComponentData,
+								embeddableElementType,
+								embeddableElementType
+						)
+				);
+			}
 		}
-		else if ( type instanceof SetType ) {
-			currentMapper.addComposite(
-					propertyAuditingData.getPropertyData(),
-					new BasicCollectionMapper<Set>(
-							commonCollectionMapperData,
-							HashSet.class,
-							SetProxy.class,
-							elementComponentData,
-							embeddableElementType,
-							embeddableElementType
-					)
-			);
+		else if ( propertyValue instanceof org.hibernate.mapping.Map ) {
+			final org.hibernate.mapping.Map collection = (org.hibernate.mapping.Map) propertyValue;
+			if ( collection.isSorted() ) {
+				// Indexed collection, so <code>indexComponentData</code> is not null.
+				currentMapper.addComposite(
+						propertyAuditingData.getPropertyData(),
+						new SortedMapCollectionMapper(
+								commonCollectionMapperData,
+								TreeMap.class,
+								SortedMapProxy.class,
+								elementComponentData,
+								indexComponentData,
+								propertyValue.getComparator(),
+								embeddableElementType
+						)
+				);
+			}
+			else {
+				// Indexed collection, so <code>indexComponentData</code> is not null.
+				currentMapper.addComposite(
+						propertyAuditingData.getPropertyData(),
+						new MapCollectionMapper<Map>(
+								commonCollectionMapperData,
+								HashMap.class,
+								MapProxy.class,
+								elementComponentData,
+								indexComponentData,
+								embeddableElementType
+						)
+				);
+			}
 		}
-		else if ( type instanceof SortedMapType ) {
-			// Indexed collection, so <code>indexComponentData</code> is not null.
-			currentMapper.addComposite(
-					propertyAuditingData.getPropertyData(),
-					new SortedMapCollectionMapper(
-							commonCollectionMapperData,
-							TreeMap.class,
-							SortedMapProxy.class,
-							elementComponentData,
-							indexComponentData,
-							propertyValue.getComparator(),
-							embeddableElementType
-					)
-			);
-		}
-		else if ( type instanceof MapType ) {
-			// Indexed collection, so <code>indexComponentData</code> is not null.
-			currentMapper.addComposite(
-					propertyAuditingData.getPropertyData(),
-					new MapCollectionMapper<Map>(
-							commonCollectionMapperData,
-							HashMap.class,
-							MapProxy.class,
-							elementComponentData,
-							indexComponentData,
-							embeddableElementType
-					)
-			);
-		}
-		else if ( type instanceof BagType ) {
+		else if ( propertyValue instanceof org.hibernate.mapping.Bag ) {
 			currentMapper.addComposite(
 					propertyAuditingData.getPropertyData(),
 					new BasicCollectionMapper<List>(
@@ -753,7 +749,7 @@ public final class CollectionMetadataGenerator {
 					)
 			);
 		}
-		else if ( type instanceof ListType ) {
+		else if ( propertyValue instanceof org.hibernate.mapping.List ) {
 			// Indexed collection, so <code>indexComponentData</code> is not null.
 			currentMapper.addComposite(
 					propertyAuditingData.getPropertyData(),
@@ -766,7 +762,7 @@ public final class CollectionMetadataGenerator {
 			);
 		}
 		else {
-			mainGenerator.throwUnsupportedTypeException( type, referencingEntityName, propertyName );
+			mainGenerator.throwUnsupportedTypeException( propertyValue, referencingEntityName, propertyName );
 		}
 	}
 
@@ -825,10 +821,10 @@ public final class CollectionMetadataGenerator {
 	}
 
 	/**
-	 * Checks if the collection element is of {@link ComponentType} type.
+	 * Checks if the collection element is of {@link Component} type.
 	 */
 	private boolean isEmbeddableElementType() {
-		return propertyValue.getElement().getType() instanceof ComponentType;
+		return propertyValue.getElement() instanceof Component;
 	}
 
 	private String getMappedBy(Collection collectionValue) {
@@ -983,5 +979,19 @@ public final class CollectionMetadataGenerator {
 		public Table getTable() {
 			return table;
 		}
+	}
+
+	/**
+	 * Returns whether the collection is a map-type and that the map element is defined as a Clob/NClob type.
+	 *
+	 * @return {@code true} if the element is a Clob/NClob type, otherwise {@code false}.
+	 */
+	private boolean isLobMapElementType() {
+		if ( propertyValue instanceof org.hibernate.mapping.Map ) {
+			if ( propertyValue.getElement().isSimpleValue() ) {
+				return ( (BasicValue) propertyValue.getElement() ).isLob();
+			}
+		}
+		return false;
 	}
 }

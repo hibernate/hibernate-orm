@@ -33,6 +33,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
+import org.hibernate.query.internal.NamedQueryRepositoryImpl;
 import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
@@ -305,7 +306,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
-		return new NamedQueryRepository(
+		return new NamedQueryRepositoryImpl(
 				namedQueryMap,
 				namedNativeQueryMap,
 				sqlResultSetMappingMap,

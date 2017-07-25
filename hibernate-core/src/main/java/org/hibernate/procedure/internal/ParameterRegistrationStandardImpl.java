@@ -10,12 +10,12 @@ import javax.persistence.ParameterMode;
 import javax.persistence.TemporalType;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.procedure.ParameterMisuseException;
 import org.hibernate.procedure.spi.ParameterBindImplementor;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
@@ -27,7 +27,7 @@ public class ParameterRegistrationStandardImpl<T> implements ParameterRegistrati
 	private final ParameterBindImpl<T> binding;
 
 	private boolean passNulls;
-	private Type hibernateType;
+	private AllowableParameterType hibernateType;
 
 	public ParameterRegistrationStandardImpl(
 			ParameterManager parameterManager,
@@ -47,11 +47,6 @@ public class ParameterRegistrationStandardImpl<T> implements ParameterRegistrati
 	@Override
 	public ProcedureCallImplementor getProcedureCall() {
 		return parameterManager.getProcedureCall();
-	}
-
-	@Override
-	public boolean isPassNullsEnabled() {
-		return passNulls;
 	}
 
 	@Override
@@ -112,12 +107,12 @@ public class ParameterRegistrationStandardImpl<T> implements ParameterRegistrati
 	}
 
 	@Override
-	public Type getHibernateType() {
+	public AllowableParameterType getHibernateType() {
 		return hibernateType;
 	}
 
 	@Override
-	public void setHibernateType(Type type) {
+	public void setHibernateType(AllowableParameterType type) {
 		if ( type == null ) {
 			throw new IllegalArgumentException( "Type cannot be null" );
 		}

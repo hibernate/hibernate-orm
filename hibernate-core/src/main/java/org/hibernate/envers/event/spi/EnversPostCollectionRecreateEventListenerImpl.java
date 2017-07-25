@@ -30,7 +30,7 @@ public class EnversPostCollectionRecreateEventListenerImpl
 	@Override
 	public void onPostRecreateCollection(PostCollectionRecreateEvent event) {
 		final CollectionEntry collectionEntry = getCollectionEntry( event );
-		if ( !collectionEntry.getLoadedPersister().isInverse() ) {
+		if ( !collectionEntry.getLoadedPersistentCollectionDescriptor().isInverse() ) {
 			onCollectionAction( event, event.getCollection(), null, collectionEntry );
 		}
 	}

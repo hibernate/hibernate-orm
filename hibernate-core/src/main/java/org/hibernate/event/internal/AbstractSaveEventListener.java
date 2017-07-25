@@ -116,7 +116,7 @@ public abstract class AbstractSaveEventListener
 		}
 
 		EntityDescriptor persister = source.getEntityPersister( entityName, entity );
-		Serializable generatedId = persister.getIdentifierGenerator().generate( source, entity );
+		Serializable generatedId = persister.getEntitgetIdentifierGenerator().generate( source, entity );
 		if ( generatedId == null ) {
 			throw new IdentifierGenerationException( "null id generated for:" + entity.getClass() );
 		}

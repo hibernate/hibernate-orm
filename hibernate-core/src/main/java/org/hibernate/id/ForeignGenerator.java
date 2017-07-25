@@ -7,13 +7,17 @@
 package org.hibernate.id;
 
 import java.io.Serializable;
+import java.util.Properties;
 
+import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * <b>foreign</b><br>
@@ -28,6 +32,7 @@ import org.hibernate.type.Type;
 public class ForeignGenerator implements IdentifierGenerator, Configurable {
 	private String entityName;
 	private String propertyName;
+	private JavaTypeDescriptor javaTypeDescriptor;
 
 	/**
 	 * Getter for property 'entityName'.
@@ -57,15 +62,17 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 		return getEntityName() + '.' + getPropertyName();
 	}
 
+	@Override
+	public void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry)
+			throws MappingException {
+		this.javaTypeDescriptor = javaTypeDescriptor;
+		propertyName = params.getProperty( "property" );
+		entityName = params.getProperty( ENTITY_NAME );
+		if ( propertyName==null ) {
+			throw new MappingException( "param named \"property\" is required for foreign id generation strategy" );
+		}
 
-//	@Override
-//	public void configure(Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-//		propertyName = params.getProperty( "property" );
-//		entityName = params.getProperty( ENTITY_NAME );
-//		if ( propertyName==null ) {
-//			throw new MappingException( "param named \"property\" is required for foreign id generation strategy" );
-//		}
-//	}
+	}
 
 	@Override
 	public Serializable generate(SharedSessionContractImplementor sessionImplementor, Object object) {
@@ -82,7 +89,7 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 
 		final EntityType foreignValueSourceType;
 		final Type propertyType = persister.getPropertyType( propertyName );
-		if ( propertyType.getClassification().equals( Type.Classification.ENTITY ) ) {
+		if ( propertyType.getgetClassification().equals( Type.Classification.ENTITY ) ) {
 			// the normal case
 			foreignValueSourceType = (EntityType) propertyType;
 		}

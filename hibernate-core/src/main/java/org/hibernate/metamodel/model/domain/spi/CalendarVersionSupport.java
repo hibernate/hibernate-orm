@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.domain.spi;
 import java.util.Calendar;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -28,12 +27,12 @@ public class CalendarVersionSupport implements VersionSupport<Calendar> {
 	}
 
 	@Override
-	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
-		return StandardSpiBasicTypes.CALENDAR.toLoggableString( value, factory );
+	public String toLoggableString(Object value) {
+		return StandardSpiBasicTypes.CALENDAR.toLoggableString( value );
 	}
 
 	@Override
 	public boolean isEqual(Calendar x, Calendar y) throws HibernateException {
-		return StandardSpiBasicTypes.CALENDAR.isEqual( x, y );
+		return StandardSpiBasicTypes.CALENDAR.areEqual( x, y );
 	}
 }

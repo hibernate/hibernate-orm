@@ -441,6 +441,8 @@ public class CustomPersister extends AbstractEntityDescriptor implements EntityD
 		return new Type[0];
 	}
 
+
+
 	private static final String[] NAMES = new String[] { "name" };
 	private static final boolean[] MUTABILITY = new boolean[] { true };
 	private static final boolean[] GENERATION = new boolean[] { false };

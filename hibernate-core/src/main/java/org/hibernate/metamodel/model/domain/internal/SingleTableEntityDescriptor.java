@@ -11,9 +11,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -27,7 +29,6 @@ import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.loader.spi.MultiLoadOptions;
 import org.hibernate.loader.spi.NaturalIdLoader;
-import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractEntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
@@ -37,6 +38,7 @@ import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -44,22 +46,11 @@ import org.hibernate.type.Type;
 public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> {
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	public SingleTableEntityDescriptor(
+			EntityMapping bootMapping,
+			RuntimeModelCreationContext creationContext) throws HibernateException {
+		super( bootMapping, creationContext );
+	}
 
 	@Override
 	public boolean isVersioned() {
@@ -71,7 +62,7 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 		return null;
 	}
 
-	@Override
+//	@Override
 	public FetchStrategy getMappedFetchStrategy() {
 		return null;
 	}
@@ -132,6 +123,16 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 	@Override
 	public String[] getAffectedTableNames() {
 		return new String[0];
+	}
+
+	@Override
+	public boolean isMultiTable() {
+		return false;
+	}
+
+	@Override
+	public List<EntityNameResolver> getEntityNameResolvers() {
+		return null;
 	}
 
 	@Override
@@ -234,6 +235,11 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 	}
 
 	@Override
+	public JavaTypeDescriptor[] getPropertyJavaTypeDescriptors() {
+		return null;
+	}
+
+	@Override
 	public String[] getPropertyNames() {
 		return new String[0];
 	}
@@ -319,15 +325,15 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 		return null;
 	}
 
-	@Override
+//	@Override
 	public boolean hasNaturalIdCache() {
 		return false;
 	}
 
-	@Override
-	public ClassMetadata getClassMetadata() {
-		return null;
-	}
+//	@Override
+//	public ClassMetadata getClassMetadata() {
+//		return null;
+//	}
 
 	@Override
 	public boolean isBatchLoadable() {
@@ -523,5 +529,10 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 	@Override
 	public boolean canUseReferenceCacheEntries() {
 		return false;
+	}
+
+	@Override
+	public void registerAffectingFetchProfile(String fetchProfileName) {
+
 	}
 }

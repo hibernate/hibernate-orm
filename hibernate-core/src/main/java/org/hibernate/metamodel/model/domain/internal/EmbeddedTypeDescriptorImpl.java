@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.EmbeddedMapping;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
@@ -191,4 +192,31 @@ public class EmbeddedTypeDescriptorImpl<T>
 	public void addSubclassType(InheritanceCapable<? extends T> subclassType) {
 		throw new UnsupportedOperationException( "Embeddable inheritance is not yet implemented" );
 	}
+
+	@Override
+	public void setPropertyValues(Object object, Object[] values) {
+
+	}
+
+	@Override
+	public void setPropertyValue(Object object, int i, Object value) {
+
+	}
+
+	@Override
+	public Object[] getPropertyValues(Object object) {
+		return new Object[0];
+	}
+
+	@Override
+	public Object getPropertyValue(Object object, int i) throws HibernateException {
+		return null;
+	}
+
+	@Override
+	public Object getPropertyValue(Object object, String propertyName) {
+		return null;
+	}
+
+
 }

@@ -20,8 +20,10 @@ import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.EntityJavaDescriptorImpl;
 
 import org.jboss.logging.Logger;
 
@@ -58,10 +60,10 @@ public class CascadingActions {
 		@Override
 		public Iterator getCascadableChildrenIterator(
 				EventSource session,
-				CollectionType collectionType,
+				PersistentCollectionDescriptor collectionDescriptor,
 				Object collection) {
 			// delete does cascade to uninitialized collections
-			return getAllElementsIterator( session, collectionType, collection );
+			return getAllElementsIterator( session, collectionDescriptor, collection );
 		}
 
 		@Override
@@ -106,10 +108,10 @@ public class CascadingActions {
 		@Override
 		public Iterator getCascadableChildrenIterator(
 				EventSource session,
-				CollectionType collectionType,
+				PersistentCollectionDescriptor collectionDescriptor,
 				Object collection) {
 			// lock doesn't cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
+			return getLoadedElementsIterator( session, collectionDescriptor, collection );
 		}
 
 		@Override
@@ -143,10 +145,10 @@ public class CascadingActions {
 		@Override
 		public Iterator getCascadableChildrenIterator(
 				EventSource session,
-				CollectionType collectionType,
+				PersistentCollectionDescriptor collectionDescriptor,
 				Object collection) {
 			// refresh doesn't cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
+			return getLoadedElementsIterator( session, collectionDescriptor, collection );
 		}
 
 		@Override
@@ -179,10 +181,10 @@ public class CascadingActions {
 		@Override
 		public Iterator getCascadableChildrenIterator(
 				EventSource session,
-				CollectionType collectionType,
+				PersistentCollectionDescriptor collectionDescriptor,
 				Object collection) {
 			// evicts don't cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
+			return getLoadedElementsIterator( session, collectionDescriptor, collection );
 		}
 
 		@Override
@@ -220,10 +222,10 @@ public class CascadingActions {
 		@Override
 		public Iterator getCascadableChildrenIterator(
 				EventSource session,
-				CollectionType collectionType,
+				PersistentCollectionDescriptor collectionDescriptor,
 				Object collection) {
 			// saves / updates don't cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
+			return getLoadedElementsIterator( session, collectionDescriptor, collection );
 		}
 
 		@Override
@@ -262,10 +264,10 @@ public class CascadingActions {
 		@Override
 		public Iterator getCascadableChildrenIterator(
 				EventSource session,
-				CollectionType collectionType,
+				PersistentCollectionDescriptor collectionDescriptor,
 				Object collection) {
 			// merges don't cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
+			return getLoadedElementsIterator( session, collectionDescriptor, collection );
 		}
 
 		@Override
@@ -299,15 +301,15 @@ public class CascadingActions {
 		@Override
 		public Iterator getCascadableChildrenIterator(
 				EventSource session,
-				CollectionType collectionType,
+				PersistentCollectionDescriptor collectionDescriptor,
 				Object collection) {
 			// in merging with DefaultPersistEventListener...
 			if ( session.getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
 				// persists don't cascade to uninitialized collections
-				return getLoadedElementsIterator( session, collectionType, collection );
+				return getLoadedElementsIterator( session, collectionDescriptor, collection );
 			}
 			else {
-				return getAllElementsIterator( session, collectionType, collection );
+				return getAllElementsIterator( session, collectionDescriptor, collection );
 			}
 		}
 
@@ -346,14 +348,14 @@ public class CascadingActions {
 		}
 
 		@Override
-		public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
+		public Iterator getCascadableChildrenIterator(EventSource session, PersistentCollectionDescriptor collectionDescriptor, Object collection) {
 			// in merging with DefaultPersistEventListener...
 			if ( session.getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
 				// persists don't cascade to uninitialized collections
-				return getLoadedElementsIterator( session, collectionType, collection );
+				return getLoadedElementsIterator( session, collectionDescriptor, collection );
 			}
 			else {
-				return getAllElementsIterator( session, collectionType, collection );
+				return getAllElementsIterator( session, collectionDescriptor, collection );
 			}
 		}
 
@@ -371,19 +373,19 @@ public class CascadingActions {
 		public void noCascade(
 				EventSource session,
 				Object parent,
-				EntityDescriptor persister,
-				Type propertyType,
+				EntityDescriptor entityDescriptor,
+				JavaTypeDescriptor propertyType,
 				int propertyIndex) {
-			if ( propertyType.getClassification().equals( Type.Classification.ENTITY ) ) {
-				Object child = persister.getPropertyValue( parent, propertyIndex );
-				String childEntityName = ( (EntityType) propertyType ).getAssociatedEntityName();
+			if ( propertyType instanceof EntityJavaDescriptorImpl ) {
+				Object child = entityDescriptor.getPropertyValue( parent, propertyIndex );
+				String childEntityName = entityDescriptor.getEntityName();
 
 				if ( child != null
 						&& !isInManagedState( child, session )
 						&& !(child instanceof HibernateProxy) //a proxy cannot be transient and it breaks ForeignKeys.isTransient
 						&& ForeignKeys.isTransient( childEntityName, child, null, session ) ) {
-					String parentEntiytName = persister.getEntityName();
-					String propertyName = persister.getPropertyNames()[propertyIndex];
+					String parentEntiytName = entityDescriptor.getEntityName();
+					String propertyName = entityDescriptor.getPropertyNames()[propertyIndex];
 					throw new TransientPropertyValueException(
 							"object references an unsaved transient instance - save the transient instance beforeQuery flushing",
 							childEntityName,
@@ -435,10 +437,10 @@ public class CascadingActions {
 		@Override
 		public Iterator getCascadableChildrenIterator(
 				EventSource session,
-				CollectionType collectionType,
+				PersistentCollectionDescriptor collectionDescriptor,
 				Object collection) {
 			// replicate does cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
+			return getLoadedElementsIterator( session, collectionDescriptor, collection );
 		}
 
 		@Override
@@ -459,7 +461,7 @@ public class CascadingActions {
 		}
 
 		@Override
-		public void noCascade(EventSource session, Object parent, EntityDescriptor persister, Type propertyType, int propertyIndex) {
+		public void noCascade(EventSource session, Object parent, EntityDescriptor entityDescriptor, JavaTypeDescriptor propertyType, int propertyIndex) {
 		}
 
 		@Override
@@ -473,16 +475,16 @@ public class CascadingActions {
 	 * from the database if necessary.
 	 *
 	 * @param session The session within which the cascade is occuring.
-	 * @param collectionType The mapping type of the collection.
+	 * @param collectionDescriptor The mapping type of the collection.
 	 * @param collection The collection instance.
 	 *
 	 * @return The children iterator.
 	 */
 	public static Iterator getAllElementsIterator(
 			EventSource session,
-			CollectionType collectionType,
+			PersistentCollectionDescriptor collectionDescriptor,
 			Object collection) {
-		return collectionType.getElementsIterator( collection, session );
+		return collectionDescriptor.getElementsIterator( collection, session );
 	}
 
 	/**
@@ -491,11 +493,11 @@ public class CascadingActions {
 	 */
 	public static Iterator getLoadedElementsIterator(
 			SharedSessionContractImplementor session,
-			CollectionType collectionType,
+			PersistentCollectionDescriptor collectionDescriptor,
 			Object collection) {
 		if ( collectionIsInitialized( collection ) ) {
 			// handles arrays and newly instantiated collections
-			return collectionType.getElementsIterator( collection, session );
+			return collectionDescriptor.getElementsIterator( collection, session );
 		}
 		else {
 			// does not handle arrays (thats ok, cos they can't be lazy)

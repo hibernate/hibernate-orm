@@ -64,7 +64,7 @@ public class EntityUniqueKey implements Serializable {
 		int result = 17;
 		result = 37 * result + entityName.hashCode();
 		result = 37 * result + uniqueKeyName.hashCode();
-		result = 37 * result + keyType.getHashCode( key );
+		result = 37 * result + keyType.getJavaTypeDescriptor().extractHashCode( key );
 		return result;
 	}
 
@@ -78,7 +78,7 @@ public class EntityUniqueKey implements Serializable {
 		EntityUniqueKey that = (EntityUniqueKey) other;
 		return that != null && that.entityName.equals( entityName )
 				&& that.uniqueKeyName.equals( uniqueKeyName )
-				&& keyType.isEqual( that.key, key );
+				&& keyType.getJavaTypeDescriptor().areEqual( that.key, key );
 	}
 
 	@Override

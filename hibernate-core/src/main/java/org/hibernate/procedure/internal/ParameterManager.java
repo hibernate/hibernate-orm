@@ -376,7 +376,7 @@ public class ParameterManager implements ParameterRegistry {
 	public <T> ParameterBindImpl<T> makeBinding(QueryParameter<T> parameter) {
 		assert parameter.getMode() == ParameterMode.IN || parameter.getMode() == ParameterMode.INOUT;
 
-		return new ParameterBindImpl<>(
+		return new ParameterBindImpl<T>(
 				parameter.getHibernateType(),
 				parameter,
 				procedureCall.getSession().getFactory()

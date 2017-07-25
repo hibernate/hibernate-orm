@@ -31,6 +31,8 @@ import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.LoadQueryInfluencers.InternalFetchProfileType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -52,18 +54,17 @@ import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
+import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
-import org.hibernate.sql.ast.tree.internal.select.QueryResultEntityImpl;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
+import org.hibernate.sql.ast.tree.internal.select.QueryResultEntityImpl;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroup;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroupEmptyImpl;
@@ -77,6 +78,9 @@ import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
+import org.hibernate.sql.ast.tree.spi.select.QueryResult;
+import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
 import org.hibernate.sql.exec.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.exec.results.spi.SqlSelectionGroupEmpty;
@@ -88,7 +92,7 @@ import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
  */
 public abstract class AbstractEntityDescriptor<T>
 		extends AbstractIdentifiableType<T>
-		implements EntityDescriptor<T> {
+		implements Lockable<T> {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractEntityDescriptor.class );
 
 	private final SessionFactoryImplementor factory;
@@ -102,6 +106,8 @@ public abstract class AbstractEntityDescriptor<T>
 	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
 
 	private final String sqlAliasStem;
+
+	private final Dialect dialect;
 
 	@SuppressWarnings("UnnecessaryBoxing")
 	public AbstractEntityDescriptor(
@@ -150,6 +156,7 @@ public abstract class AbstractEntityDescriptor<T>
 		}
 
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( getEntityName() );
+		this.dialect = factory.getServiceRegistry().getService( JdbcServices.class ).getDialect();
 	}
 
 	// todo (6.0) : the root-table may not need to be phyically stored here
@@ -673,5 +680,29 @@ public abstract class AbstractEntityDescriptor<T>
 		}
 
 		columnBindingGroupMap.put( persistentAttribute, columnBindingGroup );
+	}
+
+	@Override
+	public String getRootTableName() {
+		return ( (PhysicalTable) rootTable ).getTableName().render( dialect );
+	}
+
+	@Override
+	public String[] getRootTableIdentifierColumnNames() {
+		final List<PhysicalColumn> columns = rootTable.getPrimaryKey().getColumns();
+		String[] columnNames = new String[columns.size()];
+		int i = 0;
+		for ( PhysicalColumn column : columns ) {
+			columnNames[i] = column.getName().render( dialect );
+			i++;
+		}
+		return columnNames;
+	}
+
+	@Override
+	public String getVersionColumnName() {
+		return ( (PhysicalColumn) getHierarchy().getVersionDescriptor().getColumns().get( 0 ) )
+				.getName()
+				.render( dialect );
 	}
 }

@@ -47,7 +47,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 				LOG.tracev(
 						"Initializing collection {0}",
 						MessageHelper.collectionInfoString(
-								ce.getLoadedPersister(),
+								ce.getLoadedPersistentCollectionDescriptor(),
 								collection,
 								ce.getLoadedKey(),
 								source
@@ -58,7 +58,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 
 			final boolean foundInCache = initializeCollectionFromCache(
 					ce.getLoadedKey(),
-					ce.getLoadedPersister(),
+					ce.getLoadedPersistentCollectionDescriptor(),
 					collection,
 					source
 			);
@@ -72,14 +72,14 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 				if ( traceEnabled ) {
 					LOG.trace( "Collection not cached" );
 				}
-				ce.getLoadedPersister().initialize( ce.getLoadedKey(), source );
+				ce.getLoadedPersistentCollectionDescriptor().initialize( ce.getLoadedKey(), source );
 				if ( traceEnabled ) {
 					LOG.trace( "Collection initialized" );
 				}
 
 				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
 					source.getFactory().getStatisticsImplementor().fetchCollection(
-							ce.getLoadedPersister().getRole()
+							ce.getLoadedPersistentCollectionDescriptor().getNavigableRole().getFullPath()
 					);
 				}
 			}
@@ -90,7 +90,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	 * Try to initialize a collection from the cache
 	 *
 	 * @param id The id of the collection of initialize
-	 * @param persister The collection persister
+	 * @param collectionDescriptor The collection PersistentCollectionDescriptor
 	 * @param collection The collection to initialize
 	 * @param source The originating session
 	 *
@@ -99,26 +99,26 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	 */
 	private boolean initializeCollectionFromCache(
 			Serializable id,
-			PersistentCollectionDescriptor persister,
+			PersistentCollectionDescriptor collectionDescriptor,
 			PersistentCollection collection,
 			SessionImplementor source) {
 
 		if ( !source.getLoadQueryInfluencers().getEnabledFilters().isEmpty()
-				&& persister.isAffectedByEnabledFilters( source ) ) {
+				&& collectionDescriptor.isAffectedByEnabledFilters( source ) ) {
 			LOG.trace( "Disregarding cached version (if any) of collection due to enabled filters" );
 			return false;
 		}
 
-		final boolean useCache = persister.hasCache() && source.getCacheMode().isGetEnabled();
+		final boolean useCache = collectionDescriptor.hasCache() && source.getCacheMode().isGetEnabled();
 
 		if ( !useCache ) {
 			return false;
 		}
 
 		final SessionFactoryImplementor factory = source.getFactory();
-		final CollectionRegionAccessStrategy cacheAccessStrategy = persister.getCacheAccessStrategy();
-		final Object ck = cacheAccessStrategy.generateCacheKey( id, persister, factory, source.getTenantIdentifier() );
-		final Object ce = CacheHelper.fromSharedCache( source, ck, persister.getCacheAccessStrategy() );
+		final CollectionRegionAccessStrategy cacheAccessStrategy = collectionDescriptor.getCacheAccessStrategy();
+		final Object ck = cacheAccessStrategy.generateCacheKey( id, collectionDescriptor, factory, source.getTenantIdentifier() );
+		final Object ce = CacheHelper.fromSharedCache( source, ck, collectionDescriptor.getCacheAccessStrategy() );
 
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			if ( ce == null ) {
@@ -135,15 +135,15 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			return false;
 		}
 
-		CollectionCacheEntry cacheEntry = (CollectionCacheEntry) persister.getCacheEntryStructure().destructure(
+		CollectionCacheEntry cacheEntry = (CollectionCacheEntry) collectionDescriptor.getCacheEntryStructure().destructure(
 				ce,
 				factory
 		);
 
 		final PersistenceContext persistenceContext = source.getPersistenceContext();
-		cacheEntry.assemble( collection, persister, persistenceContext.getCollectionOwner( id, persister ) );
+		cacheEntry.assemble( collection, collectionDescriptor, persistenceContext.getCollectionOwner( id, collectionDescriptor ) );
 		persistenceContext.getCollectionEntry( collection ).postInitialize( collection );
-		// addInitializedCollection(collection, persister, id);
+		// addInitializedCollection(collection, collectionDescriptor, id);
 		return true;
 	}
 }

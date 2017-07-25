@@ -42,8 +42,6 @@ import org.hibernate.loader.spi.MultiLoadOptions;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorClassResolver;
 import org.hibernate.metamodel.model.domain.spi.AbstractEntityDescriptor;
@@ -58,7 +56,6 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
@@ -71,7 +68,6 @@ import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.Type;
 
@@ -950,7 +946,7 @@ public class GoofyRuntimeModelDescriptorClassProvider implements RuntimeModelDes
 		}
 
 		@Override
-		public NavigableContainer getContainer() {
+		public ManagedTypeDescriptor getContainer() {
 			return null;
 		}
 

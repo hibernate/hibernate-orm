@@ -14,6 +14,7 @@ import java.time.ZonedDateTime;
 import java.util.Calendar;
 import javax.persistence.TemporalType;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.Type;
@@ -30,7 +31,7 @@ public class BindingTypeHelper {
 	private BindingTypeHelper() {
 	}
 
-	public BasicType determineTypeForTemporalType(TemporalType temporalType, Type baseType, Object bindValue) {
+	public BasicType determineTypeForTemporalType(TemporalType temporalType, AllowableParameterType baseType, Object bindValue) {
 		// todo : for 6.0 make TemporalType part of org.hibernate.type.descriptor.java.JdbcRecommendedSqlTypeMappingContext
 		//		then we can just ask the org.hibernate.type.basic.BasicTypeFactory to handle this based on its registry
 		//
@@ -55,7 +56,7 @@ public class BindingTypeHelper {
 			javaType = bindValue.getClass();
 		}
 		else if ( baseType != null ) {
-			javaType = baseType.getReturnedClass();
+			javaType = baseType.getJavaTypeDescriptor().getJavaType();
 		}
 		else {
 			javaType = java.sql.Timestamp.class;
@@ -77,7 +78,7 @@ public class BindingTypeHelper {
 		}
 	}
 
-	public BasicType resolveTimestampTemporalTypeVariant(Class javaType, Type baseType) {
+	public BasicType resolveTimestampTemporalTypeVariant(Class javaType, AllowableParameterType baseType) {
 		// prefer to use any Type already known - interprets TIMESTAMP as "no narrowing"
 		if ( baseType != null && baseType instanceof BasicType ) {
 			return (BasicType) baseType;
@@ -111,10 +112,10 @@ public class BindingTypeHelper {
 	}
 
 	@SuppressWarnings("unchecked")
-	public BasicType resolveDateTemporalTypeVariant(Class javaType, Type baseType) {
+	public BasicType resolveDateTemporalTypeVariant(Class javaType, AllowableParameterType baseType) {
 		// prefer to use any Type already known
 		if ( baseType != null && baseType instanceof BasicType ) {
-			if ( baseType.getReturnedClass().isAssignableFrom( javaType ) ) {
+			if ( baseType.getJavaTypeDescriptor().getJavaType().isAssignableFrom( javaType ) ) {
 				return (BasicType) baseType;
 			}
 		}
@@ -142,7 +143,7 @@ public class BindingTypeHelper {
 		throw new IllegalArgumentException( "Unsure how to handle given Java type [" + javaType.getName() + "] as TemporalType#DATE" );
 	}
 
-	public BasicType resolveTimeTemporalTypeVariant(Class javaType, Type baseType) {
+	public BasicType resolveTimeTemporalTypeVariant(Class javaType, AllowableParameterType baseType) {
 		if ( Calendar.class.isAssignableFrom( javaType ) ) {
 			return StandardSpiBasicTypes.CALENDAR_TIME;
 		}

@@ -53,7 +53,7 @@ public final class Collections {
 	private static void processDereferencedCollection(PersistentCollection coll, SessionImplementor session) {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final CollectionEntry entry = persistenceContext.getCollectionEntry( coll );
-		final PersistentCollectionDescriptor loadedPersister = entry.getLoadedPersister();
+		final PersistentCollectionDescriptor loadedPersister = entry.getLoadedPersistentCollectionDescriptor();
 
 		if ( loadedPersister != null && LOG.isDebugEnabled() ) {
 			LOG.debugf(
@@ -116,7 +116,7 @@ public final class Collections {
 			LOG.debugf(
 					"Found collection with unloaded owner: %s",
 					MessageHelper.collectionInfoString( 
-							entry.getLoadedPersister(),
+							entry.getLoadedPersistentCollectionDescriptor(),
 							coll,
 							entry.getLoadedKey(),
 							session
@@ -124,7 +124,7 @@ public final class Collections {
 			);
 		}
 
-		entry.setCurrentPersister( entry.getLoadedPersister() );
+		entry.setCurrentPersister( entry.getLoadedPersistentCollectionDescriptor() );
 		entry.setCurrentKey( entry.getLoadedKey() );
 
 		prepareCollectionForUpdate( coll, entry, session.getFactory() );
@@ -194,7 +194,7 @@ public final class Collections {
 									session
 							),
 							MessageHelper.collectionInfoString(
-									ce.getLoadedPersister(),
+									ce.getLoadedPersistentCollectionDescriptor(),
 									collection,
 									ce.getLoadedKey(),
 									session
@@ -211,7 +211,7 @@ public final class Collections {
 									session
 							),
 							MessageHelper.collectionInfoString(
-									ce.getLoadedPersister(),
+									ce.getLoadedPersistentCollectionDescriptor(),
 									collection,
 									ce.getLoadedKey(),
 									session
@@ -239,7 +239,7 @@ public final class Collections {
 		}
 		entry.setProcessed( true );
 
-		final PersistentCollectionDescriptor loadedPersister = entry.getLoadedPersister();
+		final PersistentCollectionDescriptor loadedPersister = entry.getLoadedPersistentCollectionDescriptor();
 		final PersistentCollectionDescriptor currentPersister = entry.getCurrentPersister();
 		if ( loadedPersister != null || currentPersister != null ) {
 			// it is or was referenced _somewhere_

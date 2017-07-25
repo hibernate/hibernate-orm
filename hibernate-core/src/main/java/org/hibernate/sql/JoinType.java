@@ -20,7 +20,6 @@ public enum JoinType {
 	FULL_JOIN( 4 );
 
 	private int joinTypeValue;
-private final javax.persistence.criteria.JoinType jpaCriteriaJoinType;
 
 	JoinType(int joinTypeValue) {
 		this.joinTypeValue = joinTypeValue;

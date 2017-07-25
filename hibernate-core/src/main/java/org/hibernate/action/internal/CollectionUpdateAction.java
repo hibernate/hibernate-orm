@@ -31,18 +31,18 @@ public final class CollectionUpdateAction extends CollectionAction {
 	 * Constructs a CollectionUpdateAction
 	 *
 	 * @param collection The collection to update
-	 * @param persister The collection persister
+	 * @param collectionDescriptor The collection collectionDescriptor
 	 * @param id The collection key
 	 * @param emptySnapshot Indicates if the snapshot is empty
 	 * @param session The session
 	 */
 	public CollectionUpdateAction(
 				final PersistentCollection collection,
-				final PersistentCollectionDescriptor persister,
+				final PersistentCollectionDescriptor collectionDescriptor,
 				final Serializable id,
 				final boolean emptySnapshot,
 				final SharedSessionContractImplementor session) {
-		super( persister, collection, id, session );
+		super( collectionDescriptor, collection, id, session );
 		this.emptySnapshot = emptySnapshot;
 	}
 
@@ -50,9 +50,9 @@ public final class CollectionUpdateAction extends CollectionAction {
 	public void execute() throws HibernateException {
 		final Serializable id = getKey();
 		final SharedSessionContractImplementor session = getSession();
-		final PersistentCollectionDescriptor persister = getPersister();
+		final PersistentCollectionDescriptor collectionDescriptor = getPersistentCollectionDescriptor();
 		final PersistentCollection collection = getCollection();
-		final boolean affectedByFilters = persister.isAffectedByEnabledFilters( session );
+		final boolean affectedByFilters = collectionDescriptor.isAffectedByEnabledFilters( session );
 
 		preUpdate();
 
@@ -64,25 +64,25 @@ public final class CollectionUpdateAction extends CollectionAction {
 		}
 		else if ( !affectedByFilters && collection.empty() ) {
 			if ( !emptySnapshot ) {
-				persister.remove( id, session );
+				collectionDescriptor.remove( id, session );
 			}
 		}
-		else if ( collection.needsRecreate( persister ) ) {
+		else if ( collection.needsRecreate( collectionDescriptor ) ) {
 			if ( affectedByFilters ) {
 				throw new HibernateException(
 						"cannot recreate collection while filter is enabled: " +
-								MessageHelper.collectionInfoString( persister, collection, id, session )
+								MessageHelper.collectionInfoString( collectionDescriptor, collection, id, session )
 				);
 			}
 			if ( !emptySnapshot ) {
-				persister.remove( id, session );
+				collectionDescriptor.remove( id, session );
 			}
-			persister.recreate( collection, id, session );
+			collectionDescriptor.recreate( collection, id, session );
 		}
 		else {
-			persister.deleteRows( collection, id, session );
-			persister.updateRows( collection, id, session );
-			persister.insertRows( collection, id, session );
+			collectionDescriptor.deleteRows( collection, id, session );
+			collectionDescriptor.updateRows( collection, id, session );
+			collectionDescriptor.insertRows( collection, id, session );
 		}
 
 		getSession().getPersistenceContext().getCollectionEntry( collection ).afterAction( collection );
@@ -90,7 +90,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 		postUpdate();
 
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatistics().updateCollection( getPersister().getRole() );
+			getSession().getFactory().getStatistics().updateCollection( getPersistentCollectionDescriptor().getNavigableRole().getFullPath() );
 		}
 	}
 	
@@ -100,7 +100,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 			return;
 		}
 		final PreCollectionUpdateEvent event = new PreCollectionUpdateEvent(
-				getPersister(),
+				getPersistentCollectionDescriptor(),
 				getCollection(),
 				eventSource()
 		);
@@ -115,7 +115,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 			return;
 		}
 		final PostCollectionUpdateEvent event = new PostCollectionUpdateEvent(
-				getPersister(),
+				getPersistentCollectionDescriptor(),
 				getCollection(),
 				eventSource()
 		);

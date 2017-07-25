@@ -225,7 +225,7 @@ public class CacheImpl implements CacheImplementor {
 		PersistentCollectionDescriptor p = sessionFactory.getMetamodel().getTypeConfiguration().findCollectionPersister( role );
 		if ( p.hasCache() ) {
 			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( "Evicting second-level cache: %s", p.getRole() );
+				LOG.debugf( "Evicting second-level cache: %s", p.getNavigableRole().getFullPath() );
 			}
 			p.getCacheAccessStrategy().evictAll();
 		}

@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.tree.spi.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
@@ -57,11 +57,6 @@ public class PluralAttributeElementReference implements NavigableReference {
 	@Override
 	public NavigableContainerReference getNavigableContainerReference() {
 		return collectionReference;
-	}
-
-	@Override
-	public ColumnReferenceSource getContributedColumnReferenceSource() {
-		return columnReferenceSource;
 	}
 
 	@Override

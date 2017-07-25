@@ -47,13 +47,13 @@ public final class CollectionRecreateAction extends CollectionAction {
 		final PersistentCollection collection = getCollection();
 		
 		preRecreate();
-		getPersister().recreate( collection, getKey(), getSession() );
+		getPersistentCollectionDescriptor().recreate( collection, getKey(), getSession() );
 		getSession().getPersistenceContext().getCollectionEntry( collection ).afterAction( collection );
 		evict();
 		postRecreate();
 
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatistics().recreateCollection( getPersister().getNavigableRole().getNavigableName() );
+			getSession().getFactory().getStatistics().recreateCollection( getPersistentCollectionDescriptor().getNavigableRole().getNavigableName() );
 		}
 	}
 
@@ -62,7 +62,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 		if ( listenerGroup.isEmpty() ) {
 			return;
 		}
-		final PreCollectionRecreateEvent event = new PreCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
+		final PreCollectionRecreateEvent event = new PreCollectionRecreateEvent( getPersistentCollectionDescriptor(), getCollection(), eventSource() );
 		for ( PreCollectionRecreateEventListener listener : listenerGroup.listeners() ) {
 			listener.onPreRecreateCollection( event );
 		}
@@ -73,7 +73,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 		if ( listenerGroup.isEmpty() ) {
 			return;
 		}
-		final PostCollectionRecreateEvent event = new PostCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
+		final PostCollectionRecreateEvent event = new PostCollectionRecreateEvent( getPersistentCollectionDescriptor(), getCollection(), eventSource() );
 		for ( PostCollectionRecreateEventListener listener : listenerGroup.listeners() ) {
 			listener.onPostRecreateCollection( event );
 		}

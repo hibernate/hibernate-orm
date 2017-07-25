@@ -14,7 +14,7 @@ public class AliasCollisionException extends SemanticException {
 		super( message );
 	}
 
-	public AliasCollisionException(String message, Throwable cause) {
+	public AliasCollisionException(String message, Exception cause) {
 		super( message, cause );
 	}
 }

@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.CacheMode;
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
@@ -90,8 +89,7 @@ public class CollectionLoadContext {
 	 * @return The loading collection (see discussion above).
 	 */
 	public PersistentCollection getLoadingCollection(final PersistentCollectionDescriptor persister, final Serializable key) {
-		final EntityMode em = persister.getOwnerEntityPersister().getEntityMetamodel().getEntityMode();
-		final CollectionKey collectionKey = new CollectionKey( persister, key, em );
+		final CollectionKey collectionKey = new CollectionKey( persister, key );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Starting attempt to find loading collection [{0}]",
 					MessageHelper.collectionInfoString( persister.getNavigableRole().getFullPath(), key ) );
@@ -174,11 +172,7 @@ public class CollectionLoadContext {
 				matches.add( lce );
 				if ( lce.getCollection().getOwner() == null ) {
 					session.getPersistenceContext().addUnownedCollection(
-							new CollectionKey(
-									persister,
-									lce.getKey(),
-									persister.getOwnerEntityPersister().getEntityMetamodel().getEntityMode()
-							),
+							new CollectionKey( persister, lce.getKey() ),
 							lce.getCollection()
 					);
 				}

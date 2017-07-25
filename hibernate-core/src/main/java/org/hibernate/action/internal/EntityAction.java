@@ -35,7 +35,7 @@ public abstract class EntityAction
 
 	private transient Object instance;
 	private transient SharedSessionContractImplementor session;
-	private transient EntityDescriptor persister;
+	private transient EntityDescriptor entityDescriptor;
 
 	/**
 	 * Instantiate an action.
@@ -43,14 +43,14 @@ public abstract class EntityAction
 	 * @param session The session from which this action is coming.
 	 * @param id The id of the entity
 	 * @param instance The entity instance
-	 * @param persister The entity persister
+	 * @param entityDescriptor The entity entityDescriptor
 	 */
-	protected EntityAction(SharedSessionContractImplementor session, Serializable id, Object instance, EntityDescriptor persister) {
-		this.entityName = persister.getEntityName();
+	protected EntityAction(SharedSessionContractImplementor session, Serializable id, Object instance, EntityDescriptor entityDescriptor) {
+		this.entityName = entityDescriptor.getEntityName();
 		this.id = id;
 		this.instance = instance;
 		this.session = session;
-		this.persister = persister;
+		this.entityDescriptor = entityDescriptor;
 	}
 
 	@Override
@@ -68,7 +68,7 @@ public abstract class EntityAction
 	protected abstract boolean hasPostCommitEventListeners();
 
 	protected boolean needsAfterTransactionCompletion() {
-		return persister.hasCache() || hasPostCommitEventListeners();
+		return entityDescriptor.hasCache() || hasPostCommitEventListeners();
 	}
 
 	/**
@@ -120,15 +120,15 @@ public abstract class EntityAction
 	/**
 	 * entity persister accessor
 	 *
-	 * @return The entity persister
+	 * @return The entity EntityDescriptor
 	 */
-	public final EntityDescriptor<?> getPersister() {
-		return persister;
+	public final EntityDescriptor<?> getEntityDescriptor() {
+		return entityDescriptor;
 	}
 
 	@Override
 	public final Serializable[] getPropertySpaces() {
-		return persister.getAffectedTableNames();
+		return entityDescriptor.getAffectedTableNames();
 	}
 
 	@Override
@@ -152,7 +152,7 @@ public abstract class EntityAction
 		}
 		else {
 			//then by id
-			return persister.getIdentifierType().getJavaTypeDescriptor().getComparator().compare( id, action.id );
+			return entityDescriptor.getIdentifierType().getJavaTypeDescriptor().getComparator().compare( id, action.id );
 		}
 	}
 
@@ -163,15 +163,15 @@ public abstract class EntityAction
 	 */
 	@Override
 	public void afterDeserialize(SharedSessionContractImplementor session) {
-		if ( this.session != null || this.persister != null ) {
+		if ( this.session != null || this.entityDescriptor != null ) {
 			throw new IllegalStateException( "already attached to a session." );
 		}
 		// IMPL NOTE: non-flushed changes code calls this method with session == null...
 		// guard against NullPointerException
 		if ( session != null ) {
 			this.session = session;
-			this.persister = session.getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
-			this.instance = session.getPersistenceContext().getEntity( session.generateEntityKey( id, persister ) );
+			this.entityDescriptor = session.getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
+			this.instance = session.getPersistenceContext().getEntity( session.generateEntityKey( id, entityDescriptor ) );
 		}
 	}
 

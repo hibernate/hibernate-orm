@@ -361,7 +361,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	public boolean isModifiableEntity() {
 		final Status status = getStatus();
 		final Status previousStatus = getPreviousStatus();
-		return getPersister().isMutable()
+		return getPersister().getJavaTypeDescriptor().getMutabilityPlan().isMutable()
 				&& status != Status.READ_ONLY
 				&& ! ( status == Status.DELETED && previousStatus == Status.READ_ONLY );
 	}
@@ -396,7 +396,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			loadedState = null;
 		}
 		else {
-			if ( ! persister.isMutable() ) {
+			if ( ! persister.getJavaTypeDescriptor().getMutabilityPlan().isMutable() ) {
 				throw new IllegalStateException( "Cannot make an immutable entity modifiable." );
 			}
 			setStatus( Status.MANAGED );

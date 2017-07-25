@@ -28,9 +28,6 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
-import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -38,11 +35,8 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.id.IdentifierGeneratorHelper;
-import org.hibernate.loader.criteria.CriteriaLoader;
-import org.hibernate.loader.custom.CustomLoader;
-import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.persister.entity.OuterJoinLoadable;
+import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -88,13 +82,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public Serializable insert(String entityName, Object entity) {
 		checkOpen();
+
 		EntityDescriptor persister = getEntityPersister( entityName, entity );
-		Serializable id = persister.getIdentifierGenerator().generate( this, entity );
+		Serializable id = persister.getIdentifierDescriptor().getIdentifierValueGenerator().generate( this, entity );
 		Object[] state = persister.getPropertyValues( entity );
 		if ( persister.isVersioned() ) {
 			boolean substitute = Versioning.seedVersion(
 					state,
-					persister.getVersionProperty(),
+					persister.getHierarchy().getVersionProperty(),
 					( (BasicType) persister.getVersionType() ).getVersionSupport(),
 					this
 			);

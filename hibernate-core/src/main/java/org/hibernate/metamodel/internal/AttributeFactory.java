@@ -21,20 +21,26 @@ import javax.persistence.metamodel.Type;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
+import org.hibernate.mapping.Any;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
-import org.hibernate.metamodel.model.domain.spi.VirtualPersistentAttribute;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * A factory for building {@link Attribute} instances.  Exposes 3 main services for building<ol>
@@ -208,15 +214,15 @@ public class AttributeFactory {
 				);
 			}
 			case ENTITY: {
-				final EntityType type = (EntityType) typeContext.getValue().getType();
-				return (Type<Y>) context.locateEntityType( type.getAssociatedEntityName() );
+				final EntityJavaDescriptor javaTypeDescriptor = (EntityJavaDescriptor) typeContext.getValue().getJavaTypeDescriptor();
+				return (Type<Y>) context.locateEntityType( javaTypeDescriptor.getEntityName() );
 			}
 			case EMBEDDABLE: {
 				final Component component = (Component) typeContext.getValue();
 				final EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<Y>(
 						typeContext.getBindableType(),
 						typeContext.getAttributeMetadata().getOwnerType(),
-						(ComponentType) typeContext.getValue().getType()
+						(EmbeddableJavaDescriptor) typeContext.getValue().getJavaTypeDescriptor()
 				);
 				context.registerEmbeddedableType( embeddableType );
 				final Iterator<Property> subProperties = component.getPropertyIterator();
@@ -411,21 +417,21 @@ public class AttributeFactory {
 		 *
 		 * @return The owner.
 		 */
-		public AbstractManagedType<X> getOwnerType();
+		AbstractManagedType<X> getOwnerType();
 
 		/**
 		 * Retrieve the Hibernate property mapping.
 		 *
 		 * @return The Hibernate property mapping.
 		 */
-		public Property getPropertyMapping();
+		Property getPropertyMapping();
 	}
 
 	/**
 	 * Contract for how we resolve the {@link Member} for a give attribute context.
 	 */
 	private interface MemberResolver {
-		public Member resolveMember(AttributeContext attributeContext);
+		Member resolveMember(AttributeContext attributeContext);
 	}
 
 	/**
@@ -451,10 +457,10 @@ public class AttributeFactory {
 		LOG.trace( "    Determined member [" + member + "]" );
 
 		final Value value = attributeContext.getPropertyMapping().getValue();
-		final org.hibernate.type.spi.Type type = value.getType();
-		LOG.trace( "    Determined type [name=" + type.getName() + ", class=" + type.getClass().getName() + "]" );
+		JavaTypeDescriptor javaTypeDescriptor = value.getJavaTypeDescriptor();
+		LOG.trace( "    Determined javaTypeDescriptor [name=" + javaTypeDescriptor.getTypeName() + ", class=" + javaTypeDescriptor.getJavaType().getName() + "]" );
 
-		if ( type.isAnyType() ) {
+		if ( value instanceof Any ) {
 			// ANY mappings are currently not supported in the JPA metamodel; see HHH-6589
 			if ( context.isIgnoreUnsupported() ) {
 				return null;
@@ -463,28 +469,52 @@ public class AttributeFactory {
 				throw new UnsupportedOperationException( "ANY not supported" );
 			}
 		}
-		else if ( type.isAssociationType() ) {
-			// collection or entity
-			if ( type.isEntityType() ) {
-				// entity
-				return new SingularAttributeMetadataImpl<X, Y>(
-						attributeContext.getPropertyMapping(),
-						attributeContext.getOwnerType(),
-						member,
-						determineSingularAssociationAttributeType( member )
-				);
-			}
-			// collection
-			if ( value instanceof Collection ) {
-				final Collection collValue = (Collection) value;
-				final Value elementValue = collValue.getElement();
-				final org.hibernate.type.spi.Type elementType = elementValue.getType();
+		else if ( value instanceof ToOne ) {
+			// entity
+			return new SingularAttributeMetadataImpl<X, Y>(
+					attributeContext.getPropertyMapping(),
+					attributeContext.getOwnerType(),
+					member,
+					determineSingularAssociationAttributeType( member )
+			);
+		}
+		// collection
+		else if ( value instanceof Collection ) {
+			final Collection collValue = (Collection) value;
+			final Value elementValue = collValue.getElement();
 
-				// First, determine the type of the elements and use that to help determine the
-				// collection type)
-				final Attribute.PersistentAttributeType elementPersistentAttributeType;
-				final Attribute.PersistentAttributeType persistentAttributeType;
-				if ( elementType.isAnyType() ) {
+			final Attribute.PersistentAttributeType elementPersistentAttributeType;
+			final Attribute.PersistentAttributeType persistentAttributeType;
+			if ( elementValue instanceof Any ) {
+				if ( context.isIgnoreUnsupported() ) {
+					return null;
+				}
+				else {
+					throw new UnsupportedOperationException( "collection of any not supported yet" );
+				}
+			}
+			final boolean isManyToMany = isManyToMany( member );
+			if ( elementValue instanceof Component ) {
+				elementPersistentAttributeType = Attribute.PersistentAttributeType.EMBEDDED;
+				persistentAttributeType = Attribute.PersistentAttributeType.ELEMENT_COLLECTION;
+			}
+			else if ( elementValue instanceof BasicValue ) {
+				elementPersistentAttributeType = Attribute.PersistentAttributeType.BASIC;
+				persistentAttributeType = Attribute.PersistentAttributeType.ELEMENT_COLLECTION;
+			}
+			else {
+				elementPersistentAttributeType = isManyToMany ?
+						Attribute.PersistentAttributeType.MANY_TO_MANY :
+						Attribute.PersistentAttributeType.ONE_TO_MANY;
+				persistentAttributeType = elementPersistentAttributeType;
+			}
+
+			final Attribute.PersistentAttributeType keyPersistentAttributeType;
+
+			if ( value instanceof Map ) {
+				final Value keyValue = ( (Map) value ).getIndex();
+
+				if ( keyValue instanceof Any ) {
 					if ( context.isIgnoreUnsupported() ) {
 						return null;
 					}
@@ -492,77 +522,32 @@ public class AttributeFactory {
 						throw new UnsupportedOperationException( "collection of any not supported yet" );
 					}
 				}
-				final boolean isManyToMany = isManyToMany( member );
-				if ( elementValue instanceof Component ) {
-					elementPersistentAttributeType = Attribute.PersistentAttributeType.EMBEDDED;
-					persistentAttributeType = Attribute.PersistentAttributeType.ELEMENT_COLLECTION;
+				if ( keyValue instanceof Component ) {
+					keyPersistentAttributeType = Attribute.PersistentAttributeType.EMBEDDED;
 				}
-				else if ( elementType.isAssociationType() ) {
-					elementPersistentAttributeType = isManyToMany ?
-							Attribute.PersistentAttributeType.MANY_TO_MANY :
-							Attribute.PersistentAttributeType.ONE_TO_MANY;
-					persistentAttributeType = elementPersistentAttributeType;
+				else if ( keyValue instanceof BasicValue ) {
+					keyPersistentAttributeType = Attribute.PersistentAttributeType.BASIC;
+
 				}
 				else {
-					elementPersistentAttributeType = Attribute.PersistentAttributeType.BASIC;
-					persistentAttributeType = Attribute.PersistentAttributeType.ELEMENT_COLLECTION;
+					keyPersistentAttributeType = Attribute.PersistentAttributeType.MANY_TO_ONE;
 				}
-
-				final Attribute.PersistentAttributeType keyPersistentAttributeType;
-
-				// Finally, we determine the type of the map key (if needed)
-				if ( value instanceof Map ) {
-					final Value keyValue = ( (Map) value ).getIndex();
-					final org.hibernate.type.spi.Type keyType = keyValue.getType();
-
-					if ( keyType.isAnyType() ) {
-						if ( context.isIgnoreUnsupported() ) {
-							return null;
-						}
-						else {
-							throw new UnsupportedOperationException( "collection of any not supported yet" );
-						}
-					}
-					if ( keyValue instanceof Component ) {
-						keyPersistentAttributeType = Attribute.PersistentAttributeType.EMBEDDED;
-					}
-					else if ( keyType.isAssociationType() ) {
-						keyPersistentAttributeType = Attribute.PersistentAttributeType.MANY_TO_ONE;
-					}
-					else {
-						keyPersistentAttributeType = Attribute.PersistentAttributeType.BASIC;
-					}
-				}
-				else {
-					keyPersistentAttributeType = null;
-				}
-				return new PluralAttributeMetadataImpl(
-						attributeContext.getPropertyMapping(), attributeContext.getOwnerType(),
-						member, persistentAttributeType, elementPersistentAttributeType,
-						keyPersistentAttributeType
-				);
 			}
-			else if ( value instanceof OneToMany ) {
-				// TODO : is this even possible??? Really OneToMany should be describing the
-				// element value within a o.h.mapping.Collection (see logic branch above)
-				throw new IllegalArgumentException( "HUH???" );
-//					final boolean isManyToMany = isManyToMany( member );
-//					//one to many with FK => entity
-//					return new PluralAttributeMetadataImpl(
-//							attributeContext.getPropertyMapping(),
-//							attributeContext.getOwnerType(),
-//							member,
-//							isManyToMany
-//									? Attribute.PersistentAttributeType.MANY_TO_MANY
-//									: Attribute.PersistentAttributeType.ONE_TO_MANY
-//							value,
-//							AttributeContext.TypeStatus.ENTITY,
-//							Attribute.PersistentAttributeType.ONE_TO_MANY,
-//							null, null, null
-//					);
+			else {
+				keyPersistentAttributeType = null;
 			}
+			return new PluralAttributeMetadataImpl(
+					attributeContext.getPropertyMapping(), attributeContext.getOwnerType(),
+					member, persistentAttributeType, elementPersistentAttributeType,
+					keyPersistentAttributeType
+			);
 		}
-		else if ( attributeContext.getPropertyMapping().isComposite() ) {
+		else if ( value instanceof OneToMany ) {
+			// TODO : is this even possible??? Really OneToMany should be describing the
+			// element value within a o.h.mapping.Collection (see logic branch above)
+			throw new IllegalArgumentException( "HUH???" );
+		}
+		else if ( value instanceof Component ) {
 			// component
 			return new SingularAttributeMetadataImpl<X, Y>(
 					attributeContext.getPropertyMapping(),
@@ -571,8 +556,8 @@ public class AttributeFactory {
 					Attribute.PersistentAttributeType.EMBEDDED
 			);
 		}
-		else {
-			// basic type
+		else if ( value instanceof BasicValue ) {
+			// basic javaTypeDescriptor
 			return new SingularAttributeMetadataImpl<X, Y>(
 					attributeContext.getPropertyMapping(),
 					attributeContext.getOwnerType(),
@@ -621,7 +606,7 @@ public class AttributeFactory {
 
 			if ( member == null ) {
 				// assume we have a MAP entity-mode "class"
-				declaredType = propertyMapping.getType().getReturnedClass();
+				declaredType = propertyMapping.getValueMapping().getJavaTypeDescriptor().getJavaType();
 			}
 			else if ( Field.class.isInstance( member ) ) {
 				declaredType = ( (Field) member ).getType();
@@ -667,7 +652,7 @@ public class AttributeFactory {
 		}
 
 		public boolean isPlural() {
-			return propertyMapping.getType().isCollectionType();
+			return propertyMapping.getValueMapping().getJavaTypeDescriptor() instanceof CollectionJavaDescriptor;
 		}
 
 		public Property getPropertyMapping() {
@@ -677,37 +662,6 @@ public class AttributeFactory {
 
 	@SuppressWarnings({"unchecked"})
 	protected <Y> Class<Y> accountForPrimitiveTypes(Class<Y> declaredType) {
-//		if ( !declaredType.isPrimitive() ) {
-//			return declaredType;
-//		}
-//
-//		if ( Boolean.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Boolean.class;
-//		}
-//		if ( Character.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Character.class;
-//		}
-//		if( Byte.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Byte.class;
-//		}
-//		if ( Short.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Short.class;
-//		}
-//		if ( Integer.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Integer.class;
-//		}
-//		if ( Long.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Long.class;
-//		}
-//		if ( Float.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Float.class;
-//		}
-//		if ( Double.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Double.class;
-//		}
-//
-//		throw new IllegalArgumentException( "Unexpected type [" + declaredType + "]" );
-		// if the field is defined as int, return int not Integer...
 		return declaredType;
 	}
 

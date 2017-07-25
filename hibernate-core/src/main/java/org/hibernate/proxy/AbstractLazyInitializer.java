@@ -109,8 +109,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				session = s;
 				if ( readOnlyBeforeAttachedToSession == null ) {
 					// use the default read-only/modifiable setting
-					final EntityDescriptor persister = s.getFactory().getEntityPersister( entityName );
-					setReadOnly( s.getPersistenceContext().isDefaultReadOnly() || !persister.isMutable() );
+					final EntityDescriptor entityPersister = s.getFactory().getEntityPersister( entityName );
+					setReadOnly( s.getPersistenceContext().isDefaultReadOnly() || !entityPersister.getJavaTypeDescriptor().getMutabilityPlan().isMutable() );
 				}
 				else {
 					// use the read-only/modifiable setting indicated during deserialization
@@ -312,8 +312,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		errorIfReadOnlySettingNotAvailable();
 		// only update if readOnly is different from current setting
 		if ( this.readOnly != readOnly ) {
-			final EntityDescriptor persister = session.getFactory().getEntityPersister( entityName );
-			if ( !persister.isMutable() && !readOnly ) {
+			final EntityDescriptor entityDescriptor = session.getFactory().getEntityPersister( entityName );
+			if ( !entityDescriptor.getJavaTypeDescriptor().getMutabilityPlan().isMutable() && !readOnly ) {
 				throw new IllegalStateException( "cannot make proxies for immutable entities modifiable" );
 			}
 			this.readOnly = readOnly;

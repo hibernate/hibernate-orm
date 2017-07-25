@@ -60,18 +60,18 @@ public class EvictVisitor extends AbstractVisitor {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Evicting collection: %s",
-					MessageHelper.collectionInfoString( ce.getLoadedPersister(),
+					MessageHelper.collectionInfoString( ce.getLoadedPersistentCollectionDescriptor(),
 							collection,
 							ce.getLoadedKey(),
 							getSession() ) );
 		}
-		if (ce.getLoadedPersister() != null && ce.getLoadedPersister().getBatchSize() > 1) {
+		if (ce.getLoadedPersistentCollectionDescriptor() != null && ce.getLoadedPersistentCollectionDescriptor().getBatchSize() > 1) {
 			getSession().getPersistenceContext().getBatchFetchQueue().removeBatchLoadableCollection(ce);
 		}
-		if ( ce.getLoadedPersister() != null && ce.getLoadedKey() != null ) {
+		if ( ce.getLoadedPersistentCollectionDescriptor() != null && ce.getLoadedKey() != null ) {
 			//TODO: is this 100% correct?
 			getSession().getPersistenceContext().getCollectionsByKey().remove(
-					new CollectionKey( ce.getLoadedPersister(), ce.getLoadedKey() )
+					new CollectionKey( ce.getLoadedPersistentCollectionDescriptor(), ce.getLoadedKey() )
 			);
 		}
 	}

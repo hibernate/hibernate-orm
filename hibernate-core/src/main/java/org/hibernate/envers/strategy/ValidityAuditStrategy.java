@@ -34,13 +34,12 @@ import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.jdbc.ReturningWork;
-import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
-import org.hibernate.persister.entity.Queryable;
-import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.sql.Update;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
@@ -190,11 +189,14 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		}
 
 		final SessionFactoryImplementor sessionFactory = ( (SessionImplementor) session ).getFactory();
-		final Type propertyType = sessionFactory.getTypeConfiguration().findEntityDescriptor( entityName ).getPropertyType( propertyName );
-		if ( propertyType.isCollectionType() ) {
-			CollectionType collectionPropertyType = (CollectionType) propertyType;
+		final EntityDescriptor<Object> entityDescriptor = sessionFactory.getTypeConfiguration().findEntityDescriptor(
+				entityName );
+		final Type propertyType = entityDescriptor.getPropertyType( propertyName );
+		if ( propertyType.getClassification() ==  Type.Classification.COLLECTION ) {
+			final PluralPersistentAttribute attribute = (PluralPersistentAttribute) entityDescriptor.getAttribute(
+					propertyName );
 			// Handling collection of components.
-			if ( collectionPropertyType.getElementType( sessionFactory ) instanceof ComponentType ) {
+			if ( attribute.getElementType() instanceof javax.persistence.metamodel.EmbeddableType ) {
 				// Adding restrictions to compare data outside of primary key.
 				// todo: is it necessary that non-primary key attributes be compared?
 				for ( Map.Entry<String, Object> dataEntry : persistentCollectionChangeData.getData().entrySet() ) {
@@ -392,14 +394,15 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			Object revision) {
 		final AuditServiceOptions options = auditService.getOptions();
 
-		Queryable entityQueryable = getQueryable( entityName, session );
+		IdentifiableTypeDescriptor entityDescriptor = getEntityDescriptor( entityName, session );
 
 		// HHH-9062 - update inherited
 		if ( options.isRevisionEndTimestampEnabled() && !options.isRevisionEndTimestampLegacyBehaviorEnabled() ) {
-			if ( entityQueryable instanceof JoinedSubclassEntityPersister ) {
+			// todo (6.0) - how are we suppose to determine this now?
+			if ( entityDescriptor instanceof JoinedSubclassEntityPersister ) {
 				List<UpdateContext> contexts = new ArrayList<>();
 				// iterate subclasses from farther descendant up the hierarchy, excluding root
-				while ( entityQueryable.getMappedSuperclass() != null ) {
+				while ( entityDescriptor.getSuperclassType() != null ) {
 					contexts.add(
 							getNonRootUpdateContext(
 									entityName,
@@ -410,9 +413,9 @@ public class ValidityAuditStrategy implements AuditStrategy {
 									revision
 							)
 					);
-					entityName = entityQueryable.getMappedSuperclass();
+					entityName = entityDescriptor.getSuperclassType().getNavigableName();
 					auditedEntityName = auditService.getAuditEntityName( entityName );
-					entityQueryable = getQueryable( entityName, session );
+					entityDescriptor = getEntityDescriptor( entityName, session );
 				}
 				// process root entity
 				contexts.add(
@@ -461,10 +464,10 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
 		final SessionFactoryImplementor sessionFactory = session.getSessionFactory();
 
-		final Queryable entityQueryable = getQueryable( entityName, session );
-		final Queryable rootEntityQueryable = getQueryable( entityQueryable.getRootEntityName(), session );
-		final Queryable auditedEntityQueryable = getQueryable( auditedEntityName, session );
-		final Queryable rootAuditedEntityQueryable = getQueryable( auditedEntityQueryable.getRootEntityName(), session );
+		final EntityDescriptor entityDescriptor = getEntityDescriptor( entityName, session );
+		final EntityDescriptor rootEntityDescriptor = entityDescriptor.getHierarchy().getRootEntityType();
+		final EntityDescriptor auditedEntityDescriptor = getEntityDescriptor( auditedEntityName, session );
+		final EntityDescriptor rootAuditedEntityDescriptor = auditedEntityDescriptor.getHierarchy().getRootEntityType();
 
 		final AuditServiceOptions options = auditService.getOptions();
 		int index = 1;
@@ -479,28 +482,28 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
 		// UPDATE audit_ent
 		final UpdateContext update = new UpdateContext( sessionFactory );
-		update.setTableName( getUpdateTableName( rootEntityQueryable, rootAuditedEntityQueryable, auditedEntityQueryable ) );
+		update.setTableName( getUpdateTableName( rootEntityDescriptor, rootAuditedEntityDescriptor, auditedEntityDescriptor ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// SET REVEND = ?
 		final Number revisionNumber = auditService.getRevisionInfoNumberReader().getRevisionNumber( revision );
 		final Type revisionNumberType = sessionFactory.getTypeConfiguration().findEntityDescriptor( options.getRevisionInfoEntityName() ).getIdentifierType();
-		update.addColumn( rootAuditedEntityQueryable.toColumns( options.getRevisionEndFieldName() )[0] );
+		update.addColumn( rootAuditedEntityDescriptor.toColumns( options.getRevisionEndFieldName() )[0] );
 		update.bind( revisionNumber, revisionNumberType );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// [, REVEND_TSTMP = ?]
 		if ( options.isRevisionEndTimestampEnabled() ) {
-			final Type timestampType = rootAuditedEntityQueryable.getPropertyType( options.getRevisionEndTimestampFieldName() );
-			update.addColumn( rootAuditedEntityQueryable.toColumns( options.getRevisionEndTimestampFieldName() )[0] );
+			final Type timestampType = rootAuditedEntityDescriptor.getPropertyType( options.getRevisionEndTimestampFieldName() );
+			update.addColumn( rootAuditedEntityDescriptor.toColumns( options.getRevisionEndTimestampFieldName() )[0] );
 			update.bind( getRevisionEndTimestampValue( revision, options ), timestampType );
 		}
 
-		applyUpdateContextWhereCommon( update, rootEntityQueryable, rootAuditedEntityQueryable, options, id, revisionNumber );
+		applyUpdateContextWhereCommon( update, rootEntityDescriptor, rootAuditedEntityDescriptor, options, id, revisionNumber );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// AND REVEND is null
-		update.addWhereColumn( auditedEntityQueryable.toColumns( options.getRevisionEndFieldName() )[0], " is null" );
+		update.addWhereColumn( auditedEntityDescriptor.toColumns( options.getRevisionEndFieldName() )[0], " is null" );
 
 		return update;
 	}
@@ -536,23 +539,23 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final SessionFactoryImplementor sessionFactory = session.getSessionFactory();
 		final AuditServiceOptions options = auditService.getOptions();
 
-		final Queryable entityQueryable = getQueryable( entityName, session );
-		final Queryable auditedEntityQueryable = getQueryable( auditedEntityName, session );
+		final EntityDescriptor entityDescriptor = getEntityDescriptor( entityName, session );
+		final EntityDescriptor auditedEntityDescriptor = getEntityDescriptor( auditedEntityName, session );
 
 		final UpdateContext update = new UpdateContext( sessionFactory );
-		update.setTableName( getUpdateTableName( entityQueryable, auditedEntityQueryable, auditedEntityQueryable ) );
+		update.setTableName( getUpdateTableName( entityDescriptor, auditedEntityDescriptor, auditedEntityDescriptor ) );
 
-		final Type timestampType = auditedEntityQueryable.getPropertyType( options.getRevisionEndTimestampFieldName() );
+		final Type timestampType = auditedEntityDescriptor.getPropertyType( options.getRevisionEndTimestampFieldName() );
 		final Object timestampValue = getRevisionEndTimestampValue( revision, options );
-		update.addColumn( auditedEntityQueryable.toColumns( options.getRevisionEndTimestampFieldName() )[0] );
+		update.addColumn( auditedEntityDescriptor.toColumns( options.getRevisionEndTimestampFieldName() )[0] );
 		update.bind( timestampValue, timestampType );
 
 		final Number revisionNumber = auditService.getRevisionInfoNumberReader().getRevisionNumber( revision );
-		applyUpdateContextWhereCommon( update, entityQueryable, auditedEntityQueryable, options, id, revisionNumber );
+		applyUpdateContextWhereCommon( update, entityDescriptor, auditedEntityDescriptor, options, id, revisionNumber );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// AND REVEND_TSTMP is null
-		update.addWhereColumn( auditedEntityQueryable.toColumns( options.getRevisionEndTimestampFieldName() )[0], " is null" );
+		update.addWhereColumn( auditedEntityDescriptor.toColumns( options.getRevisionEndTimestampFieldName() )[0], " is null" );
 
 		return update;
 	}
@@ -561,55 +564,65 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	 * Apply common where predicates to the update context.
 	 *
 	 * @param updateContext The update context.
-	 * @param entityQueryable The entity queryable.
-	 * @param auditedEntityQueryable The audited entity queryable.
+	 * @param entityDescriptor The entity descriptor.
+	 * @param auditedEntityDescriptor The audited entity descriptor.
 	 * @param options The AuditServiceOptions.
 	 * @param id The entity identifier.
 	 * @param revisionNumber The revision number.
 	 */
 	private void applyUpdateContextWhereCommon(UpdateContext updateContext,
-			Queryable entityQueryable,
-			Queryable auditedEntityQueryable,
+			EntityDescriptor entityDescriptor,
+			EntityDescriptor auditedEntityDescriptor,
 			AuditServiceOptions options,
 			Serializable id,
 			Number revisionNumber) {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// WHERE (entity_id) = ? AND REV <> ? AND REVEND is null
-		updateContext.addPrimaryKeyColumns( entityQueryable.getIdentifierColumnNames() );
-		updateContext.bind( id, entityQueryable.getIdentifierType() );
+		updateContext.addPrimaryKeyColumns( getEntityDescriptorPrimaryKeyColumnNames( entityDescriptor ) );
+		updateContext.bind( id, entityDescriptor.getIdentifierType() );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// AND REV <> ?
-		updateContext.addWhereColumn( auditedEntityQueryable.toColumns( options.getRevisionNumberPath() )[0], " <> ?" );
-		updateContext.bind( revisionNumber, auditedEntityQueryable.getPropertyType( options.getRevisionNumberPath() ) );
+		updateContext.addWhereColumn( auditedEntityDescriptor.toColumns( options.getRevisionNumberPath() )[0], " <> ?" );
+		updateContext.bind( revisionNumber, auditedEntityDescriptor.getPropertyType( options.getRevisionNumberPath() ) );
 	}
 
-	private Queryable getQueryable(String entityName, SessionImplementor sessionImplementor) {
-		return (Queryable) sessionImplementor.getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
+	private EntityDescriptor getEntityDescriptor(String entityName, SessionImplementor sessionImplementor) {
+		return sessionImplementor.getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
+	}
+
+	private String[] getEntityDescriptorPrimaryKeyColumnNames(EntityDescriptor entityDescriptor) {
+		final List<PhysicalColumn> primaryKeyColumns = entityDescriptor.getPrimaryTable().getPrimaryKey().getColumns();
+		final String[] columns = new String[ primaryKeyColumns.size() ];
+		for ( int i = 0; i < primaryKeyColumns.size(); ++i ) {
+			columns[ i ] = primaryKeyColumns.get( i ).getName().render();
+		}
+		return columns;
 	}
 
 	/**
 	 * Get the update table name based on the various queryable instances.
 	 *
-	 * @param rootProductionEntityQueryable The root entity queryable.
-	 * @param rootAuditedEntityQueryable The root audited entity queryable.
-	 * @param auditedEntityQueryable The audited entity queryable.
+	 * @param rootEntityDescriptor The root entity descriptor.
+	 * @param rootAuditedEntityDescriptor The root audited entity descriptor.
+	 * @param auditedEntityDescriptor The audited entity descriptor.
 	 * @return the update table name.
 	 */
-	private String getUpdateTableName(Queryable rootProductionEntityQueryable,
-			Queryable rootAuditedEntityQueryable,
-			Queryable auditedEntityQueryable) {
-		if ( UnionSubclassEntityPersister.class.isInstance( rootProductionEntityQueryable ) ) {
+	private String getUpdateTableName(
+			EntityDescriptor rootEntityDescriptor,
+			EntityDescriptor rootAuditedEntityDescriptor,
+			EntityDescriptor auditedEntityDescriptor) {
+		if ( UnionSubclassEntityPersister.class.isInstance( rootEntityDescriptor ) ) {
 			// this is the condition causing all the problems in terms of the generated SQL UPDATE
 			// the problem being that we currently try to update the in-line view made up of the union query
 			//
 			// this is extremely hacky means to get the root table name for the union subclass style entities.
 			// hacky because it relies on internal behavior of UnionSubclassEntityPersister
 			// !!!!!! NOTICE - using subclass persister, not root !!!!!!
-			return auditedEntityQueryable.getSubclassTableName( 0 );
+			return auditedEntityDescriptor.getSubclassTableName( 0 );
 		}
 		else {
-			return rootAuditedEntityQueryable.getTableName();
+			return rootAuditedEntityDescriptor.getPrimaryTable().getTableExpression();
 		}
 	}
 

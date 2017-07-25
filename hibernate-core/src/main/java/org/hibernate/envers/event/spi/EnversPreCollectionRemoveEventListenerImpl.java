@@ -34,7 +34,7 @@ public class EnversPreCollectionRemoveEventListenerImpl
 	public void onPreRemoveCollection(PreCollectionRemoveEvent event) {
 		final CollectionEntry collectionEntry = getCollectionEntry( event );
 		if ( collectionEntry != null ) {
-			if ( !collectionEntry.getLoadedPersister().isInverse() ) {
+			if ( !collectionEntry.getLoadedPersistentCollectionDescriptor().isInverse() ) {
 				Serializable oldColl = collectionEntry.getSnapshot();
 				if ( !event.getCollection().wasInitialized() && shouldGenerateRevision( event ) ) {
 					// In case of uninitialized collection we need a fresh snapshot to properly calculate audit data.

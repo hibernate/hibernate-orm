@@ -784,7 +784,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Object getLoadedCollectionOwnerOrNull(PersistentCollection collection) {
 		final CollectionEntry ce = getCollectionEntry( collection );
-		if ( ce.getLoadedPersister() == null ) {
+		if ( ce.getLoadedPersistentCollectionDescriptor() == null ) {
 			return null;
 		}
 
@@ -793,7 +793,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		// return collection.getOwner()
 		final Serializable entityId = getLoadedCollectionOwnerIdOrNull( ce );
 		if ( entityId != null ) {
-			loadedOwner = getCollectionOwner( entityId, ce.getLoadedPersister() );
+			loadedOwner = getCollectionOwner( entityId, ce.getLoadedPersistentCollectionDescriptor() );
 		}
 		return loadedOwner;
 	}
@@ -810,12 +810,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 * @return the owner ID if available from the collection's loaded key; otherwise, returns null
 	 */
 	private Serializable getLoadedCollectionOwnerIdOrNull(CollectionEntry ce) {
-		if ( ce == null || ce.getLoadedKey() == null || ce.getLoadedPersister() == null ) {
+		if ( ce == null || ce.getLoadedKey() == null || ce.getLoadedPersistentCollectionDescriptor() == null ) {
 			return null;
 		}
 		// TODO: an alternative is to check if the owner has changed; if it hasn't then
 		// get the ID from collection.getOwner()
-		return ce.getLoadedPersister().getOrmType().getIdOfOwnerOrNull( ce.getLoadedKey(), session );
+		return ce.getLoadedPersistentCollectionDescriptor().getOrmType().getIdOfOwnerOrNull( ce.getLoadedKey(), session );
 	}
 
 	@Override
@@ -851,7 +851,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	private void addCollection(PersistentCollection coll, CollectionEntry entry, Serializable key) {
 		collectionEntries.put( coll, entry );
-		final CollectionKey collectionKey = new CollectionKey( entry.getLoadedPersister(), key );
+		final CollectionKey collectionKey = new CollectionKey( entry.getLoadedPersistentCollectionDescriptor(), key );
 		final PersistentCollection old = collectionsByKey.put( collectionKey, coll );
 		if ( old != null ) {
 			if ( old == coll ) {
@@ -1610,7 +1610,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 			rtn.collectionsByKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
-				rtn.collectionsByKey.put( CollectionKey.deserialize( ois, session ), (PersistentCollection) ois.readObject() );
+				rtn.collectionsByKey.put( CollectionKey.deserialize( ois ), (PersistentCollection) ois.readObject() );
 			}
 
 			count = ois.readInt();

@@ -7,6 +7,7 @@
 package org.hibernate.action.internal;
 
 import java.io.Serializable;
+import java.util.Set;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.internal.ForeignKeys;
@@ -19,6 +20,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 
 /**
  * A base class for entity insert actions.
@@ -88,7 +90,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	public NonNullableTransientDependencies findNonNullableTransientEntities() {
 		return ForeignKeys.findNonNullableTransientEntities(
-				getPersister().getEntityName(),
+				getEntityDescriptor().getEntityName(),
 				getInstance(),
 				getState(),
 				isEarlyInsert(),
@@ -110,9 +112,11 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	protected final void nullifyTransientReferencesIfNotAlready() {
 		if ( ! areTransientReferencesNullified ) {
+			final Set<PersistentAttribute<?, ?>> persistentAttributes = (Set<PersistentAttribute<?, ?>>) getEntityDescriptor()
+					.getPersistentAttributes();
 			new ForeignKeys.Nullifier( getInstance(), false, isEarlyInsert(), getSession() )
-					.nullifyTransientReferences( getState(), getPersister().getPropertyTypes() );
-			new Nullability( getSession() ).checkNullability( getState(), getPersister(), false );
+					.nullifyTransientReferences( getState(), persistentAttributes );
+			new Nullability( getSession() ).checkNullability( getState(), getEntityDescriptor(), false );
 			areTransientReferencesNullified = true;
 		}
 	}
@@ -122,16 +126,16 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	public final void makeEntityManaged() {
 		nullifyTransientReferencesIfNotAlready();
-		final Object version = Versioning.getVersion( getState(), getPersister() );
+		final Object version = Versioning.getVersion( getState(), getEntityDescriptor() );
 		getSession().getPersistenceContext().addEntity(
 				getInstance(),
-				( getPersister().getHierarchy().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
+				( getEntityDescriptor().getHierarchy().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				getState(),
 				getEntityKey(),
 				version,
 				LockMode.WRITE,
 				isExecuted,
-				getPersister(),
+				getEntityDescriptor(),
 				isVersionIncrementDisabled
 		);
 	}
@@ -166,7 +170,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	protected void handleNaturalIdPreSaveNotifications() {
 		// beforeQuery save, we need to add a local (transactional) natural id cross-reference
 		getSession().getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
-				getPersister(),
+				getEntityDescriptor(),
 				getId(),
 				state,
 				null,
@@ -183,7 +187,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		if ( isEarlyInsert() ) {
 			// with early insert, we still need to add a local (transactional) natural id cross-reference
 			getSession().getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
-					getPersister(),
+					getEntityDescriptor(),
 					generatedId,
 					state,
 					null,
@@ -192,7 +196,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		}
 		// afterQuery save, we need to manage the shared cache entries
 		getSession().getPersistenceContext().getNaturalIdHelper().manageSharedNaturalIdCrossReference(
-				getPersister(),
+				getEntityDescriptor(),
 				generatedId,
 				state,
 				null,

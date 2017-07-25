@@ -6,12 +6,12 @@
  */
 package org.hibernate.procedure.internal;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.procedure.ParameterBind;
 import org.hibernate.procedure.spi.ParameterBindImplementor;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryParameterBindingImpl;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
-import org.hibernate.type.Type;
 
 /**
  * Implementation of the {@link ParameterBind} contract.
@@ -26,7 +26,7 @@ public class ParameterBindImpl<T> extends QueryParameterBindingImpl<T> implement
 	}
 
 	public ParameterBindImpl(
-			Type bindType,
+			AllowableParameterType bindType,
 			QueryParameter<T> queryParameter,
 			QueryParameterBindingTypeResolver typeResolver) {
 		super( bindType, queryParameter, typeResolver );
@@ -38,7 +38,7 @@ public class ParameterBindImpl<T> extends QueryParameterBindingImpl<T> implement
 	}
 
 	@Override
-	public Type getBindType() {
+	public AllowableParameterType<T> getBindType() {
 		return super.getBindType();
 	}
 }

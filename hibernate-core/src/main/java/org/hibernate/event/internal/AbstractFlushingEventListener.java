@@ -290,7 +290,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 				actionQueue.addAction(
 						new CollectionRemoveAction(
 								coll,
-								ce.getLoadedPersister(),
+								ce.getLoadedPersistentCollectionDescriptor(),
 								ce.getLoadedKey(),
 								ce.isSnapshotEmpty(coll),
 								session
@@ -302,7 +302,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 				actionQueue.addAction(
 						new CollectionUpdateAction(
 								coll,
-								ce.getLoadedPersister(),
+								ce.getLoadedPersistentCollectionDescriptor(),
 								ce.getLoadedKey(),
 								ce.isSnapshotEmpty(coll),
 								session
@@ -315,7 +315,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 				actionQueue.addAction(
 						new QueuedOperationCollectionAction(
 								coll,
-								ce.getLoadedPersister(),
+								ce.getLoadedPersistentCollectionDescriptor(),
 								ce.getLoadedKey(),
 								session
 							)
@@ -387,7 +387,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 			CollectionEntry collectionEntry = me.getValue();
 			PersistentCollection persistentCollection = me.getKey();
 			collectionEntry.postFlush(persistentCollection);
-			if ( collectionEntry.getLoadedPersister() == null ) {
+			if ( collectionEntry.getLoadedPersistentCollectionDescriptor() == null ) {
 				//if the collection is dereferenced, unset its session reference and remove from the session cache
 				//iter.remove(); //does not work, since the entrySet is not backed by the set
 				persistentCollection.unsetSession( session );
@@ -397,7 +397,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 			else {
 				//otherwise recreate the mapping between the collection and its key
 				CollectionKey collectionKey = new CollectionKey(
-						collectionEntry.getLoadedPersister(),
+						collectionEntry.getLoadedPersistentCollectionDescriptor(),
 						collectionEntry.getLoadedKey()
 				);
 				persistenceContext.getCollectionsByKey().put(collectionKey, persistentCollection);

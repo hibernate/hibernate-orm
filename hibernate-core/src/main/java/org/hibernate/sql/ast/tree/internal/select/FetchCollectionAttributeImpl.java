@@ -61,11 +61,6 @@ public class FetchCollectionAttributeImpl extends AbstractCollectionReference im
 	}
 
 	@Override
-	public NavigableReference getFetchedNavigableReference() {
-		return getNavigableReference();
-	}
-
-	@Override
 	public FetchStrategy getFetchStrategy() {
 		return fetchStrategy;
 	}
@@ -77,6 +72,6 @@ public class FetchCollectionAttributeImpl extends AbstractCollectionReference im
 
 	@Override
 	public PluralPersistentAttribute getFetchedNavigable() {
-		return (PluralPersistentAttribute) getFetchedNavigableReference().getNavigable();
+		return (PluralPersistentAttribute) getNavigableReference().getNavigable();
 	}
 }

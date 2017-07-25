@@ -11,7 +11,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Second level cache providers now have the option to use custom key implementations.
@@ -26,7 +26,7 @@ import org.hibernate.type.Type;
  * to use the primary id only, skipping the role or entity name.
  * <p/>
  * Even with multiple types sharing the same cache, their identifiers could be of the same
- * {@link Type}; in this case the cache container could
+ * {@link JavaTypeDescriptor}; in this case the cache container could
  * use a single type reference to implement a custom equality function without having
  * to look it up on each equality check: that's a small optimisation but the
  * equality function is often invoked extremely frequently.
@@ -34,23 +34,34 @@ import org.hibernate.type.Type;
  * Another reason is to make it more convenient to implement custom serialization protocols when the
  * implementation supports clustering.
  *
- * @see Type#getHashCode(Object)
- * @see Type#isEqual(Object, Object)
+ * @see JavaTypeDescriptor#extractHashCode(Object)
+ * @see JavaTypeDescriptor#areEqual(Object, Object)
  * @author Sanne Grinovero
  * @since 5.0
  */
 public class DefaultCacheKeysFactory {
 
-	public static Object createCollectionKey(Object id, PersistentCollectionDescriptor persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return new OldCacheKeyImplementation( id, persister.getKeyType(), persister.getRole(), tenantIdentifier );
+	public static Object createCollectionKey(Object id, PersistentCollectionDescriptor descriptor, SessionFactoryImplementor factory, String tenantIdentifier) {
+		return new OldCacheKeyImplementation( id, descriptor.getKeyJavaTypeDescriptor(), descriptor.getNavigableRole().getFullPath(), tenantIdentifier );
 	}
 
-	public static Object createEntityKey(Object id, EntityDescriptor persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return new OldCacheKeyImplementation( id, persister.getIdentifierType(), persister.getRootEntityName(), tenantIdentifier );
+	public static Object createEntityKey(Object id, EntityDescriptor descriptor, SessionFactoryImplementor factory, String tenantIdentifier) {
+		return new OldCacheKeyImplementation(
+				id,
+				descriptor.getIdentifierType().getJavaTypeDescriptor(),
+				descriptor.getHierarchy().getRootEntityType().getEntityName(),
+				tenantIdentifier
+		);
 	}
 
-	public static Object createNaturalIdKey(Object[] naturalIdValues, EntityDescriptor persister, SharedSessionContractImplementor session) {
-		return new OldNaturalIdCacheKey( naturalIdValues,  persister.getPropertyTypes(), persister.getNaturalIdentifierProperties(), persister.getRootEntityName(), session );
+	public static Object createNaturalIdKey(Object[] naturalIdValues, EntityDescriptor descriptor, SharedSessionContractImplementor session) {
+		return new OldNaturalIdCacheKey(
+				naturalIdValues,
+				descriptor.getPropertyTypes(),
+				descriptor.getNaturalIdentifierProperties(),
+				descriptor.getHierarchy().getRootEntityType().getEntityName(),
+				session
+		);
 	}
 
 	public static Object getEntityId(Object cacheKey) {
@@ -67,18 +78,18 @@ public class DefaultCacheKeysFactory {
 
 	public static CacheKeysFactory INSTANCE = new CacheKeysFactory() {
 		@Override
-		public Object createCollectionKey(Object id, PersistentCollectionDescriptor persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-			return DefaultCacheKeysFactory.createCollectionKey(id, persister, factory, tenantIdentifier);
+		public Object createCollectionKey(Object id, PersistentCollectionDescriptor collectionDescriptor, SessionFactoryImplementor factory, String tenantIdentifier) {
+			return DefaultCacheKeysFactory.createCollectionKey(id, collectionDescriptor, factory, tenantIdentifier);
 		}
 
 		@Override
-		public Object createEntityKey(Object id, EntityDescriptor persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-			return DefaultCacheKeysFactory.createEntityKey(id, persister, factory, tenantIdentifier);
+		public Object createEntityKey(Object id, EntityDescriptor entityDescriptor, SessionFactoryImplementor factory, String tenantIdentifier) {
+			return DefaultCacheKeysFactory.createEntityKey(id, entityDescriptor, factory, tenantIdentifier);
 		}
 
 		@Override
-		public Object createNaturalIdKey(Object[] naturalIdValues, EntityDescriptor persister, SharedSessionContractImplementor session) {
-			return DefaultCacheKeysFactory.createNaturalIdKey(naturalIdValues, persister, session);
+		public Object createNaturalIdKey(Object[] naturalIdValues, EntityDescriptor entityDescriptor, SharedSessionContractImplementor session) {
+			return DefaultCacheKeysFactory.createNaturalIdKey(naturalIdValues, entityDescriptor, session);
 		}
 
 		@Override

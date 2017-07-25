@@ -13,19 +13,13 @@ import java.util.List;
 
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
-import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
-import org.hibernate.sql.ast.tree.spi.select.Fetch;
-import org.hibernate.sql.ast.tree.spi.select.FetchParent;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -44,12 +38,6 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 				Integer.MAX_VALUE
 		);
 
-	}
-
-	@Override
-	public Type getOrmType() {
-		// what should this be?
-		throw new NotYetImplementedException(  );
 	}
 
 	@Override
@@ -116,19 +104,7 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 
 	@Override
 	public void visitNavigable(NavigableVisitationStrategy visitor) {
-		visitor.visitRowId( this );
-	}
-
-	@Override
-	public QueryResult generateReturn(
-			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Fetch generateFetch(
-			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
-		throw new UnsupportedOperationException();
+		visitor.visitRowIdDescriptor( this );
 	}
 
 	@Override
@@ -138,7 +114,7 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 
 	@Override
 	public Class getBindableJavaType() {
-		return getOrmType().getJavaType();
+		return getJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override
@@ -176,8 +152,4 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 		return null;
 	}
 
-	@Override
-	public String getTypeName() {
-		return getOrmType().getName();
-	}
 }

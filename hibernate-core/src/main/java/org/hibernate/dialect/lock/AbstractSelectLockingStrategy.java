@@ -8,6 +8,7 @@ package org.hibernate.dialect.lock;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.metamodel.model.domain.spi.Lockable;
 
 /**
  * Base {@link LockingStrategy} implementation to support implementations

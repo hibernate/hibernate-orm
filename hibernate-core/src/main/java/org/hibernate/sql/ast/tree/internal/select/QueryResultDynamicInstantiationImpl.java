@@ -34,18 +34,8 @@ public class QueryResultDynamicInstantiationImpl implements QueryResultDynamicIn
 	}
 
 	@Override
-	public String getSelectedExpressionDescription() {
-		return dynamicInstantiation.toString();
-	}
-
-	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return dynamicInstantiation.getType().getJavaTypeDescriptor();
-	}
-
-	@Override
-	public String getResultVariable() {
-		return resultVariable;
 	}
 
 	@Override

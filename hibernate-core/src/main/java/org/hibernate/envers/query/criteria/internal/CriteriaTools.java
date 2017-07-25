@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.query.criteria.internal;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -18,8 +19,9 @@ import org.hibernate.envers.internal.entities.RelationType;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.criteria.AuditId;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
-import org.hibernate.type.EmbeddedComponentType;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -109,11 +111,13 @@ public abstract class CriteriaTools {
 			// Single id.
 			return Arrays.asList( identifierPropertyName );
 		}
-		final Type identifierType = sessionFactory.getTypeConfiguration().findEntityDescriptor( entityName ).getIdentifierType();
-		if ( identifierType instanceof EmbeddedComponentType ) {
+		final EntityDescriptor entityDescriptor = sessionFactory.getTypeConfiguration().findEntityDescriptor( entityName );
+		final EntityIdentifier entityIdentifier = entityDescriptor.getIdentifierDescriptor();
+
+		if ( entityIdentifier instanceof EntityIdentifierCompositeNonAggregated ) {
 			// Multiple ids.
-			final EmbeddedComponentType embeddedComponentType = (EmbeddedComponentType) identifierType;
-			return Arrays.asList( embeddedComponentType.getPropertyNames() );
+			final EntityIdentifierCompositeNonAggregated embeddedId = EntityIdentifierCompositeNonAggregated.class.cast( entityIdentifier );
+			return new ArrayList<>( embeddedId.getEmbeddedDescriptor().getAttributesByName().keySet() );
 		}
 		return Collections.emptyList();
 	}

@@ -7,6 +7,8 @@
 package org.hibernate.engine.internal;
 
 import java.io.Serializable;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.metamodel.Attribute;
@@ -24,6 +26,7 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute.SingularAttributeClassification;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.Type;
@@ -95,37 +98,40 @@ public final class ForeignKeys {
 					return isNullifiable( entityName, value ) ? null : value;
 				}
 			}
-			else if ( attribute instanceof SingularPersistentAttribute )
-			{
-				final SingularPersistentAttribute.SingularAttributeClassification singularAttributeClassification = ( (SingularPersistentAttribute) attribute )
-						.getAttributeTypeClassification();
-				if( singularAttributeClassification == SingularPersistentAttribute.SingularAttributeClassification.ANY )
-				{
-					return isNullifiable( null, value ) ? null : value;
-				}else if( singularAttributeClassification == SingularPersistentAttribute.SingularAttributeClassification.EMBEDDED){
-					SingularPersistentAttributeEmbedded embedded = (SingularPersistentAttributeEmbedded) attribute;
-					final EmbeddedTypeDescriptor embeddedDescriptor = embedded.getEmbeddedDescriptor();
-					final Object[] subvalues = embeddedDescriptor.getPropertyValues(  value );
+			else if ( attribute instanceof SingularPersistentAttribute ) {
+				final SingularAttributeClassification attributeClassification =
+						( (SingularPersistentAttribute) attribute ).getAttributeTypeClassification();
 
-					final Type[] subtypes = actype.getSubtypes();
+				if ( attributeClassification == SingularAttributeClassification.ANY ) {
+					return isNullifiable( null, value ) ? null : value;
+				}
+				else if ( attributeClassification == SingularAttributeClassification.EMBEDDED ) {
+					final SingularPersistentAttributeEmbedded embedded = (SingularPersistentAttributeEmbedded) attribute;
+					final EmbeddedTypeDescriptor embeddedDescriptor = embedded.getEmbeddedDescriptor();
+					final Map<String, PersistentAttribute> embeddedAttributes = embeddedDescriptor.getDeclaredAttributesByName();
+
+					final Map<String, Object> embeddedValues = new LinkedHashMap<>();
+					for ( String propertyName : embeddedAttributes.keySet() ) {
+						embeddedValues.put( propertyName, embeddedDescriptor.getPropertyValue( value, propertyName ) );
+					}
+
 					boolean substitute = false;
-					for ( int i = 0; i < subvalues.length; i++ ) {
-						final Object replacement = nullifyTransientReferences( subvalues[i], subtypes[i] );
-						if ( replacement != subvalues[i] ) {
+					for ( Map.Entry<String, PersistentAttribute> attributeEntry : embeddedAttributes.entrySet() ) {
+						final Object attributeValue = embeddedDescriptor.getPropertyValue( value, attributeEntry.getKey() );
+						final Object replacement = nullifyTransientReferences( attributeValue, attributeEntry.getValue() );
+						if ( replacement != attributeValue ) {
 							substitute = true;
-							subvalues[i] = replacement;
+							embeddedValues.put( attributeEntry.getKey(), replacement );
 						}
 					}
 					if ( substitute ) {
 						// todo : need to account for entity mode on the CompositeType interface :(
-						actype.setPropertyValues( value, subvalues, EntityMode.POJO );
+						embeddedDescriptor.setPropertyValues( value, embeddedValues.values().toArray() );
 					}
 					return value;
 				}
 			}
-			else {
-				return value;
-			}
+			return value;
 		}
 
 		/**
@@ -347,7 +353,8 @@ public final class ForeignKeys {
 			Nullifier nullifier,
 			Object value,
 			String propertyName,
-			Type type,
+			//Type type,
+			PersistentAttribute attribute,
 			boolean isNullable,
 			SharedSessionContractImplementor session,
 			NonNullableTransientDependencies nonNullableTransientEntities) {

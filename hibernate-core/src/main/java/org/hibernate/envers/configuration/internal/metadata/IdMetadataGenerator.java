@@ -20,10 +20,10 @@ import org.hibernate.envers.internal.entities.mapper.id.SimpleIdMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.id.SingleIdMapper;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.Type;
+import org.hibernate.query.spi.NavigablePath;
 
 import org.dom4j.Element;
 import org.dom4j.tree.DefaultElement;
@@ -50,10 +50,9 @@ public final class IdMetadataGenerator {
 			boolean audited) {
 		while ( properties.hasNext() ) {
 			final Property property = properties.next();
-			final Type propertyType = property.getType();
-			if ( !"_identifierMapper".equals( property.getName() ) ) {
+			if ( !NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( property.getName() ) ) {
 				boolean added = false;
-				if ( propertyType instanceof ManyToOneType ) {
+				if ( property.getValue() instanceof ManyToOne ) {
 					added = mainGenerator.getBasicMetadataGenerator().addManyToOne(
 							parent,
 							getIdPersistentPropertyAuditingData( property ),
@@ -77,7 +76,7 @@ public final class IdMetadataGenerator {
 					// If the entity is not audited, then we simply don't support this entity, even in
 					// target relation mode not audited.
 					if ( audited ) {
-						throw new MappingException( "Type not supported: " + propertyType.getClass().getName() );
+						throw new MappingException( "Property [" + property.getName() + " uses an unsupported type." );
 					}
 					else {
 						return false;

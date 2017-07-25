@@ -6,6 +6,9 @@
  */
 package org.hibernate.envers.query.criteria.internal;
 
+import java.util.Map;
+import java.util.Set;
+
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
@@ -13,9 +16,9 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -58,19 +61,20 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 			// Any other operator for a component type will not be supported.
 			// Non-component types will continue to behave normally.
 			final SessionImplementor session = versionsReader.getSessionImplementor();
-			final Type type = getPropertyType( session, entityName, propertyName );
-			if ( type != null && type.isComponentType() ) {
+			final PersistentAttribute persistentAttribute = getPersistentAttribute( session, entityName, propertyName );
+			if ( persistentAttribute != null && persistentAttribute instanceof SingularPersistentAttributeEmbedded ) {
 				if ( !"=".equals( op ) && !"<>".equals( op ) ) {
 					throw new AuditException( "Component-based criterion is not supported for op: " + op );
 				}
-				final ComponentType componentType = (ComponentType) type;
-				for ( int i = 0; i < componentType.getPropertyNames().length; i++ ) {
-					final Object componentValue = componentType.getPropertyValue( value, i, session );
+				final SingularPersistentAttributeEmbedded embeddedAttribute = (SingularPersistentAttributeEmbedded) persistentAttribute;
+				final Set<PersistentAttribute> attributes = embeddedAttribute.getEmbeddedDescriptor().getPersistentAttributes();
+				for ( PersistentAttribute attribute : attributes ) {
+					final Object attributeValue = embeddedAttribute.getEmbeddedDescriptor().getPropertyValue( value, attribute.getName() );
 					parameters.addWhereWithParam(
 							alias,
-							propertyName + "_" + componentType.getPropertyNames()[ i ],
+							propertyName + "_" + attribute.getName(),
 							op,
-							componentValue
+							attributeValue
 					);
 				}
 			}
@@ -91,22 +95,17 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 	}
 
 	/**
-	 * Get the property type of a given property in the specified entity.
+	 * Get the attribute by name from the specified entity.
 	 *
 	 * @param session      the session
 	 * @param entityName   the entity name
-	 * @param propertyName the property name
-	 * @return the property type of the property or {@code null} if the property name isn't found.
+	 * @param propertyName the property attribute name
+	 *
+	 * @return the persistent attribute or {@code null} if the attribute isn't found.
 	 */
-	private Type getPropertyType(SessionImplementor session, String entityName, String propertyName) {
-		// rather than rely on QueryException from calling getPropertyType(), this allows a non-failure way
-		// to determine whether to return null or lookup the value safely.
-		final EntityDescriptor persister = session.getSessionFactory().getTypeConfiguration().findEntityDescriptor( entityName );
-		for ( String name : persister.getPropertyNames() ) {
-			if ( name.equals( propertyName ) ) {
-				return persister.getPropertyType( propertyName );
-			}
-		}
-		return null;
+	private PersistentAttribute getPersistentAttribute(SessionImplementor session, String entityName, String attributeName) {
+		final EntityDescriptor entityDescriptor = session.getSessionFactory().getTypeConfiguration().findEntityDescriptor( entityName );
+		final Map<String, PersistentAttribute> attributes = (Map<String, PersistentAttribute>) entityDescriptor.getAttributesByName();
+		return attributes.getOrDefault( attributeName, null );
 	}
 }

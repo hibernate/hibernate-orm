@@ -30,7 +30,9 @@ import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
+import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -41,10 +43,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.GeneratedValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.ValueGeneration;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.OneToOneType;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.Type;
@@ -214,7 +212,7 @@ public final class AuditMetadataGenerator {
 				final Element property = MetadataTools.addProperty(
 						mapping,
 						options.getRevisionEndTimestampFieldName(),
-						timestampType.getName(),
+						timestampType.getJavaTypeDescriptor().getTypeName(),
 						true,
 						true,
 						false
@@ -242,7 +240,6 @@ public final class AuditMetadataGenerator {
 			PropertyAuditingData propertyAuditingData,
 			boolean insertable,
 			boolean processModifiedFlag) {
-		final Type type = value.getType();
 		final boolean isBasic = basicMetadataGenerator.addBasic(
 				parent,
 				propertyAuditingData,
@@ -255,26 +252,28 @@ public final class AuditMetadataGenerator {
 		if ( isBasic ) {
 			// The property was mapped by the basic generator.
 		}
-		else if ( type instanceof ComponentType ) {
+		else if ( value instanceof Component ) {
 			componentMetadataGenerator.addComponent(
 					parent, propertyAuditingData, value, currentMapper,
 					entityName, xmlMappingData, true
 			);
 		}
 		else {
-			if ( !processedInSecondPass( type ) ) {
+			if ( !processedInSecondPass( value ) ) {
 				// If we got here in the first pass, it means the basic mapper didn't map it, and none of the
 				// above branches either.
-				throwUnsupportedTypeException( type, entityName, propertyAuditingData.getName() );
+				throwUnsupportedTypeException( value, entityName, propertyAuditingData.getName() );
 			}
 			return;
 		}
 		addModifiedFlagIfNeeded( parent, propertyAuditingData, processModifiedFlag );
 	}
 
-	private boolean processedInSecondPass(Type type) {
-		return type instanceof ComponentType || type instanceof ManyToOneType ||
-				type instanceof OneToOneType || type instanceof CollectionType;
+	private boolean processedInSecondPass(Value value) {
+		return value instanceof Component ||
+				value instanceof ManyToOne ||
+				value instanceof OneToOne ||
+				value instanceof Collection;
 	}
 
 	private void addValueInSecondPass(
@@ -286,9 +285,7 @@ public final class AuditMetadataGenerator {
 			PropertyAuditingData propertyAuditingData,
 			boolean insertable,
 			boolean processModifiedFlag) {
-		final Type type = value.getType();
-
-		if ( type instanceof ComponentType ) {
+		if ( value instanceof Component ) {
 			componentMetadataGenerator.addComponent(
 					parent,
 					propertyAuditingData,
@@ -301,7 +298,7 @@ public final class AuditMetadataGenerator {
 			// mod flag field has been already generated in first pass
 			return;
 		}
-		else if ( type instanceof ManyToOneType ) {
+		else if ( value instanceof ManyToOne ) {
 			toOneRelationMetadataGenerator.addToOne(
 					parent,
 					propertyAuditingData,
@@ -311,7 +308,7 @@ public final class AuditMetadataGenerator {
 					insertable
 			);
 		}
-		else if ( type instanceof OneToOneType ) {
+		else if ( value instanceof OneToOne ) {
 			final OneToOne oneToOne = (OneToOne) value;
 			if ( oneToOne.getReferencedPropertyName() != null ) {
 				toOneRelationMetadataGenerator.addOneToOneNotOwning(
@@ -332,7 +329,7 @@ public final class AuditMetadataGenerator {
 				);
 			}
 		}
-		else if ( type instanceof CollectionType ) {
+		else if ( value instanceof Collection ) {
 			final CollectionMetadataGenerator collectionMetadataGenerator = new CollectionMetadataGenerator(
 					this,
 					(Collection) value,
@@ -565,7 +562,7 @@ public final class AuditMetadataGenerator {
 			final Element discriminatorElement = classMapping.addElement( "discriminator" );
 			// Database column or SQL formula allowed to distinguish entity types
 			MetadataTools.addColumnsOrFormulas( discriminatorElement, pc.getDiscriminator().getColumnIterator() );
-			discriminatorElement.addAttribute( "type", pc.getDiscriminator().getType().getName() );
+			discriminatorElement.addAttribute( "type", pc.getDiscriminator().getJavaTypeDescriptor().getTypeName() );
 		}
 
 		// Adding the id mapping
@@ -779,8 +776,8 @@ public final class AuditMetadataGenerator {
 		return auditEntityNameRegister;
 	}
 
-	void throwUnsupportedTypeException(Type type, String entityName, String propertyName) {
-		final String message = "Type not supported for auditing: " + type.getReturnedClass().getClass().getName() +
+	void throwUnsupportedTypeException(Value value, String entityName, String propertyName) {
+		final String message = "Type not supported for auditing: " + value.getJavaTypeDescriptor().getTypeName() +
 				", on entity " + entityName + ", property '" + propertyName + "'.";
 
 		throw new MappingException( message );

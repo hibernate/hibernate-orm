@@ -1,1 +1,0 @@
-Cat theManagedInstance = session.merge( someDetachedCat );

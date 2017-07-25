@@ -11,7 +11,8 @@ import java.util.Iterator;
 import org.hibernate.HibernateException;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * A session action that may be cascaded from parent entity to its children
@@ -44,13 +45,13 @@ public interface CascadingAction {
 	 * current cascading action should be visited.
 	 *
 	 * @param session The session within which the cascade is occuring.
-	 * @param collectionType The mapping type of the collection.
+	 * @param collectionDescriptor The PersistentCollectionDescriptor of the collection.
 	 * @param collection The collection instance.
 	 * @return The children iterator.
 	 */
 	Iterator getCascadableChildrenIterator(
 			EventSource session,
-			CollectionType collectionType,
+			PersistentCollectionDescriptor collectionDescriptor,
 			Object collection);
 
 	/**
@@ -78,7 +79,7 @@ public interface CascadingAction {
 	 * @param propertyType The property type
 	 * @param propertyIndex The index of the property within the owner.
 	 */
-	void noCascade(EventSource session, Object parent, EntityDescriptor entityDescriptor, Type propertyType, int propertyIndex);
+	void noCascade(EventSource session, Object parent, EntityDescriptor entityDescriptor, JavaTypeDescriptor propertyType, int propertyIndex);
 
 	/**
 	 * Should this action be performed (or noCascade consulted) in the case of lazy properties.

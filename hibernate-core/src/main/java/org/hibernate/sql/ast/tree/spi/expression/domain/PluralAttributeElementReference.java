@@ -60,11 +60,6 @@ public class PluralAttributeElementReference implements NavigableReference {
 	}
 
 	@Override
-	public ColumnReferenceSource getContributedColumnReferenceSource() {
-		return columnReferenceSource;
-	}
-
-	@Override
 	public CollectionElement getNavigable() {
 		return collectionMetadata.getElementDescriptor();
 	}

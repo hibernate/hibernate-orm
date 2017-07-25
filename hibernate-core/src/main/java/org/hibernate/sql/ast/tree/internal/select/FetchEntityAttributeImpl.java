@@ -12,17 +12,16 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.exec.results.internal.EntityFetchInitializerImpl;
-import org.hibernate.sql.exec.results.spi.Initializer;
-import org.hibernate.sql.exec.results.spi.InitializerCollector;
-import org.hibernate.sql.exec.results.spi.InitializerParent;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 import org.hibernate.sql.ast.tree.spi.select.EntityIdentifierReference;
 import org.hibernate.sql.ast.tree.spi.select.FetchEntityAttribute;
 import org.hibernate.sql.ast.tree.spi.select.FetchParent;
 import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.exec.results.internal.EntityFetchInitializerImpl;
+import org.hibernate.sql.exec.results.spi.EntityReferenceInitializer;
+import org.hibernate.sql.exec.results.spi.InitializerCollector;
+import org.hibernate.sql.exec.results.spi.InitializerParent;
 
 /**
  * @author Steve Ebersole
@@ -108,7 +107,7 @@ public class FetchEntityAttributeImpl extends AbstractFetchParent implements Fet
 	}
 
 	@Override
-	public Initializer getInitializer() {
+	public EntityReferenceInitializer getInitializer() {
 		return initializer;
 	}
 

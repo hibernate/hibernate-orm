@@ -60,11 +60,6 @@ public class PluralAttributeIndexReference implements NavigableReference {
 	}
 
 	@Override
-	public ColumnReferenceSource getContributedColumnReferenceSource() {
-		return columnReferenceSource;
-	}
-
-	@Override
 	public NavigableContainerReference getNavigableContainerReference() {
 		return containerReference;
 	}

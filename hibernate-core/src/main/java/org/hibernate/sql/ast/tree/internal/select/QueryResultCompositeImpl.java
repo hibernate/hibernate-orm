@@ -38,18 +38,8 @@ public class QueryResultCompositeImpl implements QueryResultComposite {
 	}
 
 	@Override
-	public String getSelectedExpressionDescription() {
-		return selectedExpressionText;
-	}
-
-	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return embeddedDescriptor.getJavaTypeDescriptor();
-	}
-
-	@Override
-	public String getResultVariable() {
-		return resultVariable;
 	}
 
 	@Override

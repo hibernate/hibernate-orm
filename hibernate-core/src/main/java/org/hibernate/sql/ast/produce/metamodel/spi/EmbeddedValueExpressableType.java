@@ -14,7 +14,6 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 public interface EmbeddedValueExpressableType<T> extends ExpressableType<T> {
 	EmbeddedTypeDescriptor getEmbeddedDescriptor();
 
-	@Override
 	default int getNumberOfJdbcParametersForRestriction() {
 		return getEmbeddedDescriptor().getNumberOfJdbcParametersForRestriction();
 	}

@@ -8,16 +8,12 @@ package org.hibernate.criterion;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
-import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.sql.ConditionFragment;
-import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 import net.bytebuddy.description.annotation.AnnotationDescription;
 
@@ -67,31 +63,6 @@ public abstract class AbstractEmptinessExpression implements Criterion {
 		return excludeEmpty()
 				? "exists " + innerSelect
 				: "not exists " + innerSelect;
-	}
-
-
-	protected PersistentCollectionDescriptor getQueryableCollection(
-			String entityName,
-			String propertyName,
-			SessionFactoryImplementor factory) throws HibernateException {
-		final PropertyMapping ownerMapping = (PropertyMapping) factory.getEntityPersister( entityName );
-		final Type type = ownerMapping.toType( propertyName );
-		if ( !type.getClassification().equals( Type.Classification.COLLECTION ) ) {
-			throw new MappingException(
-					"Property path [" + entityName + "." + propertyName + "] does not reference a collection"
-			);
-		}
-
-		final String role = ( (CollectionType) type ).getRole();
-		try {
-			return (QueryableCollection) factory.getTypeConfiguration().findCollectionPersister( role );
-		}
-		catch ( ClassCastException cce ) {
-			throw new QueryException( "collection role is not queryable: " + role );
-		}
-		catch ( Exception e ) {
-			throw new QueryException( "collection role not found: " + role );
-		}
 	}
 
 	@Override

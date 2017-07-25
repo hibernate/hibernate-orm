@@ -127,4 +127,9 @@ public interface EmbeddedTypeDescriptor<T>
 	 * Get the value of a particular property
 	 */
 	Object getPropertyValue(Object object, String propertyName);
+
+	/**
+	 * Get the nullability of the properties of this class
+	 */
+	boolean[] getPropertyNullability();
 }

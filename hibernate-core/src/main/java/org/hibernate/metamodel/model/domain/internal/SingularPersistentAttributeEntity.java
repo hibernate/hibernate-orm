@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.FetchStrategy;
+import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
@@ -65,6 +66,8 @@ public class SingularPersistentAttributeEntity<O,J>
 
 	private final String sqlAliasStem;
 
+	private final PersistentAttributeType persistentAttributeType;
+
 
 	public SingularPersistentAttributeEntity(
 			ManagedTypeDescriptor<O> declaringType,
@@ -92,13 +95,19 @@ public class SingularPersistentAttributeEntity<O,J>
 				valueMapping.getMappedColumns()
 		);
 
+		if ( valueMapping instanceof ManyToOne ) {
+			persistentAttributeType = PersistentAttributeType.MANY_TO_ONE;
+		}
+		else {
+			persistentAttributeType = PersistentAttributeType.ONE_TO_ONE;
+		}
+
 		this.sqlAliasStem =  SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
 	}
 
 	@Override
 	public PersistentAttributeType getPersistentAttributeType() {
-		// assume ManyToOne for now
-		return PersistentAttributeType.MANY_TO_ONE;
+		return persistentAttributeType;
 	}
 
 	@Override

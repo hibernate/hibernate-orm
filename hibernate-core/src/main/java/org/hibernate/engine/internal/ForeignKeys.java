@@ -11,17 +11,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.internal.AttributeImplementor;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
@@ -29,8 +25,6 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute.SingularAttributeClassification;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * Algorithms related to foreign key constraint transparency
@@ -89,20 +83,18 @@ public final class ForeignKeys {
 			if ( value == null ) {
 				return null;
 			}
-			else if ( attribute.getDeclaringType() instanceof EntityType ) {
-				if ( attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE ) {
-					return value;
-				}
-				else {
-					final String entityName = ( (EntityType) attribute.getDeclaringType() ).getName();
-					return isNullifiable( entityName, value ) ? null : value;
-				}
-			}
 			else if ( attribute instanceof SingularPersistentAttribute ) {
 				final SingularAttributeClassification attributeClassification =
 						( (SingularPersistentAttribute) attribute ).getAttributeTypeClassification();
-
-				if ( attributeClassification == SingularAttributeClassification.ANY ) {
+				if ( attributeClassification == SingularAttributeClassification.ONE_TO_ONE ) {
+					return value;
+				}
+				else if ( attributeClassification == SingularAttributeClassification.MANY_TO_ONE ) {
+					final SingularPersistentAttributeEntity singularPersistentAttribute = (SingularPersistentAttributeEntity) attribute;
+					final String entityName = singularPersistentAttribute.getEntityName();
+					return isNullifiable( entityName, value ) ? null : value;
+				}
+				else if ( attributeClassification == SingularAttributeClassification.ANY ) {
 					return isNullifiable( null, value ) ? null : value;
 				}
 				else if ( attributeClassification == SingularAttributeClassification.EMBEDDED ) {
@@ -117,8 +109,14 @@ public final class ForeignKeys {
 
 					boolean substitute = false;
 					for ( Map.Entry<String, PersistentAttribute> attributeEntry : embeddedAttributes.entrySet() ) {
-						final Object attributeValue = embeddedDescriptor.getPropertyValue( value, attributeEntry.getKey() );
-						final Object replacement = nullifyTransientReferences( attributeValue, attributeEntry.getValue() );
+						final Object attributeValue = embeddedDescriptor.getPropertyValue(
+								value,
+								attributeEntry.getKey()
+						);
+						final Object replacement = nullifyTransientReferences(
+								attributeValue,
+								attributeEntry.getValue()
+						);
 						if ( replacement != attributeValue ) {
 							substitute = true;
 							embeddedValues.put( attributeEntry.getKey(), replacement );
@@ -330,30 +328,30 @@ public final class ForeignKeys {
 		final Nullifier nullifier = new Nullifier( entity, false, isEarlyInsert, session );
 		final EntityDescriptor descriptor = session.getEntityPersister( entityName, entity );
 		final String[] propertyNames = descriptor.getPropertyNames();
-		final Type[] types = descriptor.getPropertyTypes();
+		final Set<PersistentAttribute<?, ?>> persistentAttributes = (Set<PersistentAttribute<?, ?>>) descriptor
+				.getPersistentAttributes();
 		final boolean[] nullability = descriptor.getPropertyNullability();
 		final NonNullableTransientDependencies nonNullableTransientEntities = new NonNullableTransientDependencies();
-		for ( int i = 0; i < types.length; i++ ) {
+		int i = 0;
+		for ( PersistentAttribute attribute : persistentAttributes) {
 			collectNonNullableTransientEntities(
-					descriptor,
 					nullifier,
 					values[i],
 					propertyNames[i],
-					types[i],
+					attribute,
 					nullability[i],
 					session,
 					nonNullableTransientEntities
 			);
+			i++;
 		}
 		return nonNullableTransientEntities.isEmpty() ? null : nonNullableTransientEntities;
 	}
 
 	private static void collectNonNullableTransientEntities(
-			EntityDescriptor descriptor,
 			Nullifier nullifier,
 			Object value,
 			String propertyName,
-			//Type type,
 			PersistentAttribute attribute,
 			boolean isNullable,
 			SharedSessionContractImplementor session,
@@ -361,37 +359,49 @@ public final class ForeignKeys {
 		if ( value == null ) {
 			return;
 		}
+		if ( attribute instanceof SingularPersistentAttributeEntity ) {
+			final SingularPersistentAttributeEntity singularPersistentAttribute = (SingularPersistentAttributeEntity) attribute;
+			if ( !isNullable && singularPersistentAttribute.getAttributeTypeClassification() != SingularAttributeClassification.ONE_TO_ONE
+					&& nullifier.isNullifiable( singularPersistentAttribute.getNavigableName(), value ) ) {
+				nonNullableTransientEntities.add( propertyName, value );
+			}
+		}
 
-		if ( type.getClassification().equals( Type.Classification.ENTITY ) ) {
-			final EntityType entityType = (EntityType) type;
-			if ( !isNullable
-					&& !entityType.isOneToOne()
-					&& nullifier.isNullifiable( entityType.getAssociatedEntityName(), value ) ) {
-				nonNullableTransientEntities.add( propertyName, value );
+		if ( attribute instanceof SingularPersistentAttribute ) {
+			final SingularAttributeClassification attributeClassification =
+					( (SingularPersistentAttribute) attribute ).getAttributeTypeClassification();
+			if ( attribute instanceof SingularPersistentAttributeEntity ) {
+				final SingularPersistentAttributeEntity singularPersistentAttribute = (SingularPersistentAttributeEntity) attribute;
+				if ( !isNullable && attributeClassification != SingularAttributeClassification.ONE_TO_ONE
+						&& nullifier.isNullifiable( singularPersistentAttribute.getNavigableName(), value ) ) {
+					nonNullableTransientEntities.add( propertyName, value );
+				}
 			}
-		}
-		else if ( type.getClassification().equals( Type.Classification.ANY )) {
-			if ( !isNullable && nullifier.isNullifiable( null, value ) ) {
-				nonNullableTransientEntities.add( propertyName, value );
+			else if ( attributeClassification == SingularAttributeClassification.ANY ) {
+				if ( !isNullable && nullifier.isNullifiable( null, value ) ) {
+					nonNullableTransientEntities.add( propertyName, value );
+				}
 			}
-		}
-		else if ( type.isComponentType() ) {
-			final EmbeddedType actype = (EmbeddedType) type;
-			final boolean[] subValueNullability = actype.getPropertyNullability();
-			if ( subValueNullability != null ) {
-				final String[] subPropertyNames = actype.getPropertyNames();
-				final Object[] subvalues = actype.getPropertyValues( value, session );
-				final Type[] subtypes = actype.getSubtypes();
-				for ( int j = 0; j < subvalues.length; j++ ) {
-					collectNonNullableTransientEntities(
-							nullifier,
-							subvalues[j],
-							subPropertyNames[j],
-							subtypes[j],
-							subValueNullability[j],
-							session,
-							nonNullableTransientEntities
-					);
+			else if ( attributeClassification == SingularAttributeClassification.EMBEDDED ) {
+				final SingularPersistentAttributeEmbedded embedded = (SingularPersistentAttributeEmbedded) attribute;
+				final EmbeddedTypeDescriptor embeddedDescriptor = embedded.getEmbeddedDescriptor();
+				final boolean[] subValueNullability = embeddedDescriptor.getPropertyNullability();
+				if ( subValueNullability != null ) {
+					final Map<String, PersistentAttribute> embeddedAttributes = embeddedDescriptor.getDeclaredAttributesByName();
+					final Object[] subvalues = embeddedDescriptor.getPropertyValues( value );
+					int j = 0;
+					for (String subPropertyNames : embeddedAttributes.keySet()){
+						collectNonNullableTransientEntities(
+								nullifier,
+								subvalues[j],
+								subPropertyNames,
+								embeddedAttributes.get( subPropertyNames ),
+								subValueNullability[j],
+								session,
+								nonNullableTransientEntities
+						);
+						j++;
+					}
 				}
 			}
 		}

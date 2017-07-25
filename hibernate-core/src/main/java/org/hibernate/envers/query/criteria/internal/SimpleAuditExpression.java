@@ -99,7 +99,7 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 	 *
 	 * @param session      the session
 	 * @param entityName   the entity name
-	 * @param propertyName the property attribute name
+	 * @param attributeName the property attribute name
 	 *
 	 * @return the persistent attribute or {@code null} if the attribute isn't found.
 	 */

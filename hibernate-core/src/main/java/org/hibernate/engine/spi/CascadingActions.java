@@ -22,6 +22,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.EntityJavaDescriptorImpl;
 
 import org.jboss.logging.Logger;
 
@@ -372,9 +374,9 @@ public class CascadingActions {
 				EventSource session,
 				Object parent,
 				EntityDescriptor entityDescriptor,
-				Type propertyType,
+				JavaTypeDescriptor propertyType,
 				int propertyIndex) {
-			if ( propertyType.getClassification().equals( Type.Classification.ENTITY ) ) {
+			if ( propertyType instanceof EntityJavaDescriptorImpl ) {
 				Object child = entityDescriptor.getPropertyValue( parent, propertyIndex );
 				String childEntityName = entityDescriptor.getEntityName();
 

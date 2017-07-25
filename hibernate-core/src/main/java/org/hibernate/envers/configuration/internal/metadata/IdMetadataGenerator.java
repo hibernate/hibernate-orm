@@ -23,7 +23,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.NavigablePath;
 
 import org.dom4j.Element;
 import org.dom4j.tree.DefaultElement;

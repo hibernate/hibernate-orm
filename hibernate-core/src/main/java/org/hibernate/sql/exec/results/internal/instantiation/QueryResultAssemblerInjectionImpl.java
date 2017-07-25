@@ -42,7 +42,7 @@ public class QueryResultAssemblerInjectionImpl implements QueryResultAssembler {
 								if ( propertyDescriptor.getWriteMethod() != null ) {
 									final boolean assignmentCompatible = Compatibility.areAssignmentCompatible(
 											propertyDescriptor.getWriteMethod().getParameterTypes()[0],
-											argumentReader.getReturnedJavaType()
+											argumentReader.getJavaTypeDescriptor().getClass()
 									);
 									if ( assignmentCompatible ) {
 										propertyDescriptor.getWriteMethod().setAccessible( true );
@@ -66,7 +66,7 @@ public class QueryResultAssemblerInjectionImpl implements QueryResultAssembler {
 						final Field field = findField(
 								targetJavaType,
 								argumentReader.getAlias(),
-								argumentReader.getReturnedJavaType()
+								argumentReader.getJavaTypeDescriptor().getJavaType()
 						);
 						if ( field != null ) {
 							beanInjections.add(

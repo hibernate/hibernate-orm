@@ -21,6 +21,7 @@ import javassist.Modifier;
 import javassist.NotFoundException;
 
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
+import org.hibernate.bytecode.enhance.internal.tracker.NoopCollectionTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.SimpleCollectionTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
@@ -120,16 +121,84 @@ public class EntityEnhancer extends PersistentAttributesEnhancer {
 				loadCtClassFromClass( DirtyTracker.class ),
 				EnhancerConstants.TRACKER_FIELD_NAME
 		);
-		FieldWriter.addField(
-				managedCtClass,
-				loadCtClassFromClass( CollectionTracker.class ),
-				EnhancerConstants.TRACKER_COLLECTION_NAME
-		);
 
-		createDirtyTrackerMethods( managedCtClass );
+		if ( collectCollectionFields( managedCtClass ).isEmpty() ) {
+			createDirtyTrackerMethodsWithoutCollections( managedCtClass );
+		}
+		else {
+			FieldWriter.addField(
+					managedCtClass,
+					loadCtClassFromClass( CollectionTracker.class ),
+					EnhancerConstants.TRACKER_COLLECTION_NAME
+			);
+			createDirtyTrackerMethodsWithCollections( managedCtClass );
+		}
 	}
 
-	private void createDirtyTrackerMethods(CtClass managedCtClass) {
+	private void createDirtyTrackerMethodsWithoutCollections(CtClass managedCtClass) {
+		try {
+			MethodWriter.write(
+					managedCtClass,
+					"public void %1$s(String name) {%n" +
+							"  if (%2$s == null) { %2$s = new %3$s(); }%n" +
+							"  %2$s.add(name);%n" +
+							"}",
+					EnhancerConstants.TRACKER_CHANGER_NAME,
+					EnhancerConstants.TRACKER_FIELD_NAME,
+					DIRTY_TRACKER_IMPL
+			);
+
+			MethodWriter.write(
+					managedCtClass,
+					"public String[] %1$s() {%n" +
+							"  return (%2$s == null) ? new String[0] : %2$s.get();%n" +
+							"}",
+					EnhancerConstants.TRACKER_GET_NAME,
+					EnhancerConstants.TRACKER_FIELD_NAME
+			);
+
+			MethodWriter.write(
+					managedCtClass,
+					"public boolean %1$s() {%n" +
+							"  return (%2$s != null && !%2$s.isEmpty());%n" +
+							"}",
+					EnhancerConstants.TRACKER_HAS_CHANGED_NAME,
+					EnhancerConstants.TRACKER_FIELD_NAME
+			);
+
+			MethodWriter.write(
+					managedCtClass,
+					"public void %1$s() {%n" +
+							"  if (%2$s != null) { %2$s.clear(); }%n" +
+							"}",
+					EnhancerConstants.TRACKER_CLEAR_NAME,
+					EnhancerConstants.TRACKER_FIELD_NAME
+			);
+
+			MethodWriter.write(
+					managedCtClass,
+					"public void %1$s(boolean f) {%n" +
+							"  if (%2$s == null) %2$s = new %3$s();%n  %2$s.suspend(f);%n" +
+							"}",
+					EnhancerConstants.TRACKER_SUSPEND_NAME,
+					EnhancerConstants.TRACKER_FIELD_NAME  ,
+					DIRTY_TRACKER_IMPL
+			);
+
+			MethodWriter.write(
+					managedCtClass,
+					"public %s %s() { return %s.INSTANCE; }",
+					CollectionTracker.class.getName(),
+					EnhancerConstants.TRACKER_COLLECTION_GET_NAME,
+					NoopCollectionTracker.class.getName()
+			);
+		}
+		catch (CannotCompileException cce) {
+			cce.printStackTrace();
+		}
+	}
+
+	private void createDirtyTrackerMethodsWithCollections(CtClass managedCtClass) {
 		try {
 			MethodWriter.write(
 					managedCtClass,
@@ -216,7 +285,7 @@ public class EntityEnhancer extends PersistentAttributesEnhancer {
 			if ( Modifier.isStatic( ctField.getModifiers() ) || ctField.getName().startsWith( "$$_hibernate_" ) ) {
 				continue;
 			}
-			if ( enhancementContext.isPersistentField( ctField ) ) {
+			if ( enhancementContext.isPersistentField( ctField ) && !enhancementContext.isMappedCollection( ctField ) ) {
 				if ( PersistentAttributesHelper.isAssignable( ctField, Collection.class.getName() ) ||
 						PersistentAttributesHelper.isAssignable( ctField, Map.class.getName() ) ) {
 					collectionList.add( ctField );
@@ -246,10 +315,12 @@ public class EntityEnhancer extends PersistentAttributesEnhancer {
 			List<CtField> collectionList = new ArrayList<CtField>();
 
 			for ( CtField ctField : managedCtSuperclass.getDeclaredFields() ) {
-				if ( !Modifier.isStatic( ctField.getModifiers() ) && enhancementContext.isPersistentField( ctField ) ) {
-					if ( PersistentAttributesHelper.isAssignable( ctField, Collection.class.getName() ) ||
-							PersistentAttributesHelper.isAssignable( ctField, Map.class.getName() ) ) {
-						collectionList.add( ctField );
+				if ( !Modifier.isStatic( ctField.getModifiers() ) ) {
+					if ( enhancementContext.isPersistentField( ctField ) && !enhancementContext.isMappedCollection( ctField ) ) {
+						if ( PersistentAttributesHelper.isAssignable( ctField, Collection.class.getName() ) ||
+								PersistentAttributesHelper.isAssignable( ctField, Map.class.getName() ) ) {
+							collectionList.add( ctField );
+						}
 					}
 				}
 			}
@@ -275,17 +346,15 @@ public class EntityEnhancer extends PersistentAttributesEnhancer {
 			);
 
 			for ( CtField ctField : collectCollectionFields( managedCtClass ) ) {
-				if ( !enhancementContext.isMappedCollection( ctField ) ) {
-					body.append(
-							String.format(
-											"  // collection field [%1$s]%n" +
-											"  if (%1$s == null && %2$s.getSize(\"%1$s\") != -1) { return true; }%n" +
-											"  if (%1$s != null && %2$s.getSize(\"%1$s\") != %1$s.size()) { return true; }%n%n",
-									ctField.getName(),
-									EnhancerConstants.TRACKER_COLLECTION_NAME
-							)
-					);
-				}
+				body.append(
+						String.format(
+										"  // collection field [%1$s]%n" +
+										"  if (%1$s == null && %2$s.getSize(\"%1$s\") != -1) { return true; }%n" +
+										"  if (%1$s != null && %2$s.getSize(\"%1$s\") != %1$s.size()) { return true; }%n%n",
+								ctField.getName(),
+								EnhancerConstants.TRACKER_COLLECTION_NAME
+						)
+				);
 			}
 			body.append( "  return false;%n}" );
 
@@ -311,17 +380,15 @@ public class EntityEnhancer extends PersistentAttributesEnhancer {
 			);
 
 			for ( CtField ctField : collectCollectionFields( managedCtClass ) ) {
-				if ( !enhancementContext.isMappedCollection( ctField ) ) {
-					body.append(
-							String.format(
-											"  // Collection field [%1$s]%n" +
-											"  if (%1$s == null && %2$s.getSize(\"%1$s\") != -1) { tracker.add(\"%1$s\"); }%n" +
-											"  if (%1$s != null && %2$s.getSize(\"%1$s\") != %1$s.size()) { tracker.add(\"%1$s\"); }%n%n",
-									ctField.getName(),
-									EnhancerConstants.TRACKER_COLLECTION_NAME
-							)
-					);
-				}
+				body.append(
+						String.format(
+										"  // Collection field [%1$s]%n" +
+										"  if (%1$s == null && %2$s.getSize(\"%1$s\") != -1) { tracker.add(\"%1$s\"); }%n" +
+										"  if (%1$s != null && %2$s.getSize(\"%1$s\") != %1$s.size()) { tracker.add(\"%1$s\"); }%n%n",
+								ctField.getName(),
+								EnhancerConstants.TRACKER_COLLECTION_NAME
+						)
+				);
 			}
 			body.append( "}" );
 
@@ -359,19 +426,17 @@ public class EntityEnhancer extends PersistentAttributesEnhancer {
 			}
 
 			for ( CtField ctField : collectCollectionFields( managedCtClass ) ) {
-				if ( !enhancementContext.isMappedCollection( ctField ) ) {
-					body.append(
-							String.format(
-										"  // collection field [%1$s]%n" +
-										"  if (lazyInterceptor == null || lazyInterceptor.isAttributeLoaded(\"%1$s\")) {%n" +
-										"    if (%1$s == null) { %2$s.add(\"%1$s\", -1); }%n" +
-										"    else { %2$s.add(\"%1$s\", %1$s.size()); }%n" +
-										"  }%n%n",
-									ctField.getName(),
-									EnhancerConstants.TRACKER_COLLECTION_NAME
-							)
-					);
-				}
+				body.append(
+						String.format(
+									"  // collection field [%1$s]%n" +
+									"  if (lazyInterceptor == null || lazyInterceptor.isAttributeLoaded(\"%1$s\")) {%n" +
+									"    if (%1$s == null) { %2$s.add(\"%1$s\", -1); }%n" +
+									"    else { %2$s.add(\"%1$s\", %1$s.size()); }%n" +
+									"  }%n%n",
+								ctField.getName(),
+								EnhancerConstants.TRACKER_COLLECTION_NAME
+						)
+				);
 			}
 			body.append( "}" );
 

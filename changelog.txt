@@ -3,6 +3,24 @@ Hibernate 5.1 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changed in 5.1.9.Final (July 25, 2017)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/29701
+https://hibernate.atlassian.net/issues/?jql=project%20%3D%2010031%20AND%20fixVersion%20%3D%2029701%20ORDER%20BY%20priority%20DESC%2C%20key%20ASC
+
+** Bug
+    * [HHH-11323] - Evict during concurrent update and putFromLoad can result in stale entry in 2LC
+    * [HHH-11350] - Intermittent failure in testEvictAll/testRemoveAll
+    * [HHH-11372] - Do not send RemoveExpiredCommands in repl/dist caches
+    * [HHH-11373] - Silence lock acquisition failures on remote nodes
+    * [HHH-11381] - In nonstrict mode, putFromLoad after evict can behave incorrectly
+    * [HHH-11889] - Fix PostgreSQL nationalization test failures
+
+** Improvement
+    * [HHH-11320] - Disable EntityRegionAccessStrategyTest#testContestedPutFromLoad because of short timeout
+    * [HHH-11339] - PutFromLoads in replicated/distributed caches should propagate asynchronously
+    * [HHH-11344] - Reduce execution time of hibernate-infinispan testsuite
+
 Changed in 5.1.8.Final (June 23, 2017)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/29300

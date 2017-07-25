@@ -7,19 +7,29 @@
 package org.hibernate.userguide.envers;
 
 import java.util.Date;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
+import org.hibernate.envers.exception.AuditException;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.test.legacy.Custom;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author Vlad Mihalcea
@@ -58,6 +68,70 @@ public class AuditTest extends BaseEntityManagerFunctionalTestCase {
 			Customer customer = entityManager.getReference( Customer.class, 1L );
 			entityManager.remove( customer );
 			//end::envers-audited-delete-example[]
+		} );
+
+		//tag::envers-audited-revisions-example[]
+		List<Number> revisions = doInJPA( this::entityManagerFactory, entityManager -> {
+			 return AuditReaderFactory.get( entityManager ).getRevisions(
+				Customer.class,
+				1L
+			);
+		} );
+		//end::envers-audited-revisions-example[]
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::envers-audited-rev1-example[]
+			Customer customer = (Customer) AuditReaderFactory.get( entityManager )
+				.createQuery()
+				.forEntitiesAtRevision( Customer.class, revisions.get( 0 ) )
+				.getSingleResult();
+
+			assertEquals("Doe", customer.getLastName());
+			//end::envers-audited-rev1-example[]
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::envers-audited-rev2-example[]
+			Customer customer = (Customer) AuditReaderFactory.get( entityManager )
+				.createQuery()
+				.forEntitiesAtRevision( Customer.class, revisions.get( 1 ) )
+				.getSingleResult();
+
+			assertEquals("Doe Jr.", customer.getLastName());
+			//end::envers-audited-rev2-example[]
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::envers-audited-rev3-example[]
+			try {
+				Customer customer = (Customer) AuditReaderFactory.get( entityManager )
+					.createQuery()
+					.forEntitiesAtRevision( Customer.class, revisions.get( 2 ) )
+					.getSingleResult();
+
+				fail("The Customer was deleted at this revision: " + revisions.get( 2 ));
+			}
+			catch (NoResultException expected) {
+			}
+			//end::envers-audited-rev3-example[]
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::envers-audited-rev4-example[]
+			Customer customer = (Customer) AuditReaderFactory.get( entityManager )
+				.createQuery()
+				.forEntitiesAtRevision(
+					Customer.class,
+					Customer.class.getName(),
+					revisions.get( 2 ),
+					true )
+				.getSingleResult();
+
+			assertEquals( Long.valueOf( 1L ), customer.getId() );
+			assertNull( customer.getFirstName() );
+			assertNull( customer.getLastName() );
+			assertNull( customer.getCreatedOn() );
+			//end::envers-audited-rev4-example[]
 		} );
 	}
 

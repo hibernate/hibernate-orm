@@ -106,7 +106,81 @@ The `REVTYPE` column value is taken from the https://docs.jboss.org/hibernate/or
 |=================================
 
 The audit (history) of an entity can be accessed using the `AuditReader` interface, which can be obtained having an open `EntityManager` or `Session` via the `AuditReaderFactory`.
-See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReaderFactory.html[Javadocs] for these classes for details on the functionality offered.
+
+[[envers-audited-revisions-example]]
+.Getting a list of revisions for the `Customer` entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/AuditTest.java[tags=envers-audited-revisions-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/envers-audited-revisions-example.sql[]
+----
+====
+
+Using the previously fetched revisions, we can now inspect the state of the `Customer` entity at that particular revision:
+
+[[envers-audited-rev1-example]]
+.Getting the first revision for the `Customer` entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/AuditTest.java[tags=envers-audited-rev1-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/envers-audited-rev1-example.sql[]
+----
+====
+
+When executing the aforementioned SQL query, there are two parameters:
+
+revision_number::
+The first parameter marks the revision number we are interested in or the latest one that exist up to this particular revision.
+revision_type::
+The second parameter specifies that we are not interested in `DEL` `RevisionType` so that deleted entries are filtered out.
+
+The same goes for the second revision associated to the `UPDATE` statement.
+
+[[envers-audited-rev2-example]]
+.Getting the second revision for the `Customer` entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/AuditTest.java[tags=envers-audited-rev2-example]
+----
+====
+
+For the deleted entity revision, Envers throws a `NoResultException` since the entity was no longer valid at that revision.
+
+[[envers-audited-rev3-example]]
+.Getting the third revision for the `Customer` entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/AuditTest.java[tags=envers-audited-rev3-example]
+----
+====
+
+You can use the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReader.html#find-java.lang.Class-java.lang.String-java.lang.Object-java.lang.Number-boolean-[`find(Class<T> cls, String entityName, Object primaryKey, Number revision, boolean includeDeletions)`]
+method to get the deleted entity revision so that, instead of a `NoResultException`,
+all attributes, except for the entity identifier, are going to be `null`.
+
+[[envers-audited-rev4-example]]
+.Getting the third revision for the `Customer` entity without getting a `NoResultException`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/AuditTest.java[tags=envers-audited-rev4-example]
+----
+====
+
+See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReader.html[Javadocs] for details on other functionality offered.
 
 [[envers-configuration]]
 === Configuration

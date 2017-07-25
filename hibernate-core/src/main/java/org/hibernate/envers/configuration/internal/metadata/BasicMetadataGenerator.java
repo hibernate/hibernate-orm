@@ -8,15 +8,12 @@ package org.hibernate.envers.configuration.internal.metadata;
 
 import java.util.Properties;
 
+import javax.persistence.EnumType;
+
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
-import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Value;
-import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.EnumType;
-import org.hibernate.type.SerializableToBlobType;
-import org.hibernate.type.Type;
 
 import org.dom4j.Element;
 
@@ -27,53 +24,32 @@ import org.dom4j.Element;
  */
 public final class BasicMetadataGenerator {
 
+	private static final String ENUM = "enumClass";
+	private static final String NAMED = "useNamed";
+	private static final String TYPE = "type";
+
 	@SuppressWarnings({"unchecked"})
 	boolean addBasic(
-			Element parent, PropertyAuditingData propertyAuditingData,
-			Value value, SimpleMapperBuilder mapper, boolean insertable, boolean key) {
-		final Type type = value.getType();
+			Element parent,
+			PropertyAuditingData propertyAuditingData,
+			Value value,
+			SimpleMapperBuilder mapper,
+			boolean insertable,
+			boolean key) {
 
-		if ( type instanceof BasicType
-				|| type instanceof SerializableToBlobType
-				|| "org.hibernate.type.PrimitiveByteArrayBlobType".equals( type.getClass().getName() ) ) {
+		if ( value instanceof BasicValue ) {
+			final BasicValue basicValue = (BasicValue) value;
 			if ( parent != null ) {
-				final boolean addNestedType = (value instanceof SimpleValue)
-						&& ( (SimpleValue) value ).getTypeParameters() != null;
-
-				String typeName = type.getName();
-				if ( typeName == null ) {
-					typeName = type.getClass().getName();
-				}
-
-				final Element propMapping = MetadataTools.addProperty(
+				final Element propMapping = buildProperty(
 						parent,
-						propertyAuditingData.getName(),
-						addNestedType ? null : typeName,
-						propertyAuditingData.isForceInsertable() || insertable,
+						propertyAuditingData,
+						basicValue,
+						insertable,
 						key
 				);
-				MetadataTools.addColumns( propMapping, value.getColumnIterator() );
 
-				if ( addNestedType ) {
-					final Properties typeParameters = ( (SimpleValue) value ).getTypeParameters();
-					final Element typeMapping = propMapping.addElement( "type" );
-					typeMapping.addAttribute( "name", typeName );
-
-					if ( "org.hibernate.type.EnumType".equals( typeName ) ) {
-						// Proper handling of enumeration type
-						mapEnumerationType( typeMapping, type, typeParameters );
-					}
-					else {
-						// By default copying all Hibernate properties
-						for ( Object object : typeParameters.keySet() ) {
-							final String keyType = (String) object;
-							final String property = typeParameters.getProperty( keyType );
-
-							if ( property != null ) {
-								typeMapping.addElement( "param" ).addAttribute( "name", keyType ).setText( property );
-							}
-						}
-					}
+				if ( isAddNestedType( basicValue ) ) {
+					applyNestedType( basicValue, propMapping );
 				}
 			}
 
@@ -81,37 +57,32 @@ public final class BasicMetadataGenerator {
 			if ( mapper != null ) {
 				mapper.add( propertyAuditingData.getPropertyData() );
 			}
-		}
-		else {
-			return false;
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
-	private void mapEnumerationType(Element parent, Type type, Properties parameters) {
-		if ( parameters.getProperty( EnumType.ENUM ) != null ) {
-			parent.addElement( "param" )
-					.addAttribute( "name", EnumType.ENUM )
-					.setText( parameters.getProperty( EnumType.ENUM ) );
+	private void mapEnumerationValue(Element parent, Value value, Properties parameters) {
+		final String enumClass;
+		if ( parameters.getProperty( ENUM ) != null ) {
+			enumClass = parameters.getProperty( ENUM );
 		}
 		else {
-			parent.addElement( "param" ).addAttribute( "name", EnumType.ENUM ).setText(
-					type.getReturnedClass()
-							.getName()
-			);
+			enumClass = value.getJavaTypeDescriptor().getTypeName();
 		}
-		if ( parameters.getProperty( EnumType.NAMED ) != null ) {
-			parent.addElement( "param" ).addAttribute( "name", EnumType.NAMED ).setText(
-					parameters.getProperty(
-							EnumType.NAMED
-					)
-			);
+		parent.addElement( "param" ).addAttribute( "name", ENUM ).setText( enumClass );
+
+		final String useNamed;
+		if ( parameters.getProperty( NAMED ) != null ) {
+			useNamed = parameters.getProperty( NAMED );
 		}
 		else {
-			parent.addElement( "param" ).addAttribute( "name", EnumType.NAMED )
-					.setText( "" + !( (EnumType) ( (CustomType) type ).getUserType() ).isOrdinal() );
+			// todo (6.0) - how to determine this?
+			boolean isOrdinal = ( (EnumType) ( (CustomType) value.getType() ).getUserType() ).isOrdinal();
+			useNamed = "" + !isOrdinal;
 		}
+		parent.addElement( "param" ).addAttribute( "name", NAMED ).setText( useNamed );
 	}
 
 	@SuppressWarnings({"unchecked"})
@@ -120,12 +91,11 @@ public final class BasicMetadataGenerator {
 			PropertyAuditingData propertyAuditingData,
 			Value value,
 			SimpleMapperBuilder mapper) {
-		final Type type = value.getType();
 
 		// A null mapper occurs when adding to composite-id element
 		final Element manyToOneElement = parent.addElement( mapper != null ? "many-to-one" : "key-many-to-one" );
 		manyToOneElement.addAttribute( "name", propertyAuditingData.getName() );
-		manyToOneElement.addAttribute( "class", type.getName() );
+		manyToOneElement.addAttribute( "class", value.getJavaTypeDescriptor().getTypeName() );
 
 		// HHH-11107
 		// Use FK hbm magic value 'none' to skip making foreign key constraints between the Envers
@@ -142,5 +112,51 @@ public final class BasicMetadataGenerator {
 		}
 
 		return true;
+	}
+
+	private boolean isAddNestedType(BasicValue basicValue) {
+		return basicValue.getTypeParameters() != null;
+	}
+
+	private Element buildProperty(
+			Element parent,
+			PropertyAuditingData propertyAuditingData,
+			BasicValue value,
+			boolean insertable,
+			boolean key) {
+		final Element propMapping = MetadataTools.addProperty(
+				parent,
+				propertyAuditingData.getName(),
+				isAddNestedType( value ) ? null : value.getJavaTypeDescriptor().getTypeName(),
+				propertyAuditingData.isForceInsertable() || insertable,
+				key
+		);
+
+		MetadataTools.addColumns( propMapping, value.getColumnIterator() );
+
+		return propMapping;
+	}
+
+	private void applyNestedType(BasicValue value, Element propertyMapping) {
+		final Properties typeParameters = value.getTypeParameters();
+		final Element typeMapping = propertyMapping.addElement( "type" );
+		final String typeName = value.getJavaTypeDescriptor().getTypeName();
+
+		typeMapping.addAttribute( "name", typeName );
+
+		if ( EnumType.class.getName().equals( typeName ) ) {
+			// Proper handling of enumeration type
+			mapEnumerationValue( typeMapping, value, typeParameters );
+		}
+		else {
+			// By default copying all Hibernate properties
+			for ( Object object : typeParameters.keySet() ) {
+				final String keyType = (String) object;
+				final String property = typeParameters.getProperty( keyType );
+				if ( property != null ) {
+					typeMapping.addElement( "param" ).addAttribute( "name", keyType ).setText( property );
+				}
+			}
+		}
 	}
 }

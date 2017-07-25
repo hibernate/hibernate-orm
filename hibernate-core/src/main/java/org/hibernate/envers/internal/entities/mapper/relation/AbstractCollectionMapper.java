@@ -160,7 +160,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 			// changes to the collection will be returned.
 			if ( !( newColl instanceof PersistentMap ) ) {
 				final PersistentCollectionDescriptor collectionPersister = collectionEntry.getCurrentPersister();
-				if ( collectionPersister != null && !collectionPersister.hasIndex() ) {
+				if ( collectionPersister != null && collectionPersister.getIndexDescriptor() != null ) {
 					return mapCollectionChanges( session, newColl, oldColl, id, collectionPersister );
 				}
 			}
@@ -291,7 +291,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 			PersistentCollection newColl,
 			Serializable oldColl,
 			Serializable id) {
-		final List<PersistentCollectionChangeData> collectionChanges = new ArrayList<PersistentCollectionChangeData>();
+		final List<PersistentCollectionChangeData> collectionChanges = new ArrayList<>();
 
 		// Comparing new and old collection content.
 		final Collection newCollection = getNewCollectionContent( newColl );
@@ -338,7 +338,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 			Serializable id,
 			PersistentCollectionDescriptor collectionPersister) {
 
-		final List<PersistentCollectionChangeData> collectionChanges = new ArrayList<PersistentCollectionChangeData>();
+		final List<PersistentCollectionChangeData> collectionChanges = new ArrayList<>();
 
 		// Comparing new and old collection content.
 		final Collection newCollection = getNewCollectionContent( newColl );
@@ -354,7 +354,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 			for ( Object object : oldCollection ) {
 				for ( Iterator addedIt = added.iterator(); addedIt.hasNext(); ) {
 					Object object2 = addedIt.next();
-					if ( collectionPersister.getElementDescriptor().getOrmType().isSame( object, object ) ) {
+					if ( collectionPersister.getElementDescriptor().getJavaTypeDescriptor().areEqual( object, object2 ) ) {
 						addedIt.remove();
 						break;
 					}
@@ -373,7 +373,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 			for ( Object object : newCollection ) {
 				for ( Iterator deletedIt = deleted.iterator(); deletedIt.hasNext(); ) {
 					Object object2 = deletedIt.next();
-					if ( collectionPersister.getElementDescriptor().getOrmType().isSame( object, object2 ) ) {
+					if ( collectionPersister.getElementDescriptor().getJavaTypeDescriptor().areEqual( object, object2 ) ) {
 						deletedIt.remove();
 						break;
 					}

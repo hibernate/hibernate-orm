@@ -18,14 +18,14 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.sql.AttributeResultRegistration;
 import org.hibernate.query.sql.EntityResultRegistration;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.tree.internal.select.QueryResultEntityImpl;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.select.EntityIdentifierReference;
 import org.hibernate.sql.ast.tree.spi.select.Fetch;
 import org.hibernate.sql.ast.tree.spi.select.QueryResultEntity;
+import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.sql.exec.results.internal.EntityReturnInitializerImpl;
 import org.hibernate.sql.exec.results.internal.QueryResultAssemblerEntity;
-import org.hibernate.sql.exec.results.spi.Initializer;
+import org.hibernate.sql.exec.results.spi.EntityReferenceInitializer;
 import org.hibernate.sql.exec.results.spi.InitializerCollector;
 import org.hibernate.sql.exec.results.spi.InitializerParent;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
@@ -181,12 +181,7 @@ public class RootEntityResultBuilder
 			}
 
 			@Override
-			public String getSelectedExpressionDescription() {
-				return null;
-			}
-
-			@Override
-			public String getResultVariable() {
+			public Selection getSelection() {
 				return null;
 			}
 
@@ -197,7 +192,7 @@ public class RootEntityResultBuilder
 
 			@Override
 			public QueryResultAssembler getResultAssembler() {
-				return null;
+				return assembler;
 			}
 
 			@Override
@@ -206,8 +201,8 @@ public class RootEntityResultBuilder
 			}
 
 			@Override
-			public Initializer getInitializer() {
-				return null;
+			public EntityReferenceInitializer getInitializer() {
+				return initializer;
 			}
 		};
 		throw new NotYetImplementedException(  );

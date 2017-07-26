@@ -38,16 +38,6 @@ public class ScalarResultBuilder
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// ReturnableResultBuilder
 
-	@Override
-	public QueryResult buildReturn() {
-		return new QueryResultScalarImpl(
-				"NativeQuery scalar result (" + columnName + ")",
-				new SqlSelectionImpl( columnName, determineExtractor() ),
-				columnName,
-				type
-		);
-	}
-
 	private ValueExtractor determineExtractor() {
 		if ( type == null ) {
 			return null;

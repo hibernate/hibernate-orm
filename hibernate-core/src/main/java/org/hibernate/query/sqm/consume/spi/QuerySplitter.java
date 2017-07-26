@@ -616,21 +616,6 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public Object visitAttributeReferenceExpression(SqmAttributeReference attributeBinding) {
-			assert attributeBinding.getSourceReference() != null;
-
-			SqmAttributeReference attributeBindingCopy = (SqmAttributeReference) navigableBindingCopyMap.get( attributeBinding );
-			if ( attributeBindingCopy == null ) {
-				attributeBindingCopy = (SqmAttributeReference) NavigableBindingHelper.createNavigableBinding(
-						attributeBinding.getSourceReference(),
-						attributeBinding.getReferencedNavigable()
-				);
-				navigableBindingCopyMap.put( attributeBinding, attributeBindingCopy );
-			}
-			return attributeBindingCopy;
-		}
-
-		@Override
 		public SqmGenericFunction visitGenericFunction(SqmGenericFunction expression) {
 			List<SqmExpression> argumentsCopy = new ArrayList<>();
 			for ( SqmExpression argument : expression.getArguments() ) {

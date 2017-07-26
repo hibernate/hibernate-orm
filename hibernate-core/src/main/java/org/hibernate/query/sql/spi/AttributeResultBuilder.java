@@ -12,8 +12,6 @@ import java.util.List;
 
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.sql.AttributeResultRegistration;
-import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
 
 /**
  * @author Steve Ebersole
@@ -30,12 +28,6 @@ public class AttributeResultBuilder
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// ResultBuilder
-
-	@Override
-	public QueryResult buildReturn() {
-		// todo (6.0) - this should not really be generating a QueryResult
-		throw new NotYetImplementedException(  );
-	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

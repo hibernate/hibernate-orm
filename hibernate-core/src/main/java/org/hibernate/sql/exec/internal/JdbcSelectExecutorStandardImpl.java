@@ -335,7 +335,10 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			);
 		}
 		else {
-			return new JdbcValuesSourceCacheHit( cachedResults );
+			return new JdbcValuesSourceCacheHit( cachedResults,
+												 jdbcSelect.getResultSetMapping()
+														 .resolve( resultSetAccess, executionContext.getSession() )
+			);
 		}
 	}
 

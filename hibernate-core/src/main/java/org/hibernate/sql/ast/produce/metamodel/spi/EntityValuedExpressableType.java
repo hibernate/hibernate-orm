@@ -34,8 +34,4 @@ public interface EntityValuedExpressableType<T> extends ExpressableType<T>, Navi
 		return getEntityDescriptor().getJavaTypeDescriptor();
 	}
 
-	@Override
-	default int getNumberOfJdbcParametersForRestriction() {
-		return getEntityDescriptor().getNumberOfJdbcParametersForRestriction();
-	}
 }

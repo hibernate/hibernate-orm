@@ -37,11 +37,6 @@ public class SqmCollectionIndexReferenceEmbedded
 	}
 
 	@Override
-	public String getTypeName() {
-		return getJavaType().getName();
-	}
-
-	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.EMBEDDABLE;
 	}

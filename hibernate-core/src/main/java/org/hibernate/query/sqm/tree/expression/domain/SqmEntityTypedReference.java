@@ -20,11 +20,6 @@ public interface SqmEntityTypedReference extends SqmNavigableContainerReference 
 	EntityValuedExpressableType getExpressionType();
 
 	@Override
-	default String getTypeName() {
-		return getExpressionType().getTypeName();
-	}
-
-	@Override
 	default JavaTypeDescriptor getJavaTypeDescriptor() {
 		return getExpressionType().getJavaTypeDescriptor();
 	}

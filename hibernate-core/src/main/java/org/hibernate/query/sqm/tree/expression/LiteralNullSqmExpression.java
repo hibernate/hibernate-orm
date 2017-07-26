@@ -7,11 +7,13 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.HibernateException;
-import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.type.converter.spi.AttributeConverterDefinition;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.spi.ValueBinder;
+import org.hibernate.type.descriptor.spi.ValueExtractor;
+import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
@@ -50,17 +52,27 @@ public class LiteralNullSqmExpression implements LiteralSqmExpression<Void> {
 
 	private static BasicValuedExpressableType NULL_TYPE = new BasicValuedExpressableType() {
 		@Override
-		public NavigableRole getNavigableRole() {
+		public ValueBinder getValueBinder() {
 			return null;
 		}
 
 		@Override
-		public AttributeConverterDefinition getAttributeConverter() {
+		public ValueExtractor getValueExtractor() {
+			return null;
+		}
+
+		@Override
+		public BasicType getBasicType() {
 			return null;
 		}
 
 		@Override
 		public PersistenceType getPersistenceType() {
+			return null;
+		}
+
+		@Override
+		public BasicJavaDescriptor getJavaTypeDescriptor() {
 			return null;
 		}
 

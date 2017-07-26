@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 import org.jboss.logging.Logger;
@@ -26,8 +26,8 @@ public class SqmMaxIndexReferenceEmbedded extends AbstractSpecificSqmCollectionI
 	}
 
 	@Override
-	public Navigable getReferencedNavigable() {
-		return super.getReferencedNavigable();
+	public EmbeddedValuedNavigable getReferencedNavigable() {
+		return (EmbeddedValuedNavigable) super.getReferencedNavigable();
 	}
 
 	@Override

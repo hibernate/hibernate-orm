@@ -7,8 +7,9 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
+import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -38,5 +39,15 @@ public class SqmSingularAttributeReferenceEntity extends AbstractSqmSingularAttr
 	@Override
 	public EntityValuedExpressableType getInferableType() {
 		return getExpressionType();
+	}
+
+	@Override
+	public <T> T accept(SemanticQueryWalker<T> walker) {
+		return walker.visitEntityValuedSingularAttribute( this );
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return super.getExpressionType().getPersistenceType();
 	}
 }

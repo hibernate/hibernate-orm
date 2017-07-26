@@ -14,6 +14,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -99,5 +100,20 @@ public abstract class AbstractSqmCollectionIndexReference
 	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
 		// for most index classifications, there is none
 		return null;
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getReferencedNavigable().getJavaTypeDescriptor();
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return getReferencedNavigable().getPersistenceType();
+	}
+
+	@Override
+	public Class getJavaType() {
+		return getReferencedNavigable().getJavaType();
 	}
 }

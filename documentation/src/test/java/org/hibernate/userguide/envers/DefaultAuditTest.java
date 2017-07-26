@@ -12,18 +12,14 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.exception.AuditException;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.test.legacy.Custom;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -34,7 +30,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-public class AuditTest extends BaseEntityManagerFunctionalTestCase {
+public class DefaultAuditTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

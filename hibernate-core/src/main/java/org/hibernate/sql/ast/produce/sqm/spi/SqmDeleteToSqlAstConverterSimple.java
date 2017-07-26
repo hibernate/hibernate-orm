@@ -6,10 +6,17 @@
  */
 package org.hibernate.sql.ast.produce.sqm.spi;
 
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
+import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmDeleteToSqlAstConverterSimple extends BaseSqmToSqlAstConverter {
+	public SqmDeleteToSqlAstConverterSimple(
+			SqlAstBuildingContext sqlAstBuildingContext,
+			QueryOptions queryOptions) {
+		super( sqlAstBuildingContext, queryOptions );
+	}
 }

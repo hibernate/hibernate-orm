@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.ast.produce.metamodel.internal;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -21,10 +20,10 @@ import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttribute
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.CollectionKey;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeAggregated;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
@@ -33,32 +32,21 @@ import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.exec.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.ast.produce.internal.SqlSelectPlanImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKey;
 import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKeyProducer;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
-import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.metamodel.spi.MetamodelDrivenSqlSelectPlanBuilder;
-import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
-import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
-import org.hibernate.sql.ast.tree.spi.select.Fetch;
-import org.hibernate.sql.ast.tree.spi.select.FetchParent;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
+import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.NavigablePathStack;
+import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
+import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
-import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
@@ -68,9 +56,15 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.ast.tree.spi.select.Fetch;
+import org.hibernate.sql.ast.tree.spi.select.FetchParent;
+import org.hibernate.sql.ast.tree.spi.select.QueryResult;
+import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
+import org.hibernate.sql.exec.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
 
 import org.jboss.logging.Logger;
 
@@ -221,61 +215,6 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 		return sqlAliasBaseManager;
 	}
 
-	@Override
-	public SqlAstSelectInterpretation buildSqlSelectPlan(NavigableContityntainer rootNavigable) {
-		assert rootNavigable instanceof RootTableGroupProducer;
-		final RootTableGroupProducer rootTableGroupProducer = (RootTableGroupProducer) rootNavigable;
-
-		prepareForVisitation();
-
-		navigablePathStack.push( rootNavigable );
-
-		// ignore return for root
-		shouldContinue( rootNavigable );
-
-		final NavigableContainerReferenceInfoImpl navigableRefInfo = (NavigableContainerReferenceInfoImpl) createNavigableRefInfo( rootNavigable );
-		navigableContainerInfoStack.push( navigableRefInfo );
-
-		try {
-			rootTableGroup = rootTableGroupProducer.createRootTableGroup( this );
-			tableSpace.setRootTableGroup( rootTableGroup );
-			tableGroupStack.push( rootTableGroup );
-
-			final Selection selection = rootTableGroup.asExpression().getSelectable().createSelection(
-					rootTableGroup.asExpression(),
-					null
-			);
-			querySpec.getSelectClause().selection( selection );
-
-			querySpec.addRestriction( generateRestriction() );
-
-			final QueryResult queryResult = rootNavigable.generateQueryResult(
-					rootTableGroup.asExpression(),
-					null,
-					this,
-					this
-			);
-
-			fetchParentStack.push( (FetchParent) queryResult );
-
-			try {
-				rootNavigable.visitNavigables( this );
-
-				return new SqlSelectPlanImpl(
-						new SelectStatement( querySpec ),
-						Collections.singletonList( queryResult )
-				);
-			}
-			finally {
-				fetchParentStack.pop();
-				tableGroupStack.pop();
-			}
-		}
-		finally {
-			navigableContainerInfoStack.pop();
-			visitationComplete();
-		}
-	}
 
 	protected Predicate generateRestriction() {
 		final Expression restrictionExpression = generateRestrictionExpression();
@@ -433,11 +372,6 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	@Override
 	public TableSpace getTableSpace() {
 		return tableSpace;
-	}
-
-	@Override
-	public TableGroupResolver getTableGroupResolver() {
-		return fromClauseIndex;
 	}
 
 	@Override

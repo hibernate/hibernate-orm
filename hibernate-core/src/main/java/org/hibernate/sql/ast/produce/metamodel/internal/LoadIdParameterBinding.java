@@ -9,18 +9,17 @@ package org.hibernate.sql.ast.produce.metamodel.internal;
 import java.util.Collection;
 import javax.persistence.TemporalType;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.spi.QueryParameterBinding;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
  */
 public class LoadIdParameterBinding<T> implements QueryParameterBinding<T> {
 	private final Collection<T> values;
-	private final ExpressableType<T> type;
+	private final AllowableParameterType<T> type;
 
-	public LoadIdParameterBinding(Collection<T> values, ExpressableType<T> type) {
+	public LoadIdParameterBinding(Collection<T> values, AllowableParameterType<T> type) {
 		this.values = values;
 		this.type = type;
 	}
@@ -41,17 +40,17 @@ public class LoadIdParameterBinding<T> implements QueryParameterBinding<T> {
 	}
 
 	@Override
-	public ExpressableType getBindType() {
+	public AllowableParameterType<T> getBindType() {
 		return type;
 	}
 
 	@Override
-	public void setBindValue(Object value) {
+	public void setBindValue(T value, AllowableParameterType<T> clarifiedType) {
 		throw new UnsupportedOperationException( "Cannot change parameter binding value" );
 	}
 
 	@Override
-	public void setBindValue(Object value, Type clarifiedType) {
+	public void setBindValue(Object value) {
 		throw new UnsupportedOperationException( "Cannot change parameter binding value" );
 	}
 
@@ -66,12 +65,14 @@ public class LoadIdParameterBinding<T> implements QueryParameterBinding<T> {
 	}
 
 	@Override
-	public void setBindValues(Collection values) {
+	public void setBindValues(
+			Collection<T> values, AllowableParameterType<T> clarifiedType) {
 		throw new UnsupportedOperationException( "Cannot change parameter binding value" );
+
 	}
 
 	@Override
-	public void setBindValues(Collection values, Type clarifiedType) {
+	public void setBindValues(Collection values) {
 		throw new UnsupportedOperationException( "Cannot change parameter binding value" );
 	}
 

@@ -82,10 +82,10 @@ public class FetchResultNodeImplementor implements NativeQuery.FetchReturn, Fetc
 
 
 
-	public Fetch buildFetch() {
-		// todo (6.0) - going to have to pass in the FetchParent, SqlSelectionResolver and others
-		return new FetchEntityAttributeImpl(  );
-	}
+//	public Fetch buildFetch() {
+//		// todo (6.0) - going to have to pass in the FetchParent, SqlSelectionResolver and others
+//		return new FetchEntityAttributeImpl(  );
+//	}
 
 //	public NativeSQLQueryReturn buildReturn() {
 //		return new NativeSQLQueryJoinReturn(

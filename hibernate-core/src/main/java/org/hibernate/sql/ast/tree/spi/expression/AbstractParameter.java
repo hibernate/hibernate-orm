@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
@@ -35,12 +34,12 @@ public abstract class AbstractParameter implements GenericParameter {
 		this.inferredType = inferredType;
 	}
 
-	public ExpressableType getInferredType() {
+	public AllowableParameterType getInferredType() {
 		return inferredType;
 	}
 
 	@Override
-	public ExpressableType getType() {
+	public AllowableParameterType getType() {
 		return getInferredType();
 	}
 

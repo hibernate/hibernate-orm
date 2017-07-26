@@ -148,6 +148,11 @@ public class JdbcValuesSourceResultSetImpl extends AbstractJdbcValuesSource {
 	}
 
 	@Override
+	public ResolvedResultSetMapping getResultSetMapping() {
+		return resultSetMapping;
+	}
+
+	@Override
 	public Object[] getCurrentRowJdbcValues() {
 		return currentRowJdbcValues;
 	}

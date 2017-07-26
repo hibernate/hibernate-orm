@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sql.internal;
 
+import java.util.BitSet;
+
 import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.spi.ParameterRecognizer;
@@ -25,6 +27,15 @@ import org.jboss.logging.Logger;
  */
 public class ParameterParser {
 	private static final Logger log = Logger.getLogger( ParameterParser.class );
+
+	public static final String HQL_SEPARATORS = " \n\r\f\t,()=<>&|+-=/*'^![]#~\\";
+	public static final BitSet HQL_SEPARATORS_BITSET = new BitSet();
+
+	static {
+		for ( int i = 0; i < HQL_SEPARATORS.length(); i++ ) {
+			HQL_SEPARATORS_BITSET.set( HQL_SEPARATORS.charAt( i ) );
+		}
+	}
 
 	/**
 	 * Performs the actual parsing and tokenizing of the query string making appropriate
@@ -125,7 +136,7 @@ public class ParameterParser {
 				}
 				else if ( c == ':' ) {
 					// named parameter
-					final int right = StringHelper.firstIndexOfChar( sqlString, ParserHelper.HQL_SEPARATORS_BITSET, indx + 1 );
+					final int right = StringHelper.firstIndexOfChar( sqlString, HQL_SEPARATORS_BITSET, indx + 1 );
 					final int chopLocation = right < 0 ? sqlString.length() : right;
 					final String param = sqlString.substring( indx + 1, chopLocation );
 					if ( StringHelper.isEmpty( param ) ) {
@@ -140,7 +151,7 @@ public class ParameterParser {
 					// could be either a positional of a JDBC-style ordinal parameter
 					if ( indx < stringLength - 1 && Character.isDigit( sqlString.charAt( indx + 1 ) ) ) {
 						// a peek ahead showed this as an JPA-positional parameter
-						final int right = StringHelper.firstIndexOfChar( sqlString, ParserHelper.HQL_SEPARATORS, indx + 1 );
+						final int right = StringHelper.firstIndexOfChar( sqlString, HQL_SEPARATORS, indx + 1 );
 						final int chopLocation = right < 0 ? sqlString.length() : right;
 						final String param = sqlString.substring( indx + 1, chopLocation );
 						// make sure this "name" is an integer value

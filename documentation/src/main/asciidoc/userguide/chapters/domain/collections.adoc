@@ -745,8 +745,10 @@ include::{extrasdir}/collections-map-bidirectional-example.sql[]
 ==== Arrays
 
 When it comes to arrays, there is quite a difference between Java arrays and relational database array types (e.g. VARRAY, ARRAY).
+
 First, not all database systems implement the SQL-99 ARRAY type, and, for this reason, Hibernate doesn't support native database array types.
-Second, Java arrays are relevant for basic types only since storing multiple embeddables or entities should always be done using the Java Collection API.
+
+Second, Java arrays could be relevant only for basic types since storing multiple embeddables or entities should always be done using the Java Collection API.
 
 [[collections-array-binary]]
 ==== Arrays as binary
@@ -754,7 +756,7 @@ Second, Java arrays are relevant for basic types only since storing multiple emb
 By default, Hibernate will choose a BINARY type, as supported by the current `Dialect`.
 
 [[collections-array-binary-example]]
-.Binary arrays
+.Arrays stored as binary
 ====
 [source,java]
 ----
@@ -765,6 +767,15 @@ include::{sourcedir}/ArrayTest.java[tags=collections-array-binary-example,indent
 ----
 include::{extrasdir}/collections-array-binary-example.sql[]
 ----
+====
+
+[NOTE]
+====
+If you want to map arrays such as `String[]` or `int[]` to database-specific array types like PostgreSQL `integer[]` or `text[]`,
+you need to write a custom Hibernate Type.
+
+Check out https://vladmihalcea.com/2017/06/21/how-to-map-java-and-sql-arrays-with-jpa-and-hibernate/[this article] for an example of how to write
+such a custom Hibernate Type.
 ====
 
 [[collections-as-basic]]

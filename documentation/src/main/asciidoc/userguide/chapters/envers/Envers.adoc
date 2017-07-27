@@ -388,16 +388,19 @@ Compared to the default strategy, the `ValidityAuditStrategy` generates simpler 
 === Revision Log
 
 When Envers starts a new revision, it creates a new revision entity which stores information about the revision.
+
 By default, that includes just:
 
-revision number:: An integral value (`int/Integer` or `long/Long`). Essentially the primary key of the revision
-
-revision timestamp:: either a `long/Long` or `java.util.Date` value representing the instant at which the revision was made.
-   When using a `java.util.Date`, instead of a `long/Long` for the revision timestamp, take care not to store it to a column data type which will loose precision.
+revision number::
+An integral value (`int/Integer` or `long/Long`). Essentially the primary key of the revision
+revision timestamp::
+Either a `long/Long` or `java.util.Date` value representing the instant at which the revision was made.
+When using a `java.util.Date`, instead of a `long/Long` for the revision timestamp, take care not to store it to a column data type which will loose precision.
 
 Envers handles this information as an entity.
 By default it uses its own internal class to act as the entity, mapped to the `REVINFO` table.
-You can, however, supply your own approach to collecting this information which might be useful to capture additional details such as who made a change or the ip address from which the request came.
+You can, however, supply your own approach to collecting this information which might be useful to capture additional details such as who made a change
+or the ip address from which the request came.
 There are two things you need to make this work:
 
 . First, you will need to tell Envers about the entity you wish to use.
@@ -418,73 +421,81 @@ If your `RevisionListener` class is inaccessible from `@RevisionEntity` (e.g. it
 set `org.hibernate.envers.revision_listener` property to its fully qualified class name.
 Class name defined by the configuration parameter overrides revision entity's value attribute.
 
+Considering we have a `CurrentUser` utility which stores the current logged user:
+
+[[envers-revisionlog-CurrentUser-example]]
+.`CurrentUser` utility
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-@RevisionEntity( MyCustomRevisionListener.class )
-public class MyCustomRevisionEntity {
-    ...
-}
-
-public class MyCustomRevisionListener
-    implements RevisionListener {
-
-    public void newRevision( Object revisionEntity ) {
-        MyCustomRevisionEntity customRevisionEntity =
-            ( MyCustomRevisionEntity ) revisionEntity;
-    }
-}
+include::{sourcedir}/CustomRevisionEntityTest.java[tags=envers-revisionlog-CurrentUser-example]
 ----
 ====
 
-.ExampleRevEntity.java
+Now, we need to provide a custom `@RevisionEntity` to store the currently logged user
+
+[[envers-revisionlog-RevisionEntity-example]]
+.Custom `@RevisionEntity` example
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-package org.hibernate.envers.example;
-
-import org.hibernate.envers.RevisionEntity;
-import org.hibernate.envers.DefaultRevisionEntity;
-
-import javax.persistence.Entity;
-
-@Entity
-@RevisionEntity( ExampleListener.class )
-public class ExampleRevEntity extends DefaultRevisionEntity {
-    private String username;
-
-    public String getUsername() { return username; }
-    public void setUsername( String username ) { this.username = username; }
-}
+include::{sourcedir}/CustomRevisionEntityTest.java[tags=envers-revisionlog-RevisionEntity-example]
 ----
 ====
 
-.ExampleListener.java
+With the custom `RevisionEntity` implementation in place,
+we only need to provide the `RevisionEntity` implementation which acts as a factory
+of `RevisionEntity` instances.
+
+[[envers-revisionlog-RevisionListener-example]]
+.Custom `@RevisionListener` example
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-package org.hibernate.envers.example;
-
-import org.hibernate.envers.RevisionListener;
-import org.jboss.seam.security.Identity;
-import org.jboss.seam.Component;
-
-public class ExampleListener implements RevisionListener {
-
-    public void newRevision( Object revisionEntity ) {
-        ExampleRevEntity exampleRevEntity = ( ExampleRevEntity ) revisionEntity;
-        Identity identity =
-            (Identity) Component.getInstance( "org.jboss.seam.security.identity" );
-
-        exampleRevEntity.setUsername( identity.getUsername() );
-    }
-}
+include::{sourcedir}/CustomRevisionEntityTest.java[tags=envers-revisionlog-RevisionListener-example]
 ----
 ====
 
-[NOTE]
+When generating the database schema, Envers creates the following `RevisionEntity` table:
+
+[[envers-revisionlog-custom-revision-entity-table-example]]
+.Auto-generated `RevisionEntity` Envers table
 ====
-An alternative method to using the `org.hibernate.envers.RevisionListener` is to instead call the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReader.html#getCurrentRevision-java.lang.Class-boolean-[`getCurrentRevision( Class<T> revisionEntityClass, boolean persist )`] method of the `org.hibernate.envers.AuditReader` interface to obtain the current revision, and fill it with desired information.
+[source, SQL, indent=0]
+----
+include::{extrasdir}/envers-revisionlog-custom-revision-entity-table-example.sql[]
+----
+====
+
+You can see the `username` column in place.
+
+Now, when inserting a `Customer` entity, Envers generates the following statements:
+
+[[envers-revisionlog-RevisionEntity-persist-example]]
+.Auditing using the custom `@RevisionEntity` instance
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CustomRevisionEntityTest.java[tags=envers-revisionlog-RevisionEntity-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/envers-revisionlog-RevisionEntity-persist-example.sql[]
+----
+====
+
+As demonstrated by the example above, the username is properly set and propagated to the `CUSTOM_REV_INFO` table.
+
+[WARNING]
+====
+**This strategy is deprecated since version 5.2 as an alternative is going to be provided in Hibernate Envers 6.0.**
+
+An alternative method to using the `org.hibernate.envers.RevisionListener` is to instead call the
+[line-through]#https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReader.html#getCurrentRevision-java.lang.Class-boolean-[`getCurrentRevision( Class<T> revisionEntityClass, boolean persist )`]#
+method of the `org.hibernate.envers.AuditReader` interface to obtain the current revision,
+and fill it with desired information.
+
 The method accepts a `persist` parameter indicating whether the revision entity should be persisted prior to returning from this method:
 
 `true`:: ensures that the returned entity has access to its identifier value (revision number), but the revision entity will be persisted regardless of whether there are any audited entities changed.

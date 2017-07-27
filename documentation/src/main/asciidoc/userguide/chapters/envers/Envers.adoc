@@ -367,6 +367,23 @@ include::{extrasdir}/envers-audited-validity-mapping-example.sql[]
 
 As you can see, the `REVEND` column is added as well as its Foreign key to the `REVINFO` table.
 
+When rerunning thee previous `Customer` audit log queries against the `ValidityAuditStrategy`,
+we get the following results:
+
+[[envers-audited-validity-rev1-example]]
+.Getting the first revision for the `Customer` entity
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/envers-audited-validity-rev1-example.sql[]
+----
+====
+
+[NOTE]
+====
+Compared to the default strategy, the `ValidityAuditStrategy` generates simpler queries that can render better execution plans.
+====
+
 [[envers-revisionlog]]
 === Revision Log
 

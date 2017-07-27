@@ -56,63 +56,50 @@ public class ValidityStrategyAuditTest extends BaseEntityManagerFunctionalTestCa
 	@Test
 	public void test() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::envers-audited-insert-example[]
 			Customer customer = new Customer();
 			customer.setId( 1L );
 			customer.setFirstName( "John" );
 			customer.setLastName( "Doe" );
 
 			entityManager.persist( customer );
-			//end::envers-audited-insert-example[]
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::envers-audited-update-example[]
 			Customer customer = entityManager.find( Customer.class, 1L );
 			customer.setLastName( "Doe Jr." );
-			//end::envers-audited-update-example[]
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::envers-audited-delete-example[]
 			Customer customer = entityManager.getReference( Customer.class, 1L );
 			entityManager.remove( customer );
-			//end::envers-audited-delete-example[]
 		} );
 
-		//tag::envers-audited-revisions-example[]
 		List<Number> revisions = doInJPA( this::entityManagerFactory, entityManager -> {
 			 return AuditReaderFactory.get( entityManager ).getRevisions(
 				Customer.class,
 				1L
 			);
 		} );
-		//end::envers-audited-revisions-example[]
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::envers-audited-rev1-example[]
 			Customer customer = (Customer) AuditReaderFactory.get( entityManager )
 				.createQuery()
 				.forEntitiesAtRevision( Customer.class, revisions.get( 0 ) )
 				.getSingleResult();
 
 			assertEquals("Doe", customer.getLastName());
-			//end::envers-audited-rev1-example[]
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::envers-audited-rev2-example[]
 			Customer customer = (Customer) AuditReaderFactory.get( entityManager )
 				.createQuery()
 				.forEntitiesAtRevision( Customer.class, revisions.get( 1 ) )
 				.getSingleResult();
 
 			assertEquals("Doe Jr.", customer.getLastName());
-			//end::envers-audited-rev2-example[]
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::envers-audited-rev3-example[]
 			try {
 				Customer customer = (Customer) AuditReaderFactory.get( entityManager )
 					.createQuery()
@@ -123,11 +110,9 @@ public class ValidityStrategyAuditTest extends BaseEntityManagerFunctionalTestCa
 			}
 			catch (NoResultException expected) {
 			}
-			//end::envers-audited-rev3-example[]
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::envers-audited-rev4-example[]
 			Customer customer = (Customer) AuditReaderFactory.get( entityManager )
 				.createQuery()
 				.forEntitiesAtRevision(
@@ -141,11 +126,9 @@ public class ValidityStrategyAuditTest extends BaseEntityManagerFunctionalTestCa
 			assertNull( customer.getFirstName() );
 			assertNull( customer.getLastName() );
 			assertNull( customer.getCreatedOn() );
-			//end::envers-audited-rev4-example[]
 		} );
 	}
 
-	//tag::envers-audited-mapping-example[]
 	@Audited
 	@Entity(name = "Customer")
 	public static class Customer {
@@ -162,9 +145,6 @@ public class ValidityStrategyAuditTest extends BaseEntityManagerFunctionalTestCa
 		@CreationTimestamp
 		private Date createdOn;
 
-		//Getters and setters are omitted for brevity
-
-	//end::envers-audited-mapping-example[]
 		public Long getId() {
 			return id;
 		}
@@ -196,7 +176,5 @@ public class ValidityStrategyAuditTest extends BaseEntityManagerFunctionalTestCa
 		public void setCreatedOn(Date createdOn) {
 			this.createdOn = createdOn;
 		}
-	//tag::envers-audited-mapping-example[]
 	}
-	//end::envers-audited-mapping-example[]
 }

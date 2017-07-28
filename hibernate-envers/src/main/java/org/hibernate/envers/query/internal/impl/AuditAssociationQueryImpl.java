@@ -7,7 +7,6 @@
 package org.hibernate.envers.query.internal.impl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -60,9 +59,9 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 	private final Map<String, String> aliasToEntityNameMap;
 	private final Map<String, String> aliasToComponentPropertyNameMap;
 	private final List<AuditCriterion> criterions = new ArrayList<>();
+	private final AuditCriterion onClauseCriterion;
 	private final Parameters parameters;
 	private final List<AuditAssociationQueryImpl<?>> associationQueries = new ArrayList<>();
-	private final Map<String, AuditAssociationQueryImpl<AuditAssociationQueryImpl<Q>>> associationQueryMap = new HashMap<>();
 
 	public AuditAssociationQueryImpl(
 			final EnversService enversService,
@@ -74,7 +73,8 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 			final Map<String, String> aliasToEntityNameMap,
 			final Map<String, String> aliasToComponentPropertyNameMap,
 			final String ownerAlias,
-			final String userSuppliedAlias) {
+			final String userSuppliedAlias,
+			final AuditCriterion onClauseCriterion) {
 		this.enversService = enversService;
 		this.auditReader = auditReader;
 		this.parent = parent;
@@ -123,6 +123,7 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 		this.aliasToEntityNameMap = aliasToEntityNameMap;
 		this.aliasToComponentPropertyNameMap = aliasToComponentPropertyNameMap;
 		parameters = queryBuilder.addParameters( this.alias );
+		this.onClauseCriterion = onClauseCriterion;
 	}
 
 	@Override
@@ -156,23 +157,34 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 			String associationName,
 			JoinType joinType,
 			String alias) {
-		AuditAssociationQueryImpl<AuditAssociationQueryImpl<Q>> result = associationQueryMap.get( associationName );
-		if ( result == null ) {
-			result = new AuditAssociationQueryImpl<>(
-					enversService,
-					auditReader,
-					this,
-					queryBuilder,
-					associationName,
-					joinType,
-					aliasToEntityNameMap,
-					aliasToComponentPropertyNameMap,
-					this.alias,
-					alias
-			);
-			associationQueries.add( result );
-			associationQueryMap.put( associationName, result );
-		}
+		return traverseRelation(
+				associationName,
+				joinType,
+				alias,
+				null
+		);
+	}
+
+	@Override
+	public AuditAssociationQueryImpl<AuditAssociationQueryImpl<Q>> traverseRelation(
+			String associationName,
+			JoinType joinType,
+			String alias,
+			AuditCriterion onClause) {
+		AuditAssociationQueryImpl<AuditAssociationQueryImpl<Q>> result = new AuditAssociationQueryImpl<>(
+				enversService,
+				auditReader,
+				this,
+				queryBuilder,
+				associationName,
+				joinType,
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				this.alias,
+				alias,
+				onClause
+		);
+		associationQueries.add( result );
 		return result;
 	}
 
@@ -283,11 +295,24 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 	}
 
 	protected void addCriterionsToQuery(AuditReaderImplementor versionsReader) {
+		Parameters onClauseParameters;
 		if ( relationDescription != null ) {
-			createEntityJoin( enversService.getConfig() );
+			onClauseParameters = createEntityJoin( enversService.getConfig() );
 		}
 		else {
-			createComponentJoin( enversService.getConfig() );
+			onClauseParameters = createComponentJoin( enversService.getConfig() );
+		}
+
+		if ( onClauseCriterion != null ) {
+			onClauseCriterion.addToQuery(
+					enversService,
+					versionsReader,
+					aliasToEntityNameMap,
+					aliasToComponentPropertyNameMap,
+					alias,
+					queryBuilder,
+					onClauseParameters
+			);
 		}
 
 		for ( AuditCriterion criterion : criterions ) {
@@ -307,7 +332,7 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 		}
 	}
 
-	private void createEntityJoin(Configuration configuration) {
+	private Parameters createEntityJoin(Configuration configuration) {
 		boolean targetIsAudited = enversService.getEntitiesConfigurations().isVersioned( entityName );
 		String targetEntityName = entityName;
 		if ( targetIsAudited ) {
@@ -316,8 +341,10 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 		String originalIdPropertyName = configuration.getOriginalIdPropertyName();
 		String revisionPropertyPath = configuration.getRevisionNumberPath();
 
+		Parameters onClauseParameters;
 		if ( relationDescription.getRelationType() == RelationType.TO_ONE ) {
 			Parameters joinConditionParameters = queryBuilder.addJoin( joinType, targetEntityName, alias, false );
+			onClauseParameters = joinConditionParameters;
 
 			// owner.reference_id = target.originalId.id
 			IdMapper idMapperTarget;
@@ -350,6 +377,7 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 				);
 			}
 			Parameters joinConditionParameters = queryBuilder.addJoin( joinType, targetEntityName, alias, false );
+			onClauseParameters = joinConditionParameters;
 
 			// owner.originalId.id = target.reference_id
 			IdMapper idMapperOwner = enversService.getEntitiesConfigurations().get( ownerEntityName ).getIdMapper();
@@ -384,6 +412,7 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 
 			// join target_entity
 			Parameters joinConditionParametersTarget = queryBuilder.addJoin( joinType, targetEntityName, alias, false );
+			onClauseParameters = joinConditionParametersTarget;
 
 			Parameters middleParameters = queryBuilder.addParameters( middleEntityAlias );
 			String middleOriginalIdPropertyPath = middleEntityAlias + "." + originalIdPropertyName;
@@ -481,11 +510,13 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 					true
 			);
 		}
+		return onClauseParameters;
 	}
 
-	private void createComponentJoin(Configuration configuration) {
+	private Parameters createComponentJoin(Configuration configuration) {
 		String originalIdPropertyName = configuration.getOriginalIdPropertyName();
 		String revisionPropertyPath = configuration.getRevisionNumberPath();
+		Parameters onClauseParameters;
 		if ( componentDescription.getType() == ComponentType.MANY ) {
 			// join middle_entity
 			Parameters joinConditionParameters = queryBuilder.addJoin(
@@ -494,8 +525,10 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 					alias,
 					false
 			);
+			onClauseParameters = joinConditionParameters;
 
 			String middleOriginalIdPropertyPath = alias + "." + originalIdPropertyName;
+
 			// join condition: owner.reference_id = middle.id_ref_ing
 			String ownerPrefix = ownerAlias + "." + originalIdPropertyName;
 			MiddleIdData middleIdData = componentDescription.getMiddleIdData();
@@ -550,6 +583,7 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 			 */
 			String targetEntityName = configuration.getAuditEntityName( entityName );
 			Parameters joinConditionParameters = queryBuilder.addJoin( joinType, targetEntityName, alias, false );
+			onClauseParameters = joinConditionParameters;
 
 			// join condition: owner.reference_id = middle.id_reference_id
 			String ownerPrefix = ownerAlias + "." + originalIdPropertyName;
@@ -560,6 +594,7 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 			// join condition: owner.rev=middle.rev
 			joinConditionParameters.addWhere( ownerAlias, revisionPropertyPath, "=", alias, revisionPropertyPath );
 		}
+		return onClauseParameters;
 	}
 
 	@Override

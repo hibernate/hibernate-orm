@@ -13,6 +13,7 @@ import jakarta.persistence.criteria.JoinType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.criteria.AuditCriterion;
@@ -21,7 +22,6 @@ import org.hibernate.envers.query.projection.AuditProjection;
 
 /**
  * @author Adam Warski (adam at warski dot org)
- * @see org.hibernate.Criteria
  */
 public interface AuditQuery {
 	List getResultList() throws AuditException;
@@ -30,8 +30,17 @@ public interface AuditQuery {
 
 	AuditAssociationQuery<? extends AuditQuery> traverseRelation(String associationName, JoinType joinType);
 
-	AuditAssociationQuery<? extends AuditQuery> traverseRelation(String associationName, JoinType joinType,
+	AuditAssociationQuery<? extends AuditQuery> traverseRelation(
+			String associationName,
+			JoinType joinType,
 			String alias);
+
+	@Incubating
+	AuditAssociationQuery<? extends AuditQuery> traverseRelation(
+			String associationName,
+			JoinType joinType,
+			String alias,
+			AuditCriterion onClauseCriterion);
 
 	AuditQuery add(AuditCriterion criterion);
 

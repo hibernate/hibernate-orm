@@ -33,6 +33,9 @@ public interface AuditQuery {
 	AuditAssociationQuery<? extends AuditQuery> traverseRelation(String associationName, JoinType joinType,
 			String alias);
 
+	AuditAssociationQuery<? extends AuditQuery> traverseRelation(String associationName, JoinType joinType,
+			String alias, AuditCriterion onClauseCriterion);
+
 	AuditQuery add(AuditCriterion criterion);
 
 	AuditQuery addProjection(AuditProjection projection);

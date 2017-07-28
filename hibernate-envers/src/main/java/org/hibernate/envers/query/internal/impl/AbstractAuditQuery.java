@@ -58,7 +58,6 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	protected final AuditReaderImplementor versionsReader;
 
 	protected final List<AuditAssociationQueryImpl<?>> associationQueries = new ArrayList<>();
-	protected final Map<String, AuditAssociationQueryImpl<AuditQueryImplementor>> associationQueryMap = new HashMap<>();
 	protected final List<Pair<String, AuditProjection>> projections = new ArrayList<>();
 
 	protected AbstractAuditQuery(
@@ -179,23 +178,29 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 
 	@Override
 	public AuditAssociationQuery<? extends AuditQuery> traverseRelation(String associationName, JoinType joinType, String alias) {
-		AuditAssociationQueryImpl<AuditQueryImplementor> result = associationQueryMap.get( associationName );
-		if (result == null) {
-			result = new AuditAssociationQueryImpl<>(
-					enversService,
-					versionsReader,
-					this,
-					qb,
-					associationName,
-					joinType,
-					aliasToEntityNameMap,
-					aliasToComponentPropertyNameMap,
-					REFERENCED_ENTITY_ALIAS,
-					alias
-			);
-			associationQueries.add( result );
-			associationQueryMap.put( associationName, result );
-		}
+		return traverseRelation(
+				associationName,
+				joinType,
+				alias,
+				null );
+	}
+
+	@Override
+	public AuditAssociationQuery<? extends AuditQuery> traverseRelation(String associationName, JoinType joinType, String alias, AuditCriterion onClause) {
+		AuditAssociationQueryImpl<AbstractAuditQuery> result = new AuditAssociationQueryImpl<>(
+				enversService,
+				versionsReader,
+				this,
+				qb,
+				associationName,
+				joinType,
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				REFERENCED_ENTITY_ALIAS,
+				alias,
+				onClause
+		);
+		associationQueries.add( result );
 		return result;
 	}
 

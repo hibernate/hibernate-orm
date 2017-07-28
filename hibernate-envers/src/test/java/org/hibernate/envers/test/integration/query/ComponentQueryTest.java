@@ -278,4 +278,26 @@ public class ComponentQueryTest extends BaseEnversJPAFunctionalTestCase {
 		assertEquals( "Expecte the symbol identfier of asset2 concatenated with 'Z'", Collections.singletonList( "XZ" ), actual );
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-11896")
+	public void testOnClauseOnSingleSymbol() {
+		List actual = getAuditReader().createQuery().forEntitiesAtRevision( Asset.class, 1 ).addProjection( AuditEntity.id() )
+				.traverseRelation( "singleSymbol", JoinType.LEFT, "s", AuditEntity.property( "s", "type" ).eq( type1 ) )
+				.addOrder( AuditEntity.property( "s", "identifier" ).asc() ).up().addOrder( AuditEntity.id().asc() ).getResultList();
+		final List<Integer> expected = new ArrayList<>();
+		Collections.addAll( expected, asset1.getId(), asset3.getId(), asset2.getId() );
+		assertEquals( "Expected the correct ordering. Assets which do not have a symbol of type1 should come first (null first)", expected, actual );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11896")
+	public void testOnClauseOnMultiSymbol() {
+		List actual = getAuditReader().createQuery().forEntitiesAtRevision( Asset.class, 1 ).addProjection( AuditEntity.id() )
+				.traverseRelation( "multiSymbols", JoinType.LEFT, "s", AuditEntity.property( "s", "type" ).eq( type1 ) )
+				.addOrder( AuditEntity.property( "s", "identifier" ).asc() ).up().addOrder( AuditEntity.id().asc() ).getResultList();
+		final List<Integer> expected = new ArrayList<>();
+		Collections.addAll( expected, asset1.getId(), asset2.getId(), asset3.getId() );
+		assertEquals( "Expected the correct ordering. Assets which do not have a symbol of type1 should come first (null first)", expected, actual );
+	}
+
 }

@@ -42,6 +42,7 @@ public class FunctionPropertyAuditExpression implements AuditCriterion {
 			EnversService enversService,
 			AuditReaderImplementor auditReader,
 			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
 			String baseAlias,
 			QueryBuilder queryBuilder,
 			Parameters parameters) {
@@ -52,7 +53,11 @@ public class FunctionPropertyAuditExpression implements AuditCriterion {
 				auditReader,
 				entityName,
 				propertyNameGetter );
-		CriteriaTools.checkPropertyNotARelation( enversService, entityName, propertyName );
-		parameters.addWhereWithFunction( enversService, aliasToEntityNameMap, effectiveAlias, propertyName, op, function );
+		String propertyNamePrefix = CriteriaTools.determineComponentPropertyPrefix( enversService, aliasToEntityNameMap, aliasToComponentPropertyNameMap,
+				effectiveAlias );
+		String prefixedPropertyName = propertyNamePrefix.concat( propertyName );
+		CriteriaTools.checkPropertyNotARelation( enversService, entityName, prefixedPropertyName );
+		parameters.addWhereWithFunction( enversService, aliasToEntityNameMap, aliasToComponentPropertyNameMap, effectiveAlias, prefixedPropertyName, op,
+				function );
 	}
 }

@@ -36,6 +36,7 @@ public class AuditDisjunction implements AuditCriterion, ExtendableCriterion {
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
 			String alias,
 			QueryBuilder qb,
 			Parameters parameters) {
@@ -46,7 +47,7 @@ public class AuditDisjunction implements AuditCriterion, ExtendableCriterion {
 		}
 		else {
 			for ( AuditCriterion criterion : criterions ) {
-				criterion.addToQuery( enversService, versionsReader, aliasToEntityNameMap, alias, qb, orParameters );
+				criterion.addToQuery( enversService, versionsReader, aliasToEntityNameMap, aliasToComponentPropertyNameMap, alias, qb, orParameters );
 			}
 		}
 	}

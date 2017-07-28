@@ -39,7 +39,7 @@ public class PropertyAuditProjection implements AuditProjection {
 
 	@Override
 	public void addProjectionToQuery(EnversService enversService, AuditReaderImplementor auditReader,
-			Map<String, String> aliasToEntityNameMap, String baseAlias, QueryBuilder queryBuilder) {
+			Map<String, String> aliasToEntityNameMap, Map<String, String> aliasToComponentPropertyNameMap, String baseAlias, QueryBuilder queryBuilder) {
 		String projectionEntityAlias = getAlias( baseAlias );
 		String projectionEntityName = aliasToEntityNameMap.get( projectionEntityAlias );
 		String propertyName = CriteriaTools.determinePropertyName(
@@ -47,10 +47,12 @@ public class PropertyAuditProjection implements AuditProjection {
 				auditReader,
 				projectionEntityName,
 				propertyNameGetter );
+		String propertyNamePrefix = CriteriaTools.determineComponentPropertyPrefix( enversService, aliasToEntityNameMap, aliasToComponentPropertyNameMap,
+				projectionEntityAlias );
 		queryBuilder.addProjection(
 				function,
 				projectionEntityAlias,
-				propertyName,
+				propertyNamePrefix.concat( propertyName ),
 				distinct );
 	}
 

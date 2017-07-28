@@ -40,12 +40,15 @@ abstract class AbstractAtomicExpression implements AuditCriterion {
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
 			String baseAlias,
 			QueryBuilder qb,
 			Parameters parameters) {
 		final String effectiveAlias = alias == null ? baseAlias : alias;
 		final String entityName = aliasToEntityNameMap.get( effectiveAlias );
-		addToQuery(enversService, versionsReader, entityName, effectiveAlias, qb, parameters);
+		final String componentPrefix = CriteriaTools.determineComponentPropertyPrefix( enversService, aliasToEntityNameMap, aliasToComponentPropertyNameMap,
+				effectiveAlias );
+		addToQuery(enversService, versionsReader, entityName, effectiveAlias, componentPrefix, qb, parameters);
 	}
 
 	protected abstract void addToQuery(
@@ -53,6 +56,7 @@ abstract class AbstractAtomicExpression implements AuditCriterion {
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			String alias,
+			String componentPrefix,
 			QueryBuilder qb,
 			Parameters parameters);
 

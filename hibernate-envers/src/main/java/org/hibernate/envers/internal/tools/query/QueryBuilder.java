@@ -26,6 +26,7 @@ import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.query.criteria.AuditFunction;
 import org.hibernate.envers.query.criteria.AuditId;
 import org.hibernate.envers.query.criteria.AuditProperty;
+import org.hibernate.envers.query.criteria.internal.CriteriaTools;
 import org.hibernate.query.Query;
 import org.hibernate.type.CustomType;
 
@@ -182,13 +183,16 @@ public class QueryBuilder {
 		}
 	}
 
-	public void addProjection(EnversService enversService, Map<String, String> aliasToEntityNameMap, AuditFunction function) {
+	public void addProjection(EnversService enversService, Map<String, String> aliasToEntityNameMap, Map<String, String> aliasToComponentPropertyNameMap,
+			AuditFunction function) {
 		final StringBuilder expression = new StringBuilder();
-		appendFunctionArgument( enversService, aliasToEntityNameMap, paramCounter, projectionQueryParamValues, alias, expression, function );
+		appendFunctionArgument( enversService, aliasToEntityNameMap, aliasToComponentPropertyNameMap, paramCounter, projectionQueryParamValues, alias,
+				expression, function );
 		projections.add( expression.toString() );
 	}
 
-	protected static void appendFunctionArgument(EnversService enversService, Map<String, String> aliasToEntityNameMap, MutableInteger paramCounter,
+	protected static void appendFunctionArgument(EnversService enversService, Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap, MutableInteger paramCounter,
 			Map<String, Object> queryParamValues, String alias,
 			StringBuilder expression, Object argument) {
 		if ( argument instanceof AuditFunction ) {
@@ -199,7 +203,8 @@ public class QueryBuilder {
 				if ( !first ) {
 					expression.append( ',' );
 				}
-				appendFunctionArgument( enversService, aliasToEntityNameMap, paramCounter, queryParamValues, alias, expression, innerArg );
+				appendFunctionArgument( enversService, aliasToEntityNameMap, aliasToComponentPropertyNameMap, paramCounter, queryParamValues, alias, expression,
+						innerArg );
 				first = false;
 			}
 			expression.append( ')' );
@@ -232,8 +237,10 @@ public class QueryBuilder {
 			if ( propertyAlias != null ) {
 				expression.append( propertyAlias ).append( '.' );
 			}
+			String propertyPrefix = CriteriaTools.determineComponentPropertyPrefix( enversService, aliasToEntityNameMap, aliasToComponentPropertyNameMap,
+					propertyAlias );
 			String propertyName = property.getPropertyNameGetter().get( enversService );
-			expression.append( propertyName );
+			expression.append( propertyPrefix.concat( propertyName ) );
 		}
 		else {
 			String queryParam = "_p" + paramCounter.getAndIncrease();

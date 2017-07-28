@@ -9,10 +9,12 @@ package org.hibernate.envers.query.criteria.internal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.internal.entities.ComponentDescription;
 import org.hibernate.envers.internal.entities.RelationDescription;
 import org.hibernate.envers.internal.entities.RelationType;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -58,6 +60,13 @@ public abstract class CriteriaTools {
 				"This type of relation (" + entityName + "." + propertyName +
 						") isn't supported and can't be used in queries."
 		);
+	}
+
+	public static ComponentDescription getComponent(
+			EnversService enversService,
+			String entityName,
+			String propertyName) {
+		return enversService.getEntitiesConfigurations().getComponentDescription( entityName, propertyName );
 	}
 
 	public static String determinePropertyName(
@@ -106,6 +115,32 @@ public abstract class CriteriaTools {
 		}
 
 		return propertyName;
+	}
+
+	/**
+	 * @param enversService The EnversService
+	 * @param aliasToEntityNameMap the map from aliases to entity names
+	 * @param aliasToComponentPropertyNameMap the map from aliases to component property name, if an alias is for a
+	 * component
+	 * @param alias the alias
+	 * @return The prefix that has to be used when referring to a property of a component. If no prefix is required or
+	 * the alias is not a component, the empty string is returned (but never null)
+	 */
+	public static String determineComponentPropertyPrefix(
+			EnversService enversService,
+			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
+			String alias) {
+		String componentPrefix = "";
+		final String entityName = aliasToEntityNameMap.get( alias );
+		final String owningComponentPropertyName = aliasToComponentPropertyNameMap.get( alias );
+		if ( owningComponentPropertyName != null ) {
+			ComponentDescription componentDescription = CriteriaTools.getComponent( enversService, entityName, owningComponentPropertyName );
+			if ( componentDescription.getType() == ComponentDescription.ComponentType.ONE ) {
+				componentPrefix = componentDescription.getPropertyName().concat( "_" );
+			}
+		}
+		return componentPrefix;
 	}
 
 	/**

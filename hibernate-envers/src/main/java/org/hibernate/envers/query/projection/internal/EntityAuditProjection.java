@@ -34,7 +34,7 @@ public class EntityAuditProjection implements AuditProjection {
 
 	@Override
 	public void addProjectionToQuery(EnversService enversService, AuditReaderImplementor auditReader,
-			Map<String, String> aliasToEntityNameMap, String baseAlias, QueryBuilder queryBuilder) {
+			Map<String, String> aliasToEntityNameMap, Map<String, String> aliasToComponentPropertyNameMap, String baseAlias, QueryBuilder queryBuilder) {
 		String projectionEntityAlias = getAlias( baseAlias );
 		queryBuilder.addProjection(
 				null,

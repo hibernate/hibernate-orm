@@ -9,6 +9,7 @@ package org.hibernate.envers.query.criteria.internal;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.internal.entities.ComponentDescription;
 import org.hibernate.envers.internal.entities.RelationDescription;
 import org.hibernate.envers.internal.entities.RelationType;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -23,6 +24,7 @@ import org.hibernate.type.Type;
  * @author Adam Warski (adam at warski dot org)
  */
 public class SimpleAuditExpression extends AbstractAtomicExpression {
+
 	private PropertyNameGetter propertyNameGetter;
 	private Object value;
 	private String op;
@@ -40,6 +42,7 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			String alias,
+			String componentPrefix,
 			QueryBuilder qb,
 			Parameters parameters) {
 		String propertyName = CriteriaTools.determinePropertyName(
@@ -49,7 +52,8 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 				propertyNameGetter
 		);
 
-		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( enversService, entityName, propertyName );
+		String prefixedPropertyName = componentPrefix.concat( propertyName );
+		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( enversService, entityName, prefixedPropertyName );
 
 		if ( relatedEntity == null ) {
 			// HHH-9178 - Add support to component type equality.
@@ -67,14 +71,14 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 					final Object componentValue = componentType.getPropertyValue( value, i, session );
 					parameters.addWhereWithParam(
 							alias,
-							propertyName + "_" + componentType.getPropertyNames()[ i ],
+							prefixedPropertyName + "_" + componentType.getPropertyNames()[ i ],
 							op,
 							componentValue
 					);
 				}
 			}
 			else {
-				parameters.addWhereWithParam( alias, propertyName, op, value );
+				parameters.addWhereWithParam( alias, prefixedPropertyName, op, value );
 			}
 		}
 		else if ( relatedEntity.getRelationType() == RelationType.TO_ONE ) {

@@ -32,6 +32,7 @@ public class NullAuditExpression extends AbstractAtomicExpression {
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			String alias,
+			String componentPrefix,
 			QueryBuilder qb,
 			Parameters parameters) {
 		String propertyName = CriteriaTools.determinePropertyName(
@@ -41,9 +42,10 @@ public class NullAuditExpression extends AbstractAtomicExpression {
 				propertyNameGetter
 		);
 		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( enversService, entityName, propertyName );
+		String prefixedPropertyName = componentPrefix.concat( propertyName );
 
 		if ( relatedEntity == null ) {
-			parameters.addNullRestriction( alias, propertyName );
+			parameters.addNullRestriction( alias, prefixedPropertyName );
 		}
 		else if ( relatedEntity.getRelationType() == RelationType.TO_ONE ) {
 			relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, null, alias, null, true );

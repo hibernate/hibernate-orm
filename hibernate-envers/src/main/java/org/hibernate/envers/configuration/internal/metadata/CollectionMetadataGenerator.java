@@ -813,7 +813,7 @@ public final class CollectionMetadataGenerator {
 	}
 
 	private void storeMiddleEntityRelationInformation(String mappedBy, MiddleIdData referencingIdData, String referencedPrefix, String auditMiddleEntityName) {
-		// Only if this is a relation (when there is a referenced entity).
+		// Only if this is a relation (when there is a referenced entity or a component).
 		if ( referencedEntityName != null ) {
 			final IdMappingData referencedIdMapping = mainGenerator.getReferencedIdMappingData(
 					referencingEntityName,
@@ -842,6 +842,9 @@ public final class CollectionMetadataGenerator {
 						referencedIdData,
 						auditMiddleEntityName );
 			}
+		}
+		else {
+			referencingEntityConfiguration.addToManyComponent( propertyName, auditMiddleEntityName, referencingIdData );
 		}
 	}
 

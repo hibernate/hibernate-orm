@@ -124,6 +124,27 @@ public class EntitiesConfigurations {
 		return descriptions;
 	}
 
+	public ComponentDescription getComponentDescription(final String entityName, final String propertyName) {
+		final EntityConfiguration entCfg;
+		if ( isVersioned( entityName ) ) {
+			entCfg = get( entityName );
+		}
+		else {
+			entCfg = getNotVersionEntityConfiguration( entityName );
+		}
+		final ComponentDescription relDesc = entCfg.getComponentDescription( propertyName );
+		if ( relDesc != null ) {
+			return relDesc;
+		}
+		else if ( entCfg.getParentEntityName() != null ) {
+			// The field may be declared in a superclass ...
+			return getComponentDescription( entCfg.getParentEntityName(), propertyName );
+		}
+		else {
+			return null;
+		}
+	}
+
 	private void addWithParentEntityNames(String entityName, Set<String> entityNames) {
 		entityNames.add( entityName );
 		final EntityConfiguration entCfg = entitiesConfigurations.get( entityName );

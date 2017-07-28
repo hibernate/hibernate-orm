@@ -505,7 +505,7 @@ The method accepts a `persist` parameter indicating whether the revision entity 
 [[envers-tracking-modified-entities-revchanges]]
 === Tracking entity names modified during revisions
 
-By default entity types that have been changed in each revision are not being tracked.
+By default, entity types that have been changed in each revision are not being tracked.
 This implies the necessity to query all tables storing audited data in order to retrieve changes made during specified revision.
 Envers provides a simple mechanism that creates `REVCHANGES` table which stores entity names of modified persistent objects.
 Single record encapsulates the revision identifier (foreign key to `REVINFO` table) and a string value.
@@ -516,33 +516,18 @@ Tracking of modified entity names can be enabled in three different ways:
   In this case `org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity` will be implicitly used as the revision log entity.
 . Create a custom revision entity that extends `org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity` class.
 +
-[source,java]
+[source, JAVA, indent=0]
 ----
-@RevisionEntity
-public class ExtendedRevisionEntity extends DefaultTrackingModifiedEntitiesRevisionEntity {
-	...
-}
+include::{sourcedir}/EntityTypeChangeAuditDefaultTrackingTest.java[tags=envers-tracking-modified-entities-revchanges-example]
 ----
 +
 . Mark an appropriate field of a custom revision entity with `@org.hibernate.envers.ModifiedEntityNames` annotation.
   The property is required to be of `Set<String>` type.
 +
-[source,java]
+[source, JAVA, indent=0]
 ----
-@RevisionEntity
-public class AnnotatedTrackingRevisionEntity {
-    ...
-
-    @ElementCollection
-    @JoinTable( name = "REVCHANGES", joinColumns = @JoinColumn( name = "REV" ) )
-    @Column( name = "ENTITYNAME" )
-    @ModifiedEntityNames
-    private Set<String> modifiedEntityNames;
-
-    ...
-}
+include::{sourcedir}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-revchanges-example]
 ----
-+
 
 Users, that have chosen one of the approaches listed above,
 can retrieve all entities modified in a specified revision by utilizing API described in <<envers-tracking-modified-entities-queries>>.

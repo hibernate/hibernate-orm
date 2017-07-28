@@ -318,6 +318,7 @@ public class Parameters {
 	 *
 	 * @param configuration the configuration.
 	 * @param aliasToEntityNameMap alias to entity name map, never {@literal null}
+	 * @param aliasToComponentPropertyNameMap alias to component property name map, never {@literal null}
 	 * @param function the function.
 	 * @param op the operator.
 	 * @param value the scalar value.
@@ -325,6 +326,7 @@ public class Parameters {
 	public void addWhereWithFunction(
 			Configuration configuration,
 			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
 			AuditFunction function,
 			String op,
 			Object value) {
@@ -333,6 +335,7 @@ public class Parameters {
 		QueryBuilder.appendFunctionArgument(
 				configuration,
 				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
 				queryParamCounter,
 				localQueryParamValues,
 				alias,
@@ -354,6 +357,7 @@ public class Parameters {
 	 *
 	 * @param configuration the configuration.
 	 * @param aliasToEntityNameMap alias to entity name map, never {@literal null}
+	 * @param aliasToComponentPropertyNameMap alias to component property name map, never {@literal null}
 	 * @param function the function.
 	 * @param op the operator.
 	 * @param aliasRight the optional alias of the right property, may be {@literal null}
@@ -362,6 +366,7 @@ public class Parameters {
 	public void addWhereWithFunction(
 			Configuration configuration,
 			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
 			AuditFunction function,
 			String op,
 			String aliasRight,
@@ -371,6 +376,7 @@ public class Parameters {
 		QueryBuilder.appendFunctionArgument(
 				configuration,
 				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
 				queryParamCounter,
 				localQueryParamValues,
 				alias,
@@ -393,6 +399,7 @@ public class Parameters {
 	 *
 	 * @param configuration the configuration.
 	 * @param aliasToEntityNameMap alias to entity name map, never {@literal null}
+	 * @param aliasToComponentPropertyNameMap alias to component property name map, never {@literal null}
 	 * @param aliasLeft the optional alias of the left property, may be {@literal null}
 	 * @param left the property.
 	 * @param op the operator.
@@ -401,6 +408,7 @@ public class Parameters {
 	public void addWhereWithFunction(
 			Configuration configuration,
 			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
 			String aliasLeft,
 			String left,
 			String op,
@@ -417,6 +425,7 @@ public class Parameters {
 		QueryBuilder.appendFunctionArgument(
 				configuration,
 				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
 				queryParamCounter,
 				localQueryParamValues,
 				alias,
@@ -432,6 +441,7 @@ public class Parameters {
 	 *
 	 * @param configuration the configuration.
 	 * @param aliasToEntityNameMap alias to entity name map, never {@literal null}
+	 * @param aliasToComponentPropertyNameMap alias to component property name map, never {@literal null}
 	 * @param left the left-side function.
 	 * @param op the operator.
 	 * @param right the right-side function.
@@ -439,6 +449,7 @@ public class Parameters {
 	public void addWhereWithFunction(
 			Configuration configuration,
 			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
 			AuditFunction left,
 			String op,
 			AuditFunction right) {
@@ -447,6 +458,7 @@ public class Parameters {
 		QueryBuilder.appendFunctionArgument(
 				configuration,
 				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
 				queryParamCounter,
 				localQueryParamValues,
 				alias,
@@ -459,6 +471,7 @@ public class Parameters {
 		QueryBuilder.appendFunctionArgument(
 				configuration,
 				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
 				queryParamCounter,
 				localQueryParamValues,
 				alias,

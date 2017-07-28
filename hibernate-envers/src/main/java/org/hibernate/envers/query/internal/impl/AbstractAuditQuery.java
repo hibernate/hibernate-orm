@@ -51,6 +51,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	protected String versionsEntityName;
 	protected QueryBuilder qb;
 	protected final Map<String, String> aliasToEntityNameMap = new HashMap<>();
+	protected final Map<String, String> aliasToComponentPropertyNameMap = new HashMap<>();
 
 	protected boolean hasOrder;
 
@@ -138,7 +139,14 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 		String projectionEntityAlias = projection.getAlias( REFERENCED_ENTITY_ALIAS );
 		String projectionEntityName = aliasToEntityNameMap.get( projectionEntityAlias );
 		registerProjection( projectionEntityName, projection );
-		projection.addProjectionToQuery( enversService, versionsReader, aliasToEntityNameMap, REFERENCED_ENTITY_ALIAS, qb );
+		projection.addProjectionToQuery(
+				enversService,
+				versionsReader,
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				REFERENCED_ENTITY_ALIAS,
+				qb
+		);
 		return this;
 	}
 
@@ -162,7 +170,18 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 				orderEntityName,
 				orderData.getPropertyName()
 		);
-		qb.addOrder( orderEntityAlias, propertyName, orderData.isAscending(), orderData.getNullPrecedence() );
+		String componentPrefix = CriteriaTools.determineComponentPropertyPrefix(
+				enversService,
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				orderEntityAlias
+		);
+		qb.addOrder(
+				orderEntityAlias,
+				componentPrefix.concat( propertyName ),
+				orderData.isAscending(),
+				orderData.getNullPrecedence()
+		);
 		return this;
 	}
 
@@ -187,6 +206,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 					associationName,
 					joinType,
 					aliasToEntityNameMap,
+					aliasToComponentPropertyNameMap,
 					REFERENCED_ENTITY_ALIAS,
 					alias
 			);
@@ -312,7 +332,15 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 				if ( projections.size() == 1 ) {
 					// qr is the value of the projection itself
 					final Pair<String, AuditProjection> projection = projections.get( 0 );
-					result.add( projection.getSecond().convertQueryResult( enversService, entityInstantiator, projection.getFirst(), revision, qr ) );
+					result.add(
+							projection.getSecond().convertQueryResult(
+									enversService,
+									entityInstantiator,
+									projection.getFirst(),
+									revision,
+									qr
+							)
+					);
 				}
 				else {
 					// qr is an array where each of its components holds the value of corresponding projection
@@ -320,7 +348,13 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 					Object[] tresults = new Object[qresults.length];
 					for ( int i = 0; i < qresults.length; i++ ) {
 						final Pair<String, AuditProjection> projection = projections.get( i );
-						tresults[i] = projection.getSecond().convertQueryResult( enversService, entityInstantiator, projection.getFirst(), revision, qresults[i] );
+						tresults[i] = projection.getSecond().convertQueryResult(
+								enversService,
+								entityInstantiator,
+								projection.getFirst(),
+								revision,
+								qresults[i]
+						);
 					}
 					result.add( tresults );
 				}

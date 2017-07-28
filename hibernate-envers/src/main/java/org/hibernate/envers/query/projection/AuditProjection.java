@@ -32,6 +32,7 @@ public interface AuditProjection {
 			EnversService enversService,
 			AuditReaderImplementor auditReader,
 			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
 			String baseAlias,
 			QueryBuilder queryBuilder);
 

@@ -26,10 +26,10 @@ import org.hibernate.envers.internal.entities.RevisionTypeType;
 import org.hibernate.envers.internal.entities.mapper.id.QueryParameterData;
 import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.envers.internal.tools.StringTools;
-import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.query.criteria.AuditFunction;
 import org.hibernate.envers.query.criteria.AuditId;
 import org.hibernate.envers.query.criteria.AuditProperty;
+import org.hibernate.envers.query.criteria.internal.CriteriaTools;
 import org.hibernate.envers.query.order.NullPrecedence;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.query.Query;
@@ -220,11 +220,16 @@ public class QueryBuilder {
 		}
 	}
 
-	public void addProjection(Configuration configuration, Map<String, String> aliasToEntityNameMap, AuditFunction function) {
+	public void addProjection(
+			Configuration configuration,
+			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
+			AuditFunction function) {
 		final StringBuilder expression = new StringBuilder();
 		appendFunctionArgument(
 				configuration,
 				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
 				paramCounter,
 				projectionQueryParamValues,
 				alias,
@@ -237,6 +242,7 @@ public class QueryBuilder {
 	protected static void appendFunctionArgument(
 			Configuration configuration,
 			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
 			MutableInteger paramCounter,
 			Map<String, Object> queryParamValues,
 			String alias,
@@ -253,6 +259,7 @@ public class QueryBuilder {
 				appendFunctionArgument(
 						configuration,
 						aliasToEntityNameMap,
+						aliasToComponentPropertyNameMap,
 						paramCounter,
 						queryParamValues,
 						alias,
@@ -292,8 +299,14 @@ public class QueryBuilder {
 			if ( propertyAlias != null ) {
 				expression.append( propertyAlias ).append( '.' );
 			}
+			String propertyPrefix = CriteriaTools.determineComponentPropertyPrefix(
+					configuration.getEnversService(),
+					aliasToEntityNameMap,
+					aliasToComponentPropertyNameMap,
+					propertyAlias
+			);
 			String propertyName = property.getPropertyNameGetter().get( configuration );
-			expression.append( propertyName );
+			expression.append( propertyPrefix.concat( propertyName ) );
 		}
 		else {
 			String queryParam = "_p" + paramCounter.getAndIncrease();

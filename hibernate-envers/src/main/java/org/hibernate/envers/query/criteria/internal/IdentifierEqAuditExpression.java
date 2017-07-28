@@ -33,6 +33,7 @@ public class IdentifierEqAuditExpression extends AbstractAtomicExpression {
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			String alias,
+			String componentPrefix,
 			QueryBuilder qb,
 			Parameters parameters) {
 		String prefix = enversService.getConfig().getOriginalIdPropertyName();

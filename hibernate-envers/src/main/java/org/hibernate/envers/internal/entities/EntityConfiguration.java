@@ -9,6 +9,7 @@ package org.hibernate.envers.internal.entities;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAuditingData;
 import org.hibernate.envers.internal.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
@@ -31,6 +32,7 @@ public class EntityConfiguration {
 	private final ExtendedPropertyMapper propertyMapper;
 	// Maps from property name
 	private final Map<String, RelationDescription> relations;
+	private final Map<String, ComponentDescription> components;
 	private final String parentEntityName;
 
 	public EntityConfiguration(
@@ -46,6 +48,7 @@ public class EntityConfiguration {
 		this.parentEntityName = parentEntityName;
 
 		this.relations = new HashMap<>();
+		this.components = new HashMap<>();
 	}
 
 	public void addToOneRelation(
@@ -170,12 +173,24 @@ public class EntityConfiguration {
 		);
 	}
 
+	public void addToManyComponent(String propertyName, String auditMiddleEntityName, MiddleIdData middleIdData) {
+		components.put( propertyName, ComponentDescription.many( propertyName, auditMiddleEntityName, middleIdData ) );
+	}
+
+	public void addToOneComponent(String propertyName, ComponentAuditingData auditingData) {
+		components.put( propertyName, ComponentDescription.one( propertyName, auditingData ) );
+	}
+
 	public boolean isRelation(String propertyName) {
 		return relations.get( propertyName ) != null;
 	}
 
 	public RelationDescription getRelationDescription(String propertyName) {
 		return relations.get( propertyName );
+	}
+
+	public ComponentDescription getComponentDescription(String propertyName) {
+		return components.get( propertyName );
 	}
 
 	public IdMappingData getIdMappingData() {

@@ -40,12 +40,14 @@ public class FunctionFunctionAuditExpression implements AuditCriterion {
 			EnversService enversService,
 			AuditReaderImplementor auditReader,
 			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
 			String baseAlias,
 			QueryBuilder queryBuilder,
 			Parameters parameters) {
 		parameters.addWhereWithFunction(
 				enversService.getConfig(),
 				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
 				leftFunction,
 				op,
 				rightFunction

@@ -14,6 +14,7 @@ import org.hibernate.envers.boot.registry.classloading.ClassLoaderAccessHelper;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
 import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
+import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -79,6 +80,11 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 						false
 				);
 			}
+		}
+
+		if ( !firstPass ) {
+			final EntityConfiguration owningEntityConfiguration = getAuditedEntityConfigurations().get( entityName );
+			owningEntityConfiguration.addToOneComponent( propertyAuditingData.getName(), componentAuditingData );
 		}
 	}
 

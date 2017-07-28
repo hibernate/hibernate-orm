@@ -405,20 +405,33 @@ public class AuditProperty<T> implements AuditProjection {
 	// Projection on this property
 
 	@Override
-	public void addProjectionToQuery(EnversService enversService, AuditReaderImplementor auditReader,
-			Map<String, String> aliasToEntityNameMap, String baseAlias, QueryBuilder queryBuilder) {
+	public void addProjectionToQuery(
+			EnversService enversService,
+			AuditReaderImplementor auditReader,
+			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
+			String baseAlias,
+			QueryBuilder queryBuilder) {
 		String projectionEntityAlias = getAlias( baseAlias );
 		String projectionEntityName = aliasToEntityNameMap.get( projectionEntityAlias );
 		String propertyName = CriteriaTools.determinePropertyName(
 				enversService,
 				auditReader,
 				projectionEntityName,
-				propertyNameGetter );
+				propertyNameGetter
+		);
+		String propertyNamePrefix = CriteriaTools.determineComponentPropertyPrefix(
+				enversService,
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				projectionEntityAlias
+		);
 		queryBuilder.addProjection(
 				null,
 				projectionEntityAlias,
-				propertyName,
-				false );
+				propertyNamePrefix.concat( propertyName ),
+				false
+		);
 	}
 
 	// Order
@@ -438,7 +451,12 @@ public class AuditProperty<T> implements AuditProjection {
 	}
 	
 	@Override
-	public Object convertQueryResult(EnversService enversService, EntityInstantiator entityInstantiator, String entityName, Number revision, Object value) {
+	public Object convertQueryResult(
+			EnversService enversService,
+			EntityInstantiator entityInstantiator,
+			String entityName,
+			Number revision,
+			Object value) {
 		return value;
 	}
 	

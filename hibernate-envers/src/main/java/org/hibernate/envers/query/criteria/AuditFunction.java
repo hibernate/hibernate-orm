@@ -240,9 +240,15 @@ public class AuditFunction implements AuditProjection {
 			EnversService enversService,
 			AuditReaderImplementor auditReader,
 			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
 			String baseAlias,
 			QueryBuilder queryBuilder) {
-		queryBuilder.addProjection( enversService.getConfig(), aliasToEntityNameMap, this );
+		queryBuilder.addProjection(
+				enversService.getConfig(),
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				this
+		);
 	}
 
 	@Override

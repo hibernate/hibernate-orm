@@ -237,7 +237,7 @@ public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMe
 			MiddleIdData referencingIdData,
 			String referencedPrefix,
 			String auditMiddleEntityName) {
-		// Only if this is a relation (when there is a referenced entity).
+		// Only if this is a relation (when there is a referenced entity or a component).
 		if ( context.getReferencedEntityName() != null ) {
 			final IdMappingData referencedIdMapping = getReferencedIdMappingData(
 					context.getReferencingEntityName(),
@@ -269,6 +269,13 @@ public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMe
 						auditMiddleEntityName
 				);
 			}
+		}
+		else {
+			context.getReferencingEntityConfiguration().addToManyComponent(
+					context.getPropertyName(),
+					auditMiddleEntityName,
+					referencingIdData
+			);
 		}
 	}	
 }

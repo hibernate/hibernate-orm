@@ -2735,8 +2735,6 @@ public abstract class Loader {
 	 *
 	 * @param queryParameters The parameters with which the query should be executed.
 	 * @param returnTypes The expected return types of the query
-	 * @param holderInstantiator If the return values are expected to be wrapped
-	 * in a holder, this is the thing that knows how to wrap them.
 	 * @param session The session from which the scroll request originated.
 	 *
 	 * @return The ScrollableResults instance.
@@ -2747,7 +2745,6 @@ public abstract class Loader {
 	protected ScrollableResultsImplementor scroll(
 			final QueryParameters queryParameters,
 			final Type[] returnTypes,
-			final HolderInstantiator holderInstantiator,
 			final SharedSessionContractImplementor session) throws HibernateException {
 		checkScrollability();
 
@@ -2788,7 +2785,7 @@ public abstract class Loader {
 						this,
 						queryParameters,
 						returnTypes,
-						holderInstantiator
+						getHolderInstantiator(queryParameters)
 				);
 			}
 			else {
@@ -2799,7 +2796,7 @@ public abstract class Loader {
 						this,
 						queryParameters,
 						returnTypes,
-						holderInstantiator
+						getHolderInstantiator(queryParameters)
 				);
 			}
 
@@ -2812,6 +2809,10 @@ public abstract class Loader {
 			);
 		}
 
+	}
+
+	protected HolderInstantiator getHolderInstantiator(QueryParameters queryParameters) {
+		return null;
 	}
 
 	/**

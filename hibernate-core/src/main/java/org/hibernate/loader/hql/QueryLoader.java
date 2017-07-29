@@ -571,9 +571,13 @@ public class QueryLoader extends BasicLoader {
 		return scroll(
 				queryParameters,
 				queryReturnTypes,
-				buildHolderInstantiator( queryParameters.getResultTransformer() ),
 				session
 		);
+	}
+
+	@Override
+	protected HolderInstantiator getHolderInstantiator(QueryParameters queryParameters) {
+		return buildHolderInstantiator( queryParameters.getResultTransformer() );
 	}
 
 	// -- Implementation private methods --

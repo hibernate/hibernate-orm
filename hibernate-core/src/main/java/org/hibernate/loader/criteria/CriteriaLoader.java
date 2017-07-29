@@ -101,7 +101,7 @@ public class CriteriaLoader extends OuterJoinLoader {
 			throws HibernateException {
 		QueryParameters qp = translator.getQueryParameters();
 		qp.setScrollMode( scrollMode );
-		return scroll( qp, resultTypes, null, session );
+		return scroll( qp, resultTypes, session );
 	}
 
 	public List list(SharedSessionContractImplementor session)

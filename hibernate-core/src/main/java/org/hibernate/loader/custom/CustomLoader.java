@@ -373,9 +373,13 @@ public class CustomLoader extends Loader {
 		return scroll(
 				queryParameters,
 				resultTypes,
-				getHolderInstantiator( queryParameters.getResultTransformer(), getReturnAliasesForTransformer() ),
 				session
 		);
+	}
+
+	@Override
+	protected HolderInstantiator getHolderInstantiator(QueryParameters queryParameters) {
+		return getHolderInstantiator( queryParameters.getResultTransformer(), getReturnAliasesForTransformer() );
 	}
 
 	static private HolderInstantiator getHolderInstantiator(

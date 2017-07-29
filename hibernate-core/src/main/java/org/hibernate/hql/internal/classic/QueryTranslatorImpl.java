@@ -1222,11 +1222,15 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	public ScrollableResultsImplementor scroll(
 			final QueryParameters queryParameters,
 			final SharedSessionContractImplementor session) throws HibernateException {
-		HolderInstantiator hi = HolderInstantiator.createClassicHolderInstantiator(
+		return scroll( queryParameters, returnTypes, session );
+	}
+
+	@Override
+	protected HolderInstantiator getHolderInstantiator(QueryParameters queryParameters) {
+		return HolderInstantiator.createClassicHolderInstantiator(
 				holderConstructor,
 				queryParameters.getResultTransformer()
 		);
-		return scroll( queryParameters, returnTypes, hi, session );
 	}
 
 	@Override

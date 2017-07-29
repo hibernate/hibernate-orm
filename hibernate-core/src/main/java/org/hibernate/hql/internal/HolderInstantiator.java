@@ -6,6 +6,7 @@
  */
 package org.hibernate.hql.internal;
 import java.lang.reflect.Constructor;
+import java.util.function.Supplier;
 
 import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
 import org.hibernate.transform.ResultTransformer;
@@ -16,10 +17,10 @@ import org.hibernate.transform.Transformers;
  */
 public final class HolderInstantiator {
 		
-	public static final HolderInstantiator NOOP_INSTANTIATOR = new HolderInstantiator(null,null);
+	public static final HolderInstantiator NOOP_INSTANTIATOR = new HolderInstantiator(null);
 	
 	private final ResultTransformer transformer;
-	private final String[] queryReturnAliases;
+	private Supplier<String[]> queryReturnAliasesSupplier = () -> null;
 	
 	public static HolderInstantiator getHolderInstantiator(ResultTransformer selectNewTransformer, ResultTransformer customTransformer, String[] queryReturnAliases) {
 		return new HolderInstantiator(
@@ -47,20 +48,29 @@ public final class HolderInstantiator {
 		}
 	}
 	
-	static public HolderInstantiator createClassicHolderInstantiator(Constructor constructor, 
+	static public HolderInstantiator createClassicHolderInstantiator(Constructor constructor,
 			ResultTransformer transformer) {
-		return new HolderInstantiator( resolveClassicResultTransformer( constructor, transformer ), null );
+		return new HolderInstantiator( resolveClassicResultTransformer( constructor, transformer ) );
 	}
 
 	static public ResultTransformer resolveClassicResultTransformer(
 			Constructor constructor,
 			ResultTransformer transformer) {
 		return constructor != null ? new AliasToBeanConstructorResultTransformer( constructor ) : transformer;
-	}	
+	}
+
+	public HolderInstantiator(ResultTransformer transformer) {
+		this.transformer = transformer;
+	}
 
 	public HolderInstantiator(ResultTransformer transformer, String[] queryReturnAliases) {
 		this.transformer = transformer;		
-		this.queryReturnAliases = queryReturnAliases;
+		this.queryReturnAliasesSupplier = () -> queryReturnAliases;
+	}
+
+	public HolderInstantiator(ResultTransformer transformer,  Supplier<String[]> queryReturnAliasesSupplier) {
+		this.transformer = transformer;
+		this.queryReturnAliasesSupplier = queryReturnAliasesSupplier;
 	}
 	
 	public boolean isRequired() {
@@ -72,12 +82,12 @@ public final class HolderInstantiator {
 			return row;
 		}
 		else {
-			return transformer.transformTuple(row, queryReturnAliases);
+			return transformer.transformTuple(row, getQueryReturnAliases());
 		}
 	}	
 	
 	public String[] getQueryReturnAliases() {
-		return queryReturnAliases;
+		return queryReturnAliasesSupplier.get();
 	}
 
 	public ResultTransformer getResultTransformer() {

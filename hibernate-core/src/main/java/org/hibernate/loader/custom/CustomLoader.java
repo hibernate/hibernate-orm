@@ -370,23 +370,19 @@ public class CustomLoader extends Loader {
 
 	public ScrollableResultsImplementor scroll(final QueryParameters queryParameters, final SharedSessionContractImplementor session)
 			throws HibernateException {
+
+		ResultTransformer resultTransformer = queryParameters.getResultTransformer();
+
+		HolderInstantiator holderInstantiator = ( resultTransformer == null ) ?
+				HolderInstantiator.NOOP_INSTANTIATOR :
+				new HolderInstantiator( resultTransformer, this::getReturnAliasesForTransformer );
+
 		return scroll(
 				queryParameters,
 				resultTypes,
-				getHolderInstantiator( queryParameters.getResultTransformer(), getReturnAliasesForTransformer() ),
+				holderInstantiator,
 				session
 		);
-	}
-
-	static private HolderInstantiator getHolderInstantiator(
-			ResultTransformer resultTransformer,
-			String[] queryReturnAliases) {
-		if ( resultTransformer == null ) {
-			return HolderInstantiator.NOOP_INSTANTIATOR;
-		}
-		else {
-			return new HolderInstantiator( resultTransformer, queryReturnAliases );
-		}
 	}
 
 	@Override

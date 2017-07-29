@@ -57,7 +57,13 @@ public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
 		private Map<String, Object> aliasToValue = new LinkedHashMap<>();
 
 		public NativeTupleImpl(Object[] tuple, String[] aliases) {
-			if ( tuple == null || aliases == null || tuple.length != aliases.length ) {
+			if ( tuple == null ) {
+			    throw new HibernateException( "Tuple must not be null" );
+			}
+			if ( aliases == null ) {
+			    throw new HibernateException( "Aliases must not be null" );
+            }
+			if ( tuple.length != aliases.length ) {
 				throw new HibernateException( "Got different size of tuples and aliases" );
 			}
 			this.tuple = tuple;
@@ -112,12 +118,20 @@ public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
 			List<TupleElement<?>> elements = new ArrayList<>( aliasToValue.size() );
 
 			for ( Map.Entry<String, Object> entry : aliasToValue.entrySet() ) {
-				elements.add( new NativeTupleElementImpl<>( entry.getValue().getClass(), entry.getKey() ) );
+				elements.add( new NativeTupleElementImpl<>( getValueClass( entry.getValue() ), entry.getKey() ) );
 			}
 			return elements;
 		}
 
-		@Override
+        private Class<?> getValueClass(Object value) {
+            Class<?> valueClass = Object.class;
+            if ( value != null ) {
+                valueClass = value.getClass();
+            }
+            return valueClass;
+        }
+
+        @Override
 		public <X> X get(TupleElement<X> tupleElement) {
 			return get( tupleElement.getAlias(), tupleElement.getJavaType() );
 		}

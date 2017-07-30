@@ -27,6 +27,7 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
@@ -73,7 +74,9 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 				VehicleBuyInfo.class,
 				Car.class,
 				Truck.class,
-				Company.class
+				Company.class,
+				PlanItem.class,
+				Task.class
 		};
 	}
 
@@ -130,6 +133,16 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 	@Test
 	public void testMapKeyJoinColumns() {
 		assertForeignKey( "FK_VEHICLE_BUY_INFOS_VEHICLE", "VEHICLE_NR", "VEHICLE_VENDOR_NR" );
+	}
+
+	@Test
+	public void testMapForeignKeyJoinColumnColection() {
+		assertForeignKey( "FK_PROPERTIES_TASK", "task_id" );
+	}
+
+	@Test
+	public void testMapForeignKeyColection() {
+		assertForeignKey( "FK_ATTRIBUTES_TASK", "task_id" );
 	}
 
 	@Test
@@ -505,5 +518,82 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 				)
 		})
 		public CompanyInfo info;
+	}
+
+	@Entity
+	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+	public abstract class PlanItem {
+
+		@Id
+		@GeneratedValue(strategy= GenerationType.IDENTITY)
+		private Integer id;
+
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+	}
+
+	@Entity
+	@SecondaryTable( name = "Task" )
+	public class Task extends PlanItem {
+		@Id
+		@GeneratedValue(strategy=GenerationType.IDENTITY)
+		private Integer id;
+
+		@ElementCollection
+		@CollectionTable(
+				name = "task_properties",
+				joinColumns = {
+						@JoinColumn(
+								name = "task_id",
+								foreignKey = @ForeignKey(
+										name = "FK_PROPERTIES_TASK",
+										foreignKeyDefinition = "FOREIGN KEY (task_id) REFERENCES Task"
+								)
+						)
+				}
+		)
+		private Set<String> properties;
+
+		@ElementCollection
+		@CollectionTable(
+				name = "task_attributes",
+				joinColumns = {@JoinColumn(name = "task_id")},
+				foreignKey = @ForeignKey(
+						name = "FK_ATTRIBUTES_TASK",
+						foreignKeyDefinition = "FOREIGN KEY (task_id) REFERENCES Task"
+				)
+		)
+		private Set<String> attributes;
+
+		@Override
+		public Integer getId() {
+			return id;
+		}
+
+		@Override
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public Set<String> getProperties() {
+			return properties;
+		}
+
+		public void setProperties(Set<String> properties) {
+			this.properties = properties;
+		}
+
+		public Set<String> getAttributes() {
+			return attributes;
+		}
+
+		public void setAttributes(Set<String> attributes) {
+			this.attributes = attributes;
+		}
 	}
 }

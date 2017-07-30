@@ -1134,6 +1134,13 @@ public abstract class CollectionBinder {
 					else {
 						key.setForeignKeyName( StringHelper.nullIfEmpty( collectionTableAnn.foreignKey().name() ) );
 						key.setForeignKeyDefinition( StringHelper.nullIfEmpty( collectionTableAnn.foreignKey().foreignKeyDefinition() ) );
+						if ( key.getForeignKeyName() == null &&
+							 key.getForeignKeyDefinition() == null &&
+							 collectionTableAnn.joinColumns().length == 1 ) {
+							JoinColumn joinColumn = collectionTableAnn.joinColumns()[0];
+							key.setForeignKeyName( StringHelper.nullIfEmpty( joinColumn.foreignKey().name() ) );
+							key.setForeignKeyDefinition( StringHelper.nullIfEmpty( joinColumn.foreignKey().foreignKeyDefinition() ) );
+						}
 					}
 				}
 				else {

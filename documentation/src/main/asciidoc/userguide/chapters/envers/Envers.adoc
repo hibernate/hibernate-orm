@@ -670,8 +670,8 @@ To see how "Modified Flags" can be utilized, check out the very simple query API
 
 You can think of historic data as having two dimensions:
 
-horizontal:: is the state of the database at a given revision. Thus, you can query for entities as they were at revision N.
-vertical:: are the revisions, at which entities changed. Hence, you can query for revisions, in which a given entity changed.
+horizontal:: The state of the database at a given revision. Thus, you can query for entities as they were at revision N.
+vertical:: The revisions, at which entities changed. Hence, you can query for revisions, in which a given entity changed.
 
 The queries in Envers are similar to Hibernate Criteria queries, so if you are common with them, using Envers queries will be much easier.
 
@@ -679,56 +679,108 @@ The main limitation of the current queries implementation is that you cannot tra
 You can only specify constraints on the ids of the related entities, and only on the "owning" side of the relation.
 This however will be changed in future releases.
 
-Please note, that queries on the audited data will be in many cases much slower than corresponding queries on "live" data, as they involve correlated subselects.
+[NOTE]
+====
+The queries on the audited data will be in many cases much slower than corresponding queries on "live" data,
+as, especially for the default audit strategy, they involve correlated subselects.
 
-Queries are improved both in terms of speed and possibilities, when using the valid-time audit strategy, that is when storing both start and end revisions for entities. See <<envers-configuration>>.
+Queries are improved both in terms of speed and possibilities, when using the validity audit strategy,
+which stores both start and end revisions for entities. See <<envers-audit-ValidityAuditStrategy>>.
+====
 
 [[entities-at-revision]]
 === Querying for entities of a class at a given revision
 
 The entry point for this type of queries is:
 
-[source,java]
+[[entities-at-revision-example]]
+.Getting the `Customer` entity at a given revision
+====
+[source, JAVA, indent=0]
 ----
-AuditQuery query = getAuditReader()
-    .createQuery()
-    .forEntitiesAtRevision( MyEntity.class, revisionNumber );
+include::{sourcedir}/QueryAuditTest.java[tags=entities-at-revision-example]
+----
+====
+
+[[entities-filtering]]
+=== Querying for entities using filtering criteria
+
+You can then specify constraints, which should be met by the entities returned, by adding restrictions,
+which can be obtained using the `AuditEntity` factory class.
+
+For example, to select only entities where the `firstName` property is equal to "John":
+
+[[entities-filtering-example]]
+.Getting the `Customer` audit log with a given `firstName` attribute value
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/QueryAuditTest.java[tags=entities-filtering-example]
+----
+====
+
+And, to select only entities whose relationships are related to a given entity,
+you can use either the target entity or its identifier.
+
+[[entities-filtering-by-entity-example]]
+.Getting the `Customer` entities whose `address` attribute matches the given entity reference
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/QueryAuditTest.java[tags=entities-filtering-by-entity-example]
 ----
 
-You can then specify constraints, which should be met by the entities returned, by adding restrictions, which can be obtained using the `AuditEntity` factory class.
-For example, to select only entities where the "name" property is equal to "John":
+[source, SQL, indent=0]
+----
+include::{extrasdir}/entities-filtering-by-entity-example.sql[]
+----
+====
 
-[source,java]
+The same SQL is generated even if we provide the identifier instead of the target entity reference.
+
+[[entities-filtering-by-entity-identifier-example]]
+.Getting the `Customer` entities whose `address` identifier matches the given entity identifier
+====
+[source, JAVA, indent=0]
 ----
-query.add( AuditEntity.property( "name" ).eq(  "John" ) );
+include::{sourcedir}/QueryAuditTest.java[tags=entities-filtering-by-entity-identifier-example]
+----
+====
+
+Apart for strict equality matching, you can also use an `IN` clause to provide multiple entity identifiers:
+
+[[entities-in-clause-filtering-by-entity-identifier-example]]
+.Getting the `Customer` entities whose `address` identifier matches one of the given entity identifiers
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/QueryAuditTest.java[tags=entities-in-clause-filtering-by-entity-identifier-example]
 ----
 
-And to select only entities that are related to a given entity:
-
-[source,java]
+[source, SQL, indent=0]
 ----
-query.add( AuditEntity.property( "address" ).eq( relatedEntityInstance ) );
-// or
-query.add( AuditEntity.relatedId( "address" ).eq( relatedEntityId ) );
-// or
-query.add( AuditEntity.relatedId( "address" ).in( relatedEntityId1, relatedEntityId2 ) );
+include::{extrasdir}/entities-in-clause-filtering-by-entity-identifier-example.sql[]
 ----
+====
 
 You can limit the number of results, order them, and set aggregations and projections (except grouping) in the usual way.
 When your query is complete, you can obtain the results by calling the `getSingleResult()` or `getResultList()` methods.
 
 A full query, can look for example like this:
 
-[source,java]
+[[entities-filtering-and-pagination]]
+.Getting the `Customer` entities using filtering and pagination
+====
+[source, JAVA, indent=0]
 ----
-List personsAtAddress = getAuditReader().createQuery()
-    .forEntitiesAtRevision( Person.class, 12 )
-    .addOrder( AuditEntity.property( "surname" ).desc() )
-    .add( AuditEntity.relatedId( "address" ).eq( addressId ) )
-    .setFirstResult( 4 )
-    .setMaxResults( 2 )
-    .getResultList();
+include::{sourcedir}/QueryAuditTest.java[tags=entities-filtering-and-pagination]
 ----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/entities-filtering-and-pagination.sql[]
+----
+====
 
 [[revisions-of-entity]]
 === Querying for revisions, at which entities of a given class changed

@@ -633,6 +633,36 @@ This is due to the fact that every tracked property has to have an accompanying 
 Of course it is Envers job to fill these columns accordingly - no additional work by the developer is required.
 Because of costs mentioned, it is recommended to enable the feature selectively, when needed with use of the granular configuration means described above.
 
+[[envers-tracking-properties-changes-mapping-example]]
+.Mapping for tracking entity changes at property level
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ModifiedFlagsAuditTest.java[tags=envers-tracking-properties-changes-mapping-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/envers-tracking-properties-changes-mapping-example.sql[]
+----
+====
+
+As you can see, every property features a `_MOD` column (e.g. `createdOn_MOD`) in the audit log.
+
+[[envers-tracking-properties-changes-example]]
+.Tracking entity changes at property level example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ModifiedFlagsAuditTest.java[tags=envers-tracking-properties-changes-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/envers-tracking-properties-changes-example.sql[]
+----
+====
+
 To see how "Modified Flags" can be utilized, check out the very simple query API that uses them: <<envers-tracking-properties-changes-queries>>.
 
 [[envers-queries]]

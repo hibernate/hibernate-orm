@@ -183,7 +183,12 @@ public class NativeSQLQueryPlan implements Serializable {
 		PreparedStatement ps;
 		try {
 			queryParameters.processFilters( this.customQuery.getSQL(), session );
-			final String sql = queryParameters.getFilteredSQL();
+			final String sql = session.getJdbcServices().getDialect()
+					.addSqlHintOrComment(
+						queryParameters.getFilteredSQL(),
+						queryParameters,
+						session.getFactory().getSessionFactoryOptions().isCommentsEnabled()
+					);
 
 			ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
 

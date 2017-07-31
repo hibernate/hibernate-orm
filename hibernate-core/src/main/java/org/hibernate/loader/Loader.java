@@ -29,6 +29,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
 import org.hibernate.cache.spi.FilterKey;
@@ -235,21 +236,20 @@ public abstract class Loader {
 	protected String preprocessSQL(
 			String sql,
 			QueryParameters parameters,
-			Dialect dialect,
+			SessionFactoryImplementor sessionFactory,
 			List<AfterLoadAction> afterLoadActions) throws HibernateException {
+
+		Dialect dialect = sessionFactory.getServiceRegistry().getService( JdbcServices.class ).getDialect();
+
 		sql = applyLocks( sql, parameters, dialect, afterLoadActions );
 
-		// Keep this here, rather than moving to Select.  Some Dialects may need the hint to be appended to the very
-		// end or beginning of the finalized SQL statement, so wait until everything is processed.
-		if ( parameters.getQueryHints() != null && parameters.getQueryHints().size() > 0 ) {
-			sql = dialect.getQueryHintString( sql, parameters.getQueryHints() );
-		}
+		sql = dialect.addSqlHintOrComment(
+			sql,
+			parameters,
+			sessionFactory.getSessionFactoryOptions().isCommentsEnabled()
+		);
 
-		sql = processDistinctKeyword( sql, parameters);
-
-		return getFactory().getSessionFactoryOptions().isCommentsEnabled()
-				? prependComment( sql, parameters )
-				: sql;
+		return processDistinctKeyword( sql, parameters );
 	}
 
 	protected boolean shouldUseFollowOnLocking(
@@ -297,16 +297,6 @@ public abstract class Loader {
 			}
 		}
 		return lockModeToUse;
-	}
-
-	private String prependComment(String sql, QueryParameters parameters) {
-		String comment = parameters.getComment();
-		if ( comment == null ) {
-			return sql;
-		}
-		else {
-			return "/* " + comment + " */ " + sql;
-		}
 	}
 
 	/**
@@ -1920,7 +1910,7 @@ public abstract class Loader {
 		String sql = limitHandler.processSql( queryParameters.getFilteredSQL(), queryParameters.getRowSelection() );
 
 		// Adding locks and comments.
-		sql = preprocessSQL( sql, queryParameters, getFactory().getDialect(), afterLoadActions );
+		sql = preprocessSQL( sql, queryParameters, getFactory(), afterLoadActions );
 
 		final PreparedStatement st = prepareQueryStatement( sql, queryParameters, limitHandler, scroll, session );
 

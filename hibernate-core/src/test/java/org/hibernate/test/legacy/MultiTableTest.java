@@ -30,6 +30,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
@@ -369,7 +370,8 @@ public class MultiTableTest extends LegacyTestCase {
 
 		// HANA currently requires specifying table name by 'FOR UPDATE of t1.c1'
 		// if there are more than one tables/views/subqueries in the FROM clause
-		if ( !( getDialect() instanceof AbstractHANADialect ) ) {
+		// H2 - Feature not supported: MVCC=TRUE && FOR UPDATE && JOIN
+		if ( !( getDialect() instanceof AbstractHANADialect || getDialect() instanceof H2Dialect ) ) {
 			s = openSession();
 			t = s.beginTransaction();
 			multi = (Multi) s.load( Top.class, mid, LockMode.UPGRADE );
@@ -491,7 +493,8 @@ public class MultiTableTest extends LegacyTestCase {
 
 		// HANA currently requires specifying table name by 'FOR UPDATE of t1.c1'
 		// if there are more than one tables/views/subqueries in the FROM clause
-		if ( !( getDialect() instanceof AbstractHANADialect ) ) {
+		// H2 - Feature not supported: MVCC=TRUE && FOR UPDATE && JOIN
+		if ( !( getDialect() instanceof AbstractHANADialect || getDialect() instanceof H2Dialect ) ) {
 			s = openSession();
 			t = s.beginTransaction();
 			multi = (Multi) s.load( Top.class, multiId, LockMode.UPGRADE );

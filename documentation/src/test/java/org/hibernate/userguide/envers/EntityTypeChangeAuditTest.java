@@ -45,7 +45,7 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 			Customer.class,
-			AnnotatedTrackingRevisionEntity.class
+			CustomTrackingRevisionEntity.class
 		};
 	}
 
@@ -68,7 +68,7 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
 				org.hibernate.jpa.AvailableSettings.LOADED_CLASSES,
 				Arrays.asList(
 					ApplicationCustomer.class,
-					AnnotatedTrackingRevisionEntity.class
+					CustomTrackingRevisionEntity.class
 				)
 			);
 			settings.put(
@@ -98,6 +98,7 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
 		}
 	}
 
+	//tag::envers-tracking-modified-entities-revchanges-before-rename-example[]
 	@Audited
 	@Entity(name = "Customer")
 	public static class Customer {
@@ -114,6 +115,9 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
 		@CreationTimestamp
 		private Date createdOn;
 
+		//Getters and setters are omitted for brevity
+	//end::envers-tracking-modified-entities-revchanges-before-rename-example[]
+
 		public Long getId() {
 			return id;
 		}
@@ -145,8 +149,11 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
 		public void setCreatedOn(Date createdOn) {
 			this.createdOn = createdOn;
 		}
+	//tag::envers-tracking-modified-entities-revchanges-before-rename-example[]
 	}
+	//end::envers-tracking-modified-entities-revchanges-before-rename-example[]
 
+	//tag::envers-tracking-modified-entities-revchanges-after-rename-example[]
 	@Audited
 	@Entity(name = "Customer")
 	public static class ApplicationCustomer {
@@ -163,6 +170,9 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
 		@CreationTimestamp
 		private Date createdOn;
 
+		//Getters and setters are omitted for brevity
+	//end::envers-tracking-modified-entities-revchanges-after-rename-example[]
+
 		public Long getId() {
 			return id;
 		}
@@ -194,13 +204,15 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
 		public void setCreatedOn(Date createdOn) {
 			this.createdOn = createdOn;
 		}
+	//tag::envers-tracking-modified-entities-revchanges-after-rename-example[]
 	}
+	//end::envers-tracking-modified-entities-revchanges-after-rename-example[]
 
 	//tag::envers-tracking-modified-entities-revchanges-example[]
-	@Entity(name = "AnnotatedTrackingRevisionEntityListener")
+	@Entity(name = "CustomTrackingRevisionEntity")
 	@Table(name = "TRACKING_REV_INFO")
 	@RevisionEntity
-	public static class AnnotatedTrackingRevisionEntity extends DefaultRevisionEntity {
+	public static class CustomTrackingRevisionEntity extends DefaultRevisionEntity {
 
 		@ElementCollection
 		@JoinTable(

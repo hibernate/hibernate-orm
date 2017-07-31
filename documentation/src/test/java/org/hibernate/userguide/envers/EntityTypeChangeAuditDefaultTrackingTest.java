@@ -39,7 +39,7 @@ public class EntityTypeChangeAuditDefaultTrackingTest extends BaseEntityManagerF
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 			Customer.class,
-			AnnotatedTrackingRevisionEntity.class
+			CustomTrackingRevisionEntity.class
 		};
 	}
 
@@ -62,7 +62,7 @@ public class EntityTypeChangeAuditDefaultTrackingTest extends BaseEntityManagerF
 				org.hibernate.jpa.AvailableSettings.LOADED_CLASSES,
 				Arrays.asList(
 					ApplicationCustomer.class,
-					AnnotatedTrackingRevisionEntity.class
+					CustomTrackingRevisionEntity.class
 				)
 			);
 			settings.put(
@@ -191,10 +191,10 @@ public class EntityTypeChangeAuditDefaultTrackingTest extends BaseEntityManagerF
 	}
 
 	//tag::envers-tracking-modified-entities-revchanges-example[]
-	@Entity(name = "AnnotatedTrackingRevisionEntityListener")
+	@Entity(name = "CustomTrackingRevisionEntity")
 	@Table(name = "TRACKING_REV_INFO")
 	@RevisionEntity
-	public static class AnnotatedTrackingRevisionEntity
+	public static class CustomTrackingRevisionEntity
 		extends DefaultTrackingModifiedEntitiesRevisionEntity {
 
 	}

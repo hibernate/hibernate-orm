@@ -529,90 +529,85 @@ include::{sourcedir}/EntityTypeChangeAuditDefaultTrackingTest.java[tags=envers-t
 include::{sourcedir}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-revchanges-example]
 ----
 
+Considering we have a `Customer` entity illustrated by the following example:
+
+[[envers-tracking-modified-entities-revchanges-before-rename-example]]
+.`Customer` entity before renaming
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-revchanges-before-rename-example]
+----
+====
+
+If the `Customer` entity class name is changed to `ApplicationCustomer`,
+Envers is going to insert a new record in the `REVCHANGES` table with the previous entity class name:
+
+[[envers-tracking-modified-entities-revchanges-after-rename-example]]
+.`Customer` entity after renaming
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-revchanges-after-rename-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/envers-tracking-modified-entities-revchanges-after-rename-example.sql[]
+----
+====
+
 Users, that have chosen one of the approaches listed above,
 can retrieve all entities modified in a specified revision by utilizing API described in <<envers-tracking-modified-entities-queries>>.
 
 Users are also allowed to implement custom mechanism of tracking modified entity types.
-In this case, they shall pass their own implementation of `org.hibernate.envers.EntityTrackingRevisionListener` interface as the value of `@org.hibernate.envers.RevisionEntity` annotation.
-`EntityTrackingRevisionListener` interface exposes one method that notifies whenever audited entity instance has been added, modified or removed within current revision boundaries.
+In this case, they shall pass their own implementation of `org.hibernate.envers.EntityTrackingRevisionListener`
+interface as the value of `@org.hibernate.envers.RevisionEntity` annotation.
 
-.CustomEntityTrackingRevisionListener.java
+`EntityTrackingRevisionListener` interface exposes one method that notifies whenever audited entity instance has been
+added, modified or removed within current revision boundaries.
+
+[[envers-tracking-modified-entities-revchanges-EntityTrackingRevisionListener-example]]
+.The `EntityTrackingRevisionListener` implementation
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-public class CustomEntityTrackingRevisionListener implements EntityTrackingRevisionListener {
-
-    @Override
-    public void entityChanged( Class entityClass, String entityName,
-                               Serializable entityId, RevisionType revisionType,
-                               Object revisionEntity ) {
-        String type = entityClass.getName();
-        ( ( CustomTrackingRevisionEntity ) revisionEntity ).addModifiedEntityType( type );
-    }
-
-    @Override
-    public void newRevision( Object revisionEntity ) {
-    }
-}
+include::{sourcedir}/EntityTypeChangeAuditTrackingRevisionListenerTest.java[tags=envers-tracking-modified-entities-revchanges-EntityTrackingRevisionListener-example]
 ----
 ====
 
-.CustomTrackingRevisionEntity.java
+The `CustomTrackingRevisionListener` adds the fully-qualified class name to the `modifiedEntityTypes` attribute of the `CustomTrackingRevisionEntity`.
+
+[[envers-tracking-modified-entities-revchanges-RevisionEntity-example]]
+.The `RevisionEntity` using the custom `EntityTrackingRevisionListener`
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-@Entity
-@RevisionEntity( CustomEntityTrackingRevisionListener.class )
-public class CustomTrackingRevisionEntity {
-
-    @Id
-    @GeneratedValue
-    @RevisionNumber
-    private int customId;
-
-    @RevisionTimestamp
-    private long customTimestamp;
-
-    @OneToMany( mappedBy="revision", cascade={ CascadeType.PERSIST, CascadeType.REMOVE } )
-    private Set<ModifiedEntityTypeEntity> modifiedEntityTypes = new HashSet<ModifiedEntityTypeEntity>();
-
-    public void addModifiedEntityType( String entityClassName ) {
-        modifiedEntityTypes.add( new ModifiedEntityTypeEntity( this, entityClassName ) );
-    }
-
-    ...
-}
+include::{sourcedir}/EntityTypeChangeAuditTrackingRevisionListenerTest.java[tags=envers-tracking-modified-entities-revchanges-RevisionEntity-example]
 ----
 ====
 
-.ModifiedEntityTypeEntity.java
+The `CustomTrackingRevisionEntity` contains a `@OneToMany` list of `ModifiedTypeRevisionEntity`
+
+[[envers-tracking-modified-entities-revchanges-EntityType-example]]
+.The `EntityType` encapsulatets the entity type name before a class name modification
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-@Entity
-public class ModifiedEntityTypeEntity {
-
-    @Id
-    @GeneratedValue
-    private Integer id;
-
-    @ManyToOne
-    private CustomTrackingRevisionEntity revision;
-
-    private String entityClassName;
-
-    ...
-}
+include::{sourcedir}/EntityTypeChangeAuditTrackingRevisionListenerTest.java[tags=envers-tracking-modified-entities-revchanges-EntityType-example]
 ----
 ====
 
-[source,java]
-----
-CustomTrackingRevisionEntity revEntity =
-    getAuditReader().findRevision( CustomTrackingRevisionEntity.class, revisionNumber );
+Now, when fetching the `CustomTrackingRevisionEntity`, you cna get access to the previous entity class name.
 
-Set<ModifiedEntityTypeEntity> modifiedEntityTypes = revEntity.getModifiedEntityTypes();
+[[envers-tracking-modified-entities-revchanges-query-example]]
+.Getting the `EntityType` through the `CustomTrackingRevisionEntity`
+====
+[source, JAVA, indent=0]
 ----
+include::{sourcedir}/EntityTypeChangeAuditTrackingRevisionListenerTest.java[tags=envers-tracking-modified-entities-revchanges-query-example]
+----
+====
 
 [[envers-tracking-properties-changes]]
 === Tracking entity changes at property level

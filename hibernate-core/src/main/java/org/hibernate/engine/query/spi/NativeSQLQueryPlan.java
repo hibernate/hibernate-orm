@@ -183,7 +183,9 @@ public class NativeSQLQueryPlan implements Serializable {
 		PreparedStatement ps;
 		try {
 			queryParameters.processFilters( this.customQuery.getSQL(), session );
-			final String sql = queryParameters.getFilteredSQL();
+			final String sql = (isCommentsEnabled(session))
+					? prependComment(queryParameters.getFilteredSQL(), queryParameters)
+					: queryParameters.getFilteredSQL();
 
 			ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
 
@@ -209,5 +211,16 @@ public class NativeSQLQueryPlan implements Serializable {
 		}
 
 		return result;
+	}
+
+	private boolean isCommentsEnabled(SharedSessionContractImplementor session) {
+		return session.getFactory().getSessionFactoryOptions().isCommentsEnabled();
+	}
+
+	private String prependComment(String sql, QueryParameters parameters) {
+		String comment = parameters.getComment();
+		return ( comment == null )
+				? sql
+				: "/* " + comment + " */ " + sql;
 	}
 }

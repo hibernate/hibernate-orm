@@ -294,7 +294,15 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 					"Proxy is detached (i.e, session is null). The read-only/modifiable setting is only accessible when the proxy is associated with an open session."
 			);
 		}
-		if ( session.isClosed() ) {
+		/*
+		Replaced if ( session.isClosed() ) with if ( !session.isOpenOrWaitingForAutoClose() )
+		to fix below issue with setting index from search.
+		HHH000260: Exception calling user Synchronization 
+		[org.hibernate.search.backend.impl.EventSourceTransactionContext$BeforeCommitSynchronizationDelegator@b4884752] 
+		: org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role:
+		*/
+		//if ( session.isClosed() ) {
+		if ( !session.isOpenOrWaitingForAutoClose() ) {
 			throw new SessionException(
 					"Session is closed. The read-only/modifiable setting is only accessible when the proxy is associated with an open session."
 			);

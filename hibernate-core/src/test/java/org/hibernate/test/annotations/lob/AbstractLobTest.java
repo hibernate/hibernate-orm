@@ -6,12 +6,17 @@
  */
 package org.hibernate.test.annotations.lob;
 
+import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.dialect.*;
 import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -55,62 +60,49 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 		editor.setName( "O'Reilly" );
 		book.setEditor( editor );
 		book.setCode2( new char[] { 'r' } );
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		s.persist( book );
-		tx.commit();
-		s.close();
-		s = openSession();
-		tx = s.beginTransaction();
-		B loadedBook = getBookClass().cast( s.get( getBookClass(), getId( book ) ) );
-		assertNotNull( loadedBook.getEditor() );
-		assertEquals( book.getEditor().getName(), loadedBook.getEditor().getName() );
-		loadedBook.setEditor( null );
-		tx.commit();
-		s.close();
-		s = openSession();
-		tx = s.beginTransaction();
-		loadedBook = getBookClass().cast( s.get( getBookClass(), getId( book ) ) );
-		assertNull( loadedBook.getEditor() );
-		tx.commit();
-		s.close();
 
+		doInHibernate( this::sessionFactory, session -> {
+			session.persist( book );
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			B loadedBook = getBookClass().cast( session.get( getBookClass(), getId( book ) ) );
+			assertNotNull( loadedBook.getEditor() );
+			assertEquals( book.getEditor().getName(), loadedBook.getEditor().getName() );
+			loadedBook.setEditor( null );
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			B loadedBook = getBookClass().cast( session.get( getBookClass(), getId( book ) ) );
+			assertNull( loadedBook.getEditor() );
+		} );
 	}
 
 	@Test
 	public void testClob() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		B b = createBook();
-		b.setShortDescription( "Hibernate Bible" );
-		b.setFullText( "Hibernate in Action aims to..." );
-		b.setCode( new Character[] { 'a', 'b', 'c' } );
-		b.setCode2( new char[] { 'a', 'b', 'c' } );
-		s.persist( b );
-		tx.commit();
-		s.close();
 
-		s = openSession();
-		tx = s.beginTransaction();
-		B b2 = getBookClass().cast( s.get( getBookClass(), getId( b ) ) );
-		assertNotNull( b2 );
-		assertEquals( b2.getFullText(), b.getFullText() );
-		assertEquals( b2.getCode()[1].charValue(), b.getCode()[1].charValue() );
-		assertEquals( b2.getCode2()[2], b.getCode2()[2] );
-		tx.commit();
-		s.close();
+		B book = createBook();
+		book.setShortDescription( "Hibernate Bible" );
+		book.setFullText( "Hibernate in Action aims to..." );
+		book.setCode( new Character[] { 'a', 'b', 'c' } );
+		book.setCode2( new char[] { 'a', 'b', 'c' } );
+
+		doInHibernate( this::sessionFactory, session -> {
+			session.persist( book );
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			B b2 = getBookClass().cast( session.get( getBookClass(), getId( book ) ) );
+			assertNotNull( b2 );
+			assertEquals( b2.getFullText(), book.getFullText() );
+			assertEquals( b2.getCode()[1].charValue(), book.getCode()[1].charValue() );
+			assertEquals( b2.getCode2()[2], book.getCode2()[2] );
+		} );
 	}
 
 	@Test
 	public void testBlob() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
+
 		C cc = createCompiledCode();
 		Byte[] header = new Byte[2];
 		header[0] = new Byte( ( byte ) 3 );
@@ -122,37 +114,35 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 			full[i] = ( byte ) ( 1 + i );
 		}
 		cc.setFullCode( full );
-		s.persist( cc );
-		tx.commit();
-		s.close();
-		s = openSession();
-		tx = s.beginTransaction();
-		C recompiled = getCompiledCodeClass().cast( s.get( getCompiledCodeClass(), getId( cc ) ) );
-		assertEquals( recompiled.getHeader()[1], cc.getHeader()[1] );
-		assertEquals( recompiled.getFullCode()[codeSize - 1], cc.getFullCode()[codeSize - 1] );
-		tx.commit();
-		s.close();
+
+		doInHibernate( this::sessionFactory, session -> {
+			session.persist( cc );
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			C recompiled = getCompiledCodeClass().cast( session.get( getCompiledCodeClass(), getId( cc ) ) );
+			assertEquals( recompiled.getHeader()[1], cc.getHeader()[1] );
+			assertEquals( recompiled.getFullCode()[codeSize - 1], cc.getFullCode()[codeSize - 1] );
+		} );
 	}
 
 	@Test
+	@SkipForDialect( SybaseDialect.class )
 	public void testBinary() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
+
 		C cc = createCompiledCode();
 		byte[] metadata = new byte[2];
 		metadata[0] = ( byte ) 3;
 		metadata[1] = ( byte ) 0;
 		cc.setMetadata( metadata );
-		s.persist( cc );
-		tx.commit();
-		s.close();
-		s = openSession();
-		tx = s.beginTransaction();
-		C recompiled = getCompiledCodeClass().cast( s.get( getCompiledCodeClass(), getId( cc ) ) );
-		assertEquals( recompiled.getMetadata()[1], cc.getMetadata()[1] );
-		tx.commit();
-		s.close();
+
+		doInHibernate( this::sessionFactory, session -> {
+			session.persist( cc );
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			C recompiled = getCompiledCodeClass().cast( session.get( getCompiledCodeClass(), getId( cc ) ) );
+			assertEquals( recompiled.getMetadata()[1], cc.getMetadata()[1] );
+		} );
 	}
 }

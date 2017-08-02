@@ -17,13 +17,17 @@ import java.util.List;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
+
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase {
 	@Test
-	@TestForIssue(jiraKey = "HHH-5695")
+	//@TestForIssue(jiraKey = "HHH-5695")
+	@TestForIssue(jiraKey = "HHH-11903")
+	@FailureExpected(jiraKey = "HHH-11903")
 	public void testInsertFooAndBarWithDerivedId() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -42,6 +46,8 @@ public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase 
 				.setParameter( "id", foo.getId() )
 				.uniqueResult();
 		assertNotNull( newBar );
+		assertNotNull( newBar.getFoo() );
+		assertEquals( foo.getId(), newBar.getFoo().getId() );
 		assertEquals( "Some details", newBar.getDetails() );
 		s.getTransaction().rollback();
 		s.close();
@@ -95,6 +101,8 @@ public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase 
 		s.clear();
 		Foo newFoo = (Foo) s.createQuery( "SELECT f FROM Foo f" ).uniqueResult();
 		assertNotNull( newFoo );
+		assertNotNull( newFoo.getBar() );
+		assertSame( newFoo, newFoo.getBar().getFoo() );
 		assertEquals( "Some details", newFoo.getBar().getDetails() );
 		s.getTransaction().rollback();
 		s.close();

@@ -6,12 +6,11 @@
  */
 package org.hibernate.test.enums;
 
-import org.hibernate.Session;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -26,21 +25,21 @@ public class EnumExplicitTypeTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-10766")
 	public void hbmEnumWithExplicitTypeTest() {
-		Session s = openSession();
-		s.getTransaction().begin();
-		Person painted = Person.person( Gender.MALE, HairColor.BROWN );
-		painted.setOriginalHairColor( HairColor.BLONDE );
-		s.persist( painted );
-		s.getTransaction().commit();
-		s.clear();
+		long id = doInHibernate( this::sessionFactory, session -> {
+			Person person = Person.person(Gender.MALE, HairColor.BROWN);
+			person.setOriginalHairColor(HairColor.BLONDE);
+			session.persist(person);
 
-		s.getTransaction().begin();
-		Number id = (Number) session.createNativeQuery(
-				"select id from Person where originalHairColor = :color" )
-				.setParameter( "color", HairColor.BLONDE.name() )
-				.getSingleResult();
-		assertEquals( 1L, id.longValue() );
-		s.getTransaction().commit();
-		s.close();
+			return person.getId();
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			Number personId = (Number) session.createNativeQuery(
+				"select id from Person where originalHairColor = :color")
+			.setParameter("color", HairColor.BLONDE.name())
+			.getSingleResult();
+
+			assertEquals( id, personId.longValue() );
+		} );
 	}
 }

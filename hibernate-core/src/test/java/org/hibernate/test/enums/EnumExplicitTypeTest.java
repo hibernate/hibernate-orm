@@ -13,6 +13,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea
@@ -26,21 +27,24 @@ public class EnumExplicitTypeTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-10766")
 	public void hbmEnumWithExplicitTypeTest() {
-		Session s = openSession();
-		s.getTransaction().begin();
-		Person painted = Person.person( Gender.MALE, HairColor.BROWN );
-		painted.setOriginalHairColor( HairColor.BLONDE );
-		s.persist( painted );
-		s.getTransaction().commit();
-		s.clear();
+        Session s = openSession();
+        try {
+            s.getTransaction().begin();
+            Person painted = Person.person(Gender.MALE, HairColor.BROWN);
+            painted.setOriginalHairColor(HairColor.BLONDE);
+            s.persist(painted);
+            s.getTransaction().commit();
+            s.clear();
 
-		s.getTransaction().begin();
-		Number id = (Number) session.createSQLQuery(
-				"select id from Person where originalHairColor = :color" )
-				.setParameter( "color", HairColor.BLONDE.name() )
-				.uniqueResult();
-		assertEquals( 1L, id.longValue() );
-		s.getTransaction().commit();
-		s.close();
+            s.getTransaction().begin();
+            Object id = session.createSQLQuery(
+                    "select id from Person where originalHairColor = :color")
+                    .setParameter("color", HairColor.BLONDE.name())
+                    .uniqueResult();
+            assertTrue(id instanceof Number);
+        } finally {
+            s.getTransaction().commit();
+            s.close();
+        }
 	}
 }

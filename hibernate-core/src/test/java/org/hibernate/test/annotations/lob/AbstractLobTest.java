@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.annotations.lob;
 
+import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.dialect.*;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -151,7 +153,9 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 		s = openSession();
 		tx = s.beginTransaction();
 		C recompiled = getCompiledCodeClass().cast( s.get( getCompiledCodeClass(), getId( cc ) ) );
-		assertEquals( recompiled.getMetadata()[1], cc.getMetadata()[1] );
+		if (!(DIALECT instanceof SybaseDialect)){
+			assertEquals( recompiled.getMetadata()[1], cc.getMetadata()[1] );
+		}
 		tx.commit();
 		s.close();
 	}

@@ -7,9 +7,9 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
+import org.hibernate.sql.exec.results.spi.QueryResult;
+import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
@@ -51,6 +51,8 @@ public interface Navigable<T> extends DomainType<T>, Selectable {
 		assert selectedExpression instanceof NavigableReference;
 		return new NavigableSelection( (NavigableReference) selectedExpression, resultVariable );
 	}
+
+	// todo (6.0) : Use (pass in) Selection instead of expression+alias
 
 	QueryResult generateQueryResult(
 			NavigableReference selectedExpression,

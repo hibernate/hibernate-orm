@@ -11,6 +11,7 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -18,8 +19,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.procedure.NoMoreReturnsException;
 import org.hibernate.procedure.Output;
 import org.hibernate.procedure.ParameterRegistration;
@@ -28,17 +31,23 @@ import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.sql.internal.ResultSetMappingUndefinedImpl;
+import org.hibernate.sql.ast.produce.sqm.spi.Callback;
+import org.hibernate.sql.exec.results.spi.ResolvedResultSetMapping;
+import org.hibernate.sql.exec.results.spi.ResultSetMapping;
 import org.hibernate.sql.exec.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.exec.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.exec.results.internal.values.DirectResultSetAccess;
 import org.hibernate.sql.exec.results.internal.values.JdbcValuesSourceResultSetImpl;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.exec.results.spi.RowReader;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcCall;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.ParameterBindingContext;
 
 import org.jboss.logging.Logger;
 
@@ -47,7 +56,11 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class ProcedureOutputsImpl implements ProcedureOutputs {
+public class ProcedureOutputsImpl
+		implements ProcedureOutputs,
+		ExecutionContext,
+		ResultSetMapping.ResolutionContext,
+		ParameterBindingContext, Callback {
 	private static final Logger log = Logger.getLogger( ProcedureOutputsImpl.class );
 
 	private final ParameterStrategy parameterStrategy;
@@ -86,7 +99,10 @@ public class ProcedureOutputsImpl implements ProcedureOutputs {
 		this.callString = buildCallableString();
 		this.callableStatement = prepareCallableStatement( queryOptions, bindings );
 
-		// todo : pass in RowReader based on ResultSet-mapping
+		// todo (6.0) : pass in RowReader based on ResultSet-mapping
+		// todo (6.0) : ^^ or build the RowReader here based on ResultSet-mapping
+		//		^^ see #extractResults
+
 		this.rowReader = rowReader;
 
 		try {
@@ -150,7 +166,7 @@ public class ProcedureOutputsImpl implements ProcedureOutputs {
 				// todo : ok to bind right away?  Or do we need to wait until after all parameters are registered?
 				final JdbcParameterBinder binder = registration.getParameterBinder();
 				if ( binder != null ) {
-					binder.bindParameterValue( callableStatement, jdbcPosition, bindings, persistenceContext );
+					binder.bindParameterValue( callableStatement, jdbcPosition, this );
 				}
 
 				final JdbcCallParameterExtractor parameterExtractor = registration.getParameterExtractor();
@@ -298,10 +314,11 @@ public class ProcedureOutputsImpl implements ProcedureOutputs {
 	@SuppressWarnings("unchecked")
 	protected List extractResults(ResultSet resultSet) {
 		final DirectResultSetAccess resultSetAccess = new DirectResultSetAccess( persistenceContext, callableStatement, resultSet );
+		final ResolvedResultSetMapping resultSetMapping = resolveResultSetMapping( resultSetAccess );
 		final JdbcValuesSourceResultSetImpl jdbcValuesSource = new JdbcValuesSourceResultSetImpl(
 				resultSetAccess,
 				queryOptions,
-				jdbcCall.getSqlSelections(),
+				resultSetMapping,
 				persistenceContext
 		);
 
@@ -333,9 +350,8 @@ public class ProcedureOutputsImpl implements ProcedureOutputs {
 
 		final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState = new JdbcValuesSourceProcessingStateStandardImpl(
 				jdbcValuesSource,
-				queryOptions,
-				processingOptions,
-				persistenceContext
+				this,
+				processingOptions
 		);
 
 		final RowProcessingStateStandardImpl rowProcessingState = new RowProcessingStateStandardImpl(
@@ -363,6 +379,26 @@ public class ProcedureOutputsImpl implements ProcedureOutputs {
 			jdbcValuesSourceProcessingState.finishUp();
 			jdbcValuesSource.finishUp();
 		}
+	}
+
+	private int currentResultSetMappingIndex = -1;
+	private ResultSetMapping currentResultSetMapping;
+
+	private ResolvedResultSetMapping resolveResultSetMapping(DirectResultSetAccess resultSetAccess) {
+		currentResultSetMappingIndex++;
+		if ( jdbcCall.getResultSetMappings() == null || jdbcCall.getResultSetMappings().isEmpty() ) {
+			if ( currentResultSetMapping == null ) {
+				currentResultSetMapping = new ResultSetMappingUndefinedImpl();
+			}
+		}
+		else {
+			if ( currentResultSetMappingIndex >= jdbcCall.getResultSetMappings().size() ) {
+				throw new HibernateException( "Needed ResultSetMapping for ResultSet #%s, but query defined only %s ResultSetMapping(s)" );
+			}
+			currentResultSetMapping = jdbcCall.getResultSetMappings().get( currentResultSetMappingIndex );
+		}
+
+		return currentResultSetMapping.resolve( resultSetAccess, this );
 	}
 
 	protected class CurrentOutputState {
@@ -418,4 +454,38 @@ public class ProcedureOutputsImpl implements ProcedureOutputs {
 		}
 	}
 
+	@Override
+	public <T> Collection<T> getLoadIdentifiers() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public QueryParameterBindings getQueryParameterBindings() {
+		return procedureCall.queryParameterBindings();
+	}
+
+	@Override
+	public SharedSessionContractImplementor getSession() {
+		return persistenceContext;
+	}
+
+	@Override
+	public QueryOptions getQueryOptions() {
+		return queryOptions;
+	}
+
+	@Override
+	public ParameterBindingContext getParameterBindingContext() {
+		return this;
+	}
+
+	@Override
+	public Callback getCallback() {
+		return this;
+	}
+
+	@Override
+	public void registerAfterLoadAction(AfterLoadAction afterLoadAction) {
+		// todo (6.0) : hook this up with follow-on locking, etc
+	}
 }

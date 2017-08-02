@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.tree.spi.select;
 
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.exec.results.spi.SqlSelectable;
 
 /**
  * Represents something that is selectable at the domain level.  This is

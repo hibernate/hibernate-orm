@@ -14,7 +14,7 @@ import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.exec.results.spi.RowProcessingState;
 import org.hibernate.sql.exec.results.spi.RowReader;
-import org.hibernate.sql.exec.results.spi.EntityReferenceInitializer;
+import org.hibernate.sql.exec.results.spi.InitializerEntity;
 import org.hibernate.sql.exec.results.spi.Initializer;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
 import org.hibernate.sql.exec.spi.RowTransformer;
@@ -71,20 +71,20 @@ public class RowReaderStandardImpl<T> implements RowReader<T> {
 		// todo : figure out CollectionReferenceInitializer handling
 
 		for ( Initializer initializer : initializers ) {
-			if ( initializer instanceof EntityReferenceInitializer ) {
-				( (EntityReferenceInitializer) initializer ).hydrateIdentifier( rowProcessingState );
+			if ( initializer instanceof InitializerEntity ) {
+				( (InitializerEntity) initializer ).hydrateIdentifier( rowProcessingState );
 			}
 		}
 
 		for ( Initializer initializer : initializers ) {
-			if ( initializer instanceof EntityReferenceInitializer ) {
-				( (EntityReferenceInitializer) initializer ).resolveEntityKey( rowProcessingState );
+			if ( initializer instanceof InitializerEntity ) {
+				( (InitializerEntity) initializer ).resolveEntityKey( rowProcessingState );
 			}
 		}
 
 		for ( Initializer initializer : initializers ) {
-			if ( initializer instanceof EntityReferenceInitializer ) {
-				( (EntityReferenceInitializer) initializer ).hydrateEntityState( rowProcessingState );
+			if ( initializer instanceof InitializerEntity ) {
+				( (InitializerEntity) initializer ).hydrateEntityState( rowProcessingState );
 			}
 		}
 

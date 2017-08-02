@@ -10,8 +10,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.tree.internal.select.QueryResultCompositeImpl;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
+import org.hibernate.sql.exec.results.spi.SqlSelection;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
 import org.hibernate.sql.exec.results.spi.RowProcessingState;
@@ -37,7 +36,7 @@ public class QueryResultAssemblerComposite implements QueryResultAssembler {
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return returnComposite.getJavaTypeDescriptor();
+		return returnComposite.getType().getJavaTypeDescriptor();
 	}
 
 	@Override

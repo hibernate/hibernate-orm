@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
@@ -100,7 +99,6 @@ import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
@@ -165,11 +163,11 @@ import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
 import org.hibernate.sql.exec.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.exec.results.spi.SqlSelectable;
+import org.hibernate.sql.exec.results.spi.SqlSelection;
+import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -275,18 +273,6 @@ public abstract class BaseSqmToSqlAstConverter
 
 	protected void primeNavigableReferenceStack(NavigableReference initial) {
 		primeStack( navigableReferenceStack, initial );
-	}
-
-
-	@Override
-	public SqlSelectionGroup resolveSqlSelectionGroup(Navigable navigable) {
-		// need something like:
-		final Map<QuerySpec,Map<Navigable,SqlSelectionGroup>> sqlSelectionGroupMapByQuerySpec = new HashMap<>();
-		// but that requires exposing SqlSelectables from Navigable or being able to ask Navigable
-		//		for a "SqlSelectableGroup"
-		// or ask it to build the SqlSelectionGroup passing in this (as SqlSelectionResolver)
-		//		and having it resolve the individual selectables building a SqlSelectionGroup
-		return null;
 	}
 
 	@Override

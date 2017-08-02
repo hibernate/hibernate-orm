@@ -53,7 +53,7 @@ public class QueryReturnTest extends BaseUnitTestCase {
 			Metadata metadata = metadataSources.buildMetadata();
 			NamedSQLQueryDefinition myQuery = metadata.getNamedNativeQueryDefinition("myQuery");
 			Assert.assertNotNull(myQuery);
-			NativeSQLQueryReturn[] myQueryReturns = myQuery.getQueryReturns();
+			NativeSQLQueryReturn[] myQueryReturns = myQuery.getQueryResultBuilders();
 			Assert.assertNotNull(myQueryReturns);
 			Assert.assertEquals(1, myQueryReturns.length);
 			Assert.assertTrue(NativeSQLQueryRootReturn.class.isInstance(myQueryReturns[0]));

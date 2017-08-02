@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.exec.results.spi;
 
-import java.util.List;
-
 /**
  * Intended to give a Fetch Initializer access to the FK value that links it
  * to its FetchParent's Initializer
@@ -15,6 +13,8 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public interface InitializerParent extends Initializer {
-	List<FetchInitializer> getChildFetchInitializers();
-	void addChildFetchInitializer(FetchInitializer fetchInitializer);
+	/**
+	 * Get the object instance that is the parent of this fetch
+	 */
+	Object getParentInstance();
 }

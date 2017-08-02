@@ -13,12 +13,13 @@ import java.util.Map;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget.Nature.CLASS;
-import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget.Nature.LIST;
-import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget.Nature.MAP;
+import static org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature.CLASS;
+import static org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature.LIST;
+import static org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature.MAP;
 
 /**
  * Represents a dynamic instantiation ({@code select new XYZ(...) ...}) as part of the SQM.
@@ -124,17 +125,17 @@ public class SqmDynamicInstantiation
 	}
 
 	private static class DynamicInstantiationTargetImpl implements SqmDynamicInstantiationTarget {
-		private final Nature nature;
+		private final DynamicInstantiationNature nature;
 		private final Class javaType;;
 
 
-		public DynamicInstantiationTargetImpl(Nature nature, Class javaType) {
+		public DynamicInstantiationTargetImpl(DynamicInstantiationNature nature, Class javaType) {
 			this.nature = nature;
 			this.javaType = javaType;
 		}
 
 		@Override
-		public Nature getNature() {
+		public DynamicInstantiationNature getNature() {
 			return nature;
 		}
 

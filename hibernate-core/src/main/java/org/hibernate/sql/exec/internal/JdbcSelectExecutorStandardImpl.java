@@ -24,8 +24,6 @@ import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.ResultSetAccess;
 import org.hibernate.sql.exec.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.exec.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.exec.results.internal.RowReaderStandardImpl;
@@ -34,9 +32,10 @@ import org.hibernate.sql.exec.results.internal.values.JdbcValuesSource;
 import org.hibernate.sql.exec.results.internal.values.JdbcValuesSourceCacheHit;
 import org.hibernate.sql.exec.results.internal.values.JdbcValuesSourceResultSetImpl;
 import org.hibernate.sql.exec.results.spi.Initializer;
-import org.hibernate.sql.exec.results.spi.InitializerSource;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.exec.results.spi.QueryResult;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
+import org.hibernate.sql.exec.results.spi.ResultSetAccess;
 import org.hibernate.sql.exec.results.spi.RowReader;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -50,6 +49,8 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
+	// todo (6.0) : Make resolving these executors swappable - JdbcServices?
+
 	/**
 	 * Singleton access
 	 */
@@ -246,13 +247,9 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		final List<QueryResultAssembler> returnAssemblers = new ArrayList<>();
 		final List<Initializer> initializers = new ArrayList<>();
-		for ( QueryResult queryReturn : jdbcValuesSource.getResultSetMapping().getQueryResults() ) {
-			returnAssemblers.add( queryReturn.getResultAssembler() );
-
-			if ( queryReturn instanceof InitializerSource ) {
-				// todo : break the Initializers out into types
-				( (InitializerSource) queryReturn ).registerInitializers( initializers::add );
-			}
+		for ( QueryResult queryResult : jdbcValuesSource.getResultSetMapping().getQueryResults() ) {
+			queryResult.registerInitializers( initializers::add );
+			returnAssemblers.add( queryResult.getResultAssembler() );
 		}
 
 		final RowReader<R> rowReader = new RowReaderStandardImpl<>(
@@ -330,14 +327,14 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			return new JdbcValuesSourceResultSetImpl(
 					resultSetAccess,
 					executionContext.getQueryOptions(),
-					jdbcSelect.getResultSetMapping().resolve( resultSetAccess, executionContext.getSession() ),
+					jdbcSelect.getResultSetMapping().resolve( resultSetAccess, executionContext ),
 					executionContext.getSession()
 			);
 		}
 		else {
-			return new JdbcValuesSourceCacheHit( cachedResults,
-												 jdbcSelect.getResultSetMapping()
-														 .resolve( resultSetAccess, executionContext.getSession() )
+			return new JdbcValuesSourceCacheHit(
+					cachedResults,
+					jdbcSelect.getResultSetMapping().resolve( resultSetAccess, executionContext )
 			);
 		}
 	}

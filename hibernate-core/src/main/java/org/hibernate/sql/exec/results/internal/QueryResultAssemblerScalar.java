@@ -7,8 +7,8 @@
 package org.hibernate.sql.exec.results.internal;
 
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
-import org.hibernate.sql.ast.tree.spi.select.QueryResultScalar;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
+import org.hibernate.sql.exec.results.spi.QueryResultScalar;
+import org.hibernate.sql.exec.results.spi.SqlSelection;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
 import org.hibernate.sql.exec.results.spi.RowProcessingState;
@@ -29,7 +29,7 @@ public class QueryResultAssemblerScalar implements QueryResultAssembler {
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return returnScalar.getJavaTypeDescriptor();
+		return returnScalar.getType().getJavaTypeDescriptor();
 	}
 
 	@SuppressWarnings("unchecked")

@@ -9,8 +9,6 @@ package org.hibernate.sql.exec.results.spi;
 
 import java.util.List;
 
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-
 /**
  * Represents a grouping of SqlSelection references, generally related to a
  * single Navigable

@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.sql.spi.QueryResultBuilder;
 
 /**
  * Definition of a named native SQL query, defined in the mapping metadata.
@@ -19,8 +20,7 @@ import org.hibernate.FlushMode;
  * @author Steve Ebersole
  */
 public class NamedSQLQueryDefinition extends NamedQueryDefinition {
-
-	private NativeSQLQueryReturn[] queryReturns;
+	private QueryResultBuilder[] queryResultBuilders;
 	private final List<String> querySpaces;
 	private final boolean callable;
 	private String resultSetRef;
@@ -32,7 +32,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 	 *
 	 * @param name The name of named query
 	 * @param query The sql query string
-	 * @param queryReturns The in-lined query return definitions
+	 * @param queryResultBuilders The in-lined query return definitions
 	 * @param querySpaces Any specified query spaces (used for auto-flushing)
 	 * @param cacheable Whether the query results are cacheable
 	 * @param cacheRegion If cacheable, the region into which to store the results
@@ -51,7 +51,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 	public NamedSQLQueryDefinition(
 			String name,
 			String query,
-			NativeSQLQueryReturn[] queryReturns,
+			QueryResultBuilder[] queryResultBuilders,
 			List<String> querySpaces,
 			boolean cacheable,
 			String cacheRegion,
@@ -80,7 +80,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				null, 		// resultSetRef
 				querySpaces,
 				callable,
-				queryReturns
+				queryResultBuilders
 		);
 	}
 
@@ -139,7 +139,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				resultSetRef,
 				querySpaces,
 				callable,
-				null		// queryReturns
+				null		// queryResultBuilders
 		);
 	}
 
@@ -160,7 +160,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 			String resultSetRef,
 			List<String> querySpaces,
 			boolean callable,
-			NativeSQLQueryReturn[] queryReturns) {
+			QueryResultBuilder[] queryResultBuilders) {
 		super(
 				name,
 				query.trim(), /* trim done to workaround stupid oracle bug that cant handle whitespaces beforeQuery a { in a sp */
@@ -180,11 +180,11 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 		this.resultSetRef = resultSetRef;
 		this.querySpaces = querySpaces;
 		this.callable = callable;
-		this.queryReturns = queryReturns;
+		this.queryResultBuilders = queryResultBuilders;
 	}
 
-	public NativeSQLQueryReturn[] getQueryReturns() {
-		return queryReturns;
+	public QueryResultBuilder[] getQueryResultBuilders() {
+		return queryResultBuilders;
 	}
 
 	public List<String> getQuerySpaces() {
@@ -218,29 +218,29 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				getResultSetRef(),
 				getQuerySpaces(),
 				isCallable(),
-				getQueryReturns()
+				getQueryResultBuilders()
 		);
 	}
 
-	public void addQueryReturns(NativeSQLQueryReturn[] queryReturnsToAdd) {
+	public void addQueryReturns(QueryResultBuilder[] queryReturnsToAdd) {
 		if ( queryReturnsToAdd != null && queryReturnsToAdd.length > 0 ) {
 			int initialQueryReturnsLength = 0;
-			if ( this.queryReturns != null ) {
-				initialQueryReturnsLength = this.queryReturns.length;
+			if ( this.queryResultBuilders != null ) {
+				initialQueryReturnsLength = this.queryResultBuilders.length;
 			}
-			NativeSQLQueryReturn[] allQueryReturns = new NativeSQLQueryReturn[initialQueryReturnsLength + queryReturnsToAdd.length];
+			QueryResultBuilder[] allBuilders = new QueryResultBuilder[initialQueryReturnsLength + queryReturnsToAdd.length];
 
 			int i = 0;
 			for ( i = 0; i < initialQueryReturnsLength; i++ ) {
-				allQueryReturns[i] = this.queryReturns[i];
+				allBuilders[i] = this.queryResultBuilders[i];
 			}
 
 			for ( int j = 0; j < queryReturnsToAdd.length; j++ ) {
-				allQueryReturns[i] = queryReturnsToAdd[j];
+				allBuilders[i] = queryReturnsToAdd[j];
 				i++;
 			}
 
-			this.queryReturns = allQueryReturns;
+			this.queryResultBuilders = allBuilders;
 		}
 	}
 }

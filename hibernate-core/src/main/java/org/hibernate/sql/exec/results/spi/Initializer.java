@@ -7,10 +7,11 @@
 package org.hibernate.sql.exec.results.spi;
 
 /**
- * Common interface for EntityReferenceInitializer and
- * CollectionReferenceInitializer contracts for the sole purpose
- * of defining a common element type for Returns to return their
- * collected initializer for itself and any fetches.
+ * Common interface for initializers of entity, collection and composite state
+ *
+ * @see InitializerEntity
+ * @see InitializerCollection
+ * @see InitializerComposite
  *
  * @author Steve Ebersole
  */

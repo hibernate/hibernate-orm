@@ -17,7 +17,7 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
-import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
+import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
@@ -29,7 +29,7 @@ import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
+import org.hibernate.sql.exec.results.spi.SqlSelection;
 
 /**
  * Specialized SqmSelectToSqlAstConverter extension to help in generating the

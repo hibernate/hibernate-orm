@@ -82,7 +82,7 @@ import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
+import org.hibernate.sql.exec.results.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;

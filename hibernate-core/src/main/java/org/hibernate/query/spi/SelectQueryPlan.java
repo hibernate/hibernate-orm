@@ -6,13 +6,12 @@
  */
 package org.hibernate.query.spi;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.Incubating;
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.Query;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * General contract for performing execution of a query returning results.  These
@@ -29,14 +28,7 @@ import org.hibernate.query.Query;
  */
 @Incubating
 public interface SelectQueryPlan<R> extends QueryPlan {
-	List<R> performList(
-			SharedSessionContractImplementor persistenceContext,
-			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings);
+	List<R> performList(ExecutionContext executionContext);
 
-	ScrollableResultsImplementor<R> performScroll(
-			SharedSessionContractImplementor persistenceContext,
-			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings,
-			ScrollMode scrollMode);
+	ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, ExecutionContext executionContext);
 }

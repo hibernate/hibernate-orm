@@ -7,17 +7,20 @@
 package org.hibernate.sql.exec.results.internal;
 
 import org.hibernate.sql.exec.results.spi.RowProcessingState;
-import org.hibernate.sql.exec.results.spi.CompositeReferenceInitializer;
+import org.hibernate.sql.exec.results.spi.InitializerComposite;
 import org.hibernate.sql.exec.results.spi.InitializerParent;
 
 /**
  * @author Steve Ebersole
  */
-public class CompositeReferenceInitializerImpl
-		extends AbstractFetchParentInitializer
-		implements CompositeReferenceInitializer {
+public class CompositeReferenceInitializerImpl implements InitializerComposite {
 	public CompositeReferenceInitializerImpl(InitializerParent initializerParent) {
 		super( initializerParent );
+	}
+
+	@Override
+	public Object getParentInstance() {
+		return null;
 	}
 
 	@Override

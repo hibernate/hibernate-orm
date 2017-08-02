@@ -42,7 +42,6 @@ import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeHelper;
 
 import org.jboss.logging.Logger;
 

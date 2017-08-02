@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.internal;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import javax.persistence.Tuple;
@@ -15,16 +14,19 @@ import javax.persistence.TupleElement;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.streams.StingArrayCollector;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.JpaTupleBuilder;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
+import org.hibernate.sql.ast.produce.sqm.spi.Callback;
+import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.exec.internal.RowTransformerSingularReturnImpl;
@@ -33,13 +35,7 @@ import org.hibernate.sql.exec.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.exec.internal.TupleElementImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
 import org.hibernate.sql.exec.spi.RowTransformer;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
-import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
-import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
-import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 
 /**
  * @author Steve Ebersole
@@ -141,70 +137,14 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public List<R> performList(
-			SharedSessionContractImplementor persistenceContext,
-			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings) {
-		final ExecutionContext executionContext = generateExecutionContext(
-				persistenceContext,
-				queryOptions,
-				inputParameterBindings
-		);
-
+	public List<R> performList(ExecutionContext executionContext) {
 		final JdbcSelect jdbcSelect = buildJdbcSelect( executionContext );
 
-
-		return new JdbcSelectExecutorStandardImpl().list(
+		return JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
 				executionContext,
 				rowTransformer
 		);
-	}
-
-	private ExecutionContext generateExecutionContext(
-			SharedSessionContractImplementor persistenceContext,
-			QueryOptions queryOptions, QueryParameterBindings inputParameterBindings) {
-		return new ExecutionContext() {
-				final ParameterBindingContext parameterBindingContext = new ParameterBindingContext() {
-					@Override
-					public <T> Collection<T> getLoadIdentifiers() {
-						// todo (6.0) : where do these come from?
-						return null;
-					}
-
-					@Override
-					public QueryParameterBindings getQueryParameterBindings() {
-						return inputParameterBindings;
-					}
-
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return persistenceContext;
-					}
-				};
-
-				@Override
-				public SharedSessionContractImplementor getSession() {
-					return persistenceContext;
-				}
-
-				@Override
-				public QueryOptions getQueryOptions() {
-					return queryOptions;
-				}
-
-				@Override
-				public ParameterBindingContext getParameterBindingContext() {
-					return parameterBindingContext;
-				}
-
-				@Override
-				public Callback getCallback() {
-					return afterLoadAction -> {
-						// do nothing here (yet)
-					};
-				}
-			};
 	}
 
 	private JdbcSelect buildJdbcSelect(ExecutionContext executionContext) {
@@ -234,17 +174,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public ScrollableResultsImplementor performScroll(
-			SharedSessionContractImplementor persistenceContext,
-			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings,
-			ScrollMode scrollMode) {
-		final ExecutionContext executionContext = generateExecutionContext(
-				persistenceContext,
-				queryOptions,
-				inputParameterBindings
-		);
-
+	public ScrollableResultsImplementor performScroll(ScrollMode scrollMode, ExecutionContext executionContext) {
 		final JdbcSelect jdbcSelect = buildJdbcSelect( executionContext );
 
 		return new JdbcSelectExecutorStandardImpl().scroll(

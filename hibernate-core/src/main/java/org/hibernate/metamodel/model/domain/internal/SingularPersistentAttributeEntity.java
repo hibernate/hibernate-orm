@@ -30,12 +30,13 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
-import org.hibernate.sql.ast.tree.internal.select.FetchEntityAttributeImpl;
-import org.hibernate.sql.ast.tree.spi.select.Fetch;
-import org.hibernate.sql.ast.tree.spi.select.FetchParent;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
+import org.hibernate.sql.exec.results.internal.FetchEntityAttributeImpl;
+import org.hibernate.sql.exec.results.spi.Fetch;
+import org.hibernate.sql.exec.results.spi.FetchParent;
+import org.hibernate.sql.exec.results.spi.QueryResult;
+import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
@@ -226,14 +227,14 @@ public class SingularPersistentAttributeEntity<O,J>
 			NavigableReference selectedExpression,
 			FetchStrategy fetchStrategy,
 			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
+		assert selectedExpression.getNavigable().equals( this.getContainer() );
+
 		return new FetchEntityAttributeImpl(
 				fetchParent,
 				(EntityReference) selectedExpression,
 				selectedExpression.getNavigablePath(),
 				fetchStrategy,
-				sqlSelectionResolver,
 				creationContext
 		);
 	}
@@ -384,5 +385,10 @@ public class SingularPersistentAttributeEntity<O,J>
 	@Override
 	public List<Navigable> getDeclaredNavigables() {
 		return entityDescriptor.getDeclaredNavigables();
+	}
+
+	@Override
+	public SqlSelectionGroup resolveSqlSelectionGroup(QueryResultCreationContext resolutionContext) {
+		throw new NotYetImplementedException(  );
 	}
 }

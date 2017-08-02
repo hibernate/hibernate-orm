@@ -8,6 +8,8 @@ package org.hibernate.sql.exec.spi;
 
 import java.util.List;
 
+import org.hibernate.sql.exec.results.spi.ResultSetMapping;
+
 /**
  * @author Steve Ebersole
  */

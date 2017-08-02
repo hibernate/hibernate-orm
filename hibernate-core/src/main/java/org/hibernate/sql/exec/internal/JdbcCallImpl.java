@@ -12,34 +12,51 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.sql.exec.spi.InFlightJdbcCall;
+import org.hibernate.sql.exec.results.spi.ResultSetMapping;
+import org.hibernate.sql.exec.spi.JdbcCall;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.exec.spi.ResultSetMapping;
 
 /**
  * Models the actual call, allowing iterative building of the parts.
  *
  * @author Steve Ebersole
  */
-public class JdbcCallImpl implements InFlightJdbcCall {
+public class JdbcCallImpl implements JdbcCall {
 	private final String callableName;
-	private final ParameterStrategy parameterStrategy;
 
-	private JdbcCallFunctionReturn functionReturn;
-	private List<JdbcCallParameterRegistration> parameterRegistrations;
-	private List<JdbcParameterBinder> parameterBinders;
-	private List<JdbcCallParameterExtractor> parameterExtractors;
-	private List<JdbcCallRefCursorExtractor> refCursorExtractors;
+	private final JdbcCallFunctionReturn functionReturn;
+	private final List<JdbcCallParameterRegistration> parameterRegistrations;
+	private final List<JdbcParameterBinder> parameterBinders;
+	private final List<JdbcCallParameterExtractor> parameterExtractors;
+	private final List<JdbcCallRefCursorExtractor> refCursorExtractors;
 
-	private List<ResultSetMapping> resultSetMappings;
+	private final List<ResultSetMapping> resultSetMappings;
 
-	public JdbcCallImpl(String callableName, ParameterStrategy parameterStrategy) {
-		this.callableName = callableName;
-		this.parameterStrategy = parameterStrategy;
+	public JdbcCallImpl(Builder builder) {
+		this.callableName = builder.callableName;
+
+		this.functionReturn = builder.functionReturn;
+
+		this.parameterRegistrations = builder.parameterRegistrations == null
+				? Collections.emptyList()
+				: Collections.unmodifiableList( builder.parameterRegistrations );
+		this.parameterBinders = builder.parameterBinders == null
+				? Collections.emptyList()
+				: Collections.unmodifiableList( builder.parameterBinders );
+		this.parameterExtractors = builder.parameterExtractors == null
+				? Collections.emptyList()
+				: Collections.unmodifiableList( builder.parameterExtractors );
+		this.refCursorExtractors = builder.refCursorExtractors == null
+				? Collections.emptyList()
+				: Collections.unmodifiableList( builder.refCursorExtractors );
+
+		this.resultSetMappings = builder.resultSetMappings == null
+				? Collections.emptyList()
+				: Collections.unmodifiableList( builder.resultSetMappings );
 	}
 
 	@Override
@@ -77,60 +94,92 @@ public class JdbcCallImpl implements InFlightJdbcCall {
 		return resultSetMappings == null ? Collections.emptyList() : Collections.unmodifiableList( resultSetMappings );
 	}
 
-	@Override
-	public void setFunctionReturn(JdbcCallFunctionReturn functionReturn) {
-		this.functionReturn = functionReturn;
-	}
+	public static class Builder {
+		private final String callableName;
+		private final ParameterStrategy parameterStrategy;
 
-	@Override
-	public void addParameterRegistration(JdbcCallParameterRegistration registration) {
-		if ( parameterRegistrations == null ) {
-			parameterRegistrations = new ArrayList<>();
-		}
-		parameterRegistrations.add( registration );
+		private JdbcCallFunctionReturn functionReturn;
 
-		switch ( registration.getParameterMode() ) {
-			case REF_CURSOR: {
-				addRefCursorExtractor( registration.getRefCursorExtractor() );
-				break;
-			}
-			case IN: {
-				addParameterBinder( registration.getParameterBinder() );
-				break;
-			}
-			case INOUT: {
-				addParameterBinder( registration.getParameterBinder() );
-				addParameterExtractor( registration.getParameterExtractor() );
-				break;
-			}
-			case OUT: {
-				addParameterExtractor( registration.getParameterExtractor() );
-				break;
-			}
-			default: {
-				throw new HibernateException( "Unexpected ParameterMode : " +registration.getParameterMode() );
-			}
-		}
-	}
+		private List<JdbcCallParameterRegistration> parameterRegistrations;
+		private List<JdbcParameterBinder> parameterBinders;
+		private List<JdbcCallParameterExtractor> parameterExtractors;
+		private List<JdbcCallRefCursorExtractor> refCursorExtractors;
 
-	private void addParameterBinder(JdbcParameterBinder binder) {
-		if ( parameterBinders == null ) {
-			parameterBinders = new ArrayList<>();
-		}
-		parameterBinders.add( binder );
-	}
+		private List<ResultSetMapping> resultSetMappings;
 
-	private void addParameterExtractor(JdbcCallParameterExtractor extractor) {
-		if ( parameterExtractors == null ) {
-			parameterExtractors = new ArrayList<>();
+		public Builder(String callableName, ParameterStrategy parameterStrategy) {
+			this.callableName = callableName;
+			this.parameterStrategy = parameterStrategy;
 		}
-		parameterExtractors.add( extractor );
-	}
 
-	private void addRefCursorExtractor(JdbcCallRefCursorExtractor extractor) {
-		if ( refCursorExtractors == null ) {
-			refCursorExtractors = new ArrayList<>();
+		public JdbcCall buildJdbcCall() {
+			return new JdbcCallImpl( this );
 		}
-		refCursorExtractors.add( extractor );
+
+		public void setFunctionReturn(JdbcCallFunctionReturn functionReturn) {
+			this.functionReturn = functionReturn;
+		}
+
+		public void addParameterRegistration(JdbcCallParameterRegistration registration) {
+			if ( parameterRegistrations == null ) {
+				parameterRegistrations = new ArrayList<>();
+			}
+
+			// todo (6.0) : add validation based on ParameterStrategy
+
+			parameterRegistrations.add( registration );
+
+			switch ( registration.getParameterMode() ) {
+				case REF_CURSOR: {
+					addRefCursorExtractor( registration.getRefCursorExtractor() );
+					break;
+				}
+				case IN: {
+					addParameterBinder( registration.getParameterBinder() );
+					break;
+				}
+				case INOUT: {
+					addParameterBinder( registration.getParameterBinder() );
+					addParameterExtractor( registration.getParameterExtractor() );
+					break;
+				}
+				case OUT: {
+					addParameterExtractor( registration.getParameterExtractor() );
+					break;
+				}
+				default: {
+					throw new HibernateException( "Unexpected ParameterMode : " +registration.getParameterMode() );
+				}
+			}
+		}
+
+		private void addParameterBinder(JdbcParameterBinder binder) {
+			if ( parameterBinders == null ) {
+				parameterBinders = new ArrayList<>();
+			}
+			parameterBinders.add( binder );
+		}
+
+		private void addParameterExtractor(JdbcCallParameterExtractor extractor) {
+			if ( parameterExtractors == null ) {
+				parameterExtractors = new ArrayList<>();
+			}
+			parameterExtractors.add( extractor );
+		}
+
+		private void addRefCursorExtractor(JdbcCallRefCursorExtractor extractor) {
+			if ( refCursorExtractors == null ) {
+				refCursorExtractors = new ArrayList<>();
+			}
+			refCursorExtractors.add( extractor );
+		}
+
+		public void addResultSetMapping(ResultSetMapping resultSetMapping) {
+			if ( resultSetMappings == null ) {
+				resultSetMappings = new ArrayList<>();
+			}
+
+			resultSetMappings.add( resultSetMapping );
+		}
 	}
 }

@@ -10,8 +10,6 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-
 /**
  * A low-level reader for extracting JDBC results.  We always extract "basic" values
  * via this contract; various other contracts may consume those basic vales into compositions

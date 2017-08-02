@@ -18,15 +18,20 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.tree.internal.select.QueryResultScalarImpl;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.exec.results.internal.QueryResultScalarImpl;
+import org.hibernate.sql.exec.results.internal.SqlSelectionGroupImpl;
+import org.hibernate.sql.exec.results.spi.QueryResult;
+import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.spi.ValueBinder;
+import org.hibernate.type.descriptor.spi.ValueExtractor;
+import org.hibernate.type.spi.BasicType;
 
 import static org.hibernate.metamodel.model.domain.internal.PersisterHelper.resolvePropertyAccess;
 
@@ -91,6 +96,11 @@ public class VersionDescriptorImpl<O,J>
 	}
 
 	@Override
+	public BasicType<J> getBasicType() {
+		return null;
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public BasicJavaDescriptor<J> getJavaTypeDescriptor() {
 		return (BasicJavaDescriptor) super.getJavaTypeDescriptor();
@@ -109,10 +119,28 @@ public class VersionDescriptorImpl<O,J>
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new QueryResultScalarImpl(
-				selectedExpression,
-				sqlSelectionResolver.resolveSqlSelection( creationContext.currentColumnReferenceSource().resolveColumnReference( column ) ),
 				resultVariable,
+				sqlSelectionResolver.resolveSqlSelection( creationContext.currentColumnReferenceSource().resolveColumnReference( column ) ),
 				this
+		);
+	}
+
+	@Override
+	public ValueBinder getValueBinder() {
+		return getBasicType().getValueBinder();
+	}
+
+	@Override
+	public ValueExtractor getValueExtractor() {
+		return getBasicType().getValueExtractor();
+	}
+
+	@Override
+	public SqlSelectionGroup resolveSqlSelectionGroup(QueryResultCreationContext resolutionContext) {
+		return new SqlSelectionGroupImpl(
+				resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
+						resolutionContext.currentColumnReferenceSource().resolveColumnReference( column )
+				)
 		);
 	}
 }

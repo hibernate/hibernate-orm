@@ -8,12 +8,10 @@ package org.hibernate.query.sql.internal;
 
 import java.util.List;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.ResolvedResultSetMapping;
-import org.hibernate.sql.ast.tree.spi.select.ResultSetAccess;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-import org.hibernate.sql.exec.spi.ResultSetMapping;
+import org.hibernate.sql.exec.results.spi.QueryResult;
+import org.hibernate.sql.exec.results.spi.ResolvedResultSetMapping;
+import org.hibernate.sql.exec.results.spi.SqlSelection;
+import org.hibernate.sql.exec.results.spi.ResultSetMapping;
 
 /**
  * ResultSetMapping for handling selections for a {@link org.hibernate.query.NativeQuery}
@@ -44,10 +42,10 @@ public class ResultSetMappingDefinedImpl implements ResultSetMapping {
 
 	@Override
 	public ResolvedResultSetMapping resolve(
-			ResultSetAccess jdbcResultsAccess,
-			SharedSessionContractImplementor persistenceContext) {
+			JdbcValuesMetadata jdbcResultsMetadata,
+			ResolutionContext resolutionContext) {
 		for ( SqlSelection sqlSelection : resolvedMapping.getSqlSelections() ) {
-			sqlSelection.prepare( jdbcResultsAccess, persistenceContext );
+			sqlSelection.prepare( jdbcResultsMetadata, resolutionContext );
 		}
 
 		return resolvedMapping;

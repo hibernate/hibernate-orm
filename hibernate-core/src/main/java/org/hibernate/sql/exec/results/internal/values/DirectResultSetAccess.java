@@ -9,6 +9,7 @@ package org.hibernate.sql.exec.results.internal.values;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -32,6 +33,11 @@ public class DirectResultSetAccess extends AbstractResultSetAccess {
 	@Override
 	public ResultSet getResultSet() {
 		return resultSet;
+	}
+
+	@Override
+	public SessionFactoryImplementor getFactory() {
+		return getPersistenceContext().getFactory();
 	}
 
 	@Override

@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.ResultSetMapping;
+import org.hibernate.sql.exec.results.spi.ResultSetMapping;
 
 /**
  * @author Steve Ebersole

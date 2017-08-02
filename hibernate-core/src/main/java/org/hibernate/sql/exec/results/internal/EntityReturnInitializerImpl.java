@@ -6,23 +6,24 @@
  */
 package org.hibernate.sql.exec.results.internal;
 
-import java.util.Map;
-
-import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
-import org.hibernate.sql.ast.tree.spi.select.EntityReference;
-import org.hibernate.sql.exec.results.spi.EntityReferenceInitializer;
-import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.sql.exec.results.spi.InitializerEntity;
 
 /**
  * @author Steve Ebersole
  */
 public class EntityReturnInitializerImpl
-		extends AbstractEntityReferenceInitializer
-		implements EntityReferenceInitializer {
+		extends AbstractInitializerEntity
+		implements InitializerEntity {
 	public EntityReturnInitializerImpl(
-			EntityReference entityReference,
-			Map<PersistentAttribute,SqlSelectionGroup> sqlSelectionGroupMap,
+			EntityDescriptor entityDescriptor,
+			EntitySqlSelectionMappings sqlSelectionMappings,
 			boolean isShallow) {
-		super( null, entityReference, true, sqlSelectionGroupMap, isShallow );
+		super( entityDescriptor, sqlSelectionMappings, isShallow );
+	}
+
+	@Override
+	protected boolean isEntityReturn() {
+		return true;
 	}
 }

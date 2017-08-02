@@ -14,8 +14,8 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeContainer;
 import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
@@ -28,9 +28,6 @@ import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.produce.internal.SqlSelectPlanImpl;
-import org.hibernate.sql.ast.tree.spi.select.FetchParent;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
 import org.hibernate.sql.ast.produce.sqm.internal.FetchGraphBuilder;
@@ -40,8 +37,13 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
+import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.exec.results.spi.FetchParent;
+import org.hibernate.sql.exec.results.spi.QueryResult;
+import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -63,7 +65,7 @@ public class SqmSelectToSqlAstConverter
 	/**
 	 * Main entry point into SQM SelectStatement interpretation
 	 *
-	 * @param statement The SQM SelectStatement to interpret
+	 * @param statement The SQM SelectStatement to interpretInstantiationTarget
 	 * @param queryOptions The options to be applied to the interpretation
 	 * @param sqlAstBuildingContext Contextual information ("parameter object") for
 	 * information needed as a SQL AST is produced
@@ -204,12 +206,12 @@ public class SqmSelectToSqlAstConverter
 	@Override
 	@SuppressWarnings("unchecked")
 	public DynamicInstantiation visitDynamicInstantiation(SqmDynamicInstantiation dynamicInstantiation) {
-		final Class target = interpret( dynamicInstantiation.getInstantiationTarget() );
-		final DynamicInstantiation sqlTree = new DynamicInstantiation( target );
+		final DynamicInstantiation sqlTree = new DynamicInstantiation(
+				dynamicInstantiation.getInstantiationTarget().getNature(),
+				interpretInstantiationTarget( dynamicInstantiation.getInstantiationTarget() )
+		);
 
 		for ( SqmDynamicInstantiationArgument argument : dynamicInstantiation.getArguments() ) {
-			validateDynamicInstantiationArgument( target, argument );
-
 			// generate the SqlSelections (if any) and get the SQL AST Expression
 			final Expression expr = (Expression) argument.getExpression().accept( this );
 
@@ -222,20 +224,23 @@ public class SqmSelectToSqlAstConverter
 		return sqlTree;
 	}
 
-	@SuppressWarnings("unused")
-	private void validateDynamicInstantiationArgument(Class target, SqmDynamicInstantiationArgument argument) {
-		// validate use of aliases
-		// todo : I think this ^^ is lready handled elsewhere
-	}
+	private <T> JavaTypeDescriptor<T> interpretInstantiationTarget(SqmDynamicInstantiationTarget instantiationTarget) {
+		final Class<T> targetJavaType;
 
-	private Class interpret(SqmDynamicInstantiationTarget instantiationTarget) {
-		if ( instantiationTarget.getNature() == SqmDynamicInstantiationTarget.Nature.LIST ) {
-			return List.class;
+		if ( instantiationTarget.getNature() == DynamicInstantiationNature.LIST ) {
+			targetJavaType = (Class<T>) List.class;
 		}
-		if ( instantiationTarget.getNature() == SqmDynamicInstantiationTarget.Nature.MAP ) {
-			return Map.class;
+		else if ( instantiationTarget.getNature() == DynamicInstantiationNature.MAP ) {
+			targetJavaType = (Class<T>) Map.class;
 		}
-		return instantiationTarget.getJavaType();
+		else {
+			targetJavaType = instantiationTarget.getJavaType();
+		}
+
+		return getSqlAstBuildingContext().getSessionFactory()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( targetJavaType );
 	}
 
 

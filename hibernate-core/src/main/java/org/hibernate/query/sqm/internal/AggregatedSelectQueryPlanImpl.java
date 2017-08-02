@@ -7,16 +7,13 @@
 package org.hibernate.query.sqm.internal;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * @author Steve Ebersole
@@ -29,27 +26,18 @@ public class AggregatedSelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 	}
 
 	@Override
-	public List<R> performList(
-			SharedSessionContractImplementor persistenceContext,
-			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings) {
+	public List<R> performList(ExecutionContext executionContext) {
 		final List<R> overallResults = new ArrayList<R>();
 
 		for ( SelectQueryPlan<R> aggregatedQueryPlan : aggregatedQueryPlans ) {
-			overallResults.addAll(
-					aggregatedQueryPlan.performList( persistenceContext, queryOptions, inputParameterBindings )
-			);
+			overallResults.addAll( aggregatedQueryPlan.performList( executionContext ) );
 		}
 
 		return overallResults;
 	}
 
 	@Override
-	public ScrollableResultsImplementor performScroll(
-			SharedSessionContractImplementor persistenceContext,
-			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings,
-			ScrollMode scrollMode) {
+	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, ExecutionContext executionContext) {
 		throw new NotYetImplementedException();
 	}
 }

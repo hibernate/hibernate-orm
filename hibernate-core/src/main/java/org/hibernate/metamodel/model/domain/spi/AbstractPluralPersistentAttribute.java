@@ -13,14 +13,14 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.tree.internal.select.FetchCollectionAttributeImpl;
-import org.hibernate.sql.ast.tree.internal.select.QueryResultCollectionImpl;
-import org.hibernate.sql.ast.tree.spi.select.Fetch;
-import org.hibernate.sql.ast.tree.spi.select.FetchParent;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.exec.results.internal.FetchCollectionAttributeImpl;
+import org.hibernate.sql.exec.results.internal.QueryResultCollectionImpl;
+import org.hibernate.sql.exec.results.spi.Fetch;
+import org.hibernate.sql.exec.results.spi.FetchParent;
+import org.hibernate.sql.exec.results.spi.QueryResult;
+import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -149,7 +149,7 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new QueryResultCollectionImpl(
-				getPersistentCollectionMetadata(),
+				this,
 				resultVariable,
 				sqlSelectionResolver,
 				creationContext
@@ -160,6 +160,7 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Fetchable
 
+
 	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
@@ -168,10 +169,20 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 			String resultVariable,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
+		return null;
+	}
+
+	@Override
+	public Fetch generateFetch(
+			FetchParent fetchParent,
+			NavigableReference selectedExpression,
+			FetchStrategy fetchStrategy,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
 		assert selectedExpression.getNavigable() == this;
 		return new FetchCollectionAttributeImpl(
 				fetchParent,
-				selectedExpression,
+				this,
 				fetchStrategy,
 				resultVariable,
 				sqlSelectionResolver,

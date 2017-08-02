@@ -9,7 +9,7 @@ package org.hibernate.sql.exec.results.internal.instantiation;
 import java.util.List;
 
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
+import org.hibernate.sql.exec.results.spi.SqlSelection;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
 import org.hibernate.sql.exec.results.spi.RowProcessingState;

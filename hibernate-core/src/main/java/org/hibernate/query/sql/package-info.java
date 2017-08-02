@@ -12,6 +12,9 @@
  * counterparts, but diverge in cases where Hibernate offers additional
  * features.
  *
+ * NOTE: Named `sql` here rather than the preferred `native` since the latter
+ * is a Java keyword.
+ *
  * @see org.hibernate.query.NativeQuery
  */
 package org.hibernate.query.sql;

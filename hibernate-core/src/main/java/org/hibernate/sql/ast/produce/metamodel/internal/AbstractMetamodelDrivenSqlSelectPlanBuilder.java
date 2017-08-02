@@ -31,6 +31,7 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKey;
 import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKeyProducer;
@@ -56,13 +57,13 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
-import org.hibernate.sql.ast.tree.spi.select.Fetch;
-import org.hibernate.sql.ast.tree.spi.select.FetchParent;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
+import org.hibernate.sql.exec.results.spi.Fetch;
+import org.hibernate.sql.exec.results.spi.FetchParent;
+import org.hibernate.sql.exec.results.spi.QueryResult;
+import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.exec.results.spi.SqlSelectable;
+import org.hibernate.sql.exec.results.spi.SqlSelection;
+import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
 import org.hibernate.sql.exec.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
 
@@ -340,11 +341,6 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SqlSelectionResolver
-
-	@Override
-	public SqlSelectionGroup resolveSqlSelectionGroup(Navigable navigable) {
-		return null;
-	}
 
 	@Override
 	public SqlSelection resolveSqlSelection(SqlSelectable sqlSelectable) {

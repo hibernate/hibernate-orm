@@ -4,13 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.query;
 
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import javax.persistence.FlushModeType;
 import javax.persistence.Parameter;
@@ -21,7 +19,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.query.sql.ReturnableResultRegistration;
 import org.hibernate.type.Type;
 
 /**
@@ -59,31 +56,6 @@ import org.hibernate.type.Type;
  */
 public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	/**
-	 * Retrieve the returns associated with this query.  Note that the returned
-	 * descriptors represents the live, in-flight view of these returns.  Meaning
-	 * that, given code such as:
-	 *
-	 * [code]
-	 * ----
-	 * NativeQuery qry = ...;
-	 * RootReturn root = qry.addRoot( "a", MyEntity.class );
-	 * EntityResultRegistration rootReg = qry.getQueryReturns().get( 0 );
-	 * ----
-	 *
-	 * the `rootReg` reference is linked to the `root` reference such that
-	 * changes made through the `root` reference will be immediately
-	 * visible via the `rootReg` reference.
-	 *
-	 * Additionally, the returned list itself however is not live.  Meaning that
-	 * registrations added after the list is obtained will not be available in
-	 * that list; instead this method needs to be called again to gain access to
-	 * those.
-	 *
-	 * @return The return descriptors
-	 */
-	List<ReturnableResultRegistration> getQueryReturns();
-
-	/**
 	 * Is this native-SQL query known to be callable?
 	 *
 	 * @return {@code true} if the query is known to be callable; {@code false} otherwise.
@@ -97,7 +69,11 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @param name The name of the mapping to use.
 	 *
 	 * @return this, for method chaining
+	 *
+	 * @deprecated Use {@link javax.persistence.EntityManager#createNativeQuery(String, String)}
+	 * instead passing the result-set-mapping when creating this `NativeQuery`
 	 */
+	@Deprecated
 	org.hibernate.query.NativeQuery<T> setResultSetMapping(String name);
 
 	/**

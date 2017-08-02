@@ -18,7 +18,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
+import org.hibernate.sql.exec.results.spi.SqlSelectable;
 
 /**
  * @author Steve Ebersole

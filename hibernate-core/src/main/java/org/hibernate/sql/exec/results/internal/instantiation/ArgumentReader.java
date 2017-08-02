@@ -12,14 +12,17 @@ import org.hibernate.sql.exec.results.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
+ * Specialized QueryResultAssembler for use as a "reader" for dynamic-
+ * instantiation arguments.
+ *
  * @author Steve Ebersole
  */
 public class ArgumentReader implements QueryResultAssembler {
-	private final QueryResultAssembler returnAssembler;
+	private final QueryResultAssembler delegateAssembler;
 	private final String alias;
 
-	public ArgumentReader(QueryResultAssembler returnAssembler, String alias) {
-		this.returnAssembler = returnAssembler;
+	public ArgumentReader(QueryResultAssembler delegateAssembler, String alias) {
+		this.delegateAssembler = delegateAssembler;
 		this.alias = alias;
 	}
 
@@ -29,11 +32,11 @@ public class ArgumentReader implements QueryResultAssembler {
 
 	@Override
 	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-		return returnAssembler.assemble( rowProcessingState, options );
+		return delegateAssembler.assemble( rowProcessingState, options );
 	}
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return returnAssembler.getJavaTypeDescriptor();
+		return delegateAssembler.getJavaTypeDescriptor();
 	}
 }

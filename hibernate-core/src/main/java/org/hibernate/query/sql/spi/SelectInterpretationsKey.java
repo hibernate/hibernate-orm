@@ -10,7 +10,7 @@ import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryInterpretations;
-import org.hibernate.sql.exec.spi.ResultSetMapping;
+import org.hibernate.sql.exec.results.spi.ResultSetMapping;
 
 /**
  * @author Steve Ebersole

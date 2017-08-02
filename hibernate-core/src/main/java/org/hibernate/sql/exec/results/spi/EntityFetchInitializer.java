@@ -9,5 +9,5 @@ package org.hibernate.sql.exec.results.spi;
 /**
  * @author Steve Ebersole
  */
-public interface EntityFetchInitializer extends EntityReferenceInitializer, FetchInitializer {
+public interface EntityFetchInitializer extends InitializerEntity {
 }

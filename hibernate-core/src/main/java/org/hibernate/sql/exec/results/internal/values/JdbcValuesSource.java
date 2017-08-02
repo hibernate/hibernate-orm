@@ -8,7 +8,7 @@ package org.hibernate.sql.exec.results.internal.values;
 
 import java.sql.SQLException;
 
-import org.hibernate.sql.ast.tree.spi.select.ResolvedResultSetMapping;
+import org.hibernate.sql.exec.results.spi.ResolvedResultSetMapping;
 import org.hibernate.sql.exec.results.spi.RowProcessingState;
 
 /**

@@ -6,13 +6,10 @@
  */
 package org.hibernate.query.sql.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
+import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
 
 /**
  * @author Steve Ebersole
  */
-public interface NodeResolutionContext {
-	SessionFactoryImplementor getSessionFactory();
-	SqlSelectionResolver getSqlSelectionResolver();
+public interface NodeResolutionContext extends QueryResultCreationContext {
 }

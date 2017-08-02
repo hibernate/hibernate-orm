@@ -11,13 +11,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.QueryException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.spi.select.ResultSetAccess;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
+import org.hibernate.sql.exec.results.spi.SqlSelectable;
+import org.hibernate.sql.exec.results.spi.SqlSelection;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
+import org.hibernate.sql.exec.results.spi.ResultSetMapping;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
@@ -52,16 +51,20 @@ public class SqlSelectionImpl implements SqlSelection, SqlSelectable, SqlSelecti
 	}
 
 	@Override
-	public void prepare(ResultSetAccess resultSetAccess, SharedSessionContractImplementor persistenceContext) {
+	public void prepare(
+			ResultSetMapping.JdbcValuesMetadata jdbcResultsMetadata,
+			ResultSetMapping.ResolutionContext resolutionContext) {
 		// resolve the column-alias to a position
-		jdbcResultSetPosition = resultSetAccess.resolveColumnPosition( columnAlias );
+		jdbcResultSetPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
 
 		if ( extractor == null ) {
 			// assume we should auto-discover the type
-			final SqlTypeDescriptor sqlTypeDescriptor = resultSetAccess.resolveSqlTypeDescriptor( jdbcResultSetPosition );
+			final SqlTypeDescriptor sqlTypeDescriptor = jdbcResultsMetadata.resolveSqlTypeDescriptor( jdbcResultSetPosition );
 
 			extractor = sqlTypeDescriptor.getExtractor(
-					sqlTypeDescriptor.getJdbcRecommendedJavaTypeMapping( persistenceContext.getFactory().getTypeConfiguration() )
+					sqlTypeDescriptor.getJdbcRecommendedJavaTypeMapping(
+							resolutionContext.getPersistenceContext().getFactory().getTypeConfiguration()
+					)
 			);
 		}
 

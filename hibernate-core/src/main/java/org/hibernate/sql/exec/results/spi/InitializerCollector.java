@@ -7,8 +7,16 @@
 package org.hibernate.sql.exec.results.spi;
 
 /**
+ * A collector for {@link Initializer} instances.
+ *
+ * @see QueryResult#registerInitializers
+ * @see Fetch#registerInitializers
+ *
  * @author Steve Ebersole
  */
 public interface InitializerCollector {
+	/**
+	 * Collect the passed Initializer
+	 */
 	void addInitializer(Initializer initializer);
 }

@@ -8,7 +8,7 @@ package org.hibernate.sql.exec.results.internal.values;
 
 import java.util.List;
 
-import org.hibernate.sql.ast.tree.spi.select.ResolvedResultSetMapping;
+import org.hibernate.sql.exec.results.spi.ResolvedResultSetMapping;
 import org.hibernate.sql.exec.results.internal.caching.QueryCachePutManagerDisabledImpl;
 import org.hibernate.sql.exec.results.spi.RowProcessingState;
 

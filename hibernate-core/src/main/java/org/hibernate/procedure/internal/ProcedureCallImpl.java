@@ -28,13 +28,12 @@ import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.ScrollMode;
-import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.procedure.NoMoreReturnsException;
 import org.hibernate.procedure.NoSuchParameterException;
@@ -55,8 +54,8 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.MutableQueryOptions;
+import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
 import org.hibernate.sql.exec.internal.JdbcCallImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterBinderImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
@@ -65,7 +64,7 @@ import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
 import org.hibernate.sql.exec.results.internal.RowReaderNoResultsExpectedImpl;
 import org.hibernate.sql.exec.results.internal.RowReaderStandardImpl;
 import org.hibernate.sql.exec.results.spi.Initializer;
-import org.hibernate.sql.exec.results.spi.InitializerSource;
+import org.hibernate.sql.exec.results.spi.QueryResult;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
 import org.hibernate.sql.exec.results.spi.RowReader;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
@@ -138,12 +137,10 @@ public class ProcedureCallImpl<R>
 					}
 
 					@Override
-					public void addQueryResult(QueryResult... queryReturns) {
-						for ( QueryResult queryReturn : queryReturns ) {
-							returnAssemblers.add( queryReturn.getResultAssembler() );
-							if ( queryReturn instanceof InitializerSource ) {
-								( (InitializerSource) queryReturn ).registerInitializers( initializers::add );
-							}
+					public void addQueryResult(QueryResult... queryResults) {
+						for ( QueryResult queryResult : queryResults ) {
+							queryResult.registerInitializers( initializers::add );
+							returnAssemblers.add( queryResult.getResultAssembler() );
 						}
 					}
 				},
@@ -194,12 +191,10 @@ public class ProcedureCallImpl<R>
 					}
 
 					@Override
-					public void addQueryReturns(QueryResult... queryReturns) {
-						for ( QueryResult queryReturn : queryReturns ) {
-							returnAssemblers.add( queryReturn.getResultAssembler() );
-							if ( queryReturn instanceof InitializerSource ) {
-								( (InitializerSource) queryReturn ).registerInitializers( initializers::add );
-							}
+					public void addQueryReturns(QueryResult... queryResults) {
+						for ( QueryResult queryResult : queryResults ) {
+							queryResult.registerInitializers( initializers::add );
+							returnAssemblers.add( queryResult.getResultAssembler() );
 						}
 					}
 
@@ -363,7 +358,14 @@ public class ProcedureCallImpl<R>
 				.getDialect()
 				.getCallableStatementSupport();
 
-		final JdbcCallImpl jdbcCall = new JdbcCallImpl( getProcedureName(), parameterManager.getParameterStrategy() );
+		// todo (6.0) : consider moving the responsibility for creating JdbcCall to CallableStatementSupport
+		//		that fixes the disjunct between its current `#shouldUseFunctionSyntax` and
+		//		what JDBC type to use for that return
+
+		JdbcCallImpl.Builder jdbcCallBuilder = new JdbcCallImpl.Builder(
+				getProcedureName(),
+				parameterManager.getParameterStrategy()
+		);
 
 		// positional parameters are 0-based..
 		//		JDBC positions (1-based) come into play later, although we could calculate them here as well
@@ -389,7 +391,7 @@ public class ProcedureCallImpl<R>
 		}
 
 		if ( functionReturnToUse != null ) {
-			jdbcCall.addParameterRegistration( functionReturnToUse.toJdbcCallParameterRegistration( getSession() ) );
+			jdbcCallBuilder.addParameterRegistration( functionReturnToUse.toJdbcCallParameterRegistration( getSession() ) );
 
 			// function returns use a parameter
 			parameterPosition++;
@@ -448,14 +450,14 @@ public class ProcedureCallImpl<R>
 				);
 			}
 
-			jdbcCall.addParameterRegistration( jdbcRegistration );
+			jdbcCallBuilder.addParameterRegistration( jdbcRegistration );
 
 			parameterPosition++;
 		}
 
 		return new ProcedureOutputsImpl(
 				this,
-				jdbcCall,
+				jdbcCallBuilder.buildJdbcCall(),
 				resolveParameterStrategy( parameterManager.getParameterStrategy() ),
 				queryOptions,
 				parameterManager,
@@ -852,7 +854,7 @@ public class ProcedureCallImpl<R>
 	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value, Type type) {
 		final ParameterRegistrationImplementor<P> reg = parameterManager.resolve( parameter );
 		reg.bindValue( value );
-		reg.setHibernateType( type );
+		reg.setHibernateType( (AllowableParameterType) type );
 		return this;
 	}
 
@@ -861,7 +863,7 @@ public class ProcedureCallImpl<R>
 	public ProcedureCallImplementor<R> setParameter(String name, Object value, Type type) {
 		final ParameterRegistrationImplementor reg = parameterManager.getQueryParameter( name );
 		reg.bindValue( value );
-		reg.setHibernateType( type );
+		reg.setHibernateType( (AllowableParameterType) type );
 		return this;
 	}
 
@@ -870,7 +872,7 @@ public class ProcedureCallImpl<R>
 	public ProcedureCallImplementor<R> setParameter(int position, Object value, Type type) {
 		final ParameterRegistrationImplementor reg = parameterManager.getQueryParameter( position );
 		reg.bindValue( value );
-		reg.setHibernateType( type );
+		reg.setHibernateType( (AllowableParameterType) type );
 		return this;
 	}
 

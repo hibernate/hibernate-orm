@@ -732,8 +732,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	protected void resultClassChecking(Class resultType, NamedSQLQueryDefinition namedQueryDefinition) {
 		final NativeSQLQueryReturn[] queryReturns;
-		if ( namedQueryDefinition.getQueryReturns() != null ) {
-			queryReturns = namedQueryDefinition.getQueryReturns();
+		if ( namedQueryDefinition.getQueryResultBuilders() != null ) {
+			queryReturns = namedQueryDefinition.getQueryResultBuilders();
 		}
 		else if ( namedQueryDefinition.getResultSetRef() != null ) {
 			final ResultSetMappingDefinition rsMapping = getFactory().getQueryEngine().getNamedQueryRepository().getResultSetMappingDefinition( namedQueryDefinition.getResultSetRef() );

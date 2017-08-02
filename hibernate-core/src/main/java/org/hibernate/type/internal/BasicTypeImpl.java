@@ -14,7 +14,7 @@ import java.util.Optional;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.metamodel.model.domain.spi.VersionSupport;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
+import org.hibernate.sql.exec.results.spi.SqlSelection;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;

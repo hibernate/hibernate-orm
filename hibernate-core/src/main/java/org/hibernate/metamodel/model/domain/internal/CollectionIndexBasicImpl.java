@@ -17,12 +17,14 @@ import org.hibernate.metamodel.model.domain.spi.CollectionIndexBasic;
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.sql.ast.tree.internal.select.QueryResultScalarImpl;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
+import org.hibernate.sql.exec.results.internal.QueryResultScalarImpl;
+import org.hibernate.sql.exec.results.spi.QueryResult;
+import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
+import org.hibernate.type.descriptor.spi.ValueBinder;
+import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -78,12 +80,21 @@ public class CollectionIndexBasicImpl<J>
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new QueryResultScalarImpl(
-				selectedExpression,
+				resultVariable,
 				sqlSelectionResolver.resolveSqlSelection(
 						creationContext.currentColumnReferenceSource().resolveColumnReference( column )
 				),
-				resultVariable,
 				this
 	  	);
+	}
+
+	@Override
+	public ValueBinder getValueBinder() {
+		return basicType.getValueBinder();
+	}
+
+	@Override
+	public ValueExtractor getValueExtractor() {
+		return basicType.getValueExtractor();
 	}
 }

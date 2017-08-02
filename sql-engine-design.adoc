@@ -311,7 +311,7 @@ results is covered later.
 [IMPORTANT]
 ====
 The process used to resolve the `SqlSelection` references given the `SqlSelectable` counterpart is
-handled through the `org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext` contract
+handled through the `org.hibernate.sql.exec.results.spi.QueryResultCreationContext` contract
 which `SqlSelectAstToJdbcSelectConverter` implements[1].  `SqlSelection` is the way we implement
 positional access to the JDBC `ReultSet`.  `SqlSelection` maintains the position at which the SQL
 selection was rendered and is the way we implement positional access to the JDBC `ResultSet` values.

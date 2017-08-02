@@ -9,16 +9,15 @@ package org.hibernate.query.sql.internal;
 import java.util.List;
 
 import org.hibernate.ScrollMode;
-import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.sql.spi.NativeQueryPlan;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
+import org.hibernate.sql.exec.results.spi.ResultSetMapping;
+import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
+import org.hibernate.sql.exec.internal.JdbcSelectImpl;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.exec.spi.ResultSetMapping;
+import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.exec.spi.RowTransformer;
 
 /**
@@ -47,19 +46,23 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 	}
 
 	@Override
-	public List<R> performList(
-			SharedSessionContractImplementor persistenceContext,
-			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings) {
-		throw new NotYetImplementedException( "Not yet implemented" );
+	public List<R> performList(ExecutionContext executionContext) {
+		// todo (6.0) : per email to dev group I'd like to remove this `callable` support
+		//		so for now, ignore it and simply build the JdbcSelect
+		final JdbcSelect jdbcSelect = new JdbcSelectImpl( sql, parameterBinders, resultSetMapping );
+
+		// todo (6.0) : need to make this swappable (see not in executor class)
+		final JdbcSelectExecutor executor = JdbcSelectExecutorStandardImpl.INSTANCE;
+
+		return executor.list( jdbcSelect, executionContext, rowTransformer );
 	}
 
 	@Override
-	public ScrollableResultsImplementor performScroll(
-			SharedSessionContractImplementor persistenceContext,
-			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings,
-			ScrollMode scrollMode) {
-		throw new NotYetImplementedException( "Not yet implemented" );
+	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, ExecutionContext executionContext) {
+		// todo (6.0) : see notes above in `#performList`
+		final JdbcSelect jdbcSelect = new JdbcSelectImpl( sql, parameterBinders, resultSetMapping );
+		final JdbcSelectExecutor executor = JdbcSelectExecutorStandardImpl.INSTANCE;
+
+		return executor.scroll( jdbcSelect, scrollMode, executionContext, rowTransformer );
 	}
 }

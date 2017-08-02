@@ -52,6 +52,11 @@ public abstract class AbstractPersistentAttribute<O,J> implements PersistentAttr
 	}
 
 	@Override
+	public PropertyAccess getPropertyAccess() {
+		return access;
+	}
+
+	@Override
 	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}

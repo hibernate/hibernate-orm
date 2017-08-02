@@ -12,11 +12,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.PreparedStatementCreator;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
@@ -47,6 +51,13 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		return resultSet;
 	}
 
+	@Override
+	public SessionFactoryImplementor getFactory() {
+		return executionContext.getSession().getFactory();
+	}
+
+	private static final Logger log = CoreLogging.logger( DeferredResultSetAccess.class );
+
 	private void executeQuery() {
 		final LogicalConnectionImplementor logicalConnection = getPersistenceContext().getJdbcCoordinator().getLogicalConnection();
 		final Connection connection = logicalConnection.getPhysicalConnection();
@@ -54,7 +65,9 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		final JdbcServices jdbcServices = getPersistenceContext().getFactory().getServiceRegistry().getService( JdbcServices.class );
 
 		final String sql = jdbcSelect.getSql();
+
 		try {
+			log.tracef( "Executing query to retrieve ResultSet : %s", sql );
 			jdbcServices.getSqlStatementLogger().logStatement( sql );
 
 			// prepare the query

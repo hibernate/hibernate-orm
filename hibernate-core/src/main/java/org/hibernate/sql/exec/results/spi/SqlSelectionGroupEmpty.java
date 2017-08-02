@@ -10,8 +10,6 @@ package org.hibernate.sql.exec.results.spi;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-
 /**
  * @author Steve Ebersole
  */

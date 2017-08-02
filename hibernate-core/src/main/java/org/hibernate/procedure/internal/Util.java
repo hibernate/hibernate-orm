@@ -20,15 +20,15 @@ import org.hibernate.procedure.UnknownSqlResultSetMappingException;
 import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.tree.internal.select.QueryResultScalarImpl;
-import org.hibernate.sql.ast.tree.spi.select.FetchParent;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
+import org.hibernate.sql.exec.results.internal.QueryResultScalarImpl;
+import org.hibernate.sql.exec.results.spi.FetchParent;
+import org.hibernate.sql.exec.results.spi.QueryResult;
+import org.hibernate.sql.exec.results.spi.SqlSelection;
 import org.hibernate.sql.exec.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.exec.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.exec.results.internal.instantiation.ArgumentReader;
-import org.hibernate.sql.exec.results.internal.instantiation.QueryResultAssemblerConstructorImpl;
-import org.hibernate.sql.exec.results.internal.instantiation.QueryResultAssemblerListImpl;
+import org.hibernate.sql.exec.results.internal.instantiation.DynamicInstantiationConstructorAssemblerImpl;
+import org.hibernate.sql.exec.results.internal.instantiation.DynamicInstantiationListAssemblerImpl;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -220,7 +220,7 @@ public class Util {
 			//	todo : implement ^^
 
 			throw new NotYetImplementedException(  );
-//			for ( NativeSQLQueryReturn nativeQueryReturn : mapping.getQueryReturns() ) {
+//			for ( NativeSQLQueryReturn nativeQueryReturn : mapping.getQueryResultBuilders() ) {
 //				if ( nativeQueryReturn instanceof NativeSQLQueryScalarReturn ) {
 //					final NativeSQLQueryScalarReturn rtn = (NativeSQLQueryScalarReturn) nativeQueryReturn;
 //					final QueryResultScalarImpl scalarReturn = new QueryResultScalarImpl(
@@ -307,7 +307,7 @@ public class Util {
 			}
 
 			if ( List.class.equals( targetJavaType ) ) {
-				return new QueryResultAssemblerListImpl( (BasicJavaDescriptor<List>) resultType, argumentReaders );
+				return new DynamicInstantiationListAssemblerImpl( (BasicJavaDescriptor<List>) resultType, argumentReaders );
 			}
 			else {
 				// find a constructor matching argument types
@@ -336,7 +336,7 @@ public class Util {
 					}
 
 					constructor.setAccessible( true );
-					return new QueryResultAssemblerConstructorImpl( constructor, resultType, argumentReaders );
+					return new DynamicInstantiationConstructorAssemblerImpl( constructor, resultType, argumentReaders );
 				}
 
 				throw new HibernateException(

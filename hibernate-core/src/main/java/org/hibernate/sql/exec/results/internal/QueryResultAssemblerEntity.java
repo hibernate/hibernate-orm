@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.exec.results.internal;
 
-import org.hibernate.sql.exec.results.spi.EntityReferenceInitializer;
+import org.hibernate.sql.exec.results.spi.InitializerEntity;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
 import org.hibernate.sql.exec.results.spi.RowProcessingState;
@@ -17,11 +17,11 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  */
 public class QueryResultAssemblerEntity implements QueryResultAssembler {
 	private final JavaTypeDescriptor javaTypeDescriptor;
-	private final EntityReferenceInitializer initializer;
+	private final InitializerEntity initializer;
 
 	public QueryResultAssemblerEntity(
 			JavaTypeDescriptor javaTypeDescriptor,
-			EntityReferenceInitializer initializer) {
+			InitializerEntity initializer) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.initializer = initializer;
 	}

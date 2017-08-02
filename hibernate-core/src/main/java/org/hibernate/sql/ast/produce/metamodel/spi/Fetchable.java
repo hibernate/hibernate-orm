@@ -8,10 +8,10 @@ package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.sql.ast.tree.spi.select.Fetch;
-import org.hibernate.sql.ast.tree.spi.select.FetchParent;
-import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
+import org.hibernate.sql.exec.results.spi.Fetch;
+import org.hibernate.sql.exec.results.spi.FetchParent;
+import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
 /**

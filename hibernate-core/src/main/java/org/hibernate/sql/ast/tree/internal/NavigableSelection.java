@@ -6,9 +6,9 @@
  */
 package org.hibernate.sql.ast.tree.internal;
 
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
+import org.hibernate.sql.exec.results.spi.QueryResult;
+import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 
@@ -24,7 +24,6 @@ public class NavigableSelection implements Selection {
 		this.resultVariable = resultVariable;
 	}
 
-	@Override
 	public NavigableReference getSelectedExpression() {
 		return selectedExpression;
 	}
@@ -38,6 +37,10 @@ public class NavigableSelection implements Selection {
 	public QueryResult createQueryResult(
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
+		// todo (6.0) : look at removing `selectedExpression` from this contract as well...
+		//		would then need:
+		//			1) NavigablePath
+
 		return getSelectedExpression().getNavigable().generateQueryResult(
 				getSelectedExpression(),
 				getResultVariable(),

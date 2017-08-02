@@ -6,36 +6,46 @@
  */
 package org.hibernate.sql.exec.results.internal;
 
-import java.util.Map;
-
-import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.tree.spi.select.FetchEntityAttribute;
-import org.hibernate.sql.exec.results.spi.FetchInitializer;
-import org.hibernate.sql.exec.results.spi.InitializerParent;
-import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.exec.results.spi.FetchEntityAttribute;
+import org.hibernate.sql.exec.results.spi.FetchParentAccess;
+import org.hibernate.sql.exec.results.spi.RowProcessingState;
 
 /**
  * @author Steve Ebersole
  */
-public class EntityFetchInitializerImpl extends AbstractEntityReferenceInitializer implements FetchInitializer {
+public class EntityFetchInitializerImpl extends AbstractInitializerEntity {
+	private final FetchParentAccess parentAccess;
+
 	public EntityFetchInitializerImpl(
-			InitializerParent parent,
+			FetchParentAccess parentAccess,
 			FetchEntityAttribute entityReference,
-			Map<PersistentAttribute,SqlSelectionGroup> sqlSelectionGroupMap,
+			EntitySqlSelectionMappings sqlSelectionMappings,
 			boolean isShallow) {
-		super( parent, entityReference, false, sqlSelectionGroupMap, isShallow );
+		super( entityReference.getEntityDescriptor(), sqlSelectionMappings, isShallow );
+		this.parentAccess = parentAccess;
+	}
+
+	@Override
+	protected boolean isEntityReturn() {
+		return false;
+	}
+
+	@Override
+	public void finishUpRow(RowProcessingState rowProcessingState) {
+		// Use `parentAccess` to inject the parent instance into
+		// the fetched entity
+		super.finishUpRow( rowProcessingState );
 	}
 
 	@Override
 	protected boolean shouldBatchFetch() {
-		// todo : add this method to SingularAttributeEntity
-		//return !getEntityReference().getFetchedAttributeDescriptor().isReferenceToNonPk();
-		return true;
-	}
+		// todo (6.0) : implement this.
+		// 		e.g. by adding a method to SingularAttributeEntity to see if it is
+		//			a reference to the owner's pk or not
 
-	@Override
-	public void link(Object fkValue) {
+		//return !getEntityReference().getFetchedAttributeDescriptor().isReferenceToNonPk();
+
 		throw new NotYetImplementedException(  );
 	}
 }

@@ -8,8 +8,8 @@
 package org.hibernate.sql.exec.results.internal;
 
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
+import org.hibernate.sql.exec.results.spi.SqlSelectable;
+import org.hibernate.sql.exec.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole

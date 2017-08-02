@@ -51,19 +51,20 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.sql.ReturnableResultRegistration;
-import org.hibernate.query.sql.spi.FetchResultNodeImplementor;
+import org.hibernate.query.sql.spi.FetchBuilder;
 import org.hibernate.query.sql.spi.NativeSelectQueryDefinition;
 import org.hibernate.query.sql.spi.NonSelectInterpretationsKey;
-import org.hibernate.query.sql.spi.ReturnableResultNodeImplementor;
-import org.hibernate.query.sql.spi.RootEntityResultBuilder;
-import org.hibernate.query.sql.spi.ScalarResultBuilder;
+import org.hibernate.query.sql.spi.QueryResultBuilder;
+import org.hibernate.query.sql.spi.QueryResultBuilderRootEntity;
+import org.hibernate.query.sql.spi.QueryResultBuilderScalar;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.sqm.spi.Callback;
+import org.hibernate.sql.exec.results.spi.ResultSetMapping;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
-import org.hibernate.sql.exec.spi.ResultSetMapping;
 import org.hibernate.sql.exec.spi.RowTransformer;
 import org.hibernate.type.Type;
 
@@ -74,13 +75,13 @@ import org.jboss.logging.Logger;
  */
 public class NativeQueryImpl<R>
 		extends AbstractQuery<R>
-		implements NativeQueryImplementor<R>, ParameterBindingContext {
+		implements NativeQueryImplementor<R>, ParameterBindingContext, ExecutionContext {
 	private static final Logger log = Logger.getLogger( NativeQueryImpl.class );
 
 	private final String sqlString;
 
-	private List<ReturnableResultNodeImplementor> resultBuilders;
-	private List<FetchResultNodeImplementor> fetchBuilders;
+	private List<QueryResultBuilder> resultBuilders;
+	private List<FetchBuilder> fetchBuilders;
 	private boolean resultSetMappingUsed;
 
 	private final boolean hasMainOutputParameter;
@@ -115,7 +116,7 @@ public class NativeQueryImpl<R>
 		);
 	}
 
-	private static List<ReturnableResultNodeImplementor> collectQueryReturns(
+	private static List<QueryResultBuilder> collectQueryReturns(
 			NamedSQLQueryDefinition queryDef,
 			SharedSessionContractImplementor session) {
 		if ( queryDef.getResultSetRef() != null ) {
@@ -131,8 +132,8 @@ public class NativeQueryImpl<R>
 			}
 			return new ArrayList<>( definition.getQueryReturns() );
 		}
-		else if ( queryDef.getQueryReturns() != null && queryDef.getQueryReturns().length > 0 ) {
-			return new ArrayList<>( Arrays.asList( queryDef.getQueryReturns() ) );
+		else if ( queryDef.getQueryResultBuilders() != null && queryDef.getQueryResultBuilders().length > 0 ) {
+			return new ArrayList<>( Arrays.asList( queryDef.getQueryResultBuilders() ) );
 		}
 		else {
 			return new ArrayList<>();
@@ -144,7 +145,7 @@ public class NativeQueryImpl<R>
 			String queryString,
 			boolean callable,
 			List<String> querySpaces,
-			List<ReturnableResultNodeImplementor> resultBuilders) {
+			List<QueryResultBuilder> resultBuilders) {
 		super( session );
 
 		this.sqlString = queryString;
@@ -188,6 +189,16 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	public ParameterBindingContext getParameterBindingContext() {
+		return this;
+	}
+
+	@Override
+	public Callback getCallback() {
+		return null;
+	}
+
+	@Override
 	public ParameterMetadata getParameterMetadata() {
 		return parameterMetadata;
 	}
@@ -217,11 +228,6 @@ public class NativeQueryImpl<R>
 	@SuppressWarnings("WeakerAccess")
 	public List<JdbcParameterBinder> getParameterBinders() {
 		return parameterBinders;
-	}
-
-	@Override
-	public List<ReturnableResultRegistration> getQueryReturns() {
-		return new ArrayList<>( resultBuilders );
 	}
 
 
@@ -263,12 +269,12 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> addScalar(String columnAlias, Type type) {
-		addReturnBuilder( new ScalarResultBuilder( columnAlias, (BasicValuedExpressableType) type ) );
+		addReturnBuilder( new QueryResultBuilderScalar( columnAlias, (BasicValuedExpressableType) type ) );
 		return this;
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected void addReturnBuilder(ReturnableResultNodeImplementor builder) {
+	protected void addReturnBuilder(QueryResultBuilder builder) {
 		if ( resultBuilders == null ) {
 			resultBuilders = new ArrayList<>();
 		}
@@ -278,7 +284,7 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public RootReturn addRoot(String tableAlias, String entityName) {
-		RootEntityResultBuilder builder = new RootEntityResultBuilder( tableAlias, entityName );
+		QueryResultBuilderRootEntity builder = new QueryResultBuilderRootEntity( tableAlias, entityName );
 		addReturnBuilder( builder );
 		return builder;
 	}
@@ -322,7 +328,7 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public FetchReturn addFetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
-		FetchResultNodeImplementor builder = new FetchResultNodeImplementor( tableAlias, ownerTableAlias, joinPropertyName );
+		final FetchBuilder builder = new FetchBuilder( tableAlias, ownerTableAlias, joinPropertyName );
 		fetchBuilders.add( builder );
 		return builder;
 	}
@@ -430,11 +436,7 @@ public class NativeQueryImpl<R>
 	protected List<R> doList() {
 		getSession().prepareForQueryExecution( false );
 
-		return resolveSelectQueryPlan().performList(
-				getSession(),
-				getQueryOptions(),
-				parameterBindings
-		);
+		return resolveSelectQueryPlan().performList( this );
 	}
 
 	private boolean shouldFlush() {
@@ -463,7 +465,7 @@ public class NativeQueryImpl<R>
 		SelectQueryPlan<R> queryPlan = null;
 
 		final ResultSetMapping resultSetMapping = resolveResultMapping();
-		final RowTransformer rowTranformer = resolveRowTransformer();
+		final RowTransformer rowTransformer = resolveRowTransformer();
 
 		final QueryInterpretations.Key cacheKey = generateSelectInterpretationsKey( resultSetMapping );
 		if ( cacheKey != null ) {
@@ -564,12 +566,7 @@ public class NativeQueryImpl<R>
 		getSession().prepareForQueryExecution( false );
 		prepareForExecution();
 
-		return resolveSelectQueryPlan().performScroll(
-				getSession(),
-				getQueryOptions(),
-				parameterBindings,
-				scrollMode
-		);
+		return resolveSelectQueryPlan().performScroll( scrollMode, this );
 	}
 
 	protected int doExecuteUpdate() {

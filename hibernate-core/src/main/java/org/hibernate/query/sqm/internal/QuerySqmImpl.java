@@ -18,6 +18,7 @@ import javax.persistence.PersistenceException;
 import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
@@ -115,6 +116,10 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> implements HandlerExecutio
 		return new ParameterMetadataImpl( namedQueryParameters, positionalQueryParameters );
 	}
 
+	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return getSession().getFactory();
+	}
 
 	private boolean isSelect() {
 		return sqmStatement instanceof SqmSelectStatement;
@@ -244,11 +249,7 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> implements HandlerExecutio
 		SqmUtil.verifyIsSelectStatement( getSqmStatement() );
 		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 
-		return resolveSelectQueryPlan().performList(
-				getSession(),
-				getQueryOptions(),
-				getQueryParameterBindings()
-		);
+		return resolveSelectQueryPlan().performList( this );
 	}
 
 	private boolean requiresTxn(LockMode lockMode) {
@@ -327,12 +328,7 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> implements HandlerExecutio
 		SqmUtil.verifyIsSelectStatement( getSqmStatement() );
 		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 
-		return resolveSelectQueryPlan().performScroll(
-				getSession(),
-				getQueryOptions(),
-				getQueryParameterBindings(),
-				scrollMode
-		);
+		return resolveSelectQueryPlan().performScroll( scrollMode, this );
 	}
 
 	@Override

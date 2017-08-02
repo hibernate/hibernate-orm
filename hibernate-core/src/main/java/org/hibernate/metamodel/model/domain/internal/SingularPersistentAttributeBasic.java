@@ -18,14 +18,18 @@ import org.hibernate.metamodel.model.domain.spi.NavigableBasicValued;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.tree.internal.select.QueryResultScalarImpl;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
+import org.hibernate.sql.exec.results.internal.QueryResultScalarImpl;
+import org.hibernate.sql.exec.results.spi.QueryResult;
+import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.spi.ValueBinder;
+import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -76,11 +80,10 @@ public class SingularPersistentAttributeBasic<O,J>
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new QueryResultScalarImpl(
-				selectedExpression,
+				resultVariable,
 				sqlSelectionResolver.resolveSqlSelection(
 						creationContext.currentColumnReferenceSource().resolveColumnReference( boundColumn )
 				),
-				resultVariable,
 				getType()
 	  	);
 	}
@@ -118,5 +121,20 @@ public class SingularPersistentAttributeBasic<O,J>
 	@Override
 	public BasicType<J> getBasicType() {
 		return basicType;
+	}
+
+	@Override
+	public ValueBinder getValueBinder() {
+		return basicType.getValueBinder();
+	}
+
+	@Override
+	public ValueExtractor getValueExtractor() {
+		return basicType.getValueExtractor();
+	}
+
+	@Override
+	public SqlSelectionGroup resolveSqlSelectionGroup(QueryResultCreationContext resolutionContext) {
+		throw new NotYetImplementedException(  );
 	}
 }

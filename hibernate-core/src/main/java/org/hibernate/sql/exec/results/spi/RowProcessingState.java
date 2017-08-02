@@ -6,9 +6,6 @@
  */
 package org.hibernate.sql.exec.results.spi;
 
-import org.hibernate.sql.ast.tree.spi.select.FetchEntityAttribute;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-
 /**
  * State pertaining to the processing of a single row of a JdbcValuesSource
  *

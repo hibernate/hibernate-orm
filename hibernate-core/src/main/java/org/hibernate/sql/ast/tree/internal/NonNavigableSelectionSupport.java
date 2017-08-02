@@ -6,9 +6,9 @@
  */
 package org.hibernate.sql.ast.tree.internal;
 
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.QueryResultCreationContext;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectionResolver;
+import org.hibernate.sql.exec.results.spi.QueryResult;
+import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 
@@ -36,8 +36,6 @@ public abstract class NonNavigableSelectionSupport implements Selection {
 		return resultVariable;
 	}
 
-	protected abstract QueryResultGenerator getQueryResultGenerator();
-
 	@Override
 	public QueryResult createQueryResult(
 			SqlSelectionResolver sqlSelectionResolver,
@@ -46,9 +44,13 @@ public abstract class NonNavigableSelectionSupport implements Selection {
 	}
 
 	/**
-	 * Only used as part of org.hibernate.sql.ast.tree.internal.NonNavigableSelectionSupport
-	 *
-	 * @author Steve Ebersole
+	 * Provides access to the QueryResult delayed generation strategy.
+	 * This method is called every time {@link #createQueryResult} is called.
+	 */
+	protected abstract QueryResultGenerator getQueryResultGenerator();
+
+	/**
+	 * Allows delayed generation of the QueryResult via {@link #getQueryResultGenerator}
 	 */
 	public interface QueryResultGenerator {
 		QueryResult generateQueryResult(

@@ -24,7 +24,7 @@ import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
+import org.hibernate.sql.exec.results.spi.SqlSelectable;
 
 /**
  * @author Steve Ebersole

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.query.sql.spi.QueryResultBuilder;
 import org.hibernate.query.sql.spi.ReturnableResultNodeImplementor;
 
 /**
@@ -27,7 +28,7 @@ import org.hibernate.query.sql.spi.ReturnableResultNodeImplementor;
  */
 public class ResultSetMappingDefinition {
 	private final String name;
-	private final List<ReturnableResultNodeImplementor> queryReturns = new ArrayList<>();
+	private final List<QueryResultBuilder> queryReturns = new ArrayList<>();
 
 	/**
 	 * Constructs a ResultSetMappingDefinition with name
@@ -45,11 +46,11 @@ public class ResultSetMappingDefinition {
 	 *
 	 * @param queryReturn The return
 	 */
-	public void addQueryReturn(ReturnableResultNodeImplementor queryReturn) {
+	public void addQueryReturn(QueryResultBuilder queryReturn) {
 		queryReturns.add( queryReturn );
 	}
 
-	public List<ReturnableResultNodeImplementor> getQueryReturns() {
+	public List<QueryResultBuilder> getQueryReturns() {
 		return Collections.unmodifiableList( queryReturns );
 	}
 }

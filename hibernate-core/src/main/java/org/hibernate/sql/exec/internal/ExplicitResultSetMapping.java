@@ -8,12 +8,10 @@ package org.hibernate.sql.exec.internal;
 
 import java.util.List;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.ast.tree.spi.select.QueryResult;
-import org.hibernate.sql.ast.tree.spi.select.ResolvedResultSetMapping;
-import org.hibernate.sql.ast.tree.spi.select.ResultSetAccess;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-import org.hibernate.sql.exec.spi.ResultSetMapping;
+import org.hibernate.sql.exec.results.spi.QueryResult;
+import org.hibernate.sql.exec.results.spi.ResolvedResultSetMapping;
+import org.hibernate.sql.exec.results.spi.SqlSelection;
+import org.hibernate.sql.exec.results.spi.ResultSetMapping;
 
 /**
  * @author Steve Ebersole
@@ -37,8 +35,8 @@ public class ExplicitResultSetMapping implements ResultSetMapping {
 
 	@Override
 	public ResolvedResultSetMapping resolve(
-			ResultSetAccess jdbcResultsAccess,
-			SharedSessionContractImplementor persistenceContext) {
+			JdbcValuesMetadata jdbcResultsMetadata,
+			ResolutionContext resolutionContext) {
 		return resolvedMapping;
 	}
 }

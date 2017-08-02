@@ -10,7 +10,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.ast.tree.spi.select.ResultSetAccess;
+import org.hibernate.sql.exec.results.spi.ResultSetAccess;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -50,9 +50,9 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 			return getMetaData().getColumnCount();
 		}
 		catch (SQLException e) {
-			throw persistenceContext.getJdbcServices().getSqlExceptionHelper().convert(
+			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper().convert(
 					e,
-					"Error calling ResultSetMetaData#getColumnCount"
+					"Unable to access ResultSet column count"
 			);
 		}
 	}
@@ -63,9 +63,9 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 			return getResultSet().findColumn( columnName );
 		}
 		catch (SQLException e) {
-			throw persistenceContext.getJdbcServices().getSqlExceptionHelper().convert(
+			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper().convert(
 					e,
-					"Unable to resolve column position for `" + columnName + "` using ResultSet#findColumn"
+					"Unable to find column position by name"
 			);
 		}
 	}
@@ -73,16 +73,16 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 	@Override
 	public String resolveColumnName(int position) {
 		try {
-			return persistenceContext.getJdbcServices()
-					.getJdbcEnvironment()
+			return getFactory().getJdbcServices().
+					getJdbcEnvironment()
 					.getDialect()
 					.getColumnAliasExtractor()
 					.extractColumnAlias( getMetaData(), position );
 		}
 		catch (SQLException e) {
-			throw persistenceContext.getJdbcServices().getSqlExceptionHelper().convert(
+			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper().convert(
 					e,
-					"Unable to resolve column name/label for ResultSet position " + position
+					"Unable to find column name by position"
 			);
 		}
 	}
@@ -90,13 +90,12 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 	@Override
 	public SqlTypeDescriptor resolveSqlTypeDescriptor(int position) {
 		try {
-			return persistenceContext.getFactory()
-					.getTypeConfiguration()
+			return getFactory().getTypeConfiguration()
 					.getSqlTypeDescriptorRegistry()
 					.getDescriptor( getMetaData().getColumnType( position ) );
 		}
 		catch (SQLException e) {
-			throw persistenceContext.getJdbcServices().getSqlExceptionHelper().convert(
+			throw getFactory().getJdbcServices().getSqlExceptionHelper().convert(
 					e,
 					"Unable to determine JDBC type code for ResultSet position " + position
 			);

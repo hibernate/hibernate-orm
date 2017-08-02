@@ -9,8 +9,8 @@ package org.hibernate.sql.exec.results.internal;
 import java.sql.SQLException;
 
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.tree.spi.select.FetchEntityAttribute;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
+import org.hibernate.sql.exec.results.spi.FetchEntityAttribute;
+import org.hibernate.sql.exec.results.spi.SqlSelection;
 import org.hibernate.sql.exec.results.internal.values.JdbcValuesSource;
 import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.exec.results.spi.RowProcessingState;

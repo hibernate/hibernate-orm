@@ -28,12 +28,14 @@ public interface NavigableVisitationStrategy {
 	/**
 	 * Notification we are preparing to start visitation.
 	 */
-	void prepareForVisitation();
+	default void prepareForVisitation() {
+	}
 
 	/**
 	 * Notification we are finished visitation.
 	 */
-	void visitationComplete();
+	default void visitationComplete() {
+	}
 
 	/**
 	 * Visit an entity

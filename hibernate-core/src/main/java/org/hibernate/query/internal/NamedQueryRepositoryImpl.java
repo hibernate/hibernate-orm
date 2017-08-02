@@ -191,7 +191,7 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 				else {
 					spec =  new NativeSQLQuerySpecification(
 							namedSQLQueryDefinition.getQueryString(),
-							namedSQLQueryDefinition.getQueryReturns(),
+							namedSQLQueryDefinition.getQueryResultBuilders(),
 							namedSQLQueryDefinition.getQuerySpaces()
 					);
 				}

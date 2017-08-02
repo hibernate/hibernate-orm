@@ -7,12 +7,9 @@
 package org.hibernate.sql.ordering.antlr;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
@@ -20,10 +17,9 @@ import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
-import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.exec.results.spi.SqlSelectable;
+import org.hibernate.sql.exec.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole
@@ -62,10 +58,10 @@ public class OrderByFragmentConverter extends BaseSqmToSqlAstConverter implement
 		return collectedSortSpecs;
 	}
 
-	@Override
-	public SqlSelectionGroup resolveSqlSelectionGroup(Navigable navigable) {
-		return super.resolveSqlSelectionGroup( navigable );
-	}
+//	@Override
+//	public SqlSelectionGroup resolveSqlSelectionGroup(Navigable navigable) {
+//		return super.resolveSqlSelectionGroup( navigable );
+//	}
 
 	@Override
 	public SqlSelection resolveSqlSelection(SqlSelectable sqlSelectable) {

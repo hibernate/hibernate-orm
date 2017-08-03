@@ -1109,4 +1109,15 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 		return this;
 	}
 
+	/**
+	 * JPA 2.2 defines the {@code getResultStream} method so to get a {@link Stream} from the JDBC {@link java.sql.ResultSet}.
+	 *
+	 * Hibernate 5.2 already defines the {@link Query#stream()} method, so {@code getResultStream} can delegate to it.
+	 *
+	 * @return The results Stream
+	 * @since 5.2.11
+	 */
+	default Stream<R> getResultStream() {
+		return stream();
+	}
 }

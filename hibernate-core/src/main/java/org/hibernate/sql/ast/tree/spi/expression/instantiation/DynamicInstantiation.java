@@ -22,16 +22,16 @@ import org.hibernate.sql.ast.tree.internal.NonNavigableSelectionSupport;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.sql.exec.results.internal.QueryResultDynamicInstantiationImpl;
-import org.hibernate.sql.exec.results.internal.instantiation.ArgumentReader;
-import org.hibernate.sql.exec.results.internal.instantiation.DynamicInstantiationListAssemblerImpl;
-import org.hibernate.sql.exec.results.internal.instantiation.DynamicInstantiationMapAssemblerImpl;
-import org.hibernate.sql.exec.results.internal.instantiation.DynamicInstantiationConstructorAssemblerImpl;
-import org.hibernate.sql.exec.results.internal.instantiation.DynamicInstantiationInjectionAssemblerImpl;
-import org.hibernate.sql.exec.results.spi.QueryResult;
-import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
-import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.results.internal.DynamicInstantiationQueryResultImpl;
+import org.hibernate.sql.results.internal.instantiation.ArgumentReader;
+import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationListAssemblerImpl;
+import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationMapAssemblerImpl;
+import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationConstructorAssemblerImpl;
+import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationInjectionAssemblerImpl;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultAssembler;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelectionResolver;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -217,7 +217,7 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 					creationContext
 			);
 
-			return new QueryResultDynamicInstantiationImpl( getDynamicInstantiation(), selection.getResultVariable(), assembler );
+			return new DynamicInstantiationQueryResultImpl( getDynamicInstantiation(), selection.getResultVariable(), assembler );
 		}
 	}
 

@@ -24,13 +24,13 @@ import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
-import org.hibernate.sql.exec.results.internal.FetchCompositeAttributeImpl;
-import org.hibernate.sql.exec.results.internal.QueryResultCompositeImpl;
-import org.hibernate.sql.exec.results.spi.Fetch;
-import org.hibernate.sql.exec.results.spi.FetchParent;
-import org.hibernate.sql.exec.results.spi.QueryResult;
-import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.results.internal.CompositeFetchImpl;
+import org.hibernate.sql.results.internal.CompositeQueryResultImpl;
+import org.hibernate.sql.results.spi.Fetch;
+import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
@@ -151,7 +151,7 @@ public class SingularPersistentAttributeEmbedded<O,J>
 			String resultVariable,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return new QueryResultCompositeImpl( resultVariable, embeddedDescriptor );
+		return new CompositeQueryResultImpl( resultVariable, embeddedDescriptor );
 	}
 
 	@Override
@@ -161,7 +161,7 @@ public class SingularPersistentAttributeEmbedded<O,J>
 			FetchStrategy fetchStrategy,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
-		return new FetchCompositeAttributeImpl(
+		return new CompositeFetchImpl(
 				fetchParent,
 				(NavigableContainerReference) selectedExpression,
 				fetchStrategy

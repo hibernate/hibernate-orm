@@ -11,8 +11,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
-import org.hibernate.sql.exec.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
+import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
+import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;

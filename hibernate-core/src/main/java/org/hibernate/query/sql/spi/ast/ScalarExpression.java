@@ -13,8 +13,8 @@ import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.sql.exec.results.spi.SqlSelectable;
-import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
+import org.hibernate.sql.results.spi.SqlSelectable;
+import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.type.spi.BasicType;
 
 /**

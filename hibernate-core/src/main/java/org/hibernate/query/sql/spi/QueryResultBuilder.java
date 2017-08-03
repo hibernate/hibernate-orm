@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sql.spi;
 
-import org.hibernate.sql.exec.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResult;
 
 /**
  * A builder for {@link QueryResult}

@@ -15,10 +15,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
@@ -41,6 +43,8 @@ public class FromClauseIndex implements TableGroupResolver {
 	//			need a more generic cross-referencing most likely based on Navigable - especially for
 	// 			fetches (see sqmFetchesByParentUid)
 
+
+	// todo (6.0) : we should really leverage NavigablePath to key stuff here
 
 	private static final Logger log = Logger.getLogger( FromClauseIndex.class );
 
@@ -149,4 +153,10 @@ public class FromClauseIndex implements TableGroupResolver {
 		}
 		return true;
 	}
+
+
+	public NavigableReference findResolvedNavigableReference(NavigablePath navigablePath) {
+		return null;
+	}
+
 }

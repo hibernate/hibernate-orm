@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sql.spi;
 
-import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * @author Steve Ebersole

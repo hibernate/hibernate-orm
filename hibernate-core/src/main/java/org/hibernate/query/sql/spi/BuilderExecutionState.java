@@ -9,7 +9,7 @@ package org.hibernate.query.sql.spi;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.sql.exec.results.spi.FetchParent;
+import org.hibernate.sql.results.spi.FetchParent;
 
 /**
  * @author Steve Ebersole

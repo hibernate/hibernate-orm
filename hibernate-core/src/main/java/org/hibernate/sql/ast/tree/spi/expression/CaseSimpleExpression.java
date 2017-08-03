@@ -12,12 +12,12 @@ import java.util.List;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.exec.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
+import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
+import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.sql.exec.results.spi.SqlSelectable;
+import org.hibernate.sql.results.spi.SqlSelectable;
 import org.hibernate.type.spi.BasicType;
 
 /**

@@ -30,7 +30,7 @@ import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
-import org.hibernate.sql.exec.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.exec.spi.JdbcInsertSelect;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;

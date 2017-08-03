@@ -14,13 +14,14 @@ import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.exec.results.internal.FetchCollectionAttributeImpl;
-import org.hibernate.sql.exec.results.internal.QueryResultCollectionImpl;
-import org.hibernate.sql.exec.results.spi.Fetch;
-import org.hibernate.sql.exec.results.spi.FetchParent;
-import org.hibernate.sql.exec.results.spi.QueryResult;
-import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.results.internal.PluralAttributeFetchImpl;
+import org.hibernate.sql.results.internal.PluralAttributeQueryResultImpl;
+import org.hibernate.sql.results.spi.Fetch;
+import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.results.spi.SqlSelectionResolver;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -148,7 +149,7 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 			String resultVariable,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return new QueryResultCollectionImpl(
+		return new PluralAttributeQueryResultImpl(
 				this,
 				resultVariable,
 				sqlSelectionResolver,
@@ -164,28 +165,14 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
-			NavigableReference selectedExpression,
-			FetchStrategy fetchStrategy,
-			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
-			QueryResultCreationContext creationContext) {
-		return null;
-	}
-
-	@Override
-	public Fetch generateFetch(
-			FetchParent fetchParent,
-			NavigableReference selectedExpression,
 			FetchStrategy fetchStrategy,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
-		assert selectedExpression.getNavigable() == this;
-		return new FetchCollectionAttributeImpl(
+		return new PluralAttributeFetchImpl(
 				fetchParent,
 				this,
 				fetchStrategy,
 				resultVariable,
-				sqlSelectionResolver,
 				creationContext
 		);
 	}
@@ -206,4 +193,8 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 	}
 
 
+	@Override
+	public SqlSelectionGroup resolveSqlSelectionGroup(QueryResultCreationContext resolutionContext) {
+		throw new NotYetImplementedException(  );
+	}
 }

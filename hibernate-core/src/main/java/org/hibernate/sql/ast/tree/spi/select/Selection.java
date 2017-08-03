@@ -9,9 +9,9 @@ package org.hibernate.sql.ast.tree.spi.select;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
-import org.hibernate.sql.exec.results.spi.QueryResult;
-import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelectionResolver;
 
 /**
  * @author Steve Ebersole

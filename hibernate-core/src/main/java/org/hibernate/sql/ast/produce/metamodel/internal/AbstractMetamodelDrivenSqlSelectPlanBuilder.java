@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.produce.metamodel.internal;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.LockOptions;
@@ -31,7 +32,6 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKey;
 import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKeyProducer;
@@ -50,6 +50,7 @@ import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
@@ -57,15 +58,14 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
-import org.hibernate.sql.exec.results.spi.Fetch;
-import org.hibernate.sql.exec.results.spi.FetchParent;
-import org.hibernate.sql.exec.results.spi.QueryResult;
-import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.exec.results.spi.SqlSelectable;
-import org.hibernate.sql.exec.results.spi.SqlSelection;
-import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
-import org.hibernate.sql.exec.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.Fetch;
+import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelectable;
+import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.sql.results.spi.SqlSelectionResolver;
 
 import org.jboss.logging.Logger;
 
@@ -103,6 +103,9 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	private final Stack<FetchParent> fetchParentStack = new Stack<>();
 	private final Stack<NavigableContainerReferenceInfoImpl> navigableContainerInfoStack = new Stack<>();
 	private final Stack<TableGroup> tableGroupStack = new Stack<>();
+
+	private final Map<FetchParent,NavigableContainerReference> fetchParentNavigableContainerReferenceMap = new HashMap<>();
+	private final Map<NavigableContainerReference,FetchParent>  navigableContainerReferenceFetchParentHashMap= new HashMap<>();
 
 	private QuerySpec querySpec;
 	private TableSpace tableSpace;
@@ -285,7 +288,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 
 		try {
 			final NavigableReference navigableReference = new SingularAttributeReference(
-					fetchParentStack.getCurrent().getNavigableContainerReference(),
+					fetchParentNavigableContainerReferenceMap.get( fetchParentStack.getCurrent() ),
 					attribute,
 					currentNavigablePath()
 			);
@@ -306,11 +309,11 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 			try {
 				final Fetch fetch = fetchable.generateFetch(
 						fetchParentStack.getCurrent(),
-						navigableReference,
+						fetchable.getMappedFetchStrategy(),
+						// todo (6.0) : auto-generate SQL alias base?
 						null,
-						null,
-						this,
-						this
+						// todo (6.0) : this needs to be a QueryResultCreationContext
+						null
 				);
 				fetchParentStack.getCurrent().addFetch( fetch );
 				fetchParentStack.push( (FetchParent) fetch );
@@ -706,7 +709,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		log.tracef(
 //				"%s Starting root collection : %s",
 //				StringHelper.repeat( ">>", fetchSourceStack.size() ),
-//				collectionDefinition.getCollectionMetadata().getRole()
+//				collectionDefinition.getCollectionDescriptor().getRole()
 //		);
 //
 //		// if we get here, it is a root
@@ -720,8 +723,8 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //
 //		associationKeyRegistered(
 //				new AssociationKey(
-//						( (Joinable) collectionDefinition.getCollectionMetadata() ).getTableName(),
-//						( (Joinable) collectionDefinition.getCollectionMetadata() ).getKeyColumnNames()
+//						( (Joinable) collectionDefinition.getCollectionDescriptor() ).getTableName(),
+//						( (Joinable) collectionDefinition.getCollectionDescriptor() ).getKeyColumnNames()
 //				)
 //		);
 //	}
@@ -744,13 +747,13 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		log.tracef(
 //				"%s Finished root collection : %s",
 //				StringHelper.repeat( "<<", fetchSourceStack.size() ),
-//				collectionDefinition.getCollectionMetadata().getRole()
+//				collectionDefinition.getCollectionDescriptor().getRole()
 //		);
 //	}
 //
 //	private void checkedPoppedCollection(CollectionReference poppedCollectionReference, CollectionDefinition collectionDefinition) {
 //		// make sure what we just poppedCollectionReference represents collectionDefinition.
-//		if ( ! poppedCollectionReference.getCollectionMetadata().equals( collectionDefinition.getCollectionMetadata() ) ) {
+//		if ( ! poppedCollectionReference.getCollectionDescriptor().equals( collectionDefinition.getCollectionDescriptor() ) ) {
 //			throw new WalkingException( "Mismatched CollectionReference from stack on pop" );
 //		}
 //	}
@@ -761,7 +764,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		log.tracef(
 //				"%s Starting collection index graph : %s",
 //				StringHelper.repeat( ">>", fetchSourceStack.size() ),
-//				indexDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
+//				indexDefinition.getCollectionDefinition().getCollectionDescriptor().getRole()
 //		);
 //
 //		final CollectionReference collectionReference = currentCollection();
@@ -771,7 +774,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //			if ( indexGraph == null ) {
 //				throw new WalkingException(
 //						"CollectionReference did not return an expected index graph : " +
-//								indexDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
+//								indexDefinition.getCollectionDefinition().getCollectionDescriptor().getRole()
 //				);
 //			}
 //			if ( !indexType.getClassification().equals( Type.Classification.ANY ) ) {
@@ -782,7 +785,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //			if ( indexGraph != null ) {
 //				throw new WalkingException(
 //						"CollectionReference returned an unexpected index graph : " +
-//								indexDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
+//								indexDefinition.getCollectionDefinition().getCollectionDescriptor().getRole()
 //				);
 //			}
 //		}
@@ -801,7 +804,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //			if ( !CollectionFetchableIndex.class.isInstance( fetchSource ) ) {
 //				throw new WalkingException(
 //						"CollectionReference did not return an expected index graph : " +
-//								indexDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
+//								indexDefinition.getCollectionDefinition().getCollectionDescriptor().getRole()
 //				);
 //			}
 //		}
@@ -809,7 +812,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		log.tracef(
 //				"%s Finished collection index graph : %s",
 //				StringHelper.repeat( "<<", fetchSourceStack.size() ),
-//				indexDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
+//				indexDefinition.getCollectionDefinition().getCollectionDescriptor().getRole()
 //		);
 //	}
 //
@@ -819,7 +822,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		log.tracef(
 //				"%s Starting collection element graph : %s",
 //				StringHelper.repeat( ">>", fetchSourceStack.size() ),
-//				elementDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
+//				elementDefinition.getCollectionDefinition().getCollectionDescriptor().getRole()
 //		);
 //
 //		final CollectionReference collectionReference = currentCollection();
@@ -829,7 +832,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //			if ( elementGraph == null ) {
 //				throw new IllegalStateException(
 //						"CollectionReference did not return an expected element graph : " +
-//								elementDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
+//								elementDefinition.getCollectionDefinition().getCollectionDescriptor().getRole()
 //				);
 //			}
 //			if ( !elementType.getClassification().equals( Type.Classification.ANY ) ) {
@@ -840,7 +843,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //			if ( elementGraph != null ) {
 //				throw new IllegalStateException(
 //						"CollectionReference returned an unexpected element graph : " +
-//								elementDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
+//								elementDefinition.getCollectionDefinition().getCollectionDescriptor().getRole()
 //				);
 //			}
 //		}
@@ -866,7 +869,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		log.tracef(
 //				"%s Finished collection element graph : %s",
 //				StringHelper.repeat( "<<", fetchSourceStack.size() ),
-//				elementDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
+//				elementDefinition.getCollectionDefinition().getCollectionDescriptor().getRole()
 //		);
 //	}
 //

@@ -11,7 +11,7 @@ import java.util.List;
 import org.hibernate.ScrollMode;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
-import org.hibernate.sql.exec.results.spi.ResultSetMapping;
+import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -29,14 +29,14 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 
 	private final List<JdbcParameterBinder> parameterBinders;
 
-	private final ResultSetMapping resultSetMapping;
+	private final ResultSetMappingDescriptor resultSetMapping;
 	private final RowTransformer<R> rowTransformer;
 
 	public NativeSelectQueryPlanImpl(
 			String sql,
 			boolean callable,
 			List<JdbcParameterBinder> parameterBinders,
-			ResultSetMapping resultSetMapping,
+			ResultSetMappingDescriptor resultSetMapping,
 			RowTransformer<R> rowTransformer) {
 		this.sql = sql;
 		this.callable = callable;

@@ -17,7 +17,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor.CollectionClassification;
+import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;

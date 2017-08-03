@@ -18,8 +18,8 @@ import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
-import org.hibernate.sql.exec.results.spi.SqlSelectable;
-import org.hibernate.sql.exec.results.spi.SqlSelection;
+import org.hibernate.sql.results.spi.SqlSelectable;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole

@@ -9,7 +9,7 @@ package org.hibernate.sql.exec.spi;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-import org.hibernate.sql.exec.results.spi.ResultSetMapping;
+import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 
 /**
  * Contextual information needed while executing some JDBC operation,
@@ -17,7 +17,7 @@ import org.hibernate.sql.exec.results.spi.ResultSetMapping;
  *
  * @author Steve Ebersole
  */
-public interface ExecutionContext extends ResultSetMapping.ResolutionContext {
+public interface ExecutionContext extends ResultSetMappingDescriptor.ResolutionContext {
 	SharedSessionContractImplementor getSession();
 
 	QueryOptions getQueryOptions();

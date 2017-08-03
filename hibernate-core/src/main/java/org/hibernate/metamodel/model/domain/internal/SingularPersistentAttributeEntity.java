@@ -30,13 +30,13 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
-import org.hibernate.sql.exec.results.internal.FetchEntityAttributeImpl;
-import org.hibernate.sql.exec.results.spi.Fetch;
-import org.hibernate.sql.exec.results.spi.FetchParent;
-import org.hibernate.sql.exec.results.spi.QueryResult;
-import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.results.internal.EntityFetchImpl;
+import org.hibernate.sql.results.spi.Fetch;
+import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.results.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
@@ -230,7 +230,7 @@ public class SingularPersistentAttributeEntity<O,J>
 			QueryResultCreationContext creationContext) {
 		assert selectedExpression.getNavigable().equals( this.getContainer() );
 
-		return new FetchEntityAttributeImpl(
+		return new EntityFetchImpl(
 				fetchParent,
 				(EntityReference) selectedExpression,
 				selectedExpression.getNavigablePath(),

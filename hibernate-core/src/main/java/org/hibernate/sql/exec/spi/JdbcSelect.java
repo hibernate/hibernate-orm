@@ -7,7 +7,7 @@
 package org.hibernate.sql.exec.spi;
 
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
-import org.hibernate.sql.exec.results.spi.ResultSetMapping;
+import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 
 /**
  * Represents the {@link SqlSelectAstToJdbcSelectConverter}'s interpretation of a select query
@@ -19,5 +19,5 @@ public interface JdbcSelect extends JdbcOperation {
 	 * Retrieve the descriptor for performing the mapping
 	 * of the JDBC ResultSet back to object query results.
 	 */
-	ResultSetMapping getResultSetMapping();
+	ResultSetMappingDescriptor getResultSetMapping();
 }

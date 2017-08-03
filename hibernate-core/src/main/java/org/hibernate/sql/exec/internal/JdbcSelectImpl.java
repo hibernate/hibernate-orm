@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.results.spi.ResultSetMapping;
+import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -18,12 +18,12 @@ import org.hibernate.sql.exec.results.spi.ResultSetMapping;
 public class JdbcSelectImpl implements JdbcSelect {
 	private final String sql;
 	private final List<JdbcParameterBinder> parameterBinders;
-	private final ResultSetMapping resultSetMapping;
+	private final ResultSetMappingDescriptor resultSetMapping;
 
 	public JdbcSelectImpl(
 			String sql,
 			List<JdbcParameterBinder> parameterBinders,
-			ResultSetMapping resultSetMapping) {
+			ResultSetMappingDescriptor resultSetMapping) {
 		this.sql = sql;
 		this.parameterBinders = parameterBinders;
 		this.resultSetMapping = resultSetMapping;
@@ -40,7 +40,7 @@ public class JdbcSelectImpl implements JdbcSelect {
 	}
 
 	@Override
-	public ResultSetMapping getResultSetMapping() {
+	public ResultSetMappingDescriptor getResultSetMapping() {
 		return resultSetMapping;
 	}
 }

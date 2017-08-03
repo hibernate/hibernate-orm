@@ -61,12 +61,12 @@ import org.hibernate.sql.exec.internal.JdbcCallParameterBinderImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterRegistrationImpl;
 import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
-import org.hibernate.sql.exec.results.internal.RowReaderNoResultsExpectedImpl;
-import org.hibernate.sql.exec.results.internal.RowReaderStandardImpl;
-import org.hibernate.sql.exec.results.spi.Initializer;
-import org.hibernate.sql.exec.results.spi.QueryResult;
-import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
-import org.hibernate.sql.exec.results.spi.RowReader;
+import org.hibernate.sql.results.internal.RowReaderNoResultsExpectedImpl;
+import org.hibernate.sql.results.internal.RowReaderStandardImpl;
+import org.hibernate.sql.results.spi.Initializer;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultAssembler;
+import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.Type;
 
@@ -342,7 +342,7 @@ public class ProcedureCallImpl<R>
 		//			2) Executing the PreparedStatement and giving access to the outputs - PreparedStatementExecutor
 		//				- ? PreparedStatementResult as an abstraction at the Jdbc level?
 		//			3) For ResultSet outputs, extracting the "jdbc values" - for integration into
-		// 				the org.hibernate.sql.exec.results.process stuff.  This allows, for example, easily
+		// 				the org.hibernate.sql.results.process stuff.  This allows, for example, easily
 		// 				applying query result caching over a ProcedureCall for its ResultSet outputs (if we
 		//				decide that is a worthwhile feature.
 

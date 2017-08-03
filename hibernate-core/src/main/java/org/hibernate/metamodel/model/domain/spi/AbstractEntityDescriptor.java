@@ -64,7 +64,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
-import org.hibernate.sql.exec.results.internal.QueryResultEntityImpl;
+import org.hibernate.sql.results.internal.EntityQueryResultImpl;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroup;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroupEmptyImpl;
@@ -78,12 +78,12 @@ import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
-import org.hibernate.sql.exec.results.spi.QueryResult;
-import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
-import org.hibernate.sql.exec.results.internal.SqlSelectionGroupImpl;
-import org.hibernate.sql.exec.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.exec.results.spi.SqlSelectionGroupEmpty;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
+import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.results.spi.SqlSelectionGroupEmpty;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 
@@ -589,7 +589,7 @@ public abstract class AbstractEntityDescriptor<T>
 			String resultVariable,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return new QueryResultEntityImpl(
+		return new EntityQueryResultImpl(
 				(EntityReference) selectedExpression,
 				resultVariable,
 				buildSqlSelectionGroupMap( creationContext, selectedExpression ),

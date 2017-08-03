@@ -10,33 +10,34 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.engine.FetchStyle;
-import org.hibernate.engine.FetchTiming;
 import org.hibernate.graph.spi.AttributeNodeContainer;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
-import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
-import org.hibernate.sql.exec.results.spi.Fetch;
-import org.hibernate.sql.exec.results.spi.FetchParent;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
+import org.hibernate.sql.results.spi.Fetch;
+import org.hibernate.sql.results.spi.FetchParent;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.engine.FetchStrategy.IMMEDIATE_JOIN;
 
 /**
  * Handles apply fetches to the "fetch graph" for an SQM-backed query.
@@ -57,7 +58,7 @@ public class FetchGraphBuilder {
 
 	private final int fetchDepthLimit;
 
-	private final FetchStrategy fetchStrategy = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
+	private final FetchStrategy fetchStrategy = IMMEDIATE_JOIN;
 
 	public FetchGraphBuilder(
 			QuerySpec querySpec,
@@ -73,6 +74,8 @@ public class FetchGraphBuilder {
 
 	}
 
+	// todo (6.0) : need proper circularity checks here
+
 	public void process(FetchParent fetchParent) {
 		processFetchParent( fetchParent, rootGraphAttributeContainer, 0 );
 	}
@@ -87,8 +90,13 @@ public class FetchGraphBuilder {
 
 		final HashSet<String> processedAttributeNames = new HashSet<>();
 
+		NavigableContainerReference parentContainerReference =
+				(NavigableContainerReference) builder.getFromClauseIndex().findResolvedNavigableReference( fetchParent.getNavigablePath() );
+
+
+		// todo (6.0) : need a better approach to tracking FetchParent
 		final String parentUid = builder.getFromClauseIndex().getTableGroupUidForNavigableReference(
-				fetchParent.getNavigableContainerReference()
+				parentContainerReference
 		);
 		final TableGroup parentTableGroup = builder.getFromClauseIndex().resolveTableGroup( parentUid );
 
@@ -111,10 +119,8 @@ public class FetchGraphBuilder {
 			assert fetchedNavigableReference.getNavigable() instanceof Fetchable;
 			final Fetch fetch = ( (Fetchable) fetchedNavigableReference.getNavigable() ).generateFetch(
 					fetchParent,
-					fetchedNavigableReference,
 					fetchStrategy,
 					fetchedJoin.getIdentificationVariable(),
-					builder,
 					builder
 			);
 			processFetch( fetchParent, fetch, attributeNode, depth );
@@ -125,12 +131,10 @@ public class FetchGraphBuilder {
 				continue;
 			}
 
-			final PersistentAttribute persistentAttribute = (PersistentAttribute) fetchParent.getNavigableContainerReference()
-					.getNavigable()
+			final PersistentAttribute persistentAttribute = (PersistentAttribute) fetchParent.getFetchContainer()
 					.findNavigable( attributeNode.getAttributeName() );
 
-			NavigableReference navigableReference = fetchParent.getNavigableContainerReference()
-					.findNavigableReference( persistentAttribute.getNavigableName() );
+			NavigableReference navigableReference = parentContainerReference.findNavigableReference( persistentAttribute.getNavigableName() );
 
 			if ( navigableReference == null ) {
 				// 1) Find the TableGroupJoinProducer and generate the TableGroupJoin
@@ -195,15 +199,13 @@ public class FetchGraphBuilder {
 				parentTableGroup.getTableSpace().addJoinedTableGroup( fetchTableGroupJoin );
 
 				navigableReference = fetchTableGroupJoin.getJoinedGroup().asExpression();
-				fetchParent.getNavigableContainerReference().addNavigableReference( navigableReference );
+				( (NavigableContainerReference) parentTableGroup.asExpression() ).addNavigableReference( navigableReference );
 			}
 
 			final Fetch fetch = ( (Fetchable) persistentAttribute ).generateFetch(
 					fetchParent,
-					navigableReference,
 					fetchStrategy,
 					null,
-					builder,
 					builder
 			);
 

@@ -65,7 +65,7 @@ import org.hibernate.sql.ast.tree.spi.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.sql.exec.results.spi.SqlSelection;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
 
 /**

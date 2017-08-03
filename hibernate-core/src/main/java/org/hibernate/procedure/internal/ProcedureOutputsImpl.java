@@ -31,16 +31,16 @@ import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.sql.internal.ResultSetMappingUndefinedImpl;
+import org.hibernate.query.sql.internal.ResultSetMappingDescriptorUndefined;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-import org.hibernate.sql.exec.results.spi.ResolvedResultSetMapping;
-import org.hibernate.sql.exec.results.spi.ResultSetMapping;
-import org.hibernate.sql.exec.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
-import org.hibernate.sql.exec.results.internal.RowProcessingStateStandardImpl;
-import org.hibernate.sql.exec.results.internal.values.DirectResultSetAccess;
-import org.hibernate.sql.exec.results.internal.values.JdbcValuesSourceResultSetImpl;
-import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.exec.results.spi.RowReader;
+import org.hibernate.sql.results.spi.ResultSetMapping;
+import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
+import org.hibernate.sql.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
+import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.internal.values.DirectResultSetAccess;
+import org.hibernate.sql.results.internal.values.JdbcValuesSourceResultSetImpl;
+import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcCall;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
@@ -59,7 +59,7 @@ import org.jboss.logging.Logger;
 public class ProcedureOutputsImpl
 		implements ProcedureOutputs,
 		ExecutionContext,
-		ResultSetMapping.ResolutionContext,
+		ResultSetMappingDescriptor.ResolutionContext,
 		ParameterBindingContext, Callback {
 	private static final Logger log = Logger.getLogger( ProcedureOutputsImpl.class );
 
@@ -314,7 +314,7 @@ public class ProcedureOutputsImpl
 	@SuppressWarnings("unchecked")
 	protected List extractResults(ResultSet resultSet) {
 		final DirectResultSetAccess resultSetAccess = new DirectResultSetAccess( persistenceContext, callableStatement, resultSet );
-		final ResolvedResultSetMapping resultSetMapping = resolveResultSetMapping( resultSetAccess );
+		final ResultSetMapping resultSetMapping = resolveResultSetMapping( resultSetAccess );
 		final JdbcValuesSourceResultSetImpl jdbcValuesSource = new JdbcValuesSourceResultSetImpl(
 				resultSetAccess,
 				queryOptions,
@@ -382,13 +382,13 @@ public class ProcedureOutputsImpl
 	}
 
 	private int currentResultSetMappingIndex = -1;
-	private ResultSetMapping currentResultSetMapping;
+	private ResultSetMappingDescriptor currentResultSetMapping;
 
-	private ResolvedResultSetMapping resolveResultSetMapping(DirectResultSetAccess resultSetAccess) {
+	private ResultSetMapping resolveResultSetMapping(DirectResultSetAccess resultSetAccess) {
 		currentResultSetMappingIndex++;
 		if ( jdbcCall.getResultSetMappings() == null || jdbcCall.getResultSetMappings().isEmpty() ) {
 			if ( currentResultSetMapping == null ) {
-				currentResultSetMapping = new ResultSetMappingUndefinedImpl();
+				currentResultSetMapping = new ResultSetMappingDescriptorUndefined();
 			}
 		}
 		else {

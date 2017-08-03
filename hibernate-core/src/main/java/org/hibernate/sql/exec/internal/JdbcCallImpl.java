@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.sql.exec.results.spi.ResultSetMapping;
+import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 import org.hibernate.sql.exec.spi.JdbcCall;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
@@ -34,7 +34,7 @@ public class JdbcCallImpl implements JdbcCall {
 	private final List<JdbcCallParameterExtractor> parameterExtractors;
 	private final List<JdbcCallRefCursorExtractor> refCursorExtractors;
 
-	private final List<ResultSetMapping> resultSetMappings;
+	private final List<ResultSetMappingDescriptor> resultSetMappings;
 
 	public JdbcCallImpl(Builder builder) {
 		this.callableName = builder.callableName;
@@ -90,7 +90,7 @@ public class JdbcCallImpl implements JdbcCall {
 	}
 
 	@Override
-	public List<ResultSetMapping> getResultSetMappings() {
+	public List<ResultSetMappingDescriptor> getResultSetMappings() {
 		return resultSetMappings == null ? Collections.emptyList() : Collections.unmodifiableList( resultSetMappings );
 	}
 
@@ -105,7 +105,7 @@ public class JdbcCallImpl implements JdbcCall {
 		private List<JdbcCallParameterExtractor> parameterExtractors;
 		private List<JdbcCallRefCursorExtractor> refCursorExtractors;
 
-		private List<ResultSetMapping> resultSetMappings;
+		private List<ResultSetMappingDescriptor> resultSetMappings;
 
 		public Builder(String callableName, ParameterStrategy parameterStrategy) {
 			this.callableName = callableName;
@@ -174,7 +174,7 @@ public class JdbcCallImpl implements JdbcCall {
 			refCursorExtractors.add( extractor );
 		}
 
-		public void addResultSetMapping(ResultSetMapping resultSetMapping) {
+		public void addResultSetMapping(ResultSetMappingDescriptor resultSetMapping) {
 			if ( resultSetMappings == null ) {
 				resultSetMappings = new ArrayList<>();
 			}

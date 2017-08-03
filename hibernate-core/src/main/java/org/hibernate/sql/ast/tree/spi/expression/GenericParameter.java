@@ -10,7 +10,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.ast.consume.spi.ParameterBindingResolutionContext;
 import org.hibernate.sql.ast.produce.sqm.spi.ParameterSpec;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
-import org.hibernate.sql.exec.results.spi.SqlSelectable;
+import org.hibernate.sql.results.spi.SqlSelectable;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
 /**

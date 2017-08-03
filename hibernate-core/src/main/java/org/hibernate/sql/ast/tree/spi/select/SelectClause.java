@@ -13,7 +13,7 @@ import java.util.List;
 
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
-import org.hibernate.sql.exec.results.spi.SqlSelection;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole

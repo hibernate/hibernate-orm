@@ -10,21 +10,21 @@ import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryInterpretations;
-import org.hibernate.sql.exec.results.spi.ResultSetMapping;
+import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class SelectInterpretationsKey implements QueryInterpretations.Key {
 	private final String sql;
-	private final ResultSetMapping resultSetMapping;
+	private final ResultSetMappingDescriptor resultSetMapping;
 
 	private final TupleTransformer tupleTransformer;
 	private final ResultListTransformer resultListTransformer;
 
 	public SelectInterpretationsKey(
 			String sql,
-			ResultSetMapping resultSetMapping,
+			ResultSetMappingDescriptor resultSetMapping,
 			TupleTransformer tupleTransformer,
 			ResultListTransformer resultListTransformer) {
 		this.sql = sql;

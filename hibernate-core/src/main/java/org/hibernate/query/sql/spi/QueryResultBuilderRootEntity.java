@@ -29,14 +29,15 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.exec.results.internal.AbstractFetchParent;
-import org.hibernate.sql.exec.results.internal.EntityReturnInitializerImpl;
-import org.hibernate.sql.exec.results.internal.QueryResultAssemblerEntity;
-import org.hibernate.sql.exec.results.spi.EntitySqlSelectionMappingBuildingVisitationStrategy;
-import org.hibernate.sql.exec.results.spi.InitializerCollector;
-import org.hibernate.sql.exec.results.spi.InitializerEntity;
-import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
-import org.hibernate.sql.exec.results.spi.QueryResultEntity;
+import org.hibernate.sql.results.internal.AbstractFetchParent;
+import org.hibernate.sql.results.internal.EntityRootInitializer;
+import org.hibernate.sql.results.internal.EntityQueryResultAssembler;
+import org.hibernate.sql.results.internal.EntitySqlSelectionMappingsBuilder;
+import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
+import org.hibernate.sql.results.spi.InitializerCollector;
+import org.hibernate.sql.results.spi.QueryResultAssembler;
+import org.hibernate.sql.results.spi.EntityQueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * Builds an entity-based QueryResult for a NativeQuery
@@ -113,8 +114,8 @@ public class QueryResultBuilderRootEntity
 	// NativeQueryReturnBuilder
 
 	@Override
-	public QueryResultEntity buildReturn(NodeResolutionContext resolutionContext) {
-		return new QueryResultEntityImpl(
+	public EntityQueryResult buildReturn(NodeResolutionContext resolutionContext) {
+		return new EntityQueryResultImpl(
 				resolutionContext.getSessionFactory().getTypeConfiguration().resolveEntityDescriptor( entityName ),
 				// todo (6.0) - is `tableAlias` the correct thing here?
 				//		this is supposed to be the "query result variable" associated with this QueryResult
@@ -127,14 +128,14 @@ public class QueryResultBuilderRootEntity
 		);
 	}
 
-	public static class QueryResultEntityImpl extends AbstractFetchParent implements QueryResultEntity {
+	public static class EntityQueryResultImpl extends AbstractFetchParent implements EntityQueryResult {
 		private final EntityDescriptor entityDescriptor;
 		private final String queryResultVariable;
 
-		private final EntityReturnInitializerImpl initializer;
-		private final QueryResultAssemblerEntity assembler;
+		private final EntityRootInitializer initializer;
+		private final EntityQueryResultAssembler assembler;
 
-		public QueryResultEntityImpl(
+		public EntityQueryResultImpl(
 				EntityDescriptor entityDescriptor,
 				String queryResultVariable,
 				List<String> explicitIdColumnAliases,
@@ -146,28 +147,23 @@ public class QueryResultBuilderRootEntity
 			this.entityDescriptor = entityDescriptor;
 			this.queryResultVariable = queryResultVariable;
 
-			final OverridableEntitySqlSelectionMappingBuilder strategy = new OverridableEntitySqlSelectionMappingBuilder(
+			this.initializer = new EntityRootInitializer(
 					entityDescriptor,
-					// row-id
-					null,
-					explicitIdColumnAliases,
-					explicitDiscriminatorColumnAlias,
-					// tenant-discriminator
-					null,
-					explicitAttributeMapping,
-					resolutionContext
-			);
-
-
-			getEntityDescriptor().visitNavigables( strategy );
-
-			this.initializer = new EntityReturnInitializerImpl(
-					entityDescriptor,
-					strategy.generateMappings(),
+					EntitySqlSelectionMappingsOverridableBuilder.buildSqlSelectionMappings(
+							entityDescriptor,
+							// row-id
+							null,
+							explicitIdColumnAliases,
+							explicitDiscriminatorColumnAlias,
+							// tenant-discriminator
+							null,
+							explicitAttributeMapping,
+							resolutionContext
+					),
 					false
 			);
 
-			this.assembler = new QueryResultAssemblerEntity(
+			this.assembler = new EntityQueryResultAssembler(
 					entityDescriptor.getJavaTypeDescriptor(),
 					initializer
 			);
@@ -198,24 +194,12 @@ public class QueryResultBuilderRootEntity
 			collector.addInitializer( initializer );
 			registerFetchInitializers( initializer, collector );
 		}
-
-		@Override
-		public InitializerEntity getInitializer() {
-			return initializer;
-		}
-
 	}
 
 	// todo (6.0 - need some form of SqlSelection, etc distinctions here to support duplicated columns - including fetches (potential duplicated unqualified column name which need to  be unique).
 
-	private static class OverridableEntitySqlSelectionMappingBuilder extends EntitySqlSelectionMappingBuildingVisitationStrategy {
-		private final String explicitRowIdColumnAlias;
-		private final List<String> explicitIdColumnAliases;
-		private final String explicitDiscriminatorColumnAlias;
-		private final String explicitTenantDiscriminatorColumnAlias;
-		private final Map<String, AttributeMapping> explicitAttributeMapping;
-
-		public OverridableEntitySqlSelectionMappingBuilder(
+	private static class EntitySqlSelectionMappingsOverridableBuilder extends EntitySqlSelectionMappingsBuilder {
+		static EntitySqlSelectionMappings buildSqlSelectionMappings(
 				EntityDescriptor entityDescriptor,
 				String explicitRowIdColumnAlias,
 				List<String> explicitIdColumnAliases,
@@ -223,7 +207,37 @@ public class QueryResultBuilderRootEntity
 				String explicitTenantDiscriminatorColumnAlias,
 				Map<String, AttributeMapping> explicitAttributeMapping,
 				NodeResolutionContext nodeResolutionContext) {
-			super( entityDescriptor, nodeResolutionContext );
+			EntitySqlSelectionMappingsBuilder strategy = new EntitySqlSelectionMappingsOverridableBuilder(
+					entityDescriptor,
+					explicitRowIdColumnAlias,
+					explicitIdColumnAliases,
+					explicitDiscriminatorColumnAlias,
+					explicitTenantDiscriminatorColumnAlias,
+					explicitAttributeMapping,
+					nodeResolutionContext
+			);
+			entityDescriptor.visitNavigables( strategy );
+			return strategy.buildSqlSelectionMappings();
+		}
+
+		private final EntityDescriptor entityDescriptor;
+
+		private final String explicitRowIdColumnAlias;
+		private final List<String> explicitIdColumnAliases;
+		private final String explicitDiscriminatorColumnAlias;
+		private final String explicitTenantDiscriminatorColumnAlias;
+		private final Map<String, AttributeMapping> explicitAttributeMapping;
+
+		public EntitySqlSelectionMappingsOverridableBuilder(
+				EntityDescriptor entityDescriptor,
+				String explicitRowIdColumnAlias,
+				List<String> explicitIdColumnAliases,
+				String explicitDiscriminatorColumnAlias,
+				String explicitTenantDiscriminatorColumnAlias,
+				Map<String, AttributeMapping> explicitAttributeMapping,
+				NodeResolutionContext nodeResolutionContext) {
+			super( nodeResolutionContext );
+			this.entityDescriptor = entityDescriptor;
 			this.explicitRowIdColumnAlias = explicitRowIdColumnAlias;
 			this.explicitIdColumnAliases = explicitIdColumnAliases;
 			this.explicitDiscriminatorColumnAlias = explicitDiscriminatorColumnAlias;
@@ -260,7 +274,7 @@ public class QueryResultBuilderRootEntity
 									Locale.ROOT,
 									"NativeQuery result-set-mapping included explicit id mapping for entity [%s] - " +
 											"but explicit mapping defined %s columns while entity has single id column",
-									getEntityDescriptor().getEntityName(),
+									entityDescriptor.getEntityName(),
 									explicitIdColumnAliases.size()
 							)
 					);

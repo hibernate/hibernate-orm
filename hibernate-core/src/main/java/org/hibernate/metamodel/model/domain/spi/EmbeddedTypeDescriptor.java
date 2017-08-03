@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
  * really represents the specific usage of the embeddable, which is `@Embedded`
  * <p/>
  * NOTE2 - this extends InheritanceCapable even though we currently do not support that, but we
- * know it is something we want to support asap.
+ * know it is something we want to support at some point.
  *
  * @author Steve Ebersole
  */

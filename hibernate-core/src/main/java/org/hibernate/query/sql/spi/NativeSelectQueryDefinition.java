@@ -9,7 +9,7 @@ package org.hibernate.query.sql.spi;
 import java.util.List;
 
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.exec.results.spi.ResultSetMapping;
+import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 import org.hibernate.sql.exec.spi.RowTransformer;
 
 /**
@@ -24,6 +24,6 @@ public interface NativeSelectQueryDefinition<R> {
 	String getSqlString();
 	boolean isCallable();
 	List<JdbcParameterBinder> getParameterBinders();
-	ResultSetMapping getResultSetMapping();
+	ResultSetMappingDescriptor getResultSetMapping();
 	RowTransformer<R> getRowTransformer();
 }

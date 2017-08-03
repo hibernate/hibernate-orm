@@ -6,14 +6,18 @@
  */
 package org.hibernate.query.sql.spi;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
-import org.hibernate.sql.exec.results.spi.Fetch;
-import org.hibernate.sql.exec.results.spi.FetchParent;
+import org.hibernate.sql.results.spi.Fetch;
+import org.hibernate.sql.results.spi.FetchParent;
 
 /**
  * @author Steve Ebersole
@@ -22,6 +26,10 @@ public class FetchBuilder implements NativeQuery.FetchReturn {
 	private final String tableAlias;
 	private final String fetchParentTableAlias;
 	private final String joinPropertyName;
+
+	private LockMode lockMode;
+
+	private Map<String, AttributeMapping> attributeMappingsByName;
 
 	public FetchBuilder(String tableAlias, String fetchParentTableAlias, String joinPropertyName) {
 		this.tableAlias = tableAlias;
@@ -35,14 +43,14 @@ public class FetchBuilder implements NativeQuery.FetchReturn {
 			throw new HibernateException( "FetchParent for table-alias [" + fetchParentTableAlias + "] not yet resolved" );
 		}
 
-		final Navigable joinedNavigable = fetchParent.getNavigableContainerReference().getNavigable().findNavigable( joinPropertyName );
+		final Navigable joinedNavigable = fetchParent.getFetchContainer().findNavigable( joinPropertyName );
 		if ( joinedNavigable == null ) {
 			throw new HibernateException(
 					String.format(
 							Locale.ROOT,
 							"Could not locate attribute/navigable for given name join name [%s] relative to container [%s (%s)]",
 							joinPropertyName,
-							fetchParent.getNavigableContainerReference().getNavigable().asLoggableText(),
+							fetchParent.getFetchContainer().asLoggableText(),
 							fetchParentTableAlias
 					)
 
@@ -51,17 +59,48 @@ public class FetchBuilder implements NativeQuery.FetchReturn {
 
 		assert joinedNavigable instanceof Fetchable;
 
-		( (Fetchable) joinedNavigable ).generateFetch(
+		final Fetch fetch = ( (Fetchable) joinedNavigable ).generateFetch(
 				fetchParent,
-				fetchParent.getNavigableContainerReference(),
+				// assume its present in the results since it is explicitly defined
+				FetchStrategy.IMMEDIATE_JOIN,
 				tableAlias,
-				resolveSqlSelectionMap(),
 				resolutionContext
 		);
-		return fetchParent;
+
+		fetchParent.addFetch( fetch );
+
+		return fetch;
 	}
 
-	private void resolveSqlSelectionMap() {
+	@Override
+	public NativeQuery.FetchReturn setLockMode(LockMode lockMode) {
+		this.lockMode = lockMode;
+		return this;
+	}
 
+	@Override
+	public FetchBuilder addProperty(String propertyName, String columnAlias) {
+		AttributeMapping attributeMapping = addProperty( propertyName );
+		attributeMapping.addColumnAlias( columnAlias );
+		return this;
+	}
+
+	@Override
+	public AttributeMapping addProperty(String propertyName) {
+		AttributeMapping attributeMapping = null;
+
+		if ( attributeMappingsByName == null ) {
+			attributeMappingsByName = new HashMap<>();
+		}
+		else {
+			attributeMapping = attributeMappingsByName.get( propertyName );
+		}
+
+		if ( attributeMapping == null ) {
+			attributeMapping = new AttributeMapping( propertyName );
+			attributeMappingsByName.put( propertyName, attributeMapping );
+		}
+
+		return attributeMapping;
 	}
 }

@@ -17,10 +17,10 @@ import org.hibernate.metamodel.model.domain.spi.CollectionElementBasic;
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.sql.exec.results.internal.QueryResultScalarImpl;
-import org.hibernate.sql.exec.results.spi.QueryResult;
-import org.hibernate.sql.exec.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.exec.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.descriptor.spi.ValueBinder;
@@ -85,7 +85,7 @@ public class CollectionElementBasicImpl<J>
 			String resultVariable,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return new QueryResultScalarImpl(
+		return new ScalarQueryResultImpl(
 				resultVariable,
 				sqlSelectionResolver.resolveSqlSelection(
 						creationContext.currentColumnReferenceSource().resolveColumnReference( getBoundColumn() )

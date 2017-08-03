@@ -20,16 +20,16 @@ import org.hibernate.procedure.UnknownSqlResultSetMappingException;
 import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.exec.results.internal.QueryResultScalarImpl;
-import org.hibernate.sql.exec.results.spi.FetchParent;
-import org.hibernate.sql.exec.results.spi.QueryResult;
-import org.hibernate.sql.exec.results.spi.SqlSelection;
-import org.hibernate.sql.exec.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.exec.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.exec.results.internal.instantiation.ArgumentReader;
-import org.hibernate.sql.exec.results.internal.instantiation.DynamicInstantiationConstructorAssemblerImpl;
-import org.hibernate.sql.exec.results.internal.instantiation.DynamicInstantiationListAssemblerImpl;
-import org.hibernate.sql.exec.results.spi.QueryResultAssembler;
+import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
+import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
+import org.hibernate.sql.results.internal.instantiation.ArgumentReader;
+import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationConstructorAssemblerImpl;
+import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationListAssemblerImpl;
+import org.hibernate.sql.results.spi.QueryResultAssembler;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
@@ -297,7 +297,7 @@ public class Util {
 
 			for ( NativeSQLQueryScalarReturn argument : nativeQueryReturn.getColumnReturns() ) {
 				final BasicType ormType = (BasicType) argument.getType();
-				final QueryResultScalarImpl argumentReturn = new QueryResultScalarImpl(
+				final ScalarQueryResultImpl argumentReturn = new ScalarQueryResultImpl(
 						null,
 						resolveSqlSelection( ormType, argument.getColumnAlias() ),
 						null,

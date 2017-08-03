@@ -8,7 +8,7 @@ package org.hibernate.sql.exec.spi;
 
 import java.util.List;
 
-import org.hibernate.sql.exec.results.spi.ResultSetMapping;
+import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -32,5 +32,5 @@ public interface JdbcCall extends JdbcOperation {
 	 * which are (unclearly) intended to describe the mapping for each
 	 * ResultSet (in order) returned from the call.
 	 */
-	List<ResultSetMapping> getResultSetMappings();
+	List<ResultSetMappingDescriptor> getResultSetMappings();
 }

@@ -7,10 +7,10 @@
 package org.hibernate.query.sql.spi;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.exec.results.internal.QueryResultScalarImpl;
-import org.hibernate.sql.exec.results.spi.QueryResult;
-import org.hibernate.sql.exec.results.spi.SqlSelectable;
-import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
+import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.SqlSelectable;
+import org.hibernate.sql.results.spi.SqlSelectionReader;
 
 /**
  * @author Steve Ebersole
@@ -20,10 +20,6 @@ public class QueryResultBuilderScalar
 	private final String columnName;
 	private final BasicValuedExpressableType type;
 
-	public QueryResultBuilderScalar(String columnName) {
-		this( columnName, null );
-	}
-
 	public QueryResultBuilderScalar(String columnName, BasicValuedExpressableType type) {
 		this.columnName = columnName;
 		this.type = type;
@@ -31,7 +27,7 @@ public class QueryResultBuilderScalar
 
 	@Override
 	public QueryResult buildReturn(NodeResolutionContext resolutionContext) {
-		return new QueryResultScalarImpl(
+		return new ScalarQueryResultImpl(
 				columnName,
 				resolutionContext.getSqlSelectionResolver().resolveSqlSelection( this ),
 				type

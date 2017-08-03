@@ -12,11 +12,11 @@ import java.sql.SQLException;
 
 import org.hibernate.QueryException;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.exec.results.spi.SqlSelectable;
-import org.hibernate.sql.exec.results.spi.SqlSelection;
-import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingState;
-import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
-import org.hibernate.sql.exec.results.spi.ResultSetMapping;
+import org.hibernate.sql.results.spi.SqlSelectable;
+import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
+import org.hibernate.sql.results.spi.SqlSelectionReader;
+import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
@@ -52,8 +52,8 @@ public class SqlSelectionImpl implements SqlSelection, SqlSelectable, SqlSelecti
 
 	@Override
 	public void prepare(
-			ResultSetMapping.JdbcValuesMetadata jdbcResultsMetadata,
-			ResultSetMapping.ResolutionContext resolutionContext) {
+			ResultSetMappingDescriptor.JdbcValuesMetadata jdbcResultsMetadata,
+			ResultSetMappingDescriptor.ResolutionContext resolutionContext) {
 		// resolve the column-alias to a position
 		jdbcResultSetPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
 

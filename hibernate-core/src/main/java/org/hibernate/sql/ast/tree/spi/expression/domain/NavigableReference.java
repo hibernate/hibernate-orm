@@ -30,8 +30,6 @@ public interface NavigableReference extends Expression {
 
 	/**
 	 * Corollary to {@link Navigable#getContainer()} on the reference/expression side
-	 *
-	 * @see {@link #getContributedColumnReferenceSource} for examples
 	 */
 	NavigableContainerReference getNavigableContainerReference();
 

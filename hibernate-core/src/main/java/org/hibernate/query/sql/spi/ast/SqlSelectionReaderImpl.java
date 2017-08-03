@@ -11,9 +11,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.exec.results.spi.SqlSelection;
-import org.hibernate.sql.exec.results.spi.JdbcValuesSourceProcessingState;
-import org.hibernate.sql.exec.results.spi.SqlSelectionReader;
+import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
+import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
 
 /**

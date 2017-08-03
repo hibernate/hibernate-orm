@@ -61,7 +61,7 @@ import org.hibernate.query.sql.spi.SelectInterpretationsKey;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-import org.hibernate.sql.exec.results.spi.ResultSetMapping;
+import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
@@ -464,7 +464,7 @@ public class NativeQueryImpl<R>
 	private SelectQueryPlan<R> resolveSelectQueryPlan() {
 		SelectQueryPlan<R> queryPlan = null;
 
-		final ResultSetMapping resultSetMapping = resolveResultMapping();
+		final ResultSetMappingDescriptor resultSetMapping = resolveResultMapping();
 		final RowTransformer rowTransformer = resolveRowTransformer();
 
 		final QueryInterpretations.Key cacheKey = generateSelectInterpretationsKey( resultSetMapping );
@@ -510,7 +510,7 @@ public class NativeQueryImpl<R>
 			}
 
 			@Override
-			public ResultSetMapping getResultSetMapping() {
+			public ResultSetMappingDescriptor getResultSetMapping() {
 				return NativeQueryImpl.this.resolveResultMapping();
 			}
 
@@ -521,7 +521,7 @@ public class NativeQueryImpl<R>
 		};
 	}
 
-	private ResultSetMapping resolveResultMapping() {
+	private ResultSetMappingDescriptor resolveResultMapping() {
 		// todo (6.0) - need to resolve SqlSelections as well as resolving ResultBuilders and FetchBuilders into QueryResult trees
 		// 		also need to account for the edge case where the user passed just the
 		//		query string and no mappings (see ResultSetMappingUndefinedImpl)
@@ -534,7 +534,7 @@ public class NativeQueryImpl<R>
 		throw new NotYetImplementedException(  );
 	}
 
-	private SelectInterpretationsKey generateSelectInterpretationsKey(ResultSetMapping resultSetMapping) {
+	private SelectInterpretationsKey generateSelectInterpretationsKey(ResultSetMappingDescriptor resultSetMapping) {
 		if ( !isCacheable( this ) ) {
 			return null;
 		}

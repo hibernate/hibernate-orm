@@ -7,11 +7,11 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import java.io.Serializable;
-import javax.persistence.metamodel.PluralAttribute;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
+import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.PersistentCollectionTuplizer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -87,28 +87,6 @@ public interface PersistentCollectionDescriptor<O,C,E>
 
 	void finishInitialization(Collection collectionBinding, RuntimeModelCreationContext creationContext);
 
-
-	/**
-	 * Classifications of the plurality.  See {@link CollectionElement.ElementClassification}
-	 * and {@link CollectionIndex.IndexClassification} for classification of the element and
-	 * index/key, respectively.
-	 */
-	enum CollectionClassification {
-		SET( PluralAttribute.CollectionType.SET ),
-		LIST( PluralAttribute.CollectionType.LIST ),
-		MAP( PluralAttribute.CollectionType.MAP ),
-		BAG( PluralAttribute.CollectionType.COLLECTION );
-
-		private final PluralAttribute.CollectionType jpaClassification;
-
-		CollectionClassification(PluralAttribute.CollectionType jpaClassification) {
-			this.jpaClassification = jpaClassification;
-		}
-
-		public PluralAttribute.CollectionType toJpaClassification() {
-			return jpaClassification;
-		}
-	}
 
 	CollectionClassification getCollectionClassification();
 
@@ -417,7 +395,7 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	 */
 	Serializable[] getCollectionSpaces();
 //
-//	CollectionMetadata getCollectionMetadata();
+//	CollectionMetadata getCollectionDescriptor();
 //
 //	/**
 //	 * Is cascade delete handled by the database-level

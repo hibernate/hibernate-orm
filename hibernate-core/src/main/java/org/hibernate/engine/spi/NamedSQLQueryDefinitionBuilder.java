@@ -17,7 +17,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.query.sql.spi.QueryResultBuilder;
 
 public class NamedSQLQueryDefinitionBuilder extends NamedQueryDefinitionBuilder {
-	private QueryResultBuilder[] queryReturns;
+	private List<QueryResultBuilder> queryReturns = new ArrayList<>(  );
 	private Collection<String> querySpaces;
 	private boolean callable;
 	private String resultSetRef;
@@ -29,18 +29,8 @@ public class NamedSQLQueryDefinitionBuilder extends NamedQueryDefinitionBuilder 
 		super( name );
 	}
 
-	public NamedSQLQueryDefinitionBuilder setQueryReturns(QueryResultBuilder[] queryReturns) {
-		this.queryReturns = queryReturns;
-		return this;
-	}
-
 	public NamedSQLQueryDefinitionBuilder setQueryReturns(List<QueryResultBuilder> queryReturns) {
-		if ( queryReturns != null ) {
-			this.queryReturns = queryReturns.toArray( new QueryResultBuilder[ queryReturns.size() ] );
-		}
-		else {
-			this.queryReturns = null;
-		}
+		this.queryReturns = queryReturns ;
 		return this;
 	}
 

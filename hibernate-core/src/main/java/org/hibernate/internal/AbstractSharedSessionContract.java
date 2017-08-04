@@ -734,11 +734,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		final JavaTypeDescriptor definedResultType;
 
 		if ( namedQueryDefinition.getQueryResultBuilders() != null ) {
-			if ( namedQueryDefinition.getQueryResultBuilders().length > 1 ) {
+			if ( namedQueryDefinition.getQueryResultBuilders().size() > 1 ) {
 				throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
 			}
 
-			definedResultType = namedQueryDefinition.getQueryResultBuilders()[0].getResultType();
+			definedResultType = namedQueryDefinition.getQueryResultBuilders().get( 0 ).getResultType();
 		}
 		else if ( namedQueryDefinition.getResultSetRef() != null ) {
 			final ResultSetMappingDefinition rsMapping = getFactory().getQueryEngine()

@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import javax.xml.bind.JAXBElement;
@@ -27,6 +28,7 @@ import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.query.sql.spi.QueryResultBuilder;
 
 /**
  * @author Steve Ebersole
@@ -173,7 +175,7 @@ public class NamedQueryBinder {
 							final ResultSetMappingDefinition resultSetMappingDefinition =
 									ResultSetMappingBinder.bind( implicitResultSetMappingDefinition, context );
 							context.getMetadataCollector().addResultSetMapping( resultSetMappingDefinition );
-							NativeSQLQueryReturn[] newQueryReturns = resultSetMappingDefinition.getQueryReturns();
+							List<QueryResultBuilder> newQueryReturns = resultSetMappingDefinition.getQueryReturns();
 							final NamedSQLQueryDefinition queryDefinition =
 									context.getMetadataCollector().getNamedNativeQueryDefinition( queryName );
 							if ( queryDefinition != null ) {

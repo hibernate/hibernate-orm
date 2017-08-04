@@ -33,20 +33,22 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.SkipLog;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,6 +63,8 @@ import static org.junit.Assert.assertThat;
  */
 @RunWith(Parameterized.class)
 public class SchemaUpdateTest {
+
+	private boolean skipTest;
 
 	@Parameterized.Parameters
 	public static Collection<String> parameters() {
@@ -79,6 +83,9 @@ public class SchemaUpdateTest {
 	@Before
 	public void setUp() throws IOException {
 		if(SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
+			// SQLServerDialect stores case-insensitive quoted identifiers in mixed case,
+			// so the checks at the end of this method won't work.
+			skipTest = true;
 			return;
 		}
 		output = File.createTempFile( "update_script", ".sql" );
@@ -87,6 +94,7 @@ public class SchemaUpdateTest {
 				.applySetting( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, "true" )
 				.applySetting( AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY, jdbcMetadataExtractorStrategy )
 				.build();
+
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( LowercaseTableNameEntity.class );
 		metadataSources.addAnnotatedClass( TestEntity.class );
@@ -99,11 +107,26 @@ public class SchemaUpdateTest {
 
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.validate();
+
+		// Databases that use case-insensitive quoted identifiers need to be skipped.
+		// The following checks will work for checking those dialects that store case-insensitive
+		// quoted identifiers as upper-case or lower-case. It does not work for dialects that
+		// store case-insensitive identifiers in mixed case (like SQL Server).
+		final IdentifierHelper identifierHelper  = ssr.getService( JdbcEnvironment.class ).getIdentifierHelper();
+		final String lowerCaseName = identifierHelper.toMetaDataObjectName( Identifier.toIdentifier( "testentity", true ) );
+		final String upperCaseName = identifierHelper.toMetaDataObjectName( Identifier.toIdentifier("TESTENTITY", true ) );
+		final String mixedCaseName = identifierHelper.toMetaDataObjectName( Identifier.toIdentifier("TESTentity", true ) );
+		if ( lowerCaseName.equals( upperCaseName ) ||
+				lowerCaseName.equals( mixedCaseName ) ||
+				upperCaseName.equals( mixedCaseName ) ) {
+			StandardServiceRegistryBuilder.destroy( ssr );
+			skipTest = true;
+		}
 	}
 
 	@After
 	public void tearsDown() {
-		if(SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
+		if ( skipTest ) {
 			return;
 		}
 		new SchemaExport().setHaltOnError( true )
@@ -115,9 +138,11 @@ public class SchemaUpdateTest {
 
 	@Test
 	public void testSchemaUpdateAndValidation() throws Exception {
-		if(SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
+		if ( skipTest ) {
+			SkipLog.reportSkip( "skipping test because quoted names are not case-sensitive." );
 			return;
 		}
+
 		new SchemaUpdate().setHaltOnError( true )
 				.execute( EnumSet.of( TargetType.DATABASE ), metadata );
 

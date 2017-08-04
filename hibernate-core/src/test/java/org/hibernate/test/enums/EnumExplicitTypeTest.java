@@ -39,7 +39,7 @@ public class EnumExplicitTypeTest extends BaseCoreFunctionalTestCase {
 				"select id from Person where originalHairColor = :color" )
 				.setParameter( "color", HairColor.BLONDE.name() )
 				.uniqueResult();
-		assertEquals( 1L, id.longValue() );
+		assertEquals( painted.getId(), id.longValue() );
 		s.getTransaction().commit();
 		s.close();
 	}

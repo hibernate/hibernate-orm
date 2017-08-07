@@ -7,6 +7,7 @@
 package org.hibernate.event.internal;
 
 import java.io.Serializable;
+import java.util.Collection;
 
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionRemoveAction;
@@ -16,7 +17,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.Type;
 
 /**
  * Abstract superclass of visitors that reattach collections.
@@ -58,12 +58,12 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 */
 	@Override
 	Object processComponent(Object component, EmbeddedTypeDescriptor descriptor) throws HibernateException {
-		Type[] types = componentType.getSubclassTypes();
-		if ( component == null ) {
-			processValues( new Object[types.length], types );
+		final Collection subclassTypes = descriptor.getSubclassTypes();
+		if ( subclassTypes == null ) {
+			processValues( new Object[subclassTypes.size()], subclassTypes );
 		}
 		else {
-			super.processComponent( component, componentType );
+			super.processComponent( component, descriptor );
 		}
 
 		return null;

@@ -7,8 +7,8 @@
 
 package org.hibernate.query.internal;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.sqm.tree.SqmParameter;
-import org.hibernate.type.Type;
 
 /**
  * QueryParameter impl for named-parameters in HQL, JPQL or Criteria queries.
@@ -30,7 +30,9 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 		return new QueryParameterNamedImpl<T>(
 				parameter.getName(),
 				parameter.allowMultiValuedBinding(),
-				parameter.getAnticipatedType()
+				parameter.getAnticipatedType() != null ?
+						(AllowableParameterType) parameter.getAnticipatedType() :
+						null
 		);
 	}
 
@@ -47,7 +49,7 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 	private QueryParameterNamedImpl(
 			String name,
 			boolean allowMultiValuedBinding,
-			Type anticipatedType) {
+			AllowableParameterType anticipatedType) {
 		super( allowMultiValuedBinding, anticipatedType );
 		this.name = name;
 	}

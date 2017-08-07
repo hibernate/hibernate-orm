@@ -25,6 +25,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.NativeQueryNonScalarRootReturn;
 import org.hibernate.boot.jaxb.hbm.spi.ResultSetMappingBindingDefinition;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -147,7 +148,7 @@ public abstract class ResultSetMappingBinder {
 		final String typeName = rtnSource.getType();
 		BasicValuedExpressableType type = null;
 		if ( typeName != null ) {
-			type = context.getMetadataCollector().heuristicType( typeName );
+			type = context.getMetadataCollector().getTypeConfiguration().getBasicTypeRegistry().getBasicType(  typeName );
 			if ( type == null ) {
 				throw new MappingException(
 						String.format(
@@ -175,13 +176,11 @@ public abstract class ResultSetMappingBinder {
 				rtnSource.getEntityName(),
 				rtnSource.getClazz()
 		);
-		final PersistentClass pc = context.getMetadataCollector().getEntityBinding( entityName );
+		final EntityDescriptor entityDescriptor = context.getBootstrapContext().getTypeConfiguration().findEntityDescriptor( entityName );
 
 		return new QueryResultBuilderRootEntity(
 				alias,
-				entityName,
-				extractPropertyResults( alias, rtnSource, pc, context ),
-				rtnSource.getLockMode()
+				entityDescriptor
 		);
 	}
 

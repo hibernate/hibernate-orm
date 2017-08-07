@@ -21,6 +21,9 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.JpaMapJoinImplementor;
 import org.hibernate.query.criteria.JpaPathImplementor;
+import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * {@link javax.persistence.criteria.MapJoin#key} poses a number of implementation difficulties in terms of the
@@ -165,7 +168,7 @@ public class MapKeyHelpers {
 			implements SingularAttribute<Map<K,?>,K>, Bindable<K>, Serializable {
 		private final MapAttribute<?,K,?> attribute;
 		private final PersistentCollectionDescriptor mapPersister;
-		private final org.hibernate.type.spi.Type mapKeyType;
+		private final JavaTypeDescriptor mapKeyType;
 		private final Type<K> jpaType;
 		private final BindableType jpaBindableType;
 		private final Class<K> jpaBinableJavaType;
@@ -186,14 +189,14 @@ public class MapKeyHelpers {
 			if ( mapPersister == null ) {
 				throw new IllegalStateException( "Could not locate collection persister [" + guessedRoleName + "]" );
 			}
-			mapKeyType = mapPersister.getIndexType();
+			mapKeyType = mapPersister.getKeyJavaTypeDescriptor();
 			if ( mapKeyType == null ) {
 				throw new IllegalStateException( "Could not determine map-key type [" + guessedRoleName + "]" );
 			}
 
-			this.persistentAttributeType = mapKeyType.isEntityType()
+			this.persistentAttributeType = mapKeyType instanceof EntityJavaDescriptor
 					? PersistentAttributeType.MANY_TO_ONE
-					: mapKeyType.isComponentType()
+					: mapKeyType instanceof EmbeddableJavaDescriptor
 							? PersistentAttributeType.EMBEDDED
 							: PersistentAttributeType.BASIC;
 		}
@@ -233,7 +236,7 @@ public class MapKeyHelpers {
 
 		@Override
 		public boolean isAssociation() {
-			return mapKeyType.isEntityType();
+			return mapKeyType instanceof EntityJavaDescriptor;
 		}
 
 		@Override

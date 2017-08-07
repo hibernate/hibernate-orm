@@ -38,7 +38,6 @@ import org.hibernate.query.sql.spi.QueryResultBuilder;
 import org.hibernate.query.sql.spi.QueryResultBuilderRootEntity;
 import org.hibernate.query.sql.spi.QueryResultBuilderScalar;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

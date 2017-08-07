@@ -12,6 +12,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Collections;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralAttributeCollection;
 
 /**
  * Process collections reachable from an entity. This
@@ -24,8 +25,8 @@ public class FlushVisitor extends AbstractVisitor {
 	
 	private Object owner;
 
-	Object processCollection(Object collection, PersistentCollectionDescriptor descriptor)
-	throws HibernateException {
+	@Override
+	Object processCollection(Object collection, PluralAttributeCollection attributeCollection) throws HibernateException {
 
 		if ( collection == PersistentCollectionDescriptor.UNFETCHED_COLLECTION ) {
 			return null;
@@ -33,14 +34,14 @@ public class FlushVisitor extends AbstractVisitor {
 
 		if (collection!=null) {
 			final PersistentCollection coll;
-			if ( descriptor.getCollectionClassification() == CollectionClassification.ARRAY ) {
+			if ( attributeCollection.getPersistentCollectionMetadata().getCollectionClassification() == CollectionClassification.ARRAY ) {
 				coll = getSession().getPersistenceContext().getCollectionHolder(collection);
 			}
 			else {
 				coll = (PersistentCollection) collection;
 			}
 
-			Collections.processReachableCollection( coll, descriptor, owner, getSession() );
+			Collections.processReachableCollection( coll, attributeCollection, owner, getSession() );
 		}
 
 		return null;

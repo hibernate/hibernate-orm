@@ -15,10 +15,12 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
-import org.hibernate.sql.ast.produce.spi.SqlExpressable;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole
@@ -63,7 +65,7 @@ public class OrderByFragmentConverter extends BaseSqmToSqlAstConverter implement
 //	}
 
 	@Override
-	public SqlSelection resolveSqlSelection(SqlExpressable sqlSelectable) {
-		return super.resolveSqlSelection( sqlSelectable );
+	public SqlSelection resolveSqlSelection(Expression expression) {
+		throw new NotYetImplementedException(  );
 	}
 }

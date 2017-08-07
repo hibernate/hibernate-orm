@@ -8,6 +8,7 @@ package org.hibernate.engine.internal;
 
 import java.io.Serializable;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,7 +32,7 @@ import org.hibernate.proxy.LazyInitializer;
  *
  * @author Gavin King
  */
-public final class ForeignKeys {
+public final class ForeignKeys<T> {
 
 	/**
 	 * Delegate for handling nullifying ("null"ing-out) non-cascaded associations
@@ -62,7 +63,9 @@ public final class ForeignKeys {
 		 * points toward that entity.
 		 *  @param values The entity attribute values
 		 * @param attributes The entity attributes */
-		public  void nullifyTransientReferences(final Object[] values, final Set<PersistentAttribute<?, ?>> attributes) {
+		public void nullifyTransientReferences(
+				final Object[] values,
+				final List<PersistentAttribute<?, ?>> attributes) {
 			int i = 0;
 			for(PersistentAttribute attribute : attributes){
 				values[i] = nullifyTransientReferences( values[i], attribute );

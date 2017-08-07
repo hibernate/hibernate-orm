@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralAttributeCollection;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -32,18 +32,19 @@ public class EvictVisitor extends AbstractVisitor {
 	}
 
 	@Override
-	Object processCollection(Object collection, PersistentCollectionDescriptor descriptor) throws HibernateException {
+	Object processCollection(Object collection, PluralAttributeCollection attributeCollection) throws HibernateException {
 		if (collection != null) {
-			evictCollection(collection, descriptor);
+			evictCollection(collection, attributeCollection);
 		}
 
 		return null;
 	}
 
-	public void evictCollection(Object value, PersistentCollectionDescriptor descriptor) {
+	public void evictCollection(Object value, PluralAttributeCollection attributeCollection) {
 		final Object pc;
-		if ( descriptor.getCollectionClassification() == CollectionClassification.ARRAY ) {
-			pc = getSession().getPersistenceContext().removeCollectionHolder(value);
+		if ( attributeCollection.getPersistentCollectionMetadata()
+				.getCollectionClassification() == CollectionClassification.ARRAY ) {
+			pc = getSession().getPersistenceContext().removeCollectionHolder( value );
 		}
 		else if ( value instanceof PersistentCollection ) {
 			pc = value;
@@ -54,7 +55,7 @@ public class EvictVisitor extends AbstractVisitor {
 
 		PersistentCollection collection = (PersistentCollection) pc;
 		if ( collection.unsetSession( getSession() ) ) {
-			evictCollection(collection);
+			evictCollection( collection );
 		}
 	}
 

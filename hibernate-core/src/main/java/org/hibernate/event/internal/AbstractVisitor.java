@@ -14,8 +14,8 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PluralAttributeCollection;
 
 /**
  * Abstract superclass of algorithms that walk
@@ -37,30 +37,34 @@ public abstract class AbstractVisitor {
 	 * Dispatch each property value to processValue().
 	 *
 	 * @param values
-	 * @param navigables
+	 * @param attributes
 	 * @throws HibernateException
 	 */
-	void processValues(Object[] values, Collection<Navigable> navigables) throws HibernateException {
+	final void processValues(Object[] values, Collection<PersistentAttribute> attributes) throws HibernateException {
 		int i = 0;
-		for ( Navigable navigable : navigables ) {
+		for ( PersistentAttribute attribute : attributes ) {
 			if ( includeProperty( values, i ) ) {
-				processValue( values[i], navigable );
+				processValue( i, values, attribute );
 			}
 			i++;
 		}
 	}
-	
+
+	void processValue(int i, Object[] values, PersistentAttribute attribute) throws HibernateException {
+		processValue( values[i], attribute );
+	}
+
 	/**
 	 * Dispatch each property value to processValue().
 	 *
 	 * @param values
-	 * @param navigables
+	 * @param attributes
 	 * @throws HibernateException
 	 */
-	public void processEntityPropertyValues(Object[] values, List<Navigable> navigables) throws HibernateException {
-		for ( int i = 0; i < navigables.size(); i++ ) {
+	public void processEntityPropertyValues(Object[] values, List<PersistentAttribute> attributes) throws HibernateException {
+		for ( int i = 0; i < attributes.size(); i++ ) {
 			if ( includeEntityProperty( values, i ) ) {
-				processValue( values[i], navigables.get( i ) );
+				processValue(i, values, attributes.get( i ) );
 			}
 		}
 	}
@@ -84,7 +88,7 @@ public abstract class AbstractVisitor {
 		if ( component != null ) {
 			processValues(
 					descriptor.getPropertyValues( component ),
-					descriptor.getSubclassTypes()
+					descriptor.getPersistentAttributes()
 			);
 		}
 		return null;
@@ -94,19 +98,19 @@ public abstract class AbstractVisitor {
 	 * Visit a property value. Dispatch to the
 	 * correct handler for the property type.
 	 * @param value
-	 * @param navigable
+	 * @param attribute
 	 * @throws HibernateException
 	 */
-	final Object processValue(Object value, Navigable navigable) throws HibernateException {
+	final Object processValue(Object value, PersistentAttribute attribute) throws HibernateException {
 
-		if ( navigable instanceof PersistentCollectionDescriptor ) {
-			return processCollection( value, (PersistentCollectionDescriptor) navigable );
+		if ( attribute instanceof PluralAttributeCollection ) {
+			return processCollection( value, (PluralAttributeCollection) attribute );
 		}
-		if ( navigable instanceof EntityDescriptor ) {
-			return processEntity( value, (EntityDescriptor) navigable );
+		if ( attribute instanceof EntityDescriptor ) {
+			return processEntity( value, (EntityDescriptor) attribute );
 		}
-		else if ( navigable instanceof EmbeddedTypeDescriptor ) {
-			return processComponent( value, (EmbeddedTypeDescriptor) navigable );
+		else if ( attribute instanceof EmbeddedTypeDescriptor ) {
+			return processComponent( value, (EmbeddedTypeDescriptor) attribute );
 		}
 		else {
 			return null;
@@ -117,13 +121,13 @@ public abstract class AbstractVisitor {
 	 * Walk the tree starting from the given entity.
 	 *
 	 * @param object
-	 * @param persister
+	 * @param entityDescriptor
 	 * @throws HibernateException
 	 */
-	void process(Object object, EntityDescriptor persister) throws HibernateException {
+	void process(Object object, EntityDescriptor entityDescriptor) throws HibernateException {
 		processEntityPropertyValues(
-				persister.getPropertyValues( object ),
-				persister.getNavigables()
+				entityDescriptor.getPropertyValues( object ),
+				entityDescriptor.getPersistentAttributes()
 		);
 	}
 
@@ -131,10 +135,10 @@ public abstract class AbstractVisitor {
 	 * Visit a collection. Default superclass
 	 * implementation is a no-op.
 	 * @param collection
-	 * @param descriptor
+	 * @param attributeCollection
 	 * @throws HibernateException
 	 */
-	Object processCollection(Object collection, PersistentCollectionDescriptor descriptor) throws HibernateException {
+	Object processCollection(Object collection, PluralAttributeCollection attributeCollection) throws HibernateException {
 		return null;
 	}
 

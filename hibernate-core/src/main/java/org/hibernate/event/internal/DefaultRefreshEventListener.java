@@ -8,6 +8,7 @@ package org.hibernate.event.internal;
 
 import java.io.Serializable;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -29,6 +30,7 @@ import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
@@ -192,13 +194,13 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
 	}
 
-	private void evictCachedCollections(EntityDescriptor persister, Serializable id, EventSource source) {
-		evictCachedCollections( persister.getPropertyTypes(), id, source );
+	private void evictCachedCollections(EntityDescriptor entityDescriptor, Serializable id, EventSource source) {
+		evictCachedCollections( entityDescriptor.getPersistentAttributes(), id, source );
 	}
 
-	private void evictCachedCollections(Type[] types, Serializable id, EventSource source)
+	private void evictCachedCollections(List<PersistentAttribute> persistentAttributes, Serializable id, EventSource source)
 			throws HibernateException {
-		for ( Type type : types ) {
+		for ( PersistentAttribute type : persistentAttributes ) {
 			if ( type.getClassification().equals( Type.Classification.COLLECTION ) ) {
 				PersistentCollectionDescriptor collectionPersister = source.getFactory().getTypeConfiguration().findCollectionPersister( ( (CollectionType) type ).getRole() );
 				if ( collectionPersister.hasCache() ) {

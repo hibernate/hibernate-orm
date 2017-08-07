@@ -9,9 +9,9 @@ package org.hibernate.proxy.pojo.javassist;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.proxy.AbstractSerializableProxy;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * Serializable placeholder for Javassist proxies
@@ -27,7 +27,7 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 	private final Class identifierSetterMethodClass;
 	private final Class[] identifierSetterMethodParams;
 
-	private final EmbeddedType componentIdType;
+	private final EmbeddedTypeDescriptor componentIdType;
 
 	public SerializableProxy(
 			String entityName,
@@ -37,7 +37,7 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 			Boolean readOnly,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
-			EmbeddedType componentIdType) {
+			EmbeddedTypeDescriptor componentIdType) {
 		super( entityName, id, readOnly );
 		this.persistentClass = persistentClass;
 		this.interfaces = interfaces;
@@ -102,7 +102,7 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 		return identifierSetterMethodParams;
 	}
 
-	protected EmbeddedType getComponentIdType() {
+	protected EmbeddedTypeDescriptor getComponentIdType() {
 		return componentIdType;
 	}
 

@@ -370,6 +370,16 @@ public interface EntityDescriptor<T>
 		return null;
 	}
 
+	default JavaTypeDescriptor getPropertyJavaTypeDescriptor(String propertyName) {
+		final String[] propertyNames = getPropertyNames();
+		for ( int i = 0; i < propertyNames.length; ++i ) {
+			if ( propertyNames[i] == propertyName ) {
+				return getPropertyJavaTypeDescriptors()[i];
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * Get the "insertability" of the properties of this class
 	 * (does the property appear in an SQL INSERT)
@@ -420,6 +430,14 @@ public interface EntityDescriptor<T>
 	 * Get the cascade styles of the properties (optional operation)
 	 */
 	CascadeStyle[] getPropertyCascadeStyles();
+
+	/**
+	 * Determine whether this entity has any non-none cascading.
+	 *
+	 * @return True if the entity has any properties with a cascade other than NONE;
+	 * false otherwise (aka, no cascading).
+	 */
+	boolean hasCascades();
 
 	/**
 	 * Get the identifier type

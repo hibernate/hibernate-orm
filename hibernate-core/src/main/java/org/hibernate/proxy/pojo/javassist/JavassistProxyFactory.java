@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 
@@ -44,7 +45,7 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 	private Class[] interfaces;
 	private Method getIdentifierMethod;
 	private Method setIdentifierMethod;
-	private EmbeddedType componentIdType;
+	private EmbeddedTypeDescriptor componentIdType;
 	private boolean overridesEquals;
 
 	private Class proxyClass;
@@ -59,7 +60,7 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 			final Set<Class> interfaces,
 			final Method getIdentifierMethod,
 			final Method setIdentifierMethod,
-			EmbeddedType componentIdType) throws HibernateException {
+			EmbeddedTypeDescriptor componentIdType) throws HibernateException {
 		this.entityName = entityName;
 		this.persistentClass = persistentClass;
 		this.interfaces = toArray( interfaces );

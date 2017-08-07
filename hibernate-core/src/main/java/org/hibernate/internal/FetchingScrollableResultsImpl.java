@@ -11,10 +11,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.spi.Loader;
-import org.hibernate.type.Type;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.results.spi.ResultSetMapping;
 
 /**
  * Implementation of ScrollableResults which can handle collection fetches.
@@ -29,23 +29,21 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 	/**
 	 * Constructs a FetchingScrollableResultsImpl.
 	 *
-	 * @param rs The scrollable result set
-	 * @param ps The prepared statement used to obtain the result set
-	 * @param sess The originating session
+	 * @param resultSet The scrollable result set
+	 * @param preparedStatement The prepared statement used to obtain the result set
+	 * @param session The originating session
 	 * @param loader The loader
-	 * @param queryParameters query parameters
-	 * @param types The result types
-	 * @param holderInstantiator Ugh
+	 * @param queryOptions The query options
+	 * @param resultSetMapping The ResultSet mapping
 	 */
-	public FetchingScrollableResultsImpl(
-			ResultSet rs,
-			PreparedStatement ps,
-			SharedSessionContractImplementor sess,
+	protected FetchingScrollableResultsImpl(
+			ResultSet resultSet,
+			PreparedStatement preparedStatement,
+			SharedSessionContractImplementor session,
 			Loader loader,
-			QueryParameters queryParameters,
-			Type[] types,
-			HolderInstantiator holderInstantiator) {
-		super( rs, ps, sess, loader, queryParameters, types, holderInstantiator );
+			QueryOptions queryOptions,
+			ResultSetMapping resultSetMapping) {
+		super( resultSet, preparedStatement, session, loader, queryOptions, resultSetMapping );
 	}
 
 	@Override

@@ -139,14 +139,14 @@ public class NaturalIdXrefDelegate {
 
 	/**
 	 * It is only valid to define natural ids at the root of an entity hierarchy.  This method makes sure we are 
-	 * using the root persister.
+	 * using the root entityDescriptor.
 	 *
-	 * @param persister The persister representing the entity type.
+	 * @param entityDescriptor The {@link EntityDescriptor} representing the entity type.
 	 * 
-	 * @return The root persister.
+	 * @return The root entityDescriptor.
 	 */
-	protected EntityDescriptor locatePersisterForKey(EntityDescriptor persister) {
-		return persistenceContext.getSession().getFactory().getEntityPersister( persister.getRootEntityName() );
+	protected EntityDescriptor locatePersisterForKey(EntityDescriptor entityDescriptor) {
+		return persistenceContext.getSession().getFactory().getEntityPersister( entityDescriptor.getRootEntityName() );
 	}
 
 	/**

@@ -7,6 +7,7 @@
 package org.hibernate.event.internal;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.CacheMode;
@@ -35,6 +36,7 @@ import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 
@@ -234,7 +236,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 	 * @param entity The entity to delete
 	 * @param entityEntry The entity's entry in the {@link PersistenceContext}
 	 * @param isCascadeDeleteEnabled Is delete cascading enabled?
-	 * @param persister The entity persister.
+	 * @param entityDescriptor The entity Descriptor.
 	 * @param transientEntities A cache of already deleted entities.
 	 */
 	protected final void deleteEntity(
@@ -243,49 +245,50 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 			final EntityEntry entityEntry,
 			final boolean isCascadeDeleteEnabled,
 			final boolean isOrphanRemovalBeforeUpdates,
-			final EntityDescriptor persister,
+			final EntityDescriptor entityDescriptor,
 			final Set transientEntities) {
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
 					"Deleting {0}",
-					MessageHelper.infoString( persister, entityEntry.getId(), session.getFactory() )
+					MessageHelper.infoString( entityDescriptor, entityEntry.getId(), session.getFactory() )
 			);
 		}
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		final Type[] propTypes = persister.getPropertyTypes();
 		final Object version = entityEntry.getVersion();
 
 		final Object[] currentState;
 		if ( entityEntry.getLoadedState() == null ) {
 			//ie. the entity came in from update()
-			currentState = persister.getPropertyValues( entity );
+			currentState = entityDescriptor.getPropertyValues( entity );
 		}
 		else {
 			currentState = entityEntry.getLoadedState();
 		}
 
-		final Object[] deletedState = createDeletedState( persister, currentState, session );
+		final Object[] deletedState = createDeletedState( entityDescriptor, currentState, session );
 		entityEntry.setDeletedState( deletedState );
 
 		session.getInterceptor().onDelete(
 				entity,
 				entityEntry.getId(),
 				deletedState,
-				persister.getPropertyNames(),
-				propTypes
+				entityDescriptor.getPropertyNames(),
+				entityDescriptor.getPropertyJavaTypeDescriptors()
 		);
 
 		// beforeQuery any callbacks, etc, so subdeletions see that this deletion happened first
 		persistenceContext.setEntryStatus( entityEntry, Status.DELETED );
-		final EntityKey key = session.generateEntityKey( entityEntry.getId(), persister );
+		final EntityKey key = session.generateEntityKey( entityEntry.getId(), entityDescriptor );
 
-		cascadeBeforeDelete( session, persister, entity, entityEntry, transientEntities );
+		cascadeBeforeDelete( session, entityDescriptor, entity, entityEntry, transientEntities );
 
+		final List<PersistentAttribute<?, ?>> attributes = (List<PersistentAttribute<?, ?>>) entityDescriptor
+				.getPersistentAttributes();
 		new ForeignKeys.Nullifier( entity, true, false, session )
-				.nullifyTransientReferences( entityEntry.getDeletedState(), propTypes );
-		new Nullability( session ).checkNullability( entityEntry.getDeletedState(), persister, true );
+				.nullifyTransientReferences( entityEntry.getDeletedState(), attributes );
+		new Nullability( session ).checkNullability( entityEntry.getDeletedState(), entityDescriptor, true );
 		persistenceContext.getNullifiableEntityKeys().add( key );
 
 		if ( isOrphanRemovalBeforeUpdates ) {
@@ -297,7 +300,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 							deletedState,
 							version,
 							entity,
-							persister,
+							entityDescriptor,
 							isCascadeDeleteEnabled,
 							session
 					)
@@ -311,14 +314,14 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 							deletedState,
 							version,
 							entity,
-							persister,
+							entityDescriptor,
 							isCascadeDeleteEnabled,
 							session
 					)
 			);
 		}
 
-		cascadeAfterDelete( session, persister, entity, transientEntities );
+		cascadeAfterDelete( session, entityDescriptor, entity, transientEntities );
 
 		// the entry will be removed afterQuery the flush, and will no longer
 		// override the stale snapshot
@@ -326,10 +329,10 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 		//persistenceContext.removeDatabaseSnapshot(key);
 	}
 
-	private Object[] createDeletedState(EntityDescriptor persister, Object[] currentState, EventSource session) {
-		Type[] propTypes = persister.getPropertyTypes();
+	private Object[] createDeletedState(EntityDescriptor entityDescriptor, Object[] currentState, EventSource session) {
+		Type[] propTypes = entityDescriptor.getPropertyTypes();
 		final Object[] deletedState = new Object[propTypes.length];
-//		TypeFactory.deepCopy( currentState, propTypes, persister.getPropertyUpdateability(), deletedState, session );
+//		TypeFactory.deepCopy( currentState, propTypes, entityDescriptor.getPropertyUpdateability(), deletedState, session );
 		boolean[] copyability = new boolean[propTypes.length];
 		java.util.Arrays.fill( copyability, true );
 		TypeHelper.deepCopy( currentState, propTypes, copyability, deletedState, session );

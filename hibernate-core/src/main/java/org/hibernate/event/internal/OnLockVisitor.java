@@ -13,6 +13,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralAttributeCollection;
 
 /**
  * When a transient entity is passed to lock(), we must inspect all its collections and
@@ -30,7 +31,7 @@ public class OnLockVisitor extends ReattachVisitor {
 	}
 
 	@Override
-	public Object processCollection(Object collection, PersistentCollectionDescriptor descriptor) throws HibernateException {
+	public Object processCollection(Object collection, PluralAttributeCollection attributeCollection) throws HibernateException {
 		if ( collection == null ) {
 			return null;
 		}
@@ -40,12 +41,16 @@ public class OnLockVisitor extends ReattachVisitor {
 		if ( collection instanceof PersistentCollection ) {
 			final PersistentCollection persistentCollection = (PersistentCollection) collection;
 			if ( persistentCollection.setCurrentSession( session ) ) {
-				if ( isOwnerUnchanged( persistentCollection, descriptor, extractCollectionKeyFromOwner( descriptor ) ) ) {
+				final PersistentCollectionDescriptor descriptor = session.getFactory()
+						.getTypeConfiguration()
+						.findCollectionPersister( attributeCollection.getNavigableName() );
+				if ( isOwnerUnchanged( persistentCollection,
+									   descriptor, extractCollectionKeyFromOwner( descriptor ) ) ) {
 					// a "detached" collection that originally belonged to the same entity
 					if ( persistentCollection.isDirty() ) {
 						throw new HibernateException( "reassociated object has dirty collection" );
 					}
-					reattachCollection( persistentCollection, descriptor.getNavigableRole() );
+					reattachCollection( persistentCollection, attributeCollection.getNavigableRole() );
 				}
 				else {
 					// a "detached" collection that belonged to a different entity

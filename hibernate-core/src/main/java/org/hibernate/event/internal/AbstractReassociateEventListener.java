@@ -37,50 +37,54 @@ public abstract class AbstractReassociateEventListener implements Serializable {
 	 * @param event The event triggering the re-association
 	 * @param object The entity to be associated
 	 * @param id The id of the entity.
-	 * @param persister The entity's persister instance.
+	 * @param entityDescriptor The entity's Descriptor instance.
 	 *
 	 * @return An EntityEntry representing the entity within this session.
 	 */
-	protected final EntityEntry reassociate(AbstractEvent event, Object object, Serializable id, EntityDescriptor persister) {
+	protected final EntityEntry reassociate(
+			AbstractEvent event,
+			Object object,
+			Serializable id,
+			EntityDescriptor entityDescriptor) {
 
 		if ( log.isTraceEnabled() ) {
 			log.tracev(
 					"Reassociating transient instance: {0}",
-					MessageHelper.infoString( persister, id, event.getSession().getFactory() )
+					MessageHelper.infoString( entityDescriptor, id, event.getSession().getFactory() )
 			);
 		}
 
 		final EventSource source = event.getSession();
-		final EntityKey key = source.generateEntityKey( id, persister );
+		final EntityKey key = source.generateEntityKey( id, entityDescriptor );
 
 		source.getPersistenceContext().checkUniqueness( key, object );
 
 		//get a snapshot
-		Object[] values = persister.getPropertyValues( object );
+		Object[] values = entityDescriptor.getPropertyValues( object );
 		TypeHelper.deepCopy(
 				values,
-				persister.getPropertyTypes(),
-				persister.getPropertyUpdateability(),
+				entityDescriptor.getPropertyTypes(),
+				entityDescriptor.getPropertyUpdateability(),
 				values,
 				source
 		);
-		Object version = Versioning.getVersion( values, persister );
+		Object version = Versioning.getVersion( values, entityDescriptor );
 
 		EntityEntry newEntry = source.getPersistenceContext().addEntity(
 				object,
-				( persister.getJavaTypeDescriptor().getMutabilityPlan().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
+				( entityDescriptor.getJavaTypeDescriptor().getMutabilityPlan().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				values,
 				key,
 				version,
 				LockMode.NONE,
 				true,
-				persister,
+				entityDescriptor,
 				false
 		);
 
-		new OnLockVisitor( source, id, object ).process( object, persister );
+		new OnLockVisitor( source, id, object ).process( object, entityDescriptor );
 
-		persister.afterReassociate( object, source );
+		entityDescriptor.afterReassociate( object, source );
 
 		return newEntry;
 

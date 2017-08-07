@@ -12,6 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralAttributeCollection;
 
 /**
  * When an entity is passed to update(), we must inspect all its collections and
@@ -30,13 +31,16 @@ public class OnUpdateVisitor extends ReattachVisitor {
 	}
 
 	@Override
-	Object processCollection(Object collection, PersistentCollectionDescriptor descriptor) throws HibernateException {
+	Object processCollection(Object collection, PluralAttributeCollection attributeCollection) throws HibernateException {
 
 		if ( collection == PersistentCollectionDescriptor.UNFETCHED_COLLECTION ) {
 			return null;
 		}
 
-		EventSource session = getSession();
+		final EventSource session = getSession();
+		final PersistentCollectionDescriptor descriptor = session.getFactory()
+				.getTypeConfiguration()
+				.findCollectionPersister( attributeCollection.getNavigableName() );
 
 		final Serializable collectionKey = extractCollectionKeyFromOwner( descriptor );
 		if ( collection != null && ( collection instanceof PersistentCollection ) ) {

@@ -20,6 +20,7 @@ import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -461,7 +462,12 @@ public class CascadingActions {
 		}
 
 		@Override
-		public void noCascade(EventSource session, Object parent, EntityDescriptor entityDescriptor, JavaTypeDescriptor propertyType, int propertyIndex) {
+		public void noCascade(
+				EventSource session,
+				Object parent,
+				EntityDescriptor entityDescriptor,
+				PersistentAttribute attribute,
+				int propertyIndex) {
 		}
 
 		@Override

@@ -11,6 +11,7 @@ import java.util.Iterator;
 import org.hibernate.HibernateException;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -76,10 +77,10 @@ public interface CascadingAction {
 	 * @param session The session witin which the cascade is occurring.
 	 * @param parent The property value owner
 	 * @param entityDescriptor The entity entityDescriptor for the owner
-	 * @param propertyType The property type
+	 * @param attribute The attribute
 	 * @param propertyIndex The index of the property within the owner.
 	 */
-	void noCascade(EventSource session, Object parent, EntityDescriptor entityDescriptor, JavaTypeDescriptor propertyType, int propertyIndex);
+	void noCascade(EventSource session, Object parent, EntityDescriptor entityDescriptor, PersistentAttribute attribute, int propertyIndex);
 
 	/**
 	 * Should this action be performed (or noCascade consulted) in the case of lazy properties.

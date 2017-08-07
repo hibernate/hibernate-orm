@@ -12,7 +12,7 @@ import java.io.Serializable;
 
 import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Emmanuel Bernard
@@ -29,13 +29,23 @@ public class ExceptionInterceptor extends EmptyInterceptor {
 		this.allowSave = allowSave;
 	}
 
-	public boolean onLoad(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types)
-			throws CallbackException {
+	@Override
+	public boolean onLoad(
+			Object entity,
+			Serializable id,
+			Object[] state,
+			String[] propertyNames,
+			JavaTypeDescriptor[] javaTypeDescriptors) throws CallbackException {
 		throw new IllegalStateException( EXCEPTION_MESSAGE );
 	}
 
-	public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types)
-			throws CallbackException {
+	@Override
+	public boolean onSave(
+			Object entity,
+			Serializable id,
+			Object[] state,
+			String[] propertyNames,
+			JavaTypeDescriptor[] javaTypeDescriptors) throws CallbackException {
 		if (allowSave) return false;
 		throw new IllegalStateException( EXCEPTION_MESSAGE );
 	}

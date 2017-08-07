@@ -21,6 +21,7 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralAttributeCollection;
 import org.hibernate.pretty.MessageHelper;
 
 import org.jboss.logging.Logger;
@@ -141,13 +142,13 @@ public final class Collections {
      * Initialize the role of the collection.
      *
      * @param collection The collection to be updated by reachability.
-     * @param descriptor The descriptor of the collection.
+     * @param attributeCollection The PluralAttributeCollection.
      * @param entity The owner of the collection.
 	 * @param session The session from which this request originates
      */
 	public static void processReachableCollection(
 			PersistentCollection collection,
-			PersistentCollectionDescriptor descriptor,
+			PluralAttributeCollection attributeCollection,
 			Object entity,
 			SessionImplementor session) {
 		collection.setOwner( entity );
@@ -156,19 +157,18 @@ public final class Collections {
 		if ( ce == null ) {
 			// refer to comment in StatefulPersistenceContext.addCollection()
 			throw new HibernateException(
-					"Found two representations of same collection: " +
-							descriptor.getNavigableRole().getFullPath()
-			);
+					"Found two representations of same collection: " + attributeCollection.getNavigableName() );
 		}
 
 		final SessionFactoryImplementor factory = session.getFactory();
-
-		final EntityDescriptor ownerEntityDescriptor = getOwnerEntityDescriptor( descriptor, factory );
-
+		final PersistentCollectionDescriptor descriptor = factory.getTypeConfiguration().findCollectionPersister(
+				attributeCollection.getNavigableName() );
 		ce.setCurrentPersister( descriptor );
+
 		//TODO: better to pass the id in as an argument?
 		ce.setCurrentKey( descriptor.getKeyOfOwner( entity, session ) );
 
+		final EntityDescriptor ownerEntityDescriptor = getOwnerEntityDescriptor( descriptor, factory );
 		final boolean isBytecodeEnhanced = ownerEntityDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 		if ( isBytecodeEnhanced && !collection.wasInitialized() ) {
 			// skip it
@@ -234,7 +234,7 @@ public final class Collections {
 	private static EntityDescriptor getOwnerEntityDescriptor(
 			PersistentCollectionDescriptor descriptor,
 			SessionFactoryImplementor factory) {
-		return factory.getTypeConfiguration().findEntityDescriptor(  descriptor.getContainer().getJavaType() );
+		return factory.getTypeConfiguration().findEntityDescriptor(  descriptor.getContainer().getNavigableName() );
 	}
 
 	/**

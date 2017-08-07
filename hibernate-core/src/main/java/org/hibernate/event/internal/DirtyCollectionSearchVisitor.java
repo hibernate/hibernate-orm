@@ -11,7 +11,7 @@ import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralAttributeCollection;
 
 /**
  * Do we have a dirty collection here?
@@ -35,11 +35,12 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 		return dirty;
 	}
 
-	Object processCollection(Object collection, PersistentCollectionDescriptor descriptor) throws HibernateException {
+	@Override
+	Object processCollection(Object collection, PluralAttributeCollection attributeCollection) throws HibernateException {
 		if ( collection != null ) {
 			final SessionImplementor session = getSession();
 			final PersistentCollection persistentCollection;
-			if ( descriptor.getCollectionClassification() == CollectionClassification.ARRAY ) {
+			if ( attributeCollection.getPersistentCollectionMetadata().getCollectionClassification() == CollectionClassification.ARRAY ) {
 				persistentCollection = session.getPersistenceContext().getCollectionHolder( collection );
 				// if no array holder we found an unwrappered array (this can't occur,
 				// because we now always call wrap() beforeQuery getting to here)
@@ -62,6 +63,7 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 		return null;
 	}
 
+	@Override
 	boolean includeEntityProperty(Object[] values, int i) {
 		return propertyVersionability[i] && super.includeEntityProperty( values, i );
 	}

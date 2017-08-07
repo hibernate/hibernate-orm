@@ -84,27 +84,27 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	@SuppressWarnings("unchecked")
 	private void checkNaturalId(
-			EntityDescriptor persister,
+			EntityDescriptor entityDescriptor,
 			EntityEntry entry,
 			Object[] current,
 			Object[] loaded,
 			SessionImplementor session) {
-		final NaturalIdentifierDescriptor naturalIdentifierDescriptor = persister.getHierarchy()
+		final NaturalIdentifierDescriptor naturalIdentifierDescriptor = entityDescriptor.getHierarchy()
 				.getNaturalIdentifierDescriptor();
 		if ( naturalIdentifierDescriptor != null && entry.getStatus() != Status.READ_ONLY ) {
-			if ( !persister.getEntityMetamodel().hasImmutableNaturalId() ) {
+			if ( !entityDescriptor.getEntityMetamodel().hasImmutableNaturalId() ) {
 				// SHORT-CUT: if the natural id is mutable (!immutable), no need to do the below checks
 				// EARLY EXIT!!!
 				return;
 			}
 
-			final int[] naturalIdentifierPropertiesIndexes = persister.getNaturalIdentifierProperties();
-			final Type[] propertyTypes = persister.getPropertyTypes();
-			final boolean[] propertyUpdateability = persister.getPropertyUpdateability();
+			final int[] naturalIdentifierPropertiesIndexes = entityDescriptor.getNaturalIdentifierProperties();
+			final Type[] propertyTypes = entityDescriptor.getPropertyTypes();
+			final boolean[] propertyUpdateability = entityDescriptor.getPropertyUpdateability();
 
 			final Object[] snapshot = loaded == null
-					? session.getPersistenceContext().getNaturalIdSnapshot( entry.getId(), persister )
-					: session.getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues( loaded, persister );
+					? session.getPersistenceContext().getNaturalIdSnapshot( entry.getId(), entityDescriptor )
+					: session.getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues( loaded, entityDescriptor );
 
 			for ( int i = 0; i < naturalIdentifierPropertiesIndexes.length; i++ ) {
 				final int naturalIdentifierPropertyIndex = naturalIdentifierPropertiesIndexes[i];
@@ -118,14 +118,12 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 					throw new HibernateException(
 							String.format(
 									"An immutable natural identifier of entity %s was altered from %s to %s",
-									persister.getEntityName(),
+									entityDescriptor.getEntityName(),
 									propertyTypes[naturalIdentifierPropertyIndex].toLoggableString(
-											snapshot[i],
-											session.getFactory()
+											snapshot[i]
 									),
 									propertyTypes[naturalIdentifierPropertyIndex].toLoggableString(
-											current[naturalIdentifierPropertyIndex],
-											session.getFactory()
+											current[naturalIdentifierPropertyIndex]
 									)
 							)
 					);
@@ -253,34 +251,34 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final EventSource session = event.getSession();
 		final Object entity = event.getEntity();
 		final Status status = entry.getStatus();
-		final EntityDescriptor persister = entry.getPersister();
+		final EntityDescriptor entityDescriptor = entry.getPersister();
 		final Object[] values = event.getPropertyValues();
 
 		if ( LOG.isTraceEnabled() ) {
 			if ( status == Status.DELETED ) {
-				if ( !persister.isMutable() ) {
+				if ( !entityDescriptor.getJavaTypeDescriptor().getMutabilityPlan().isMutable() ) {
 					LOG.tracev(
 							"Updating immutable, deleted entity: {0}",
-							MessageHelper.infoString( persister, entry.getId(), session.getFactory() )
+							MessageHelper.infoString( entityDescriptor, entry.getId(), session.getFactory() )
 					);
 				}
 				else if ( !entry.isModifiableEntity() ) {
 					LOG.tracev(
 							"Updating non-modifiable, deleted entity: {0}",
-							MessageHelper.infoString( persister, entry.getId(), session.getFactory() )
+							MessageHelper.infoString( entityDescriptor, entry.getId(), session.getFactory() )
 					);
 				}
 				else {
 					LOG.tracev(
 							"Updating deleted entity: ",
-							MessageHelper.infoString( persister, entry.getId(), session.getFactory() )
+							MessageHelper.infoString( entityDescriptor, entry.getId(), session.getFactory() )
 					);
 				}
 			}
 			else {
 				LOG.tracev(
 						"Updating entity: {0}",
-						MessageHelper.infoString( persister, entry.getId(), session.getFactory() )
+						MessageHelper.infoString( entityDescriptor, entry.getId(), session.getFactory() )
 				);
 			}
 		}
@@ -301,7 +299,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		// check nullability but do not doAfterTransactionCompletion command execute
 		// we'll use scheduled updates for that.
-		new Nullability( session ).checkNullability( values, persister, true );
+		new Nullability( session ).checkNullability( values, entityDescriptor, true );
 
 		// schedule the update
 		// note that we intentionally do _not_ pass in currentPersistentState!
@@ -312,13 +310,13 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 						dirtyProperties,
 						event.hasDirtyCollection(),
 						( status == Status.DELETED && !entry.isModifiableEntity() ?
-								persister.getPropertyValues( entity ) :
+								entityDescriptor.getPropertyValues( entity ) :
 								entry.getLoadedState() ),
 						entry.getVersion(),
 						nextVersion,
 						entity,
 						entry.getRowId(),
-						persister,
+						entityDescriptor,
 						session
 				)
 		);
@@ -370,7 +368,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				values,
 				entry.getLoadedState(),
 				persister.getPropertyNames(),
-				persister.getPropertyTypes()
+				persister.getPropertyJavaTypeDescriptors()
 		);
 
 		return answerFromInterceptor || isDirty;
@@ -520,7 +518,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				values,
 				loadedState,
 				persister.getPropertyNames(),
-				persister.getPropertyTypes()
+				persister.getPropertyJavaTypeDescriptors()
 		);
 
 		if ( dirtyProperties == null ) {

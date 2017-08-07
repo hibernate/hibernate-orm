@@ -82,7 +82,6 @@ import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.PropertyInferredData;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.cfg.SecondPass;
-import org.hibernate.criterion.Junction;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -100,6 +99,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.naming.Identifier;
+import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 
 import org.jboss.logging.Logger;
 
@@ -963,7 +963,7 @@ public abstract class CollectionBinder {
 			if ( StringHelper.isNotEmpty( clause ) ) {
 				if ( whereBuffer.length() > 0 ) {
 					whereBuffer.append( StringHelper.WHITESPACE );
-					whereBuffer.append( Junction.Nature.AND.getOperator() );
+					whereBuffer.append( Junction.Nature.CONJUNCTION );
 					whereBuffer.append( StringHelper.WHITESPACE );
 				}
 				whereBuffer.append( clause );

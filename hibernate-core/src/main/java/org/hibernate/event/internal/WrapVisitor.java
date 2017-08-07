@@ -6,7 +6,9 @@
  */
 package org.hibernate.event.internal;
 
-import org.hibernate.EntityMode;
+import java.util.List;
+import java.util.Set;
+
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -15,9 +17,11 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralAttributeCollection;
 
 /**
  * Wrap collections in a Hibernate collection wrapper.
@@ -38,7 +42,7 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	Object processCollection(Object collection, PersistentCollectionDescriptor descriptor)
+	Object processCollection(Object collection, PluralAttributeCollection attributeCollection)
 			throws HibernateException {
 
 		if ( collection != null && ( collection instanceof PersistentCollection ) ) {
@@ -46,18 +50,21 @@ public class WrapVisitor extends ProxyVisitor {
 			final SessionImplementor session = getSession();
 			PersistentCollection coll = (PersistentCollection) collection;
 			if ( coll.setCurrentSession( session ) ) {
-				reattachCollection( coll, descriptor.getNavigableRole() );
+				reattachCollection( coll, attributeCollection.getNavigableRole() );
 			}
 			return null;
 
 		}
 		else {
+			final PersistentCollectionDescriptor descriptor = getSession().getFactory()
+					.getTypeConfiguration()
+					.findCollectionPersister( attributeCollection.getNavigableName() );
 			return processArrayOrNewCollection( collection, descriptor );
 		}
 
 	}
 
-	final Object processArrayOrNewCollection(Object collection, PersistentCollectionDescriptor descriptor)
+	final Object processArrayOrNewCollection(Object collection, PersistentCollectionDescriptor collectionDescriptor)
 			throws HibernateException {
 
 		final SessionImplementor session = getSession();
@@ -67,11 +74,9 @@ public class WrapVisitor extends ProxyVisitor {
 			return null;
 		}
 		else {
-			PersistentCollectionDescriptor persister = session.getFactory().getTypeConfiguration().findCollectionPersister( descriptor.getRole() );
-
 			final PersistenceContext persistenceContext = session.getPersistenceContext();
 			//TODO: move into collection type, so we can use polymorphism!
-			if ( descriptor.getCollectionClassification() == CollectionClassification.ARRAY ) {
+			if ( collectionDescriptor.getCollectionClassification() == CollectionClassification.ARRAY ) {
 
 				if ( collection == PersistentCollectionDescriptor.UNFETCHED_COLLECTION ) {
 					return null;
@@ -79,19 +84,19 @@ public class WrapVisitor extends ProxyVisitor {
 
 				PersistentCollection ah = persistenceContext.getCollectionHolder( collection );
 				if ( ah == null ) {
-					ah = descriptor.getTuplizer().wrap( session, collection );
-					persistenceContext.addNewCollection( persister, ah );
+					ah = collectionDescriptor.getTuplizer().wrap( session, collection );
+					persistenceContext.addNewCollection( collectionDescriptor, ah );
 					persistenceContext.addCollectionHolder( ah );
 				}
 				return null;
 			}
 			else {
 
-				PersistentCollection persistentCollection = descriptor.getTuplizer().wrap( session, collection );
-				persistenceContext.addNewCollection( persister, persistentCollection );
+				PersistentCollection persistentCollection = collectionDescriptor.getTuplizer().wrap( session, collection );
+				persistenceContext.addNewCollection( collectionDescriptor, persistentCollection );
 
 				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Wrapped collection in role: {0}", descriptor.getNavigableRole().getFullPath() );
+					LOG.tracev( "Wrapped collection in role: {0}", collectionDescriptor.getNavigableRole().getFullPath() );
 				}
 
 				return persistentCollection; //Force a substitution!
@@ -103,8 +108,8 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	void processValue(int i, Object[] values, Type[] types) {
-		Object result = processValue( values[i], types[i] );
+	void processValue(int i, Object[] values, PersistentAttribute attribute) throws HibernateException{
+		Object result = processValue( values[i], attribute );
 		if ( result != null ) {
 			substitute = true;
 			values[i] = result;
@@ -112,20 +117,22 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	Object processComponent(Object component, EmbeddedType componentType) throws HibernateException {
+	Object processComponent(Object component, EmbeddedTypeDescriptor descriptor) throws HibernateException {
 		if ( component != null ) {
-			Object[] values = componentType.getPropertyValues( component, getSession() );
-			Type[] types = componentType.getSubtypes();
+			Object[] values = descriptor.getPropertyValues( component );
+			final List<PersistentAttribute> persistentAttributes = descriptor.getPersistentAttributes();
 			boolean substituteComponent = false;
-			for ( int i = 0; i < types.length; i++ ) {
-				Object result = processValue( values[i], types[i] );
+			int i = 0;
+			for(PersistentAttribute attribute : persistentAttributes){
+				Object result = processValue( values[i], attribute );
 				if ( result != null ) {
 					values[i] = result;
 					substituteComponent = true;
 				}
+				i++;
 			}
 			if ( substituteComponent ) {
-				componentType.setPropertyValues( component, values, EntityMode.POJO );
+				descriptor.setPropertyValues( component, values );
 			}
 		}
 
@@ -133,12 +140,12 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	void process(Object object, EntityDescriptor persister) throws HibernateException {
-		final Object[] values = persister.getPropertyValues( object );
-		final Type[] types = persister.getPropertyTypes();
-		processEntityPropertyValues( values, types );
+	void process(Object object, EntityDescriptor descriptor) throws HibernateException {
+		final Object[] values = descriptor.getPropertyValues( object );
+		final List<PersistentAttribute> persistentAttributes = descriptor.getPersistentAttributes();
+		processEntityPropertyValues( values, persistentAttributes );
 		if ( isSubstitutionRequired() ) {
-			persister.setPropertyValues( object, values );
+			descriptor.setPropertyValues( object, values );
 		}
 	}
 }

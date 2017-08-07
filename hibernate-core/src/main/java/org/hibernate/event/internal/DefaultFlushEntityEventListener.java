@@ -142,9 +142,9 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final Object entity = event.getEntity();
 		final EntityEntry entry = event.getEntityEntry();
 		final EventSource session = event.getSession();
-		final EntityDescriptor persister = entry.getPersister();
+		final EntityDescriptor entityDescriptor = entry.getPersister();
 		final Status status = entry.getStatus();
-		final Type[] types = persister.getPropertyTypes();
+		final Type[] types = entityDescriptor.getPropertyTypes();
 
 		final boolean mightBeDirty = entry.requiresDirtyCheck( entity );
 
@@ -153,7 +153,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		event.setPropertyValues( values );
 
 		//TODO: avoid this for non-new instances where mightBeDirty==false
-		boolean substitute = wrapCollections( session, persister, types, values );
+		boolean substitute = wrapCollections( session, entityDescriptor, types, values );
 
 		if ( isUpdateNecessary( event, mightBeDirty ) ) {
 			substitute = scheduleUpdate( event ) || substitute;
@@ -162,12 +162,12 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		if ( status != Status.DELETED ) {
 			// now update the object .. has to be outside the main if block above (because of collections)
 			if ( substitute ) {
-				persister.setPropertyValues( entity, values );
+				entityDescriptor.setPropertyValues( entity, values );
 			}
 
 			// Search for collections by reachability, updating their role.
 			// We don't want to touch collections reachable from a deleted object
-			if ( persister.hasCollections() ) {
+			if ( entityDescriptor.hasCollections() ) {
 				new FlushVisitor( session, entity ).processEntityPropertyValues( values, types );
 			}
 		}

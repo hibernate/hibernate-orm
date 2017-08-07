@@ -7,6 +7,7 @@
 package org.hibernate.event.internal;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -25,6 +26,7 @@ import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 
@@ -145,12 +147,12 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			Object entity,
 			Serializable id,
 			Object[] values,
-			Type[] types,
+			List<Navigable> navigables,
 			EventSource source) {
 		//TODO: we use two visitors here, inefficient!
 		OnReplicateVisitor visitor = new OnReplicateVisitor( source, id, entity, false );
-		visitor.processEntityPropertyValues( values, types );
-		return super.visitCollectionsBeforeSave( entity, id, values, types, source );
+		visitor.processEntityPropertyValues( values, navigables );
+		return super.visitCollectionsBeforeSave( entity, id, values, navigables, source );
 	}
 
 	@Override

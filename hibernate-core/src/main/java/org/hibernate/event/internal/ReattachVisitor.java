@@ -13,6 +13,7 @@ import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
@@ -56,8 +57,8 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * {@inheritDoc}
 	 */
 	@Override
-	Object processComponent(Object component, EmbeddedType componentType) throws HibernateException {
-		Type[] types = componentType.getSubtypes();
+	Object processComponent(Object component, EmbeddedTypeDescriptor descriptor) throws HibernateException {
+		Type[] types = componentType.getSubclassTypes();
 		if ( component == null ) {
 			processValues( new Object[types.length], types );
 		}

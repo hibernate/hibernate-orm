@@ -41,6 +41,7 @@ import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierComposite;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -168,7 +169,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			LoadEvent event,
 			LoadEventListener.LoadType options,
 			EntityDescriptor dependentPersister,
-			EmbeddedComponentType dependentIdType,
+			EntityIdentifierComposite dependentIdType,
 			EntityDescriptor parentPersister) {
 		final EntityKey parentEntityKey = event.getSession().generateEntityKey( event.getEntityId(), parentPersister );
 		final Object parent = doLoad( event, parentPersister, parentEntityKey, options );

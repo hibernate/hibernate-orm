@@ -8,6 +8,7 @@ package org.hibernate.event.internal;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -37,7 +38,7 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	Object processCollection(Object collection, CollectionType collectionType)
+	Object processCollection(Object collection, PersistentCollectionDescriptor descriptor)
 			throws HibernateException {
 
 		if ( collection != null && ( collection instanceof PersistentCollection ) ) {
@@ -45,18 +46,18 @@ public class WrapVisitor extends ProxyVisitor {
 			final SessionImplementor session = getSession();
 			PersistentCollection coll = (PersistentCollection) collection;
 			if ( coll.setCurrentSession( session ) ) {
-				reattachCollection( coll, collectionType );
+				reattachCollection( coll, descriptor.getNavigableRole() );
 			}
 			return null;
 
 		}
 		else {
-			return processArrayOrNewCollection( collection, collectionType );
+			return processArrayOrNewCollection( collection, descriptor );
 		}
 
 	}
 
-	final Object processArrayOrNewCollection(Object collection, CollectionType collectionType)
+	final Object processArrayOrNewCollection(Object collection, PersistentCollectionDescriptor descriptor)
 			throws HibernateException {
 
 		final SessionImplementor session = getSession();
@@ -66,19 +67,19 @@ public class WrapVisitor extends ProxyVisitor {
 			return null;
 		}
 		else {
-			PersistentCollectionDescriptor persister = session.getFactory().getTypeConfiguration().findCollectionPersister( collectionType.getRole() );
+			PersistentCollectionDescriptor persister = session.getFactory().getTypeConfiguration().findCollectionPersister( descriptor.getRole() );
 
 			final PersistenceContext persistenceContext = session.getPersistenceContext();
 			//TODO: move into collection type, so we can use polymorphism!
-			if ( collectionType.hasHolder() ) {
+			if ( descriptor.getCollectionClassification() == CollectionClassification.ARRAY ) {
 
-				if ( collection == CollectionType.UNFETCHED_COLLECTION ) {
+				if ( collection == PersistentCollectionDescriptor.UNFETCHED_COLLECTION ) {
 					return null;
 				}
 
 				PersistentCollection ah = persistenceContext.getCollectionHolder( collection );
 				if ( ah == null ) {
-					ah = collectionType.wrap( session, collection );
+					ah = descriptor.getTuplizer().wrap( session, collection );
 					persistenceContext.addNewCollection( persister, ah );
 					persistenceContext.addCollectionHolder( ah );
 				}
@@ -86,11 +87,11 @@ public class WrapVisitor extends ProxyVisitor {
 			}
 			else {
 
-				PersistentCollection persistentCollection = collectionType.wrap( session, collection );
+				PersistentCollection persistentCollection = descriptor.getTuplizer().wrap( session, collection );
 				persistenceContext.addNewCollection( persister, persistentCollection );
 
 				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Wrapped collection in role: {0}", collectionType.getRole() );
+					LOG.tracev( "Wrapped collection in role: {0}", descriptor.getNavigableRole().getFullPath() );
 				}
 
 				return persistentCollection; //Force a substitution!

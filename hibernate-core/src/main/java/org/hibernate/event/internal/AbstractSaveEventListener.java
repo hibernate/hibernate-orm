@@ -7,6 +7,7 @@
 package org.hibernate.event.internal;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.LockMode;
@@ -34,9 +35,10 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.Type;
 
 /**
  * A convenience bas class for listeners responding to save events.
@@ -115,8 +117,12 @@ public abstract class AbstractSaveEventListener
 			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
 		}
 
-		EntityDescriptor persister = source.getEntityPersister( entityName, entity );
-		Serializable generatedId = persister.getEntitgetIdentifierGenerator().generate( source, entity );
+		final EntityDescriptor entityDescriptor = source.getEntityPersister( entityName, entity );
+		final EntityIdentifier<Object, Object> identifierDescriptor = entityDescriptor.getHierarchy()
+				.getIdentifierDescriptor();
+		Serializable generatedId = identifierDescriptor
+				.getIdentifierValueGenerator()
+				.generate( source, entity );
 		if ( generatedId == null ) {
 			throw new IdentifierGenerationException( "null id generated for:" + entity.getClass() );
 		}
@@ -124,19 +130,19 @@ public abstract class AbstractSaveEventListener
 			return source.getIdentifier( entity );
 		}
 		else if ( generatedId == IdentifierGeneratorHelper.POST_INSERT_INDICATOR ) {
-			return performSave( entity, null, persister, true, anything, source, requiresImmediateIdAccess );
+			return performSave( entity, null, entityDescriptor, true, anything, source, requiresImmediateIdAccess );
 		}
 		else {
 			// TODO: define toString()s for generators
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf(
 						"Generated identifier: %s, using strategy: %s",
-						persister.getIdentifierType().toLoggableString( generatedId, source.getFactory() ),
-						persister.getIdentifierGenerator().getClass().getName()
+						entityDescriptor.getIdentifierType().toLoggableString( generatedId ),
+						identifierDescriptor.getClass().getName()
 				);
 			}
 
-			return performSave( entity, generatedId, persister, false, anything, source, true );
+			return performSave( entity, generatedId, entityDescriptor, false, anything, source, true );
 		}
 	}
 
@@ -266,12 +272,12 @@ public abstract class AbstractSaveEventListener
 		cascadeBeforeSave( source, persister, entity, anything );
 
 		Object[] values = persister.getPropertyValuesToInsert( entity, getMergeMap( anything ), source );
-		Type[] types = persister.getPropertyTypes();
+		final List<Navigable> navigables = persister.getNavigables();
 
 		boolean substitute = substituteValuesIfNecessary( entity, id, values, persister, source );
 
 		if ( persister.hasCollections() ) {
-			substitute = substitute || visitCollectionsBeforeSave( entity, id, values, types, source );
+			substitute = substitute || visitCollectionsBeforeSave( entity, id, values, navigables, source );
 		}
 
 		if ( substitute ) {
@@ -361,11 +367,11 @@ public abstract class AbstractSaveEventListener
 			Object entity,
 			Serializable id,
 			Object[] values,
-			Type[] types,
+			List<Navigable> navigables,
 			EventSource source) {
 		WrapVisitor visitor = new WrapVisitor( source );
 		// substitutes into values by side-effect
-		visitor.processEntityPropertyValues( values, types );
+		visitor.processEntityPropertyValues( values, navigables );
 		return visitor.isSubstitutionRequired();
 	}
 

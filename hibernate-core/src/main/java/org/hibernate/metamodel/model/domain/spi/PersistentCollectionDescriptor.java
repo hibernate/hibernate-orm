@@ -15,6 +15,7 @@ import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.PersistentCollectionTuplizer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.loader.spi.CollectionLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -66,8 +67,10 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * @author Gavin King
  */
 public interface PersistentCollectionDescriptor<O,C,E>
-		extends NavigableContainer<C>, RootTableGroupProducer, TableGroupJoinProducer,
+		extends  NavigableContainer<C>, RootTableGroupProducer, TableGroupJoinProducer,
 		TableReferenceContributor, EmbeddedContainer<C> {
+
+	Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
 
 	Class[] CONSTRUCTOR_SIGNATURE = new Class[] {
 			Collection.class,

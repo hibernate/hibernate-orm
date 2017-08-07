@@ -7,12 +7,14 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
+import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -30,16 +32,17 @@ public class EvictVisitor extends AbstractVisitor {
 	}
 
 	@Override
-	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	Object processCollection(Object collection, PersistentCollectionDescriptor descriptor) throws HibernateException {
 		if (collection != null) {
-			evictCollection(collection, type);
+			evictCollection(collection, descriptor);
 		}
 
 		return null;
 	}
-	public void evictCollection(Object value, CollectionType type) {
+
+	public void evictCollection(Object value, PersistentCollectionDescriptor descriptor) {
 		final Object pc;
-		if ( type.hasHolder() ) {
+		if ( descriptor.getCollectionClassification() == CollectionClassification.ARRAY ) {
 			pc = getSession().getPersistenceContext().removeCollectionHolder(value);
 		}
 		else if ( value instanceof PersistentCollection ) {
@@ -65,7 +68,7 @@ public class EvictVisitor extends AbstractVisitor {
 							ce.getLoadedKey(),
 							getSession() ) );
 		}
-		if (ce.getLoadedPersistentCollectionDescriptor() != null && ce.getLoadedPersistentCollectionDescriptor().getBatchSize() > 1) {
+		if (ce.getLoadedPersistentCollectionDescriptor() != null && ce.getLoadedPersistentCollectionDescriptor().getgetBatchSize() > 1) {
 			getSession().getPersistenceContext().getBatchFetchQueue().removeBatchLoadableCollection(ce);
 		}
 		if ( ce.getLoadedPersistentCollectionDescriptor() != null && ce.getLoadedKey() != null ) {

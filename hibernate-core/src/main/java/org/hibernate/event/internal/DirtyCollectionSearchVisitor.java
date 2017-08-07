@@ -7,9 +7,11 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
+import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * Do we have a dirty collection here?
@@ -33,11 +35,11 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 		return dirty;
 	}
 
-	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	Object processCollection(Object collection, PersistentCollectionDescriptor descriptor) throws HibernateException {
 		if ( collection != null ) {
 			final SessionImplementor session = getSession();
 			final PersistentCollection persistentCollection;
-			if ( type.isArrayType() ) {
+			if ( descriptor.getCollectionClassification() == CollectionClassification.ARRAY ) {
 				persistentCollection = session.getPersistenceContext().getCollectionHolder( collection );
 				// if no array holder we found an unwrappered array (this can't occur,
 				// because we now always call wrap() beforeQuery getting to here)

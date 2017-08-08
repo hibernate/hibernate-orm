@@ -114,6 +114,16 @@ public class Identifier implements Comparable<Identifier> {
 	}
 
 	/**
+	 * Constructs an unquoted identifier instance.
+	 *
+	 * @param text The identifier text.
+	 */
+	protected Identifier(String text) {
+		this.text = text;
+		this.isQuoted = false;
+	}
+
+	/**
 	 * Get the identifiers name (text)
 	 *
 	 * @return The name

@@ -57,20 +57,20 @@ or [Eclipse](https://community.jboss.org/wiki/ContributingToHibernateUsingEclips
 
 Create a [topic branch](http://git-scm.com/book/en/Git-Branching-Branching-Workflows#Topic-Branches) 
 on which you will work.  The convention is to incorporate the JIRA issue key in the name of this branch,
-although this is more of a mnemonic strategy than a hard=and-fast rule - but doing so helps:
+although this is more of a mnemonic strategy than a hard-and-fast rule - but doing so helps:
 * remember what each branch is for 
 * isolate the work from other contributions you may be working on.  
 
-
-This branch will be the base for 
-.  If there is not already a JIRA issue
-covering the work you want to do, create one.  Assuming you will be working from the master branch and working
+_If there is not already a JIRA issue covering the work you want to do, create one._
+  
+Assuming you will be working from the master branch and working
 on the JIRA HHH-123 : `git checkout -b HHH-123 master`
 
 
 ## Code
 
 Do yo thing!
+
 
 ## Commit
 

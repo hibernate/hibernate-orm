@@ -18,6 +18,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.CompositeType;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -44,6 +45,7 @@ public class EmptyCompositeEquivalentToNullTest extends BaseCoreFunctionalTestCa
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-11898" )
+	@FailureExpected( jiraKey = "HHH-11898" )
 	public void testPrimitive() {
 		doInHibernate(
 				this::sessionFactory,

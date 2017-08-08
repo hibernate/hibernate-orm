@@ -14,15 +14,17 @@ import org.hibernate.internal.util.StringHelper;
  * @author Andrea Boriero
  */
 public class DatabaseIdentifier extends Identifier {
+
+	/**
+	 * Constructs a datatabase identifier instance.
+	 * It is assumed that <code>text</code> is unquoted.
+	 *
+	 * @param text The identifier text.
+	 */
 	protected DatabaseIdentifier(String text) {
 		super( text );
 	}
 
-	/**
-	 * Constructs a datatabase identifier instance.
-	 *
-	 * @param text The identifier text.
-	 */
 	public static DatabaseIdentifier toIdentifier(String text) {
 		if ( StringHelper.isEmpty( text ) ) {
 			return null;

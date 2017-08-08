@@ -27,6 +27,11 @@ public class DatabaseIdentifier extends Identifier {
 		if ( StringHelper.isEmpty( text ) ) {
 			return null;
 		}
-		return new DatabaseIdentifier( text );
+		String textToUse = text;
+		if ( isQuoted( text ) ) {
+			// exclude the quotes from text
+			textToUse = Identifier.toIdentifier( text ).getText();
+		}
+		return new DatabaseIdentifier( textToUse );
 	}
 }

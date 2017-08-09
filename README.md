@@ -9,7 +9,8 @@ JPA specification, which is the standardized Java specification for ORM.  See
 [![Build Status](http://ci.hibernate.org/job/hibernate-orm-master-h2-main/badge/icon)](http://ci.hibernate.org/job/hibernate-orm-master-h2-main/)
 
 
-## Resources
+Resources
+=========
 
 The build requires a Java 8 JDK as JAVA_HOME.
 
@@ -26,14 +27,16 @@ See the guides for setting up [IntelliJ](https://developer.jboss.org/wiki/Contri
 Check out the _Getting Started_ section in CONTRIBUTING.md for getting started working on Hibernate source.
 
 
-## CI Builds
+CI Builds
+=========
 
 Hibernate makes use of [Jenkins](http://jenkins-ci.org) for its CI needs.  The project is built continuous on each 
 push to the upstream repository.   Overall there are a few different jobs, all of which can be seen at 
 [http://ci.hibernate.org/view/ORM/](http://ci.hibernate.org/view/ORM/)
 
 
-## Gradle primer
+Gradle primer
+=========
 
 This section describes some of the basics developers and contributors new to Gradle might 
 need to know to get productive quickly.  The Gradle documentation is very well done; 2 in 
@@ -45,7 +48,8 @@ it follows a topical approach to describing all of the capabilities of Gradle.
 getting up to speed on certain aspects of Gradle.
 
 
-### Using the Gradle Wrapper
+Using the Gradle Wrapper
+------------------------
 
 For contributors who do not otherwise use Gradle and do not want to install it, Gradle offers a very cool
 features called the wrapper.  It lets you run Gradle builds without a previously installed Gradle distro in 
@@ -62,7 +66,8 @@ _Note that another reason to use `gradlew` is that it uses the exact version of 
 defined to work with.
 
 
-### Executing Tasks
+Executing Tasks
+------------------------
 
 Gradle uses the concept of build tasks (equivalent to Ant targets or Maven phases/goals). You can get a list of
 available tasks via 
@@ -76,7 +81,8 @@ either:
 1. `cd` into that module directory and execute the task
 2. name the "task path".  For example, in order to run the tests for the _hibernate-core_ module from the root directory you could say `gradle hibernate-core:test`
 
-### Common Java related tasks
+Common Java related tasks
+------------------------
 
 * _build_ - Assembles (jars) and tests this project
 * _buildDependents_ - Assembles and tests this project and all projects that depend on it.  So think of running this in hibernate-core, Gradle would assemble and test hibernate-core as well as hibernate-envers (because envers depends on core)
@@ -93,17 +99,20 @@ never uses this, but it can be useful for testing your build with other local Ma
 * _clean_ - Cleans the build directory
 
 
-## Testing and databases
+Testing and databases
+=====================
 
 Testing against a specific database can be achieved in 2 different ways:
 
 
-### Using the "Matrix Testing Plugin" for Gradle.
+Using the "Matrix Testing Plugin" for Gradle.
+---------------------------------------------
 
 Coming soon...
 
 
-### Using "profiles"
+Using "profiles"
+------------------------
 
 The Hibernate build defines a number of database testing "profiles" in `databases.gradle`.  These
 profiles can be activated by name using the `db` build property which can be passed either as

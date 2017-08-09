@@ -119,39 +119,11 @@ profiles can be activated by name using the `db` build property which can be pas
 a JVM system prop (`-D`) or as a Gradle project property (`-P`).  Examples below use the Gradle
 project property approach.
 
-[source]
-----
-gradle clean build -Pdb=pgsql
-----
+    gradle clean build -Pdb=pgsql
 
 To run a test from your IDE, you need to ensure the property expansions happen.
 Use the following command:
 
-[source]
-----
-gradle clean compile -Pdb=pgsql
-----
+    gradle clean compile -Pdb=pgsql
 
-[NOTE]
-====
-To run the tests from your IDEs for Oracle, DB2 and other non-OSS JDBC drivers, it is a bit different.
-You also need to edit `build.gradle` and change the following (e.g for Oracle DB).
-
-[source]
-----
-// from
-if (db.equalsIgnoreCase("oracle")) {
-  dependencies {
-    testRuntime( libraries.oracle )
-  }
-}
-
-//to
-dependencies {
-  testRuntime( libraries.oracle )
-}
-----
-
-Also remember to add the Oracle driver to your local Maven repository.
-Oracle drivers are not on Maven central.
-====
+_*NOTE : If you are running tests against a JDBC driver that is not available via Maven central (generally due to license nonsense - Oracle, DB2, etc) be sure to add these drivers to your local Maven repo cache (~/.m2/repository) or (better) add it to a personal Maven repo server*_

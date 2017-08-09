@@ -8,11 +8,11 @@ project really) strong and successful.
 All original contributions to Hibernate are licensed under the 
 [GNU Lesser General Public License (LGPL)](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt), 
 version 2.1 or later, or, if another license is specified as governing the file or directory being 
-modified, such other license.  The LGPL text is included verbatim in the link:lgpl.txt[lgpl.txt] file 
+modified, such other license.  The LGPL text is included verbatim in the [lgpl.txt](lgpl.txt) file 
 in the root directory of the ORM repository.
 
 All contributions are subject to the [Developer Certificate of Origin (DCO)](https://developercertificate.org/).  
-The DCO text is also included verbatim in the link:dco.txt[dco.txt] file in the root directory of the ORM repository.
+The DCO text is also included verbatim in the [dco.txt](dco.txt) file in the root directory of the ORM repository.
 
 
 ## Guidelines

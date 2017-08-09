@@ -304,8 +304,7 @@ public class CascadingActions {
 				CollectionType collectionType,
 				Object collection) {
 			// persists don't cascade to uninitialized collections
-			// Change according to HHH-11916
-			return getLoadedElementsIterator( session, collectionType, collection );
+			return getAllElementsIterator( session, collectionType, collection );
 		}
 
 		@Override

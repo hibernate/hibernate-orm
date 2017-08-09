@@ -38,8 +38,6 @@ public class DirtyTrackingCollectionTest extends BaseCoreFunctionalTestCase {
 
     @Before
     public void prepare() {
-        buildSessionFactory();
-
         doInJPA( this::sessionFactory, em -> {
             StringsEntity entity = new StringsEntity();
             entity.id = 1L;

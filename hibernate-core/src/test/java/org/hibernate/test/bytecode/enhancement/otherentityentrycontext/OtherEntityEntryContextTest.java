@@ -41,8 +41,6 @@ public class OtherEntityEntryContextTest extends BaseCoreFunctionalTestCase {
 
     @Before
     public void prepare() {
-        buildSessionFactory();
-
         // Create a Parent
         doInHibernate( this::sessionFactory, s -> {
             s.persist( new Parent( 1L, "first" ) );
@@ -73,7 +71,8 @@ public class OtherEntityEntryContextTest extends BaseCoreFunctionalTestCase {
                 try {
                     session2.update( p );
                     fail( "should have failed because p is already associated with a PersistenceContext that is still open." );
-                } catch ( HibernateException expected ) {
+                }
+                catch ( HibernateException ignored ) {
                     // expected
                 }
             } );

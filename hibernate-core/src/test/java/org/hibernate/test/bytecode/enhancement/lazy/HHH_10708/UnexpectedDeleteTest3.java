@@ -38,8 +38,6 @@ public class UnexpectedDeleteTest3 extends BaseCoreFunctionalTestCase {
 
     @Before
     public void prepare() {
-        buildSessionFactory();
-
         doInHibernate( this::sessionFactory, s -> {
             Child child = new Child();
             child.setId( 2L );

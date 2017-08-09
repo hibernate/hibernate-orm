@@ -44,8 +44,6 @@ public class CascadeDeleteTest extends BaseCoreFunctionalTestCase {
 
     @Before
     public void prepare() {
-        buildSessionFactory();
-
         // Create a Parent with one Child
         doInHibernate( this::sessionFactory, s -> {
                     Parent p = new Parent();

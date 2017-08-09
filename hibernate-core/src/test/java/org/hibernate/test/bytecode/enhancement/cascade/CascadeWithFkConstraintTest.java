@@ -41,8 +41,6 @@ public class CascadeWithFkConstraintTest extends BaseCoreFunctionalTestCase {
 
     @Before
     public void prepare() {
-        buildSessionFactory();
-
         // Create garage, add 2 cars to garage
         doInJPA( this::sessionFactory, em -> {
 
@@ -64,7 +62,6 @@ public class CascadeWithFkConstraintTest extends BaseCoreFunctionalTestCase {
 
     @Test
     public void test() {
-
         // Remove garage
         doInJPA( this::sessionFactory, em -> {
             Garage toRemoveGarage = em.find( Garage.class, garageId );

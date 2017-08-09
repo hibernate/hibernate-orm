@@ -39,8 +39,6 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 
     @Before
     public void prepare() {
-        buildSessionFactory();
-
         // Create a Parent
         doInHibernate( this::sessionFactory, s -> {
             Parent p = new Parent();

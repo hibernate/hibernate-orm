@@ -31,12 +31,11 @@ public class EnhancerFileNotFoundTest {
     public void test() throws Exception {
         Enhancer enhancer = new Enhancer( new DefaultEnhancementContext() );
         try {
-            Class<?> clazz = getClass().getClassLoader().loadClass( Hidden.class.getName() );
-            String resourceName = clazz.getName().replace( '.', '/' ) + ".class";
+            String resourceName = Hidden.class.getName().replace( '.', '/' ) + ".class";
             URL url = getClass().getClassLoader().getResource( resourceName );
             if ( url != null ) {
                 Files.delete( Paths.get( url.toURI() ) );
-                enhancer.loadCtClassFromClass( clazz );
+                enhancer.loadCtClassFromClass( Hidden.class );
             }
             fail( "Should throw FileNotFoundException!" );
         } catch ( Exception expected ) {

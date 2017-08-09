@@ -34,11 +34,6 @@ public class EmbeddedPKTest extends BaseCoreFunctionalTestCase {
         return new Class<?>[]{WorkOrder.class, WorkOrderPK.class};
     }
 
-    @Before
-    public void prepare() {
-        buildSessionFactory();
-    }
-
     @Test
     public void test() {
         TransactionUtil.doInHibernate( this::sessionFactory, s -> {

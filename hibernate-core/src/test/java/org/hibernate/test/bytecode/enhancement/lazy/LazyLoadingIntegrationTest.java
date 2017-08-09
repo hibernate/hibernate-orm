@@ -9,6 +9,7 @@ package org.hibernate.test.bytecode.enhancement.lazy;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
@@ -46,13 +47,14 @@ public class LazyLoadingIntegrationTest extends BaseCoreFunctionalTestCase {
         return new Class<?>[]{Parent.class, Child.class};
     }
 
+    @Override
+    protected void configure(Configuration configuration) {
+        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
+        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
+    }
+
     @Before
     public void prepare() {
-        buildSessionFactory( configuration -> {
-            configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-            configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-        } );
-
         doInHibernate( this::sessionFactory, s -> {
             Parent parent = new Parent();
             for ( int i = 0; i < CHILDREN_SIZE; i++ ) {

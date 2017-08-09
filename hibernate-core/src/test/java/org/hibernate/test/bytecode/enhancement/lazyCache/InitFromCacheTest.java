@@ -11,6 +11,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Formula;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.cache.BaseRegion;
@@ -51,13 +52,14 @@ public class InitFromCacheTest extends BaseCoreFunctionalTestCase {
         return new Class[]{Document.class};
     }
 
+    @Override
+    protected void configure(Configuration configuration) {
+        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
+        configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
+    }
+
     @Before
     public void prepare() {
-        buildSessionFactory( configuration -> {
-            configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
-            configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
-        } );
-
         persister = sessionFactory().getMetamodel().entityPersister( Document.class );
         assertTrue( persister.hasCache() );
 

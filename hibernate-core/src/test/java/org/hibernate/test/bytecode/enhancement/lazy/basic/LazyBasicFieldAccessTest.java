@@ -7,6 +7,7 @@
 package org.hibernate.test.bytecode.enhancement.lazy.basic;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
@@ -41,13 +42,14 @@ public class LazyBasicFieldAccessTest extends BaseCoreFunctionalTestCase {
         return new Class<?>[]{LazyEntity.class};
     }
 
+    @Override
+    protected void configure(Configuration configuration) {
+        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
+        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
+    }
+
     @Before
     public void prepare() {
-        buildSessionFactory( configuration -> {
-            configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-            configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-        } );
-
         doInHibernate( this::sessionFactory, s -> {
             LazyEntity entity = new LazyEntity();
             entity.setDescription( "desc" );

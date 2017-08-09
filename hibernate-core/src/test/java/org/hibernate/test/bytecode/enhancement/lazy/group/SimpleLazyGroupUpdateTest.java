@@ -9,6 +9,7 @@ package org.hibernate.test.bytecode.enhancement.lazy.group;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
@@ -46,12 +47,14 @@ public class SimpleLazyGroupUpdateTest extends BaseCoreFunctionalTestCase {
         return new Class[]{TestEntity.class};
     }
 
+    @Override
+    protected void configure(Configuration configuration) {
+        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
+        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
+    }
+
     @Before
     public void prepare() {
-        buildSessionFactory( configuration -> {
-            configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-            configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-        } );
         doInHibernate( this::sessionFactory, s -> {
             s.save( new TestEntity( 1L, "entity 1", "blah", REALLY_BIG_STRING ) );
         } );

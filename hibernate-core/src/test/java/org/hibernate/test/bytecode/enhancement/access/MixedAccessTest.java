@@ -54,8 +54,6 @@ public class MixedAccessTest extends BaseCoreFunctionalTestCase {
 
     @Before
     public void prepare() {
-        buildSessionFactory();
-
         doInHibernate( this::sessionFactory, s -> {
             TestEntity testEntity = new TestEntity( "foo" );
             testEntity.setParamsAsString( "{\"paramName\":\"paramValue\"}" );

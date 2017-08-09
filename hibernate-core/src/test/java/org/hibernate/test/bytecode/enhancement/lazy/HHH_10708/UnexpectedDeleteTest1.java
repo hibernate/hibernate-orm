@@ -41,8 +41,6 @@ public class UnexpectedDeleteTest1 extends BaseCoreFunctionalTestCase {
 
     @Before
     public void prepare() {
-        buildSessionFactory();
-
         doInHibernate( this::sessionFactory, s -> {
             Bar bar1 = new Bar();
             Bar bar2 = new Bar();

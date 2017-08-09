@@ -29,8 +29,6 @@ public class DetachedGetIdentifierTest extends BaseCoreFunctionalTestCase {
 
     @Test
     public void test() {
-        buildSessionFactory();
-
         SimpleEntity[] entities = new SimpleEntity[2];
         entities[0] = new SimpleEntity();
         entities[0].name = "test";

@@ -45,8 +45,6 @@ public class CompositeMergeTest extends BaseCoreFunctionalTestCase {
 
     @Before
     public void prepare() {
-        buildSessionFactory(); 
-
         ParentEntity parent = new ParentEntity();
         parent.description = "desc";
         parent.address = new Address();

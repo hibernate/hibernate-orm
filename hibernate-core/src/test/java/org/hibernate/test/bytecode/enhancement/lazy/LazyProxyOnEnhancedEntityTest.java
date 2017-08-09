@@ -49,8 +49,6 @@ public class LazyProxyOnEnhancedEntityTest extends BaseCoreFunctionalTestCase {
 
     @Before
     public void prepare() {
-        buildSessionFactory();
-
         doInJPA( this::sessionFactory, em -> {
             Child c = new Child();
             em.persist( c );

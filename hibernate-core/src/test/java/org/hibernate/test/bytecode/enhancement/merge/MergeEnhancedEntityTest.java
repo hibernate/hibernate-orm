@@ -9,6 +9,7 @@ package org.hibernate.test.bytecode.enhancement.merge;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,8 +42,6 @@ public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
 
     @Before
     public void prepare() {
-        buildSessionFactory();
-
         doInHibernate( this::sessionFactory, s -> {
             s.persist( new Person( 1L, "Sam" ) );
         } );
@@ -71,6 +70,13 @@ public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
             } catch ( RuntimeException e ) {
                 fail( "Enhanced entity can't be refreshed: " + e.getMessage() );
             }
+        } );
+    }
+
+    @After
+    public void cleanup() {
+        doInHibernate( this::sessionFactory, s -> {
+            s.delete( new Person( 1L, "Sam" ) );
         } );
     }
 

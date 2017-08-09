@@ -9,9 +9,11 @@ package org.hibernate.testing.bytecode.enhancement;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.cfg.Environment;
-import org.junit.internal.builders.JUnit4Builder;
+import org.hibernate.testing.junit4.CustomRunner;
+import org.junit.runner.Runner;
 import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.RunnerBuilder;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -26,8 +28,15 @@ import java.util.List;
  */
 public class BytecodeEnhancerRunner extends Suite {
 
+	private static final RunnerBuilder CUSTOM_RUNNER_BUILDER = new RunnerBuilder() {
+		@Override
+		public Runner runnerForClass(Class<?> testClass) throws Throwable {
+			return new CustomRunner( testClass );
+		}
+	};
+
 	public BytecodeEnhancerRunner(Class<?> klass) throws ClassNotFoundException, InitializationError {
-		super( new JUnit4Builder(), klass, enhanceTestClass( klass ) );
+		super( CUSTOM_RUNNER_BUILDER, klass, enhanceTestClass( klass ) );
 	}
 
 	private static Class<?>[] enhanceTestClass(Class<?> klass) throws ClassNotFoundException {

@@ -11,10 +11,9 @@ import org.junit.Test;
 /**
  * Testing relationships between components: example invoice -> invoice line
  *
- * @author martin
- * @version $Id: InvoiceDaoTest.java,v 1.14 2017/07/31 09:03:02 lustig#his.de Exp $
+ * @author Jan-Oliver Lustig, Sebastian Viefhaus
  */
-public class InvoiceDaoTest extends BaseCoreFunctionalTestCase{
+public class PersistOnLazyCollectionTest extends BaseCoreFunctionalTestCase{
 
 	static String RECEIPT_A = "Receipt A";
     static String INVOICE_A = "Invoice A";

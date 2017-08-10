@@ -9,9 +9,12 @@ package org.hibernate.test.bytecode.enhancement.ondemandload;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,6 +33,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.hibernate.test.bytecode.enhancement.merge.MergeEnhancedEntityTest;
 
 import static org.hibernate.Hibernate.isPropertyInitialized;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -50,14 +55,15 @@ public class OnDemandLoadTest extends BaseCoreFunctionalTestCase {
         return new Class[]{Store.class, Inventory.class, Product.class};
     }
 
+    @Override
+    protected void configure(Configuration configuration) {
+        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
+        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
+        configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
+    }
+
     @Before
     public void prepare() {
-        buildSessionFactory( configuration -> {
-            configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-            configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-            configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
-        } );
-
         doInHibernate( this::sessionFactory, s -> {
             Store store = new Store( 1L ).setName( "Acme Super Outlet" );
             s.persist( store );
@@ -147,6 +153,17 @@ public class OnDemandLoadTest extends BaseCoreFunctionalTestCase {
             assertTrue( isPropertyInitialized( store, "inventories" ) );
             assertEquals( 3, sessionFactory().getStatistics().getSessionOpenCount() );
             assertEquals( 2, sessionFactory().getStatistics().getSessionCloseCount() );
+        } );
+    }
+
+    @After
+    public void cleanup() throws Exception {
+        doInHibernate( this::sessionFactory, s -> {
+            Store store = s.find( Store.class, 1L );
+            s.delete( store );
+
+            Product product= s.find( Product.class, "007" );
+            s.delete( product );
         } );
     }
 

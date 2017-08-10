@@ -10,6 +10,7 @@ import org.hibernate.annotations.LazyGroup;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;

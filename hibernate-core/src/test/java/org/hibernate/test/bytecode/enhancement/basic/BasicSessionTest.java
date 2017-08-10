@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.bytecode.enhancement.basic;
 
-import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -31,8 +30,8 @@ import static org.junit.Assert.assertSame;
 public class BasicSessionTest extends BaseCoreFunctionalTestCase {
 
     @Override
-    protected void configure(Configuration configuration) {
-        configuration.addAnnotatedClass( MyEntity.class );
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class[]{ MyEntity.class};
     }
 
     @Test

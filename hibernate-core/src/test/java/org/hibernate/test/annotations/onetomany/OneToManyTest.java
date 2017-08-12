@@ -346,6 +346,33 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	public void testCascadeDeleteWithUnidirectionalAssociation() throws Exception {
+		Session s;
+		Transaction tx;
+		s = openSession();
+		tx = s.beginTransaction();
+		E e = new E();
+		e.id = 1L;
+		D d = new D();
+		d.id = 1L;
+		d.listOfEs = java.util.Collections.singletonList(e);
+		s.persist( d );
+		tx.commit();
+		s.close();
+		s = openSession();
+		tx = s.beginTransaction();
+		s.createQuery("delete from D").executeUpdate();
+		tx.commit();
+		s.close();
+		s = openSession();
+		tx = s.beginTransaction();
+		E e1 = ( E ) s.get( E.class, e.id );
+		assertNull( "delete cascade should work", e1 );
+		tx.commit();
+		s.close();
+	}
+
+	@Test
 	public void testSimpleOneToManySet() throws Exception {
 		Session s;
 		Transaction tx;
@@ -503,7 +530,9 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 				Person.class,
 				Organisation.class,
 				OrganisationUser.class,
-				Model.class
+				Model.class,
+				D.class,
+				E.class
 		};
 	}
 

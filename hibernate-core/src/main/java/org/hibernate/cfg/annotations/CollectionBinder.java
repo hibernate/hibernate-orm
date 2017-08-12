@@ -46,6 +46,7 @@ import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ManyToAny;
+import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OrderBy;
 import org.hibernate.annotations.Parameter;
@@ -476,6 +477,15 @@ public abstract class CollectionBinder {
 					|| property.isAnnotationPresent( JoinColumns.class )
 					|| propertyHolder.getJoinTable( property ) != null ) ) {
 			String message = "Associations marked as mappedBy must not define database mappings like @JoinTable or @JoinColumn: ";
+			message += StringHelper.qualify( propertyHolder.getPath(), propertyName );
+			throw new AnnotationException( message );
+		}
+
+		if (!isMappedBy
+				&& oneToMany
+				&& property.isAnnotationPresent( OnDelete.class )
+				&& !property.isAnnotationPresent( JoinColumn.class )) {
+			String message = "Unidirectional one-to-many associations annotated with @OnDelete must define @JoinColumn: ";
 			message += StringHelper.qualify( propertyHolder.getPath(), propertyName );
 			throw new AnnotationException( message );
 		}

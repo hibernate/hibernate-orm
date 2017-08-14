@@ -75,7 +75,7 @@ public class CascadeMergeToChildBeforeParentTest extends BaseCoreFunctionalTestC
 		s = openSession();
 		s.beginTransaction();
 
-		route = (Route) s.get( Route.class, new Long( 1 ) );
+		route = (Route) s.get( Route.class, route.getRouteID() );
 
 		route.setTransientField( new String( "sfnaouisrbn" ) );
 
@@ -127,7 +127,7 @@ public class CascadeMergeToChildBeforeParentTest extends BaseCoreFunctionalTestC
 		s = openSession();
 		s.beginTransaction();
 
-		route = (Route) s.get( Route.class, new Long( 1 ) );
+		route = (Route) s.get( Route.class, route.getRouteID() );
 
 		route.setTransientField( new String( "sfnaouisrbn" ) );
 
@@ -194,7 +194,7 @@ public class CascadeMergeToChildBeforeParentTest extends BaseCoreFunctionalTestC
 		s = openSession();
 		s.beginTransaction();
 
-		route = (Route) s.get( Route.class, new Long( 1 ) );
+		route = (Route) s.get( Route.class, route.getRouteID() );
 
 		route.setTransientField( new String( "sfnaouisrbn" ) );
 

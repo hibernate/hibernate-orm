@@ -64,13 +64,13 @@ import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.internal.EntityQueryResultImpl;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroup;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroupEmptyImpl;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroupImpl;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
@@ -78,9 +78,10 @@ import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
+import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupEmpty;
@@ -584,21 +585,24 @@ public abstract class AbstractEntityDescriptor<T>
 	}
 
 	@Override
-	public QueryResult generateQueryResult(
-			NavigableReference selectedExpression,
+	public QueryResult createQueryResult(
+			Expression selectedExpression,
 			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
+			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
+		assert selectedExpression instanceof EntityValuedNavigable;
+		final NavigableReference navigableReference = (NavigableReference) selectedExpression;
+
 		return new EntityQueryResultImpl(
-				(EntityReference) selectedExpression,
+				(EntityValuedNavigable) navigableReference.getNavigable(),
 				resultVariable,
-				buildSqlSelectionGroupMap( creationContext, selectedExpression ),
-				selectedExpression.getNavigablePath(),
+				buildSqlSelectionMappings( creationContext, navigableReference ),
+				navigableReference.getNavigablePath(),
 				creationContext
 		);
 	}
 
-	private Map<PersistentAttribute, SqlSelectionGroup> buildSqlSelectionGroupMap(
+	private EntitySqlSelectionMappings buildSqlSelectionMappings(
 			QueryResultCreationContext resolutionContext,
 			NavigableReference selectedExpression) {
 		final Map<PersistentAttribute, SqlSelectionGroup> sqlSelectionGroupMap = new HashMap<>();
@@ -619,10 +623,12 @@ public abstract class AbstractEntityDescriptor<T>
 			return SqlSelectionGroupEmpty.INSTANCE;
 		}
 
-		final SqlSelectionResolver sqlSelectionResolver = null;
+		final SqlExpressionResolver sqlSelectionResolver = null;
 
 		final SqlSelectionGroupImpl sqlSelectionGroup = new SqlSelectionGroupImpl();
 		for ( ColumnReference columnReference : columnReferenceGroup.getColumnReferences() ) {
+			resolutionContext.currentColumnReferenceSource().resolveColumnReference(  )
+			columnReference.getIdentificationVariable()
 			sqlSelectionGroup.addSqlSelection( sqlSelectionResolver.resolveSqlSelection( columnReference ) );
 		}
 		return sqlSelectionGroup;

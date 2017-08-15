@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.consume.spi;
 
+import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.assign.Assignment;
 import org.hibernate.sql.ast.tree.spi.expression.AbsFunction;
@@ -205,4 +206,6 @@ public interface SqlAstWalker {
 	void visitTrimFunction(TrimFunction function);
 
 	void visitUpperFunction(UpperFunction function);
+
+	void visitSqlSelectionExpression(SqlSelectionExpression expression);
 }

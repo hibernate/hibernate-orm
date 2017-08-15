@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.tree.internal;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.spi.SqlSelectable;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 
 /**
  * A non-Navigable basic scalar selection (a function, a literal, etc)
@@ -22,7 +22,7 @@ public class BasicValuedNonNavigableSelection extends NonNavigableSelectionSuppo
 	public BasicValuedNonNavigableSelection(
 			Expression selectedExpression,
 			String resultVariable,
-			SqlSelectable sqlSelectable) {
+			SqlExpressable sqlSelectable) {
 		this(
 				selectedExpression,
 				resultVariable,

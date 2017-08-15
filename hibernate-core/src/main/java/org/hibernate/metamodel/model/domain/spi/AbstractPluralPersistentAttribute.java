@@ -21,7 +21,7 @@ import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -147,7 +147,7 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
+			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new PluralAttributeQueryResultImpl(
 				this,

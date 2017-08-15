@@ -11,6 +11,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.exec.internal.JdbcSelectImpl;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
+import org.hibernate.sql.exec.internal.ResultSetMappingDescriptorExplicit;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
@@ -48,8 +49,10 @@ public class SqlSelectAstToJdbcSelectConverter
 		return new JdbcSelectImpl(
 				walker.getSql(),
 				walker.getParameterBinders(),
-				sqlSelectPlan.getSqlAstStatement().getQuerySpec().getSelectClause().getSqlSelections(),
-				sqlSelectPlan.getQueryResults()
+				new ResultSetMappingDescriptorExplicit(
+						sqlSelectPlan.getSqlAstStatement().getQuerySpec().getSelectClause().getSqlSelections(),
+						sqlSelectPlan.getQueryResults()
+				)
 		);
 	}
 

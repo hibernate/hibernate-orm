@@ -30,6 +30,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.produce.internal.SqlSelectPlanImpl;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.sqm.internal.FetchGraphBuilder;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
@@ -82,6 +83,7 @@ public class SqmSelectToSqlAstConverter
 
 	private final Stack<Shallowness> shallownessStack = new Stack<>( Shallowness.NONE );
 	private final Stack<NavigableReference> navigableReferenceStack = new Stack<>();
+	private final Stack<Expression> currentSelectedExpression = new Stack<>();
 
 	private final List<QueryResult> queryResults = new ArrayList<>();
 
@@ -169,22 +171,40 @@ public class SqmSelectToSqlAstConverter
 	private Stack<SqmFrom> sqmFromStack = new Stack<>();
 	private Stack<AttributeNodeContainer> entityGraphNodeStack = new Stack<>();
 
-	@Override
-	public Selection visitSelection(SqmSelection sqmSelection) {
-		final Selection selection = super.visitSelection( sqmSelection );
+//	@Override
+//	public Void visitSelection(SqmSelection sqmSelection) {
+//		final Expression expression = (Expression) sqmSelection.getExpression().accept( this );
+//
+//		final Selection selection = super.visitSelection( sqmSelection );
+//
+//		// the call to Expression to resolve the ColumnReferenceResolver
+//		//		allows polymorphic input per Expression type.  E.g.
+//		//		a functions
+//		//
+//		// todo (6.0) : just pass TableGroupResolver into Selection#createQueryResult
+//		//		still allows access to TableGroup/ColumnReference resolution for
+//		//		Selection/Expression/Selectables that need it
+//		final QueryResult queryResult = selection.createQueryResult( this, this );
+//		queryResults.add( queryResult );
+//		applyFetches( queryResult );
+//
+//		return selection;
+//	}
 
-		// the call to Expression to resolve the ColumnReferenceResolver
-		//		allows polymorphic input per Expression type.  E.g.
-		//		a functions
-		//
-		// todo (6.0) : just pass TableGroupResolver into Selection#createQueryResult
-		//		still allows access to TableGroup/ColumnReference resolution for
-		//		Selection/Expression/Selectables that need it
-		final QueryResult queryResult = selection.createQueryResult( this, this );
+	@Override
+	protected void processSelectedExpression(Expression expression, String resultVariable) {
+		if ( getQuerySpecStack().depth() > 1 ) {
+			return;
+		}
+
+		final QueryResult queryResult = expression.createQueryResult(
+				expression,
+				resultVariable,
+				this,
+				this
+		);
 		queryResults.add( queryResult );
 		applyFetches( queryResult );
-
-		return selection;
 	}
 
 	protected void applyFetches(QueryResult queryReturn) {
@@ -206,6 +226,18 @@ public class SqmSelectToSqlAstConverter
 	@Override
 	@SuppressWarnings("unchecked")
 	public DynamicInstantiation visitDynamicInstantiation(SqmDynamicInstantiation dynamicInstantiation) {
+		queryResults.add(
+				dynamicInstantiation.createQueryResult(
+						// todo (6.0) : need alias for the instantiation itself, not just args.  how?
+						//		- `SqmDynamicInstantiation#getResultVariable()`?
+						// 		- Pass it in as arg?  but even callers don't know it (visitation)
+						//		- ???
+						dynamicInstantiation.getResultVariable(),
+						this,
+						this
+				)
+		);
+
 		final DynamicInstantiation sqlTree = new DynamicInstantiation(
 				dynamicInstantiation.getInstantiationTarget().getNature(),
 				interpretInstantiationTarget( dynamicInstantiation.getInstantiationTarget() )
@@ -243,8 +275,12 @@ public class SqmSelectToSqlAstConverter
 				.getDescriptor( targetJavaType );
 	}
 
+	@Override
+	public SqlExpressionResolver getSqlSelectionResolver() {
+		return this;
+	}
 
-//	@Override
+	//	@Override
 //	public DomainReferenceExpression visitAttributeReferenceExpression(AttributeBinding attributeBinding) {
 //		if ( attributeBinding instanceof PluralAttributeBinding ) {
 //			return getCurrentDomainReferenceExpressionBuilder().buildPluralAttributeExpression(

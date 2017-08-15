@@ -23,7 +23,7 @@ import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.results.internal.EntityQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
@@ -120,7 +120,7 @@ public class CollectionIndexEntityImpl<J>
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
+			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new EntityQueryResultImpl(
 				(EntityReference) selectedExpression,

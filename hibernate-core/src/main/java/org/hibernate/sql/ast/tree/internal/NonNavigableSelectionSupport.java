@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.tree.internal;
 
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 
@@ -38,7 +38,7 @@ public abstract class NonNavigableSelectionSupport implements Selection {
 
 	@Override
 	public QueryResult createQueryResult(
-			SqlSelectionResolver sqlSelectionResolver,
+			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return getQueryResultGenerator().generateQueryResult( sqlSelectionResolver, creationContext );
 	}
@@ -54,7 +54,7 @@ public abstract class NonNavigableSelectionSupport implements Selection {
 	 */
 	public interface QueryResultGenerator {
 		QueryResult generateQueryResult(
-				SqlSelectionResolver sqlSelectionResolver,
+				SqlExpressionResolver sqlSelectionResolver,
 				QueryResultCreationContext creationContext);
 	}
 }

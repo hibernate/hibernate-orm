@@ -8,22 +8,24 @@ package org.hibernate.sql.ast.tree.spi.expression;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.results.spi.Selectable;
 
 /**
+ * Models an expression at the SQL-level.
+ *
+ * Note that these Expressions can also model a reference to a domain-model Navigable.
+ * While not technically a SQL-level expression, modeling them as such makes handling
+ * the easier later while processing the SQL AST to generate the appropriate
+ * {@link org.hibernate.sql.exec.spi.JdbcOperation}
+ *
+ *
+ *
  * @author Steve Ebersole
  */
-public interface Expression extends SqlAstNode {
+public interface Expression extends SqlAstNode, Selectable {
 	/**
 	 * Access the type for this expression.  See {@link ExpressableType}
 	 * for more detailed description.
 	 */
 	ExpressableType getType();
-
-	/**
-	 * For expressions that may be part of the SELECT clause, return the
-	 * "selectable" representation of that expression.  Again, see
-	 * {@link Selectable} for mode detailed description
-	 */
-	Selectable getSelectable();
 }

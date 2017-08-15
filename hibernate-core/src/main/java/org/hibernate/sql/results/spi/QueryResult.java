@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.spi;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 
 /**
  * Represents a result value in the domain query results.  Acts as the
@@ -53,4 +54,6 @@ public interface QueryResult extends ResultSetMappingNode {
 	 * for details on its purpose,
 	 */
 	QueryResultAssembler getResultAssembler();
+
+	Initializer generateInitializer(QueryResultCreationContext creationContext);
 }

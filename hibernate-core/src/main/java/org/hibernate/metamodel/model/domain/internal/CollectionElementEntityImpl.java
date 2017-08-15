@@ -22,7 +22,7 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
@@ -125,7 +125,7 @@ public class CollectionElementEntityImpl<J>
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
+			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		// delegate to the persister because here we are returning
 		// 		the entities that make up the referenced collection's elements

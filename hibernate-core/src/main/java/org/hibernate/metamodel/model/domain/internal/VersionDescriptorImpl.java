@@ -27,7 +27,7 @@ import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
@@ -116,7 +116,7 @@ public class VersionDescriptorImpl<O,J>
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
+			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new ScalarQueryResultImpl(
 				resultVariable,

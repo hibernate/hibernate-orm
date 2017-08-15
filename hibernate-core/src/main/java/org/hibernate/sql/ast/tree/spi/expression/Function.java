@@ -6,15 +6,15 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
-import org.hibernate.sql.results.spi.SqlSelectable;
+import org.hibernate.sql.results.spi.Selectable;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 
 /**
  * Generalized contract for any type of function reference in the query
  *
  * @author Steve Ebersole
  */
-public interface Function extends Expression, Selectable, SqlSelectable {
+public interface Function extends Expression, Selectable, SqlExpressable {
 	@Override
 	default Selectable getSelectable() {
 		return this;

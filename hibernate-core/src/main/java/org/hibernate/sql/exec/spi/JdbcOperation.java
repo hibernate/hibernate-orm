@@ -9,7 +9,7 @@ package org.hibernate.sql.exec.spi;
 import java.util.List;
 
 /**
- * Unifying contract for any SQL statement we want to execute via JDBC.  Gener
+ * Unifying contract for any SQL statement we want to execute via JDBC.
  *
  * todo (6.0) : good idea to have a single `#execute(...)` method here imo...
  * 		defines a nice singular access point for execution of an operation,
@@ -20,6 +20,7 @@ import java.util.List;
 public interface JdbcOperation {
 	/**
 	 * Get the SQL command we will be executing through JDBC PreparedStatement
+	 * or CallableStatement
 	 */
 	String getSql();
 

@@ -22,14 +22,14 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.results.spi.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.sql.results.spi.SqlSelectable;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 
 /**
  * @author Steve Ebersole
  */
-public class SelfRenderingFunctionSqlAstExpression implements SelfRenderingExpression, Selectable, SqlSelectable {
+public class SelfRenderingFunctionSqlAstExpression implements SelfRenderingExpression, Selectable, SqlExpressable {
 	private final SelfRenderingSqmFunction sqmExpression;
 	private final List<Expression> sqlAstArguments;
 

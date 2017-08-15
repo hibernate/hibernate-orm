@@ -16,6 +16,7 @@ import org.hibernate.sql.results.spi.EntityFetch;
 import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.FetchParentAccess;
+import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.InitializerCollector;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
@@ -65,6 +66,11 @@ public class EntityFetchImpl extends AbstractFetchParent implements EntityFetch 
 	@Override
 	public boolean isNullable() {
 		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public Initializer generateInitializer(FetchParentAccess parentAccess) {
+		return null;
 	}
 
 //	@Override

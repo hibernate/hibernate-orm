@@ -16,15 +16,15 @@ import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.results.spi.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.sql.results.spi.SqlSelectable;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
  */
-public class CaseSearchedExpression implements Expression, SqlSelectable, Selectable {
+public class CaseSearchedExpression implements Expression, SqlExpressable, Selectable {
 	private final ExpressableType type;
 
 	private List<WhenFragment> whenFragments = new ArrayList<>();

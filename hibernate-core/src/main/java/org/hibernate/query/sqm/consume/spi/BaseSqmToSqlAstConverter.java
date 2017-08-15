@@ -101,10 +101,16 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
+import org.hibernate.sql.ast.produce.spi.NonQualifiableSqlExpressable;
+import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
@@ -162,12 +168,8 @@ import org.hibernate.sql.ast.tree.spi.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.spi.SqlSelectable;
 import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -178,7 +180,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class BaseSqmToSqlAstConverter
 		extends BaseSemanticQueryWalker
-		implements SqmToSqlAstConverter, SqlSelectionResolver {
+		implements SqmToSqlAstConverter, SqlExpressionResolver {
 
 	private static final Logger log = Logger.getLogger( BaseSqmToSqlAstConverter.class );
 
@@ -186,7 +188,7 @@ public abstract class BaseSqmToSqlAstConverter
 		NONE,
 		CTOR,
 		FUNCTION,
-		SUBQUERY;
+		SUBQUERY
 	}
 
 	private final SqlAstBuildingContext sqlAstBuildingContext;
@@ -194,7 +196,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
 
-	private final Map<QuerySpec,Map<SqlSelectable,SqlSelection>> sqlSelectionMapByQuerySpec = new HashMap<>();
+	private final Map<QuerySpec,Map<SqlExpressable,SqlSelection>> sqlSelectionMapByQuerySpec = new HashMap<>();
 
 	private final FromClauseIndex fromClauseIndex = new FromClauseIndex();
 
@@ -275,27 +277,76 @@ public abstract class BaseSqmToSqlAstConverter
 		primeStack( navigableReferenceStack, initial );
 	}
 
+	// NOTE : assumes that Expression impls "properly" implement equals/hashCode which may not be the
+	//		best option.
+
+	// todo (6.0) : decide if we want to do the caching/unique-ing of Expressions here.
+	//		its really only needed for top-level select clauses, not sub-queries.
+	//		its "ok" to do it for sub-queries as well - just wondering about the overhead.
+	private Map<QuerySpec,Map<Expression, SqlSelection>> sqlExpressionToSqlSelectionMapByQuerySpec;
+
+	private Map<QuerySpec,Map<SqlExpressionQualifier,Map<QualifiableSqlExpressable,SqlSelection>>> qualifiedSExpressionToSqlSelectionMapByQuerySpec;
+
+	// todo (6.0) : is there ever a time when resolving a sqlSelectable relative to a qualifier ought to return different expressions for multiple references?
+
 	@Override
-	public SqlSelection resolveSqlSelection(SqlSelectable sqlSelectable) {
-		// todo (6.0) : this needs to be relative to some notion of a particular TableGroup
-		//		SqlSelectable e.g. would be a ColumnReference
+	public Expression resolveSqlExpression(SqlExpressionQualifier qualifier, QualifiableSqlExpressable sqlSelectable) {
+		return normalizeSqlExpression( qualifier.qualify( sqlSelectable ) );
+	}
 
-		final Map<SqlSelectable,SqlSelection> sqlSelectionMap = sqlSelectionMapByQuerySpec.computeIfAbsent(
-				currentQuerySpec(),
-				k -> new HashMap<>()
-		);
-
-		final SqlSelection existing = sqlSelectionMap.get( sqlSelectable );
-		if ( existing != null ) {
-			return existing;
+	private Expression normalizeSqlExpression(Expression expression) {
+		if ( getCurrentClauseStack().getCurrent() == Clause.ORDER
+				|| getCurrentClauseStack().getCurrent() == Clause.GROUP
+				|| getCurrentClauseStack().getCurrent() == Clause.HAVING ) {
+			// see if this (Sql)Expression is used as a selection, and if so
+			// wrap the (Sql)Expression in a special wrapper with access to both
+			// the (Sql)Expression and the SqlSelection.
+			//
+			// This is used for databases which prefer to use the position of a
+			// selected expression (within the select-clause) as the
+			// order-by, group-by or having expression
+			if ( sqlExpressionToSqlSelectionMapByQuerySpec != null ) {
+				final Map<Expression, SqlSelection> sqlExpressionToSqlSelectionMap =
+						sqlExpressionToSqlSelectionMapByQuerySpec.get( currentQuerySpec() );
+				if ( sqlExpressionToSqlSelectionMap != null ) {
+					final SqlSelection selection = sqlExpressionToSqlSelectionMap.get( expression );
+					if ( selection != null ) {
+						return new SqlSelectionExpression( selection, expression );
+					}
+				}
+			}
 		}
 
-		final SqlSelection sqlSelection = new SqlSelectionImpl( sqlSelectable, sqlSelectionMap.size() );
-		currentQuerySpec().getSelectClause().addSqlSelection( sqlSelection );
-		sqlSelectionMap.put( sqlSelectable, sqlSelection );
-
-		return sqlSelection;
+		return expression;
 	}
+
+	@Override
+	public Expression resolveSqlExpression(NonQualifiableSqlExpressable sqlSelectable) {
+		return normalizeSqlExpression( sqlSelectable.createExpression() );
+	}
+
+
+//	@Override
+//	public SqlSelection resolveSqlSelection(SqlExpressable sqlSelectable) {
+//		// todo (6.0) : this needs to be relative to some notion of a particular TableGroup
+//		//		SqlSelectable e.g. would be a ColumnReference
+//
+//		final Map<SqlExpressable,SqlSelection> sqlSelectionMap = sqlSelectionMapByQuerySpec.computeIfAbsent(
+//				currentQuerySpec(),
+//				k -> new HashMap<>()
+//		);
+//
+//		final SqlSelection existing = sqlSelectionMap.get( sqlSelectable );
+//		if ( existing != null ) {
+//			return existing;
+//		}
+//
+//		final SqlSelection sqlSelection = new SqlSelectionImpl( sqlSelectable, sqlSelectionMap.size() );
+//		currentQuerySpec().getSelectClause().addSqlSelection( sqlSelection );
+//		sqlSelectionMap.put( sqlSelectable, sqlSelection );
+//
+//		return sqlSelection;
+//	}
 
 
 	@Override
@@ -602,6 +653,11 @@ public abstract class BaseSqmToSqlAstConverter
 		shallownessStack.push( SqmSelectToSqlAstConverter.Shallowness.SUBQUERY );
 		try {
 			super.visitSelectClause( selectClause );
+			for ( SqmSelection sqmSelection : selectClause.getSelections() ) {
+				final Object sqlExpression = sqmSelection.getExpression().accept( this );
+				processSelectedExpression( (Expression) sqlExpression, sqmSelection.getAlias() );
+			}
+
 			currentQuerySpec().getSelectClause().makeDistinct( selectClause.isDistinct() );
 			return currentQuerySpec().getSelectClause();
 		}
@@ -611,17 +667,30 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public Selection visitSelection(SqmSelection sqmSelection) {
-		final Expression expression = (Expression) sqmSelection.getExpression().accept( this );
-		final Selection selection = expression.getSelectable().createSelection(
-				expression,
-				sqmSelection.getAlias()
-		);
-		currentQuerySpec().getSelectClause().selection( selection );
+//	@Override
+//	@SuppressWarnings("unchecked")
+//	public Void visitSelection(SqmSelection sqmSelection) {
+//		final Expression expression = (Expression) sqmSelection.getExpression().accept( this );
+//		processSelectedExpression( expression, sqmSelection.getAlias() );
+//
+//		if ( shouldCreateQueryResults() ) {
+//
+//		}
+//		if ( querySpecStack.depth() == 1 ) {
+//			// todo (6.0) : `== 1` works for SELECT queries, but not mutation queries
+//		}
+//		expression.createQueryResult( ... );
+//		final Selection selection = expression.getSelectable().createSelection(
+//				expression,
+//				sqmSelection.getAlias()
+//		);
+////		currentQuerySpec().getSelectClause().selection( selection );
+//
+//		return selection;
+//	}
 
-		return selection;
+	protected void processSelectedExpression(Expression expression, String resultVariable) {
+		// in the base converter we have nothing to do
 	}
 
 

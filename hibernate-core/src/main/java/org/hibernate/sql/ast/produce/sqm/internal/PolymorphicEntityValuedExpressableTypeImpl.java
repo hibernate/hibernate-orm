@@ -20,7 +20,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
@@ -155,7 +155,7 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements Polymorphi
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
+			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		throw new HibernateException( "Cannot create QueryResult from polymorphic entity reference" );
 	}

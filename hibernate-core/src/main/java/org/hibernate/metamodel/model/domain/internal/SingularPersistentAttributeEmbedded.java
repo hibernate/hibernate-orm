@@ -12,30 +12,31 @@ import java.util.List;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.mapping.Component;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
+import org.hibernate.sql.ast.tree.internal.NavigableSelection;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.sql.results.internal.CompositeFetchImpl;
 import org.hibernate.sql.results.internal.CompositeQueryResultImpl;
+import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.tree.internal.NavigableSelection;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
@@ -66,6 +67,16 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	@Override
 	public ManagedTypeDescriptor<O> getContainer() {
 		return super.getContainer();
+	}
+
+	@Override
+	public SqlSelectionGroup resolveSqlSelectionGroup(QueryResultCreationContext resolutionContext) {
+		final SqlSelectionGroup group = new SqlSelectionGroupImpl();
+		for ( Column column : embeddedDescriptor.collectColumns() ) {
+			resolutionContext.getSqlSelectionResolver().resolveSqlSelection( column )
+		}
+
+		return group;
 	}
 
 	@Override
@@ -149,7 +160,7 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
+			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new CompositeQueryResultImpl( resultVariable, embeddedDescriptor );
 	}
@@ -157,14 +168,14 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
-			NavigableReference selectedExpression,
 			FetchStrategy fetchStrategy,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		return new CompositeFetchImpl(
 				fetchParent,
-				(NavigableContainerReference) selectedExpression,
-				fetchStrategy
+				this,
+				fetchStrategy,
+				creationContext
 		);
 	}
 

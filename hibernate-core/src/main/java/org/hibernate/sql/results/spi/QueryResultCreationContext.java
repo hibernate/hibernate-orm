@@ -8,6 +8,8 @@ package org.hibernate.sql.results.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 
 /**
@@ -20,7 +22,7 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 public interface QueryResultCreationContext {
 	SessionFactoryImplementor getSessionFactory();
 
-	SqlSelectionResolver getSqlSelectionResolver();
+	SqlExpressionResolver getSqlSelectionResolver();
 
 	ColumnReferenceSource currentColumnReferenceSource();
 	NavigablePath currentNavigablePath();

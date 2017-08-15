@@ -19,7 +19,7 @@ import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.results.spi.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 
 /**

@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.tree.spi.expression.instantiation;
 import org.hibernate.sql.results.internal.instantiation.ArgumentReader;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 
 /**
@@ -33,7 +33,7 @@ public class DynamicInstantiationArgument {
 	}
 
 	public ArgumentReader buildArgumentReader(
-			SqlSelectionResolver sqlSelectionResolver,
+			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext resolutionContext) {
 		final QueryResultAssembler queryResultAssembler = expression.getSelectable()
 				.createSelection( expression, alias )

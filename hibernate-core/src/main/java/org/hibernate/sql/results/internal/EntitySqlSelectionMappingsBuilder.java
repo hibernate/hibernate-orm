@@ -53,7 +53,7 @@ public class EntitySqlSelectionMappingsBuilder implements NavigableVisitationStr
 		return creationContext;
 	}
 
-	public EntitySqlSelectionMappings buildSqlSelectionMappings() {
+	protected EntitySqlSelectionMappings buildSqlSelectionMappings() {
 		return new EntitySqlSelectionMappingsImpl(
 				rowIdSqlSelection,
 				idSqlSelectionGroup,

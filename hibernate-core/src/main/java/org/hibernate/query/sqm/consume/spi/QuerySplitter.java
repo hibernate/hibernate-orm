@@ -90,6 +90,7 @@ import org.hibernate.query.sqm.tree.set.SqmSetClause;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 
 /**
  * Handles splitting queries containing unmapped polymorphic references.
@@ -365,17 +366,14 @@ public class QuerySplitter {
 		public SqmSelectClause visitSelectClause(SqmSelectClause selectClause) {
 			SqmSelectClause copy = new SqmSelectClause( selectClause.isDistinct() );
 			for ( SqmSelection selection : selectClause.getSelections() ) {
-				copy.addSelection( visitSelection( selection ) );
+				copy.addSelection(
+						new SqmSelection(
+								(SqmExpression) selection.getExpression().accept( this ),
+								selection.getAlias()
+						)
+				);
 			}
 			return copy;
-		}
-
-		@Override
-		public SqmSelection visitSelection(SqmSelection selection) {
-			return new SqmSelection(
-					(SqmExpression) selection.getExpression().accept( this ),
-					selection.getAlias()
-			);
 		}
 
 		@Override

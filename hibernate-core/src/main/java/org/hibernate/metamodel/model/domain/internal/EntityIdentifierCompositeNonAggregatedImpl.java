@@ -20,7 +20,7 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.property.access.internal.PropertyAccessStrategyEmbeddedImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -149,7 +149,7 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
+			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return embeddedDescriptor.generateQueryResult(
 				selectedExpression,

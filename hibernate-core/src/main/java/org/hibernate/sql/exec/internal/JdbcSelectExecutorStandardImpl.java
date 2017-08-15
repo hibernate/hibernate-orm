@@ -248,7 +248,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final List<QueryResultAssembler> returnAssemblers = new ArrayList<>();
 		final List<Initializer> initializers = new ArrayList<>();
 		for ( QueryResult queryResult : jdbcValuesSource.getResultSetMapping().getQueryResults() ) {
-			queryResult.registerInitializers( initializers::add );
+			initializers.add( queryResult.generateInitializer( this ) );
+//			queryResult.registerInitializers( initializers::add );
 			returnAssemblers.add( queryResult.getResultAssembler() );
 		}
 

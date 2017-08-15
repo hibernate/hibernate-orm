@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.tree.spi.expression;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.results.spi.Selectable;
 
 /**
  * @author Steve Ebersole

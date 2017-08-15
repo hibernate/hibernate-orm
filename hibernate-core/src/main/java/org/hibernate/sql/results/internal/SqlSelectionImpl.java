@@ -8,23 +8,23 @@
 package org.hibernate.sql.results.internal;
 
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.results.spi.SqlSelectable;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole
  */
 public class SqlSelectionImpl implements SqlSelection {
-	private final SqlSelectable sqlSelectable;
+	private final SqlExpressable sqlSelectable;
 	private final int position;
 
-	public SqlSelectionImpl(SqlSelectable sqlSelectable, int position) {
+	public SqlSelectionImpl(SqlExpressable sqlSelectable, int position) {
 		this.sqlSelectable = sqlSelectable;
 		this.position = position;
 	}
 
 	@Override
-	public SqlSelectable getSqlSelectable() {
+	public SqlExpressable getSqlSelectable() {
 		return sqlSelectable;
 	}
 

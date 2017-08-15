@@ -13,7 +13,7 @@ import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.results.spi.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.results.spi.SqlSelectionReader;

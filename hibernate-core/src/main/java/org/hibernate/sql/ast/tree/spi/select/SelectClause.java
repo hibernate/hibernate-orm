@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.sql.ast.tree.spi.select;
 
 import java.util.ArrayList;
@@ -36,7 +35,6 @@ public class SelectClause implements SqlAstNode {
 	//		- specifically
 
 	private boolean distinct;
-	private final List<Selection> selections = new ArrayList<>();
 	private final List<SqlSelection> sqlSelections = new ArrayList<>();
 
 	public SelectClause() {
@@ -50,14 +48,14 @@ public class SelectClause implements SqlAstNode {
 		return distinct;
 	}
 
-	public List<Selection> getSelections() {
-		return selections;
-	}
-
-	public void selection(Selection selection) {
-		selections.add( selection );
-	}
-
+//	public List<Selection> getSelections() {
+//		return selections;
+//	}
+//
+//	public void selection(Selection selection) {
+//		selections.add( selection );
+//	}
+//
 	public List<SqlSelection> getSqlSelections() {
 		return Collections.unmodifiableList( sqlSelections );
 	}

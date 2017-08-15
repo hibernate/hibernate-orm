@@ -21,6 +21,7 @@ import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.SemanticException;
 import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.AbsFunction;
 import org.hibernate.sql.ast.tree.spi.expression.AvgFunction;
@@ -620,6 +621,19 @@ public abstract class AbstractSqlAstWalker
 		appendSql( ")" );
 	}
 
+	@Override
+	public void visitSqlSelectionExpression(SqlSelectionExpression expression) {
+		final boolean useSelectionPosition = getSessionFactory().getJdbcServices()
+				.getDialect()
+				.replaceResultVariableInOrderByClauseWithPosition();
+
+		if ( useSelectionPosition ) {
+			appendSql( Integer.toString( expression.getSelection().getJdbcResultSetIndex() ) );
+		}
+		else {
+			expression.getExpression().accept( this );
+		}
+	}
 
 	@Override
 	@SuppressWarnings("unchecked")

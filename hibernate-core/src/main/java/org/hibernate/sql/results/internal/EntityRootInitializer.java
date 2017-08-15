@@ -6,9 +6,12 @@
  */
 package org.hibernate.sql.results.internal;
 
+import java.util.List;
+
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.sql.results.spi.EntityInitializer;
 import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
+import org.hibernate.sql.results.spi.Fetch;
 
 /**
  * InitializerEntity for root
@@ -20,8 +23,9 @@ public class EntityRootInitializer
 	public EntityRootInitializer(
 			EntityDescriptor entityDescriptor,
 			EntitySqlSelectionMappings sqlSelectionMappings,
+			List<Fetch> fetches,
 			boolean isShallow) {
-		super( entityDescriptor, sqlSelectionMappings, isShallow );
+		super( entityDescriptor, sqlSelectionMappings, fetches, isShallow );
 	}
 
 	@Override

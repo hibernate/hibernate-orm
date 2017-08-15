@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.sql.ordering.antlr;
+package org.hibernate.sql.ast.produce.ordering.internal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +18,7 @@ import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
-import org.hibernate.sql.results.spi.SqlSelectable;
-import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 
 /**
  * @author Steve Ebersole
@@ -64,7 +63,7 @@ public class OrderByFragmentConverter extends BaseSqmToSqlAstConverter implement
 //	}
 
 	@Override
-	public SqlSelection resolveSqlSelection(SqlSelectable sqlSelectable) {
+	public SqlSelection resolveSqlSelection(SqlExpressable sqlSelectable) {
 		return super.resolveSqlSelection( sqlSelectable );
 	}
 }

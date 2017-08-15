@@ -12,8 +12,6 @@ import java.util.Locale;
  * Enumeration of the various ways that Hibernate can represent the
  * application's domain model.
  *
- * @see org.hibernate.metamodel.model.domain.rep
- *
  * @author Steve Ebersole
  */
 public enum Representation {

@@ -36,7 +36,7 @@ import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
@@ -44,7 +44,6 @@ import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
@@ -201,7 +200,7 @@ public class SingularPersistentAttributeEntity<O,J>
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
+			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return entityDescriptor.generateQueryResult(
 				selectedExpression,
@@ -224,16 +223,14 @@ public class SingularPersistentAttributeEntity<O,J>
 	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
-			NavigableReference selectedExpression,
 			FetchStrategy fetchStrategy,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
-		assert selectedExpression.getNavigable().equals( this.getContainer() );
-
 		return new EntityFetchImpl(
 				fetchParent,
-				(EntityReference) selectedExpression,
-				selectedExpression.getNavigablePath(),
+				null,
+				this,
+				fetchParent.getNavigablePath().append( getNavigableName() ),
 				fetchStrategy,
 				creationContext
 		);

@@ -10,15 +10,21 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 
 /**
  * An expression that is a reference to some part of the application domain model.
  *
+ * NOTE : DO NOT ADD TO SQL AST.  Only meant to be used by `#createQueryResult`
+ * for `Navigable`
+ *
  * @author Steve Ebersole
  */
 public interface NavigableReference extends Expression {
+	SqlExpressionQualifier getSqlExpressionQualifier();
+
 	/**
 	 * Get the Navigable referenced by this expression
 	 *

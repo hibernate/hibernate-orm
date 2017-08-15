@@ -11,7 +11,7 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 
 /**
  * @author Steve Ebersole
@@ -30,7 +30,7 @@ public interface Selection extends SqlAstNode {
 	String getResultVariable();
 
 	QueryResult createQueryResult(
-			SqlSelectionResolver sqlSelectionResolver,
+			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext);
 
 	@Override

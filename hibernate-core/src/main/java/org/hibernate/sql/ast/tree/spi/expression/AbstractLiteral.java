@@ -11,9 +11,9 @@ import java.sql.SQLException;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.results.spi.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.sql.results.spi.SqlSelectable;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
@@ -28,7 +28,7 @@ import org.hibernate.sql.exec.spi.ParameterBindingContext;
  * @author Steve Ebersole
  */
 public abstract class AbstractLiteral
-		implements JdbcParameterBinder, Expression, SqlSelectable, Selectable {
+		implements JdbcParameterBinder, Expression, SqlExpressable, Selectable {
 	private final Object value;
 	private final BasicValuedExpressableType type;
 	private final boolean inSelect;

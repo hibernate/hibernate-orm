@@ -66,7 +66,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -970,7 +970,7 @@ public class GoofyRuntimeModelDescriptorClassProvider implements RuntimeModelDes
 		public QueryResult generateQueryResult(
 				NavigableReference selectedExpression,
 				String resultVariable,
-				SqlSelectionResolver sqlSelectionResolver,
+				SqlExpressionResolver sqlSelectionResolver,
 				QueryResultCreationContext creationContext) {
 			return null;
 		}

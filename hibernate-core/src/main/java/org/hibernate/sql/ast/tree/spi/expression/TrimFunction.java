@@ -10,7 +10,7 @@ import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.tree.spi.TrimSpecification;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.results.spi.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 

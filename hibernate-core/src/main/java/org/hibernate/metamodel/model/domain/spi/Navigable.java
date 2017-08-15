@@ -7,14 +7,11 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.tree.internal.NavigableSelection;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.results.spi.Selectable;
 
 /**
  * Models a "piece" of the application's domain model that can be navigated
@@ -46,19 +43,10 @@ public interface Navigable<T> extends DomainType<T>, Selectable {
 	void visitNavigable(NavigableVisitationStrategy visitor);
 
 
-	@Override
-	default Selection createSelection(Expression selectedExpression, String resultVariable) {
-		assert selectedExpression instanceof NavigableReference;
-		return new NavigableSelection( (NavigableReference) selectedExpression, resultVariable );
-	}
-
 	// todo (6.0) : Use (pass in) Selection instead of expression+alias
+	// todo (6.0) : ^^ Actually get rid of Selection :)
 
-	QueryResult generateQueryResult(
-			NavigableReference selectedExpression,
-			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
-			QueryResultCreationContext creationContext);
+
 
 	/**
 	 * Obtain a loggable representation.

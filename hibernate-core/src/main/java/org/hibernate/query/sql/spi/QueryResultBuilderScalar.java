@@ -9,14 +9,14 @@ package org.hibernate.query.sql.spi;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.SqlSelectable;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 import org.hibernate.sql.results.spi.SqlSelectionReader;
 
 /**
  * @author Steve Ebersole
  */
 public class QueryResultBuilderScalar
-		implements WrappableQueryResultBuilder, SqlSelectable {
+		implements WrappableQueryResultBuilder, SqlExpressable {
 	private final String columnName;
 	private final BasicValuedExpressableType type;
 

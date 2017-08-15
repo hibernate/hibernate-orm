@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.relational.spi;
 
+import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -13,7 +14,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface Column {
+public interface Column extends QualifiableSqlExpressable {
 	Table getSourceTable();
 
 	String getExpression();

@@ -9,12 +9,13 @@ for Hibernate to generate and execute SQL:
 
 * HQL query
 * Criteria query
-* Various load "styles":
+* Various queries Hibernate generates itself:
 	** single-id
 	** natural-id
 	** other unique key
 	** multi-id
 	** locker
+	** updates/deletes/inserts corresponding to normal PC state
 
 In other words, in versions of Hibernate prior to 6.0 there were multiple sources for generating the SQL and multiple
 sources for executing the SQL and processing any results.
@@ -45,27 +46,48 @@ of results.
 
 The main parts of the overall design for this work follow...
 
+=== JdbcOperation
+
+`org.hibernate.sql.exec.spi.JdbcOperation` and its sub-types represent, naturally, an operation to be
+performed against the database via JDBC.  The main source of these JdbcOperations is from processing (walking)
+a SQL AST (see below).  Each operation sub-type also defines a corresponding executor that understands how
+to coordinate the execution of the particular type of operation being performed.  The specific operation
+types and their corresponding executors are as follows:
+
+* `JdbcSelect` -> `JdbcSelectExecutor`
+* `JdbcMutation` -> `JdbcMutationExecutor`
+** `JdbcUpdate`
+** _JdbcDelete_
+** _JdbcInsert_
+** `JdbcInsertSelect`
+* `JdbcCall` -> _JdbcCallExecutor_
+
+_Those in italics are not yet defined_
+
+Generally speaking, a `JdbcOperation` is created from a SQL AST.  The one exception is handling for
+native SQL queries (`org.hibernate.query.NativeQuery`).
+
 
 === SQL AST
 
 The general approach for centralizing the SQL generation, execution and (for SELECTS) processing results was
 to use an Abstract Syntax Tree (AST) representing the SQL and walking/visiting the AST to produce the SQL and
-all delegates needed to execute the JDBC call.  The term AST is just a fancy phrase for a visitable object
+all delegates needed to execute the JDBC operation.  The term AST is just a fancy phrase for a visitable object
 representation of a SQL query.  The overall solution here includes:
  	* The SQL AST - `org.hibernate.sql.ast.tree`
- 	* contracts to produce this AST - `org.hibernate.sql.produce`
- 	* contracts to consume this AST - `org.hibernate.sql.consume`
+ 	* contracts to produce this AST - `org.hibernate.sql.ast.produce`
+ 	* contracts to consume this AST - `org.hibernate.sql.ast.consume`
 
 Producing the SQL AST tree comes from 2 main sources:
 
 	* Queries - HQL and Criteria, as well as custom "SQM producers"
-	* Persister-based load, remove, etc calls.
+	* Metadata-based load, remove, etc calls.
 
-In either case, persisters are responsible for generating the various "sub-trees" of the SQL AST.  It was decided
-to have persisters directly produce SQL AST trees in handling _Persister-based load, remove, etc calls_ because:
+In either case, metadata objects are responsible for generating the various "sub-trees" of the SQL AST.  It was decided
+to have persisters directly produce entire SQL AST trees in handling metadata-based load, remove, etc calls_ because:
 
  	* It already knows how to generate the sub-trees.
- 	* Is more performant than generation the SQM view and then walking that SQM.
+ 	* Is more performant than generating the SQM view and then walking that SQM to produce the SQL AST.
 
 Producing the SQL AST is beyond the scope of this doc, but is not hard to conceptually understand...
 
@@ -74,6 +96,10 @@ of the tree is covered in detail in <<consumption>>.
 
 The following sub-sections describe the sub-parts of the SQL AST.
 
+[NOTE]
+----
+There is a 3rd source for JDBC
+----
 
 ==== FromClause - Tables and Groups and Spaces (oh my)
 
@@ -247,7 +273,7 @@ As we see above, a `Expression` acts as a factory for an appropriate `Selection`
 is `NavigableReference` which is an `Expression` whose `Selectable` is its referenced `Navigable`.
 
 
-[#consumption]
+[#operations]
 ==== SQL AST consumption
 
 Ultimately, the consumption of the SQL AST is execution of some JDBC call.  Here we will focus on processing
@@ -259,9 +285,10 @@ The main actor in consuming SQL AST for a SELECT query (`org.hibernate.sql.ast.t
 transforms it into a `org.hibernate.sql.exec.spi.JdbcSelect` which encapsulates:
 
 	* The SQL String
-	* `List` of `JdbcParameterBinder`
-	* `List` of `QueryResult` references (see <<reading-results>>)
-	* `List` of `SqlSelection` references (see <<reading-results>> and <<rendering>>)
+	* List of `JdbcParameterBinder`
+	* A `
+	* List of `QueryResult` references (see <<reading-results>>)
+	* List of `SqlSelection` references (see <<reading-results>> and <<rendering>>)
 
 
 [plantuml,queryresult-sequence,png]

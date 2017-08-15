@@ -63,9 +63,8 @@ import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.SqlSelectable;
-import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 
 import org.jboss.logging.Logger;
 
@@ -80,7 +79,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 		implements MetamodelDrivenSqlSelectPlanBuilder, RootTableGroupContext, JoinedTableGroupContext,
-		QueryResultCreationContext, SqlAstBuildingContext, SqlSelectionResolver {
+		QueryResultCreationContext, SqlAstBuildingContext, SqlExpressionResolver {
 
 	private static final Logger log = Logger.getLogger( AbstractMetamodelDrivenSqlSelectPlanBuilder.class );
 
@@ -110,7 +109,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	private QuerySpec querySpec;
 	private TableSpace tableSpace;
 	private TableGroup rootTableGroup;
-	private HashMap<SqlSelectable,SqlSelection> sqlSelectionMap = new HashMap<>();
+	private HashMap<SqlExpressable,SqlSelection> sqlSelectionMap = new HashMap<>();
 
 	/**
 	 *
@@ -346,7 +345,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	// SqlSelectionResolver
 
 	@Override
-	public SqlSelection resolveSqlSelection(SqlSelectable sqlSelectable) {
+	public SqlSelection resolveSqlSelection(SqlExpressable sqlSelectable) {
 		final SqlSelection existing = sqlSelectionMap.get( sqlSelectable );
 		if ( existing != null ) {
 			return existing;

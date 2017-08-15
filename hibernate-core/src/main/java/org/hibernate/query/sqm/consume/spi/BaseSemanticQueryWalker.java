@@ -214,17 +214,17 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	@Override
 	public T visitSelectClause(SqmSelectClause selectClause) {
 		for ( SqmSelection selection : selectClause.getSelections() ) {
-			visitSelection( selection );
+			selection.getExpression().accept( this );
 		}
 		return (T) selectClause;
 	}
 
-	@Override
-	public T visitSelection(SqmSelection selection) {
-		selection.getExpression().accept( this );
-		return (T) selection;
-	}
-
+//	@Override
+//	public T visitSelection(SqmSelection selection) {
+//		selection.getExpression().accept( this );
+//		return (T) selection;
+//	}
+//
 	@Override
 	public T visitDynamicInstantiation(SqmDynamicInstantiation dynamicInstantiation) {
 		return (T) dynamicInstantiation;

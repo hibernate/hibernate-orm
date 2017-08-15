@@ -12,6 +12,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.results.spi.Selectable;
 
 /**
  * @author Steve Ebersole

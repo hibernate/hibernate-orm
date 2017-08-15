@@ -66,5 +66,7 @@ public interface Fetch extends ResultSetMappingNode {
 	 */
 	boolean isNullable();
 
+	Initializer generateInitializer(FetchParentAccess parentAccess);
+
 	void registerInitializers(FetchParentAccess parentAccess, InitializerCollector collector);
 }

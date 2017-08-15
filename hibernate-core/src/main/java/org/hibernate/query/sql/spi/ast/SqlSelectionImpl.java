@@ -12,7 +12,7 @@ import java.sql.SQLException;
 
 import org.hibernate.QueryException;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.results.spi.SqlSelectable;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.spi.SqlSelectionReader;
@@ -26,7 +26,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class SqlSelectionImpl implements SqlSelection, SqlSelectable, SqlSelectionReader {
+public class SqlSelectionImpl implements SqlSelection, SqlExpressable, SqlSelectionReader {
 	private final String columnAlias;
 	private ValueExtractor extractor;
 
@@ -71,7 +71,7 @@ public class SqlSelectionImpl implements SqlSelection, SqlSelectable, SqlSelecti
 	}
 
 	@Override
-	public SqlSelectable getSqlSelectable() {
+	public SqlExpressable getSqlSelectable() {
 		return this;
 	}
 

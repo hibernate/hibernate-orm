@@ -6,14 +6,15 @@
  */
 package org.hibernate.sql.results.spi;
 
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
+
 /**
- * Unifying contract for things that are selectable at the SQL level.
- *
  * @author Steve Ebersole
  */
-public interface SqlSelectable {
-	/**
-	 * Get the reader capable of reading values of this "selectable"
-	 */
-	SqlSelectionReader getSqlSelectionReader();
+public interface QueryResultProducer<T> {
+	QueryResult createQueryResult(
+			T expression,
+			String resultVariable,
+			SqlExpressionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext);
 }

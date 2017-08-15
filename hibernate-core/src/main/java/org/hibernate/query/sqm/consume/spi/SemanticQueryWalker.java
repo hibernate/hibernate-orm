@@ -149,7 +149,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitSelectClause(SqmSelectClause selectClause);
 
-	T visitSelection(SqmSelection selection);
+//	T visitSelection(SqmSelection selection);
 
 	T visitDynamicInstantiation(SqmDynamicInstantiation dynamicInstantiation);
 

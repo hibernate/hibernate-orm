@@ -15,15 +15,15 @@ import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.results.spi.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.sql.results.spi.SqlSelectable;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
  */
-public class CaseSimpleExpression implements Expression, Selectable, SqlSelectable {
+public class CaseSimpleExpression implements Expression, Selectable, SqlExpressable {
 	private final ExpressableType type;
 	private final Expression fixture;
 

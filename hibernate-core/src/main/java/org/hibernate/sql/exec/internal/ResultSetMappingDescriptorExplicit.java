@@ -14,6 +14,12 @@ import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 
 /**
+ * ResultSetMappingDescriptor implementation for cases where the mappings are
+ * all explicitly created by Hibernate itself.  Basically this covers all
+ * scenarios *except* {@link org.hibernate.query.NativeQuery} processing -
+ * an important distinction as it means we do not have to perform any
+ * {@link java.sql.ResultSetMetaData} resolutions.
+ *
  * @author Steve Ebersole
  */
 public class ResultSetMappingDescriptorExplicit implements ResultSetMappingDescriptor {

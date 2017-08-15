@@ -12,7 +12,7 @@ import org.hibernate.sql.results.spi.InitializerCollector;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
 import org.hibernate.sql.results.spi.PluralAttributeQueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 
 /**
  * @author Steve Ebersole
@@ -23,7 +23,7 @@ public class PluralAttributeQueryResultImpl
 	public PluralAttributeQueryResultImpl(
 			PluralPersistentAttribute pluralAttribute,
 			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
+			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		super( pluralAttribute, resultVariable );
 	}

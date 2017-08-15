@@ -11,7 +11,7 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.results.spi.Selectable;
 
 /**
  * @author Steve Ebersole

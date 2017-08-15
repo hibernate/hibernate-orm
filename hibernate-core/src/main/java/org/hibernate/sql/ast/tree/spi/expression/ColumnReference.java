@@ -10,20 +10,23 @@ package org.hibernate.sql.ast.tree.spi.expression;
 import java.util.Locale;
 
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.ConversionException;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
-import org.hibernate.sql.results.spi.SqlSelectable;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.Selectable;
+import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
+import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.sql.results.spi.SqlSelectionReader;
 
 /**
  * @author Steve Ebersole
  */
-public class ColumnReference implements Expression, SqlSelectable {
+public class ColumnReference implements Expression {
 	private final String identificationVariable;
 	private final Column column;
 	private final SqlSelectionReader sqlSelectionReader;
@@ -98,6 +101,15 @@ public class ColumnReference implements Expression, SqlSelectable {
 	@Override
 	public ExpressableType getType() {
 		// n/a
+		return null;
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			SqlSelection sqlSelection,
+			String resultVariable,
+			SqlExpressionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
 		return null;
 	}
 

@@ -7,15 +7,19 @@
 package org.hibernate.sql.results.spi;
 
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 
 /**
  * @author Steve Ebersole
  */
 public interface SqlSelection {
+
 	/**
-	 * Get the selectable SQL expression.
+	 * Get the reader used to read values for this selection
+	 *
+	 * @see SqlExpressable#getSqlSelectionReader()
 	 */
-	SqlSelectable getSqlSelectable();
+	SqlSelectionReader getSqlSelectionReader();
 
 	/**
 	 * Get the position within the values array (0-based)
@@ -34,6 +38,17 @@ public interface SqlSelection {
 			ResultSetMappingDescriptor.ResolutionContext resolutionContext) {
 		// By default we have nothing to do.  Here as a hook for NativeQuery mapping resolutions
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo (6.0) : remove methods below
+
+	/**
+	 * Get the SqlSelectable represented by this selection
+	 *
+	 * todo (6.0) : remove in favor of `#getSqlSelectionReader`
+	 */
+	SqlExpressable getSqlSelectable();
 
 	void accept(SqlAstWalker interpreter);
 }

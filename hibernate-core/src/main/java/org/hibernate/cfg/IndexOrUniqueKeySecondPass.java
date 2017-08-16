@@ -62,6 +62,7 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 		this.buildingContext = buildingContext;
 		this.unique = unique;
 	}
+
 	@Override
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		if ( columns != null ) {
@@ -72,11 +73,17 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 		if ( column != null ) {
 			this.table = column.getTable();
 
-			PersistentClass persistentClass = (PersistentClass) persistentClasses.get( column.getPropertyHolder().getEntityName() );
-			Property property = persistentClass.getProperty( column.getPropertyName() );
+			final PropertyHolder propertyHolder = column.getPropertyHolder();
+
+			String entityName = ( propertyHolder.isComponent() ) ?
+					propertyHolder.getPersistentClass().getEntityName() :
+					propertyHolder.getEntityName();
+
+			final PersistentClass persistentClass = (PersistentClass) persistentClasses.get( entityName );
+			final Property property = persistentClass.getProperty( column.getPropertyName() );
 
 			if ( property.getValue() instanceof Component ) {
-				Component component = (Component) property.getValue();
+				final Component component = (Component) property.getValue();
 
 				List<Column> columns = new ArrayList<>();
 				component.getColumnIterator().forEachRemaining( selectable -> {
@@ -89,7 +96,7 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 			else {
 				addConstraintToColumn(
 						buildingContext.getMetadataCollector()
-							.getLogicalColumnName( table, column.getMappingColumn().getQuotedName() )
+								.getLogicalColumnName( table, column.getMappingColumn().getQuotedName() )
 				);
 			}
 		}

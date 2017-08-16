@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.annotations.onetomany;
 
-import javax.persistence.PersistenceException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -15,11 +14,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import javax.persistence.PersistenceException;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.MetadataSources;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
@@ -370,6 +371,16 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertNull( "delete cascade should work", e1 );
 		tx.commit();
 		s.close();
+	}
+
+	@Test(expected = AnnotationException.class)
+	public void testOnDeleteWithoutJoinColumn() throws Exception {
+		new MetadataSources()
+				.addAnnotatedClass( F.class )
+				.addAnnotatedClass( E.class )
+				.buildMetadata()
+				.buildSessionFactory()
+				.close();
 	}
 
 	@Test

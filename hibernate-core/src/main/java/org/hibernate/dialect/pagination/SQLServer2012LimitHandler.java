@@ -110,8 +110,11 @@ public class SQLServer2012LimitHandler extends SQLServer2005LimitHandler {
 
 	private boolean hasOrderBy(String sql) {
 		int depth = 0;
-		for ( int i = 0; i < sql.length(); ++i ) {
-			char ch = sql.charAt( i );
+
+		String lowerCaseSQL = sql.toLowerCase();
+
+		for ( int i = lowerCaseSQL.length() - 1; i >= 0; --i ) {
+			char ch = lowerCaseSQL.charAt( i );
 			if ( ch == '(' ) {
 				depth++;
 			}
@@ -119,7 +122,7 @@ public class SQLServer2012LimitHandler extends SQLServer2005LimitHandler {
 				depth--;
 			}
 			if ( depth == 0 ) {
-				if ( sql.substring( i ).toLowerCase().startsWith( "order by " ) ) {
+				if ( lowerCaseSQL.startsWith( "order by ", i ) ) {
 					return true;
 				}
 			}

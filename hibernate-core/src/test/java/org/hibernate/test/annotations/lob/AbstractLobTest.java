@@ -10,6 +10,9 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.SybaseDialect;
+
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -135,6 +138,7 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 	}
 
 	@Test
+	@SkipForDialect( SybaseDialect.class )
 	public void testBinary() throws Exception {
 		Session s;
 		Transaction tx;

@@ -6,8 +6,12 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * The standard locate function SQL AST expression
@@ -46,7 +50,15 @@ public class LocateFunction extends AbstractStandardFunction implements Standard
 	}
 
 	@Override
-	public ExpressableType getType() {
-		return stringToSearch.getType();
+	public BasicValuedExpressableType getType() {
+		return (BasicValuedExpressableType) stringToSearch.getType();
+	}
+
+	@Override
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		return new SqlSelectionImpl(
+				getType().getBasicType().getSqlSelectionReader(),
+				jdbcPosition
+		);
 	}
 }

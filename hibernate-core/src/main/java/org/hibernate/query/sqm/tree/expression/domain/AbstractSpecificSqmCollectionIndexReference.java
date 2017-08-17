@@ -12,7 +12,7 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 /**
  * @author Steve Ebersole
  */
-public class AbstractSpecificSqmCollectionIndexReference extends AbstractSqmCollectionIndexReference {
+public abstract class AbstractSpecificSqmCollectionIndexReference extends AbstractSqmCollectionIndexReference {
 	public AbstractSpecificSqmCollectionIndexReference(SqmPluralAttributeReference pluralAttributeBinding) {
 		super( pluralAttributeBinding );
 	}

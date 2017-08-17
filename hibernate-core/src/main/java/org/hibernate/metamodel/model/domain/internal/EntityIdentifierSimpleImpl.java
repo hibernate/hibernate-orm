@@ -22,12 +22,13 @@ import org.hibernate.metamodel.model.domain.spi.NavigableBasicValued;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
+import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
@@ -126,15 +127,17 @@ public class EntityIdentifierSimpleImpl<O,J>
 	}
 
 	@Override
-	public QueryResult generateQueryResult(
-			NavigableReference selectedExpression,
+	public QueryResult createQueryResult(
+			Expression expression,
 			String resultVariable,
-			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new ScalarQueryResultImpl(
 				resultVariable,
-				sqlSelectionResolver.resolveSqlSelection(
-						creationContext.currentColumnReferenceSource().resolveColumnReference( column )
+				creationContext.getSqlSelectionResolver().resolveSqlSelection(
+						creationContext.getSqlSelectionResolver().resolveSqlExpression(
+								creationContext.currentColumnReferenceSource(),
+								column
+						)
 				),
 				this
 		);
@@ -146,7 +149,9 @@ public class EntityIdentifierSimpleImpl<O,J>
 	}
 
 	@Override
-	public SqlSelectionGroup resolveSqlSelectionGroup(QueryResultCreationContext resolutionContext) {
+	public SqlSelectionGroup resolveSqlSelectionGroup(
+			SqlExpressionQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext) {
 		throw new org.hibernate.sql.NotYetImplementedException(  );
 	}
 

@@ -4,28 +4,27 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.sql.results.internal;
 
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.sql.results.spi.SqlSelectionReader;
 
 /**
  * @author Steve Ebersole
  */
 public class SqlSelectionImpl implements SqlSelection {
-	private final SqlExpressable sqlSelectable;
+	private final SqlSelectionReader reader;
 	private final int position;
 
-	public SqlSelectionImpl(SqlExpressable sqlSelectable, int position) {
-		this.sqlSelectable = sqlSelectable;
+	public SqlSelectionImpl(SqlSelectionReader reader, int position) {
+		this.reader = reader;
 		this.position = position;
 	}
 
 	@Override
-	public SqlExpressable getSqlSelectable() {
-		return sqlSelectable;
+	public SqlSelectionReader getSqlSelectionReader() {
+		return reader;
 	}
 
 	@Override

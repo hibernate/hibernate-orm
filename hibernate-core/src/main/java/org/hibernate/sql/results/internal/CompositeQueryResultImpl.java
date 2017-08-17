@@ -12,8 +12,10 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValueExpressableType;
 import org.hibernate.sql.results.spi.CompositeQueryResult;
+import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.InitializerCollector;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * @author Steve Ebersole
@@ -63,6 +65,12 @@ public class CompositeQueryResultImpl extends AbstractFetchParent implements Com
 
 	@Override
 	public void registerInitializers(InitializerCollector collector) {
+		// todo (6.0) : register the CompositeInitializer as well as the initializers for our fetches
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public Initializer generateInitializer(QueryResultCreationContext creationContext) {
 		// todo (6.0) : register the CompositeInitializer as well as the initializers for our fetches
 		throw new NotYetImplementedException(  );
 	}

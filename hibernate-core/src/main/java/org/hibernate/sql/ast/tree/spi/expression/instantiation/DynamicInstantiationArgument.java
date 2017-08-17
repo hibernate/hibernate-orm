@@ -7,39 +7,38 @@
 package org.hibernate.sql.ast.tree.spi.expression.instantiation;
 
 import org.hibernate.sql.results.internal.instantiation.ArgumentReader;
-import org.hibernate.sql.results.spi.QueryResultAssembler;
+import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 
 /**
  * @author Steve Ebersole
  */
 public class DynamicInstantiationArgument {
-	private final Expression expression;
+	private final QueryResultProducer argumentResultProducer;
 	private final String alias;
 
-	public DynamicInstantiationArgument(Expression expression, String alias) {
-		this.expression = expression;
+	@SuppressWarnings("WeakerAccess")
+	public DynamicInstantiationArgument(QueryResultProducer argumentResultProducer, String alias) {
+		this.argumentResultProducer = argumentResultProducer;
 		this.alias = alias;
-	}
-
-	public Expression getExpression() {
-		return expression;
 	}
 
 	public String getAlias() {
 		return alias;
 	}
 
-	public ArgumentReader buildArgumentReader(
-			SqlExpressionResolver sqlSelectionResolver,
-			QueryResultCreationContext resolutionContext) {
-		final QueryResultAssembler queryResultAssembler = expression.getSelectable()
-				.createSelection( expression, alias )
-				.createQueryResult( sqlSelectionResolver, resolutionContext )
-				.getResultAssembler();
+	@SuppressWarnings({"unchecked", "WeakerAccess"})
+	public ArgumentReader buildArgumentReader(QueryResultCreationContext resolutionContext) {
+		final QueryResult queryResult = argumentResultProducer.createQueryResult(
+				argumentResultProducer,
+				alias,
+				resolutionContext
+		);
 
-		return new ArgumentReader( queryResultAssembler, alias );
+		return new ArgumentReader(
+				queryResult.getResultAssembler(),
+				alias
+		);
 	}
 }

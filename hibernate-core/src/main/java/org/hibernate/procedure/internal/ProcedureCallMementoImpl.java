@@ -12,12 +12,12 @@ import java.util.Set;
 import javax.persistence.ParameterMode;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.sql.results.spi.RowReader;
-import org.hibernate.type.Type;
 
 /**
  * Implementation of ProcedureCallMemento
@@ -97,7 +97,7 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 		private final String name;
 		private final ParameterMode mode;
 		private final Class type;
-		private final Type hibernateType;
+		private final AllowableParameterType hibernateType;
 		private final boolean passNulls;
 
 		/**
@@ -115,7 +115,7 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 				String name,
 				ParameterMode mode,
 				Class type,
-				Type hibernateType,
+				AllowableParameterType hibernateType,
 				boolean passNulls) {
 			this.position = position;
 			this.name = name;
@@ -141,7 +141,7 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 			return type;
 		}
 
-		public Type getHibernateType() {
+		public AllowableParameterType getHibernateType() {
 			return hibernateType;
 		}
 
@@ -157,14 +157,7 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 		 * @return The memento
 		 */
 		public static ParameterMemento fromRegistration(ParameterRegistrationImplementor registration) {
-			return new ParameterMemento(
-					registration.getPosition(),
-					registration.getName(),
-					registration.getMode(),
-					registration.getType(),
-					registration.getHibernateType(),
-					registration.isPassNullsEnabled()
-			);
+			return registration.toMemento();
 		}
 
 	}

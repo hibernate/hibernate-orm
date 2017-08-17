@@ -8,7 +8,6 @@ package org.hibernate.engine.spi;
 
 import java.io.Serializable;
 import java.sql.Connection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,7 +25,6 @@ import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.metamodel.Metamodel;
 
 import org.hibernate.CacheMode;
-import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -38,7 +36,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.ReplicationMode;
-import org.hibernate.ScrollMode;
 import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
@@ -57,7 +54,6 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
@@ -171,41 +167,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public List list(String query, QueryParameters queryParameters) throws HibernateException {
-		return delegate.list( query, queryParameters );
-	}
-
-	@Override
-	public Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException {
-		return delegate.iterate( query, queryParameters );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scroll(String query, QueryParameters queryParameters) throws HibernateException {
-		return delegate.scroll( query, queryParameters );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scroll(Criteria criteria, ScrollMode scrollMode) {
-		return delegate.scroll( criteria, scrollMode );
-	}
-
-	@Override
-	public List list(Criteria criteria) {
-		return delegate.list( criteria );
-	}
-
-	@Override
-	public List listFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException {
-		return delegate.listFilter( collection, filter, queryParameters );
-	}
-
-	@Override
-	public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException {
-		return delegate.iterateFilter( collection, filter, queryParameters );
-	}
-
-	@Override
 	public EntityDescriptor getEntityPersister(String entityName, Object object) throws HibernateException {
 		return delegate.getEntityPersister( entityName, object );
 	}
@@ -236,26 +197,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) throws HibernateException {
-		return delegate.listCustomQuery( customQuery, queryParameters );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) throws HibernateException {
-		return delegate.scrollCustomQuery( customQuery, queryParameters );
-	}
-
-	@Override
-	public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters) throws HibernateException {
-		return delegate.list( spec, queryParameters );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters) throws HibernateException {
-		return delegate.scroll( spec, queryParameters );
-	}
-
-	@Override
 	public int getDontFlushFromFind() {
 		return delegate.getDontFlushFromFind();
 	}
@@ -263,16 +204,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public PersistenceContext getPersistenceContext() {
 		return delegate.getPersistenceContext();
-	}
-
-	@Override
-	public int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException {
-		return delegate.executeUpdate( query, queryParameters );
-	}
-
-	@Override
-	public int executeNativeUpdate(NativeSQLQuerySpecification specification, QueryParameters queryParameters) throws HibernateException {
-		return delegate.executeNativeUpdate( specification, queryParameters );
 	}
 
 	@Override
@@ -611,26 +542,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Criteria createCriteria(Class persistentClass) {
-		return delegate.createCriteria( persistentClass );
-	}
-
-	@Override
-	public Criteria createCriteria(Class persistentClass, String alias) {
-		return delegate.createCriteria( persistentClass, alias );
-	}
-
-	@Override
-	public Criteria createCriteria(String entityName) {
-		return delegate.createCriteria( entityName );
-	}
-
-	@Override
-	public Criteria createCriteria(String entityName, String alias) {
-		return delegate.createCriteria( entityName, alias );
-	}
-
-	@Override
 	public SharedSessionBuilder sessionWithOptions() {
 		return delegate.sessionWithOptions();
 	}
@@ -893,11 +804,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public LockMode getCurrentLockMode(Object object) {
 		return delegate.getCurrentLockMode( object );
-	}
-
-	@Override
-	public org.hibernate.query.Query createFilter(Object collection, String queryString) {
-		return delegate.createFilter( collection, queryString );
 	}
 
 	@Override

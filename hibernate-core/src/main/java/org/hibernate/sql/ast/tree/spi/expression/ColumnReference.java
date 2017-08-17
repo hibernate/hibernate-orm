@@ -11,54 +11,39 @@ import java.util.Locale;
 
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.ConversionException;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.Selectable;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.sql.results.spi.SqlSelectionReader;
 
 /**
  * @author Steve Ebersole
  */
 public class ColumnReference implements Expression {
-	private final String identificationVariable;
+	private final SqlExpressionQualifier qualifier;
 	private final Column column;
-	private final SqlSelectionReader sqlSelectionReader;
 
 
-	public ColumnReference(Column column, BasicValuedExpressableType type, TableReference tableReference) {
-		this.identificationVariable = tableReference.getIdentificationVariable();
+	public ColumnReference(SqlExpressionQualifier qualifier, Column column) {
+		this.qualifier = qualifier;
 		this.column = column;
-		this.sqlSelectionReader = new SqlSelectionReaderImpl( type );
 	}
 
-	public ColumnReference(Column column, int jdbcTypeCode, TableReference tableReference) {
-		this.identificationVariable = tableReference.getIdentificationVariable();
-		this.column = column;
-		this.sqlSelectionReader = new SqlSelectionReaderImpl( jdbcTypeCode );
+	@Override
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		return new SqlSelectionImpl(
+				new SqlSelectionReaderImpl( column.getSqlTypeDescriptor().getJdbcTypeCode() ),
+				jdbcPosition
+		);
 	}
 
-	public ColumnReference(Column column, TableReference tableReference) {
-		this( column, column.getJdbcType(), tableReference );
+	public SqlExpressionQualifier getQualifier() {
+		return qualifier;
 	}
 
 	public Column getColumn() {
 		return column;
-	}
-
-	public String getIdentificationVariable() {
-		return identificationVariable;
-	}
-
-	@Override
-	public SqlSelectionReader getSqlSelectionReader() {
-		return sqlSelectionReader;
 	}
 
 	@Override
@@ -76,13 +61,13 @@ public class ColumnReference implements Expression {
 		}
 
 		final ColumnReference that = (ColumnReference) o;
-		return getIdentificationVariable().equals( that.getIdentificationVariable() )
+		return qualifier.equals( that.qualifier )
 				&& getColumn().equals( that.getColumn() );
 	}
 
 	@Override
 	public int hashCode() {
-		int result = getIdentificationVariable().hashCode();
+		int result = qualifier.hashCode();
 		result = 31 * result + getColumn().hashCode();
 		return result;
 	}
@@ -92,11 +77,10 @@ public class ColumnReference implements Expression {
 		return String.format(
 				Locale.ROOT,
 				"ColumnBinding(%s.%s)",
-				getIdentificationVariable(),
+				qualifier,
 				column.getExpression()
 		);
 	}
-
 
 	@Override
 	public ExpressableType getType() {
@@ -104,17 +88,6 @@ public class ColumnReference implements Expression {
 		return null;
 	}
 
-	@Override
-	public QueryResult createQueryResult(
-			SqlSelection sqlSelection,
-			String resultVariable,
-			SqlExpressionResolver sqlSelectionResolver,
-			QueryResultCreationContext creationContext) {
-		return null;
-	}
 
-	@Override
-	public Selectable getSelectable() {
-		throw new ConversionException( "ColumnReferenceExpression is not Selectable" );
-	}
+
 }

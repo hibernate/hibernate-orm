@@ -20,6 +20,10 @@ import org.hibernate.sql.results.spi.SqlSelectionGroup;
 public class SqlSelectionGroupImpl implements SqlSelectionGroup {
 	private List<SqlSelection> sqlSelections;
 
+	public static SqlSelectionGroupImpl of(SqlSelection... sqlSelections) {
+		return new SqlSelectionGroupImpl( sqlSelections );
+	}
+
 	public SqlSelectionGroupImpl() {
 	}
 

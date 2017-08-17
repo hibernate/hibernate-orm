@@ -6,9 +6,8 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -16,9 +15,9 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 public class ExtractFunction extends AbstractStandardFunction {
 	private final Expression unitToExtract;
 	private final Expression extractionSource;
-	private final AllowableFunctionReturnType returnType;
+	private final BasicValuedExpressableType returnType;
 
-	public ExtractFunction(Expression unitToExtract, Expression extractionSource, AllowableFunctionReturnType returnType) {
+	public ExtractFunction(Expression unitToExtract, Expression extractionSource, BasicValuedExpressableType returnType) {
 		this.unitToExtract = unitToExtract;
 		this.extractionSource = extractionSource;
 		this.returnType = returnType;
@@ -38,7 +37,7 @@ public class ExtractFunction extends AbstractStandardFunction {
 	}
 
 	@Override
-	public ExpressableType getType() {
+	public BasicValuedExpressableType getType() {
 		return returnType;
 	}
 }

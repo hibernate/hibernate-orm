@@ -16,5 +16,5 @@ import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
  */
 public interface QueryParameterBindingTypeResolver {
 	AllowableParameterType resolveParameterBindType(Object bindValue);
-	AllowableParameterType resolveParameterBindType(Class clazz);
+	AllowableParameterType resolveParameterBindType(Class javaType);
 }

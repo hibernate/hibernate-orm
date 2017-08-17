@@ -44,11 +44,7 @@ public interface SqlSelection {
 	// todo (6.0) : remove methods below
 
 	/**
-	 * Get the SqlSelectable represented by this selection
-	 *
-	 * todo (6.0) : remove in favor of `#getSqlSelectionReader`
+	 * todo (6.0) : why removing this one?
 	 */
-	SqlExpressable getSqlSelectable();
-
 	void accept(SqlAstWalker interpreter);
 }

@@ -6,14 +6,19 @@
  */
 package org.hibernate.sql.ast.consume.spi;
 
+import java.util.Collection;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.exec.internal.JdbcSelectImpl;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.exec.internal.ResultSetMappingDescriptorExplicit;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.results.spi.InitializerCreationContext;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 
 import org.jboss.logging.Logger;
@@ -39,7 +44,8 @@ public class SqlSelectAstToJdbcSelectConverter
 			SqlAstSelectInterpretation sqlSelectPlan,
 			SharedSessionContractImplementor persistenceContext,
 			QueryParameterBindings parameterBindings,
-			java.util.Collection<?> loadIdentifiers) {
+			QueryResultCreationContext initializerCreationContext,
+			Collection<?> loadIdentifiers) {
 		final SqlSelectAstToJdbcSelectConverter walker = new SqlSelectAstToJdbcSelectConverter(
 				persistenceContext,
 				parameterBindings,

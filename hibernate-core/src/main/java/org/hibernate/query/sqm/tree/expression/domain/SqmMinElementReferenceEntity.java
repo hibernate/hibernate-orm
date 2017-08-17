@@ -9,14 +9,18 @@ package org.hibernate.query.sqm.tree.expression.domain;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementEntity;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmMinElementReferenceEntity extends AbstractSpecificSqmElementReference implements SqmMinElementReference,
-		SqmEntityTypedReference {
+public class SqmMinElementReferenceEntity
+		extends AbstractSpecificSqmElementReference
+		implements SqmMinElementReference, SqmEntityTypedReference {
 	private static final Logger log = Logger.getLogger( SqmMinElementReferenceEntity.class );
 
 	private SqmFrom exportedFromElement;
@@ -59,5 +63,14 @@ public class SqmMinElementReferenceEntity extends AbstractSpecificSqmElementRefe
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return null;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
 	}
 }

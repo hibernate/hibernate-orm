@@ -6,10 +6,11 @@
  */
 package org.hibernate.query.sql.spi;
 
+import org.hibernate.sql.results.spi.InitializerCreationContext;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * @author Steve Ebersole
  */
-public interface NodeResolutionContext extends QueryResultCreationContext {
+public interface NodeResolutionContext extends InitializerCreationContext, QueryResultCreationContext {
 }

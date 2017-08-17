@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.tree.spi.from;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
+import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 
 /**
  * @author Steve Ebersole

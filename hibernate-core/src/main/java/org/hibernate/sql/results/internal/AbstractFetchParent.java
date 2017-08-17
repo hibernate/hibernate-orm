@@ -58,6 +58,7 @@ public abstract class AbstractFetchParent implements FetchParent {
 		return new ArrayList<>( base );
 	}
 
+
 	protected void registerFetchInitializers(FetchParentAccess parentAccess, InitializerCollector collector) {
 		if ( fetches == null ) {
 			return;

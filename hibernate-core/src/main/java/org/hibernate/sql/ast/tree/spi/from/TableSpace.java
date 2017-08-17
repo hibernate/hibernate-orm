@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
+import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 
 import org.jboss.logging.Logger;
 

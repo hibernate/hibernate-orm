@@ -10,6 +10,9 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 import org.jboss.logging.Logger;
 
@@ -51,5 +54,14 @@ public class SqmMaxElementReferenceEmbedded
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
+
 	}
 }

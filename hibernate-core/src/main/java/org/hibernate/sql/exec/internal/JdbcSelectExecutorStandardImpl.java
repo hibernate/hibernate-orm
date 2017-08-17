@@ -24,6 +24,11 @@ import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
+import org.hibernate.sql.exec.spi.PreparedStatementCreator;
+import org.hibernate.sql.exec.spi.RowTransformer;
 import org.hibernate.sql.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.RowReaderStandardImpl;
@@ -36,12 +41,8 @@ import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
 import org.hibernate.sql.results.spi.ResultSetAccess;
+import org.hibernate.sql.results.spi.ResultSetMapping;
 import org.hibernate.sql.results.spi.RowReader;
-import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
-import org.hibernate.sql.exec.spi.PreparedStatementCreator;
-import org.hibernate.sql.exec.spi.RowTransformer;
 
 import org.jboss.logging.Logger;
 
@@ -248,8 +249,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final List<QueryResultAssembler> returnAssemblers = new ArrayList<>();
 		final List<Initializer> initializers = new ArrayList<>();
 		for ( QueryResult queryResult : jdbcValuesSource.getResultSetMapping().getQueryResults() ) {
-			initializers.add( queryResult.generateInitializer( this ) );
-//			queryResult.registerInitializers( initializers::add );
+			queryResult.registerInitializers( initializers::add );
 			returnAssemblers.add( queryResult.getResultAssembler() );
 		}
 
@@ -285,6 +285,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final boolean queryCacheEnabled = executionContext.getSession().getFactory().getSessionFactoryOptions().isQueryCacheEnabled();
 		final CacheMode cacheMode = resolveCacheMode(  executionContext );
 
+		final ResultSetMapping resultSetMapping = jdbcSelect.getResultSetMapping()
+				.resolve( resultSetAccess, executionContext );
+
+		final QueryKey queryResultsCacheKey;
+
 		if ( queryCacheEnabled && executionContext.getQueryOptions().getCacheMode().isGetEnabled() ) {
 			log.debugf( "Reading Query result cache data per CacheMode#isGetEnabled [%s]", cacheMode.name() );
 
@@ -292,28 +297,40 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					.getCache()
 					.getQueryCache( executionContext.getQueryOptions().getResultCacheRegionName() );
 
-			final QueryKey queryResultsCacheKey = null;
+			// todo (6.0) : not sure that it is at all important that we account for QueryResults
+			//		these cached values are "lower level" than that, representing the
+			// 		"raw" JDBC values.
+			//
+			// todo (6.0) : relatedly ^^, pretty sure that SqlSelections are also irrelevant
+
+			queryResultsCacheKey = QueryKey.from(
+					jdbcSelect.getSql(),
+					executionContext.getQueryOptions().getLimit(),
+					executionContext.getParameterBindingContext().getQueryParameterBindings(),
+					executionContext.getSession()
+			);
 
 			cachedResults = queryCache.get(
-					// todo : QueryCache#get takes the `queryResultsCacheKey` see tat discussion above
+					// todo (6.0) : QueryCache#get takes the `queryResultsCacheKey` see tat discussion above
 					queryResultsCacheKey,
-					// todo : QueryCache#get also takes a `Type[] returnTypes` argument which ought to either:
+					// todo (6.0) : QueryCache#get also takes a `Type[] returnTypes` argument which ought to either:
 					// 		1) be replaced with the Return graph
 					//		2) removed (and Return graph made part of the QueryKey)
 					null,
-					// todo : QueryCache#get also takes a `isNaturalKeyLookup` argument which should go away
+					// todo (6.0) : QueryCache#get also takes a `isNaturalKeyLookup` argument which should go away
 					// 		that is no longer the supported way to perform a load-by-naturalId
 					false,
-					// todo : `querySpaces` and `session` make perfect sense as args, but its odd passing those into this method just to pass along
+					// todo (6.0) : `querySpaces` and `session` make perfect sense as args, but its odd passing those into this method just to pass along
+					//		atm we do not even collect querySpaces, but we need to
 					null,
-					null
+					executionContext.getSession()
 			);
 
-			// todo : `querySpaces` and `session` are used in QueryCache#get to verify "up-to-dateness" via UpdateTimestampsCache
+			// todo (6.0) : `querySpaces` and `session` are used in QueryCache#get to verify "up-to-dateness" via UpdateTimestampsCache
 			//		better imo to move UpdateTimestampsCache handling here and have QueryCache be a simple access to
 			//		the underlying query result cache region.
 			//
-			// todo : if we go this route (^^), still beneficial to have an abstraction over different UpdateTimestampsCache-based
+			// todo (6.0) : if we go this route (^^), still beneficial to have an abstraction over different UpdateTimestampsCache-based
 			//		invalidation strategies - QueryCacheInvalidationStrategy
 		}
 		else {
@@ -322,20 +339,22 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 						cacheMode.name()
 			);
 			cachedResults = null;
+			queryResultsCacheKey = null;
 		}
 
 		if ( cachedResults == null || cachedResults.isEmpty() ) {
 			return new JdbcValuesSourceResultSetImpl(
 					resultSetAccess,
+					queryResultsCacheKey,
 					executionContext.getQueryOptions(),
-					jdbcSelect.getResultSetMapping().resolve( resultSetAccess, executionContext ),
+					resultSetMapping,
 					executionContext.getSession()
 			);
 		}
 		else {
 			return new JdbcValuesSourceCacheHit(
 					cachedResults,
-					jdbcSelect.getResultSetMapping().resolve( resultSetAccess, executionContext )
+					resultSetMapping
 			);
 		}
 	}

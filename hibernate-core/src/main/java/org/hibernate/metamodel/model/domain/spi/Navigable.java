@@ -7,10 +7,6 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.Selectable;
 
 /**

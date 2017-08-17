@@ -13,7 +13,8 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.internal.PluralAttributeFetchImpl;
 import org.hibernate.sql.results.internal.PluralAttributeQueryResultImpl;
 import org.hibernate.sql.results.spi.Fetch;
@@ -21,7 +22,7 @@ import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
+import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -144,15 +145,13 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 	}
 
 	@Override
-	public QueryResult generateQueryResult(
-			NavigableReference selectedExpression,
+	public QueryResult createQueryResult(
+			Expression expression,
 			String resultVariable,
-			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new PluralAttributeQueryResultImpl(
 				this,
 				resultVariable,
-				sqlSelectionResolver,
 				creationContext
 		);
 	}
@@ -165,9 +164,11 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
+			SqlExpressionQualifier qualifier,
 			FetchStrategy fetchStrategy,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
+		// todo (6.0) : use qualifier to create the SqlSelection mappings
 		return new PluralAttributeFetchImpl(
 				fetchParent,
 				this,
@@ -192,9 +193,10 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 		return getPersistentCollectionMetadata().getForeignKeyDescriptor().getJoinColumnMappings();
 	}
 
-
 	@Override
-	public SqlSelectionGroup resolveSqlSelectionGroup(QueryResultCreationContext resolutionContext) {
+	public SqlSelectionGroup resolveSqlSelectionGroup(
+			SqlExpressionQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext) {
 		throw new NotYetImplementedException(  );
 	}
 }

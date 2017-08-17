@@ -6,15 +6,16 @@
  */
 package org.hibernate.sql.results.spi;
 
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-
 /**
+ * AFAIK this is only used in SQM interpretation.  If that holds true, it is
+ * perhaps better to move this contract to a more appropriate SQM-based package.
+ * `org.hibernate.query.sqm.consume.spi`?
+ *
  * @author Steve Ebersole
  */
 public interface QueryResultProducer<T> {
 	QueryResult createQueryResult(
 			T expression,
 			String resultVariable,
-			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext);
 }

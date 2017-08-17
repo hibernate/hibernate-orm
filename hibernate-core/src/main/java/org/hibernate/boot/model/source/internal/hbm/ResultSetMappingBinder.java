@@ -33,6 +33,10 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.query.sql.spi.QueryResultBuilder;
+import org.hibernate.query.sql.spi.QueryResultBuilderRootEntity;
+import org.hibernate.query.sql.spi.QueryResultBuilderScalar;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.type.Type;
 
 /**
@@ -40,6 +44,11 @@ import org.hibernate.type.Type;
  * @author Emmanuel Bernard
  */
 public abstract class ResultSetMappingBinder {
+
+	// todo (6.0) : we need to delay the building of the QueryResultBuilder instances until after the SessionFactory is available
+	//		something like a `QueryResultBuilderDescriptor` against which we can call
+	//		`#resolve(SessionFactoryImplementor factory)` or similar (what ags?)
+
 	/**
 	 * Build a ResultSetMappingDefinition given a containing element for the "return-XXX" elements.
 	 * <p/>
@@ -131,12 +140,12 @@ public abstract class ResultSetMappingBinder {
 	//
 	//		MappingException already carries origin, adding the query/resultset-mapping name pinpoints the location :)
 
-	public static NativeSQLQueryScalarReturn extractReturnDescription(
+	public static QueryResultBuilderScalar extractReturnDescription(
 			JaxbHbmNativeQueryScalarReturnType rtnSource,
 			HbmLocalMetadataBuildingContext context) {
 		final String column = rtnSource.getColumn();
 		final String typeName = rtnSource.getType();
-		Type type = null;
+		BasicValuedExpressableType type = null;
 		if ( typeName != null ) {
 			type = context.getMetadataCollector().heuristicType( typeName );
 			if ( type == null ) {
@@ -149,11 +158,11 @@ public abstract class ResultSetMappingBinder {
 				);
 			}
 		}
-		return new NativeSQLQueryScalarReturn( column, type );
+		return new QueryResultBuilderScalar( column, type );
 	}
 
 
-	public static NativeSQLQueryRootReturn extractReturnDescription(
+	public static QueryResultBuilder extractReturnDescription(
 			JaxbHbmNativeQueryReturnType rtnSource,
 			HbmLocalMetadataBuildingContext context,
 			int queryReturnPosition) {
@@ -168,7 +177,7 @@ public abstract class ResultSetMappingBinder {
 		);
 		final PersistentClass pc = context.getMetadataCollector().getEntityBinding( entityName );
 
-		return new NativeSQLQueryRootReturn(
+		return new QueryResultBuilderRootEntity(
 				alias,
 				entityName,
 				extractPropertyResults( alias, rtnSource, pc, context ),
@@ -176,7 +185,7 @@ public abstract class ResultSetMappingBinder {
 		);
 	}
 
-	public static NativeSQLQueryJoinReturn extractReturnDescription(
+	public static QueryResultBuilder extractReturnDescription(
 			JaxbHbmNativeQueryJoinReturnType rtnSource,
 			HbmLocalMetadataBuildingContext context,
 			int queryReturnPosition) {
@@ -205,7 +214,7 @@ public abstract class ResultSetMappingBinder {
 		);
 	}
 
-	public static NativeSQLQueryReturn extractReturnDescription(
+	public static QueryResultBuilder extractReturnDescription(
 			JaxbHbmNativeQueryCollectionLoadReturnType rtnSource,
 			HbmLocalMetadataBuildingContext context,
 			int queryReturnPosition) {

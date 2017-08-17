@@ -11,13 +11,11 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.ast.consume.spi.ParameterBindingResolutionContext;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.expression.AbstractParameter;
-import org.hibernate.sql.ast.tree.spi.expression.GenericParameter;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
 
 /**
  * @author Steve Ebersole
  */
-public class LoadIdParameter extends AbstractParameter implements GenericParameter {
+public class LoadIdParameter extends AbstractParameter {
 	public LoadIdParameter(AllowableParameterType type) {
 		super( type );
 	}

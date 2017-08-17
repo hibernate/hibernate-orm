@@ -654,8 +654,7 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			super.visitSelectClause( selectClause );
 			for ( SqmSelection sqmSelection : selectClause.getSelections() ) {
-				final Object sqlExpression = sqmSelection.getExpression().accept( this );
-				processSelectedExpression( (Expression) sqlExpression, sqmSelection.getAlias() );
+				visitSelection( sqmSelection );
 			}
 
 			currentQuerySpec().getSelectClause().makeDistinct( selectClause.isDistinct() );
@@ -665,32 +664,6 @@ public abstract class BaseSqmToSqlAstConverter
 			shallownessStack.pop();
 			currentClauseStack.pop();
 		}
-	}
-
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public Void visitSelection(SqmSelection sqmSelection) {
-//		final Expression expression = (Expression) sqmSelection.getExpression().accept( this );
-//		processSelectedExpression( expression, sqmSelection.getAlias() );
-//
-//		if ( shouldCreateQueryResults() ) {
-//
-//		}
-//		if ( querySpecStack.depth() == 1 ) {
-//			// todo (6.0) : `== 1` works for SELECT queries, but not mutation queries
-//		}
-//		expression.createQueryResult( ... );
-//		final Selection selection = expression.getSelectable().createSelection(
-//				expression,
-//				sqmSelection.getAlias()
-//		);
-////		currentQuerySpec().getSelectClause().selection( selection );
-//
-//		return selection;
-//	}
-
-	protected void processSelectedExpression(Expression expression, String resultVariable) {
-		// in the base converter we have nothing to do
 	}
 
 
@@ -963,7 +936,7 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			return new BitLengthFunction(
 					(Expression) function.getArgument().accept( this ),
-					function.getExpressionType()
+					(BasicValuedExpressableType) function.getExpressionType()
 			);
 		}
 		finally {
@@ -978,7 +951,7 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			return new CastFunction(
 					(Expression) expression.getExpressionToCast().accept( this ),
-					(BasicValuedExpressableType) expression.getExpressionType(),
+					expression.getExpressionType(),
 					expression.getExplicitSqlCastTarget()
 			);
 		}
@@ -1027,17 +1000,17 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public CurrentDateFunction visitCurrentDateFunction(SqmCurrentDateFunction function) {
-		return new CurrentDateFunction( function.getExpressionType() );
+		return new CurrentDateFunction( (BasicValuedExpressableType) function.getExpressionType() );
 	}
 
 	@Override
 	public CurrentTimeFunction visitCurrentTimeFunction(SqmCurrentTimeFunction function) {
-		return new CurrentTimeFunction( function.getExpressionType() );
+		return new CurrentTimeFunction( (BasicValuedExpressableType) function.getExpressionType() );
 	}
 
 	@Override
 	public CurrentTimestampFunction visitCurrentTimestampFunction(SqmCurrentTimestampFunction function) {
-		return new CurrentTimestampFunction( function.getExpressionType() );
+		return new CurrentTimestampFunction( (BasicValuedExpressableType) function.getExpressionType() );
 	}
 
 	@Override
@@ -1048,7 +1021,7 @@ public abstract class BaseSqmToSqlAstConverter
 			return new ExtractFunction(
 					(Expression) function.getUnitToExtract().accept( this ),
 					(Expression) function.getExtractionSource().accept( this ),
-					function.getExpressionType()
+					(BasicValuedExpressableType) function.getExpressionType()
 			);
 		}
 		finally {
@@ -1111,7 +1084,7 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			return new LowerFunction(
 					(Expression) function.getArgument().accept( this ),
-					function.getExpressionType()
+					(BasicValuedExpressableType) function.getExpressionType()
 			);
 		}
 		finally {
@@ -1161,7 +1134,7 @@ public abstract class BaseSqmToSqlAstConverter
 			return new ModFunction(
 					dividend,
 					divisor,
-					function.getExpressionType()
+					(BasicValuedExpressableType) function.getExpressionType()
 			);
 		}
 		finally {
@@ -1328,7 +1301,7 @@ public abstract class BaseSqmToSqlAstConverter
 	public Object visitUpperFunction(SqmUpperFunction sqmFunction) {
 		return new UpperFunction(
 				(Expression) sqmFunction.getArgument().accept( this ),
-				sqmFunction.getExpressionType()
+				(BasicValuedExpressableType) sqmFunction.getExpressionType()
 		);
 
 	}

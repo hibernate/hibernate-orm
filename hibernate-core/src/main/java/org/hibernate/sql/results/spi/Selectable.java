@@ -7,13 +7,15 @@
 package org.hibernate.sql.results.spi;
 
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 
 /**
  * Represents something that is selectable at the object level.  This is
  * distinctly different from {@link SqlExpressable} which represents something
  * selectable at the SQL/JDBC level.
+ *
+ * Essentially acts as a template (in the pattern sense) for "selections" -
+ * represented by {@link QueryResult}
  *
  * @implNote  Generally speaking any query expression is also selectable.  However
  * there are 2 exceptions to this:

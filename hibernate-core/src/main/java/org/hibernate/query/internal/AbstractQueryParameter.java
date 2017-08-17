@@ -7,8 +7,8 @@
 
 package org.hibernate.query.internal;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
@@ -19,11 +19,11 @@ public abstract class AbstractQueryParameter<T> implements QueryParameterImpleme
 	private static final Logger log = Logger.getLogger( AbstractQueryParameter.class );
 
 	private boolean allowMultiValuedBinding;
-	private Type anticipatedType;
+	private AllowableParameterType<T> anticipatedType;
 
 	public AbstractQueryParameter(
 			boolean allowMultiValuedBinding,
-			Type anticipatedType) {
+			AllowableParameterType<T> anticipatedType) {
 		this.allowMultiValuedBinding = allowMultiValuedBinding;
 		this.anticipatedType = anticipatedType;
 	}
@@ -40,7 +40,8 @@ public abstract class AbstractQueryParameter<T> implements QueryParameterImpleme
 	}
 
 	@Override
-	public Type getHibernateType() {
+	@SuppressWarnings("unchecked")
+	public AllowableParameterType<T> getHibernateType() {
 		return anticipatedType;
 	}
 

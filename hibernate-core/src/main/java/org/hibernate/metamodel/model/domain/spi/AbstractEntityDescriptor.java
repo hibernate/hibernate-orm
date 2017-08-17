@@ -9,9 +9,7 @@ package org.hibernate.metamodel.model.domain.spi;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,9 +47,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.Representation;
 import org.hibernate.metamodel.model.domain.internal.EntityIdentifierCompositeAggregatedImpl;
 import org.hibernate.metamodel.model.domain.internal.EntityIdentifierSimpleImpl;
-import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
-import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
@@ -65,11 +61,6 @@ import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.internal.EntityQueryResultImpl;
-import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroup;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroupEmptyImpl;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroupImpl;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
@@ -78,13 +69,11 @@ import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
+import org.hibernate.sql.results.internal.EntityQueryResultImpl;
+import org.hibernate.sql.results.internal.EntitySqlSelectionMappingsImpl;
 import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
-import org.hibernate.sql.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.results.spi.SqlSelectionGroupEmpty;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 
@@ -588,7 +577,6 @@ public abstract class AbstractEntityDescriptor<T>
 	public QueryResult createQueryResult(
 			Expression selectedExpression,
 			String resultVariable,
-			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		assert selectedExpression instanceof EntityValuedNavigable;
 		final NavigableReference navigableReference = (NavigableReference) selectedExpression;
@@ -596,96 +584,71 @@ public abstract class AbstractEntityDescriptor<T>
 		return new EntityQueryResultImpl(
 				(EntityValuedNavigable) navigableReference.getNavigable(),
 				resultVariable,
-				buildSqlSelectionMappings( creationContext, navigableReference ),
+				buildSqlSelectionMappings( navigableReference, creationContext ),
 				navigableReference.getNavigablePath(),
 				creationContext
 		);
 	}
 
+	// todo (6.0) : rather than SqlSelection, I kind of think that these contracts should capture the Expressions
+	//		an "(Sql)ExpressionGroup" if you will.  This is because the entity may be
+	// 		used in clauses other than the select.
+	//
+	// note : we could also cache mappings between a NavigableReference and its "(Sql)Expression"
+	//		group mappings
+
 	private EntitySqlSelectionMappings buildSqlSelectionMappings(
-			QueryResultCreationContext resolutionContext,
-			NavigableReference selectedExpression) {
-		final Map<PersistentAttribute, SqlSelectionGroup> sqlSelectionGroupMap = new HashMap<>();
-
-		final LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> columnBindingGroupMap = buildColumnBindingGroupMap( selectedExpression, resolutionContext );
-		for ( Map.Entry<PersistentAttribute, ColumnReferenceGroup> entry : columnBindingGroupMap.entrySet() ) {
-			sqlSelectionGroupMap.put(
-					entry.getKey(),
-					toSqlSelectionGroup( entry.getValue(), resolutionContext )
-			);
-		}
-
-		return sqlSelectionGroupMap;
-	}
-
-	private SqlSelectionGroup toSqlSelectionGroup(ColumnReferenceGroup columnReferenceGroup, QueryResultCreationContext resolutionContext) {
-		if ( columnReferenceGroup.getColumnReferences().isEmpty() ) {
-			return SqlSelectionGroupEmpty.INSTANCE;
-		}
-
-		final SqlExpressionResolver sqlSelectionResolver = null;
-
-		final SqlSelectionGroupImpl sqlSelectionGroup = new SqlSelectionGroupImpl();
-		for ( ColumnReference columnReference : columnReferenceGroup.getColumnReferences() ) {
-			resolutionContext.currentColumnReferenceSource().resolveColumnReference(  )
-			columnReference.getIdentificationVariable()
-			sqlSelectionGroup.addSqlSelection( sqlSelectionResolver.resolveSqlSelection( columnReference ) );
-		}
-		return sqlSelectionGroup;
-	}
-
-	private LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> buildColumnBindingGroupMap(
 			NavigableReference selectedExpression,
-			QueryResultCreationContext creationContext) {
-		final LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> columnBindingGroupMap = new LinkedHashMap<>();
+			QueryResultCreationContext resolutionContext) {
+		final EntitySqlSelectionMappingsImpl.Builder mappings = new EntitySqlSelectionMappingsImpl.Builder();
 
-		// no matter what, include:
-		//		1) identifier
-		addColumnBindingGroupEntry( getHierarchy().getIdentifierDescriptor(), columnBindingGroupMap, creationContext );
-		//		2) ROW_ID (if used)
-		if ( getHierarchy().getRowIdDescriptor() != null ) {
-			addColumnBindingGroupEntry( getHierarchy().getRowIdDescriptor(), columnBindingGroupMap, creationContext );
-		}
-		//		3) discriminator (if used)
-		if ( getHierarchy().getDiscriminatorDescriptor() != null ) {
-			addColumnBindingGroupEntry( getHierarchy().getDiscriminatorDescriptor(), columnBindingGroupMap, creationContext );
-		}
+		mappings.applyRowIdSqlSelection(
+				resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
+						resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
+								selectedExpression.getSqlExpressionQualifier(),
+								getHierarchy().getRowIdDescriptor().getColumns().get( 0 )
+						)
+				)
+		);
 
-		// Only render the rest of the attributes if !shallow
-		if (  !creationContext.shouldCreateShallowEntityResult() ) {
-			for ( PersistentAttribute<?,?> persistentAttribute : getPersistentAttributes() ) {
-				addColumnBindingGroupEntry( persistentAttribute, columnBindingGroupMap, creationContext );
-			}
-		}
+		mappings.applyDiscriminatorSqlSelection(
+				resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
+						resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
+								selectedExpression.getSqlExpressionQualifier(),
+								getHierarchy().getDiscriminatorDescriptor().getColumns().get( 0 )
+						)
+				)
+		);
 
-		return columnBindingGroupMap;
-	}
+		mappings.applyTenantDiscriminatorSqlSelection(
+				resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
+						resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
+								selectedExpression.getSqlExpressionQualifier(),
+								getHierarchy().getTenantDiscrimination().getColumn()
+						)
+				)
+		);
 
-	private void addColumnBindingGroupEntry(
-			PersistentAttribute persistentAttribute,
-			Map<PersistentAttribute, ColumnReferenceGroup> columnBindingGroupMap,
-			QueryResultCreationContext creationContext) {
-		if ( !SingularPersistentAttribute.class.isInstance( persistentAttribute ) ) {
-			columnBindingGroupMap.put( persistentAttribute, ColumnReferenceGroupEmptyImpl.INSTANCE );
-			return;
-		}
+		mappings.applyIdSqlSelectionGroup(
+				getHierarchy().getIdentifierDescriptor().resolveSqlSelectionGroup(
+						selectedExpression.getSqlExpressionQualifier(),
+						resolutionContext
+				)
+		);
 
-		final SingularPersistentAttribute singularAttribute = (SingularPersistentAttribute) persistentAttribute;
-		final ColumnReferenceGroupImpl columnBindingGroup = new ColumnReferenceGroupImpl();
+		getPersistentAttributes().forEach(
+				persistentAttribute -> {
+					mappings.applyAttributeSqlSelectionGroup(
+							persistentAttribute,
+							persistentAttribute.resolveSqlSelectionGroup(
+									selectedExpression.getSqlExpressionQualifier(),
+									resolutionContext
+							)
+					);
+				}
+		);
 
-		final List<Column> columns;
-		if ( persistentAttribute instanceof SingularPersistentAttributeEmbedded ) {
-			columns = ( (SingularPersistentAttributeEmbedded) singularAttribute ).getEmbeddedDescriptor().collectColumns();
-		}
-		else {
-			columns = singularAttribute.getColumns();
-		}
-
-		for ( Column column : columns ) {
-			columnBindingGroup.addColumnBinding( creationContext.currentColumnReferenceSource().resolveColumnReference( column ) );
-		}
-
-		columnBindingGroupMap.put( persistentAttribute, columnBindingGroup );
+		return mappings.create();
 	}
 
 	@Override

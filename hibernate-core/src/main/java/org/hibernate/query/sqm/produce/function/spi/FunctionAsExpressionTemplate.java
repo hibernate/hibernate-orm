@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 
 import org.jboss.logging.Logger;
@@ -95,7 +96,7 @@ public class FunctionAsExpressionTemplate
 	 *
 	 * @param sqlAppender The sql appender to append the rendered argument.
 	 * @param sqlAstArgument The argument being processed.
-	 * @param walker The walker to use for rendering {@link org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode} expressions
+	 * @param walker The walker to use for rendering {@link SqlAstNode} expressions
 	 * @param sessionFactory The session factory
 	 */
 	protected void renderArgument(

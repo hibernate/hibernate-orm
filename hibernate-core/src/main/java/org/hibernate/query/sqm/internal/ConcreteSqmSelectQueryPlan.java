@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.streams.StingArrayCollector;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.JpaTupleBuilder;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
@@ -25,8 +26,10 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.exec.internal.RowTransformerSingularReturnImpl;
@@ -148,8 +151,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	}
 
 	private JdbcSelect buildJdbcSelect(ExecutionContext executionContext) {
-		final SqlAstSelectInterpretation interpretation = SqmSelectToSqlAstConverter.interpret(
-				sqm,
+		final SqmSelectToSqlAstConverter sqmConveter = new SqmSelectToSqlAstConverter(
 				executionContext.getQueryOptions(),
 				new SqlAstBuildingContext() {
 					@Override
@@ -164,10 +166,13 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				}
 		);
 
+		final SqlAstSelectInterpretation interpretation = sqmConveter.interpret( sqm );
+
 		return SqlSelectAstToJdbcSelectConverter.interpret(
 				interpretation,
 				executionContext.getSession(),
 				executionContext.getParameterBindingContext().getQueryParameterBindings(),
+				sqmConveter,
 				Collections.emptyList()
 		);
 	}

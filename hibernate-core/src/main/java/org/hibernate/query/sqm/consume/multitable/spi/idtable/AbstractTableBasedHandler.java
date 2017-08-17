@@ -30,7 +30,6 @@ import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.exec.spi.JdbcInsertSelect;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
@@ -165,8 +164,7 @@ public abstract class AbstractTableBasedHandler implements Handler {
 		if ( sessionUidSupport.needsSessionUidColumn() ) {
 			// we need to insert the uid into the id-table to properly identify the rows later
 			entityIdSelect.getSelectClause().addSqlSelection(
-					new SqlSelectionImpl(
-							generateSessionUidLiteralExpression( executionContext ),
+					generateSessionUidLiteralExpression( executionContext ).createSqlExpression().createSqlSelection(
 							idTableInfo.getPhysicalColumns().size()
 					)
 			);

@@ -10,21 +10,18 @@ package org.hibernate.sql.ast.tree.spi.expression;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.results.spi.Selectable;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
+import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
  */
-public class CaseSearchedExpression implements Expression, SqlExpressable, Selectable {
+public class CaseSearchedExpression implements Expression, SqlExpressable {
 	private final ExpressableType type;
 
 	private List<WhenFragment> whenFragments = new ArrayList<>();
@@ -57,23 +54,16 @@ public class CaseSearchedExpression implements Expression, SqlExpressable, Selec
 	}
 
 	@Override
-	public Selectable getSelectable() {
-		return this;
-	}
-
-	@Override
 	public void accept(SqlAstWalker  walker) {
 		walker.visitCaseSearchedExpression( this );
 	}
 
 	@Override
-	public Selection createSelection(Expression selectedExpression, String resultVariable) {
-		throw new NotYetImplementedException(  );
-	}
-
-	@Override
-	public SqlSelectionReader getSqlSelectionReader() {
-		return new SqlSelectionReaderImpl( getType() );
+	public SqlSelection generateSqlSelection(int jdbcResultSetPosition) {
+		return new SqlSelectionImpl(
+				getType().getSqlSelectionReader(),
+				jdbcResultSetPosition
+		);
 	}
 
 	public static class WhenFragment {

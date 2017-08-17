@@ -11,7 +11,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
 import javax.persistence.FlushModeType;
@@ -29,11 +28,8 @@ import org.hibernate.LockMode;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -47,7 +43,6 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -55,16 +50,17 @@ import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.query.Query;
-import org.hibernate.query.sql.internal.NativeQueryImpl;
-import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.query.spi.ResultSetMappingDefinition;
+import org.hibernate.query.sql.internal.NativeQueryImpl;
+import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -72,6 +68,7 @@ import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoo
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -710,6 +707,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
 	protected <T> NativeQueryImplementor createNativeQuery(NamedSQLQueryDefinition queryDefinition, Class<T> resultType) {
 		if ( resultType != null ) {
+			// todo (6.0) : fold this checking inside NativeQueryImpl.
+			//		the idea is to get rid of `QueryResultBuilder#getResultType`
+			//		inside NativeQueryImpl we can
 			resultClassChecking( resultType, queryDefinition );
 		}
 
@@ -731,49 +731,39 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	protected void resultClassChecking(Class resultType, NamedSQLQueryDefinition namedQueryDefinition) {
-		final NativeSQLQueryReturn[] queryReturns;
+		final JavaTypeDescriptor definedResultType;
+
 		if ( namedQueryDefinition.getQueryResultBuilders() != null ) {
-			queryReturns = namedQueryDefinition.getQueryResultBuilders();
+			if ( namedQueryDefinition.getQueryResultBuilders().length > 1 ) {
+				throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+			}
+
+			definedResultType = namedQueryDefinition.getQueryResultBuilders()[0].getResultType();
 		}
 		else if ( namedQueryDefinition.getResultSetRef() != null ) {
-			final ResultSetMappingDefinition rsMapping = getFactory().getQueryEngine().getNamedQueryRepository().getResultSetMappingDefinition( namedQueryDefinition.getResultSetRef() );
-			queryReturns = rsMapping.getQueryReturns();
+			final ResultSetMappingDefinition rsMapping = getFactory().getQueryEngine()
+					.getNamedQueryRepository()
+					.getResultSetMappingDefinition( namedQueryDefinition.getResultSetRef() );
+
+			if ( rsMapping.getQueryReturns().size() > 1 ) {
+				throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+			}
+
+			definedResultType = rsMapping.getQueryReturns().get( 0 ).getResultType();
 		}
 		else {
-			throw new AssertionFailure( "Unsupported named query model. Please report the bug in Hibernate EntityManager");
+			throw new AssertionFailure( "Unsupported named NativeQuery ResultSet-mapping" );
 		}
 
-		if ( queryReturns.length > 1 ) {
-			throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+		if ( definedResultType == null ) {
+			log.debug( "Could not determine NativeQuery result type to verify requested type for TypedQuery" );
 		}
 
-		final NativeSQLQueryReturn nativeSQLQueryReturn = queryReturns[0];
+		if ( !resultType.isAssignableFrom( definedResultType.getJavaType() ) ) {
+			throw buildIncompatibleException( resultType, definedResultType.getJavaType() );
+		}
 
-		if ( nativeSQLQueryReturn instanceof NativeSQLQueryRootReturn ) {
-			final Class<?> actualReturnedClass;
-			final String entityClassName = ( (NativeSQLQueryRootReturn) nativeSQLQueryReturn ).getReturnEntityName();
-			try {
-				actualReturnedClass = getFactory().getServiceRegistry().getService( ClassLoaderService.class ).classForName( entityClassName );
-			}
-			catch ( ClassLoadingException e ) {
-				throw new AssertionFailure(
-						"Unable to load class [" + entityClassName + "] declared on named native query [" +
-								namedQueryDefinition.getName() + "]"
-				);
-			}
-			if ( !resultType.isAssignableFrom( actualReturnedClass ) ) {
-				throw buildIncompatibleException( resultType, actualReturnedClass );
-			}
-		}
-		else if ( nativeSQLQueryReturn instanceof NativeSQLQueryConstructorReturn ) {
-			final NativeSQLQueryConstructorReturn ctorRtn = (NativeSQLQueryConstructorReturn) nativeSQLQueryReturn;
-			if ( !resultType.isAssignableFrom( ctorRtn.getTargetClass() ) ) {
-				throw buildIncompatibleException( resultType, ctorRtn.getTargetClass() );
-			}
-		}
-		else {
-			log.debugf( "Skiping unhandled NativeSQLQueryReturn type : " + nativeSQLQueryReturn );
-		}
+		log.debugf( "Verification of TypedQuery type for named NativeQuery [%s] successful" );
 	}
 
 	private IllegalArgumentException buildIncompatibleException(Class<?> resultClass, Class<?> actualResultClass) {
@@ -882,16 +872,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	protected abstract Object load(String entityName, Serializable identifier);
 
 	@Override
-	public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters) {
-		return listCustomQuery( getNativeQueryPlan( spec ).getCustomQuery(), queryParameters );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters) {
-		return scrollCustomQuery( getNativeQueryPlan( spec ).getCustomQuery(), queryParameters );
-	}
-
-	@Override
 	public ExceptionConverter getExceptionConverter(){
 		return exceptionConverter;
 	}
@@ -958,5 +938,29 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				.buildTransactionCoordinator( jdbcCoordinator, this );
 
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
+	}
+
+	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return factory;
+	}
+
+	@Override
+	public AllowableParameterType resolveParameterBindType(Object bindValue) {
+		if ( bindValue == null ) {
+			return getSessionFactory().getTypeConfiguration()
+					.getBasicTypeRegistry()
+					.getBasicType( Serializable.class );
+		}
+		else {
+			return resolveParameterBindType( bindValue.getClass() );
+		}
+	}
+
+	@Override
+	public AllowableParameterType resolveParameterBindType(Class javaType) {
+		return getSessionFactory().getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.getBasicType( javaType );
 	}
 }

@@ -62,8 +62,6 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeElementRe
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeIndexReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReference;
-import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
-import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationArgument;
 import org.hibernate.sql.ast.tree.spi.from.FromClause;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
@@ -82,10 +80,9 @@ import org.hibernate.sql.ast.tree.spi.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.BasicType;
@@ -257,11 +254,6 @@ public abstract class AbstractSqlAstWalker
 		finally {
 			currentlyInSelections = previouslyInSelections;
 		}
-	}
-
-	@Override
-	public void visitSelection(Selection selection) {
-		// do nothing... this is handled #visitSelectClause
 	}
 
 	@Override
@@ -443,7 +435,7 @@ public abstract class AbstractSqlAstWalker
 			return castFunction.getExplicitCastTargetTypeSqlExpression();
 		}
 
-		final BasicValuedExpressableType castResultType = castFunction.getCastResultType();
+		final BasicValuedExpressableType castResultType = (BasicValuedExpressableType) castFunction.getCastResultType();
 
 		if ( castResultType == null ) {
 			throw new SqlTreeException(
@@ -677,12 +669,6 @@ public abstract class AbstractSqlAstWalker
 	}
 
 	@Override
-	public void visitColumnReferenceExpression(ColumnReference columnReference) {
-		// need to find a better way to do this
-		appendSql( columnReference.getColumn().render( columnReference.getIdentificationVariable() ) );
-	}
-
-	@Override
 	@SuppressWarnings("unchecked")
 	public void visitCoalesceFunction(CoalesceFunction coalesceExpression) {
 		appendSql( "coalesce(" );
@@ -695,16 +681,6 @@ public abstract class AbstractSqlAstWalker
 
 		appendSql( ")" );
 	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitDynamicInstantiation(DynamicInstantiation<?> dynamicInstantiation) {
-		for ( DynamicInstantiationArgument argument : dynamicInstantiation.getArguments() ) {
-			// renders the SQL selections
-			argument.getExpression().accept( this );
-		}
-	}
-
 
 	@Override
 	public void visitGenericParameter(GenericParameter parameter) {

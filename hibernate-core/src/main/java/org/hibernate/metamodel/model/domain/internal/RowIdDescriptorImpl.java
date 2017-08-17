@@ -8,17 +8,28 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.lang.reflect.Member;
+import java.sql.Types;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.HibernateException;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
+import org.hibernate.metamodel.model.relational.spi.DerivedColumn;
+import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -28,16 +39,17 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 	private final EntityHierarchy hierarchy;
 	// todo : really need to expose AbstractEntityPersister.rowIdName for this to work.
 	//		for now we will just always assume a selection name of "ROW_ID"
-	private final PhysicalColumn column;
+	private final DerivedColumn column;
 
-	public RowIdDescriptorImpl(EntityHierarchy hierarchy) {
+	public RowIdDescriptorImpl(
+			EntityHierarchy hierarchy,
+			RuntimeModelCreationContext creationContext) {
 		this.hierarchy = hierarchy;
-		column = new PhysicalColumn(
+		column = new DerivedColumn(
 				hierarchy.getRootEntityType().getPrimaryTable(),
 				"ROW_ID",
-				Integer.MAX_VALUE
+				creationContext.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.INTEGER )
 		);
-
 	}
 
 	@Override
@@ -50,6 +62,11 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		// what should this be?
 		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public PropertyAccess getPropertyAccess() {
+		throw new org.hibernate.sql.NotYetImplementedException(  );
 	}
 
 	@Override
@@ -152,4 +169,25 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 		return null;
 	}
 
+	@Override
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		throw new HibernateException( "Selection of ROW_ID from domain query is not supported" );
+	}
+
+	@Override
+	public SqlSelectionGroup resolveSqlSelectionGroup(
+			SqlExpressionQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext) {
+		return SqlSelectionGroupImpl.of(
+				resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
+						resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
+								qualifier,
+								column
+						)
+				)
+		);
+	}
 }

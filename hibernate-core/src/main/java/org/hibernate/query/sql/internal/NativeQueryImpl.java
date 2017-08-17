@@ -34,6 +34,7 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.Limit;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
@@ -61,11 +62,11 @@ import org.hibernate.query.sql.spi.SelectInterpretationsKey;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
 import org.hibernate.sql.exec.spi.RowTransformer;
+import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -244,11 +245,14 @@ public class NativeQueryImpl<R>
 			throw new QueryException( "Cannot mix ResultSet mappings and manually defined mappings in a single native query" );
 		}
 
-		final ResultSetMappingDefinition mapping = getSession().getFactory()
+		// todo (6.0) : see the notes on ResultSetMappingDefinition.
+		//		really this should be something like:
+		//
+		final ResultSetMappingDefinition mappingDefinition = getSession().getFactory()
 				.getQueryEngine()
 				.getNamedQueryRepository()
 				.getResultSetMappingDefinition( name );
-		if ( mapping == null ) {
+		if ( mappingDefinition == null ) {
 			throw new MappingException( "Unknown SqlResultSetMapping [" + name + "]" );
 		}
 
@@ -257,7 +261,10 @@ public class NativeQueryImpl<R>
 		if ( resultBuilders == null ) {
 			resultBuilders = new ArrayList<>();
 		}
-		resultBuilders.addAll( mapping.getQueryReturns() );
+
+		for ( ResultSetMappingDefinition.QueryResultDefinition queryResultDefinition : mappingDefinition.getQueryResultDefinitions() ) {
+			resultBuilders.add( queryResultDefinition.resolve() );
+		}
 
 		return this;
 	}
@@ -284,7 +291,10 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public RootReturn addRoot(String tableAlias, String entityName) {
-		QueryResultBuilderRootEntity builder = new QueryResultBuilderRootEntity( tableAlias, entityName );
+		final EntityDescriptor entityDescriptor = getPersistenceContext().getFactory()
+				.getTypeConfiguration()
+				.resolveEntityDescriptor( entityName );
+		QueryResultBuilderRootEntity builder = new QueryResultBuilderRootEntity( tableAlias, entityDescriptor );
 		addReturnBuilder( builder );
 		return builder;
 	}

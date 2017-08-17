@@ -7,8 +7,9 @@
 package org.hibernate.sql.ast.tree.spi.expression;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
-import org.hibernate.sql.results.spi.Selectable;
+import org.hibernate.sql.ast.tree.spi.SqlAstNode;
+import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.sql.results.spi.SqlSelectionProducer;
 
 /**
  * Models an expression at the SQL-level.
@@ -22,10 +23,18 @@ import org.hibernate.sql.results.spi.Selectable;
  *
  * @author Steve Ebersole
  */
-public interface Expression extends SqlAstNode, Selectable {
+public interface Expression extends SqlAstNode, SqlSelectionProducer {
 	/**
 	 * Access the type for this expression.  See {@link ExpressableType}
 	 * for more detailed description.
 	 */
 	ExpressableType getType();
+
+	/**
+	 * If this expression is used as a selection in the SQL this method
+	 * will be called to generate the corresponding SqlSelection (reader,
+	 * position, etc) that can be used to read its value.
+	 */
+	@Override
+	SqlSelection createSqlSelection(int jdbcPosition);
 }

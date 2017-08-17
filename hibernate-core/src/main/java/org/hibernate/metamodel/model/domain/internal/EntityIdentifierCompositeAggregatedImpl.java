@@ -11,19 +11,22 @@ import java.util.List;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeAggregated;
-import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 import static org.hibernate.metamodel.model.domain.internal.PersisterHelper.resolvePropertyAccess;
@@ -108,15 +111,13 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 	}
 
 	@Override
-	public QueryResult generateQueryResult(
-			NavigableReference selectedExpression,
+	public QueryResult createQueryResult(
+			Expression expression,
 			String resultVariable,
-			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return embeddedMetadata.generateQueryResult(
-				selectedExpression,
+		return embeddedMetadata.createQueryResult(
+				expression,
 				resultVariable,
-				sqlSelectionResolver,
 				creationContext
 		);
 	}
@@ -138,6 +139,43 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 
 	@Override
 	public List<Column> getColumns() {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public SqlSelectionGroup resolveSqlSelectionGroup(
+			SqlExpressionQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext) {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public <N> Navigable<N> findNavigable(String navigableName) {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public List<Navigable> getNavigables() {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public List<Navigable> getDeclaredNavigables() {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public void visitNavigables(NavigableVisitationStrategy visitor) {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
 		throw new NotYetImplementedException(  );
 	}
 }

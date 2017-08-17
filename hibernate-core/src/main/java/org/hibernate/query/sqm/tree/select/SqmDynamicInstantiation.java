@@ -12,13 +12,8 @@ import java.util.Map;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.Selectable;
 
 import org.jboss.logging.Logger;
 
@@ -33,8 +28,7 @@ import static org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicIns
  */
 public class SqmDynamicInstantiation
 		implements SqmExpression,
-				SqmAliasedExpressionContainer<SqmDynamicInstantiationArgument>,
-				Selectable {
+				SqmAliasedExpressionContainer<SqmDynamicInstantiationArgument> {
 
 	private static final Logger log = Logger.getLogger( SqmDynamicInstantiation.class );
 
@@ -130,14 +124,6 @@ public class SqmDynamicInstantiation
 
 	public SqmDynamicInstantiation makeShallowCopy() {
 		return new SqmDynamicInstantiation( getInstantiationTarget() );
-	}
-
-	@Override
-	public QueryResult createQueryResult(
-			String resultVariable,
-			SqlExpressionResolver sqlSelectionResolver,
-			QueryResultCreationContext creationContext) {
-		throw new NotYetImplementedException(  );
 	}
 
 	private static class DynamicInstantiationTargetImpl implements SqmDynamicInstantiationTarget {

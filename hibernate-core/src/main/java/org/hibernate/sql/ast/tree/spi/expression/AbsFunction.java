@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.tree.spi.expression;
 
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -29,7 +29,7 @@ public class AbsFunction extends AbstractStandardFunction {
 	}
 
 	@Override
-	public ExpressableType getType() {
-		return argument.getType();
+	public BasicValuedExpressableType getType() {
+		return (BasicValuedExpressableType) argument.getType();
 	}
 }

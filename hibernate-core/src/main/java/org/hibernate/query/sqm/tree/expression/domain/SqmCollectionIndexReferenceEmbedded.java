@@ -9,6 +9,9 @@ package org.hibernate.query.sqm.tree.expression.domain;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndexEmbedded;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * @author Steve Ebersole
@@ -44,5 +47,13 @@ public class SqmCollectionIndexReferenceEmbedded
 	@Override
 	public Class getJavaType() {
 		return getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getIndexDescriptor().getJavaType();
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
 	}
 }

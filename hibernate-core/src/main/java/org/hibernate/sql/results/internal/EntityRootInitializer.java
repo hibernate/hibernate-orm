@@ -23,9 +23,8 @@ public class EntityRootInitializer
 	public EntityRootInitializer(
 			EntityDescriptor entityDescriptor,
 			EntitySqlSelectionMappings sqlSelectionMappings,
-			List<Fetch> fetches,
 			boolean isShallow) {
-		super( entityDescriptor, sqlSelectionMappings, fetches, isShallow );
+		super( entityDescriptor, sqlSelectionMappings, isShallow );
 	}
 
 	@Override

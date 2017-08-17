@@ -6,17 +6,21 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole
  */
 public class LengthFunction extends AbstractStandardFunction implements StandardFunction {
 	private final Expression argument;
-	private final ExpressableType type;
+	private final AllowableFunctionReturnType type;
 
-	public LengthFunction(Expression argument, ExpressableType type) {
+	public LengthFunction(Expression argument, AllowableFunctionReturnType type) {
 		this.argument = argument;
 		this.type = type;
 	}
@@ -35,7 +39,15 @@ public class LengthFunction extends AbstractStandardFunction implements Standard
 	}
 
 	@Override
-	public ExpressableType getType() {
+	public AllowableFunctionReturnType getType() {
 		return type;
+	}
+
+	@Override
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		return new SqlSelectionImpl(
+				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlSelectionReader(),
+				jdbcPosition
+		);
 	}
 }

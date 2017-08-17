@@ -6,9 +6,10 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole
@@ -16,16 +17,16 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 public class ModFunction extends AbstractStandardFunction implements StandardFunction {
 	private final Expression dividend;
 	private final Expression divisor;
-	private final AllowableFunctionReturnType type;
+	private final BasicValuedExpressableType type;
 
 	public ModFunction(Expression dividend, Expression divisor) {
-		this( dividend, divisor, (AllowableFunctionReturnType) dividend.getType() );
+		this( dividend, divisor, (BasicValuedExpressableType) dividend.getType() );
 	}
 
 	public ModFunction(
 			Expression dividend,
 			Expression divisor,
-			AllowableFunctionReturnType type) {
+			BasicValuedExpressableType type) {
 		this.dividend = dividend;
 		this.divisor = divisor;
 		this.type = type;
@@ -45,7 +46,15 @@ public class ModFunction extends AbstractStandardFunction implements StandardFun
 	}
 
 	@Override
-	public ExpressableType getType() {
+	public BasicValuedExpressableType getType() {
 		return type;
+	}
+
+	@Override
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		return new SqlSelectionImpl(
+				getType().getBasicType().getSqlSelectionReader(),
+				jdbcPosition
+		);
 	}
 }

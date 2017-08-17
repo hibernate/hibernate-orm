@@ -8,11 +8,12 @@ package org.hibernate.sql.results.internal;
 
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.sql.results.spi.PluralAttributeFetch;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.FetchParentAccess;
-import org.hibernate.sql.results.spi.PluralAttributeInitializer;
 import org.hibernate.sql.results.spi.InitializerCollector;
+import org.hibernate.sql.results.spi.PluralAttributeFetch;
+import org.hibernate.sql.results.spi.PluralAttributeInitializer;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
@@ -21,22 +22,30 @@ import org.hibernate.sql.results.spi.QueryResultCreationContext;
 public class PluralAttributeFetchImpl extends AbstractPluralAttributeMappingNode implements PluralAttributeFetch {
 	private final FetchParent fetchParent;
 	private final FetchStrategy fetchStrategy;
+	private final SqlExpressionQualifier qualifier;
 	private final PluralPersistentAttribute pluralAttribute;
 	private final QueryResultCreationContext creationContext;
 
 	public PluralAttributeFetchImpl(
 			FetchParent fetchParent,
+			SqlExpressionQualifier qualifier,
 			PluralPersistentAttribute pluralAttribute,
 			FetchStrategy fetchStrategy,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		super( pluralAttribute, resultVariable );
 		this.fetchParent = fetchParent;
+		this.qualifier = qualifier;
 		this.pluralAttribute = pluralAttribute;
 		this.fetchStrategy = fetchStrategy;
 		this.creationContext = creationContext;
 
 		fetchParent.addFetch( this );
+	}
+
+	@Override
+	public SqlExpressionQualifier getSqlExpressionQualifier() {
+		return qualifier;
 	}
 
 	@Override

@@ -6,18 +6,17 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 /**
  * @author Steve Ebersole
  */
 public class BitLengthFunction extends AbstractStandardFunction {
 	private final Expression argument;
-	private final AllowableFunctionReturnType type;
+	private final BasicValuedExpressableType type;
 
-	public BitLengthFunction(Expression argument, AllowableFunctionReturnType type) {
+	public BitLengthFunction(Expression argument, BasicValuedExpressableType type) {
 		this.argument = argument;
 		this.type = type;
 	}
@@ -32,7 +31,7 @@ public class BitLengthFunction extends AbstractStandardFunction {
 	}
 
 	@Override
-	public ExpressableType getType() {
+	public BasicValuedExpressableType getType() {
 		return type;
 	}
 }

@@ -9,6 +9,9 @@ package org.hibernate.query.sqm.tree.expression.domain;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * Expression representing the type of an entity-valued expression.
@@ -45,5 +48,14 @@ public class SqmEntityTypeSqmExpression implements SqmExpression {
 	@Override
 	public String asLoggableText() {
 		return "TYPE(" + binding.asLoggableText() + ")";
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		throw new UnsupportedOperationException( "At the moment, selection of an entity's type as a QUeryResult is not supported" );
+		// todo (6.0) : but could be ^^ - consider adding support for this (returning Class)
 	}
 }

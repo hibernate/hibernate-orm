@@ -17,22 +17,21 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.Representation;
 import org.hibernate.metamodel.model.domain.spi.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
 import org.hibernate.metamodel.model.domain.spi.Instantiator;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.internal.CompositeQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
@@ -164,13 +163,17 @@ public class EmbeddedTypeDescriptorImpl<T>
 		throw new UnsupportedOperationException(  );
 	}
 
+
 	@Override
-	public QueryResult generateQueryResult(
-			NavigableReference selectedExpression,
+	public QueryResult createQueryResult(
+			Expression expression,
 			String resultVariable,
-			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return new CompositeQueryResultImpl( resultVariable, this );
+		return new CompositeQueryResultImpl(
+				// todo (6.0) : this constructor needs a lot of work
+				resultVariable,
+				this
+		);
 	}
 
 	@Override
@@ -195,28 +198,31 @@ public class EmbeddedTypeDescriptorImpl<T>
 
 	@Override
 	public void setPropertyValues(Object object, Object[] values) {
-
+		throw new org.hibernate.sql.NotYetImplementedException(  );
 	}
 
 	@Override
 	public void setPropertyValue(Object object, int i, Object value) {
-
+		throw new org.hibernate.sql.NotYetImplementedException(  );
 	}
 
 	@Override
 	public Object[] getPropertyValues(Object object) {
-		return new Object[0];
+		throw new org.hibernate.sql.NotYetImplementedException(  );
 	}
 
 	@Override
 	public Object getPropertyValue(Object object, int i) throws HibernateException {
-		return null;
+		throw new org.hibernate.sql.NotYetImplementedException(  );
 	}
 
 	@Override
 	public Object getPropertyValue(Object object, String propertyName) {
-		return null;
+		throw new org.hibernate.sql.NotYetImplementedException(  );
 	}
 
-
+	@Override
+	public boolean[] getPropertyNullability() {
+		throw new org.hibernate.sql.NotYetImplementedException(  );
+	}
 }

@@ -17,11 +17,11 @@ import org.hibernate.metamodel.model.domain.spi.CollectionElementBasic;
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
@@ -80,15 +80,22 @@ public class CollectionElementBasicImpl<J>
 	}
 
 	@Override
-	public QueryResult generateQueryResult(
-			NavigableReference selectedExpression,
+	public QueryResult createQueryResult(
+			Expression expression,
 			String resultVariable,
-			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
+		assert expression instanceof NavigableReference;
+		final NavigableReference navigableReference = (NavigableReference) expression;
+
+		assert this.equals( navigableReference.getNavigable() );
+
 		return new ScalarQueryResultImpl(
 				resultVariable,
-				sqlSelectionResolver.resolveSqlSelection(
-						creationContext.currentColumnReferenceSource().resolveColumnReference( getBoundColumn() )
+				creationContext.getSqlSelectionResolver().resolveSqlSelection(
+						creationContext.getSqlSelectionResolver().resolveSqlExpression(
+								navigableReference.getSqlExpressionQualifier(),
+								getBoundColumn()
+						)
 				),
 				getBasicType()
 		);

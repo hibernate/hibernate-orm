@@ -60,6 +60,18 @@ public class ParameterRegistrationStandardImpl<T> implements ParameterRegistrati
 	}
 
 	@Override
+	public ProcedureCallMementoImpl.ParameterMemento toMemento() {
+		return new ProcedureCallMementoImpl.ParameterMemento(
+				getPosition(),
+				getName(),
+				getMode(),
+				getParameterType(),
+				getHibernateType(),
+				passNulls
+		);
+	}
+
+	@Override
 	public void bindValue(T value) {
 		validateBindability();
 		if ( hibernateType != null ) {

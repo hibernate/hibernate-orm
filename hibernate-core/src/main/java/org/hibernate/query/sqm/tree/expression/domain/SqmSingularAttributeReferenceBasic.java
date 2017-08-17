@@ -10,6 +10,9 @@ import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttribute
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * @author Steve Ebersole
@@ -53,5 +56,14 @@ public class SqmSingularAttributeReferenceBasic extends AbstractSqmSingularAttri
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitBasicValuedSingularAttribute( this );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
 	}
 }

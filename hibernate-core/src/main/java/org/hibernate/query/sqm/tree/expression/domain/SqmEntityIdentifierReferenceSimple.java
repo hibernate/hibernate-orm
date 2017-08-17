@@ -6,11 +6,16 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -81,5 +86,29 @@ public class SqmEntityIdentifierReferenceSimple
 	@Override
 	public Class getJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return entityIdentifier.createQueryResult( expression, resultVariable, creationContext );
+	}
+
+	@Override
+	public String getUniqueIdentifier() {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public String getIdentificationVariable() {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
+		throw new NotYetImplementedException(  );
 	}
 }

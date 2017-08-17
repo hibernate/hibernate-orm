@@ -13,13 +13,13 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.JoinablePersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
@@ -30,24 +30,22 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
+import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.TableGroupContext;
+import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.results.internal.EntityFetchImpl;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
-import org.hibernate.sql.ast.produce.spi.TableGroupContext;
-import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
-import org.hibernate.sql.ast.tree.internal.NavigableSelection;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 
@@ -191,21 +189,13 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
-	public Selection createSelection(Expression selectedExpression, String resultVariable) {
-		assert selectedExpression instanceof NavigableReference;
-		return new NavigableSelection( (NavigableReference) selectedExpression, resultVariable );
-	}
-
-	@Override
-	public QueryResult generateQueryResult(
-			NavigableReference selectedExpression,
+	public QueryResult createQueryResult(
+			Expression expression,
 			String resultVariable,
-			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return entityDescriptor.generateQueryResult(
-				selectedExpression,
+		return entityDescriptor.createQueryResult(
+				expression,
 				resultVariable,
-				sqlSelectionResolver,
 				creationContext
 		);
 	}
@@ -223,12 +213,13 @@ public class SingularPersistentAttributeEntity<O,J>
 	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
+			SqlExpressionQualifier qualifier,
 			FetchStrategy fetchStrategy,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		return new EntityFetchImpl(
 				fetchParent,
-				null,
+				qualifier,
 				this,
 				fetchParent.getNavigablePath().append( getNavigableName() ),
 				fetchStrategy,
@@ -385,7 +376,9 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
-	public SqlSelectionGroup resolveSqlSelectionGroup(QueryResultCreationContext resolutionContext) {
+	public SqlSelectionGroup resolveSqlSelectionGroup(
+			SqlExpressionQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext) {
 		throw new NotYetImplementedException(  );
 	}
 }

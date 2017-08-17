@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.tree.spi.sort;
 import org.hibernate.query.sqm.tree.order.SqmSortOrder;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
+import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 
 /**
  * @author Steve Ebersole

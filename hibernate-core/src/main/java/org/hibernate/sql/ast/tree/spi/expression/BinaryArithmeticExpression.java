@@ -7,20 +7,17 @@
 
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
-import org.hibernate.sql.results.spi.Selectable;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole
  */
 public class BinaryArithmeticExpression
-		implements Expression, SqlExpressable, Selectable {
+		implements Expression, SqlExpressable {
 	private final Operation operation;
 	private final Expression lhsOperand;
 	private final Expression rhsOperand;
@@ -48,25 +45,10 @@ public class BinaryArithmeticExpression
 	}
 
 	@Override
-	public Selectable getSelectable() {
-		return this;
-	}
-
-	@Override
-	public SqlSelectionReader getSqlSelectionReader() {
-		return new SqlSelectionReaderImpl( getType() );
-	}
-
-	@Override
-	public Selection createSelection(
-			Expression selectedExpression,
-			String resultVariable) {
-		assert selectedExpression == this;
-
-		return new BasicValuedNonNavigableSelection(
-				selectedExpression,
-				resultVariable,
-				this
+	public SqlSelection generateSqlSelection(int jdbcResultSetPosition) {
+		return new SqlSelectionImpl(
+				getType().getBasicType().getSqlSelectionReader(),
+				jdbcResultSetPosition
 		);
 	}
 

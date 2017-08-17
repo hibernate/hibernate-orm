@@ -13,6 +13,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * An expression that is a reference to some part of the application domain model.
@@ -23,7 +24,15 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
  * @author Steve Ebersole
  */
 public interface NavigableReference extends Expression {
+
+	// todo (6.0) : remove this contract completely.  A navigable is never a (Sql)Expression
+
 	SqlExpressionQualifier getSqlExpressionQualifier();
+
+	@Override
+	default SqlSelection createSqlSelection(int jdbcPosition) {
+		throw new UnsupportedOperationException(  );
+	}
 
 	/**
 	 * Get the Navigable referenced by this expression

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sql.spi.ast;
+package org.hibernate.query.sql.spi;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -12,11 +12,10 @@ import java.sql.SQLException;
 
 import org.hibernate.QueryException;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.spi.SqlExpressable;
-import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
-import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
+import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
@@ -26,22 +25,22 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class SqlSelectionImpl implements SqlSelection, SqlExpressable, SqlSelectionReader {
+public class ResolvingSqlSelectionImpl implements SqlSelection, SqlSelectionReader {
 	private final String columnAlias;
 	private ValueExtractor extractor;
 
 	private Integer jdbcResultSetPosition;
 
-	public SqlSelectionImpl(String columnAlias, int jdbcResultSetPosition) {
+	public ResolvingSqlSelectionImpl(String columnAlias, int jdbcResultSetPosition) {
 		this.columnAlias = columnAlias;
 		this.jdbcResultSetPosition = jdbcResultSetPosition;
 	}
 
-	public SqlSelectionImpl(String columnAlias) {
+	public ResolvingSqlSelectionImpl(String columnAlias) {
 		this( columnAlias, null );
 	}
 
-	public SqlSelectionImpl(String columnAlias, ValueExtractor extractor) {
+	public ResolvingSqlSelectionImpl(String columnAlias, ValueExtractor extractor) {
 		this.columnAlias = columnAlias;
 		this.extractor = extractor;
 	}
@@ -68,11 +67,6 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressable, SqlSelect
 			);
 		}
 
-	}
-
-	@Override
-	public SqlExpressable getSqlSelectable() {
-		return this;
 	}
 
 	@Override
@@ -140,6 +134,6 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressable, SqlSelect
 
 	@Override
 	public void accept(SqlAstWalker interpreter) {
-
+		interpreter.visitSqlSelection( this );
 	}
 }

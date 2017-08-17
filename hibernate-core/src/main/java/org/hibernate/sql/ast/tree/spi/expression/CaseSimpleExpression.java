@@ -10,14 +10,15 @@ package org.hibernate.sql.ast.tree.spi.expression;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.results.spi.Selectable;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
+import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.Selectable;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -50,13 +51,23 @@ public class CaseSimpleExpression implements Expression, Selectable, SqlExpressa
 	}
 
 	@Override
-	public Selectable getSelectable() {
-		return this;
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return new ScalarQueryResultImpl(
+				resultVariable,
+				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
+				getType()
+		);
 	}
 
 	@Override
-	public Selection createSelection(Expression selectedExpression, String resultVariable) {
-		throw new NotYetImplementedException(  );
+	public SqlSelection generateSqlSelection(int jdbcResultSetPosition) {
+		return new SqlSelectionImpl(
+				getType().getSqlSelectionReader(),
+				jdbcResultSetPosition
+		);
 	}
 
 	public List<WhenFragment> getWhenFragments() {
@@ -73,11 +84,6 @@ public class CaseSimpleExpression implements Expression, Selectable, SqlExpressa
 
 	public void when(Expression test, Expression result) {
 		whenFragments.add( new WhenFragment( test, result ) );
-	}
-
-	@Override
-	public SqlSelectionReader getSqlSelectionReader() {
-		return new SqlSelectionReaderImpl( getType() );
 	}
 
 	public static class WhenFragment {

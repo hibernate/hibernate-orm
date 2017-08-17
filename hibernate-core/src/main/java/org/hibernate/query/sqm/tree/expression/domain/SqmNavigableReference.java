@@ -14,6 +14,9 @@ import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmDowncast;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * Represents a specific reference to a given {@link Navigable}
@@ -52,4 +55,13 @@ public interface SqmNavigableReference extends SqmExpression, NavigableReference
 	void addDowncast(SqmDowncast downcast);
 
 	Collection<SqmDowncast> getDowncasts();
+
+	@Override
+	@SuppressWarnings("unchecked")
+	default QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
+	}
 }

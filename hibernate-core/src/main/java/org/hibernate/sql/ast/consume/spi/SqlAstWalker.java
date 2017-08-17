@@ -47,7 +47,6 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeElementRe
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeIndexReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReference;
-import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.tree.spi.from.FromClause;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
@@ -65,9 +64,8 @@ import org.hibernate.sql.ast.tree.spi.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole
@@ -84,8 +82,6 @@ public interface SqlAstWalker {
 	void visitLimitOffsetClause(QuerySpec querySpec);
 
 	void visitSelectClause(SelectClause selectClause);
-
-	void visitSelection(Selection selection);
 
 	void visitSqlSelection(SqlSelection sqlSelection);
 
@@ -118,10 +114,6 @@ public interface SqlAstWalker {
 	void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression);
 
 	void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression);
-
-	void visitColumnReferenceExpression(ColumnReference columnReference);
-
-	void visitDynamicInstantiation(DynamicInstantiation<?> dynamicInstantiation);
 
 	void visitCoalesceFunction(CoalesceFunction coalesceExpression);
 

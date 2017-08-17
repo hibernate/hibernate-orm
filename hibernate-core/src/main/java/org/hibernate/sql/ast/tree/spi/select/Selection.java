@@ -6,18 +6,19 @@
  */
 package org.hibernate.sql.ast.tree.spi.select;
 
-import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 
 /**
+ * todo (6.0) : remove this in favor of {@link org.hibernate.sql.results.spi.QueryResultProducer} approach
+ *
  * @author Steve Ebersole
  */
-public interface Selection extends SqlAstNode {
-	Expression getSelectedExpression();
+public interface Selection {
+	QueryResultProducer getQueryResultProducer();
 
 	/**
 	 * The (optional) "result variable" for the selection.  This is the JPA
@@ -29,12 +30,10 @@ public interface Selection extends SqlAstNode {
 	 */
 	String getResultVariable();
 
+	Expression getSelectedExpression();
+
+
 	QueryResult createQueryResult(
 			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext);
-
-	@Override
-	default void accept(SqlAstWalker  sqlTreeWalker) {
-		sqlTreeWalker.visitSelection( this );
-	}
 }

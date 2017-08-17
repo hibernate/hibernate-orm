@@ -4,11 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.query.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.sql.NotYetImplementedException;
 
 /**
  * Manages all the parameter bindings for a particular query.
@@ -60,4 +61,12 @@ public interface QueryParameterBindings {
 	 * Validate the bindings.  Called just before execution
 	 */
 	void validate();
+
+	/**
+	 * Generate a "memento" for these parameter bindings that can be used
+	 * in creating a {@link org.hibernate.cache.spi.QueryKey}
+	 */
+	default QueryKey.ParameterBindingsMemento generateQueryKeyMemento() {
+		throw new NotYetImplementedException(  );
+	}
 }

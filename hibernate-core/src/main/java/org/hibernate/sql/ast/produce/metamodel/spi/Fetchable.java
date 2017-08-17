@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
@@ -18,6 +19,7 @@ import org.hibernate.sql.results.spi.QueryResultCreationContext;
 public interface Fetchable<T> extends Joinable<T> {
 	Fetch generateFetch(
 			FetchParent fetchParent,
+			SqlExpressionQualifier qualifier,
 			FetchStrategy fetchStrategy,
 			String resultVariable,
 			QueryResultCreationContext creationContext);

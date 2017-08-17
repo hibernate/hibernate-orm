@@ -12,13 +12,13 @@ import java.sql.SQLException;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
-import org.hibernate.sql.results.spi.Selectable;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 import org.jboss.logging.Logger;
 
@@ -44,25 +44,8 @@ public abstract class AbstractParameter implements GenericParameter {
 	}
 
 	@Override
-	public Selectable getSelectable() {
-		return this;
-	}
-
-	@Override
-	public Selection createSelection(Expression selectedExpression, String resultVariable) {
-		return new BasicValuedNonNavigableSelection( selectedExpression, resultVariable, this );
-	}
-
-	@Override
 	public JdbcParameterBinder getParameterBinder() {
 		return this;
-	}
-
-	@Override
-	public SqlSelectionReader getSqlSelectionReader() {
-		// todo (6.0) : this limits parameter bindings to just basic (single column) types.
-
-		return new SqlSelectionReaderImpl( ( BasicValuedExpressableType) getType() );
 	}
 
 	@Override
@@ -108,4 +91,34 @@ public abstract class AbstractParameter implements GenericParameter {
 	protected abstract void unresolvedType();
 
 	protected abstract void warnNullBindValue();
+
+
+
+	// todo (6.0) : both of the methods below are another manifestation of only really allowing basic (single column) valued parameters
+
+	@Override
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return new ScalarQueryResultImpl(
+				resultVariable,
+				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
+				(BasicValuedExpressableType) expression.getType()
+		);
+	}
+
+	@Override
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		// todo (6.0) : we should really just access the parameter bind value here rather than reading from ResultSet
+		//		should be more performant - double so if we can resolve the bind here
+		//		and encode it into the SqlSelectionReader
+		//
+		//		see `org.hibernate.sql.ast.tree.spi.expression.AbstractLiteral.createSqlSelection`
+
+		return new SqlSelectionImpl(
+				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlSelectionReader(),
+				jdbcPosition
+		);
+	}
 }

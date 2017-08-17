@@ -7,8 +7,9 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 
 /**
  * Models a persistent (mapped) attribute in Hibernate's "runtime model".
@@ -41,5 +42,15 @@ public interface PersistentAttribute<O,T> extends Navigable<T>, javax.persistenc
 
 	PropertyAccess getPropertyAccess();
 
-	SqlSelectionGroup resolveSqlSelectionGroup(QueryResultCreationContext resolutionContext);
+	// todo (6.0) : this method should accept the SqlExpressionQualifier/ColumnReferenceSource/TableGroup
+	//		e.g.,
+	//			SqlSelectionGroup resolveSqlSelectionGroup(
+	//					SqlExpressionQualifier qualifier,
+	// 					SqlSelectionGroupResolutionContext resolutionContext
+	// 			);
+	//
+
+	SqlSelectionGroup resolveSqlSelectionGroup(
+			SqlExpressionQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext);
 }

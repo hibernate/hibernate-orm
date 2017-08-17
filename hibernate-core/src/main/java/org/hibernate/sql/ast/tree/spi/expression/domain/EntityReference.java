@@ -6,11 +6,11 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression.domain;
 
+import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.ast.tree.spi.select.EntityValuedSelectable;
-import org.hibernate.sql.results.spi.Selectable;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 
 /**
  * @author Andrea Boriero
@@ -24,9 +24,8 @@ public class EntityReference extends AbstractNavigableContainerReference {
 
 	// todo (6.0) : see org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference and SqmRoot ctor
 
+	private final ColumnReferenceSource columnReferenceSource;
 	private final EntityValuedExpressableType expressionType;
-
-	private final EntityValuedSelectable selectable;
 
 	public EntityReference(
 			ColumnReferenceSource columnReferenceSource,
@@ -35,24 +34,23 @@ public class EntityReference extends AbstractNavigableContainerReference {
 			NavigableContainerReference containerReference,
 			boolean isShallow) {
 		super( containerReference, expressionType, navigablePath );
+		this.columnReferenceSource = columnReferenceSource;
 		this.expressionType = expressionType;
+	}
 
-		this.selectable = new EntityValuedSelectable(
-				this,
-				navigablePath,
-				columnReferenceSource,
-				isShallow
-		);
+	@Override
+	public EntityValuedNavigable getNavigable() {
+		return (EntityValuedNavigable) super.getNavigable();
+	}
+
+	@Override
+	public SqlExpressionQualifier getSqlExpressionQualifier() {
+		return columnReferenceSource;
 	}
 
 	@Override
 	public EntityValuedExpressableType getType() {
 		return expressionType;
-	}
-
-	@Override
-	public Selectable getSelectable() {
-		return selectable;
 	}
 
 	@Override

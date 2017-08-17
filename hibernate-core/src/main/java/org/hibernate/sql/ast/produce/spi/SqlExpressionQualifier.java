@@ -23,6 +23,12 @@ public interface SqlExpressionQualifier {
 	/**
 	 * Resolve the SqlSelection for the given QualifiableSqlSelectable
 	 * relative to this Qualifier.
+	 *
+	 * @implNote Do not call this method directly.  The expectation instead
+	 * is to call {@link SqlExpressionResolver#resolveSqlExpression(SqlExpressionQualifier, QualifiableSqlExpressable)}
+	 * and that that method will in turn call this method.  The reason being that
+	 * `SqlExpressionResolver#resolveSqlExpression` performs additional needed
+	 * logic.
 	 */
 	Expression qualify(QualifiableSqlExpressable sqlSelectable);
 }

@@ -11,6 +11,7 @@ import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
 /**
@@ -40,8 +41,8 @@ public class PluralAttributeElementReference implements NavigableReference {
 	}
 
 	@Override
-	public CollectionElement getSelectable() {
-		return getNavigable();
+	public SqlExpressionQualifier getSqlExpressionQualifier() {
+		return columnReferenceSource;
 	}
 
 	@Override

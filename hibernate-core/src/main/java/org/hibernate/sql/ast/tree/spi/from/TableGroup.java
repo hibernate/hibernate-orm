@@ -8,10 +8,9 @@ package org.hibernate.sql.ast.tree.spi.from;
 
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstWalker;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
+import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 
 /**
  * Group together related {@link TableReference} references (generally related by EntityPersister or CollectionPersister),

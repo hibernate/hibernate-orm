@@ -15,12 +15,12 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.Selectable;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
 
 /**
  * A TableGroup for an entity reference
@@ -88,12 +88,15 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 	}
 
 	@Override
-	public Selection createSelection(Expression selectedExpression, String resultVariable) {
-		assert selectedExpression != null;
-		assert selectedExpression instanceof NavigableReference;
-
-		final NavigableReference navigableReference = (NavigableReference) selectedExpression;
-		return new NavigableSelection( navigableReference, resultVariable );
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return getEntityDescriptor().createQueryResult(
+				expression,
+				resultVariable,
+				creationContext
+		);
 	}
 
 	@Override

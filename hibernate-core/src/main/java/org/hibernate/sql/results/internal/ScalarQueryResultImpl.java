@@ -6,9 +6,14 @@
  */
 package org.hibernate.sql.results.internal;
 
+import javax.persistence.AttributeConverter;
+
+import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.InitializerCollector;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.ScalarQueryResult;
 import org.hibernate.sql.results.spi.SqlSelection;
 
@@ -28,7 +33,15 @@ public class ScalarQueryResultImpl implements ScalarQueryResult {
 		this.resultVariable = resultVariable;
 		this.expressableType = expressableType;
 
-		this.assembler = new ScalarQueryResultAssembler( sqlSelection, this );
+		AttributeConverter attributeConverter = null;
+		if ( expressableType instanceof ConvertibleNavigable ) {
+			final ConvertibleNavigable navigable = (ConvertibleNavigable) expressableType;
+			if ( navigable.getAttributeConverter() != null ) {
+				attributeConverter = navigable.getAttributeConverter().getAttributeConverter();
+			}
+		}
+
+		this.assembler = new ScalarQueryResultAssembler( sqlSelection, attributeConverter, expressableType.getJavaTypeDescriptor() );
 	}
 
 	@Override

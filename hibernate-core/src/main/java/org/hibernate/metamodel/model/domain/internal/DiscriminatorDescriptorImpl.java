@@ -14,17 +14,26 @@ import java.util.List;
 import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorMappings;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
+import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
+import org.hibernate.type.descriptor.spi.ValueBinder;
+import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -62,23 +71,8 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 	}
 
 	@Override
-	public DiscriminatorMappings getDiscriminatorMappings() {
-		// todo (6.0) : will probably need to collect these dynamically during "first phase" of runtime model creation
-		throw new NotYetImplementedException(  );
-	}
-
-	@Override
-	public void visitNavigable(NavigableVisitationStrategy visitor) {
-		visitor.visitDiscriminator( this );
-	}
-
-	@Override
-	public QueryResult generateQueryResult(
-			NavigableReference selectedExpression,
-			String resultVariable,
-			SqlExpressionResolver sqlSelectionResolver,
-			QueryResultCreationContext creationContext) {
-		return null;
+	public PropertyAccess getPropertyAccess() {
+		throw new org.hibernate.sql.NotYetImplementedException(  );
 	}
 
 	@Override
@@ -97,8 +91,29 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 	}
 
 	@Override
+	public DiscriminatorMappings getDiscriminatorMappings() {
+		// todo (6.0) : will probably need to collect these dynamically during "first phase" of runtime model creation
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public void visitNavigable(NavigableVisitationStrategy visitor) {
+		visitor.visitDiscriminator( this );
+	}
+
+	@Override
 	public List<Column> getColumns() {
 		return Collections.singletonList( column );
+	}
+
+	@Override
+	public ValueBinder getValueBinder() {
+		return getBasicType().getValueBinder();
+	}
+
+	@Override
+	public ValueExtractor getValueExtractor() {
+		return getBasicType().getValueExtractor();
 	}
 
 	@Override
@@ -179,5 +194,40 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 	@Override
 	public BasicType<J> getBasicType() {
 		return basicType;
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		final SqlSelectionGroup group = resolveSqlSelectionGroup(
+				( (NavigableReference) expression ).getSqlExpressionQualifier(),
+				creationContext
+		);
+
+		return new ScalarQueryResultImpl(
+				resultVariable,
+				group.getSqlSelections().get( 0 ),
+				this
+		);
+	}
+
+	private SqlSelection resolveSqlSelection(
+			SqlExpressionQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext) {
+		return resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
+				resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
+						qualifier,
+						getBoundColumn()
+				)
+		);
+	}
+
+	@Override
+	public SqlSelectionGroup resolveSqlSelectionGroup(
+			SqlExpressionQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext) {
+		return SqlSelectionGroupImpl.of( resolveSqlSelection( qualifier, resolutionContext ) );
 	}
 }

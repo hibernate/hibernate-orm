@@ -29,15 +29,18 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
+import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.internal.AbstractFetchParent;
-import org.hibernate.sql.results.internal.EntityRootInitializer;
 import org.hibernate.sql.results.internal.EntityQueryResultAssembler;
+import org.hibernate.sql.results.internal.EntityRootInitializer;
 import org.hibernate.sql.results.internal.EntitySqlSelectionMappingsBuilder;
+import org.hibernate.sql.results.spi.EntityQueryResult;
 import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 import org.hibernate.sql.results.spi.InitializerCollector;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
-import org.hibernate.sql.results.spi.EntityQueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Builds an entity-based QueryResult for a NativeQuery
@@ -45,9 +48,9 @@ import org.hibernate.sql.results.spi.QueryResultCreationContext;
  * @author Steve Ebersole
  */
 public class QueryResultBuilderRootEntity
-		implements NativeQuery.RootReturn, WrappableQueryResultBuilder {
+		implements NativeQuery.RootReturn, WrappableQueryResultBuilder, SqlExpressionQualifier {
 	private final String tableAlias;
-	private final String entityName;
+	private final EntityDescriptor entityDescriptor ;
 	private LockMode lockMode = LockMode.READ;
 
 	private List<String> idColumnAliases;
@@ -55,9 +58,14 @@ public class QueryResultBuilderRootEntity
 
 	private Map<String, AttributeMapping> propertyMappings;
 
-	public QueryResultBuilderRootEntity(String tableAlias, String entityName) {
+	public QueryResultBuilderRootEntity(String tableAlias, EntityDescriptor entityDescriptor ) {
 		this.tableAlias = tableAlias;
-		this.entityName = entityName;
+		this.entityDescriptor = entityDescriptor;
+	}
+
+	@Override
+	public JavaTypeDescriptor getResultType() {
+		return entityDescriptor.getJavaTypeDescriptor();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -116,7 +124,8 @@ public class QueryResultBuilderRootEntity
 	@Override
 	public EntityQueryResult buildReturn(NodeResolutionContext resolutionContext) {
 		return new EntityQueryResultImpl(
-				resolutionContext.getSessionFactory().getTypeConfiguration().resolveEntityDescriptor( entityName ),
+				entityDescriptor,
+				this,
 				// todo (6.0) - is `tableAlias` the correct thing here?
 				//		this is supposed to be the "query result variable" associated with this QueryResult
 				//		- is that the intention of `tableAlias`?
@@ -128,6 +137,11 @@ public class QueryResultBuilderRootEntity
 		);
 	}
 
+	@Override
+	public Expression qualify(QualifiableSqlExpressable sqlSelectable) {
+		throw new NotYetImplementedException(  );
+	}
+
 	public static class EntityQueryResultImpl extends AbstractFetchParent implements EntityQueryResult {
 		private final EntityDescriptor entityDescriptor;
 		private final String queryResultVariable;
@@ -137,6 +151,7 @@ public class QueryResultBuilderRootEntity
 
 		public EntityQueryResultImpl(
 				EntityDescriptor entityDescriptor,
+				SqlExpressionQualifier qualifier,
 				String queryResultVariable,
 				List<String> explicitIdColumnAliases,
 				String explicitDiscriminatorColumnAlias,
@@ -151,6 +166,7 @@ public class QueryResultBuilderRootEntity
 					entityDescriptor,
 					EntitySqlSelectionMappingsOverridableBuilder.buildSqlSelectionMappings(
 							entityDescriptor,
+							qualifier,
 							// row-id
 							null,
 							explicitIdColumnAliases,
@@ -201,14 +217,16 @@ public class QueryResultBuilderRootEntity
 	private static class EntitySqlSelectionMappingsOverridableBuilder extends EntitySqlSelectionMappingsBuilder {
 		static EntitySqlSelectionMappings buildSqlSelectionMappings(
 				EntityDescriptor entityDescriptor,
+				SqlExpressionQualifier qualifier,
 				String explicitRowIdColumnAlias,
 				List<String> explicitIdColumnAliases,
 				String explicitDiscriminatorColumnAlias,
 				String explicitTenantDiscriminatorColumnAlias,
 				Map<String, AttributeMapping> explicitAttributeMapping,
 				NodeResolutionContext nodeResolutionContext) {
-			EntitySqlSelectionMappingsBuilder strategy = new EntitySqlSelectionMappingsOverridableBuilder(
+			EntitySqlSelectionMappingsOverridableBuilder strategy = new EntitySqlSelectionMappingsOverridableBuilder(
 					entityDescriptor,
+					qualifier,
 					explicitRowIdColumnAlias,
 					explicitIdColumnAliases,
 					explicitDiscriminatorColumnAlias,
@@ -230,19 +248,25 @@ public class QueryResultBuilderRootEntity
 
 		public EntitySqlSelectionMappingsOverridableBuilder(
 				EntityDescriptor entityDescriptor,
+				SqlExpressionQualifier qualifier,
 				String explicitRowIdColumnAlias,
 				List<String> explicitIdColumnAliases,
 				String explicitDiscriminatorColumnAlias,
 				String explicitTenantDiscriminatorColumnAlias,
 				Map<String, AttributeMapping> explicitAttributeMapping,
 				NodeResolutionContext nodeResolutionContext) {
-			super( nodeResolutionContext );
+			super( qualifier, nodeResolutionContext );
 			this.entityDescriptor = entityDescriptor;
 			this.explicitRowIdColumnAlias = explicitRowIdColumnAlias;
 			this.explicitIdColumnAliases = explicitIdColumnAliases;
 			this.explicitDiscriminatorColumnAlias = explicitDiscriminatorColumnAlias;
 			this.explicitTenantDiscriminatorColumnAlias = explicitTenantDiscriminatorColumnAlias;
 			this.explicitAttributeMapping = explicitAttributeMapping;
+		}
+
+		@Override
+		public EntitySqlSelectionMappings buildSqlSelectionMappings() {
+			return super.buildSqlSelectionMappings();
 		}
 
 		@Override
@@ -280,23 +304,25 @@ public class QueryResultBuilderRootEntity
 					);
 				}
 
-				setIdSqlSelectionGroup( identifier.resolveSqlSelectionGroup( getCreationContext() ) );
+				setIdSqlSelectionGroup(
+						identifier.resolveSqlSelectionGroup( getQualifier(), getCreationContext() )
+				);
 			}
 		}
 
 		@Override
 		public void visitAggregateCompositeIdentifier(EntityIdentifierCompositeAggregated identifier) {
-			setIdSqlSelectionGroup( identifier.resolveSqlSelectionGroup( getCreationContext() ) );
+			setIdSqlSelectionGroup( identifier.resolveSqlSelectionGroup( getQualifier(), getCreationContext() ) );
 		}
 
 		@Override
 		public void visitNonAggregateCompositeIdentifier(EntityIdentifierCompositeNonAggregated identifier) {
-			setIdSqlSelectionGroup( identifier.resolveSqlSelectionGroup( getCreationContext() ) );
+			setIdSqlSelectionGroup( identifier.resolveSqlSelectionGroup( getQualifier(), getCreationContext() ) );
 		}
 
 		@Override
 		public void visitDiscriminator(DiscriminatorDescriptor discriminator) {
-			setDiscriminatorSqlSelection( discriminator.resolveSqlSelectionGroup( getCreationContext() ) );
+			setDiscriminatorSqlSelection( discriminator.resolveSqlSelectionGroup( getQualifier(), getCreationContext() ) );
 		}
 
 		@Override

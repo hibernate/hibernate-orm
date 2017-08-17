@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
+import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 
 /**
  * @author Steve Ebersole

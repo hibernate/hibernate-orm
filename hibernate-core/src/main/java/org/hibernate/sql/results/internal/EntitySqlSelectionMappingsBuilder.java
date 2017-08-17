@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.internal;
 
-import java.util.Map;
-
 import org.hibernate.HibernateException;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeBasic;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
@@ -18,12 +16,12 @@ import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeAggrega
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 
 /**
  * @author Steve Ebersole
@@ -31,21 +29,24 @@ import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 public class EntitySqlSelectionMappingsBuilder implements NavigableVisitationStrategy {
 	public static EntitySqlSelectionMappings buildSqlSelectionMappings(
 			EntityDescriptor entityDescriptor,
+			SqlExpressionQualifier qualifier,
 			QueryResultCreationContext creationContext) {
-		EntitySqlSelectionMappingsBuilder strategy = new EntitySqlSelectionMappingsBuilder( creationContext );
+		final EntitySqlSelectionMappingsBuilder strategy = new EntitySqlSelectionMappingsBuilder(
+				qualifier,
+				creationContext
+		);
 		entityDescriptor.visitNavigables( strategy );
 		return strategy.buildSqlSelectionMappings();
 	}
 
+	private final SqlExpressionQualifier qualifier;
 	private final QueryResultCreationContext creationContext;
+	private final EntitySqlSelectionMappingsImpl.Builder sqlSelectionMappingsBuilder = new EntitySqlSelectionMappingsImpl.Builder();
 
-	private SqlSelection rowIdSqlSelection;
-	private SqlSelectionGroup idSqlSelectionGroup;
-	private SqlSelection discriminatorSqlSelection;
-	private SqlSelection tenantDiscriminatorSqlSelection;
-	private Map<PersistentAttribute,SqlSelectionGroup> attributeSqlSelectionGroupMap;
-
-	protected EntitySqlSelectionMappingsBuilder(QueryResultCreationContext creationContext) {
+	protected EntitySqlSelectionMappingsBuilder(
+			SqlExpressionQualifier qualifier,
+			QueryResultCreationContext creationContext) {
+		this.qualifier = qualifier;
 		this.creationContext = creationContext;
 	}
 
@@ -54,51 +55,46 @@ public class EntitySqlSelectionMappingsBuilder implements NavigableVisitationStr
 	}
 
 	protected EntitySqlSelectionMappings buildSqlSelectionMappings() {
-		return new EntitySqlSelectionMappingsImpl(
-				rowIdSqlSelection,
-				idSqlSelectionGroup,
-				discriminatorSqlSelection,
-				tenantDiscriminatorSqlSelection,
-				attributeSqlSelectionGroupMap
-		);
+		return sqlSelectionMappingsBuilder.create();
 	}
 
-
-
+	protected SqlExpressionQualifier getQualifier() {
+		return qualifier;
+	}
 
 	@Override
 	public void visitSimpleIdentifier(EntityIdentifierSimple identifier) {
-		setIdSqlSelectionGroup( identifier.resolveSqlSelectionGroup( getCreationContext() ) );
+		setIdSqlSelectionGroup(
+				identifier.resolveSqlSelectionGroup(
+						qualifier,
+						getCreationContext()
+				)
+		);
 	}
 
-	// todo (6.0) : consider a singular, pluggable `HibernateExceptionFactory` that can be used to seamlessly handle JPA v. native-Hibernate requirements.
-	//		Another option would be to migrate Hibernate to usage of the JPA exception requirements,
-	//		still using `HibernateException` derivatives for cases not covered by JPA.
-	//
-	//		The initial comment ^^ is the safest solution as it would allow for continuing the
-	// 		current user expectations.  However, this is a fairly large code change.
-
 	protected void setIdSqlSelectionGroup(SqlSelectionGroup group) {
-		if ( idSqlSelectionGroup != null ) {
-			throw new HibernateException( "Multiple calls to set entity id SqlSelections" );
-		}
-
-		idSqlSelectionGroup = group;;
+		sqlSelectionMappingsBuilder.applyIdSqlSelectionGroup( group );
 	}
 
 	@Override
 	public void visitAggregateCompositeIdentifier(EntityIdentifierCompositeAggregated identifier) {
-		setIdSqlSelectionGroup( identifier.resolveSqlSelectionGroup( getCreationContext() ) );
+		setIdSqlSelectionGroup(
+				identifier.resolveSqlSelectionGroup( qualifier, getCreationContext() )
+		);
 	}
 
 	@Override
 	public void visitNonAggregateCompositeIdentifier(EntityIdentifierCompositeNonAggregated identifier) {
-		setIdSqlSelectionGroup( identifier.resolveSqlSelectionGroup( getCreationContext() ) );
+		setIdSqlSelectionGroup(
+				identifier.resolveSqlSelectionGroup( qualifier, getCreationContext() )
+		);
 	}
 
 	@Override
 	public void visitDiscriminator(DiscriminatorDescriptor discriminator) {
-		setDiscriminatorSqlSelection( discriminator.resolveSqlSelectionGroup( getCreationContext() ) );
+		setDiscriminatorSqlSelection(
+				discriminator.resolveSqlSelectionGroup( qualifier, getCreationContext() )
+		);
 	}
 
 	protected void setDiscriminatorSqlSelection(SqlSelectionGroup sqlSelectionGroup) {
@@ -112,30 +108,38 @@ public class EntitySqlSelectionMappingsBuilder implements NavigableVisitationStr
 	}
 
 	protected void setDiscriminatorSqlSelection(SqlSelection discriminatorSqlSelection) {
-		if ( discriminatorSqlSelection != null ) {
-			throw new HibernateException( "Multiple calls to set entity discriminator SqlSelection" );
-		}
-
-		this.discriminatorSqlSelection = discriminatorSqlSelection;
+		sqlSelectionMappingsBuilder.applyDiscriminatorSqlSelection( discriminatorSqlSelection );
 	}
 
 	@Override
 	public void visitSingularAttributeBasic(SingularPersistentAttributeBasic attribute) {
-
+		sqlSelectionMappingsBuilder.applyAttributeSqlSelectionGroup(
+				attribute,
+				attribute.resolveSqlSelectionGroup( qualifier, getCreationContext() )
+		);
 	}
 
 	@Override
 	public void visitSingularAttributeEmbedded(SingularPersistentAttributeEmbedded attribute) {
-
+		sqlSelectionMappingsBuilder.applyAttributeSqlSelectionGroup(
+				attribute,
+				attribute.resolveSqlSelectionGroup( qualifier, creationContext )
+		);
 	}
 
 	@Override
 	public void visitSingularAttributeEntity(SingularPersistentAttributeEntity attribute) {
-
+		sqlSelectionMappingsBuilder.applyAttributeSqlSelectionGroup(
+				attribute,
+				attribute.resolveSqlSelectionGroup( qualifier, creationContext )
+		);
 	}
 
 	@Override
 	public void visitPluralAttribute(PluralPersistentAttribute attribute) {
-
+		sqlSelectionMappingsBuilder.applyAttributeSqlSelectionGroup(
+				attribute,
+				attribute.resolveSqlSelectionGroup( qualifier, creationContext )
+		);
 	}
 }

@@ -9,6 +9,9 @@ package org.hibernate.query.sqm.tree.expression.domain;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementBasic;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * @author Steve Ebersole
@@ -36,5 +39,19 @@ public class SqmMinElementReferenceBasic extends AbstractSpecificSqmElementRefer
 	@Override
 	public String asLoggableText() {
 		return "MINELEMENT(" + getPluralAttributeBinding().asLoggableText() + ")";
+	}
+
+	@Override
+	public CollectionElementBasic getReferencedNavigable() {
+		return (CollectionElementBasic) super.getReferencedNavigable();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
 	}
 }

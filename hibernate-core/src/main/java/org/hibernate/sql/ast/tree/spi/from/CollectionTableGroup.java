@@ -20,7 +20,9 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstWalker;
+import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
 /**
@@ -141,5 +143,10 @@ public class CollectionTableGroup implements TableGroup {
 		final ColumnReference columnBinding = new ColumnReference( column, tableBinding );
 		columnBindingMap.put( column, columnBinding );
 		return columnBinding;
+	}
+
+	@Override
+	public Expression qualify(QualifiableSqlExpressable sqlSelectable) {
+		throw new NotYetImplementedException(  );
 	}
 }

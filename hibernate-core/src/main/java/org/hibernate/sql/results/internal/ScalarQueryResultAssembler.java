@@ -6,13 +6,12 @@
  */
 package org.hibernate.sql.results.internal;
 
-import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
-import org.hibernate.sql.results.spi.ScalarQueryResult;
-import org.hibernate.sql.results.spi.SqlSelection;
+import javax.persistence.AttributeConverter;
+
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
 import org.hibernate.sql.results.spi.RowProcessingState;
-import org.hibernate.type.converter.spi.AttributeConverterDefinition;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -20,16 +19,21 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  */
 public class ScalarQueryResultAssembler implements QueryResultAssembler {
 	private final SqlSelection sqlSelection;
-	private final ScalarQueryResult returnScalar;
+	private final AttributeConverter attributeConverter;
+	private final JavaTypeDescriptor javaTypeDescriptor;
 
-	public ScalarQueryResultAssembler(SqlSelection sqlSelection, ScalarQueryResult returnScalar) {
+	public ScalarQueryResultAssembler(
+			SqlSelection sqlSelection,
+			AttributeConverter attributeConverter,
+			JavaTypeDescriptor javaTypeDescriptor) {
 		this.sqlSelection = sqlSelection;
-		this.returnScalar = returnScalar;
+		this.attributeConverter = attributeConverter;
+		this.javaTypeDescriptor = javaTypeDescriptor;
 	}
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return returnScalar.getType().getJavaTypeDescriptor();
+		return javaTypeDescriptor;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -39,12 +43,8 @@ public class ScalarQueryResultAssembler implements QueryResultAssembler {
 			JdbcValuesSourceProcessingOptions options) {
 		final Object rawJdbcValue = rowProcessingState.getJdbcValue( sqlSelection );
 
-		if ( returnScalar.getType() instanceof ConvertibleNavigable ) {
-			final AttributeConverterDefinition attributeConverter = ( (ConvertibleNavigable) returnScalar.getType() ).getAttributeConverter();
-			if ( attributeConverter != null ) {
-				// apply the attribute converter
-				return attributeConverter.getAttributeConverter().convertToEntityAttribute( rawJdbcValue );
-			}
+		if ( attributeConverter != null ) {
+			return attributeConverter.convertToEntityAttribute( rawJdbcValue );
 		}
 
 		return rawJdbcValue;

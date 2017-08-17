@@ -7,11 +7,8 @@
 package org.hibernate.sql.ast.produce.spi;
 
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
@@ -52,14 +49,7 @@ public class SqlSelectionExpression implements Expression {
 	}
 
 	@Override
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			SqlExpressionResolver sqlSelectionResolver,
-			QueryResultCreationContext creationContext) {
-		throw new ConversionException(
-				"Unexpected attempt to create QueryResult from specialized SqlSelectionExpression"
-		);
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		return theSelection;
 	}
-
 }

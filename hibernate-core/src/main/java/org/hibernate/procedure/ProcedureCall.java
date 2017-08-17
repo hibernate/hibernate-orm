@@ -24,7 +24,7 @@ import org.hibernate.query.SynchronizeableQuery;
  * </ul>
  * Unless explicitly specified, the ProcedureCall is assumed to follow the
  * procedure call syntax.  To explicitly specify that this should be a function
- * call, use {@link #markAsFunctionCall()}.  JPA users could either:<ul>
+ * call, use {@link #markAsFunctionCall}.  JPA users could either:<ul>
  *     <li>use {@code storedProcedureQuery.unwrap( ProcedureCall.class }.markAsFunctionCall()</li>
  *     <li>set the {@link #IS_FUNCTION_HINT} hint (avoids loading Hibernate-specific classes)</li>
  * </ul>

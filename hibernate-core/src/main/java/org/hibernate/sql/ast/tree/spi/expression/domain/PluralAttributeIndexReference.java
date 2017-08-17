@@ -10,6 +10,7 @@ import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 
 /**
  * @author Steve Ebersole
@@ -40,12 +41,12 @@ public class PluralAttributeIndexReference implements NavigableReference {
 	}
 
 	@Override
-	public CollectionIndex getType() {
-		return getNavigable();
+	public SqlExpressionQualifier getSqlExpressionQualifier() {
+		return columnReferenceSource;
 	}
 
 	@Override
-	public CollectionIndex getSelectable() {
+	public CollectionIndex getType() {
 		return getNavigable();
 	}
 

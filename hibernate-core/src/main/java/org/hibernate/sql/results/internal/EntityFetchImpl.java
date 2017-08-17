@@ -9,14 +9,13 @@ package org.hibernate.sql.results.internal;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.results.spi.EntityFetch;
 import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.FetchParentAccess;
-import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.InitializerCollector;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
@@ -25,27 +24,27 @@ import org.hibernate.sql.results.spi.QueryResultCreationContext;
  */
 public class EntityFetchImpl extends AbstractFetchParent implements EntityFetch {
 	private final FetchParent fetchParent;
-	private final FetchParentAccess fetchParentAccess;
+	private final SqlExpressionQualifier qualifier;
 	private final FetchStrategy fetchStrategy;
 
-	private final EntitySqlSelectionMappings entitySqlSelectionMappings;
+	private final EntitySqlSelectionMappings sqlSelectionMappings;
 
 	public EntityFetchImpl(
 			FetchParent fetchParent,
-			FetchParentAccess fetchParentAccess,
+			SqlExpressionQualifier qualifier,
 			EntityValuedNavigable fetchedNavigable,
 			NavigablePath navigablePath,
 			FetchStrategy fetchStrategy,
 			QueryResultCreationContext creationContext) {
 		super( fetchedNavigable, navigablePath );
 		this.fetchParent = fetchParent;
-		this.fetchParentAccess = fetchParentAccess;
-		this.fetchStrategy = fetchStrategy;
-
-		this.entitySqlSelectionMappings = EntitySqlSelectionMappingsBuilder.buildSqlSelectionMappings(
-				fetchedNavigable.getEntityDescriptor(),
+		this.qualifier = qualifier;
+		this.sqlSelectionMappings = EntitySqlSelectionMappingsBuilder.buildSqlSelectionMappings(
+				getEntityDescriptor(),
+				qualifier,
 				creationContext
 		);
+		this.fetchStrategy = fetchStrategy;
 	}
 
 	@Override
@@ -54,7 +53,12 @@ public class EntityFetchImpl extends AbstractFetchParent implements EntityFetch 
 	}
 
 	@Override
-	public Navigable getFetchedNavigable() {
+	public SqlExpressionQualifier getSqlExpressionQualifier() {
+		return qualifier;
+	}
+
+	@Override
+	public EntityValuedNavigable getFetchedNavigable() {
 		return getFetchContainer();
 	}
 
@@ -69,26 +73,6 @@ public class EntityFetchImpl extends AbstractFetchParent implements EntityFetch 
 	}
 
 	@Override
-	public Initializer generateInitializer(FetchParentAccess parentAccess) {
-		return null;
-	}
-
-//	@Override
-//	public ResolvedFetch resolve(
-//			ResolvedFetchParent resolvedFetchParent,
-//			Map<AttributeDescriptor, SqlSelectionGroup> sqlSelectionGroupMap,
-//			boolean shallow) {
-//		return new ResolvedFetchEntityImpl(
-//				this,
-//				resolvedFetchParent,
-//				fetchStrategy,
-//				sqlSelectionGroupMap,
-//				shallow
-//		);
-//	}
-
-
-	@Override
 	public EntityValuedNavigable getFetchContainer() {
 		return (EntityValuedNavigable) super.getFetchContainer();
 	}
@@ -101,9 +85,9 @@ public class EntityFetchImpl extends AbstractFetchParent implements EntityFetch 
 	@Override
 	public void registerInitializers(FetchParentAccess parentAccess, InitializerCollector collector) {
 		final EntityFetchInitializer initializer = new EntityFetchInitializer(
-				fetchParentAccess,
+				parentAccess,
 				this,
-				entitySqlSelectionMappings,
+				sqlSelectionMappings,
 				false
 		);
 

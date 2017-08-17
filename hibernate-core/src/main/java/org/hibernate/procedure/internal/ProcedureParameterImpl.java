@@ -8,9 +8,9 @@ package org.hibernate.procedure.internal;
 
 import javax.persistence.ParameterMode;
 
-import org.hibernate.query.internal.AbstractQueryParameter;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.procedure.ProcedureParameter;
-import org.hibernate.type.Type;
+import org.hibernate.query.internal.AbstractQueryParameter;
 
 /**
  * @author Steve Ebersole
@@ -24,16 +24,28 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 	private final Class<T> javaType;
 
 
-	public ProcedureParameterImpl(String name, ParameterMode mode, Class<T> javaType, Type hibernateType, boolean passNulls) {
-		super( false, passNulls, hibernateType );
+	public ProcedureParameterImpl(
+			String name,
+			ParameterMode mode,
+			Class<T> javaType,
+			AllowableParameterType<T> hibernateType,
+			boolean passNulls) {
+		// todo (6.0) : what to do with `passNulls`?
+		super( false, hibernateType );
 		this.name = name;
 		this.position = null;
 		this.mode = mode;
 		this.javaType = javaType;
 	}
 
-	public ProcedureParameterImpl(Integer position, ParameterMode mode, Class<T> javaType, Type hibernateType, boolean passNulls) {
-		super( false, passNulls, hibernateType );
+	public ProcedureParameterImpl(
+			Integer position,
+			ParameterMode mode,
+			Class<T> javaType,
+			AllowableParameterType<T> hibernateType,
+			boolean passNulls) {
+		// todo (6.0) : what to do with `passNulls`?
+		super( false, hibernateType );
 		this.name = null;
 		this.position = position;
 		this.mode = mode;

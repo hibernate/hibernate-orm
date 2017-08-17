@@ -32,6 +32,7 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKey;
 import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKeyProducer;
@@ -41,10 +42,13 @@ import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.NavigablePathStack;
+import org.hibernate.sql.ast.produce.spi.NonQualifiableSqlExpressable;
+import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
@@ -65,6 +69,7 @@ import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 import org.jboss.logging.Logger;
 
@@ -343,19 +348,30 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SqlSelectionResolver
+	//
+	//		See impls on SqmSelectToSqlAstConverter
+
 
 	@Override
-	public SqlSelection resolveSqlSelection(SqlExpressable sqlSelectable) {
-		final SqlSelection existing = sqlSelectionMap.get( sqlSelectable );
-		if ( existing != null ) {
-			return existing;
-		}
+	public SqlExpressionResolver getSqlSelectionResolver() {
+		return this;
+	}
 
-		final SqlSelection sqlSelection = new SqlSelectionImpl( sqlSelectable, sqlSelectionMap.size() );
-		querySpec.getSelectClause().addSqlSelection( sqlSelection );
-		sqlSelectionMap.put( sqlSelectable, sqlSelection );
+	@Override
+	public Expression resolveSqlExpression(
+			SqlExpressionQualifier qualifier,
+			QualifiableSqlExpressable sqlSelectable) {
+		throw new NotYetImplementedException(  );
+	}
 
-		return sqlSelection;
+	@Override
+	public Expression resolveSqlExpression(NonQualifiableSqlExpressable sqlSelectable) {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public SqlSelection resolveSqlSelection(Expression expression) {
+		throw new NotYetImplementedException(  );
 	}
 
 

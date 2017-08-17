@@ -85,10 +85,14 @@ public class StandardCallableStatementSupport implements CallableStatementSuppor
 				}
 			}
 
+			// todo (6.0) : again assume basic-valued
+			/*
 			for ( int j = 0; j < registration.getJdbcParameterCount(); j++ ) {
 				buffer.append( sep ).append( "?" );
 				sep = ",";
 			}
+			*/
+			buffer.append( sep ).append( "?" );
 		}
 
 		return buffer.append( ")}" ).toString();
@@ -107,7 +111,9 @@ public class StandardCallableStatementSupport implements CallableStatementSuppor
 
 		try {
 			if ( functionReturn != null ) {
-				functionReturn.prepare( statement, session );
+				// todo (6.0) : what was the purpose here?
+				//		look back to 5.2 and see if this is still needed
+				//functionReturn.prepare( statement, session );
 				i++;
 			}
 
@@ -119,7 +125,9 @@ public class StandardCallableStatementSupport implements CallableStatementSuppor
 				}
 				else {
 					registration.registerParameter( statement, session );
-					i += registration.getJdbcParameterCount();
+					// todo (6.0) : again basic-valued assumption
+					//i += registration.getJdbcParameterCount();
+					i += 1;
 				}
 			}
 		}

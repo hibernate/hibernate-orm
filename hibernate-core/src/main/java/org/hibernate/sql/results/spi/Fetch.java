@@ -9,6 +9,7 @@ package org.hibernate.sql.results.spi;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 
 /**
  * Contract for fetches including entity, collection and composite.  Acts as the
@@ -35,6 +36,8 @@ public interface Fetch extends ResultSetMappingNode {
 	 * 			such injection (e.g. {@link org.hibernate.annotations.Parent})
 	 */
 	FetchParent getFetchParent();
+
+	SqlExpressionQualifier getSqlExpressionQualifier();
 
 	/**
 	 * The Navigable being fetched
@@ -65,8 +68,6 @@ public interface Fetch extends ResultSetMappingNode {
 	 * 			but if so, how does this interact with mapped nullability (optional)
 	 */
 	boolean isNullable();
-
-	Initializer generateInitializer(FetchParentAccess parentAccess);
 
 	void registerInitializers(FetchParentAccess parentAccess, InitializerCollector collector);
 }

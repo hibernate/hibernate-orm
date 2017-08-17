@@ -11,7 +11,6 @@ import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.ast.consume.spi.ParameterBindingResolutionContext;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.exec.spi.ParameterBindingContext;
 
 import org.jboss.logging.Logger;
 

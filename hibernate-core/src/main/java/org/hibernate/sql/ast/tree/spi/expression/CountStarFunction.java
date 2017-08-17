@@ -6,10 +6,10 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
-
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.results.spi.Selectable;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole
@@ -26,6 +26,14 @@ public class CountStarFunction extends AbstractAggregateFunction {
 		walker.visitCountStarFunction( this );
 	}
 
+	@Override
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		return new SqlSelectionImpl(
+				getType().getBasicType().getSqlSelectionReader(),
+				jdbcPosition
+		);
+	}
+
 	static class StarExpression implements Expression {
 		@Override
 		public BasicValuedExpressableType getType() {
@@ -33,12 +41,12 @@ public class CountStarFunction extends AbstractAggregateFunction {
 		}
 
 		@Override
-		public void accept(SqlAstWalker  walker) {
+		public SqlSelection createSqlSelection(int jdbcPosition) {
+			throw new UnsupportedOperationException( "The star (`*`) in a `count(*) expression cannot be selected" );
 		}
 
 		@Override
-		public Selectable getSelectable() {
-			throw new UnsupportedOperationException(  );
+		public void accept(SqlAstWalker  walker) {
 		}
 	}
 }

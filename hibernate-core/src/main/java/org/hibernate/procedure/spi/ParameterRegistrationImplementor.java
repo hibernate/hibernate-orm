@@ -7,6 +7,7 @@
 package org.hibernate.procedure.spi;
 
 import org.hibernate.procedure.ParameterRegistration;
+import org.hibernate.procedure.internal.ProcedureCallMementoImpl;
 
 /**
  * Additional internal contract for ParameterRegistration
@@ -18,4 +19,6 @@ public interface ParameterRegistrationImplementor<T> extends ParameterRegistrati
 
 	@Override
 	ParameterBindImplementor<T> getBind();
+
+	ProcedureCallMementoImpl.ParameterMemento toMemento();
 }

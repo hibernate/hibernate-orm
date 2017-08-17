@@ -9,8 +9,10 @@ package org.hibernate.sql.ast.tree.spi.expression.domain;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.results.spi.Selectable;
 
 /**
@@ -41,6 +43,13 @@ public class PluralAttributeReference implements NavigableReference {
 	}
 
 	@Override
+	public SqlExpressionQualifier getSqlExpressionQualifier() {
+		// todo (6.0) : we need a combined TableSpace to act as the qualifier
+		//		combining collection-table, element table and index table
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
 	public Navigable getNavigable() {
 		return referencedAttribute;
 	}
@@ -48,11 +57,6 @@ public class PluralAttributeReference implements NavigableReference {
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
-	}
-
-	@Override
-	public Selectable getSelectable() {
-		return referencedAttribute;
 	}
 
 	@Override

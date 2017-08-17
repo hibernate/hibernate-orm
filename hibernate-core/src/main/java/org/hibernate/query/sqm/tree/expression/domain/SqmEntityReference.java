@@ -8,10 +8,13 @@ package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 import org.jboss.logging.Logger;
 
@@ -117,5 +120,13 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 	@Override
 	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
 		return containerReference;
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return getReferencedNavigable().getEntityDescriptor().createQueryResult( expression, resultVariable, creationContext );
 	}
 }

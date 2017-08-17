@@ -6,12 +6,14 @@
  */
 package org.hibernate.sql.results.internal;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.HibernateException;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 
 /**
  * @author Steve Ebersole
@@ -59,5 +61,71 @@ public class EntitySqlSelectionMappingsImpl implements EntitySqlSelectionMapping
 	@Override
 	public SqlSelectionGroup getAttributeSqlSelectionGroup(PersistentAttribute attribute) {
 		return attributeSqlSelectionGroupMap.get( attribute );
+	}
+
+	public static class Builder {
+		private SqlSelection rowIdSqlSelection;
+		private SqlSelectionGroup idSqlSelectionGroup;
+		private SqlSelection discriminatorSqlSelection;
+		private SqlSelection tenantDiscriminatorSqlSelection;
+		private Map<PersistentAttribute, SqlSelectionGroup> attributeSqlSelectionGroupMap;
+
+		public Builder applyRowIdSqlSelection(SqlSelection rowIdSqlSelection) {
+			this.rowIdSqlSelection = rowIdSqlSelection;
+			return this;
+		}
+
+		public Builder applyIdSqlSelectionGroup(SqlSelectionGroup idSqlSelectionGroup) {
+			if ( this.idSqlSelectionGroup != null ) {
+				throw new HibernateException( "Multiple calls to set entity id SqlSelections" );
+			}
+			this.idSqlSelectionGroup = idSqlSelectionGroup;
+
+			return this;
+		}
+
+		public Builder applyDiscriminatorSqlSelection(SqlSelection discriminatorSqlSelection) {
+			if ( this.discriminatorSqlSelection != null ) {
+				throw new HibernateException( "Multiple calls to set entity discriminator SqlSelection" );
+			}
+			this.discriminatorSqlSelection = discriminatorSqlSelection;
+
+			return this;
+		}
+
+		public Builder applyTenantDiscriminatorSqlSelection(SqlSelection tenantDiscriminatorSqlSelection) {
+			if ( this.tenantDiscriminatorSqlSelection != null ) {
+				throw new HibernateException( "Multiple calls to set entity tenant-discriminator SqlSelection" );
+			}
+			this.tenantDiscriminatorSqlSelection = tenantDiscriminatorSqlSelection;
+
+			return this;
+		}
+
+		public Builder applyAttributeSqlSelectionGroup(PersistentAttribute attribute, SqlSelectionGroup sqlSelectionGroup) {
+			if ( attributeSqlSelectionGroupMap == null ) {
+				attributeSqlSelectionGroupMap = new HashMap<>();
+			}
+			attributeSqlSelectionGroupMap.put( attribute, sqlSelectionGroup );
+			return this;
+		}
+
+		public Builder applyAttributeSqlSelectionGroupMap(Map<PersistentAttribute, SqlSelectionGroup> map) {
+			if ( attributeSqlSelectionGroupMap == null ) {
+				attributeSqlSelectionGroupMap = new HashMap<>();
+			}
+			attributeSqlSelectionGroupMap.putAll( map );
+			return this;
+		}
+
+		public EntitySqlSelectionMappingsImpl create() {
+			return new EntitySqlSelectionMappingsImpl(
+					rowIdSqlSelection,
+					idSqlSelectionGroup,
+					discriminatorSqlSelection,
+					tenantDiscriminatorSqlSelection,
+					attributeSqlSelectionGroupMap
+			);
+		}
 	}
 }

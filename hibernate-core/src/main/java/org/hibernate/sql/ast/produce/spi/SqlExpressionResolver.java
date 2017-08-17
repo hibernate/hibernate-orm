@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.produce.spi;
 
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * Resolution of a SqlSelection reference for a given SqlSelectable.  Some
@@ -37,4 +38,9 @@ public interface SqlExpressionResolver {
 	 * (Sql)Expression reference.
 	 */
 	Expression resolveSqlExpression(NonQualifiableSqlExpressable sqlSelectable);
+
+	/**
+	 * Resolve the SqlSelection for the given expression
+	 */
+	SqlSelection resolveSqlSelection(Expression expression);
 }

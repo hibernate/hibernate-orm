@@ -10,14 +10,11 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
-import org.hibernate.sql.results.spi.Selectable;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
-import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * We classify literals different based on their source so that we can handle then differently
@@ -28,7 +25,7 @@ import org.hibernate.sql.exec.spi.ParameterBindingContext;
  * @author Steve Ebersole
  */
 public abstract class AbstractLiteral
-		implements JdbcParameterBinder, Expression, SqlExpressable, Selectable {
+		implements JdbcParameterBinder, Expression, SqlExpressable {
 	private final Object value;
 	private final BasicValuedExpressableType type;
 	private final boolean inSelect;
@@ -53,19 +50,16 @@ public abstract class AbstractLiteral
 	}
 
 	@Override
-	public Selectable getSelectable() {
-		return this;
-	}
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		// todo (6.0) : for literals and parameters consider simply pushing these values directly into the "current JDBC values" array
+		//		rather than reading them (the same value over and over) from the ResultSet.
+		//
+		//		see `org.hibernate.sql.ast.tree.spi.expression.AbstractParameter.createSqlSelection`
 
-	@Override
-	public Selection createSelection(Expression selectedExpression, String resultVariable) {
-		return new BasicValuedNonNavigableSelection( selectedExpression, resultVariable, this );
-	}
-
-
-	@Override
-	public SqlSelectionReader getSqlSelectionReader() {
-		return new SqlSelectionReaderImpl( getType() );
+		return new SqlSelectionImpl(
+				getType().getBasicType().getSqlSelectionReader(),
+				jdbcPosition
+		);
 	}
 
 	@Override

@@ -12,7 +12,6 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.results.spi.EntityQueryResult;
 import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
-import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.InitializerCollector;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
@@ -37,6 +36,8 @@ public class EntityQueryResultImpl extends AbstractFetchParent implements Entity
 		super( navigable, navigablePath );
 		this.resultVariable = resultVariable;
 
+		// todo (6.0) : the difficulty here is a chicken-egg problem...
+		//
 		this.initializer = new EntityRootInitializer(
 				navigable.getEntityDescriptor(),
 				sqlSelectionMappings,
@@ -46,19 +47,6 @@ public class EntityQueryResultImpl extends AbstractFetchParent implements Entity
 		this.assembler = new EntityQueryResultAssembler(
 				getType().getJavaTypeDescriptor(),
 				initializer
-		);
-	}
-
-	@Override
-	public Initializer generateInitializer(QueryResultCreationContext creationContext) {
-		return new EntityRootInitializer(
-				getEntityDescriptor(),
-				EntitySqlSelectionMappingsBuilder.buildSqlSelectionMappings(
-						getEntityDescriptor(),
-						creationContext
-				),
-				getFetches(),
-				creationContext.shouldCreateShallowEntityResult()
 		);
 	}
 

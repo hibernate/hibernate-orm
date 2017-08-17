@@ -8,20 +8,22 @@ package org.hibernate.sql.ast.tree.spi.expression;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole
  */
 public class UpperFunction extends AbstractStandardFunction implements StandardFunction {
 	private final Expression argument;
-	private final AllowableFunctionReturnType type;
+	private final BasicValuedExpressableType type;
 
 	public UpperFunction(Expression argument) {
-		this( argument, (AllowableFunctionReturnType) argument.getType() );
+		this( argument, (BasicValuedExpressableType) argument.getType() );
 	}
 
-	public UpperFunction(Expression argument, AllowableFunctionReturnType type) {
+	public UpperFunction(Expression argument, BasicValuedExpressableType type) {
 		this.argument = argument;
 		this.type = type;
 	}
@@ -36,7 +38,15 @@ public class UpperFunction extends AbstractStandardFunction implements StandardF
 	}
 
 	@Override
-	public ExpressableType getType() {
+	public BasicValuedExpressableType getType() {
 		return type;
+	}
+
+	@Override
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		return new SqlSelectionImpl(
+				getType().getBasicType().getSqlSelectionReader(),
+				jdbcPosition
+		);
 	}
 }

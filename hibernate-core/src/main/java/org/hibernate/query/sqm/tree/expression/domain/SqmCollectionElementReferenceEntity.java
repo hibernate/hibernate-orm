@@ -11,15 +11,18 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmCollectionElementReferenceEntity extends AbstractSqmCollectionElementReference implements
-		SqmCollectionElementReference,
-		SqmEntityTypedReference {
+public class SqmCollectionElementReferenceEntity
+		extends AbstractSqmCollectionElementReference
+		implements SqmCollectionElementReference, SqmEntityTypedReference {
 	private static final Logger log = Logger.getLogger( SqmCollectionElementReferenceEntity.class );
 
 	private SqmFrom exportedFromElement;
@@ -74,5 +77,13 @@ public class SqmCollectionElementReferenceEntity extends AbstractSqmCollectionEl
 	public String getUniqueIdentifier() {
 		// todo (6.0) : for the entity element classification we should point to the referenced entity's uid
 		return super.getUniqueIdentifier();
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
 	}
 }

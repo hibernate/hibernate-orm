@@ -9,7 +9,7 @@ package org.hibernate.query.sql.internal;
 import java.util.List;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.query.sql.spi.ast.SqlSelectionImpl;
+import org.hibernate.query.sql.spi.ResolvingSqlSelectionImpl;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.ResultSetMapping;
@@ -30,7 +30,7 @@ public class ResultSetMappingDescriptorUndefined implements ResultSetMappingDesc
 
 		for ( int columnPosition = 0; columnPosition < columnCount; columnPosition++ ) {
 			final String columnName = jdbcResultsMetadata.resolveColumnName( columnPosition );
-			final SqlSelection sqlSelection = new SqlSelectionImpl( columnName, columnPosition );
+			final SqlSelection sqlSelection = new ResolvingSqlSelectionImpl( columnName, columnPosition );
 			sqlSelections.add( sqlSelection );
 
 			// todo (6.0) - need to build the QueryResultScalar

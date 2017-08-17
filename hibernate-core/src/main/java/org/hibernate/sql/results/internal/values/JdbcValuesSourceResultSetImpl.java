@@ -45,14 +45,18 @@ public class JdbcValuesSourceResultSetImpl extends AbstractJdbcValuesSource {
 
 	public JdbcValuesSourceResultSetImpl(
 			ResultSetAccess resultSetAccess,
+			QueryKey queryCacheKey,
 			QueryOptions queryOptions,
 			ResultSetMapping resultSetMapping,
 			SharedSessionContractImplementor persistenceContext) {
-		super( resolveQueryCachePutManager( persistenceContext, queryOptions ) );
+		super(
+				resolveQueryCachePutManager( persistenceContext, queryOptions, queryCacheKey )
+		);
 		this.resultSetAccess = resultSetAccess;
 		this.resultSetMapping = resultSetMapping;
 		this.persistenceContext = persistenceContext;
 
+		// todo (6.0) : decide how to handle paged/limited results
 		this.numberOfRowsToProcess = interpretNumberOfRowsToProcess( queryOptions );
 	}
 
@@ -70,7 +74,8 @@ public class JdbcValuesSourceResultSetImpl extends AbstractJdbcValuesSource {
 
 	private static QueryCachePutManager resolveQueryCachePutManager(
 			SharedSessionContractImplementor persistenceContext,
-			QueryOptions queryOptions) {
+			QueryOptions queryOptions,
+			QueryKey queryCacheKey) {
 		final boolean queryCacheEnabled = persistenceContext.getFactory().getSessionFactoryOptions().isQueryCacheEnabled();
 		final CacheMode cacheMode = queryOptions.getCacheMode();
 
@@ -79,9 +84,7 @@ public class JdbcValuesSourceResultSetImpl extends AbstractJdbcValuesSource {
 					.getCache()
 					.getQueryCache( queryOptions.getResultCacheRegionName() );
 
-			final QueryKey queryResultsCacheKey = null;
-
-			return new QueryCachePutManagerEnabledImpl( queryCache, queryResultsCacheKey );
+			return new QueryCachePutManagerEnabledImpl( queryCache, queryCacheKey );
 		}
 		else {
 			return QueryCachePutManagerDisabledImpl.INSTANCE;
@@ -133,7 +136,7 @@ public class JdbcValuesSourceResultSetImpl extends AbstractJdbcValuesSource {
 		final int numberOfSqlSelections = resultSetMapping.getSqlSelections().size();
 		final Object[] row = new Object[numberOfSqlSelections];
 		for ( int i = 0; i < numberOfSqlSelections; i++ ) {
-			row[i] = resultSetMapping.getSqlSelections().get( i ).getSqlSelectable().getSqlSelectionReader().read(
+			row[i] = resultSetMapping.getSqlSelections().get( i ).getSqlSelectionReader().read(
 					resultSetAccess.getResultSet(),
 					rowProcessingState.getJdbcValuesSourceProcessingState(),
 					resultSetMapping.getSqlSelections().get( i )

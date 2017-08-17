@@ -6,12 +6,12 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import org.hibernate.sql.results.spi.SqlSelectionReader;
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.tree.spi.TrimSpecification;
-import org.hibernate.sql.results.spi.Selectable;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -49,23 +49,15 @@ public class TrimFunction implements StandardFunction {
 	}
 
 	@Override
-	public SqlSelectionReader getSqlSelectionReader() {
-		return null;
-	}
-
-	@Override
-	public Selection createSelection(
-			Expression selectedExpression, String resultVariable) {
-		return null;
-	}
-
-	@Override
-	public ExpressableType getType() {
+	public AllowableFunctionReturnType getType() {
 		return StandardSpiBasicTypes.STRING;
 	}
 
 	@Override
-	public Selectable getSelectable() {
-		return null;
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		return new SqlSelectionImpl(
+				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlSelectionReader(),
+				jdbcPosition
+		);
 	}
 }

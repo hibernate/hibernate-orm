@@ -674,18 +674,6 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	LockMode getCurrentLockMode(Object object);
 
 	/**
-	 * Create a {@link Query} instance for the given collection and filter string.  Contains an implicit {@code FROM}
-	 * element named {@code this} which refers to the defined table for the collection elements, as well as an implicit
-	 * {@code WHERE} restriction for this particular collection instance's key value.
-	 *
-	 * @param collection a persistent collection
-	 * @param queryString a Hibernate query fragment.
-	 *
-	 * @return The query instance for manipulation and execution
-	 */
-	org.hibernate.query.Query createFilter(Object collection, String queryString);
-
-	/**
 	 * Completely clear the session. Evict all loaded instances and cancel all pending
 	 * saves, updates and deletions. Do not close open iterators or instances of
 	 * <tt>ScrollableResults</tt>.

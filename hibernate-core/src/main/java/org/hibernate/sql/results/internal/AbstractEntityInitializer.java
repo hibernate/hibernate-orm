@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.internal;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -24,11 +23,9 @@ import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.results.spi.EntityInitializer;
-import org.hibernate.sql.results.spi.Fetch;
-import org.hibernate.sql.results.spi.Initializer;
+import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 import org.hibernate.sql.results.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 
 /**
  * @author Steve Ebersole
@@ -52,22 +49,13 @@ public abstract class AbstractEntityInitializer implements EntityInitializer {
 	private EntityKey entityKey;
 	private Object entityInstance;
 
-	private List<Initializer> fetchInitializers;
-
 	public AbstractEntityInitializer(
 			EntityDescriptor entityDescriptor,
 			EntitySqlSelectionMappings sqlSelectionMappings,
-			List<Fetch> fetches,
 			boolean isShallow) {
 		this.entityDescriptor = entityDescriptor;
 		this.sqlSelectionMappings = sqlSelectionMappings;
 		this.isShallow = isShallow;
-
-		fetchInitializers = new ArrayList<>(  );
-		for ( Fetch fetch : fetches ) {
-			fetchInitializers.add( fetch.generateInitializer( this ) );
-		}
-
 	}
 
 	protected abstract boolean isEntityReturn();

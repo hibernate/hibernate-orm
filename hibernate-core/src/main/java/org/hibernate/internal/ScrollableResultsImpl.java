@@ -13,10 +13,10 @@ import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.ScrollableResults;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.spi.Loader;
-import org.hibernate.type.Type;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.results.spi.ResultSetMapping;
 
 /**
  * Standard ScrollableResults implementation.
@@ -28,23 +28,15 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 
 	/**
 	 * Constructs a ScrollableResultsImpl using the specified information.
-	 *
-	 * @param rs The scrollable result set
-	 * @param ps The prepared statement used to obtain the result set
-	 * @param sess The originating session
-	 * @param loader The loader
-	 * @param queryParameters query parameters
-	 * @param types The result types
-	 * @param holderInstantiator Ugh
 	 */
 	public ScrollableResultsImpl(
 			ResultSet rs,
 			PreparedStatement ps,
 			SharedSessionContractImplementor sess,
 			Loader loader,
-			QueryParameters queryParameters,
-			Type[] types, HolderInstantiator holderInstantiator) {
-		super( rs, ps, sess, loader, queryParameters, types, holderInstantiator );
+			QueryOptions queryOptions,
+			ResultSetMapping resultSetMapping) {
+		super( rs, ps, sess, loader, queryOptions, resultSetMapping );
 	}
 
 	@Override

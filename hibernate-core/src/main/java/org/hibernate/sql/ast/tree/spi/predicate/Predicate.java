@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.ast.tree.spi.predicate;
 
+import org.hibernate.sql.ast.tree.spi.SqlAstNode;
+
 /**
  * @author Steve Ebersole
  */

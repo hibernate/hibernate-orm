@@ -122,7 +122,8 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 							resolveIdAttributeDeclarer( rootEntityBinding, rootEntityPersister ),
 							rootEntityBinding.getIdentifierProperty().getName(),
 							creationContext
-					)
+					),
+					rootEntityBinding.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping()
 			);
 		}
 		else if ( rootEntityBinding.getIdentifier() instanceof Component ) {
@@ -163,7 +164,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			RootClass rootEntityBinding,
 			RuntimeModelCreationContext creationContext) {
 		if ( rootEntityBinding.getRootTable().getRowId() != null ) {
-			return new RowIdDescriptorImpl( hierarchy );
+			return new RowIdDescriptorImpl( hierarchy, creationContext );
 		}
 
 		return null;

@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.produce.sqm.spi;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,15 +36,15 @@ import org.hibernate.sql.ast.produce.sqm.internal.FetchGraphBuilder;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.QueryResultProducer;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -63,27 +64,11 @@ public class SqmSelectToSqlAstConverter
 	// todo (6.0) : SqmSelectToSqlAstConverter needs to account for the EntityGraph hint
 	private FetchGraphBuilder fetchGraphBuilder;
 
-	/**
-	 * Main entry point into SQM SelectStatement interpretation
-	 *
-	 * @param statement The SQM SelectStatement to interpretInstantiationTarget
-	 * @param queryOptions The options to be applied to the interpretation
-	 * @param sqlAstBuildingContext Contextual information ("parameter object") for
-	 * information needed as a SQL AST is produced
-	 *
-	 * @return The interpretation
-	 */
-	public static SqlAstSelectInterpretation interpret(
-			SqmSelectStatement statement,
-			QueryOptions queryOptions,
-			SqlAstBuildingContext sqlAstBuildingContext) {
-		return new SqmSelectToSqlAstConverter( queryOptions, sqlAstBuildingContext )
-				.interpret( statement );
-	}
-
 	private final Stack<Shallowness> shallownessStack = new Stack<>( Shallowness.NONE );
 	private final Stack<NavigableReference> navigableReferenceStack = new Stack<>();
 	private final Stack<Expression> currentSelectedExpression = new Stack<>();
+
+	private final Map<Expression,SqlSelection> sqlSelectionByExpressionMap = new HashMap<>();
 
 	private final List<QueryResult> queryResults = new ArrayList<>();
 
@@ -93,7 +78,7 @@ public class SqmSelectToSqlAstConverter
 		return "<uid(fetchgraph):" + counter++ + ">";
 	}
 
-	protected SqmSelectToSqlAstConverter(
+	public SqmSelectToSqlAstConverter(
 			QueryOptions queryOptions,
 			SqlAstBuildingContext sqlAstBuildingContext) {
 		super( sqlAstBuildingContext, queryOptions );
@@ -101,7 +86,7 @@ public class SqmSelectToSqlAstConverter
 		this.entityGraphQueryHintType = queryOptions.getEntityGraphQueryHint().getType();
 	}
 
-	private SqlAstSelectInterpretation interpret(SqmSelectStatement statement) {
+	public SqlAstSelectInterpretation interpret(SqmSelectStatement statement) {
 		return new SqlSelectPlanImpl(
 				visitSelectStatement( statement ),
 				queryResults
@@ -111,16 +96,6 @@ public class SqmSelectToSqlAstConverter
 	@Override
 	public SessionFactoryImplementor getSessionFactory() {
 		return getSqlAstBuildingContext().getSessionFactory();
-	}
-
-	@Override
-	public ColumnReferenceSource currentColumnReferenceSource() {
-		return tableGroupStack.getCurrent();
-	}
-
-	@Override
-	public NavigablePath currentNavigablePath() {
-		return navigablePathStack.getCurrent();
 	}
 
 	@Override
@@ -171,42 +146,22 @@ public class SqmSelectToSqlAstConverter
 	private Stack<SqmFrom> sqmFromStack = new Stack<>();
 	private Stack<AttributeNodeContainer> entityGraphNodeStack = new Stack<>();
 
-//	@Override
-//	public Void visitSelection(SqmSelection sqmSelection) {
-//		final Expression expression = (Expression) sqmSelection.getExpression().accept( this );
-//
-//		final Selection selection = super.visitSelection( sqmSelection );
-//
-//		// the call to Expression to resolve the ColumnReferenceResolver
-//		//		allows polymorphic input per Expression type.  E.g.
-//		//		a functions
-//		//
-//		// todo (6.0) : just pass TableGroupResolver into Selection#createQueryResult
-//		//		still allows access to TableGroup/ColumnReference resolution for
-//		//		Selection/Expression/Selectables that need it
-//		final QueryResult queryResult = selection.createQueryResult( this, this );
-//		queryResults.add( queryResult );
-//		applyFetches( queryResult );
-//
-//		return selection;
-//	}
-
 	@Override
-	protected void processSelectedExpression(Expression expression, String resultVariable) {
-		if ( getQuerySpecStack().depth() > 1 ) {
-			return;
-		}
-
+	public Void visitSelection(SqmSelection sqmSelection) {
+		final QueryResultProducer expression = (QueryResultProducer) sqmSelection.getExpression().accept( this );
 		final QueryResult queryResult = expression.createQueryResult(
 				expression,
-				resultVariable,
-				this,
+				sqmSelection.getAlias(),
 				this
 		);
+
 		queryResults.add( queryResult );
 		applyFetches( queryResult );
+
+		return null;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	protected void applyFetches(QueryResult queryReturn) {
 		if ( !FetchParent.class.isInstance( queryReturn ) ) {
 			return;
@@ -215,6 +170,7 @@ public class SqmSelectToSqlAstConverter
 		applyFetches( (FetchParent) queryReturn );
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	protected void applyFetches(FetchParent fetchParent) {
 		new FetchGraphBuilder(
 				getQuerySpecStack().getCurrent(),
@@ -225,35 +181,25 @@ public class SqmSelectToSqlAstConverter
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public DynamicInstantiation visitDynamicInstantiation(SqmDynamicInstantiation dynamicInstantiation) {
-		queryResults.add(
-				dynamicInstantiation.createQueryResult(
-						// todo (6.0) : need alias for the instantiation itself, not just args.  how?
-						//		- `SqmDynamicInstantiation#getResultVariable()`?
-						// 		- Pass it in as arg?  but even callers don't know it (visitation)
-						//		- ???
-						dynamicInstantiation.getResultVariable(),
-						this,
-						this
-				)
+	public DynamicInstantiation visitDynamicInstantiation(SqmDynamicInstantiation sqmDynamicInstantiation) {
+		final DynamicInstantiation dynamicInstantiation = new DynamicInstantiation(
+				sqmDynamicInstantiation.getInstantiationTarget().getNature(),
+				interpretInstantiationTarget( sqmDynamicInstantiation.getInstantiationTarget() )
 		);
 
-		final DynamicInstantiation sqlTree = new DynamicInstantiation(
-				dynamicInstantiation.getInstantiationTarget().getNature(),
-				interpretInstantiationTarget( dynamicInstantiation.getInstantiationTarget() )
-		);
-
-		for ( SqmDynamicInstantiationArgument argument : dynamicInstantiation.getArguments() ) {
-			// generate the SqlSelections (if any) and get the SQL AST Expression
-			final Expression expr = (Expression) argument.getExpression().accept( this );
-
-			// now build the ArgumentReader and inject into the SQL AST DynamicInstantiation
-			sqlTree.addArgument( argument.getAlias(), expr );
+		for ( SqmDynamicInstantiationArgument argument : sqmDynamicInstantiation.getArguments() ) {
+			// build the ArgumentReader essentially defined by the expression's
+			// QueryResultAssembler via QueryResultProducer -> QueryResult -> QueryResultAssembler
+			dynamicInstantiation.addArgument(
+					argument.getAlias(),
+					(QueryResultProducer) argument.getExpression().accept( this )
+			);
 		}
 
-		sqlTree.complete();
+		// todo (6.0) : make this a "builder"
+		dynamicInstantiation.complete();
 
-		return sqlTree;
+		return dynamicInstantiation;
 	}
 
 	private <T> JavaTypeDescriptor<T> interpretInstantiationTarget(SqmDynamicInstantiationTarget instantiationTarget) {
@@ -278,6 +224,11 @@ public class SqmSelectToSqlAstConverter
 	@Override
 	public SqlExpressionResolver getSqlSelectionResolver() {
 		return this;
+	}
+
+	@Override
+	public SqlSelection resolveSqlSelection(Expression expression) {
+		return sqlSelectionByExpressionMap.get( expression );
 	}
 
 	//	@Override

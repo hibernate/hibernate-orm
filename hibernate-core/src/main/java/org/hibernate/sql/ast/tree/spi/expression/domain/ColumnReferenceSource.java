@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.tree.spi.expression.domain;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 
@@ -18,7 +19,7 @@ import org.hibernate.sql.ast.tree.spi.from.TableReference;
  *
  * @author Steve Ebersole
  */
-public interface ColumnReferenceSource {
+public interface ColumnReferenceSource extends SqlExpressionQualifier {
 	/**
 	 * Get the unique (within this query) identifier for this group of tables.
 	 * Think primary-key; other code which knows this uid can locate it through

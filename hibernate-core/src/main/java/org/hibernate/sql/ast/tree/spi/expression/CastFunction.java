@@ -6,25 +6,23 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.results.spi.SqlSelectionReader;
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole
  */
 public class CastFunction implements StandardFunction {
 	private final Expression expressionToCast;
-	private final BasicValuedExpressableType castResultType;
+	private final AllowableFunctionReturnType castResultType;
 	private final String explicitCastTargetTypeSqlExpression;
 
 	public CastFunction(
 			Expression expressionToCast,
-			BasicValuedExpressableType castResultType,
+			AllowableFunctionReturnType castResultType,
 			String explicitCastTargetTypeSqlExpression) {
 		this.expressionToCast = expressionToCast;
 		this.castResultType = castResultType;
@@ -35,8 +33,13 @@ public class CastFunction implements StandardFunction {
 		return expressionToCast;
 	}
 
-	public BasicValuedExpressableType getCastResultType() {
+	public AllowableFunctionReturnType getCastResultType() {
 		return castResultType;
+	}
+
+	@Override
+	public AllowableFunctionReturnType getType() {
+		return getCastResultType();
 	}
 
 	public String getExplicitCastTargetTypeSqlExpression() {
@@ -49,17 +52,10 @@ public class CastFunction implements StandardFunction {
 	}
 
 	@Override
-	public SqlSelectionReader getSqlSelectionReader() {
-		return new SqlSelectionReaderImpl( castResultType );
-	}
-
-	@Override
-	public Selection createSelection(Expression selectedExpression, String resultVariable) {
-		return new BasicValuedNonNavigableSelection( selectedExpression, resultVariable, this );
-	}
-
-	@Override
-	public ExpressableType getType() {
-		return castResultType;
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		return new SqlSelectionImpl(
+				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlSelectionReader(),
+				jdbcPosition
+		);
 	}
 }

@@ -21,4 +21,5 @@ public interface EntityQueryResult extends EntityMappingNode, QueryResult {
 	default NavigablePath getNavigablePath() {
 		return new NavigablePath( getEntityDescriptor().getEntityName() );
 	}
+
 }

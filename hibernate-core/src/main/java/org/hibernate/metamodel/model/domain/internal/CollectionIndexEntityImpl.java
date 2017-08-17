@@ -20,7 +20,9 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.internal.EntityQueryResultImpl;
+import org.hibernate.sql.results.internal.EntitySqlSelectionMappingsBuilder;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
@@ -117,16 +119,22 @@ public class CollectionIndexEntityImpl<J>
 	}
 
 	@Override
-	public QueryResult generateQueryResult(
-			NavigableReference selectedExpression,
+	public QueryResult createQueryResult(
+			Expression expression,
 			String resultVariable,
-			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
+		assert expression instanceof EntityReference;
+		final EntityReference entityReference = (EntityReference) expression;
+
 		return new EntityQueryResultImpl(
-				(EntityReference) selectedExpression,
+				entityReference.getNavigable(),
 				resultVariable,
-				null,
-				selectedExpression.getNavigablePath(),
+				EntitySqlSelectionMappingsBuilder.buildSqlSelectionMappings(
+						getEntityDescriptor(),
+						entityReference.getSqlExpressionQualifier(),
+						creationContext
+				),
+				entityReference.getNavigablePath(),
 				creationContext
 		);
 	}

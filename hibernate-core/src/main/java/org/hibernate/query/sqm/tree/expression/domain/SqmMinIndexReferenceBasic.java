@@ -8,11 +8,15 @@ package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmMinIndexReferenceBasic extends AbstractSpecificSqmCollectionIndexReference
+public class SqmMinIndexReferenceBasic
+		extends AbstractSpecificSqmCollectionIndexReference
 		implements SqmMinIndexReference {
 	public SqmMinIndexReferenceBasic(SqmPluralAttributeReference attributeBinding) {
 		super( attributeBinding );
@@ -36,5 +40,14 @@ public class SqmMinIndexReferenceBasic extends AbstractSpecificSqmCollectionInde
 	@Override
 	public String asLoggableText() {
 		return "MININDEX(" + getPluralAttributeBinding().asLoggableText() + ")";
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
 	}
 }

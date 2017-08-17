@@ -11,20 +11,21 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SelfRenderingExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
-import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.spi.Selectable;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
+import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.Selectable;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole
@@ -53,25 +54,28 @@ public class SelfRenderingFunctionSqlAstExpression implements SelfRenderingExpre
 	}
 
 	@Override
-	public ExpressableType getType() {
+	public AllowableFunctionReturnType getType() {
 		return sqmExpression.getExpressionType();
 	}
 
 	@Override
-	public Selectable getSelectable() {
-		return this;
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return new ScalarQueryResultImpl(
+				resultVariable,
+				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression),
+				(BasicValuedExpressableType) getType()
+		);
 	}
 
 	@Override
-	public Selection createSelection(
-			Expression selectedExpression,
-			String resultVariable) {
-		return new BasicValuedNonNavigableSelection( selectedExpression, resultVariable, this );
-	}
-
-	@Override
-	public SqlSelectionReader getSqlSelectionReader() {
-		return new SqlSelectionReaderImpl( (BasicValuedExpressableType) getType() );
+	public SqlSelection generateSqlSelection(int jdbcResultSetPosition) {
+		return new SqlSelectionImpl(
+				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlSelectionReader(),
+				jdbcResultSetPosition
+		);
 	}
 
 	@Override

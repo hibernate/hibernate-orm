@@ -8,34 +8,29 @@ package org.hibernate.engine.spi;
 
 import java.io.Serializable;
 import java.sql.Connection;
-import java.util.Iterator;
-import java.util.List;
 import java.util.UUID;
 import javax.persistence.FlushModeType;
 
 import org.hibernate.CacheMode;
-import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.ScrollMode;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryProducerImplementor;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.sqm.consume.multitable.spi.HandlerCreationContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder.Options;
-import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.spi.WrapperOptions;
 
 /**
  * Defines the internal contract shared between {@link org.hibernate.Session} and
@@ -215,42 +210,6 @@ public interface SharedSessionContractImplementor
 	Object immediateLoad(String entityName, Serializable id) throws HibernateException;
 
 	/**
-	 * Execute a <tt>find()</tt> query
-	 */
-	List list(String query, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Execute an <tt>iterate()</tt> query
-	 */
-	Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Execute a <tt>scroll()</tt> query
-	 */
-	ScrollableResultsImplementor scroll(String query, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Execute a criteria query
-	 */
-	ScrollableResultsImplementor scroll(Criteria criteria, ScrollMode scrollMode);
-
-	/**
-	 * Execute a criteria query
-	 */
-	List list(Criteria criteria);
-
-	/**
-	 * Execute a filter
-	 */
-	List listFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Iterate a filter
-	 */
-	Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters)
-			throws HibernateException;
-
-	/**
 	 * Get the <tt>EntityPersister</tt> for any instance
 	 *
 	 * @param entityName optional entity name
@@ -285,58 +244,9 @@ public interface SharedSessionContractImplementor
 	 */
 	Object instantiate(String entityName, Serializable id) throws HibernateException;
 
-	/**
-	 * Execute an SQL Query
-	 */
-	List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
-			throws HibernateException;
-
-	/**
-	 * Execute an SQL Query
-	 */
-	ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
-			throws HibernateException;
-
 	boolean isDefaultReadOnly();
 
-	/**
-	 * Execute a native SQL query, and return the results as a fully built list.
-	 *
-	 * @param spec The specification of the native SQL query to execute.
-	 * @param queryParameters The parameters by which to perform the execution.
-	 *
-	 * @return The result list.
-	 *
-	 * @throws HibernateException
-	 */
-	List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters)
-			throws HibernateException;
-
-	/**
-	 * Execute a native SQL query, and return the results as a scrollable result.
-	 *
-	 * @param spec The specification of the native SQL query to execute.
-	 * @param queryParameters The parameters by which to perform the execution.
-	 *
-	 * @return The resulting scrollable result.
-	 *
-	 * @throws HibernateException
-	 */
-	ScrollableResultsImplementor scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters);
-
 	int getDontFlushFromFind();
-
-	/**
-	 * Execute a HQL update or delete query
-	 */
-	int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Execute a native SQL update or delete query
-	 */
-	int executeNativeUpdate(NativeSQLQuerySpecification specification, QueryParameters queryParameters)
-			throws HibernateException;
-
 
 	CacheMode getCacheMode();
 

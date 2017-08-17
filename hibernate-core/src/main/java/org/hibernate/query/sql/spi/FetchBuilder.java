@@ -16,6 +16,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 
@@ -43,6 +44,17 @@ public class FetchBuilder implements NativeQuery.FetchReturn {
 			throw new HibernateException( "FetchParent for table-alias [" + fetchParentTableAlias + "] not yet resolved" );
 		}
 
+		// todo (6.0) : how to handle `SqlExpressableQualifier`?
+		//		we need such a qualifier here to build EntitySqlSelectionMappings
+		//
+		//		also - who is responsible for generating it?  it should be "consistent" - either
+		//		we generate them in the `ResultSetMappingNode` ctors or we generate them
+		//		first and pass them in to the `ResultSetMappingNode` ctors.
+		//
+		//		given a `FetchParent`, need a way to find/create the `TableGroup` for the fetched
+		// 		`Navigable`. that provides the `SqlExpressableQualifier` and fit into the SQL AST
+		// 		being built.
+
 		final Navigable joinedNavigable = fetchParent.getFetchContainer().findNavigable( joinPropertyName );
 		if ( joinedNavigable == null ) {
 			throw new HibernateException(
@@ -59,9 +71,12 @@ public class FetchBuilder implements NativeQuery.FetchReturn {
 
 		assert joinedNavigable instanceof Fetchable;
 
+		final SqlExpressionQualifier qualifier = null;
+
 		final Fetch fetch = ( (Fetchable) joinedNavigable ).generateFetch(
 				fetchParent,
 				// assume its present in the results since it is explicitly defined
+				qualifier,
 				FetchStrategy.IMMEDIATE_JOIN,
 				tableAlias,
 				resolutionContext

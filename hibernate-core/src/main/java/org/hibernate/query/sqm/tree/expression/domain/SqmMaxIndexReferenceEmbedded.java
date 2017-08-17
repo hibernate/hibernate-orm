@@ -8,15 +8,18 @@ package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmMaxIndexReferenceEmbedded extends AbstractSpecificSqmCollectionIndexReference
-		implements SqmMaxIndexReference,
-		SqmEmbeddableTypedReference {
+public class SqmMaxIndexReferenceEmbedded
+		extends AbstractSpecificSqmCollectionIndexReference
+		implements SqmMaxIndexReference, SqmEmbeddableTypedReference {
 	private static final Logger log = Logger.getLogger( SqmMaxIndexReferenceEmbedded.class );
 
 	private SqmFrom exportedFromElement;
@@ -44,5 +47,14 @@ public class SqmMaxIndexReferenceEmbedded extends AbstractSpecificSqmCollectionI
 				this.exportedFromElement
 		);
 		exportedFromElement = sqmFrom;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
 	}
 }

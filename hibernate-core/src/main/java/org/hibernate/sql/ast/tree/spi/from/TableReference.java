@@ -12,9 +12,11 @@ import java.util.Map;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
-import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
+import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 
 /**
  * Represents a reference to a table (derived or physical) in a query's from clause.
@@ -69,5 +71,11 @@ public class TableReference implements SqlAstNode, ColumnReferenceSource {
 	@Override
 	public void accept(SqlAstWalker  sqlTreeWalker) {
 		sqlTreeWalker.visitTableReference( this );
+	}
+
+	@Override
+	public Expression qualify(QualifiableSqlExpressable sqlSelectable) {
+		assert sqlSelectable instanceof Column;
+		return resolveColumnReference( (Column) sqlSelectable );
 	}
 }

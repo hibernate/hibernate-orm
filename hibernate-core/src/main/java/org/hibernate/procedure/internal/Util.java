@@ -212,7 +212,7 @@ public class Util {
 				throw new UnknownSqlResultSetMappingException( "Unknown SqlResultSetMapping [" + resultSetMappingName + "]" );
 			}
 
-			log.tracef( "Found result-set-mapping : %s", mapping.traceLoggableFormat() );
+			log.tracef( "Found result-set-mapping : %s", mapping.getName() );
 
 
 			// even though we only read from JDBC via positions now, we can still leverage the specified
@@ -276,7 +276,7 @@ public class Util {
 			return sqlSelectionMap.computeIfAbsent(
 					alias,
 					s -> new SqlSelectionImpl(
-							() -> new SqlSelectionReaderImpl( ormType ),
+							new SqlSelectionReaderImpl( ormType ),
 							selectablesCount++
 					)
 			);

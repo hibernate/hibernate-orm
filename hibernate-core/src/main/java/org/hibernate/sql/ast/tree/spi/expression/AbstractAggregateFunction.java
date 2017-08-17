@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 /**
@@ -37,10 +35,5 @@ public abstract class AbstractAggregateFunction extends AbstractStandardFunction
 	@Override
 	public Expression getArgument() {
 		return argument;
-	}
-
-	@Override
-	public SqlSelectionReader getSqlSelectionReader() {
-		return new SqlSelectionReaderImpl( getType() );
 	}
 }

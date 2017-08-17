@@ -8,21 +8,27 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.property.access.internal.PropertyAccessStrategyEmbeddedImpl;
+import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
+import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -39,20 +45,21 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 	@SuppressWarnings("unchecked")
 	public EntityIdentifierCompositeNonAggregatedImpl(
 			EntityHierarchy entityHierarchy,
-			EmbeddedTypeDescriptor<J> embeddedDescriptor) {
+			EmbeddedTypeDescriptor<J> embeddedDescriptor,
+			EmbeddedValueMapping bootMapping) {
 		super(
 				entityHierarchy.getRootEntityType(),
 				NAVIGABLE_NAME,
 				PropertyAccessStrategyEmbeddedImpl.INSTANCE.buildPropertyAccess( null, NAVIGABLE_NAME ),
-				embeddedDescriptor,
 				Disposition.ID,
-				false
+				false,
+				bootMapping
 		);
 		this.embeddedDescriptor = embeddedDescriptor;
 	}
 
 	@Override
-	public EmbeddedTypeDescriptor getEmbeddedDescriptor() {
+	public EmbeddedTypeDescriptor<J> getEmbeddedDescriptor() {
 		return embeddedDescriptor;
 	}
 
@@ -101,7 +108,7 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public EmbeddableJavaDescriptor<J> getJavaTypeDescriptor() {
 		return embeddedDescriptor.getJavaTypeDescriptor();
 	}
 
@@ -146,16 +153,26 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 	}
 
 	@Override
-	public QueryResult generateQueryResult(
-			NavigableReference selectedExpression,
+	public QueryResult createQueryResult(
+			Expression expression,
 			String resultVariable,
-			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return embeddedDescriptor.generateQueryResult(
-				selectedExpression,
+		return embeddedDescriptor.createQueryResult(
+				expression,
 				resultVariable,
-				sqlSelectionResolver,
 				creationContext
 		);
+	}
+
+	@Override
+	public SqlSelectionGroup resolveSqlSelectionGroup(
+			SqlExpressionQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext) {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public IdentifierGenerator getIdentifierValueGenerator() {
+		throw new NotYetImplementedException(  );
 	}
 }

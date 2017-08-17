@@ -7,19 +7,16 @@
 
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
-import org.hibernate.sql.results.spi.Selectable;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole
  */
-public class UnaryOperation implements Expression, SqlExpressable, Selectable {
+public class UnaryOperation implements Expression, SqlExpressable {
 	public enum Operator {
 		PLUS,
 		MINUS
@@ -49,26 +46,15 @@ public class UnaryOperation implements Expression, SqlExpressable, Selectable {
 	}
 
 	@Override
-	public SqlSelectionReader getSqlSelectionReader() {
-		return new SqlSelectionReaderImpl( getType() );
+	public SqlSelection generateSqlSelection(int jdbcResultSetPosition) {
+		return new SqlSelectionImpl(
+				getType().getBasicType().getSqlSelectionReader(),
+				jdbcResultSetPosition
+		);
 	}
 
 	@Override
 	public void accept(SqlAstWalker  walker) {
 		walker.visitUnaryOperationExpression( this );
-	}
-
-	@Override
-	public Selectable getSelectable() {
-		return this;
-	}
-
-	@Override
-	public Selection createSelection(Expression selectedExpression, String resultVariable) {
-		return new BasicValuedNonNavigableSelection(
-				selectedExpression,
-				resultVariable,
-				this
-		);
 	}
 }

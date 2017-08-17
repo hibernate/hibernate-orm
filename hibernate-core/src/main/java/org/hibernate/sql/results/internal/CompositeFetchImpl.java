@@ -9,6 +9,7 @@ package org.hibernate.sql.results.internal;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.results.spi.CompositeFetch;
 import org.hibernate.sql.results.spi.CompositeSqlSelectionMappings;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -21,6 +22,7 @@ import org.hibernate.sql.results.spi.QueryResultCreationContext;
  */
 public class CompositeFetchImpl extends AbstractFetchParent implements CompositeFetch {
 	private final FetchParent fetchParent;
+	private final SqlExpressionQualifier qualifier;
 	private final SingularPersistentAttributeEmbedded fetchedNavigable;
 	private final FetchStrategy fetchStrategy;
 
@@ -28,6 +30,7 @@ public class CompositeFetchImpl extends AbstractFetchParent implements Composite
 
 	public CompositeFetchImpl(
 			FetchParent fetchParent,
+			SqlExpressionQualifier qualifier,
 			SingularPersistentAttributeEmbedded fetchedNavigable,
 			FetchStrategy fetchStrategy,
 			QueryResultCreationContext creationContext) {
@@ -36,6 +39,7 @@ public class CompositeFetchImpl extends AbstractFetchParent implements Composite
 				fetchParent.getNavigablePath().append( fetchedNavigable.getNavigableName() )
 		);
 		this.fetchParent = fetchParent;
+		this.qualifier = qualifier;
 		this.fetchedNavigable = fetchedNavigable;
 		this.fetchStrategy = fetchStrategy;
 
@@ -48,6 +52,11 @@ public class CompositeFetchImpl extends AbstractFetchParent implements Composite
 	@Override
 	public FetchParent getFetchParent() {
 		return fetchParent;
+	}
+
+	@Override
+	public SqlExpressionQualifier getSqlExpressionQualifier() {
+		return qualifier;
 	}
 
 	@Override

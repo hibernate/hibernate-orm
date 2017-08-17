@@ -98,7 +98,7 @@ public class ParameterManager implements ParameterRegistry {
 					parameterMemento.getName(),
 					parameterMemento.getMode(),
 					parameterMemento.getType(),
-					null,//parameterMemento.getHibernateType(),
+					parameterMemento.getHibernateType(),
 					parameterMemento.isPassNullsEnabled()
 			);
 		}

@@ -18,11 +18,8 @@ import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +42,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.CacheMode;
-import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -59,9 +55,7 @@ import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.QueryException;
 import org.hibernate.ReplicationMode;
-import org.hibernate.ScrollMode;
 import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
@@ -72,19 +66,16 @@ import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.criterion.NaturalIdentifier;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.ActionQueue;
-import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SessionOwner;
@@ -127,9 +118,8 @@ import org.hibernate.event.spi.ResolveNaturalIdEvent;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
+import org.hibernate.graph.internal.EntityGraphImpl;
 import org.hibernate.graph.spi.EntityGraphImplementor;
-import org.hibernate.internal.CriteriaImpl.CriterionEntry;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.jdbc.WorkExecutor;
@@ -140,9 +130,10 @@ import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.loader.spi.MultiLoadOptions;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NaturalIdentifierDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
@@ -150,9 +141,8 @@ import org.hibernate.procedure.UnknownSqlResultSetMappingException;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.Query;
-import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
@@ -1420,131 +1410,6 @@ public final class SessionImpl
 		doFlush();
 	}
 
-	@Override
-	public List list(String query, QueryParameters queryParameters) throws HibernateException {
-		checkOpen();
-		checkTransactionSynchStatus();
-		queryParameters.validateParameters();
-
-		HQLQueryPlan plan = queryParameters.getQueryPlan();
-		if ( plan == null ) {
-			plan = getQueryPlan( query, false );
-		}
-
-		autoFlushIfRequired( plan.getQuerySpaces() );
-
-		List results = Collections.EMPTY_LIST;
-		boolean success = false;
-
-		dontFlushFromFind++;   //stops flush being called multiple times if this method is recursively called
-		try {
-			results = plan.performList( queryParameters, this );
-			success = true;
-		}
-		finally {
-			dontFlushFromFind--;
-			afterOperation( success );
-			delayedAfterCompletion();
-		}
-		return results;
-	}
-
-	@Override
-	public int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException {
-		checkOpen();
-		checkTransactionSynchStatus();
-		queryParameters.validateParameters();
-		HQLQueryPlan plan = getQueryPlan( query, false );
-		autoFlushIfRequired( plan.getQuerySpaces() );
-
-		boolean success = false;
-		int result = 0;
-		try {
-			result = plan.performExecuteUpdate( queryParameters, this );
-			success = true;
-		}
-		finally {
-			afterOperation( success );
-			delayedAfterCompletion();
-		}
-		return result;
-	}
-
-	@Override
-	public int executeNativeUpdate(
-			NativeSQLQuerySpecification nativeQuerySpecification,
-			QueryParameters queryParameters) throws HibernateException {
-		checkOpen();
-		checkTransactionSynchStatus();
-		queryParameters.validateParameters();
-		NativeSQLQueryPlan plan = getNativeQueryPlan( nativeQuerySpecification );
-
-
-		autoFlushIfRequired( plan.getCustomQuery().getQuerySpaces() );
-
-		boolean success = false;
-		int result = 0;
-		try {
-			result = plan.performExecuteUpdate( queryParameters, this );
-			success = true;
-		}
-		finally {
-			afterOperation( success );
-			delayedAfterCompletion();
-		}
-		return result;
-	}
-
-	@Override
-	public Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException {
-		checkOpen();
-		checkTransactionSynchStatus();
-		queryParameters.validateParameters();
-
-		HQLQueryPlan plan = queryParameters.getQueryPlan();
-		if ( plan == null ) {
-			plan = getQueryPlan( query, true );
-		}
-
-		autoFlushIfRequired( plan.getQuerySpaces() );
-
-		dontFlushFromFind++; //stops flush being called multiple times if this method is recursively called
-		try {
-			return plan.performIterate( queryParameters, this );
-		}
-		finally {
-			delayedAfterCompletion();
-			dontFlushFromFind--;
-		}
-	}
-
-	@Override
-	public ScrollableResultsImplementor scroll(String query, QueryParameters queryParameters) throws HibernateException {
-		checkOpen();
-		checkTransactionSynchStatus();
-		
-		HQLQueryPlan plan = queryParameters.getQueryPlan();
-		if ( plan == null ) {
-			plan = getQueryPlan( query, false );
-		}
-		
-		autoFlushIfRequired( plan.getQuerySpaces() );
-
-		dontFlushFromFind++;
-		try {
-			return plan.performScroll( queryParameters, this );
-		}
-		finally {
-			delayedAfterCompletion();
-			dontFlushFromFind--;
-		}
-	}
-
-	@Override
-	public org.hibernate.query.Query createFilter(Object collection, String queryString) {
-		throw new UnsupportedOperationException( "Session#createFilter is no longer supported" );
-	}
-
 
 	@Override
 	public Object instantiate(String entityName, Serializable id) throws HibernateException {
@@ -1560,7 +1425,7 @@ public final class SessionImpl
 		checkTransactionSynchStatus();
 		Object result = getInterceptor().instantiate(
 				persister.getEntityName(),
-				persister.getEntityMetamodel().getEntityMode(),
+				persister.getRepresentation(),
 				id
 		);
 		if ( result == null ) {
@@ -1635,289 +1500,6 @@ public final class SessionImpl
 
 	private Serializable getProxyIdentifier(Object proxy) {
 		return ( (HibernateProxy) proxy ).getHibernateLazyInitializer().getIdentifier();
-	}
-
-	private FilterQueryPlan getFilterQueryPlan(
-			Object collection,
-			String filter,
-			QueryParameters parameters,
-			boolean shallow) throws HibernateException {
-		if ( collection == null ) {
-			throw new NullPointerException( "null collection passed to filter" );
-		}
-
-		CollectionEntry entry = persistenceContext.getCollectionEntryOrNull( collection );
-		final PersistentCollectionDescriptor roleBeforeFlush = ( entry == null ) ? null : entry.getLoadedPersistentCollectionDescriptor();
-
-		FilterQueryPlan plan = null;
-		if ( roleBeforeFlush == null ) {
-			// if it was previously unreferenced, we need to flush in order to
-			// get its state into the database in order to execute query
-			flush();
-			entry = persistenceContext.getCollectionEntryOrNull( collection );
-			PersistentCollectionDescriptor roleAfterFlush = ( entry == null ) ? null : entry.getLoadedPersistentCollectionDescriptor();
-			if ( roleAfterFlush == null ) {
-				throw new QueryException( "The collection was unreferenced" );
-			}
-			plan = getFactory().getQueryPlanCache().getFilterQueryPlan(
-					filter,
-					roleAfterFlush.getRole(),
-					shallow,
-					getLoadQueryInfluencers().getEnabledFilters()
-			);
-		}
-		else {
-			// otherwise, we only need to flush if there are in-memory changes
-			// to the queried tables
-			plan = getFactory().getQueryPlanCache().getFilterQueryPlan(
-					filter,
-					roleBeforeFlush.getRole(),
-					shallow,
-					getLoadQueryInfluencers().getEnabledFilters()
-			);
-			if ( autoFlushIfRequired( plan.getQuerySpaces() ) ) {
-				// might need to run a different filter entirely afterQuery the flush
-				// because the collection role may have changed
-				entry = persistenceContext.getCollectionEntryOrNull( collection );
-				PersistentCollectionDescriptor roleAfterFlush = ( entry == null ) ? null : entry.getLoadedPersistentCollectionDescriptor();
-				if ( roleBeforeFlush != roleAfterFlush ) {
-					if ( roleAfterFlush == null ) {
-						throw new QueryException( "The collection was dereferenced" );
-					}
-					plan = getFactory().getQueryPlanCache().getFilterQueryPlan(
-							filter,
-							roleAfterFlush.getRole(),
-							shallow,
-							getLoadQueryInfluencers().getEnabledFilters()
-					);
-				}
-			}
-		}
-
-		if ( parameters != null ) {
-			parameters.getPositionalParameterValues()[0] = entry.getLoadedKey();
-			parameters.getPositionalParameterTypes()[0] = entry.getLoadedPersistentCollectionDescriptor().getKeyType();
-		}
-
-		return plan;
-	}
-
-	@Override
-	public List listFilter(Object collection, String filter, QueryParameters queryParameters) {
-		checkOpen();
-		checkTransactionSynchStatus();
-		FilterQueryPlan plan = getFilterQueryPlan( collection, filter, queryParameters, false );
-		List results = Collections.EMPTY_LIST;
-
-		boolean success = false;
-		dontFlushFromFind++;   //stops flush being called multiple times if this method is recursively called
-		try {
-			results = plan.performList( queryParameters, this );
-			success = true;
-		}
-		finally {
-			dontFlushFromFind--;
-			afterOperation( success );
-			delayedAfterCompletion();
-		}
-		return results;
-	}
-
-	@Override
-	public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters) {
-		checkOpen();
-		checkTransactionSynchStatus();
-		FilterQueryPlan plan = getFilterQueryPlan( collection, filter, queryParameters, true );
-		Iterator itr = plan.performIterate( queryParameters, this );
-		delayedAfterCompletion();
-		return itr;
-	}
-
-	@Override
-	public Criteria createCriteria(Class persistentClass, String alias) {
-		DeprecationLogger.DEPRECATION_LOGGER.deprecatedLegacyCriteria();
-		checkOpen();
-		checkTransactionSynchStatus();
-		return new CriteriaImpl( persistentClass.getName(), alias, this );
-	}
-
-	@Override
-	public Criteria createCriteria(String entityName, String alias) {
-		DeprecationLogger.DEPRECATION_LOGGER.deprecatedLegacyCriteria();
-		checkOpen();
-		checkTransactionSynchStatus();
-		return new CriteriaImpl( entityName, alias, this );
-	}
-
-	@Override
-	public Criteria createCriteria(Class persistentClass) {
-		DeprecationLogger.DEPRECATION_LOGGER.deprecatedLegacyCriteria();
-		checkOpen();
-		checkTransactionSynchStatus();
-		return new CriteriaImpl( persistentClass.getName(), this );
-	}
-
-	@Override
-	public Criteria createCriteria(String entityName) {
-		DeprecationLogger.DEPRECATION_LOGGER.deprecatedLegacyCriteria();
-		checkOpen();
-		checkTransactionSynchStatus();
-		return new CriteriaImpl( entityName, this );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scroll(Criteria criteria, ScrollMode scrollMode) {
-		// TODO: Is this guaranteed to always be CriteriaImpl?
-		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
-
-		checkOpen();
-		checkTransactionSynchStatus();
-
-		String entityName = criteriaImpl.getEntityOrClassName();
-		CriteriaLoader loader = new CriteriaLoader(
-				getOuterJoinLoadable( entityName ),
-				getFactory(),
-				criteriaImpl,
-				entityName,
-				getLoadQueryInfluencers()
-		);
-		autoFlushIfRequired( loader.getQuerySpaces() );
-		dontFlushFromFind++;
-		try {
-			return loader.scroll( this, scrollMode );
-		}
-		finally {
-			delayedAfterCompletion();
-			dontFlushFromFind--;
-		}
-	}
-
-	@Override
-	public List list(Criteria criteria) throws HibernateException {
-		// TODO: Is this guaranteed to always be CriteriaImpl?
-		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
-
-		final NaturalIdLoadAccess naturalIdLoadAccess = this.tryNaturalIdLoadAccess( criteriaImpl );
-		if ( naturalIdLoadAccess != null ) {
-			// EARLY EXIT!
-			return Arrays.asList( naturalIdLoadAccess.load() );
-		}
-
-
-		checkOpen();
-//		checkTransactionSynchStatus();
-
-		// NOTE : once we hook in SQM consumption we will not need this call anymore...
-		//		so ok to leave as call to deprecated method for now
-		String[] implementors = getFactory().getImplementors( criteriaImpl.getEntityOrClassName() );
-		int size = implementors.length;
-
-		CriteriaLoader[] loaders = new CriteriaLoader[size];
-		Set spaces = new HashSet();
-		for ( int i = 0; i < size; i++ ) {
-
-			loaders[i] = new CriteriaLoader(
-					getOuterJoinLoadable( implementors[i] ),
-					getFactory(),
-					criteriaImpl,
-					implementors[i],
-					getLoadQueryInfluencers()
-			);
-
-			spaces.addAll( loaders[i].getQuerySpaces() );
-
-		}
-
-		autoFlushIfRequired( spaces );
-
-		List results = Collections.EMPTY_LIST;
-		dontFlushFromFind++;
-		boolean success = false;
-		try {
-			for ( int i = 0; i < size; i++ ) {
-				final List currentResults = loaders[i].list( this );
-				currentResults.addAll( results );
-				results = currentResults;
-			}
-			success = true;
-		}
-		finally {
-			dontFlushFromFind--;
-			afterOperation( success );
-			delayedAfterCompletion();
-		}
-
-		return results;
-	}
-
-	/**
-	 * Checks to see if the CriteriaImpl is a naturalId lookup that can be done via
-	 * NaturalIdLoadAccess
-	 *
-	 * @param criteria The criteria to check as a complete natural identifier lookup.
-	 *
-	 * @return A fully configured NaturalIdLoadAccess or null, if null is returned the standard CriteriaImpl execution
-	 * should be performed
-	 */
-	private NaturalIdLoadAccess tryNaturalIdLoadAccess(CriteriaImpl criteria) {
-		// See if the criteria lookup is by naturalId
-		if ( !criteria.isLookupByNaturalKey() ) {
-			return null;
-		}
-
-		final String entityName = criteria.getEntityOrClassName();
-		final EntityDescriptor entityPersister = getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
-
-		// Verify the entity actually has a natural id, needed for legacy support as NaturalIdentifier criteria
-		// queries did no natural id validation
-		if ( !entityPersister.hasNaturalIdentifier() ) {
-			return null;
-		}
-
-		// Since isLookupByNaturalKey is true there can be only one CriterionEntry and getCriterion() will
-		// return an instanceof NaturalIdentifier
-		final CriterionEntry criterionEntry = criteria.iterateExpressionEntries().next();
-		final NaturalIdentifier naturalIdentifier = (NaturalIdentifier) criterionEntry.getCriterion();
-
-		final Map<String, Object> naturalIdValues = naturalIdentifier.getNaturalIdValues();
-		final int[] naturalIdentifierProperties = entityPersister.getNaturalIdentifierProperties();
-
-		// Verify the NaturalIdentifier criterion includes all naturalId properties, first check that the property counts match
-		if ( naturalIdentifierProperties.length != naturalIdValues.size() ) {
-			return null;
-		}
-
-		final String[] propertyNames = entityPersister.getPropertyNames();
-		final NaturalIdLoadAccess naturalIdLoader = this.byNaturalId( entityName );
-
-		// Build NaturalIdLoadAccess and in the process verify all naturalId properties were specified
-		for ( int naturalIdentifierProperty : naturalIdentifierProperties ) {
-			final String naturalIdProperty = propertyNames[naturalIdentifierProperty];
-			final Object naturalIdValue = naturalIdValues.get( naturalIdProperty );
-
-			if ( naturalIdValue == null ) {
-				// A NaturalId property is missing from the critera query, can't use NaturalIdLoadAccess
-				return null;
-			}
-
-			naturalIdLoader.using( naturalIdProperty, naturalIdValue );
-		}
-
-		// Criteria query contains a valid naturalId, use the new API
-		log.warn(
-				"Session.byNaturalId(" + entityName
-						+ ") should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria"
-		);
-
-		return naturalIdLoader;
-	}
-
-	private OuterJoinLoadable getOuterJoinLoadable(String entityName) throws MappingException {
-		EntityDescriptor persister = getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
-		if ( !( persister instanceof OuterJoinLoadable ) ) {
-			throw new MappingException( "class persister is not OuterJoinLoadable: " + entityName );
-		}
-		return (OuterJoinLoadable) persister;
 	}
 
 	@Override
@@ -2057,57 +1639,6 @@ public final class SessionImpl
 		checkOpen();
 //		checkTransactionSynchStatus();
 		return super.createStoredProcedureCall( procedureName, resultClasses );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) {
-		checkOpen();
-//		checkTransactionSynchStatus();
-
-		if ( log.isTraceEnabled() ) {
-			log.tracev( "Scroll SQL query: {0}", customQuery.getSQL() );
-		}
-
-		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
-
-		autoFlushIfRequired( loader.getQuerySpaces() );
-
-		dontFlushFromFind++; //stops flush being called multiple times if this method is recursively called
-		try {
-			return loader.scroll( queryParameters, this );
-		}
-		finally {
-			delayedAfterCompletion();
-			dontFlushFromFind--;
-		}
-	}
-
-	// basically just an adapted copy of find(CriteriaImpl)
-	@Override
-	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) {
-		checkOpen();
-//		checkTransactionSynchStatus();
-
-		if ( log.isTraceEnabled() ) {
-			log.tracev( "SQL query: {0}", customQuery.getSQL() );
-		}
-
-		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
-
-		autoFlushIfRequired( loader.getQuerySpaces() );
-
-		dontFlushFromFind++;
-		boolean success = false;
-		try {
-			List results = loader.list( this, queryParameters );
-			success = true;
-			return results;
-		}
-		finally {
-			dontFlushFromFind--;
-			delayedAfterCompletion();
-			afterOperation( success );
-		}
 	}
 
 	@Override
@@ -2923,7 +2454,8 @@ public final class SessionImpl
 				// synchronization (this process) was disabled
 				return;
 			}
-			if ( entityPersister.getEntityMetamodel().hasImmutableNaturalId() ) {
+			if ( entityPersister.getHierarchy().getNaturalIdentifierDescriptor() != null
+					|| !entityPersister.getHierarchy().getNaturalIdentifierDescriptor().isMutable() ) {
 				// only mutable natural-ids need this processing
 				return;
 			}
@@ -2980,7 +2512,7 @@ public final class SessionImpl
 	}
 
 	private class NaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadAccess<T> {
-		private final Map<String, Object> naturalIdParameters = new LinkedHashMap<String, Object>();
+		private final Map<String, Object> naturalIdParameters = new LinkedHashMap<>();
 
 		private NaturalIdLoadAccessImpl(EntityDescriptor entityPersister) {
 			super( entityPersister );
@@ -3050,17 +2582,29 @@ public final class SessionImpl
 		private SimpleNaturalIdLoadAccessImpl(EntityDescriptor entityPersister) {
 			super( entityPersister );
 
-			if ( entityPersister.getNaturalIdentifierProperties().length != 1 ) {
+			final NaturalIdentifierDescriptor naturalIdentifierDescriptor = entityPersister.getHierarchy()
+					.getNaturalIdentifierDescriptor();
+
+			if ( naturalIdentifierDescriptor == null ) {
 				throw new HibernateException(
 						String.format(
-								"Entity [%s] did not define a simple natural id",
+								"Entity [%s] did not define a natural id",
 								entityPersister.getEntityName()
 						)
 				);
 			}
 
-			final int naturalIdAttributePosition = entityPersister.getNaturalIdentifierProperties()[0];
-			this.naturalIdAttributeName = entityPersister.getPropertyNames()[naturalIdAttributePosition];
+			if ( naturalIdentifierDescriptor.getPersistentAttributes().size() != 1 ) {
+				throw new HibernateException(
+						String.format(
+								"Natural0id defined for entity [%s] is not simple (1 attribute)",
+								entityPersister.getEntityName()
+						)
+				);
+			}
+
+			final PersistentAttribute persistentAttribute = naturalIdentifierDescriptor.getPersistentAttributes().iterator().next();
+			this.naturalIdAttributeName = persistentAttribute.getAttributeName();
 		}
 
 		private SimpleNaturalIdLoadAccessImpl(String entityName) {
@@ -3721,9 +3265,14 @@ public final class SessionImpl
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> EntityGraph<T> createEntityGraph(Class<T> rootType) {
 		checkOpen();
-		return new EntityGraphImpl<T>( null, getMetamodel().entity( rootType ), getEntityManagerFactory() );
+		return new EntityGraphImpl<T>(
+				null,
+				(EntityDescriptor<T>) getFactory().getTypeConfiguration().resolveEntityDescriptor( rootType ),
+				getEntityManagerFactory()
+		);
 	}
 
 	@Override

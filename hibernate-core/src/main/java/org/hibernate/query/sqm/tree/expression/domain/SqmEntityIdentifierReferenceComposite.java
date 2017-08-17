@@ -6,13 +6,16 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import javax.persistence.metamodel.Type;
-
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierComposite;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.internal.CompositeQueryResultImpl;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -95,4 +98,27 @@ public class SqmEntityIdentifierReferenceComposite
 		return getJavaTypeDescriptor().getJavaType();
 	}
 
+	@Override
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return new CompositeQueryResultImpl( resultVariable, navigable );
+	}
+
+
+	@Override
+	public String getUniqueIdentifier() {
+		throw new RuntimeException( "These methods need to be re-thought" );
+	}
+
+	@Override
+	public String getIdentificationVariable() {
+		throw new RuntimeException( "These methods need to be re-thought" );
+	}
+
+	@Override
+	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
+		throw new RuntimeException( "These methods need to be re-thought" );
+	}
 }

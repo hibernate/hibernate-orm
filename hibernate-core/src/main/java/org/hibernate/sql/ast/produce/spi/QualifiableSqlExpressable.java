@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.ast.produce.spi;
 
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+
 /**
  * Specialization for SqlSelectables that need to be qualified by a
  * {@link SqlExpressionQualifier} to be treated as a SqlSelection.
@@ -14,5 +16,6 @@ package org.hibernate.sql.ast.produce.spi;
  * @author Steve Ebersole
  */
 public interface QualifiableSqlExpressable extends SqlExpressable {
-
+	// todo (6.0) : anything else to pass in?
+	Expression createSqlExpression(SqlExpressionQualifier qualifier);
 }

@@ -22,9 +22,8 @@ import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
 import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.Type;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -132,5 +131,18 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 	@Override
 	public void setHibernateType(AllowableParameterType type) {
 		this.ormType = type;
+	}
+
+	@Override
+	public ProcedureCallMementoImpl.ParameterMemento toMemento() {
+		// todo (6.0) : do we need a FunctionReturnMemento?
+		return new ProcedureCallMementoImpl.ParameterMemento(
+				getPosition(),
+				getName(),
+				getMode(),
+				getParameterType(),
+				getHibernateType(),
+				false
+		);
 	}
 }

@@ -8,6 +8,8 @@ package org.hibernate.sql.ast.tree.spi.expression;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole
@@ -20,5 +22,13 @@ public class MaxFunction extends AbstractAggregateFunction {
 	@Override
 	public void accept(SqlAstWalker  walker) {
 		walker.visitMaxFunction( this );
+	}
+
+	@Override
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		return new SqlSelectionImpl(
+				getType().getBasicType().getSqlSelectionReader(),
+				jdbcPosition
+		);
 	}
 }

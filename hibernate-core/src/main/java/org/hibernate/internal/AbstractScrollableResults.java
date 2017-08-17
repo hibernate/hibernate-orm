@@ -18,12 +18,13 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.spi.Loader;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
+import org.hibernate.sql.results.spi.ResultSetMapping;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * Base implementation of the ScrollableResults interface.
@@ -37,9 +38,8 @@ public abstract class AbstractScrollableResults implements ScrollableResultsImpl
 	private final PreparedStatement ps;
 	private final SharedSessionContractImplementor session;
 	private final Loader loader;
-	private final QueryParameters queryParameters;
-	private final Type[] types;
-	private HolderInstantiator holderInstantiator;
+	private final QueryOptions queryOptions;
+	private final ResultSetMapping resultSetMapping;
 	private boolean closed;
 
 	protected AbstractScrollableResults(
@@ -47,18 +47,14 @@ public abstract class AbstractScrollableResults implements ScrollableResultsImpl
 			PreparedStatement ps,
 			SharedSessionContractImplementor sess,
 			Loader loader,
-			QueryParameters queryParameters,
-			Type[] types,
-			HolderInstantiator holderInstantiator) {
+			QueryOptions queryOptions,
+			ResultSetMapping resultSetMapping) {
 		this.resultSet = rs;
 		this.ps = ps;
 		this.session = sess;
 		this.loader = loader;
-		this.queryParameters = queryParameters;
-		this.types = types;
-		this.holderInstantiator = holderInstantiator != null && holderInstantiator.isRequired()
-				? holderInstantiator
-				: null;
+		this.queryOptions = queryOptions;
+		this.resultSetMapping = resultSetMapping;
 	}
 
 	protected abstract Object[] getCurrentRow();
@@ -77,18 +73,6 @@ public abstract class AbstractScrollableResults implements ScrollableResultsImpl
 
 	protected Loader getLoader() {
 		return loader;
-	}
-
-	protected QueryParameters getQueryParameters() {
-		return queryParameters;
-	}
-
-	protected Type[] getTypes() {
-		return types;
-	}
-
-	protected HolderInstantiator getHolderInstantiator() {
-		return holderInstantiator;
 	}
 
 	@Override
@@ -122,7 +106,7 @@ public abstract class AbstractScrollableResults implements ScrollableResultsImpl
 
 	@Override
 	public int getNumberOfTypes() {
-		return this.types.length;
+		return resultSetMapping.getQueryResults().size();
 	}
 
 	@Override

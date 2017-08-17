@@ -11,6 +11,11 @@ package org.hibernate.query;
  * @author Steve Ebersole
  */
 public class Limit {
+	/**
+	 * Singleton access for "no limit"
+	 */
+	public static final Limit NONE = new Limit();
+
 	private Integer firstRow;
 	private Integer maxRows;
 

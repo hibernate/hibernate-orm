@@ -32,7 +32,7 @@ public class MavenEnhancePluginTest {
 
     @Test
     public void testEnhancePlugin() throws Exception {
-        File baseDir = new File("target/classes/test");
+        File baseDir = new File("target/classes/java/test");
         URL[] baseURLs = { baseDir.toURI().toURL() };
 
         MavenEnhancePlugin plugin = new MavenEnhancePlugin();

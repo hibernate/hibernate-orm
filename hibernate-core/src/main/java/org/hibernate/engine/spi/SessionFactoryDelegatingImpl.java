@@ -73,6 +73,10 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		this.delegate = delegate;
 	}
 
+	protected SessionFactoryImplementor getDelegate() {
+		return delegate;
+	}
+
 	@Override
 	public SessionFactoryOptions getSessionFactoryOptions() {
 		return delegate.getSessionFactoryOptions();

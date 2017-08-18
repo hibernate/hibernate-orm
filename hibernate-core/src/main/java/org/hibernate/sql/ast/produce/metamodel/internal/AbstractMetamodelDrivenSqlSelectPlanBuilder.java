@@ -48,12 +48,13 @@ import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReference;
@@ -62,13 +63,10 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.spi.SqlExpressable;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.spi.SqlSelection;
 
 import org.jboss.logging.Logger;
@@ -313,11 +311,13 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 			try {
 				final Fetch fetch = fetchable.generateFetch(
 						fetchParentStack.getCurrent(),
-						fetchable.getMappedFetchStrategy(),
+						tableGroupStack.getCurrent(),
 						// todo (6.0) : auto-generate SQL alias base?
 						null,
 						// todo (6.0) : this needs to be a QueryResultCreationContext
-						null
+						null,
+						this
+
 				);
 				fetchParentStack.getCurrent().addFetch( fetch );
 				fetchParentStack.push( (FetchParent) fetch );
@@ -396,13 +396,12 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// QueryResultCreationContext
 
-	@Override
-	public ColumnReferenceSource currentColumnReferenceSource() {
-		return tableGroupStack.getCurrent();
-	}
-
-	@Override
-	public NavigablePath currentNavigablePath() {
+//	@Override
+//	public ColumnReferenceSource currentColumnReferenceSource() {
+//		return tableGroupStack.getCurrent();
+//	}
+//
+	private NavigablePath currentNavigablePath() {
 		return navigablePathStack.getCurrent();
 	}
 

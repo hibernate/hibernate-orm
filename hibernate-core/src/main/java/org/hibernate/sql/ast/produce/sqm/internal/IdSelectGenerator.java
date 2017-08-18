@@ -109,16 +109,6 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 					}
 
 					@Override
-					public ColumnReferenceSource currentColumnReferenceSource() {
-						return rootTableGroup;
-					}
-
-					@Override
-					public NavigablePath currentNavigablePath() {
-						return rootTableGroup.asExpression().getNavigablePath();
-					}
-
-					@Override
 					public boolean shouldCreateShallowEntityResult() {
 						return true;
 					}
@@ -238,18 +228,10 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 		return sqlAliasBaseManager;
 	}
 
-	@Override
-	public ColumnReferenceSource currentColumnReferenceSource() {
-		return idSelectTableSpace.getRootTableGroup();
-	}
 
 	@Override
 	protected QuerySpec currentQuerySpec() {
 		return idSelectQuerySpec;
 	}
 
-	@Override
-	public NavigablePath currentNavigablePath() {
-		return idSelectTableSpace.getRootTableGroup().asExpression().getNavigablePath();
-	}
 }

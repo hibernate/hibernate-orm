@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
@@ -39,6 +40,8 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements JpaCriteriaQue
 	private final Class<T> returnType;
 
 	private final QueryStructure<T> queryStructure;
+	private List<Order> orderSpecs = Collections.emptyList();
+
 
 	public CriteriaQueryImpl(
 			CriteriaBuilderImpl criteriaBuilder,
@@ -94,11 +97,12 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements JpaCriteriaQue
 	public CriteriaQuery<T> multiselect(List<Selection<?>> selections) {
 		final Selection<? extends T> selection;
 
+		final Selection[] selectionArray = selections.stream().toArray(Selection[]::new);
 		if ( Tuple.class.isAssignableFrom( getResultType() ) ) {
-			selection = ( Selection<? extends T> ) criteriaBuilder().tuple( selections );
+			selection = ( Selection<? extends T> ) criteriaBuilder().tuple( selectionArray );
 		}
 		else if ( getResultType().isArray() ) {
-			selection = criteriaBuilder().array( getResultType(), selections );
+			selection = (Selection<? extends T>) criteriaBuilder().array( selectionArray );
 		}
 		else if ( Object.class.equals( getResultType() ) ) {
 			switch ( selections.size() ) {
@@ -112,12 +116,12 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements JpaCriteriaQue
 					break;
 				}
 				default: {
-					selection = ( Selection<? extends T> ) criteriaBuilder().array( selections );
+					selection = ( Selection<? extends T> ) criteriaBuilder().array( selectionArray );
 				}
 			}
 		}
 		else {
-			selection = criteriaBuilder().construct( getResultType(), selections );
+			selection = criteriaBuilder().construct( getResultType(), selectionArray );
 		}
 		applySelection( selection );
 		return this;

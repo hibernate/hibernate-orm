@@ -86,8 +86,8 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 			);
 		}
 
-		final List<Serializable> idsInBatch = new ArrayList<>();
-		final List<Integer> elementPositionsLoadedByBatch = new ArrayList<>();
+		final List<Serializable> idsInBatch = new ArrayList<Serializable>();
+		final List<Integer> elementPositionsLoadedByBatch = new ArrayList<Integer>();
 
 		for ( int i = 0; i < ids.length; i++ ) {
 			final Serializable id = ids[i];

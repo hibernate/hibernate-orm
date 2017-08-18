@@ -6,8 +6,13 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * Represents an reference to an entity type as a literal.  This is the JPA
@@ -42,4 +47,17 @@ public class EntityTypeLiteralSqmExpression implements SqmExpression {
 	public String asLoggableText() {
 		return "TYPE(" + entityType + ")";
 	}
+
+	@Override
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return new ScalarQueryResultImpl( resultVariable,
+										  creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
+										  (BasicValuedExpressableType) getExpressionType()
+		);
+	}
+
+
 }

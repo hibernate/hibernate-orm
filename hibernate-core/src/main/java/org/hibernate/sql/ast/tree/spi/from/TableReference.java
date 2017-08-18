@@ -63,7 +63,7 @@ public class TableReference implements SqlAstNode, ColumnReferenceSource {
 			return existing;
 		}
 
-		final ColumnReference columnReference = new ColumnReference( column, this );
+		final ColumnReference columnReference = new ColumnReference( this, column );
 		columnReferenceResolutionMap.put( column, columnReference );
 		return columnReference;
 	}

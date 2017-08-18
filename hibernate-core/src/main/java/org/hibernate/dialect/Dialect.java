@@ -2753,22 +2753,22 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	@Deprecated
 	public boolean useFollowOnLocking() {
-		return false;
+		return useFollowOnLocking( null );
 	}
 
-//	/**
-//	 * Some dialects have trouble applying pessimistic locking depending upon what other query options are
-//	 * specified (paging, ordering, etc).  This method allows these dialects to request that locking be applied
-//	 * by subsequent selects.
-//	 *
-//	 * @param parameters query parameters
-//	 * @return {@code true} indicates that the dialect requests that locking be applied by subsequent select;
-//	 * {@code false} (the default) indicates that locking should be applied to the main SQL statement..
-//	 * @since 5.2
-//	 */
-//	public boolean useFollowOnLocking(QueryParameters parameters) {
-//		return false;
-//	}
+	/**
+	 * Some dialects have trouble applying pessimistic locking depending upon what other query options are
+	 * specified (paging, ordering, etc).  This method allows these dialects to request that locking be applied
+	 * by subsequent selects.
+	 *
+	 * @param parameters query parameters
+	 * @return {@code true} indicates that the dialect requests that locking be applied by subsequent select;
+	 * {@code false} (the default) indicates that locking should be applied to the main SQL statement..
+	 * @since 5.2
+	 */
+	public boolean useFollowOnLocking(QueryParameters parameters) {
+		return false;
+	}
 
 	/**
 	 * Negate an expression

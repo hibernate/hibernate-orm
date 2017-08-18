@@ -192,10 +192,10 @@ public class Teradata14Dialect extends TeradataDialect {
 		return new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString() + " " + sql;
 	}
 
-	@Override
-	public boolean useFollowOnLocking(QueryParameters parameters) {
-		return true;
-	}
+//	@Override
+//	public boolean useFollowOnLocking(QueryParameters parameters) {
+//		return true;
+//	}
 
 	@Override
 	public boolean supportsLockTimeouts() {

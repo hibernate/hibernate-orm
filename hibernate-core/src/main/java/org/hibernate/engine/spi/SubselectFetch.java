@@ -13,6 +13,8 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.query.spi.QueryOptions;
 
 /**
  * @author Gavin King
@@ -28,8 +30,7 @@ public class SubselectFetch {
 	private final Set resultingEntityKeys;
 	private final String queryString;
 	private final String alias;
-	private final Loadable loadable;
-	private final QueryParameters queryParameters;
+	private final EntityDescriptor loadable;
 	private final Map namedParameterLocMap;
 
 	/**
@@ -54,15 +55,11 @@ public class SubselectFetch {
 	 */
 	public SubselectFetch(
 			final String alias,
-			final Loadable loadable,
-			final QueryParameters queryParameters,
 			final Set resultingEntityKeys,
 			final Map namedParameterLocMap) {
 		this(
 				createSubselectFetchQueryFragment( queryParameters ),
 				alias,
-				loadable,
-				queryParameters,
 				resultingEntityKeys,
 				namedParameterLocMap
 		);
@@ -86,12 +83,9 @@ public class SubselectFetch {
 	public SubselectFetch(
 			final String subselectFetchQueryFragment,
 			final String alias,
-			final Loadable loadable,
-			final QueryParameters queryParameters,
 			final Set resultingEntityKeys,
 			final Map namedParameterLocMap) {
 		this.resultingEntityKeys = resultingEntityKeys;
-		this.queryParameters = queryParameters;
 		this.namedParameterLocMap = namedParameterLocMap;
 		this.loadable = loadable;
 		this.alias = alias;
@@ -106,19 +100,19 @@ public class SubselectFetch {
 	 * @param queryParameters -the query parameters.
 	 * @return the subselect fetch query fragment.
 	 */
-	public static String createSubselectFetchQueryFragment(QueryParameters queryParameters) {
-		//TODO: ugly here:
-		final String queryString = queryParameters.getFilteredSQL();
-		final int fromIndex = getFromIndex( queryString );
-		final int orderByIndex = queryString.lastIndexOf( "order by" );
-		final String subselectQueryFragment =  orderByIndex > 0
-				? queryString.substring( fromIndex, orderByIndex )
-				: queryString.substring( fromIndex );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "SubselectFetch query fragment: %s", subselectQueryFragment );
-		}
-		return subselectQueryFragment;
-	}
+//	public static String createSubselectFetchQueryFragment(QueryParameters queryParameters) {
+//		//TODO: ugly here:
+//		final String queryString = queryParameters.getFilteredSQL();
+//		final int fromIndex = getFromIndex( queryString );
+//		final int orderByIndex = queryString.lastIndexOf( "order by" );
+//		final String subselectQueryFragment =  orderByIndex > 0
+//				? queryString.substring( fromIndex, orderByIndex )
+//				: queryString.substring( fromIndex );
+//		if ( LOG.isTraceEnabled() ) {
+//			LOG.tracef( "SubselectFetch query fragment: %s", subselectQueryFragment );
+//		}
+//		return subselectQueryFragment;
+//	}
 
 	private static int getFromIndex(String queryString) {
 		int index = queryString.indexOf( FROM_STRING );
@@ -157,10 +151,6 @@ public class SubselectFetch {
 		}
 
 		return parenCount == 0;
-	}
-
-	public QueryParameters getQueryParameters() {
-		return queryParameters;
 	}
 
 	/**

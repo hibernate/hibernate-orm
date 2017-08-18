@@ -718,28 +718,28 @@ public class Oracle8iDialect extends Dialect {
 	 * @return
 	 @see <a href="https://docs.oracle.com/database/121/SQLRF/statements_10002.htm#SQLRF01702">Oracle FOR UPDATE restrictions</a>
 	 */
-	@Override
-	public boolean useFollowOnLocking(QueryParameters parameters) {
-
-		if (parameters != null ) {
-			String lowerCaseSQL = parameters.getFilteredSQL().toLowerCase();
-
-			return
-				DISTINCT_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
-				GROUP_BY_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
-				UNION_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
-				(
-					parameters.hasRowSelection() &&
-						(
-							ORDER_BY_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
-							parameters.getRowSelection().getFirstRow() != null
-						)
-				);
-		}
-		else {
-			return true;
-		}
-	}
+//	@Override
+//	public boolean useFollowOnLocking(QueryParameters parameters) {
+//
+//		if (parameters != null ) {
+//			String lowerCaseSQL = parameters.getFilteredSQL().toLowerCase();
+//
+//			return
+//				DISTINCT_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
+//				GROUP_BY_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
+//				UNION_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
+//				(
+//					parameters.hasRowSelection() &&
+//						(
+//							ORDER_BY_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
+//							parameters.getRowSelection().getFirstRow() != null
+//						)
+//				);
+//		}
+//		else {
+//			return true;
+//		}
+//	}
 	
 	@Override
 	public String getNotExpression( String expression ) {

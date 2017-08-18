@@ -40,16 +40,16 @@ public class BinaryArithmeticExpression
 	}
 
 	@Override
-	public void accept(SqlAstWalker  walker) {
-		walker.visitBinaryArithmeticExpression( this );
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		return new SqlSelectionImpl(
+				getType().getBasicType().getSqlSelectionReader(),
+				jdbcPosition
+		);
 	}
 
 	@Override
-	public SqlSelection generateSqlSelection(int jdbcResultSetPosition) {
-		return new SqlSelectionImpl(
-				getType().getBasicType().getSqlSelectionReader(),
-				jdbcResultSetPosition
-		);
+	public void accept(SqlAstWalker  walker) {
+		walker.visitBinaryArithmeticExpression( this );
 	}
 
 	public enum Operation {

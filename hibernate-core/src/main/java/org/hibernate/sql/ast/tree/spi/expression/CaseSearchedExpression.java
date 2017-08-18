@@ -54,16 +54,16 @@ public class CaseSearchedExpression implements Expression, SqlExpressable {
 	}
 
 	@Override
-	public void accept(SqlAstWalker  walker) {
-		walker.visitCaseSearchedExpression( this );
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		return new SqlSelectionImpl(
+				getType().getSqlSelectionReader(),
+				jdbcPosition
+		);
 	}
 
 	@Override
-	public SqlSelection generateSqlSelection(int jdbcResultSetPosition) {
-		return new SqlSelectionImpl(
-				getType().getSqlSelectionReader(),
-				jdbcResultSetPosition
-		);
+	public void accept(SqlAstWalker  walker) {
+		walker.visitCaseSearchedExpression( this );
 	}
 
 	public static class WhenFragment {

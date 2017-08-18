@@ -46,10 +46,10 @@ public class UnaryOperation implements Expression, SqlExpressable {
 	}
 
 	@Override
-	public SqlSelection generateSqlSelection(int jdbcResultSetPosition) {
+	public SqlSelection createSqlSelection(int jdbcPosition) {
 		return new SqlSelectionImpl(
 				getType().getBasicType().getSqlSelectionReader(),
-				jdbcResultSetPosition
+				jdbcPosition
 		);
 	}
 

@@ -7,10 +7,7 @@
 package org.hibernate.sql.ast.tree.spi.expression;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * Generalized contract for any type of function reference in the query
@@ -18,22 +15,7 @@ import org.hibernate.sql.results.spi.SqlSelection;
  * @author Steve Ebersole
  */
 public interface Function extends Expression, SqlExpressable {
-	@Override
-	default SqlSelection generateSqlSelection(int jdbcResultSetPosition) {
-		return new SqlSelectionImpl(
-				// todo (6.0) : Need a better link between scalar/basic types and SqlSelectionReader
-				// 		for now we assume, essentially, that a function can return only basic types
-				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlSelectionReader(),
-				jdbcResultSetPosition
-		);
-	}
 
 	@Override
 	AllowableFunctionReturnType getType();
-
-
-	@Override
-	default Expression createSqlExpression() {
-		return this;
-	}
 }

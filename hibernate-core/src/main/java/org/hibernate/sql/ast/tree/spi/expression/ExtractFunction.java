@@ -8,6 +8,8 @@ package org.hibernate.sql.ast.tree.spi.expression;
 
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole
@@ -39,5 +41,13 @@ public class ExtractFunction extends AbstractStandardFunction {
 	@Override
 	public BasicValuedExpressableType getType() {
 		return returnType;
+	}
+
+	@Override
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		return new SqlSelectionImpl(
+				getType().getBasicType().getSqlSelectionReader(),
+				jdbcPosition
+		);
 	}
 }

@@ -93,6 +93,7 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.config.ConfigurationException;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.internal.AfterCompletionActionLegacyJpaImpl;
 import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
 import org.hibernate.jpa.internal.ManagedFlushCheckerLegacyJpaImpl;
@@ -235,7 +236,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				);
 			}
 		}
+
 		maskOutSensitiveInformation(this.properties);
+		logIfEmptyCompositesEnabled( this.properties );
+
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( jdbcServices.getJdbcEnvironment().getDialect(), options.getCustomSqlFunctionMap() );
 		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );
 		this.criteriaBuilder = new CriteriaBuilderImpl( this );
@@ -1565,6 +1569,22 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private void maskOutIfSet(Map<String, Object> props, String setting) {
 		if ( props.containsKey( setting ) ) {
 			props.put( setting, "****" );
+		}
+	}
+
+	private void logIfEmptyCompositesEnabled(Map<String, Object> props ) {
+		final boolean isEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
+				AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLED,
+				props,
+				false
+		);
+		if ( isEmptyCompositesEnabled ) {
+			// It would be nice to do this logging in ComponentMetamodel, where
+			// AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLED is actually used.
+			// Unfortunately that would end up logging a message several times for
+			// each embeddable/composite. Doing it here will log the message only
+			// once.
+			LOG.emptyCompositesEnabled();
 		}
 	}
 }

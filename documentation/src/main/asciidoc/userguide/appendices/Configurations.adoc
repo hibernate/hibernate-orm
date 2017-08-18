@@ -290,6 +290,9 @@ Such a need is very uncommon and not recommended.
 
 3+|Misc options
 |`hibernate.create_empty_composites.enabled` |`true` or `false` (default value) | Enable instantiation of composite/embeddable objects when all of its attribute values are `null`. The default (and historical) behavior is that a `null` reference will be used to represent the composite when all of its attributes are `null`.
+
+This is an experimental feature that has known issues. It should not be used in production until it is stabilized. See Hibernate Jira issue https://hibernate.atlassian.net/browse/HHH-11936[HHH-11936] for details.
+
 |`hibernate.entity_dirtiness_strategy` | fully-qualified class name or an actual `CustomEntityDirtinessStrategy` instance | Setting to identify a `org.hibernate.CustomEntityDirtinessStrategy` to use.
 |`hibernate.default_entity_mode` |`pojo` (default value) or `dynamic-map` |Default `EntityMode` for entity representation for all sessions opened from this `SessionFactory`, defaults to `pojo`.
 |===================================================================================================================================================================================================================================

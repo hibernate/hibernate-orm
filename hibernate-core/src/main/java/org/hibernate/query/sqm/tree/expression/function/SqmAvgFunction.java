@@ -46,10 +46,4 @@ public class SqmAvgFunction
 		return "AVG(" + getArgument().asLoggableText() + ")";
 	}
 
-	@Override
-	public QueryResult createQueryResult(
-			Expression expression, String resultVariable, QueryResultCreationContext creationContext) {
-		SqlSelectionImpl sqlSelection = new SqlSelectionImpl( creationContext.getSqlSelectionReader(), )
-		return new ScalarQueryResultImpl( resultVariable, sqlSelection, getInferableType() );
-	}
 }

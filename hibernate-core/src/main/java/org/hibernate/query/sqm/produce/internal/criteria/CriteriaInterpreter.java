@@ -745,12 +745,14 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 
 	@Override
 	public SqmAvgFunction visitAvgFunction(JpaExpression<?> expression, boolean distinct) {
-		final SqmExpression sqmExpression = expression.visitExpression( this );
-		return new SqmAvgFunction(
-				sqmExpression,
-				distinct,
-				(BasicValuedExpressableType) sqmExpression.getExpressionType()
+		final SqmAvgFunction sqmAvgFunction = new SqmAvgFunction(
+				expression.visitExpression( this ),
+				(BasicValuedExpressableType) expression.visitExpression( this ).getExpressionType()
 		);
+		if ( distinct ) {
+			sqmAvgFunction.makeDistinct();
+		}
+		return sqmAvgFunction;
 	}
 
 	@Override
@@ -758,17 +760,26 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 			JpaExpression<?> expression,
 			boolean distinct,
 			BasicValuedExpressableType resultType) {
-		return new SqmAvgFunction( expression.visitExpression( this ), distinct, resultType );
+		final SqmAvgFunction sqmAvgFunction = new SqmAvgFunction(
+				expression.visitExpression( this ),
+				resultType
+		);
+		if ( distinct ) {
+			sqmAvgFunction.makeDistinct();
+		}
+		return sqmAvgFunction;
 	}
 
 	@Override
 	public SqmCountFunction visitCountFunction(JpaExpression<?> expression, boolean distinct) {
-		final SqmExpression sqmExpression = expression.visitExpression( this );
-		return new SqmCountFunction(
-				sqmExpression,
-				distinct,
-				(BasicValuedExpressableType) sqmExpression.getExpressionType()
+		final SqmCountFunction sqmCountFunction = new SqmCountFunction(
+				expression.visitExpression( this ),
+				(BasicValuedExpressableType) expression.visitExpression( this ).getExpressionType()
 		);
+		if ( distinct ) {
+			sqmCountFunction.makeDistinct();
+		}
+		return sqmCountFunction;
 	}
 
 	@Override
@@ -776,30 +787,49 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 			JpaExpression<?> expression,
 			boolean distinct,
 			BasicValuedExpressableType resultType) {
-		return new SqmCountFunction( expression.visitExpression( this ), distinct, resultType );
+		final SqmCountFunction sqmCountFunction = new SqmCountFunction(
+				expression.visitExpression( this ),
+				resultType
+		);
+		if ( distinct ) {
+			sqmCountFunction.makeDistinct();
+		}
+		return sqmCountFunction;
 	}
 
 	@Override
 	public SqmCountStarFunction visitCountStarFunction(boolean distinct) {
-		return new SqmCountStarFunction(
-				distinct,
-				parsingContext.getSessionFactory().getTypeConfiguration().getBasicTypeRegistry().getBasicType( Long.class )
+		final SqmCountStarFunction sqmCountStarFunction = new SqmCountStarFunction(
+				parsingContext.getSessionFactory()
+						.getTypeConfiguration()
+						.getBasicTypeRegistry()
+						.getBasicType( Long.class )
 		);
+		if ( distinct ) {
+			sqmCountStarFunction.makeDistinct();
+		}
+		return sqmCountStarFunction;
 	}
 
 	@Override
 	public SqmCountStarFunction visitCountStarFunction(boolean distinct, BasicValuedExpressableType resultType) {
-		return new SqmCountStarFunction( distinct, resultType );
+		final SqmCountStarFunction sqmCountStarFunction = new SqmCountStarFunction( resultType );
+		if ( distinct ) {
+			sqmCountStarFunction.makeDistinct();
+		}
+		return sqmCountStarFunction;
 	}
 
 	@Override
 	public SqmMaxFunction visitMaxFunction(JpaExpression<?> expression, boolean distinct) {
-		final SqmExpression sqmExpression = expression.visitExpression( this );
-		return new SqmMaxFunction(
-				sqmExpression,
-				distinct,
-				(BasicValuedExpressableType) sqmExpression.getExpressionType()
+		final SqmMaxFunction sqmMaxFunction = new SqmMaxFunction(
+				expression.visitExpression( this ),
+				(BasicValuedExpressableType) expression.visitExpression( this ).getExpressionType()
 		);
+		if ( distinct ) {
+			sqmMaxFunction.makeDistinct();
+		}
+		return sqmMaxFunction;
 	}
 
 	@Override
@@ -807,17 +837,23 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 			JpaExpression<?> expression,
 			boolean distinct,
 			BasicValuedExpressableType resultType) {
-		return new SqmMaxFunction( expression.visitExpression( this ), distinct, resultType );
+		final SqmMaxFunction sqmMaxFunction = new SqmMaxFunction( expression.visitExpression( this ), resultType );
+		if ( distinct ) {
+			sqmMaxFunction.makeDistinct();
+		}
+		return sqmMaxFunction;
 	}
 
 	@Override
 	public SqmMinFunction visitMinFunction(JpaExpression<?> expression, boolean distinct) {
-		final SqmExpression sqmExpression = expression.visitExpression( this );
-		return new SqmMinFunction(
-				sqmExpression,
-				distinct,
-				(BasicValuedExpressableType) sqmExpression.getExpressionType()
+		final SqmMinFunction sqmMinFunction = new SqmMinFunction(
+				expression.visitExpression( this ),
+				(BasicValuedExpressableType) expression.visitExpression( this ).getExpressionType()
 		);
+		if ( distinct ) {
+			sqmMinFunction.makeDistinct();
+		}
+		return sqmMinFunction;
 	}
 
 	@Override
@@ -825,17 +861,30 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 			JpaExpression<?> expression,
 			boolean distinct,
 			BasicValuedExpressableType resultType) {
-		return new SqmMinFunction( expression.visitExpression( this ), distinct, resultType );
+		final SqmMinFunction sqmMinFunction = new SqmMinFunction(
+				expression.visitExpression( this ),
+				resultType
+		);
+		if ( distinct ) {
+			sqmMinFunction.makeDistinct();
+		}
+		return sqmMinFunction;
 	}
 
 	@Override
 	public SqmSumFunction visitSumFunction(JpaExpression<?> expression, boolean distinct) {
-		final SqmExpression sqmExpression = expression.visitExpression( this );
-		return new SqmSumFunction(
-				sqmExpression,
-				distinct,
-				parsingContext.getSessionFactory().getTypeConfiguration().resolveSumFunctionType( (BasicValuedExpressableType) sqmExpression.getExpressionType() )
+		final SqmSumFunction sqmSumFunction = new SqmSumFunction(
+				expression.visitExpression( this ),
+				parsingContext.getSessionFactory()
+						.getTypeConfiguration()
+						.resolveSumFunctionType( (BasicValuedExpressableType) expression.visitExpression(
+								this )
+								.getExpressionType() )
 		);
+		if ( distinct ) {
+			sqmSumFunction.makeDistinct();
+		}
+		return sqmSumFunction;
 	}
 
 	@Override
@@ -843,7 +892,14 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 			JpaExpression<?> expression,
 			boolean distinct,
 			BasicValuedExpressableType resultType) {
-		return new SqmSumFunction( expression.visitExpression( this ), distinct, resultType );
+		final SqmSumFunction sqmSumFunction = new SqmSumFunction(
+				expression.visitExpression( this ),
+				resultType
+		);
+		if ( distinct ) {
+			sqmSumFunction.makeDistinct();
+		}
+		return sqmSumFunction;
 	}
 
 	@Override

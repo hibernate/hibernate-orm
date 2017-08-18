@@ -59,6 +59,14 @@ public class SelfRenderingFunctionSqlAstExpression implements SelfRenderingExpre
 	}
 
 	@Override
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		return new SqlSelectionImpl(
+				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlSelectionReader(),
+				jdbcPosition
+		);
+	}
+
+	@Override
 	public QueryResult createQueryResult(
 			Expression expression,
 			String resultVariable,
@@ -67,14 +75,6 @@ public class SelfRenderingFunctionSqlAstExpression implements SelfRenderingExpre
 				resultVariable,
 				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression),
 				(BasicValuedExpressableType) getType()
-		);
-	}
-
-	@Override
-	public SqlSelection generateSqlSelection(int jdbcResultSetPosition) {
-		return new SqlSelectionImpl(
-				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlSelectionReader(),
-				jdbcResultSetPosition
 		);
 	}
 

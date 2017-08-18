@@ -131,10 +131,10 @@ public class NativeQueryImpl<R>
 								queryDef.getResultSetRef()
 				);
 			}
-			return new ArrayList<>( definition.getQueryReturns() );
+			return definition.getQueryReturns();
 		}
-		else if ( queryDef.getQueryResultBuilders() != null && queryDef.getQueryResultBuilders().length > 0 ) {
-			return new ArrayList<>( Arrays.asList( queryDef.getQueryResultBuilders() ) );
+		else if ( queryDef.getQueryResultBuilders() != null && queryDef.getQueryResultBuilders().size() > 0 ) {
+			return queryDef.getQueryResultBuilders();
 		}
 		else {
 			return new ArrayList<>();

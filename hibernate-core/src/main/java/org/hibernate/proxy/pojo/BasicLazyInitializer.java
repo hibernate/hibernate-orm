@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.proxy.AbstractLazyInitializer;
 
 /**
@@ -27,7 +28,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 	protected final Method getIdentifierMethod;
 	protected final Method setIdentifierMethod;
 	protected final boolean overridesEquals;
-	protected final EmbeddedType componentIdType;
+	protected final EmbeddedTypeDescriptor componentIdType;
 
 	private Object replacement;
 
@@ -37,7 +38,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 			Serializable id,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
-			EmbeddedType componentIdType,
+			EmbeddedTypeDescriptor componentIdType,
 			SharedSessionContractImplementor session,
 			boolean overridesEquals) {
 		super( entityName, id, session );

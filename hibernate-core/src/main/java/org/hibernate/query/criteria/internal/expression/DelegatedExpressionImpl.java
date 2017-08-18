@@ -9,6 +9,7 @@ package org.hibernate.query.criteria.internal.expression;
 import java.util.List;
 import javax.persistence.criteria.Selection;
 
+import org.hibernate.query.criteria.JpaSelectionImplementor;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
 
@@ -39,7 +40,7 @@ public abstract class DelegatedExpressionImpl<T> extends AbstractExpression<T> {
 	}
 
 	@Override
-	public Selection<T> alias(String alias) {
+	public JpaSelectionImplementor<T> alias(String alias) {
 		wrapped.alias( alias );
 		return this;
 	}
@@ -67,16 +68,6 @@ public abstract class DelegatedExpressionImpl<T> extends AbstractExpression<T> {
 	@Override
 	protected void resetJavaType(Class targetType) {
 		wrapped.resetJavaType( targetType );
-	}
-
-	@Override
-	protected void forceConversion(ValueHandlerFactory.ValueHandler<T> tValueHandler) {
-		wrapped.forceConversion( tValueHandler );
-	}
-
-	@Override
-	public ValueHandlerFactory.ValueHandler<T> getValueHandler() {
-		return wrapped.getValueHandler();
 	}
 
 	@Override

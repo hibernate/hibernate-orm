@@ -17,11 +17,16 @@ import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
  * index/key, respectively.
  */
 public enum CollectionClassification {
-	// todo (6.0) : do we need variants such as SORTED_SET, SORTED_MAP?  ORDERED_*?
 	SET( PluralAttribute.CollectionType.SET ),
 	LIST( PluralAttribute.CollectionType.LIST ),
 	MAP( PluralAttribute.CollectionType.MAP ),
-	BAG( PluralAttribute.CollectionType.COLLECTION );
+	BAG( PluralAttribute.CollectionType.COLLECTION ),
+	SORTED_SET( PluralAttribute.CollectionType.SET ),
+	ORDERED_SET( PluralAttribute.CollectionType.SET ),
+	SORTED_MAP( PluralAttribute.CollectionType.MAP ),
+	ORDERED_MAP( PluralAttribute.CollectionType.MAP ),
+	IDBAG( PluralAttribute.CollectionType.COLLECTION ),
+	ARRAY( PluralAttribute.CollectionType.COLLECTION );
 
 	private final PluralAttribute.CollectionType jpaClassification;
 

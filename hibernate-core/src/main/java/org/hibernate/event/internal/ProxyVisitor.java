@@ -11,6 +11,8 @@ import java.io.Serializable;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
@@ -24,7 +26,8 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 		super(session);
 	}
 
-	Object processEntity(Object value, EntityType entityType) throws HibernateException {
+	@Override
+	Object processEntity(Object value, EntityDescriptor descriptor) throws HibernateException {
 
 		if (value!=null) {
 			getSession().getPersistenceContext().reassociateIfUninitializedProxy(value);
@@ -60,11 +63,11 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	 * collection wrapper, using a snapshot carried with the collection
 	 * wrapper
 	 */
-	protected void reattachCollection(PersistentCollection collection, CollectionType type)
+	protected void reattachCollection(PersistentCollection collection, NavigableRole role)
 	throws HibernateException {
 		if ( collection.wasInitialized() ) {
 			PersistentCollectionDescriptor collectionPersister = getSession().getFactory().getTypeConfiguration()
-			.findCollectionPersister( type.getRole() );
+			.findCollectionPersister( role.getFullPath() );
 			getSession().getPersistenceContext()
 				.addInitializedDetachedCollection( collectionPersister, collection );
 		}

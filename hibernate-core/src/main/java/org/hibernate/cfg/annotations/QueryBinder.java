@@ -6,7 +6,9 @@
  */
 package org.hibernate.cfg.annotations;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
@@ -31,6 +33,8 @@ import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.query.sql.spi.QueryResultBuilder;
+import org.hibernate.query.sql.spi.QueryResultBuilderRootEntity;
 
 import org.jboss.logging.Logger;
 
@@ -116,12 +120,15 @@ public abstract class QueryBinder {
 		else if ( !void.class.equals( queryAnn.resultClass() ) ) {
 			//class mapping usage
 			//FIXME should be done in a second pass due to entity name?
-			final NativeSQLQueryRootReturn entityQueryReturn =
-					new NativeSQLQueryRootReturn( "alias1", queryAnn.resultClass().getName(), new HashMap(), LockMode.READ );
-			builder.setQueryReturns( new NativeSQLQueryReturn[] {entityQueryReturn} );
+			final QueryResultBuilderRootEntity entityQueryReturn =
+					new QueryResultBuilderRootEntity( "alias1", queryAnn.resultClass().getName() );
+			entityQueryReturn.setLockMode( LockMode.READ );
+			final List<QueryResultBuilder> queryResultBuilders = new ArrayList<>();
+			queryResultBuilders.add( entityQueryReturn );
+			builder.setQueryReturns( queryResultBuilders );
 		}
 		else {
-			builder.setQueryReturns( new NativeSQLQueryReturn[0] );
+			builder.setQueryReturns( Collections.EMPTY_LIST );
 		}
 		
 		NamedSQLQueryDefinition query = builder.createNamedQueryDefinition();
@@ -176,11 +183,14 @@ public abstract class QueryBinder {
 		else if ( !void.class.equals( queryAnn.resultClass() ) ) {
 			//class mapping usage
 			//FIXME should be done in a second pass due to entity name?
-			final NativeSQLQueryRootReturn entityQueryReturn =
-					new NativeSQLQueryRootReturn( "alias1", queryAnn.resultClass().getName(), new HashMap(), LockMode.READ );
+			final QueryResultBuilderRootEntity entityQueryReturn =
+					new QueryResultBuilderRootEntity( "alias1", queryAnn.resultClass().getName() );
+			entityQueryReturn.setLockMode( LockMode.READ );
+			final List<QueryResultBuilder> queryResultBuilders = new ArrayList<>();
+			queryResultBuilders.add( entityQueryReturn );
 			query = new NamedSQLQueryDefinitionBuilder().setName( queryAnn.name() )
 					.setQuery( queryAnn.query() )
-					.setQueryReturns( new NativeSQLQueryReturn[] {entityQueryReturn} )
+					.setQueryReturns( queryResultBuilders )
 					.setQuerySpaces( null )
 					.setCacheable( queryAnn.cacheable() )
 					.setCacheRegion(

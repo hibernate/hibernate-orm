@@ -47,22 +47,6 @@ public class Util {
 	private Util() {
 	}
 
-	/**
-	 * Makes a copy of the given query return array.
-	 *
-	 * @param queryReturns The returns to copy
-	 *
-	 * @return The copy
-	 */
-	public static NativeSQLQueryReturn[] copy(NativeSQLQueryReturn[] queryReturns) {
-		if ( queryReturns == null ) {
-			return new NativeSQLQueryReturn[0];
-		}
-
-		final NativeSQLQueryReturn[] copy = new NativeSQLQueryReturn[ queryReturns.length ];
-		System.arraycopy( queryReturns, 0, copy, 0, queryReturns.length );
-		return copy;
-	}
 
 	/**
 	 * Make a (shallow) copy of query spaces to be synchronized
@@ -282,68 +266,68 @@ public class Util {
 			);
 		}
 
-		private QueryResultAssembler buildDynamicInstantiationAssembler(NativeSQLQueryConstructorReturn nativeQueryReturn) {
-			final JavaTypeDescriptor resultType = context.getSessionFactory()
-					.getTypeConfiguration()
-					.getJavaTypeDescriptorRegistry()
-					.getDescriptor( nativeQueryReturn.getTargetClass() );
-			final Class targetJavaType = resultType.getJavaType();
-
-			if ( Map.class.equals( targetJavaType ) ) {
-				throw new HibernateException( "Map dynamic-instantiations not allowed for native/procedure queries" );
-			}
-
-			final List<ArgumentReader> argumentReaders = new ArrayList<>();
-
-			for ( NativeSQLQueryScalarReturn argument : nativeQueryReturn.getColumnReturns() ) {
-				final BasicType ormType = (BasicType) argument.getType();
-				final ScalarQueryResultImpl argumentReturn = new ScalarQueryResultImpl(
-						null,
-						resolveSqlSelection( ormType, argument.getColumnAlias() ),
-						null,
-						ormType
-				);
-				argumentReaders.add( new ArgumentReader( argumentReturn.getResultAssembler(), null ) );
-			}
-
-			if ( List.class.equals( targetJavaType ) ) {
-				return new DynamicInstantiationListAssemblerImpl( (BasicJavaDescriptor<List>) resultType, argumentReaders );
-			}
-			else {
-				// find a constructor matching argument types
-				constructor_loop:
-				for ( Constructor constructor : targetJavaType.getDeclaredConstructors() ) {
-					if ( constructor.getParameterTypes().length != argumentReaders.size() ) {
-						continue;
-					}
-
-					for ( int i = 0; i < argumentReaders.size(); i++ ) {
-						final ArgumentReader argumentReader = argumentReaders.get( i );
-						// todo : move Compatibility from SQM into ORM?  It is only used here
-						final boolean assignmentCompatible = Compatibility.areAssignmentCompatible(
-								resolveJavaTypeDescriptor( constructor.getParameterTypes()[i] ),
-								argumentReader.getJavaTypeDescriptor()
-						);
-						if ( !assignmentCompatible ) {
-							log.debugf(
-									"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
-									i,
-									constructor.getParameterTypes()[i],
-									argumentReader.getJavaTypeDescriptor().getJavaType().getName()
-							);
-							continue constructor_loop;
-						}
-					}
-
-					constructor.setAccessible( true );
-					return new DynamicInstantiationConstructorAssemblerImpl( constructor, resultType, argumentReaders );
-				}
-
-				throw new HibernateException(
-						"Could not locate appropriate constructor for dynamic instantiation of [" + targetJavaType.getName() + "]"
-				);
-			}
-		}
+//		private QueryResultAssembler buildDynamicInstantiationAssembler(NativeSQLQueryConstructorReturn nativeQueryReturn) {
+//			final JavaTypeDescriptor resultType = context.getSessionFactory()
+//					.getTypeConfiguration()
+//					.getJavaTypeDescriptorRegistry()
+//					.getDescriptor( nativeQueryReturn.getTargetClass() );
+//			final Class targetJavaType = resultType.getJavaType();
+//
+//			if ( Map.class.equals( targetJavaType ) ) {
+//				throw new HibernateException( "Map dynamic-instantiations not allowed for native/procedure queries" );
+//			}
+//
+//			final List<ArgumentReader> argumentReaders = new ArrayList<>();
+//
+//			for ( NativeSQLQueryScalarReturn argument : nativeQueryReturn.getColumnReturns() ) {
+//				final BasicType ormType = (BasicType) argument.getType();
+//				final ScalarQueryResultImpl argumentReturn = new ScalarQueryResultImpl(
+//						null,
+//						resolveSqlSelection( ormType, argument.getColumnAlias() ),
+//						null,
+//						ormType
+//				);
+//				argumentReaders.add( new ArgumentReader( argumentReturn.getResultAssembler(), null ) );
+//			}
+//
+//			if ( List.class.equals( targetJavaType ) ) {
+//				return new DynamicInstantiationListAssemblerImpl( (BasicJavaDescriptor<List>) resultType, argumentReaders );
+//			}
+//			else {
+//				// find a constructor matching argument types
+//				constructor_loop:
+//				for ( Constructor constructor : targetJavaType.getDeclaredConstructors() ) {
+//					if ( constructor.getParameterTypes().length != argumentReaders.size() ) {
+//						continue;
+//					}
+//
+//					for ( int i = 0; i < argumentReaders.size(); i++ ) {
+//						final ArgumentReader argumentReader = argumentReaders.get( i );
+//						// todo : move Compatibility from SQM into ORM?  It is only used here
+//						final boolean assignmentCompatible = Compatibility.areAssignmentCompatible(
+//								resolveJavaTypeDescriptor( constructor.getParameterTypes()[i] ),
+//								argumentReader.getJavaTypeDescriptor()
+//						);
+//						if ( !assignmentCompatible ) {
+//							log.debugf(
+//									"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
+//									i,
+//									constructor.getParameterTypes()[i],
+//									argumentReader.getJavaTypeDescriptor().getJavaType().getName()
+//							);
+//							continue constructor_loop;
+//						}
+//					}
+//
+//					constructor.setAccessible( true );
+//					return new DynamicInstantiationConstructorAssemblerImpl( constructor, resultType, argumentReaders );
+//				}
+//
+//				throw new HibernateException(
+//						"Could not locate appropriate constructor for dynamic instantiation of [" + targetJavaType.getName() + "]"
+//				);
+//			}
+//		}
 
 		@SuppressWarnings("unchecked")
 		private JavaTypeDescriptor resolveJavaTypeDescriptor(Class javaType) {

@@ -7,7 +7,7 @@
 package org.hibernate.action.internal;
 
 import java.io.Serializable;
-import java.util.Set;
+import java.util.List;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.internal.ForeignKeys;
@@ -112,7 +112,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	protected final void nullifyTransientReferencesIfNotAlready() {
 		if ( ! areTransientReferencesNullified ) {
-			final Set<PersistentAttribute<?, ?>> persistentAttributes = (Set<PersistentAttribute<?, ?>>) getEntityDescriptor()
+			final List<PersistentAttribute<?, ?>> persistentAttributes = (List<PersistentAttribute<?, ?>>) getEntityDescriptor()
 					.getPersistentAttributes();
 			new ForeignKeys.Nullifier( getInstance(), false, isEarlyInsert(), getSession() )
 					.nullifyTransientReferences( getState(), persistentAttributes );

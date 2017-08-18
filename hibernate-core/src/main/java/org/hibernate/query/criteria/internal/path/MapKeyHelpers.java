@@ -17,10 +17,11 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.JpaMapJoinImplementor;
 import org.hibernate.query.criteria.JpaPathImplementor;
+import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 
 /**
  * {@link javax.persistence.criteria.MapJoin#key} poses a number of implementation difficulties in terms of the
@@ -165,7 +166,7 @@ public class MapKeyHelpers {
 			implements SingularAttribute<Map<K,?>,K>, Bindable<K>, Serializable {
 		private final MapAttribute<?,K,?> attribute;
 		private final PersistentCollectionDescriptor mapPersister;
-		private final org.hibernate.type.spi.Type mapKeyType;
+		private final CollectionIndex mapIndexDescriptor;
 		private final Type<K> jpaType;
 		private final BindableType jpaBindableType;
 		private final Class<K> jpaBinableJavaType;
@@ -186,14 +187,14 @@ public class MapKeyHelpers {
 			if ( mapPersister == null ) {
 				throw new IllegalStateException( "Could not locate collection persister [" + guessedRoleName + "]" );
 			}
-			mapKeyType = mapPersister.getIndexType();
-			if ( mapKeyType == null ) {
+			mapIndexDescriptor = mapPersister.getIndexDescriptor();
+			if ( mapIndexDescriptor == null ) {
 				throw new IllegalStateException( "Could not determine map-key type [" + guessedRoleName + "]" );
 			}
 
-			this.persistentAttributeType = mapKeyType.isEntityType()
+			this.persistentAttributeType = isEntityType( mapIndexDescriptor )
 					? PersistentAttributeType.MANY_TO_ONE
-					: mapKeyType.isComponentType()
+					: isComponentType( mapIndexDescriptor )
 							? PersistentAttributeType.EMBEDDED
 							: PersistentAttributeType.BASIC;
 		}
@@ -201,6 +202,14 @@ public class MapKeyHelpers {
 		private String determineRole(MapAttribute<?,K,?> attribute) {
 			return attribute.getDeclaringType().getJavaType().getName() +
 					'.' + attribute.getName();
+		}
+
+		private boolean isEntityType(CollectionIndex mapKeyType){
+			return  mapKeyType.getPersistenceType() == Type.PersistenceType.ENTITY;
+		}
+
+		private boolean isComponentType(CollectionIndex mapKeyType){
+			return  mapKeyType.getPersistenceType() == Type.PersistenceType.EMBEDDABLE;
 		}
 
 		@Override
@@ -233,7 +242,7 @@ public class MapKeyHelpers {
 
 		@Override
 		public boolean isAssociation() {
-			return mapKeyType.isEntityType();
+			return isEntityType( mapIndexDescriptor );
 		}
 
 		@Override

@@ -105,14 +105,14 @@ public class CollectionCacheInvalidator
 				return;
 			}
 			for ( String role : collectionRoles ) {
-				final PersistentCollectionDescriptor collectionPersister = factory.getTypeConfiguration().findCollectionPersister( role );
-				if ( !collectionPersister.hasCache() ) {
+				final PersistentCollectionDescriptor collectionDescriptor = factory.getTypeConfiguration().findCollectionPersister( role );
+				if ( !collectionDescriptor.hasCache() ) {
 					// ignore collection if no caching is used
 					continue;
 				}
 				// this is the property this OneToMany relation is mapped by
-				String mappedBy = collectionPersister.getMappedByProperty();
-				if ( !collectionPersister.isManyToMany() &&
+				String mappedBy = collectionDescriptor.getMappedByProperty();
+				if ( !collectionDescriptor.isManyToMany() &&
 						mappedBy != null && !mappedBy.isEmpty() ) {
 					int i = entityDescriptor.getEntityMetamodel().getPropertyIndex( mappedBy );
 					Serializable oldId = null;
@@ -127,18 +127,18 @@ public class CollectionCacheInvalidator
 					// only evict if the related entity has changed
 					if ( ( id != null && !id.equals( oldId ) ) || ( oldId != null && !oldId.equals( id ) ) ) {
 						if ( id != null ) {
-							evict( id, collectionPersister, session );
+							evict( id, collectionDescriptor, session );
 						}
 						if ( oldId != null ) {
-							evict( oldId, collectionPersister, session );
+							evict( oldId, collectionDescriptor, session );
 						}
 					}
 				}
 				else {
 					LOG.debug( "Evict CollectionRegion " + role );
-					final SoftLock softLock = collectionPersister.getCacheAccessStrategy().lockRegion();
+					final SoftLock softLock = collectionDescriptor.getCacheAccessStrategy().lockRegion();
 					session.getActionQueue().registerProcess( (success, session1) -> {
-						collectionPersister.getCacheAccessStrategy().unlockRegion( softLock );
+						collectionDescriptor.getCacheAccessStrategy().unlockRegion( softLock );
 					} );
 				}
 			}

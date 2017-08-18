@@ -333,14 +333,13 @@ public class Configuration {
 
 
 	public Configuration registerTypeOverride(UserType type, String[] keys) {
-		basicTypes.add( new CustomType( type, keys ) );
-		return this;
+		throw new NotYetImplementedException(  );
 	}
 
-	public Configuration registerTypeOverride(CompositeUserType type, String[] keys) {
-		basicTypes.add( new CompositeCustomType( type, keys ) );
-		return this;
-	}
+//	public Configuration registerTypeOverride(CompositeUserType type, String[] keys) {
+//		basicTypes.add( new CompositeCustomType( type, keys ) );
+//		return this;
+//	}
 
 	/**
 	 * Read mappings from a particular XML file

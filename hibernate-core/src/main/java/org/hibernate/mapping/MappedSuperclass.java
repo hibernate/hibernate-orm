@@ -21,6 +21,8 @@ import org.hibernate.boot.model.domain.MappedTableJoin;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.internal.AbstractMappedSuperclassMapping;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.spi.Instantiator;
 
 /**
  * Represents a @MappedSuperclass.
@@ -54,6 +56,16 @@ public class MappedSuperclass extends AbstractMappedSuperclassMapping implements
 	@Override
 	public String getName() {
 		return mappedSuperclassClass.getName();
+	}
+
+	@Override
+	public Representation getExplicitRepresentation() {
+		return Representation.fromExternalName( getEntityMappingHierarchy().getEntityMode().getExternalName());
+	}
+
+	@Override
+	public Instantiator getExplicitInstantiator() {
+		return null;
 	}
 
 	/**

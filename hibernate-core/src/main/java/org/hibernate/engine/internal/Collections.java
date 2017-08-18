@@ -19,7 +19,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralAttributeCollection;
 import org.hibernate.pretty.MessageHelper;
 
 import org.jboss.logging.Logger;
@@ -67,7 +69,12 @@ public final class Collections {
 		// do a check
 		final boolean hasOrphanDelete = loadedPersister != null && loadedPersister.hasOrphanDelete();
 		if ( hasOrphanDelete ) {
-			Serializable ownerId = loadedPersister.getOwnerEntityPersister().getIdentifier( coll.getOwner(), session );
+			final EntityDescriptor ownerEntityDescriptor = getOwnerEntityDescriptor(
+					loadedPersister,
+					session.getSessionFactory()
+			);
+
+			Serializable ownerId = ownerEntityDescriptor.getIdentifier( coll.getOwner(), session );
 			if ( ownerId == null ) {
 				// the owning entity may have been deleted and its identifier unset due to
 				// identifier-rollback; in which case, try to look up its identifier from
@@ -82,7 +89,7 @@ public final class Collections {
 					throw new AssertionFailure( "Unable to determine collection owner identifier for orphan-delete processing" );
 				}
 			}
-			final EntityKey key = session.generateEntityKey( ownerId, loadedPersister.getOwnerEntityPersister() );
+			final EntityKey key = session.generateEntityKey( ownerId, ownerEntityDescriptor );
 			final Object owner = persistenceContext.getEntity( key );
 			if ( owner == null ) {
 				throw new AssertionFailure(
@@ -135,13 +142,13 @@ public final class Collections {
      * Initialize the role of the collection.
      *
      * @param collection The collection to be updated by reachability.
-     * @param type The type of the collection.
+     * @param attributeCollection The PluralAttributeCollection.
      * @param entity The owner of the collection.
 	 * @param session The session from which this request originates
      */
 	public static void processReachableCollection(
 			PersistentCollection collection,
-			CollectionType type,
+			PluralAttributeCollection attributeCollection,
 			Object entity,
 			SessionImplementor session) {
 		collection.setOwner( entity );
@@ -150,24 +157,24 @@ public final class Collections {
 		if ( ce == null ) {
 			// refer to comment in StatefulPersistenceContext.addCollection()
 			throw new HibernateException(
-					"Found two representations of same collection: " +
-					type.getRole()
-			);
+					"Found two representations of same collection: " + attributeCollection.getNavigableName() );
 		}
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		final PersistentCollectionDescriptor persister = factory.getTypeConfiguration().findCollectionPersister( type.getRole() );
+		final PersistentCollectionDescriptor descriptor = factory.getTypeConfiguration().findCollectionPersister(
+				attributeCollection.getNavigableName() );
+		ce.setCurrentPersister( descriptor );
 
-		ce.setCurrentPersister( persister );
 		//TODO: better to pass the id in as an argument?
-		ce.setCurrentKey( type.getKeyOfOwner( entity, session ) );
+		ce.setCurrentKey( descriptor.getKeyOfOwner( entity, session ) );
 
-		final boolean isBytecodeEnhanced = persister.getOwnerEntityPersister().getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
+		final EntityDescriptor ownerEntityDescriptor = getOwnerEntityDescriptor( descriptor, factory );
+		final boolean isBytecodeEnhanced = ownerEntityDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 		if ( isBytecodeEnhanced && !collection.wasInitialized() ) {
 			// skip it
 			LOG.debugf(
 					"Skipping uninitialized bytecode-lazy collection: %s",
-					MessageHelper.collectionInfoString( persister, collection, ce.getCurrentKey(), session )
+					MessageHelper.collectionInfoString( descriptor, collection, ce.getCurrentKey(), session )
 			);
 			ce.setReached( true );
 			ce.setProcessed( true );
@@ -178,7 +185,7 @@ public final class Collections {
 			if ( ce.isReached() ) {
 				// We've been here beforeQuery
 				throw new HibernateException(
-						"Found shared references to a collection: " + type.getRole()
+						"Found shared references to a collection: " + descriptor.getNavigableRole().getFullPath()
 				);
 			}
 			ce.setReached( true );
@@ -188,7 +195,7 @@ public final class Collections {
 					LOG.debugf(
 							"Collection found: %s, was: %s (initialized)",
 							MessageHelper.collectionInfoString(
-									persister,
+									descriptor,
 									collection,
 									ce.getCurrentKey(),
 									session
@@ -205,7 +212,7 @@ public final class Collections {
 					LOG.debugf(
 							"Collection found: %s, was: %s (uninitialized)",
 							MessageHelper.collectionInfoString(
-									persister,
+									descriptor,
 									collection,
 									ce.getCurrentKey(),
 									session
@@ -222,6 +229,12 @@ public final class Collections {
 
 			prepareCollectionForUpdate( collection, ce, factory );
 		}
+	}
+
+	private static EntityDescriptor getOwnerEntityDescriptor(
+			PersistentCollectionDescriptor descriptor,
+			SessionFactoryImplementor factory) {
+		return factory.getTypeConfiguration().findEntityDescriptor(  descriptor.getContainer().getNavigableName() );
 	}
 
 	/**
@@ -246,7 +259,10 @@ public final class Collections {
 
 			// if either its role changed, or its key changed
 			final boolean ownerChanged = loadedPersister != currentPersister
-					|| !currentPersister.getKeyType().isEqual( entry.getLoadedKey(), entry.getCurrentKey(), factory );
+					|| !currentPersister.getJavaTypeDescriptor().areEqual(
+					entry.getLoadedKey(),
+					entry.getCurrentKey()
+			);
 
 			if ( ownerChanged ) {
 				// do a check
@@ -256,7 +272,7 @@ public final class Collections {
 				if (orphanDeleteAndRoleChanged) {
 					throw new HibernateException(
 							"Don't change the reference to a collection with delete-orphan enabled : "
-									+ loadedPersister.getRole()
+									+ loadedPersister.getNavigableRole().getFullPath()
 					);
 				}
 

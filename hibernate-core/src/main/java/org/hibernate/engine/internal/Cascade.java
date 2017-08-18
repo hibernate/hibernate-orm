@@ -10,6 +10,9 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+
+import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
@@ -22,8 +25,12 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
@@ -77,12 +84,13 @@ public final class Cascade {
 				LOG.tracev( "Processing cascade {0} for: {1}", action, persister.getEntityName() );
 			}
 
-			final JavaTypeDescriptor[] types = persister.getPropertyJavaTypeDescriptors();
+//			final JavaTypeDescriptor[] types = persister.getPropertyJavaTypeDescriptors();
+			final List<PersistentAttribute> persistentAttributes = persister.getPersistentAttributes();
 			final String[] propertyNames = persister.getPropertyNames();
 			final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
 			final boolean hasUninitializedLazyProperties = persister.hasUninitializedLazyProperties( parent );
 			final int componentPathStackDepth = 0;
-			for ( int i = 0; i < types.length; i++) {
+			for ( int i = 0; i < persistentAttributes.size(); i++) {
 				final CascadeStyle style = cascadeStyles[i];
 				final String propertyName = propertyNames[i];
 
@@ -105,7 +113,7 @@ public final class Cascade {
 							componentPathStackDepth,
 							parent,
 							child,
-							types[i],
+							persistentAttributes.get( i ),
 							style,
 							propertyName,
 							anything,
@@ -117,7 +125,7 @@ public final class Cascade {
 							eventSource,
 							parent,
 							persister,
-							types[i],
+							persistentAttributes.get( i ),
 							i
 					);
 				}
@@ -139,16 +147,15 @@ public final class Cascade {
 			final int componentPathStackDepth,
 			final Object parent,
 			final Object child,
-			final JavaTypeDescriptor javaTypeDescriptor,
+			final PersistentAttribute attribute,
 			final CascadeStyle style,
 			final String propertyName,
 			final Object anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
 		
 		if ( child != null ) {
-			if ( type.isAssociationType() ) {
-				final AssociationType associationType = (AssociationType) type;
-				if ( cascadeAssociationNow( cascadePoint, associationType ) ) {
+			if ( PluralPersistentAttribute.class.isInstance(attribute) || SingularPersistentAttributeEntity.class.isInstance( attribute ) ) {
+				if ( cascadeAssociationNow( cascadePoint, attribute ) ) {
 					cascadeAssociation(
 							action,
 							cascadePoint,
@@ -156,14 +163,14 @@ public final class Cascade {
 							componentPathStackDepth,
 							parent,
 							child,
-							type,
+							attribute,
 							style,
 							anything,
 							isCascadeDeleteEnabled
 						);
 				}
 			}
-			else if ( type.isComponentType() ) {
+			else if ( attribute.getPersistenceType() == PersistenceType.EMBEDDABLE ) {
 				cascadeComponent(
 						action,
 						cascadePoint,
@@ -171,7 +178,7 @@ public final class Cascade {
 						componentPathStackDepth,
 						parent,
 						child,
-						(EmbeddedType) type,
+						attribute,
 						anything
 				);
 			}
@@ -256,8 +263,8 @@ public final class Cascade {
 		return type.getClassification().equals( Type.Classification.ENTITY ) && ( (EntityType) type ).isLogicalOneToOne();
 	}
 
-	private static boolean cascadeAssociationNow(final CascadePoint cascadePoint, AssociationType associationType) {
-		return associationType.getForeignKeyDirection().cascadeNow( cascadePoint );
+	private static boolean cascadeAssociationNow(final CascadePoint cascadePoint, PersistentAttribute attribute) {
+		return attribute.getForeignKeyDirection().cascadeNow( cascadePoint );
 	}
 
 	private static void cascadeComponent(
@@ -267,7 +274,7 @@ public final class Cascade {
 			final int componentPathStackDepth,
 			final Object parent,
 			final Object child,
-			final EmbeddedType componentType,
+			final PersistentAttribute componentType,
 			final Object anything) {
 
 		Object[] children = null;
@@ -305,17 +312,17 @@ public final class Cascade {
 			final int componentPathStackDepth,
 			final Object parent,
 			final Object child,
-			final Type type,
+			final PersistentAttribute attribute,
 			final CascadeStyle style,
 			final Object anything,
 			final boolean isCascadeDeleteEnabled) {
-		if ( type.getClassification().equals( Type.Classification.ENTITY )
-				|| type.getClassification().equals( Type.Classification.ANY ) ) {
-			cascadeToOne( action, eventSource, parent, child, type, style, anything, isCascadeDeleteEnabled );
+		if ( SingularPersistentAttributeEntity.class.isInstance( attribute ) ) {
+			cascadeToOne( action, eventSource, parent, child, attribute, style, anything, isCascadeDeleteEnabled );
 		}
-		else if ( type.getClassification().equals( Type.Classification.COLLECTION ) ) {
+		else if ( PluralPersistentAttribute.class.isInstance( attribute ) ) {
 			cascadeCollection(
 					action,
+
 					cascadePoint,
 					eventSource,
 					componentPathStackDepth,
@@ -323,7 +330,7 @@ public final class Cascade {
 					child,
 					style,
 					anything,
-					(CollectionType) type
+					(PluralPersistentAttribute) attribute
 			);
 		}
 	}
@@ -340,8 +347,11 @@ public final class Cascade {
 			final Object child,
 			final CascadeStyle style,
 			final Object anything,
-			final CollectionType type) {
-		final PersistentCollectionDescriptor persister = eventSource.getFactory().getTypeConfiguration().findCollectionPersister( type.getRole() );
+			final PluralPersistentAttribute attribute) {
+		final PersistentCollectionDescriptor persister = eventSource.getFactory()
+				.getTypeConfiguration()
+				.findCollectionPersister( attribute.getNavigableRole().getNavigableName() );
+		final javax.persistence.metamodel.Type elementType = attribute.getElementType();
 		final Type elemType = (Type) persister.getElementType();
 
 		CascadePoint elementsCascadePoint = cascadePoint;
@@ -406,7 +416,7 @@ public final class Cascade {
 			final int componentPathStackDepth,
 			final Object parent,
 			final Object child,
-			final CollectionType collectionType,
+			final JavaTypeDescriptor collectionType,
 			final CascadeStyle style,
 			final Type elemType,
 			final Object anything,

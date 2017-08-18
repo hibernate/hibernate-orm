@@ -62,7 +62,7 @@ public class PropertyAccessMapImpl implements PropertyAccess {
 
 		public GetterImpl(String propertyName) {
 			this.propertyName = propertyName;
-			this.virtualMember = new MapMember( propertyName );
+			this.virtualMember = new MapMember( propertyName, Object.class );
 		}
 
 		@Override

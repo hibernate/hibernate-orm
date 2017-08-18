@@ -9,7 +9,7 @@ package org.hibernate;
 import java.io.Serializable;
 import java.util.Iterator;
 
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * An interceptor that does nothing.  May be used as a base class for application-defined custom interceptors.
@@ -30,8 +30,8 @@ public class EmptyInterceptor implements Interceptor, Serializable {
 			Object entity, 
 			Serializable id, 
 			Object[] state, 
-			String[] propertyNames, 
-			Type[] types) {}
+			String[] propertyNames,
+			JavaTypeDescriptor[] javaTypeDescriptors) {}
 
 	@Override
 	public boolean onFlushDirty(
@@ -39,8 +39,8 @@ public class EmptyInterceptor implements Interceptor, Serializable {
 			Serializable id, 
 			Object[] currentState, 
 			Object[] previousState, 
-			String[] propertyNames, 
-			Type[] types) {
+			String[] propertyNames,
+			JavaTypeDescriptor[] javaTypeDescriptorss) {
 		return false;
 	}
 
@@ -49,8 +49,8 @@ public class EmptyInterceptor implements Interceptor, Serializable {
 			Object entity, 
 			Serializable id, 
 			Object[] state, 
-			String[] propertyNames, 
-			Type[] types) {
+			String[] propertyNames,
+			JavaTypeDescriptor[] javaTypeDescriptors) {
 		return false;
 	}
 
@@ -59,8 +59,8 @@ public class EmptyInterceptor implements Interceptor, Serializable {
 			Object entity, 
 			Serializable id, 
 			Object[] state, 
-			String[] propertyNames, 
-			Type[] types) {
+			String[] propertyNames,
+			JavaTypeDescriptor[] javaTypeDescriptors) {
 		return false;
 	}
 
@@ -89,7 +89,7 @@ public class EmptyInterceptor implements Interceptor, Serializable {
 			Object[] currentState,
 			Object[] previousState,
 			String[] propertyNames,
-			Type[] types) {
+			JavaTypeDescriptor[] javaTypeDescriptors) {
 		return null;
 	}
 

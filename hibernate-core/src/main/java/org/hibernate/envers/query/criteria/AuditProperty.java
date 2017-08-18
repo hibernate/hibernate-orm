@@ -8,7 +8,6 @@ package org.hibernate.envers.query.criteria;
 
 import java.util.Collection;
 
-import org.hibernate.criterion.MatchMode;
 import org.hibernate.envers.boot.AuditService;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.query.criteria.internal.BetweenAuditExpression;

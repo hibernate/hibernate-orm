@@ -6,9 +6,9 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 import javax.persistence.metamodel.ManagedType;
 
@@ -39,14 +39,14 @@ public interface ManagedTypeDescriptor<T>
 	PersistentAttribute<? super T, ?> findDeclaredAttribute(String name);
 	PersistentAttribute<? super T, ?> findDeclaredAttribute(String name, Class resultType);
 
-	default Set<PersistentAttribute<? super T,?>> getPersistentAttributes() {
-		final HashSet<PersistentAttribute<? super T,?>> attributes = new HashSet<>();
+	default List<PersistentAttribute<? super T,?>> getPersistentAttributes() {
+		final List<PersistentAttribute<? super T,?>> attributes = new ArrayList<>();
 		collectAttributes( attributes::add, PersistentAttribute.class );
 		return attributes;
 	}
 
-	default Set<PersistentAttribute<? super T, ?>> getDeclaredPersistentAttributes() {
-		final HashSet<PersistentAttribute<? super T,?>> attributes = new HashSet<>();
+	default List<PersistentAttribute<? super T, ?>> getDeclaredPersistentAttributes() {
+		final List<PersistentAttribute<? super T,?>> attributes = new ArrayList<>();
 		collectDeclaredAttributes( attributes::add, PersistentAttribute.class );
 		return attributes;
 	}

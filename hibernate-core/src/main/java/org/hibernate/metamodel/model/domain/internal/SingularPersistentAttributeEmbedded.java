@@ -146,6 +146,7 @@ public class SingularPersistentAttributeEmbedded<O,J>
 		return new CompositeQueryResultImpl( resultVariable, embeddedDescriptor );
 	}
 
+
 	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,

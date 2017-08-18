@@ -7,9 +7,9 @@
 
 package org.hibernate.query.internal;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.sqm.tree.SqmParameter;
-import org.hibernate.type.Type;
 
 /**
  * QueryParameter impl for positional-parameters in HQL, JPQL or Criteria queries.
@@ -31,9 +31,9 @@ public class QueryParameterPositionalImpl<T> extends AbstractQueryParameter<T> {
 		return new QueryParameterPositionalImpl<T>(
 				parameter.getPosition(),
 				parameter.allowMultiValuedBinding(),
-				parameter.getAnticipatedType() != null
-						? parameter.getAnticipatedType()
-						: null
+				parameter.getAnticipatedType() != null ?
+						(AllowableParameterType) parameter.getAnticipatedType() :
+						null
 		);
 	}
 
@@ -50,7 +50,7 @@ public class QueryParameterPositionalImpl<T> extends AbstractQueryParameter<T> {
 	private QueryParameterPositionalImpl(
 			Integer position,
 			boolean allowMultiValuedBinding,
-			Type anticipatedType) {
+			AllowableParameterType anticipatedType) {
 		super( allowMultiValuedBinding, anticipatedType );
 		this.position = position;
 	}

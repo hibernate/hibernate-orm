@@ -17,17 +17,17 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
  * @author Gavin King
  */
 public class DefaultPreLoadEventListener implements PreLoadEventListener {
-	
+
 	public void onPreLoad(PreLoadEvent event) {
-		EntityDescriptor persister = event.getPersister();
+		EntityDescriptor descriptor = event.getPersister();
 		event.getSession()
-			.getInterceptor()
-			.onLoad( 
-					event.getEntity(), 
-					event.getId(), 
-					event.getState(), 
-					persister.getPropertyNames(), 
-					persister.getPropertyTypes() 
+				.getInterceptor()
+				.onLoad(
+						event.getEntity(),
+						event.getId(),
+						event.getState(),
+						descriptor.getPropertyNames(),
+						descriptor.getPropertyJavaTypeDescriptors()
 				);
 	}
 	

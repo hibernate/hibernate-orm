@@ -20,17 +20,17 @@ import java.util.concurrent.Future;
 import org.hibernate.Criteria;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Hibernate;
-import org.hibernate.query.Query;
-import org.hibernate.query.NativeQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.transform.Transformers;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -627,20 +627,26 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		private volatile CountDownLatch waitLatch;
 
 		@Override
-		public boolean onLoad(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
+		public boolean onLoad(
+				Object entity,
+				Serializable id,
+				Object[] state,
+				String[] propertyNames,
+				JavaTypeDescriptor[] javaTypeDescriptors) {
 			// Synchronize load and update activities
 			try {
-				if (waitLatch != null) {
+				if ( waitLatch != null ) {
 					waitLatch.countDown();
 					waitLatch = null;
 				}
-				if (blockLatch != null) {
+				if ( blockLatch != null ) {
 					blockLatch.await();
 					blockLatch = null;
 				}
-			} catch (InterruptedException e) {
+			}
+			catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
-				throw new RuntimeException(e);
+				throw new RuntimeException( e );
 			}
 			return true;
 		}

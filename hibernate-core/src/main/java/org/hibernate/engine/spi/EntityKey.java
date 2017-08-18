@@ -56,9 +56,11 @@ public final class EntityKey implements Serializable {
 
 	private int generateHashCode() {
 		int result = 17;
-		final String rootEntityName = entityDescriptor.getRootEntityName();
+		final String rootEntityName = entityDescriptor.getHierarchy().getRootEntityType().getEntityName();
 		result = 37 * result + ( rootEntityName != null ? rootEntityName.hashCode() : 0 );
-		result = 37 * result + entityDescriptor.getIdentifierType().getJavaTypeDescriptor().extractHashCode( identifier );
+		result = 37 * result + entityDescriptor.getIdentifierType()
+				.getJavaTypeDescriptor()
+				.extractHashCode( identifier );
 		return result;
 	}
 
@@ -90,7 +92,10 @@ public final class EntityKey implements Serializable {
 	}
 
 	private boolean sameIdentifier(final EntityKey otherKey) {
-		return entityDescriptor.getIdentifierType().getJavaTypeDescriptor().areEqual( otherKey.identifier, this.identifier );
+		return entityDescriptor.getIdentifierType().getJavaTypeDescriptor().areEqual(
+				otherKey.identifier,
+				this.identifier
+		);
 	}
 
 	private boolean samePersistentType(final EntityKey otherKey) {
@@ -98,7 +103,10 @@ public final class EntityKey implements Serializable {
 			return true;
 		}
 		else {
-			return EqualsHelper.equals( otherKey.entityDescriptor.getRootEntityName(), entityDescriptor.getRootEntityName() );
+			return EqualsHelper.equals(
+					otherKey.entityDescriptor.getHierarchy().getRootEntityType().getEntityName(),
+					entityDescriptor.getHierarchy().getRootEntityType().getEntityName()
+			);
 		}
 	}
 
@@ -138,10 +146,11 @@ public final class EntityKey implements Serializable {
 	 * @throws IOException Thrown by Java I/O
 	 * @throws ClassNotFoundException Thrown by Java I/O
 	 */
-	public static EntityKey deserialize(ObjectInputStream ois, SessionFactoryImplementor sessionFactory) throws IOException, ClassNotFoundException {
+	public static EntityKey deserialize(ObjectInputStream ois, SessionFactoryImplementor sessionFactory)
+			throws IOException, ClassNotFoundException {
 		final Serializable id = (Serializable) ois.readObject();
 		final String entityName = (String) ois.readObject();
 		final EntityDescriptor entityPersister = sessionFactory.getEntityPersister( entityName );
-		return new EntityKey(id, entityPersister);
+		return new EntityKey( id, entityPersister );
 	}
 }

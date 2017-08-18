@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.spi;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +22,7 @@ import org.hibernate.query.sql.spi.QueryResultBuilder;
  * @author Steve Ebersole
  */
 public class NamedSQLQueryDefinition extends NamedQueryDefinition {
-	private QueryResultBuilder[] queryResultBuilders;
+	private List<QueryResultBuilder> queryResultBuilders;
 	private final List<String> querySpaces;
 	private final boolean callable;
 	private String resultSetRef;
@@ -75,12 +77,12 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				readOnly,
 				comment,
 				parameterTypes,
-				null,		// firstResult
-				null,		// maxResults
-				null, 		// resultSetRef
+				null,        // firstResult
+				null,        // maxResults
+				null,        // resultSetRef
 				querySpaces,
 				callable,
-				queryResultBuilders
+				Arrays.asList( queryResultBuilders)
 		);
 	}
 
@@ -139,7 +141,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				resultSetRef,
 				querySpaces,
 				callable,
-				null		// queryResultBuilders
+				Collections.EMPTY_LIST        // queryResultBuilders
 		);
 	}
 
@@ -160,7 +162,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 			String resultSetRef,
 			List<String> querySpaces,
 			boolean callable,
-			QueryResultBuilder[] queryResultBuilders) {
+			List<QueryResultBuilder> queryResultBuilders) {
 		super(
 				name,
 				query.trim(), /* trim done to workaround stupid oracle bug that cant handle whitespaces beforeQuery a { in a sp */
@@ -183,7 +185,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 		this.queryResultBuilders = queryResultBuilders;
 	}
 
-	public QueryResultBuilder[] getQueryResultBuilders() {
+	public List<QueryResultBuilder> getQueryResultBuilders() {
 		return queryResultBuilders;
 	}
 
@@ -222,25 +224,24 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 		);
 	}
 
-	public void addQueryReturns(QueryResultBuilder[] queryReturnsToAdd) {
-		if ( queryReturnsToAdd != null && queryReturnsToAdd.length > 0 ) {
-			int initialQueryReturnsLength = 0;
+	/**
+	 *
+	 * @deprecated Instead use addQueryReturns(List<QueryResultBuilder>)
+	 *
+	 */
+	@Deprecated
+	public void addQueryReturns(QueryResultBuilder[] queryResultBuildersToAdd) {
+		addQueryReturns( Arrays.asList( queryResultBuildersToAdd ));
+	}
+
+
+	public void addQueryReturns(List<QueryResultBuilder> queryResultBuildersToAdd) {
+		if ( queryResultBuildersToAdd != null && queryResultBuildersToAdd.size() > 0 ) {
 			if ( this.queryResultBuilders != null ) {
-				initialQueryReturnsLength = this.queryResultBuilders.length;
+				this.queryResultBuilders.addAll( queryResultBuildersToAdd );
+			}else {
+				this.queryResultBuilders = queryResultBuildersToAdd;
 			}
-			QueryResultBuilder[] allBuilders = new QueryResultBuilder[initialQueryReturnsLength + queryReturnsToAdd.length];
-
-			int i = 0;
-			for ( i = 0; i < initialQueryReturnsLength; i++ ) {
-				allBuilders[i] = this.queryResultBuilders[i];
-			}
-
-			for ( int j = 0; j < queryReturnsToAdd.length; j++ ) {
-				allBuilders[i] = queryReturnsToAdd[j];
-				i++;
-			}
-
-			this.queryResultBuilders = allBuilders;
 		}
 	}
 }

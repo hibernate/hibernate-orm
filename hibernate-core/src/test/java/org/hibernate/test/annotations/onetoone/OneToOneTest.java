@@ -419,6 +419,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	        }
 	    }
 
+	    @Override
 	    public String onPrepareStatement(String sql) {
 	        int numberOfJoins = 0;
 	        if (sql.startsWith("select") & !sql.matches(nextValRegex)) {

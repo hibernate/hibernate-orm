@@ -101,25 +101,25 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	protected void doEvict(
 			final Object object,
 			final EntityKey key,
-			final EntityDescriptor persister,
+			final EntityDescriptor entityDescriptor,
 			final EventSource session)
 			throws HibernateException {
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Evicting {0}", MessageHelper.infoString( persister ) );
+			LOG.tracev( "Evicting {0}", MessageHelper.infoString( entityDescriptor ) );
 		}
 
-		if ( persister.hasNaturalIdentifier() ) {
+		if ( entityDescriptor.hasNaturalIdentifier() ) {
 			session.getPersistenceContext().getNaturalIdHelper().handleEviction(
 					object,
-					persister,
+					entityDescriptor,
 					key.getIdentifier()
 			);
 		}
 
 		// remove all collections for the entity from the session-level cache
-		if ( persister.hasCollections() ) {
-			new EvictVisitor( session ).process( object, persister );
+		if ( entityDescriptor.hasCollections() ) {
+			new EvictVisitor( session ).process( object, entityDescriptor );
 		}
 
 		// remove any snapshot, not really for memory management purposes, but
@@ -128,6 +128,6 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		// This is now handled by removeEntity()
 		//session.getPersistenceContext().removeDatabaseSnapshot(key);
 
-		Cascade.cascade( CascadingActions.EVICT, CascadePoint.AFTER_EVICT, session, persister, object );
+		Cascade.cascade( CascadingActions.EVICT, CascadePoint.AFTER_EVICT, session, entityDescriptor, object );
 	}
 }

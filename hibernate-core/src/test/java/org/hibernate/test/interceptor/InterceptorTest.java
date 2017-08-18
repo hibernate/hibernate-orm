@@ -5,14 +5,13 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.interceptor;
-import javax.persistence.PersistenceException;
+
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Queue;
-
-import org.junit.Test;
+import javax.persistence.PersistenceException;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EmptyInterceptor;
@@ -20,9 +19,11 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.Type;
+import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
@@ -98,7 +99,14 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession(
 				new EmptyInterceptor() {
-					public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types) {
+					@Override
+					public boolean onFlushDirty(
+							Object entity,
+							Serializable id,
+							Object[] currentState,
+							Object[] previousState,
+							String[] propertyNames,
+							JavaTypeDescriptor[] javaTypeDescriptors) {
 						currentState[0] = "test";
 						return true;
 					}
@@ -158,7 +166,13 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 		Session s = openSession(
 				new EmptyInterceptor() {
-					public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
+					@Override
+					public boolean onSave(
+							Object entity,
+							Serializable id,
+							Object[] state,
+							String[] propertyNames,
+							JavaTypeDescriptor[] javaTypeDescriptors) {
 						if ( state[0] == null ) {
 							Image.Details detail = new Image.Details();
 							detail.setPerm1( checkPerm );

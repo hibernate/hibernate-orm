@@ -29,7 +29,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -83,19 +82,22 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testBasicMultiLoad() {
-		doInHibernate(
-				this::sessionFactory, session -> {
-					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids(56) );
+		Session session = openSession();
+		session.beginTransaction();
+		{
+					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 56 ) );
 					assertEquals( 56, list.size() );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10984" )
 	public void testUnflushedDeleteAndThenMultiLoad() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					// delete one of them (but do not flush)...
 					session.delete( session.load( SimpleEntity.class, 5 ) );
 
@@ -110,15 +112,17 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 					// finally assert how multiLoad handles it
 					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids(56) );
 					assertEquals( 56, list.size() );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10617" )
 	public void testDuplicatedRequestedIds() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					// ordered multiLoad
 					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( 1, 2, 3, 2, 2 );
 					assertEquals( 5, list.size() );
@@ -128,15 +132,17 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 					// un-ordered multiLoad
 					list = session.byMultipleIds( SimpleEntity.class ).enableOrderedReturn( false ).multiLoad( 1, 2, 3, 2, 2 );
 					assertEquals( 3, list.size() );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10617" )
 	public void testNonExistentIdRequest() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					// ordered multiLoad
 					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( 1, 699, 2 );
 					assertEquals( 3, list.size() );
@@ -145,8 +151,9 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 					// un-ordered multiLoad
 					list = session.byMultipleIds( SimpleEntity.class ).enableOrderedReturn( false ).multiLoad( 1, 699, 2 );
 					assertEquals( 2, list.size() );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test

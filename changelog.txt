@@ -3,6 +3,22 @@ Hibernate 5.1 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changed in 5.1.10.Final (August 18, 2017)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/30300
+https://hibernate.atlassian.net/issues/?jql=project%20%3D%2010031%20AND%20fixVersion%20%3D%2030300%20ORDER%20BY%20priority%20DESC%2C%20key%20ASC
+
+** Bug
+    * [HHH-10617] - multiLoad behavior
+    * [HHH-11904] - EnumExplicitTypeTest test assert fails on mariadb clusters
+    * [HHH-11905] - AbstractLobTest Fails on Sybase
+    * [HHH-11910] - SchemaUpdateTest fails on databases using case-insensitive identifiers
+    * [HHH-11927] - CascadeMergeToChildBeforeParentTest should not assume the persisted entity has the id with a value of 1
+    * [HHH-11935] - Log a warning and update documentation that enabling "empty" composites is an experimental feature
+
+** Improvement
+    * [HHH-10984] - Have multiLoad not return (unflushed) DELETED entities
+
 Changed in 5.1.9.Final (July 25, 2017)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/29701

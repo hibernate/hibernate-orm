@@ -9,6 +9,11 @@ package org.hibernate.query.sqm.tree.expression.function;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * @author Steve Ebersole
@@ -39,5 +44,12 @@ public class SqmAvgFunction
 	@Override
 	public String asLoggableText() {
 		return "AVG(" + getArgument().asLoggableText() + ")";
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			Expression expression, String resultVariable, QueryResultCreationContext creationContext) {
+		SqlSelectionImpl sqlSelection = new SqlSelectionImpl( creationContext.getSqlSelectionReader(), )
+		return new ScalarQueryResultImpl( resultVariable, sqlSelection, getInferableType() );
 	}
 }

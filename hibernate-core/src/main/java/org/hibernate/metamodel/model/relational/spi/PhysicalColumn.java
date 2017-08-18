@@ -8,10 +8,7 @@ package org.hibernate.metamodel.model.relational.spi;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.naming.Identifier;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
@@ -158,15 +155,5 @@ public class PhysicalColumn implements Column {
 
 	public String getCheckConstraint() {
 		return checkConstraint;
-	}
-
-	@Override
-	public Expression createSqlExpression() {
-		return null;
-	}
-
-	@Override
-	public SqlSelection generateSqlSelection(int jdbcResultSetPosition) {
-		return new SqlSelectionImpl( sqlSelectionReader, jdbcResultSetPosition );
 	}
 }

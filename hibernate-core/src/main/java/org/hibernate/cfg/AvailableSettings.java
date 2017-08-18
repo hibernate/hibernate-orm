@@ -1257,10 +1257,13 @@ public interface AvailableSettings {
 	 */
 	String PROCEDURE_NULL_PARAM_PASSING = "hibernate.proc.param_null_passing";
 
-	/*
-	 * Enable instantiation of composite/embedded objects when all of its attribute values are {@code null}.
+	/**
+	 * [EXPERIMENTAL] Enable instantiation of composite/embedded objects when all of its attribute values are {@code null}.
 	 * The default (and historical) behavior is that a {@code null} reference will be used to represent the
 	 * composite when all of its attributes are {@code null}
+	 * <p/>
+	 * This is an experimental feature that has known issues. It should not be used in production
+	 * until it is stabilized. See Hibernate Jira issue HHH-11936 for details.
 	 *
 	 * @since 5.1
 	 */

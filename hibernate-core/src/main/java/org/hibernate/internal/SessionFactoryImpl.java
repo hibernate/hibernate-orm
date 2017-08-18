@@ -67,6 +67,7 @@ import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
 import org.hibernate.context.internal.JTASessionContext;
@@ -112,6 +113,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
@@ -238,6 +240,9 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		this.jdbcServices = this.serviceRegistry.getService( JdbcServices.class );
 		this.dialect = this.jdbcServices.getDialect();
+
+		logIfEmptyCompositesEnabled( this.properties );
+
 		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), options.getCustomSqlFunctionMap() );
 
@@ -1572,5 +1577,21 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		boolean isNamed = ois.readBoolean();
 		final String name = isNamed ? ois.readUTF() : null;
 		return (SessionFactoryImpl) locateSessionFactoryOnDeserialization( uuid, name );
+	}
+
+	private void logIfEmptyCompositesEnabled(Properties props ) {
+		final boolean isEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
+				AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLED,
+				props,
+				false
+		);
+		if ( isEmptyCompositesEnabled ) {
+			// It would be nice to do this logging in ComponentMetamodel, where
+			// AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLED is actually used.
+			// Unfortunately that would end up logging a message several times for
+			// each embeddable/composite. Doing it here will log the message only
+			// once.
+			LOG.emptyCompositesEnabled();
+		}
 	}
 }

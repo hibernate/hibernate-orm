@@ -6,10 +6,6 @@
  */
 package org.hibernate.metamodel.model.relational.spi;
 
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -53,13 +49,5 @@ public class DerivedColumn implements Column {
 	@Override
 	public SqlTypeDescriptor getSqlTypeDescriptor() {
 		return sqlTypeDescriptor;
-	}
-
-	@Override
-	public SqlSelection generateSqlSelection(int jdbcResultSetPosition) {
-		return new SqlSelectionImpl(
-				new SqlSelectionReaderImpl( getSqlTypeDescriptor().getJdbcTypeCode() ),
-				jdbcResultSetPosition
-		);
 	}
 }

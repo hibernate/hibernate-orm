@@ -17,7 +17,6 @@ public interface SqlSelection {
 	/**
 	 * Get the reader used to read values for this selection
 	 *
-	 * @see SqlExpressable#getSqlSelectionReader()
 	 */
 	SqlSelectionReader getSqlSelectionReader();
 

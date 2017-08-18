@@ -140,7 +140,7 @@ public class CollectionTableGroup implements TableGroup {
 							") to ColumnBinding via TableGroup [" + this + "]"
 			);
 		}
-		final ColumnReference columnBinding = new ColumnReference( column, tableBinding );
+		final ColumnReference columnBinding = new ColumnReference( this, column );
 		columnBindingMap.put( column, columnBinding );
 		return columnBinding;
 	}

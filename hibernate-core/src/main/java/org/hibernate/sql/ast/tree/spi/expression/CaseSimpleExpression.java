@@ -46,6 +46,14 @@ public class CaseSimpleExpression implements Expression, Selectable, SqlExpressa
 	}
 
 	@Override
+	public SqlSelection createSqlSelection(int jdbcPosition) {
+		return new SqlSelectionImpl(
+				getType().getSqlSelectionReader(),
+				jdbcPosition
+		);
+	}
+
+	@Override
 	public void accept(SqlAstWalker  walker) {
 		walker.visitCaseSimpleExpression( this );
 	}
@@ -59,14 +67,6 @@ public class CaseSimpleExpression implements Expression, Selectable, SqlExpressa
 				resultVariable,
 				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
 				getType()
-		);
-	}
-
-	@Override
-	public SqlSelection generateSqlSelection(int jdbcResultSetPosition) {
-		return new SqlSelectionImpl(
-				getType().getSqlSelectionReader(),
-				jdbcResultSetPosition
 		);
 	}
 

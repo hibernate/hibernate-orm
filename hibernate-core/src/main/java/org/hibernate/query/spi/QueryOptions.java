@@ -36,4 +36,23 @@ public interface QueryOptions {
 
 	TupleTransformer getTupleTransformer();
 	ResultListTransformer getResultListTransformer();
+
+	default Limit getEffectiveLimit() {
+		final Limit explicit = getLimit();
+		return explicit != null ? explicit : Limit.NONE;
+	}
+
+	default boolean hasLimit() {
+		final Limit limit = getLimit();
+		if ( limit != null ) {
+			if ( limit.getFirstRow() != null ) {
+				return true;
+			}
+			if ( limit.getMaxRows() != null ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 }

@@ -16,7 +16,6 @@ import java.util.regex.Pattern;
 
 import org.hibernate.JDBCException;
 import org.hibernate.QueryTimeoutException;
-import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.NvlFunctionTemplate;
@@ -31,8 +30,10 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
 import org.hibernate.query.sqm.consume.multitable.spi.idtable.GlobalTempTableExporter;
@@ -714,31 +715,27 @@ public class Oracle8iDialect extends Dialect {
 
 	/**
 	 * For Oracle, the FOR UPDATE clause cannot be applied when using ORDER BY, DISTINCT or views.
-	 * @param parameters
-	 * @return
-	 @see <a href="https://docs.oracle.com/database/121/SQLRF/statements_10002.htm#SQLRF01702">Oracle FOR UPDATE restrictions</a>
+	 *
+	 * @see <a href="https://docs.oracle.com/database/121/SQLRF/statements_10002.htm#SQLRF01702">Oracle FOR UPDATE restrictions</a>
 	 */
 	@Override
-	public boolean useFollowOnLocking(QueryParameters parameters) {
-
-		if (parameters != null ) {
-			String lowerCaseSQL = parameters.getFilteredSQL().toLowerCase();
-
-			return
-				DISTINCT_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
-				GROUP_BY_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
-				UNION_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
-				(
-					parameters.hasRowSelection() &&
-						(
-							ORDER_BY_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
-							parameters.getRowSelection().getFirstRow() != null
-						)
-				);
-		}
-		else {
+	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
+		if ( StringHelper.isEmpty( sql ) || queryOptions == null ) {
 			return true;
 		}
+
+		sql = sql.toLowerCase( Locale.ROOT );
+
+		return DISTINCT_KEYWORD_PATTERN.matcher( sql ).find()
+				|| GROUP_BY_KEYWORD_PATTERN.matcher( sql ).find()
+				|| UNION_KEYWORD_PATTERN.matcher( sql ).find()
+				|| (
+						queryOptions.hasLimit()
+								&& (
+										ORDER_BY_KEYWORD_PATTERN.matcher( sql ).find()
+												|| queryOptions.getLimit().getFirstRow() != null
+								)
+				);
 	}
 	
 	@Override

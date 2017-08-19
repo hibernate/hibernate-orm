@@ -77,6 +77,7 @@ import org.hibernate.metamodel.model.relational.spi.Sequence;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
 import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
 import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTableExporterImpl;
@@ -1175,7 +1176,6 @@ public abstract class Dialect implements ConversionContext {
 	 * @param zeroBasedFirstResult The user-supplied, zero-based first row offset.
 	 * @return The corresponding db/dialect specific offset.
 	 * @see org.hibernate.query.Query#setFirstResult
-	 * @see org.hibernate.Criteria#setFirstResult
 	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
 	 */
 	@Deprecated
@@ -2749,24 +2749,10 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return {@code true} indicates that the dialect requests that locking be applied by subsequent select;
 	 * {@code false} (the default) indicates that locking should be applied to the main SQL statement..
-	 * @deprecated Use {@link #useFollowOnLocking(QueryParameters)} instead.
-	 */
-	@Deprecated
-	public boolean useFollowOnLocking() {
-		return useFollowOnLocking( null );
-	}
-
-	/**
-	 * Some dialects have trouble applying pessimistic locking depending upon what other query options are
-	 * specified (paging, ordering, etc).  This method allows these dialects to request that locking be applied
-	 * by subsequent selects.
 	 *
-	 * @param parameters query parameters
-	 * @return {@code true} indicates that the dialect requests that locking be applied by subsequent select;
-	 * {@code false} (the default) indicates that locking should be applied to the main SQL statement..
 	 * @since 5.2
 	 */
-	public boolean useFollowOnLocking(QueryParameters parameters) {
+	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
 		return false;
 	}
 

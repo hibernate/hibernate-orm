@@ -24,6 +24,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.metamodel.model.relational.spi.Index;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.naming.QualifiedNameImpl;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
@@ -193,7 +194,7 @@ public class Teradata14Dialect extends TeradataDialect {
 	}
 
 	@Override
-	public boolean useFollowOnLocking(QueryParameters parameters) {
+	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
 		return true;
 	}
 

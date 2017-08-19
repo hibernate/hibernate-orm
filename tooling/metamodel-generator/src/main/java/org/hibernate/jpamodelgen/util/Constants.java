@@ -30,6 +30,9 @@ public final class Constants {
 	public static final String MAP_KEY_CLASS = "javax.persistence.MapKeyClass";
 	public static final String ELEMENT_COLLECTION = "javax.persistence.ElementCollection";
 	public static final String ACCESS = "javax.persistence.Access";
+	public static final String MAP_ATTRIBUTE = "javax.persistence.metamodel.MapAttribute";
+	public static final String CONVERT = "javax.persistence.Convert";
+	public static final String HIBERNATE_TYPE = "org.hibernate.annotations.Type";
 
 	public static final Map<String, String> COLLECTIONS = new HashMap<String, String>();
 

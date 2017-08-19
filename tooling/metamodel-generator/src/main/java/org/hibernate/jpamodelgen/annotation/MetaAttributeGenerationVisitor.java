@@ -111,6 +111,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 	}
 
 	private AnnotationMetaAttribute createMetaCollectionAttribute(DeclaredType declaredType, Element element, String fqNameOfReturnType, String collection, String targetEntity) {
+		boolean isCollection = isCollectionAttribute(element.getAnnotationMirrors());
 		if ( TypeUtils.containsAnnotation( element, Constants.ELEMENT_COLLECTION ) ) {
 			String explicitTargetEntity = getTargetEntity( element.getAnnotationMirrors() );
 			TypeMirror collectionElementType = TypeUtils.getCollectionElementType(
@@ -142,9 +143,13 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 			return createAnnotationMetaAttributeForMap( declaredType, element, collection, targetEntity );
 		}
 		else {
-			return new AnnotationMetaCollection(
-					entity, element, collection, getElementType( declaredType, targetEntity )
-			);
+			if(isCollection){
+				return new AnnotationMetaCollection(
+						entity, element, collection, getElementType( declaredType, targetEntity )
+				);
+			}else{
+				return new AnnotationMetaSingleAttribute(entity,element,declaredType.toString());
+			}
 		}
 	}
 
@@ -249,6 +254,20 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 			}
 		}
 		return fullyQualifiedTargetEntityName;
+	}
+
+	private boolean isCollectionAttribute(List<? extends AnnotationMirror> annotations){
+		for ( AnnotationMirror mirror : annotations ) {
+			if(TypeUtils.isAnnotationMirrorOfType( mirror, Constants.ELEMENT_COLLECTION )
+					|| TypeUtils.isAnnotationMirrorOfType( mirror, Constants.ONE_TO_MANY )
+					|| TypeUtils.isAnnotationMirrorOfType( mirror, Constants.MANY_TO_MANY )
+					|| TypeUtils.isAnnotationMirrorOfType( mirror, Constants.MANY_TO_ONE )
+					|| TypeUtils.isAnnotationMirrorOfType( mirror, Constants.ONE_TO_ONE )
+					|| TypeUtils.isAnnotationMirrorOfType( mirror, ORG_HIBERNATE_ANNOTATIONS_TARGET )){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private String getFullyQualifiedClassNameOfTargetEntity(AnnotationMirror mirror, String parameterName) {

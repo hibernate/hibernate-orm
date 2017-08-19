@@ -3,6 +3,14 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.0.15.Final (August 18, 2017)
+------------------------------------------------------------------------------------------------------------------------
+    [JBEAP-11657 / HHH-9199] - ValidityAuditStrategy: Collection of embeddables is not audited correctly
+
+    [JBEAP-11659] Envers bugs auditing collection of embeddables
+                  [HHH-11214] - ValidityAuditStrategy not audit properly nested collection with nulls
+                  [HHH-11215] - NullPointerException when reading an audited entity that has a collection of embeddables with a ManyToOne to an unaudited entity.
+
 Changes in 5.0.14.Final (June 12, 2017)
 ------------------------------------------------------------------------------------------------------------------------
 

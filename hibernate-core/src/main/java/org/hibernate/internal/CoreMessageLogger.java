@@ -24,6 +24,7 @@ import javax.transaction.SystemException;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.cache.CacheException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.engine.jndi.JndiException;
@@ -1773,4 +1774,16 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "@javax.persistence.Cacheable or @org.hibernate.annotations.Cache used on a non-root entity: ignored for %s", id = 482)
 	void cacheOrCacheableAnnotationOnNonRoot(String className);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 483,
+			value = "An experimental feature has been enabled (" +
+					AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLED +
+					"=true) that instantiates empty composite/embedded " +
+					"objects when all of its attribute values are null. This feature has known issues and " +
+					"should not be used in production until it is stabilized. See Hibernate Jira " +
+					"issue HHH-11936 for details."
+	)
+	void emptyCompositesEnabled();
 }

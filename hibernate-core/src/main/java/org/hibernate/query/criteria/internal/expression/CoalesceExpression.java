@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.persistence.criteria.Expression;
 
-import org.hibernate.query.criteria.JpaCoalesce;
-import org.hibernate.query.criteria.JpaExpressionImplementor;
+import org.hibernate.query.criteria.spi.JpaCoalesce;
+import org.hibernate.query.criteria.spi.JpaExpressionImplementor;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;

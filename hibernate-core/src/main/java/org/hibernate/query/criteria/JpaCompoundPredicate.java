@@ -16,6 +16,8 @@ import javax.persistence.criteria.Predicate;
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
+import org.hibernate.query.criteria.spi.AbstractPredicateImpl;
+import org.hibernate.query.criteria.spi.JpaPredicateImplementor;
 import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 

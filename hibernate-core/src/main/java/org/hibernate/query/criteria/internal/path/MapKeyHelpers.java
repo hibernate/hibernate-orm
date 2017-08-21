@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.criteria.JpaMapJoinImplementor;
-import org.hibernate.query.criteria.JpaPathImplementor;
+import org.hibernate.query.criteria.spi.JpaPathImplementor;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 
 /**

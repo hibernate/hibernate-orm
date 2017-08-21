@@ -20,7 +20,7 @@ import javax.persistence.metamodel.Type;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
-import org.hibernate.query.criteria.JpaPathSourceImplementor;
+import org.hibernate.query.criteria.spi.JpaPathSourceImplementor;
 import org.hibernate.query.criteria.internal.path.SingularAttributeJoin;
 
 import org.junit.Test;

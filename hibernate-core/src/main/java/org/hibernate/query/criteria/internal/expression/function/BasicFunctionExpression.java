@@ -8,10 +8,10 @@ package org.hibernate.query.criteria.internal.expression.function;
 
 import java.io.Serializable;
 
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.expression.AbstractExpression;
+import org.hibernate.query.criteria.spi.JpaCriteriaBuilderImplementor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Models the basic concept of a SQL function.
@@ -25,15 +25,11 @@ public class BasicFunctionExpression<X>
 	private final String functionName;
 
 	public BasicFunctionExpression(
-			HibernateCriteriaBuilder criteriaBuilder,
-			Class<X> javaType,
+			JpaCriteriaBuilderImplementor criteriaBuilder,
+			JavaTypeDescriptor<X> javaType,
 			String functionName) {
 		super( criteriaBuilder, javaType );
 		this.functionName = functionName;
-	}
-
-	protected  static int properSize(int number) {
-		return number + (int)( number*.75 ) + 1;
 	}
 
 	public String getFunctionName() {

@@ -11,7 +11,7 @@ import javax.persistence.metamodel.ListAttribute;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.JpaPathImplementor;
+import org.hibernate.query.criteria.spi.JpaPathImplementor;
 
 /**
  * An expression for referring to the index of a list.

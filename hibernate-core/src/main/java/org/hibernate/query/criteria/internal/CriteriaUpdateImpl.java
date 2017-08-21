@@ -15,8 +15,8 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.query.criteria.AbstractManipulationCriteriaQuery;
-import org.hibernate.query.criteria.JpaExpressionImplementor;
-import org.hibernate.query.criteria.JpaPathImplementor;
+import org.hibernate.query.criteria.spi.JpaExpressionImplementor;
+import org.hibernate.query.criteria.spi.JpaPathImplementor;
 import org.hibernate.query.criteria.internal.path.SingularAttributePath;
 
 /**

@@ -10,6 +10,8 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.Incubating;
+import org.hibernate.query.criteria.spi.JpaExpressionImplementor;
+import org.hibernate.query.criteria.spi.JpaPredicateImplementor;
 
 /**
  * Hibernate ORM specialization of the JPA {@link CriteriaBuilder.In}

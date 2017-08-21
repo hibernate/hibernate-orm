@@ -13,7 +13,7 @@ import javax.persistence.metamodel.MapAttribute;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.JpaPathImplementor;
+import org.hibernate.query.criteria.spi.JpaPathImplementor;
 /**
  * TODO : javadoc
  *

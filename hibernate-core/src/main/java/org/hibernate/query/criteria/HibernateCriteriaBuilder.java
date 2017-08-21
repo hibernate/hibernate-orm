@@ -12,14 +12,12 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
@@ -33,6 +31,11 @@ import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.query.criteria.spi.JpaCoalesce;
+import org.hibernate.query.criteria.spi.JpaExpressionImplementor;
+import org.hibernate.query.criteria.spi.JpaParameterExpression;
+import org.hibernate.query.criteria.spi.JpaPathImplementor;
+import org.hibernate.query.criteria.spi.JpaPredicateImplementor;
 import org.hibernate.query.sqm.produce.spi.criteria.JpaCriteriaQuery;
 import org.hibernate.query.sqm.produce.spi.criteria.from.JpaRoot;
 import org.hibernate.query.sqm.produce.spi.criteria.select.JpaCompoundSelection;
@@ -43,7 +46,17 @@ import org.hibernate.query.sqm.produce.spi.criteria.select.JpaCompoundSelection;
  * @author Steve Ebersole
  */
 public interface HibernateCriteriaBuilder extends CriteriaBuilder {
-	SessionFactory getEntityManagerFactory();
+	/**
+	 * Access to the underlying SessionFactory.
+	 *
+	 * @deprecated Use {@link #getSessionFactory} instead
+	 */
+	@Deprecated
+	default SessionFactory getEntityManagerFactory() {
+		return getSessionFactory();
+	}
+
+	SessionFactory getSessionFactory();
 
 	// in-flight ideas:
 	//		* operator corresponding to the new "matches" HQL operator
@@ -51,27 +64,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	// 				outside of checks done in #checkMultiSelect
 	//		* ?generic support for SQL restrictions? - ala Restrictions.sqlRestriction
 	//		* port query-by-example support - org.hibernate.criterion.Example
+	// todo (6.0) : consider these ^^
 
-	/**
-	 * Centralize checking of criteria query multi-selects as defined by the
-	 * {@link CriteriaQuery#multiselect(List)}  method.
-	 *
-	 * @param selections The selection varargs to check
-	 *
-	 * @throws IllegalArgumentException If the selection items are not valid per {@link CriteriaQuery#multiselect}
-	 * documentation.
-	 * <i>&quot;An argument to the multiselect method must not be a tuple-
-	 * or array-valued compound selection item.&quot;</i>
-	 */
-	void checkMultiSelect(List<Selection<?>> selections);
-
-	void checkIsJpaExpression(Selection<?> selection);
-
-	void checkIsJpaExpression(Expression<?> expression);
-
-	void checkIsJpaPredicate(Predicate predicate);
-
-	JpaPredicateImplementor wrap(Expression<Boolean> expression);
+	Predicate wrap(Expression<Boolean> expression);
 
 	/**
 	 * Create a predicate that tests whether a Map is empty.
@@ -85,7 +80,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return is-empty predicate
 	 */
-	<M extends Map<?,?>> JpaPredicateImplementor isMapEmpty(Expression<M> mapExpression);
+	<M extends Map<?,?>> Predicate isMapEmpty(Expression<M> mapExpression);
 
 	/**
 	 * Create a predicate that tests whether a Map is
@@ -99,7 +94,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return is-not-empty predicate
 	 */
-	<M extends Map<?,?>> JpaPredicateImplementor isMapNotEmpty(Expression<M> mapExpression);
+	<M extends Map<?,?>> Predicate isMapNotEmpty(Expression<M> mapExpression);
 
 	/**
 	 * Create an expression that tests the size of a map.
@@ -112,7 +107,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return size expression
 	 */
-	<M extends Map<?,?>> JpaExpressionImplementor<Integer> mapSize(Expression<M> mapExpression);
+	<M extends Map<?,?>> Expression<Integer> mapSize(Expression<M> mapExpression);
 
 	/**
 	 * Create an expression that tests the size of a map.
@@ -121,7 +116,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return size expression
 	 */
-	<M extends Map<?,?>> JpaExpressionImplementor<Integer> mapSize(M map);
+	<M extends Map<?,?>> Expression<Integer> mapSize(M map);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -517,12 +512,14 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	<T> JpaInImplementor<T> in(Expression<? extends T> expression);
 
+	@SuppressWarnings("unchecked")
 	<T> JpaInImplementor<T> in(Expression<? extends T> expression, Expression<? extends T>... values);
 
+	@SuppressWarnings("unchecked")
 	<T> JpaInImplementor<T> in(Expression<? extends T> expression, T... values);
 
 	@Override
-	<Y> JpaCoalesce <Y> coalesce(Expression<? extends Y> x, Expression<? extends Y> y);
+	<Y> JpaCoalesce<Y> coalesce(Expression<? extends Y> x, Expression<? extends Y> y);
 
 	@Override
 	<Y> JpaExpressionImplementor<Y> coalesce(Expression<? extends Y> x, Y y);

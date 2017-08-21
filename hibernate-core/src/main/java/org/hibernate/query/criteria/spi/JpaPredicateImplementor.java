@@ -4,9 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.criteria;
+package org.hibernate.query.criteria.spi;
 
-import org.hibernate.query.sqm.produce.spi.criteria.JpaPredicate;
+import javax.persistence.criteria.Predicate;
 
 /**
  * Hibernate ORM specialization of the JPA {@link javax.persistence.criteria.Predicate}
@@ -14,14 +14,7 @@ import org.hibernate.query.sqm.produce.spi.criteria.JpaPredicate;
  *
  * @author Steve Ebersole
  */
-public interface JpaPredicateImplementor extends JpaPredicate, JpaExpressionImplementor<Boolean> {
-	/**
-	 * Access to the CriteriaBuilder
-	 *
-	 * @return The CriteriaBuilder
-	 */
-	HibernateCriteriaBuilder criteriaBuilder();
-
+public interface JpaPredicateImplementor extends JpaExpressionImplementor<Boolean>, Predicate {
 	@Override
 	JpaPredicateImplementor not();
 

@@ -7,6 +7,7 @@
 package org.hibernate.query.criteria;
 
 import org.hibernate.Incubating;
+import org.hibernate.query.criteria.spi.JpaSelectionImplementor;
 import org.hibernate.query.sqm.produce.spi.criteria.select.JpaSelectClause;
 import org.hibernate.query.sqm.produce.spi.criteria.select.JpaSelection;
 

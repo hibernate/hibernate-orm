@@ -11,20 +11,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.query.criteria.CriteriaBuilderException;
-import org.hibernate.query.criteria.JpaExpressionImplementor;
 import org.hibernate.query.criteria.JpaInImplementor;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
 import org.hibernate.query.criteria.internal.expression.LiteralExpression;
-import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.criteria.spi.JpaCriteriaBuilderImplementor;
+import org.hibernate.query.criteria.spi.JpaExpressionImplementor;
 
 /**
  * Models an <tt>[NOT] IN</tt> restriction
@@ -76,8 +72,7 @@ public class InPredicate<T>
 			Expression<? extends T> expression,
 			List<Expression<? extends T>> values) {
 		super( criteriaBuilder );
-		criteriaBuilder.checkIsJpaExpression( expression );
-		this.expression = (JpaExpressionImplementor<? extends T>) expression;
+		this.expression = criteriaBuilder.asHibernateExpression( expression );
 
 		if ( values == null || values.isEmpty() ) {
 			this.values = null;
@@ -110,13 +105,12 @@ public class InPredicate<T>
 	 * @param values The value list.
 	 */
 	public InPredicate(
-			CriteriaBuilderImpl criteriaBuilder,
+			JpaCriteriaBuilderImplementor criteriaBuilder,
 			Expression<? extends T> expression,
 			Collection<T> values) {
 		super( criteriaBuilder );
 
-		criteriaBuilder.checkIsJpaExpression( expression );
-		this.expression = (JpaExpressionImplementor<? extends T>) expression;
+		this.expression = criteriaBuilder.asHibernateExpression( expression );
 
 		if ( values == null || values.isEmpty() )
 		this.values = CollectionHelper.arrayList( values.size() );
@@ -142,12 +136,12 @@ public class InPredicate<T>
 	}
 
 	public List<Expression<? extends T>> getValues() {
-		return values.stream().collect( Collectors.toList() );
+		return new ArrayList<>( values );
 	}
 
 	@Override
 	public InPredicate<T> value(T value) {
-		return addValue( new LiteralExpression<T>( criteriaBuilder(), value ) );
+		return addValue( new LiteralExpression<T>( getCriteriaBuilder(), value ) );
 	}
 
 	private InPredicate<T> addValue(JpaExpressionImplementor<? extends T> value) {
@@ -161,8 +155,7 @@ public class InPredicate<T>
 	@Override
 	@SuppressWarnings("unchecked")
 	public InPredicate<T> value(Expression<? extends T> value) {
-		criteriaBuilder().checkIsJpaExpression( value );
-		return addValue( (JpaExpressionImplementor<? extends T>) value );
+		return addValue( getCriteriaBuilder().asHibernateExpression( value ) );
 	}
 
 	@Override
@@ -171,19 +164,5 @@ public class InPredicate<T>
 		for ( Expression value : getValues() ) {
 			Helper.possibleParameter(value, registry);
 		}
-	}
-
-	@Override
-	public SqmPredicate visitPredicate(CriteriaVisitor visitor) {
-		return visitor.visitInTupleListPredicate(
-				expression,
-				values.stream().collect( Collectors.toList() ),
-				isNegated()
-		);
-	}
-
-	@Override
-	public SqmExpression visitExpression(CriteriaVisitor visitor) {
-		throw new CriteriaBuilderException( "Unexpected call to #visitExpression on InPredicate" );
 	}
 }

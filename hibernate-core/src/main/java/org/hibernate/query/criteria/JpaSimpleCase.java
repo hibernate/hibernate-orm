@@ -9,6 +9,7 @@ package org.hibernate.query.criteria;
 import javax.persistence.criteria.CriteriaBuilder;
 
 import org.hibernate.Incubating;
+import org.hibernate.query.criteria.spi.JpaExpressionImplementor;
 
 /**
  * Hibernate ORM specialization of the JPA {@link CriteriaBuilder.SimpleCase}

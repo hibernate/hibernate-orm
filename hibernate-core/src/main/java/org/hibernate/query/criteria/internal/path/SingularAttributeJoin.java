@@ -17,7 +17,7 @@ import javax.persistence.metamodel.Type;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
 import org.hibernate.query.criteria.JpaFromImplementor;
-import org.hibernate.query.criteria.JpaPathSourceImplementor;
+import org.hibernate.query.criteria.spi.JpaPathSourceImplementor;
 
 /**
  * Models a join based on a singular attribute

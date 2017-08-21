@@ -17,7 +17,7 @@ import javax.persistence.metamodel.Type;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.JpaAttributeJoinImplementor;
-import org.hibernate.query.criteria.JpaPathSourceImplementor;
+import org.hibernate.query.criteria.spi.JpaPathSourceImplementor;
 
 /**
  * Support for defining joins to plural attributes (JPA requires typing based on

@@ -12,7 +12,7 @@ import java.util.List;
 import javax.persistence.criteria.CriteriaBuilder.SimpleCase;
 import javax.persistence.criteria.Expression;
 
-import org.hibernate.query.criteria.JpaExpressionImplementor;
+import org.hibernate.query.criteria.spi.JpaExpressionImplementor;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;

@@ -20,7 +20,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
-import org.hibernate.query.criteria.JpaPathSourceImplementor;
+import org.hibernate.query.criteria.spi.JpaPathSourceImplementor;
 import org.hibernate.query.sqm.produce.spi.criteria.path.JpaPluralAttributePath;
 
 /**

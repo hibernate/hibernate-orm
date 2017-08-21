@@ -6,9 +6,12 @@
  */
 package org.hibernate.query.criteria;
 
+import javax.persistence.criteria.From;
+
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
-import org.hibernate.query.sqm.produce.spi.criteria.from.JpaFrom;
+import org.hibernate.query.criteria.spi.JpaPathImplementor;
+import org.hibernate.query.criteria.spi.JpaPathSourceImplementor;
 
 /**
  * Hibernate ORM specialization of the JPA {@link javax.persistence.criteria.From}
@@ -19,7 +22,7 @@ import org.hibernate.query.sqm.produce.spi.criteria.from.JpaFrom;
  * @since 6.0
  */
 @Incubating
-public interface JpaFromImplementor<Z,X> extends JpaPathImplementor<X>, JpaFrom<Z,X> {
+public interface JpaFromImplementor<Z,X> extends JpaPathSourceImplementor<X>, From<Z,X> {
 	JpaFromImplementor<Z,X> correlateTo(CriteriaSubqueryImpl subquery);
 	void prepareCorrelationDelegate(JpaFromImplementor<Z,X> parent);
 	JpaFromImplementor<Z, X> getCorrelationParent();

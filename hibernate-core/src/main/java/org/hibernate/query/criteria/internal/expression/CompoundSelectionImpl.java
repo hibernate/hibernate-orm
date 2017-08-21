@@ -15,7 +15,7 @@ import javax.persistence.criteria.Selection;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.JpaTupleElementImplementor;
+import org.hibernate.query.criteria.spi.JpaTupleElementImplementor;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
 import org.hibernate.query.criteria.internal.selection.AbstractSelection;
 

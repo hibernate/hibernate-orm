@@ -17,8 +17,8 @@ import javax.persistence.metamodel.SetAttribute;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
 import org.hibernate.query.criteria.JpaFromImplementor;
-import org.hibernate.query.criteria.JpaPathImplementor;
-import org.hibernate.query.criteria.JpaPathSourceImplementor;
+import org.hibernate.query.criteria.spi.JpaPathImplementor;
+import org.hibernate.query.criteria.spi.JpaPathSourceImplementor;
 import org.hibernate.query.criteria.JpaSetJoinImplementor;
 
 /**

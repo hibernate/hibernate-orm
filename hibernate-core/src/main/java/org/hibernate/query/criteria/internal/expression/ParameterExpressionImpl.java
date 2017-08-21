@@ -8,7 +8,7 @@ package org.hibernate.query.criteria.internal.expression;
 
 import java.io.Serializable;
 
-import org.hibernate.query.criteria.JpaParameterExpression;
+import org.hibernate.query.criteria.spi.JpaParameterExpression;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;

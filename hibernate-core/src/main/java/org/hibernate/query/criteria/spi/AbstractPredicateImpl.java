@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.criteria;
+package org.hibernate.query.criteria.spi;
 
 import java.io.Serializable;
 import java.util.List;
@@ -13,8 +13,6 @@ import javax.persistence.criteria.Selection;
 
 import org.hibernate.query.criteria.internal.expression.AbstractExpression;
 import org.hibernate.query.criteria.internal.predicate.NegatedPredicateWrapper;
-import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * Basic template support for {@link Predicate} implementors providing
@@ -26,13 +24,8 @@ public abstract class AbstractPredicateImpl
 		extends AbstractExpression<Boolean>
 		implements JpaPredicateImplementor, Serializable {
 
-	protected AbstractPredicateImpl(HibernateCriteriaBuilder criteriaBuilder) {
-		super( criteriaBuilder, Boolean.class );
-	}
-
-	@Override
-	public SqmExpression visitExpression(CriteriaVisitor visitor) {
-		return null;
+	protected AbstractPredicateImpl(JpaCriteriaBuilderImplementor criteriaBuilder) {
+		super( criteriaBuilder, criteriaBuilder.resolveJavaTypeDescriptor( Boolean.class ) );
 	}
 
 	@Override

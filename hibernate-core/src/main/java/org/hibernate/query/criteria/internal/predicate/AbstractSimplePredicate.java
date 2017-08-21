@@ -11,8 +11,8 @@ import java.util.Collections;
 import java.util.List;
 import javax.persistence.criteria.Expression;
 
-import org.hibernate.query.criteria.AbstractPredicateImpl;
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
+import org.hibernate.query.criteria.spi.AbstractPredicateImpl;
+import org.hibernate.query.criteria.spi.JpaCriteriaBuilderImplementor;
 
 /**
  * TODO : javadoc
@@ -24,7 +24,7 @@ public abstract class AbstractSimplePredicate
 		implements Serializable {
 	private static final List<Expression<Boolean>> NO_EXPRESSIONS = Collections.emptyList();
 
-	public AbstractSimplePredicate(CriteriaBuilderImpl criteriaBuilder) {
+	public AbstractSimplePredicate(JpaCriteriaBuilderImplementor criteriaBuilder) {
 		super( criteriaBuilder );
 	}
 

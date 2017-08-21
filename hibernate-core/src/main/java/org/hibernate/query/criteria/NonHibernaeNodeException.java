@@ -6,13 +6,17 @@
  */
 package org.hibernate.query.criteria;
 
-import org.hibernate.query.sqm.produce.spi.criteria.select.JpaSelection;
+import org.hibernate.HibernateException;
 
 /**
- * Hibernate ORM specialization of the JPA {@link javax.persistence.criteria.Selection}
- * contract.
- *
  * @author Steve Ebersole
  */
-public interface JpaSelectionImplementor<X> extends JpaTupleElementImplementor<X>, JpaSelection<X> {
+public class NonHibernaeNodeException extends HibernateException {
+	public NonHibernaeNodeException(String message) {
+		super( message );
+	}
+
+	public NonHibernaeNodeException(String message, Throwable cause) {
+		super( message, cause );
+	}
 }

@@ -8,12 +8,10 @@ package org.hibernate.query.criteria.internal.expression;
 
 import java.io.Serializable;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.criteria.JpaExpressionImplementor;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.criteria.spi.JpaCriteriaBuilderImplementor;
+import org.hibernate.query.criteria.spi.JpaExpressionImplementor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Represents a literal expression.
@@ -22,18 +20,30 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  */
 public class LiteralExpression<T> extends AbstractExpression<T> implements JpaExpressionImplementor<T>, Serializable {
 	private Object literal;
-	private boolean wasReset;
 
 	@SuppressWarnings({ "unchecked" })
-	public LiteralExpression(HibernateCriteriaBuilder criteriaBuilder, T literal) {
-		this( criteriaBuilder, (Class<T>) determineClass( literal ), literal );
+	public LiteralExpression(JpaCriteriaBuilderImplementor criteriaBuilder, T literal) {
+		this(
+				criteriaBuilder,
+				determineJavaTypeDescriptor( literal, criteriaBuilder ),
+				literal
+		);
 	}
 
-	private static Class determineClass(Object literal) {
-		return literal == null ? null : literal.getClass();
+	@SuppressWarnings("unchecked")
+	private static <T> JavaTypeDescriptor<T> determineJavaTypeDescriptor(
+			T literal,
+			JpaCriteriaBuilderImplementor criteriaBuilder) {
+		return criteriaBuilder.getSessionFactory().getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				// Java generics fun - why in the fudge do we need this cast?
+				.getDescriptor( (Class<T>) literal.getClass() );
 	}
 
-	public LiteralExpression(HibernateCriteriaBuilder criteriaBuilder, Class<T> type, T literal) {
+	public LiteralExpression(
+			JpaCriteriaBuilderImplementor criteriaBuilder,
+			JavaTypeDescriptor<T> type,
+			T literal) {
 		super( criteriaBuilder, type );
 		this.literal = literal;
 	}
@@ -45,35 +55,5 @@ public class LiteralExpression<T> extends AbstractExpression<T> implements JpaEx
 
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do
-	}
-
-	@Override
-	public ExpressableType getExpressionType() {
-		return null;
-	}
-
-	@Override
-	@SuppressWarnings({ "unchecked" })
-	protected void resetJavaType(Class targetType) {
-		super.resetJavaType( targetType );
-		wasReset = true;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public SqmExpression visitExpression(CriteriaVisitor visitor) {
-		final T value = wasReset
-				? (T) convert( literal, getJavaType() )
-				: (T) literal;
-		return visitor.visitConstant( value, getJavaType() );
-	}
-
-	@SuppressWarnings("unchecked")
-	private <X> Object convert(X literal, Class<T> javaType) {
-		// todo : convert the literal value based on the Java type.  This requires access to Session though
-		return criteriaBuilder().getEntityManagerFactory().getMetamodel().getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( (Class<X>) literal.getClass() )
-				.unwrap( literal, javaType, null );
 	}
 }

@@ -37,22 +37,19 @@ import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.query.criteria.CriteriaBuilderException;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaAttributeJoinImplementor;
-import org.hibernate.query.criteria.JpaCoalesce;
+import org.hibernate.query.criteria.spi.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCollectionJoinImplementor;
 import org.hibernate.query.criteria.JpaCompoundPredicate;
-import org.hibernate.query.criteria.JpaExpressionImplementor;
+import org.hibernate.query.criteria.spi.JpaExpressionImplementor;
 import org.hibernate.query.criteria.JpaInImplementor;
 import org.hibernate.query.criteria.JpaListJoinImplementor;
 import org.hibernate.query.criteria.JpaMapJoinImplementor;
-import org.hibernate.query.criteria.JpaParameterExpression;
-import org.hibernate.query.criteria.JpaPathImplementor;
-import org.hibernate.query.criteria.JpaPredicateImplementor;
+import org.hibernate.query.criteria.spi.JpaParameterExpression;
+import org.hibernate.query.criteria.spi.JpaPathImplementor;
+import org.hibernate.query.criteria.spi.JpaPredicateImplementor;
 import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.criteria.JpaSetJoinImplementor;
 import org.hibernate.query.criteria.JpaSimpleCase;
@@ -99,8 +96,9 @@ import org.hibernate.query.criteria.internal.predicate.NullnessPredicate;
 import org.hibernate.query.criteria.internal.selection.ArrayJpaSelectionImpl;
 import org.hibernate.query.criteria.internal.selection.DynamicInstantiationImpl;
 import org.hibernate.query.criteria.internal.selection.TupleJpaSelectionImpl;
+import org.hibernate.query.criteria.spi.JpaCriteriaBuilderImplementor;
+import org.hibernate.query.criteria.spi.JpaSelectionImplementor;
 import org.hibernate.query.sqm.produce.spi.criteria.JpaCriteriaQuery;
-import org.hibernate.query.sqm.produce.spi.criteria.JpaExpression;
 import org.hibernate.query.sqm.produce.spi.criteria.from.JpaRoot;
 import org.hibernate.query.sqm.produce.spi.criteria.select.JpaCompoundSelection;
 
@@ -109,19 +107,15 @@ import org.hibernate.query.sqm.produce.spi.criteria.select.JpaCompoundSelection;
  *
  * @author Steve Ebersole
  */
-public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializable {
+public class CriteriaBuilderImpl implements JpaCriteriaBuilderImplementor, Serializable {
 	private final SessionFactoryImplementor sessionFactory;
 
 	public CriteriaBuilderImpl(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
 	}
 
-	/**
-	 * Provides protected access to the underlying {@link SessionFactoryImpl}.
-	 *
-	 * @return The underlying {@link SessionFactoryImpl}
-	 */
-	public SessionFactoryImplementor getEntityManagerFactory() {
+	@Override
+	public SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
 
@@ -199,39 +193,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	}
 
 	@Override
-	public void checkIsJpaExpression(Selection<?> selection) {
-		if ( selection instanceof JpaExpressionImplementor ) {
-			return;
-		}
-		throw new CriteriaBuilderException(
-				"Expecting javax.persistence.criteria.Selection to be " +
-						"org.hibernate.query.criteria.JpaExpressionImplementor, but found " +
-						selection.toString()
-		);
-	}
-
-	@Override
-	public void checkIsJpaExpression(Expression<?> expr) {
-		if ( expr instanceof JpaExpression ) {
-			return;
-		}
-		throw new CriteriaBuilderException(
-				"Expecting javax.persistence.criteria.Expression to be " +
-						"org.hibernate.query.criteria.JpaExpressionImplementor, but found " +
-						expr.toString()
-		);
-	}
-
-	@Override
 	public  void checkIsJpaPredicate(Predicate predicate) {
-		if ( predicate instanceof JpaPredicateImplementor ) {
-			return;
-		}
-		throw new CriteriaBuilderException(
-				"Expecting javax.persistence.criteria.Predicate to be " +
-						"org.hibernate.query.criteria.JpaPredicateImplementor, but found " +
-						predicate.toString()
-		);
 	}
 
 	@Override
@@ -251,15 +213,14 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 		return new TupleJpaSelectionImpl( this, Tuple.class, toExpressions( selections ) );
 	}
 
-	private List<JpaExpression<?>> toExpressions(List<Selection<?>> selections) {
+	private <X> List<JpaSelectionImplementor<X>> toExpressions(List<Selection<X>> selections) {
 		if ( selections == null || selections.isEmpty() ) {
 			return Collections.emptyList();
 		}
 
-		final ArrayList<JpaExpression<?>> expressions = new ArrayList<>();
-		for ( Selection<?> selection : selections ) {
-			checkIsJpaExpression( selection );
-			expressions.add( (JpaExpression) selection );
+		final ArrayList<JpaSelectionImplementor<X>> expressions = new ArrayList<>();
+		for ( Selection<X> selection : selections ) {
+			expressions.add( asHibernateSelection( selection ) );
 		}
 
 		return expressions;
@@ -371,8 +332,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	public JpaPredicateImplementor and(Predicate... restrictions) {
 		final JpaCompoundPredicate conjunction = new JpaCompoundPredicate( this, Predicate.BooleanOperator.AND );
 		for ( Predicate restriction : restrictions ) {
-			checkIsJpaPredicate( restriction );
-			conjunction.applyPredicate( (JpaPredicateImplementor) restriction );
+			conjunction.applyPredicate( asHibernatePredicate( restriction ) );
 		}
 		return conjunction;
 	}
@@ -381,8 +341,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	public JpaPredicateImplementor or(Predicate... restrictions) {
 		final JpaCompoundPredicate disjunction = new JpaCompoundPredicate( this, Predicate.BooleanOperator.OR );
 		for ( Predicate restriction : restrictions ) {
-			checkIsJpaPredicate( restriction );
-			disjunction.applyPredicate( (JpaPredicateImplementor) restriction );
+			disjunction.applyPredicate( asHibernatePredicate( restriction ) );
 		}
 		return disjunction;
 	}
@@ -1365,8 +1324,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 	@SuppressWarnings("unchecked")
 	public <C, R> JpaSimpleCase<C, R> selectCase(Class<R> type, Expression<? extends C> expression) {
-		checkIsJpaExpression( expression );
-		return new SimpleCaseExpression<>( this, type, (JpaExpressionImplementor<? extends C>) expression );
+		return new SimpleCaseExpression<>( this, type, asHibernateExpression( expression );
 	}
 
 	@Override

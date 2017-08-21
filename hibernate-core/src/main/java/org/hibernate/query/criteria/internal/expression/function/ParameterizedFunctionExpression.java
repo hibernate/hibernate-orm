@@ -14,6 +14,7 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterContainer;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Support for functions with parameters.
@@ -50,7 +51,7 @@ public class ParameterizedFunctionExpression<X>
 
 	public ParameterizedFunctionExpression(
 			CriteriaBuilderImpl criteriaBuilder,
-			Class<X> javaType,
+			JavaTypeDescriptor<X> javaType,
 			String functionName,
 			List<Expression<?>> argumentExpressions) {
 		super( criteriaBuilder, javaType, functionName );
@@ -60,7 +61,7 @@ public class ParameterizedFunctionExpression<X>
 
 	public ParameterizedFunctionExpression(
 			CriteriaBuilderImpl criteriaBuilder,
-			Class<X> javaType,
+			JavaTypeDescriptor<X> javaType,
 			String functionName,
 			Expression<?>... argumentExpressions) {
 		super( criteriaBuilder, javaType, functionName );

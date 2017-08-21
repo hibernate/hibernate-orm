@@ -13,7 +13,7 @@ import javax.persistence.metamodel.EntityType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
 import org.hibernate.query.criteria.JpaFromImplementor;
-import org.hibernate.query.criteria.JpaPathSourceImplementor;
+import org.hibernate.query.criteria.spi.JpaPathSourceImplementor;
 import org.hibernate.query.sqm.produce.spi.criteria.from.JpaRoot;
 
 /**

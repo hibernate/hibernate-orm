@@ -8,7 +8,8 @@ package org.hibernate.query.criteria.internal;
 
 import java.io.Serializable;
 
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.spi.JpaCriteriaBuilderImplementor;
+import org.hibernate.query.criteria.spi.JpaCriteriaNode;
 
 /**
  * All nodes in a criteria query tree will generally need access to the {@link CriteriaBuilderImpl} from which they
@@ -16,19 +17,15 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractNode implements Serializable {
-	private final HibernateCriteriaBuilder criteriaBuilder;
+public abstract class AbstractNode implements JpaCriteriaNode, Serializable {
+	private final JpaCriteriaBuilderImplementor criteriaBuilder;
 
-	public AbstractNode(HibernateCriteriaBuilder criteriaBuilder) {
+	public AbstractNode(JpaCriteriaBuilderImplementor criteriaBuilder) {
 		this.criteriaBuilder = criteriaBuilder;
 	}
 
-	/**
-	 * Provides access to the underlying {@link CriteriaBuilderImpl}.
-	 *
-	 * @return The underlying {@link CriteriaBuilderImpl} instance.
-	 */
-	public HibernateCriteriaBuilder criteriaBuilder() {
+	@Override
+	public JpaCriteriaBuilderImplementor getCriteriaBuilder() {
 		return criteriaBuilder;
 	}
 }

@@ -36,7 +36,7 @@ import org.hibernate.query.criteria.JpaFromImplementor;
 import org.hibernate.query.criteria.JpaAttributeJoinImplementor;
 import org.hibernate.query.criteria.JpaListJoinImplementor;
 import org.hibernate.query.criteria.JpaMapJoinImplementor;
-import org.hibernate.query.criteria.JpaPathSourceImplementor;
+import org.hibernate.query.criteria.spi.JpaPathSourceImplementor;
 import org.hibernate.query.criteria.JpaSetJoinImplementor;
 
 /**

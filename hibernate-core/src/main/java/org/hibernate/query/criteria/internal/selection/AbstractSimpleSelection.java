@@ -4,19 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.query.criteria.internal.selection;
 
 import java.io.Serializable;
 import java.util.List;
 import javax.persistence.criteria.Selection;
 
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.criteria.JpaSelectionImplementor;
-import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;
-import org.hibernate.query.sqm.produce.spi.criteria.select.JpaSelection;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.select.SqmAliasedExpressionContainer;
+import org.hibernate.query.criteria.spi.JpaCriteriaBuilderImplementor;
+import org.hibernate.query.criteria.spi.JpaSelectionImplementor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * The Hibernate implementation of the JPA {@link Selection}
@@ -26,8 +22,10 @@ import org.hibernate.query.sqm.tree.select.SqmAliasedExpressionContainer;
  */
 public abstract class AbstractSimpleSelection<X>
 		extends AbstractSelection<X>
-		implements JpaSelection<X>, Serializable {
-	public AbstractSimpleSelection(HibernateCriteriaBuilder criteriaBuilder, Class<X> javaType) {
+		implements JpaSelectionImplementor<X>, Serializable {
+	public AbstractSimpleSelection(
+			JpaCriteriaBuilderImplementor criteriaBuilder,
+			JavaTypeDescriptor<X> javaType) {
 		super( criteriaBuilder, javaType );
 	}
 
@@ -35,13 +33,6 @@ public abstract class AbstractSimpleSelection<X>
 		setAlias( alias );
 		return this;
 	}
-
-	@Override
-	public void visitSelections(CriteriaVisitor visitor, SqmAliasedExpressionContainer container) {
-		container.add( visitExpression( visitor ), getAlias() );
-	}
-
-	protected abstract SqmExpression visitExpression(CriteriaVisitor visitor);
 
 	public boolean isCompoundSelection() {
 		return false;

@@ -16,7 +16,7 @@ import javax.persistence.metamodel.Attribute;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
 import org.hibernate.query.criteria.JpaAttributeJoinImplementor;
-import org.hibernate.query.criteria.JpaPathSourceImplementor;
+import org.hibernate.query.criteria.spi.JpaPathSourceImplementor;
 
 /**
  * Convenience base class for various {@link javax.persistence.criteria.Join} implementations.

@@ -9,9 +9,8 @@ package org.hibernate.query.criteria.internal.expression;
 import java.util.List;
 import javax.persistence.criteria.Selection;
 
-import org.hibernate.query.criteria.JpaSelectionImplementor;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.ValueHandlerFactory;
+import org.hibernate.query.criteria.spi.JpaSelectionImplementor;
 
 /**
  * Implementation of {@link javax.persistence.criteria.Expression} wraps another Expression and delegates most of its
@@ -23,7 +22,7 @@ public abstract class DelegatedExpressionImpl<T> extends AbstractExpression<T> {
 	private final AbstractExpression<T> wrapped;
 
 	public DelegatedExpressionImpl(AbstractExpression<T> wrapped) {
-		super( wrapped.criteriaBuilder(), wrapped.getJavaType() );
+		super( wrapped.getCriteriaBuilder(), wrapped.getJavaTypeDescriptor() );
 		this.wrapped = wrapped;
 	}
 
@@ -51,23 +50,8 @@ public abstract class DelegatedExpressionImpl<T> extends AbstractExpression<T> {
 	}
 
 	@Override
-	public List<ValueHandlerFactory.ValueHandler> getValueHandlers() {
-		return wrapped.getValueHandlers();
-	}
-
-	@Override
 	public List<Selection<?>> getCompoundSelectionItems() {
 		return wrapped.getCompoundSelectionItems();
-	}
-
-	@Override
-	public Class<T> getJavaType() {
-		return wrapped.getJavaType();
-	}
-
-	@Override
-	protected void resetJavaType(Class targetType) {
-		wrapped.resetJavaType( targetType );
 	}
 
 	@Override

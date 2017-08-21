@@ -14,11 +14,11 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
 import org.hibernate.query.criteria.JpaCompoundPredicate;
-import org.hibernate.query.criteria.JpaPredicateImplementor;
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
+import org.hibernate.query.criteria.spi.JpaPredicateImplementor;
 import org.hibernate.query.criteria.internal.ParameterContainer;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.expression.AbstractExpression;
+import org.hibernate.query.criteria.spi.JpaCriteriaBuilderImplementor;
 
 /**
  * @author Steve Ebersole
@@ -30,17 +30,17 @@ public class NegatedPredicateWrapper extends AbstractExpression<Boolean> impleme
 
 	@SuppressWarnings("unchecked")
 	public NegatedPredicateWrapper(JpaPredicateImplementor predicate) {
-		super( predicate.criteriaBuilder(), Boolean.class );
+		super( predicate.getCriteriaBuilder(), Boolean.class );
 		this.predicate = predicate;
 		this.negatedOperator = predicate.isJunction()
 				? JpaCompoundPredicate.reverseOperator( predicate.getOperator() )
 				: predicate.getOperator();
-		this.negatedExpressions = negateCompoundExpressions( predicate.getExpressions(), predicate.criteriaBuilder() );
+		this.negatedExpressions = negateCompoundExpressions( predicate.getExpressions(), predicate.getCriteriaBuilder() );
 	}
 
 	private static List<Expression<Boolean>> negateCompoundExpressions(
 			List<Expression<Boolean>> expressions,
-			CriteriaBuilderImpl criteriaBuilder) {
+			JpaCriteriaBuilderImplementor criteriaBuilder) {
 		if ( expressions == null || expressions.isEmpty() ) {
 			return Collections.emptyList();
 		}

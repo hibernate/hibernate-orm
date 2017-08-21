@@ -11,6 +11,7 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.expression.LiteralExpression;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Models SQL aggregation functions (<tt>MIN</tt>, <tt>MAX</tt>, <tt>COUNT</tt>, etc).
@@ -32,7 +33,7 @@ public class AggregationFunction<T>
 	@SuppressWarnings({ "unchecked" })
 	public AggregationFunction(
 			CriteriaBuilderImpl criteriaBuilder,
-			Class<T> returnType,
+			JavaTypeDescriptor<T> returnType,
 			String functionName,
 			Object argument) {
 		this( criteriaBuilder, returnType, functionName, new LiteralExpression( criteriaBuilder, argument ) );
@@ -48,10 +49,26 @@ public class AggregationFunction<T>
 	 */
 	public AggregationFunction(
 			CriteriaBuilderImpl criteriaBuilder,
-			Class<T> returnType,
+			JavaTypeDescriptor<T> returnType,
 			String functionName,
 			Expression<?> argument) {
 		super( criteriaBuilder, returnType, functionName, argument );
+	}
+
+	public AggregationFunction(
+			CriteriaBuilderImpl criteriaBuilder,
+			Class<T> javaType,
+			String name,
+			Expression<?> expression) {
+		this(
+				criteriaBuilder,
+				criteriaBuilder.getSessionFactory()
+						.getTypeConfiguration()
+						.getJavaTypeDescriptorRegistry()
+						.getDescriptor( javaType ),
+				name,
+				expression
+		);
 	}
 
 	@Override
@@ -111,14 +128,10 @@ public class AggregationFunction<T>
 		@SuppressWarnings({ "unchecked" })
 		public SUM(CriteriaBuilderImpl criteriaBuilder, Expression<N> expression) {
 			super( criteriaBuilder, (Class<N>)expression.getJavaType(), NAME , expression);
-			// force the use of a ValueHandler
-			resetJavaType( expression.getJavaType() );
 		}
 
 		public SUM(CriteriaBuilderImpl criteriaBuilder, Expression<? extends Number> expression, Class<N> returnType) {
 			super( criteriaBuilder, returnType, NAME , expression);
-			// force the use of a ValueHandler
-			resetJavaType( returnType );
 		}
 	}
 

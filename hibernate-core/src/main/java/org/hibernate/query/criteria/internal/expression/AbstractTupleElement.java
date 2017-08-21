@@ -7,36 +7,43 @@
 package org.hibernate.query.criteria.internal.expression;
 
 import java.io.Serializable;
-import javax.persistence.TupleElement;
 
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.internal.AbstractNode;
+import org.hibernate.query.criteria.spi.JpaCriteriaBuilderImplementor;
+import org.hibernate.query.criteria.spi.JpaTupleElementImplementor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
- * TODO : javadoc
+ * Abstract implementation of the JPA criteria TupleElement
  *
  * @author Steve Ebersole
  */
 public abstract class AbstractTupleElement<X>
 		extends AbstractNode
-		implements TupleElement<X>, Serializable {
-	private final Class originalJavaType;
-	private Class<X> javaType;
+		implements JpaTupleElementImplementor<X>, Serializable {
+	private final JavaTypeDescriptor<X> originalJavaType;
+	private JavaTypeDescriptor<X> javaType;
 	private String alias;
 
-	protected AbstractTupleElement(HibernateCriteriaBuilder criteriaBuilder, Class<X> javaType) {
+	protected AbstractTupleElement(
+			JpaCriteriaBuilderImplementor criteriaBuilder,
+			JavaTypeDescriptor<X>javaType) {
 		super( criteriaBuilder );
 		this.originalJavaType = javaType;
 		this.javaType = javaType;
 	}
 
 	@Override
-	public Class<X> getJavaType() {
+	public JavaTypeDescriptor<X> getJavaTypeDescriptor() {
 		return javaType;
 	}
 
+	public JavaTypeDescriptor<X> getOriginalJavaTypeDescriptor() {
+		return originalJavaType;
+	}
+
 	@SuppressWarnings({ "unchecked" })
-	protected void resetJavaType(Class targetType) {
+	protected void resetJavaType(JavaTypeDescriptor targetType) {
 		this.javaType = targetType;
 	}
 

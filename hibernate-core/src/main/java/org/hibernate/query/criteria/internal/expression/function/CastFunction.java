@@ -9,9 +9,9 @@ package org.hibernate.query.criteria.internal.expression.function;
 import java.io.Serializable;
 
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.expression.AbstractExpression;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Models a <tt>CAST</tt> function.
@@ -30,7 +30,7 @@ public class CastFunction<T,Y>
 
 	public CastFunction(
 			HibernateCriteriaBuilder criteriaBuilder,
-			Class<T> javaType,
+			JavaTypeDescriptor<T> javaType,
 			AbstractExpression<Y> castSource) {
 		super( criteriaBuilder, javaType, CAST_NAME );
 		this.castSource = castSource;

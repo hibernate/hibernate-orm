@@ -7,7 +7,7 @@
 package org.hibernate.query.criteria;
 
 
-import org.hibernate.query.criteria.JpaPathSourceImplementor;
+import org.hibernate.query.criteria.spi.JpaPathSourceImplementor;
 
 /**
  * Represents an illegal attempt to dereference from a {@link #getPathSource() path source} which

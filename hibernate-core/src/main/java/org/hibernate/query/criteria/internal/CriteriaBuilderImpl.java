@@ -1324,7 +1324,7 @@ public class CriteriaBuilderImpl implements JpaCriteriaBuilderImplementor, Seria
 
 	@SuppressWarnings("unchecked")
 	public <C, R> JpaSimpleCase<C, R> selectCase(Class<R> type, Expression<? extends C> expression) {
-		return new SimpleCaseExpression<>( this, type, asHibernateExpression( expression );
+		return new SimpleCaseExpression<>( this, type, asHibernateExpression( expression ));
 	}
 
 	@Override

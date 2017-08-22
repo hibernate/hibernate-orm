@@ -736,7 +736,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					attributeConverterDefinitions.add(
 							AttributeConverterDefinition.from(
 									metamodelBuilder.getBootstrapContext().getClassmateContext(),
-									(Class<? extends AttributeConverter<?,?>>) cls
+									cls
 							)
 					);
 				}

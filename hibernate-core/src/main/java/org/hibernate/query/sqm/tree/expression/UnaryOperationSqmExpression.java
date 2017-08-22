@@ -9,6 +9,10 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * @author Steve Ebersole
@@ -62,6 +66,16 @@ public class UnaryOperationSqmExpression implements ImpliedTypeSqmExpression {
 	@Override
 	public String asLoggableText() {
 		return ( operation == Operation.MINUS ? '-' : '+' ) + operand.asLoggableText();
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			Expression expression, String resultVariable, QueryResultCreationContext creationContext) {
+		return new ScalarQueryResultImpl(
+				resultVariable,
+				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
+				getExpressionType()
+		);
 	}
 
 	public SqmExpression getOperand() {

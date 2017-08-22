@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.query.sqm.tree.TreeException;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -18,6 +19,8 @@ import org.hibernate.sql.results.spi.QueryResultCreationContext;
  * Represents an reference to an entity type as a literal.  This is the JPA
  * terminology for cases when we have something like: {@code ... where TYPE(e) = SomeType}.
  * The token {@code SomeType} is an "entity type literal".
+ *
+ * An entity type expression can be used to restrict query polymorphism. The TYPE operator returns the exact type of the argument.
  *
  * @author Steve Ebersole
  */
@@ -53,10 +56,7 @@ public class EntityTypeLiteralSqmExpression implements SqmExpression {
 			Expression expression,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
-		return new ScalarQueryResultImpl( resultVariable,
-										  creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
-										  (BasicValuedExpressableType) getExpressionType()
-		);
+		throw new TreeException("Selecting an entity type is not allowed. An entity type expression can be used to restrict query polymorphism ");
 	}
 
 

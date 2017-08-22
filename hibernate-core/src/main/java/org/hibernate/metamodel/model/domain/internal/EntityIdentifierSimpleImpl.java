@@ -133,12 +133,7 @@ public class EntityIdentifierSimpleImpl<O,J>
 			QueryResultCreationContext creationContext) {
 		return new ScalarQueryResultImpl(
 				resultVariable,
-				creationContext.getSqlSelectionResolver().resolveSqlSelection(
-						creationContext.getSqlSelectionResolver().resolveSqlExpression(
-								creationContext.currentColumnReferenceSource(),
-								column
-						)
-				),
+				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
 				this
 		);
 	}

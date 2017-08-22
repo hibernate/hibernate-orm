@@ -20,13 +20,12 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
@@ -122,17 +121,15 @@ public class CollectionElementEntityImpl<J>
 	}
 
 	@Override
-	public QueryResult generateQueryResult(
-			NavigableReference selectedExpression,
+	public QueryResult createQueryResult(
+			Expression expression,
 			String resultVariable,
-			SqlExpressionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		// delegate to the persister because here we are returning
 		// 		the entities that make up the referenced collection's elements
-		return getEntityDescriptor().generateQueryResult(
-				selectedExpression,
+		return getEntityDescriptor().createQueryResult(
+				expression,
 				resultVariable,
-				sqlSelectionResolver,
 				creationContext
 		);
 	}

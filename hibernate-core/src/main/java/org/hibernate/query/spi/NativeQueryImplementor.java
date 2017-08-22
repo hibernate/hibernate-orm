@@ -22,6 +22,7 @@ import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.type.Type;
@@ -40,7 +41,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> addScalar(String columnAlias);
 
 	@Override
-	NativeQueryImplementor<R> addScalar(String columnAlias, Type type);
+	NativeQueryImplementor<R> addScalar(String columnAlias, AllowableParameterType type);
 
 	@Override
 	RootReturn addRoot(String tableAlias, String entityName);
@@ -134,16 +135,31 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> setParameter(String name, Object val);
 
 	@Override
-	<P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, Type type);
+	default <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, Type type) {
+		return setParameter( parameter, val, (AllowableParameterType) type );
+	}
+
+	@Override
+	<P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, AllowableParameterType type);
 
 	@Override
 	NativeQueryImplementor<R> setParameter(int position, Object val);
 
 	@Override
-	NativeQueryImplementor<R> setParameter(String name, Object val, Type type);
+	default NativeQueryImplementor<R> setParameter(String name, Object val, Type type) {
+		return setParameter( name, val, (AllowableParameterType) type );
+	}
 
 	@Override
-	NativeQueryImplementor<R> setParameter(int position, Object val, Type type);
+	NativeQueryImplementor<R> setParameter(String name, Object val, AllowableParameterType type);
+
+	@Override
+	default NativeQueryImplementor<R> setParameter(int position, Object val, Type type) {
+		return setParameter( position, val, (AllowableParameterType) type );
+	}
+
+	@Override
+	NativeQueryImplementor<R> setParameter(int position, Object val, AllowableParameterType type);
 
 	@Override
 	<P> NativeQueryImplementor<R> setParameter(
@@ -166,10 +182,20 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> setParameterList(String name, Collection values);
 
 	@Override
-	NativeQueryImplementor<R> setParameterList(String name, Collection values, Type type);
+	default NativeQueryImplementor<R> setParameterList(String name, Collection values, Type type) {
+		return setParameterList( name, values, (AllowableParameterType) type );
+	}
 
 	@Override
-	NativeQueryImplementor<R> setParameterList(String name, Object[] values, Type type);
+	NativeQueryImplementor<R> setParameterList(String name, Collection values, AllowableParameterType type);
+
+	@Override
+	default NativeQueryImplementor<R> setParameterList(String name, Object[] values, Type type) {
+		return setParameterList( name, values, (AllowableParameterType) type );
+	}
+
+	@Override
+	NativeQueryImplementor<R> setParameterList(String name, Object[] values, AllowableParameterType type);
 
 	@Override
 	NativeQueryImplementor<R> setParameterList(String name, Object[] values);

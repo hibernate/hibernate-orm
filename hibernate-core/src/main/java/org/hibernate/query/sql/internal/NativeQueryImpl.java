@@ -34,6 +34,7 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.Limit;
 import org.hibernate.query.NativeQuery;
@@ -60,14 +61,12 @@ import org.hibernate.query.sql.spi.QueryResultBuilderRootEntity;
 import org.hibernate.query.sql.spi.QueryResultBuilderScalar;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
 import org.hibernate.sql.exec.spi.RowTransformer;
 import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
-import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
@@ -271,12 +270,13 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> addScalar(String columnAlias) {
-		return addScalar( columnAlias, null );
+		addReturnBuilder( new QueryResultBuilderScalar( columnAlias, null) );
+		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addScalar(String columnAlias, Type type) {
-		addReturnBuilder( new QueryResultBuilderScalar( columnAlias, (BasicValuedExpressableType) type ) );
+	public NativeQueryImplementor<R> addScalar(String columnAlias, AllowableParameterType type) {
+
 		return this;
 	}
 
@@ -809,19 +809,19 @@ public class NativeQueryImpl<R>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public NativeQueryImplementor<R> setParameter(QueryParameter parameter, Object value, Type type) {
+	public NativeQueryImplementor<R> setParameter(QueryParameter parameter, Object value, AllowableParameterType type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setParameter(String name, Object value, Type type) {
+	public NativeQueryImplementor<R> setParameter(String name, Object value, AllowableParameterType type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setParameter(int position, Object value, Type type) {
+	public NativeQueryImplementor<R> setParameter(int position, Object value, AllowableParameterType type) {
 		super.setParameter( position, value, type );
 		return this;
 	}
@@ -858,13 +858,13 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setParameterList(String name, Collection values, Type type) {
+	public NativeQueryImplementor<R> setParameterList(String name, Collection values, AllowableParameterType type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setParameterList(String name, Object[] values, Type type) {
+	public NativeQueryImplementor<R> setParameterList(String name, Object[] values, AllowableParameterType type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}

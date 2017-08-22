@@ -7,7 +7,7 @@
 
 package org.hibernate.query;
 
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 
 /**
  * Can be used to bind query parameter values.  Allows to provide additional details about the
@@ -16,10 +16,10 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class TypedParameterValue {
-	private final Type type;
+	private final AllowableParameterType type;
 	private final Object value;
 
-	public TypedParameterValue(Type type, Object value) {
+	public TypedParameterValue(AllowableParameterType type, Object value) {
 		this.type = type;
 		this.value = value;
 	}
@@ -38,7 +38,7 @@ public class TypedParameterValue {
 	 *
 	 * @return The Hibernate type to use.
 	 */
-	public Type getType() {
+	public AllowableParameterType getType() {
 		return type;
 	}
 }

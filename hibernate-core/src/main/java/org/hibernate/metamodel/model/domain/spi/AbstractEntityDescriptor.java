@@ -674,4 +674,9 @@ public abstract class AbstractEntityDescriptor<T>
 				.getName()
 				.render( dialect );
 	}
+
+	@Override
+	public boolean hasNaturalIdentifier() {
+		return getHierarchy().getNaturalIdentifierDescriptor() != null;
+	}
 }

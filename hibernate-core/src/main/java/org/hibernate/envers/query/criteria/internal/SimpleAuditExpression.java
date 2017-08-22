@@ -6,8 +6,8 @@
  */
 package org.hibernate.envers.query.criteria.internal;
 
+import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.exception.AuditException;
@@ -67,7 +67,7 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 					throw new AuditException( "Component-based criterion is not supported for op: " + op );
 				}
 				final SingularPersistentAttributeEmbedded embeddedAttribute = (SingularPersistentAttributeEmbedded) persistentAttribute;
-				final Set<PersistentAttribute> attributes = embeddedAttribute.getEmbeddedDescriptor().getPersistentAttributes();
+				final Collection<PersistentAttribute> attributes = embeddedAttribute.getEmbeddedDescriptor().getPersistentAttributes();
 				for ( PersistentAttribute attribute : attributes ) {
 					final Object attributeValue = embeddedAttribute.getEmbeddedDescriptor().getPropertyValue( value, attribute.getName() );
 					parameters.addWhereWithParam(

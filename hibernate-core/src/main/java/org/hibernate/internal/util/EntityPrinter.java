@@ -46,7 +46,7 @@ public final class EntityPrinter {
 
 		Map<String, String> result = new HashMap<String, String>();
 
-		if ( entityPersister.hasIdentifierProperty() ) {
+		if ( entityPersister.getIdentifierDescriptor() != null ) {
 			result.put(
 					entityPersister.getIdentifierPropertyName(),
 					entityPersister.getIdentifierType().toLoggableString(

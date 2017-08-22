@@ -741,4 +741,9 @@ public interface EntityDescriptor<T>
 	boolean canUseReferenceCacheEntries();
 
 	void registerAffectingFetchProfile(String fetchProfileName);
+
+	/**
+	 * Does this entity define a natural-id.
+	 */
+	boolean hasNaturalIdentifier();
 }

@@ -14,6 +14,8 @@ import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAudit
 import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Value;
+import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
+import org.hibernate.type.spi.ColumnDescriptor;
 
 import org.dom4j.Element;
 
@@ -63,7 +65,7 @@ public final class BasicMetadataGenerator {
 		return false;
 	}
 
-	private void mapEnumerationValue(Element parent, Value value, Properties parameters) {
+	private void mapEnumerationValue(Element parent, BasicValue value, Properties parameters) {
 		final String enumClass;
 		if ( parameters.getProperty( ENUM ) != null ) {
 			enumClass = parameters.getProperty( ENUM );
@@ -78,9 +80,8 @@ public final class BasicMetadataGenerator {
 			useNamed = parameters.getProperty( NAMED );
 		}
 		else {
-			// todo (6.0) - how to determine this?
-			boolean isOrdinal = ( (EnumType) ( (CustomType) value.getType() ).getUserType() ).isOrdinal();
-			useNamed = "" + !isOrdinal;
+			final ColumnDescriptor columnDescriptor = value.resolveType().getColumnDescriptor();
+			useNamed = columnDescriptor.equals( IntegerSqlDescriptor.INSTANCE ) ? "false" : "true";
 		}
 		parent.addElement( "param" ).addAttribute( "name", NAMED ).setText( useNamed );
 	}

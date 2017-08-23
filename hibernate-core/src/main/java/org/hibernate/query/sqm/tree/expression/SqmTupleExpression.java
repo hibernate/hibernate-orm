@@ -14,8 +14,10 @@ import java.util.Optional;
 import org.hibernate.query.sqm.QueryException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
-import static org.hibernate.query.sqm.tree.internal.Helper.firstNonNull;
 
 /**
  * @author Steve Ebersole
@@ -64,4 +66,13 @@ public class SqmTupleExpression implements SqmExpression {
 	public String asLoggableText() {
 		return null;
 	}
+
+	@Override
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return groupedExpressions.get( 0 ).createQueryResult( expression, resultVariable, creationContext );
+	}
+
 }

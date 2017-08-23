@@ -8,6 +8,9 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * @author Steve Ebersole
@@ -37,5 +40,14 @@ public class ParameterizedEntityTypeSqmExpression implements SqmExpression {
 	@Override
 	public String asLoggableText() {
 		return "TYPE(" + parameterExpression.asLoggableText() + ")";
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			Expression expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		throw new UnsupportedOperationException( "At the moment, selection of an entity's type as a QueryResult is not supported" );
+		// todo (6.0) : but could be ^^ - consider adding support for this (returning Class)
 	}
 }

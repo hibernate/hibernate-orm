@@ -6,12 +6,7 @@
  */
 package org.hibernate.boot.model.type.spi;
 
-import java.util.Map;
-
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.BasicTypeParameters;
 
 /**
  * Describes the data needed to resolve a BasicType.
@@ -28,7 +23,7 @@ import org.hibernate.type.spi.BasicTypeParameters;
  *             <li>
  *                 If the name refers to an existing entry in the
  *             </li>
- *         </ul>
+ *         </ul>N
  *     </li>
  * </ol>
  *

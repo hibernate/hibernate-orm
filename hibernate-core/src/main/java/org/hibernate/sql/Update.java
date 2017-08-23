@@ -5,13 +5,14 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.sql;
+
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.internal.AbstractSharedSessionContract;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -133,12 +134,22 @@ public class Update {
 		return this;
 	}
 
-	public Update addColumn(String columnName, Object value, BasicType type, SharedSessionContractImplementor session) throws Exception {
-		return addColumn( columnName,
-						  type.getColumnDescriptor()
-								  .getSqlTypeDescriptor()
-								  .getJdbcLiteralFormatter( type.getJavaTypeDescriptor() )
-								  .toJdbcLiteral( value, dialect, session )
+	public Update addColumn(
+			String columnName,
+			Object value,
+			JavaTypeDescriptor javaTypeDescriptor,
+			AbstractSharedSessionContract session) throws Exception {
+		final BasicType basicType = session.getFactory()
+				.getMetamodel()
+				.getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.getBasicType( javaTypeDescriptor.getJavaType() );
+		return addColumn(
+				columnName,
+				basicType.getColumnDescriptor()
+						.getSqlTypeDescriptor()
+						.getJdbcLiteralFormatter( basicType.getJavaTypeDescriptor() )
+						.toJdbcLiteral( value, dialect, session )
 		);
 	}
 

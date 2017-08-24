@@ -79,6 +79,7 @@ import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -3782,6 +3783,22 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		t.commit();
 		session.close();
+	}
+
+	@Test
+	@FailureExpected( jiraKey = "HHH-11942" )
+	public void testOrderByExtraParenthesis() throws Exception {
+		doInHibernate( this::sessionFactory, session -> {
+			session.createQuery(
+				"select a from Product a " +
+				"where " +
+				"coalesce(a.description, :description) = :description ) " +
+				"order by a.description ", Product.class)
+			.setParameter( "description", "desc" )
+			.getResultList();
+
+			fail("Should throw parsing exception");
+		} );
 	}
 
 	@RequiresDialectFeature(

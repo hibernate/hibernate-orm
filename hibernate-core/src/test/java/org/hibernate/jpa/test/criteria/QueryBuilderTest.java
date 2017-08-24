@@ -276,6 +276,20 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().commit();
 		em.close();
 	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11938")
+	public void testPowerFunction() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaBuilderImpl cb = (CriteriaBuilderImpl) em.getCriteriaBuilder();
+		CriteriaQuery<Long> criteria = cb.createQuery( Long.class );
+		criteria.from(Customer.class);
+		criteria.select(cb.function("SINH", Long.class, cb.literal(2)));
+		em.createQuery(criteria).getResultList();
+		em.getTransaction().commit();
+		em.close();
+	}
 	
 	@Test
 	@TestForIssue(jiraKey = "HHH-10737")

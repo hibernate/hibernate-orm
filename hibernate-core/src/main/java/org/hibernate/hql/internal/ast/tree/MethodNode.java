@@ -18,6 +18,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -119,6 +120,11 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 			Type functionReturnType = getSessionFactoryHelper()
 					.findFunctionReturnType( methodName, function, firstChild );
 			setDataType( functionReturnType );
+		} else {
+			//HHH-11938:
+			// in JPA 2.1 specification, user can call any database function, even if function is not supported by the JPA standard
+			Type defaultType = new AnyType(null, null, null);
+			setDataType(defaultType);
 		}
 	}
 

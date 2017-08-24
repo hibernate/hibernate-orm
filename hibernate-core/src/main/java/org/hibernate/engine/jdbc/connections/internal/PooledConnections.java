@@ -52,7 +52,7 @@ public class PooledConnections {
 			primed = true;
 		}
 
-		if ( size < minSize && primed ) {
+		if ( size < minSize && !primed ) {
 			int numberToBeAdded = minSize - size;
 			log.debugf( "Adding %s Connections to the pool", numberToBeAdded );
 			addConnections( numberToBeAdded );

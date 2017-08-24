@@ -279,7 +279,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11938")
-	public void testPowerFunction() {
+	public void testSinhFunction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		CriteriaBuilderImpl cb = (CriteriaBuilderImpl) em.getCriteriaBuilder();

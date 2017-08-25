@@ -159,22 +159,22 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 
 	@Override
 	public PersistenceUnitUtil getPersistenceUnitUtil() {
-		return null;
+		return delegate.getPersistenceUnitUtil();
 	}
 
 	@Override
 	public void addNamedQuery(String name, Query query) {
-
+		delegate.addNamedQuery( name, query );
 	}
 
 	@Override
 	public <T> T unwrap(Class<T> cls) {
-		return null;
+		return delegate.unwrap( cls );
 	}
 
 	@Override
 	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
-
+		delegate.addNamedEntityGraph( graphName, entityGraph );
 	}
 
 	@Override

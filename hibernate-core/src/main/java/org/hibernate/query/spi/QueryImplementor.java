@@ -23,11 +23,11 @@ import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
-import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
@@ -114,13 +114,13 @@ public interface QueryImplementor<R> extends Query<R> {
 	<T> QueryImplementor<R> setParameter(QueryParameter<T> parameter, T val);
 
 	@Override
-	QueryImplementor<R> setParameter(String name, Object val, Type type);
+	QueryImplementor<R> setParameter(String name, Object val, AllowableParameterType type);
 
 	@Override
-	QueryImplementor<R> setParameter(int position, Object val, Type type);
+	QueryImplementor<R> setParameter(int position, Object val, AllowableParameterType type);
 
 	@Override
-	<P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, Type type);
+	<P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, AllowableParameterType type);
 
 	@Override
 	<P> QueryImplementor<R> setParameter(String name, P val, TemporalType temporalType);

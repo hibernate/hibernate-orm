@@ -19,6 +19,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.type.Type;
 
 /**
@@ -101,8 +102,27 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @param type The Hibernate type as which to treat the value.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@link #addScalar(String, AllowableParameterType)}
 	 */
-	org.hibernate.query.NativeQuery<T> addScalar(String columnAlias, Type type);
+	@Deprecated
+	default org.hibernate.query.NativeQuery<T> addScalar(String columnAlias, Type type) {
+		return addScalar( columnAlias, (AllowableParameterType) type );
+	}
+
+	/**
+	 * Declare a scalar query result.
+	 * <p/>
+	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
+	 * {@link javax.persistence.ColumnResult} in annotations
+	 *
+	 * @param columnAlias The column alias in the result-set to be processed
+	 * 		as a scalar result
+	 * @param type The Hibernate allowable parameter type as which to treat the value.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	org.hibernate.query.NativeQuery<T> addScalar(String columnAlias, AllowableParameterType type);
 
 	/**
 	 * Add a new root return mapping, returning a {@link RootReturn} to allow
@@ -469,10 +489,18 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	org.hibernate.query.NativeQuery<T> setParameterList(String name, Collection values);
 
 	@Override
-	org.hibernate.query.NativeQuery<T> setParameterList(String name, Collection values, Type type);
+	default org.hibernate.query.NativeQuery<T> setParameterList(String name, Collection values, Type type) {
+		return setParameterList( name, values, (AllowableParameterType) type );
+	}
+
+	@Override
+	org.hibernate.query.NativeQuery<T> setParameterList(String name, Collection values, AllowableParameterType type);
 
 	@Override
 	org.hibernate.query.NativeQuery<T> setParameterList(String name, Object[] values, Type type);
+
+	@Override
+	org.hibernate.query.NativeQuery<T> setParameterList(String name, Object[] values, AllowableParameterType type);
 
 	@Override
 	org.hibernate.query.NativeQuery<T> setParameterList(String name, Object[] values);

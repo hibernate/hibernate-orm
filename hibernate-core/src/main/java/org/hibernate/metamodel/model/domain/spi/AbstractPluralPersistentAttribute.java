@@ -171,6 +171,7 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 		// todo (6.0) : use qualifier to create the SqlSelection mappings
 		return new PluralAttributeFetchImpl(
 				fetchParent,
+				qualifier,
 				this,
 				fetchStrategy,
 				resultVariable,

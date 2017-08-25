@@ -79,14 +79,9 @@ public class CollectionIndexBasicImpl<J>
 			QueryResultCreationContext creationContext) {
 		return new ScalarQueryResultImpl(
 				resultVariable,
-				creationContext.getSqlSelectionResolver().resolveSqlSelection(
-						creationContext.getSqlSelectionResolver().resolveSqlExpression(
-								creationContext.currentColumnReferenceSource(),
-								column
-						)
-				),
+				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
 				this
-	  	);
+		);
 	}
 
 	@Override

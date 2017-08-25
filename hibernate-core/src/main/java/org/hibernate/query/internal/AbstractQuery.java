@@ -854,7 +854,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <P> void setParameter(Parameter<P> parameter, Object value, Type type) {
+	private <P> void setParameter(Parameter<P> parameter, Object value, AllowableParameterType type) {
 		if ( parameter instanceof QueryParameter ) {
 			setParameter( (QueryParameter) parameter, value, type );
 		}
@@ -904,21 +904,21 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <P> QueryImplementor setParameter(QueryParameter<P> parameter, P value, Type type) {
-		locateBinding( parameter ).setBindValue( value, type );
+	public <P> QueryImplementor setParameter(QueryParameter<P> parameter, P value, AllowableParameterType type) {
+		locateBinding( parameter ).setBindValue( value,  type );
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public QueryImplementor setParameter(String name, Object value, Type type) {
+	public QueryImplementor setParameter(String name, Object value, AllowableParameterType type) {
 		locateBinding( name ).setBindValue( value, type );
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public QueryImplementor setParameter(int position, Object value, Type type) {
+	public QueryImplementor setParameter(int position, Object value, AllowableParameterType type) {
 		locateBinding( position ).setBindValue( value, type );
 		return this;
 	}
@@ -960,14 +960,14 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public QueryImplementor setParameterList(String name, Collection values, Type type) {
+	public QueryImplementor setParameterList(String name, Collection values, AllowableParameterType type) {
 		locateBinding( name ).setBindValues( values, type );
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public QueryImplementor setParameterList(String name, Object[] values, Type type) {
+	public QueryImplementor setParameterList(String name, Object[] values, AllowableParameterType type) {
 		locateBinding( name ).setBindValues( Arrays.asList( values ), type );
 		return this;
 	}
@@ -1135,7 +1135,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				}
 				else {
 					AllowableParameterType type = determineType( paramName, retType );
-					setParameter( paramName, object, type );
+					setParameter( paramName, object, (Type) type );
 				}
 			}
 			catch (PropertyNotFoundException pnfe) {

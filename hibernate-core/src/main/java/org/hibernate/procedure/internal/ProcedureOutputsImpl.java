@@ -317,6 +317,7 @@ public class ProcedureOutputsImpl
 		final ResultSetMapping resultSetMapping = resolveResultSetMapping( resultSetAccess );
 		final JdbcValuesSourceResultSetImpl jdbcValuesSource = new JdbcValuesSourceResultSetImpl(
 				resultSetAccess,
+				null,
 				queryOptions,
 				resultSetMapping,
 				persistenceContext

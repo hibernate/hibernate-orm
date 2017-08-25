@@ -18,6 +18,7 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.internal.CompositeQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
@@ -93,16 +94,13 @@ public class CollectionElementEmbeddedImpl<J>
 	}
 
 	@Override
-	public QueryResult generateQueryResult(
-			NavigableReference selectedExpression,
-			String resultVariable,
-			SqlExpressionResolver sqlSelectionResolver,
-			QueryResultCreationContext creationContext) {
-		return new CompositeQueryResultImpl( resultVariable, embeddedPersister );
+	public List<Column> getColumns() {
+		return columnList;
 	}
 
 	@Override
-	public List<Column> getColumns() {
-		return columnList;
+	public QueryResult createQueryResult(
+			Expression expression, String resultVariable, QueryResultCreationContext creationContext) {
+		return new CompositeQueryResultImpl( resultVariable, embeddedPersister );
 	}
 }

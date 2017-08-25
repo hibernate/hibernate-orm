@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpa;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.type.Type;
 
 /**
@@ -19,6 +20,6 @@ import org.hibernate.type.Type;
 @Deprecated
 public class TypedParameterValue extends org.hibernate.query.TypedParameterValue {
 	public TypedParameterValue(Type type, Object value) {
-		super( type, value );
+		super( (AllowableParameterType) type, value );
 	}
 }

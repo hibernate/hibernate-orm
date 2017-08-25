@@ -39,7 +39,7 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
  * @param <T> The type of a specific sub-class; Allows sub-classes to narrow down the return-type of the contract methods
  * to a specialization of {@link SessionFactoryBuilder}
  */
-public abstract class AbstractDelegatingSessionFactoryBuilder<T extends AbstractDelegatingSessionFactoryBuilder<T>> implements SessionFactoryBuilder {
+public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionFactoryBuilder> implements SessionFactoryBuilder {
 	private final SessionFactoryBuilder delegate;
 
 	public AbstractDelegatingSessionFactoryBuilder(SessionFactoryBuilder delegate) {

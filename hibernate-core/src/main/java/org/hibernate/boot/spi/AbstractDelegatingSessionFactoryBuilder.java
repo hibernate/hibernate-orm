@@ -15,6 +15,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
+import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -24,6 +25,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -33,6 +35,7 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
  *
  * @author Steve Ebersole
  * @author Gunnar Morling
+ * @author Guillaume Smet
  * @param <T> The type of a specific sub-class; Allows sub-classes to narrow down the return-type of the contract methods
  * to a specialization of {@link SessionFactoryBuilder}
  */
@@ -49,6 +52,10 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	 * "getThis trick?"</a>.
 	 */
 	protected abstract T getThis();
+
+	protected SessionFactoryBuilder getDelegate() {
+		return delegate;
+	}
 
 	@Override
 	public T applyValidatorFactory(Object validatorFactory) {
@@ -342,6 +349,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 		return getThis();
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public T applyConnectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
 		delegate.applyConnectionReleaseMode( connectionReleaseMode );
@@ -375,7 +383,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	}
 
 	@Override
-	public SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable) {
+	public T enableReleaseResourcesOnCloseEnabled(boolean enable) {
 		delegate.enableReleaseResourcesOnCloseEnabled( enable );
 		return getThis();
 	}
@@ -384,5 +392,22 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	@SuppressWarnings("unchecked")
 	public <S extends SessionFactoryBuilder> S unwrap(Class<S> type) {
 		return (S) this;
+	}
+
+	@Override
+	public T applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass) {
+		delegate.applyStatelessInterceptor( statelessInterceptorClass );
+		return getThis();
+	}
+
+	@Override
+	public T applyConnectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
+		delegate.applyConnectionHandlingMode( connectionHandlingMode );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactory build() {
+		return delegate.build();
 	}
 }

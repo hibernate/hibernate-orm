@@ -40,7 +40,7 @@ import org.jboss.jandex.IndexView;
  * to a specialization of {@link MetadataBuilderImplementor}
  */
 @SuppressWarnings("unused")
-public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends AbstractDelegatingMetadataBuilderImplementor<T>>  implements MetadataBuilderImplementor {
+public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends MetadataBuilderImplementor>  implements MetadataBuilderImplementor {
 
 	private final MetadataBuilderImplementor delegate;
 

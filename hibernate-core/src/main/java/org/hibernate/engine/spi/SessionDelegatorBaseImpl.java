@@ -68,12 +68,12 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * This class is meant to be extended.
- * 
+ *
  * Wraps and delegates all methods to a {@link SessionImplementor} and
  * a {@link Session}. This is useful for custom implementations of this
  * API so that only some methods need to be overridden
  * (Used by Hibernate Search).
- * 
+ *
  * @author Sanne Grinovero <sanne@hibernate.org> (C) 2012 Red Hat Inc.
  */
 @SuppressWarnings("deprecation")
@@ -618,9 +618,14 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.unwrap( cls );
 	}
 
+	/**
+	 * This is an implementation of EntityManager#getDelegate(). It returns the current session and not the delegate
+	 * session as it is what we want. The name of the method is misleading here but, as it is part of JPA, we cannot do
+	 * anything about it.
+	 */
 	@Override
 	public Object getDelegate() {
-		return delegate;
+		return this;
 	}
 
 	@Override

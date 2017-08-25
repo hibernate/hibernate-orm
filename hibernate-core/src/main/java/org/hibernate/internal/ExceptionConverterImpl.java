@@ -8,6 +8,7 @@ package org.hibernate.internal;
 
 import java.io.Serializable;
 import java.sql.SQLException;
+
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.LockTimeoutException;
@@ -32,6 +33,7 @@ import org.hibernate.dialect.lock.LockingStrategyException;
 import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.engine.spi.ExceptionConverter;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.MultipleBagFetchException;
 
 /**
@@ -40,9 +42,9 @@ import org.hibernate.loader.MultipleBagFetchException;
 public class ExceptionConverterImpl implements ExceptionConverter {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( ExceptionConverterImpl.class );
 
-	private final AbstractSharedSessionContract sharedSessionContract;
+	private final SharedSessionContractImplementor sharedSessionContract;
 
-	public ExceptionConverterImpl(AbstractSharedSessionContract sharedSessionContract) {
+	public ExceptionConverterImpl(SharedSessionContractImplementor sharedSessionContract) {
 		this.sharedSessionContract = sharedSessionContract;
 	}
 

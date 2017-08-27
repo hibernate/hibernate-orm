@@ -17,7 +17,8 @@ For that case the Hibernate ORM project provides a ZIP file containing the requi
 can also be included in WildFly. Such a module will not replace the existing Hibernate ORM module, but it will become an
 alternative option that your application can choose to use instead of the default version it includes.
 
-Our goal is to provide a module ZIP file targeted at the WildFly version current at the time of the Hibernate release (e.g. WildFly 10 for Hibernate 5.1.x and 5.2.x).
+Our goal is to provide a module ZIP file targeted at the WildFly version current at the time of the Hibernate release
+(e.g. WildFly 10 for Hibernate ORM 5.1.x and up until 5.2.10, as well as WildFly 11 since Hibernate ORM 5.2.11).
 
 == Where to download the modules from
 
@@ -32,7 +33,7 @@ The module ZIP files can be downloaded from Maven Central, to facilitate automat
    <groupId>org.hibernate</groupId>
    <artifactId>hibernate-orm-modules</artifactId>
    <version>{fullVersion}</version>
-   <classifier>wildfly-10-dist</classifier>
+   <classifier>wildfly-11-dist</classifier>
    <type>zip</type>
 ----
 ====
@@ -70,7 +71,7 @@ Once downloaded, extract the contents of the ZIP file into the _modules_ directo
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-orm-modules</artifactId>
                     <version>${hibernateVersion}</version>
-                    <classifier>wildfly-10-dist</classifier>
+                    <classifier>wildfly-11-dist</classifier>
                     <type>zip</type>
                     <overWrite>true</overWrite>
                     <outputDirectory>

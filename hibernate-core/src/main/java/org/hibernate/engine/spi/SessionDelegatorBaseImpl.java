@@ -82,7 +82,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	protected final SessionImplementor delegate;
 
 	/**
-	 * @deprecated (snce 6.0) SessionDelegatorBaseImpl should take just one argument, the SessionImplementor.
+	 * @deprecated (since 6.0) SessionDelegatorBaseImpl should take just one argument, the SessionImplementor.
 	 * Use the {@link #SessionDelegatorBaseImpl(SessionImplementor)} form instead
 	 */
 	@Deprecated

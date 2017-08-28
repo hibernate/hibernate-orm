@@ -11,6 +11,7 @@ import javax.persistence.SharedCacheMode;
 
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
@@ -255,5 +256,20 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	public MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter) {
 		delegate.applyIdGenerationTypeInterpreter( interpreter );
 		return getThis();
+	}
+
+	@Override
+	public <M extends MetadataBuilder> M unwrap(Class<M> type) {
+		return delegate.unwrap( type );
+	}
+
+	@Override
+	public MetadataBuildingOptions getMetadataBuildingOptions() {
+		return delegate.getMetadataBuildingOptions();
+	}
+
+	@Override
+	public Metadata build() {
+		return delegate.build();
 	}
 }

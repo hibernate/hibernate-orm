@@ -7,15 +7,22 @@
 package org.hibernate.engine.internal;
 
 import java.util.Iterator;
+import java.util.List;
+import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
+import org.hibernate.metamodel.model.domain.spi.CollectionElementEmbedded;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralAttributeCollection;
 import org.hibernate.type.descriptor.java.internal.AnyTypeJavaDescriptor;
 
 /**
@@ -77,7 +84,7 @@ public final class Nullability {
 			final boolean[] checkability = isUpdate ?
 				entityDescriptor.getPropertyUpdateability() :
 				entityDescriptor.getPropertyInsertability();
-			final Type[] propertyTypes = entityDescriptor.getPropertyTypes();
+			final List<PersistentAttribute> persistentAttributes = entityDescriptor.getPersistentAttributes();
 
 			for ( int i = 0; i < values.length; i++ ) {
 
@@ -95,7 +102,10 @@ public final class Nullability {
 					}
 					else if ( value != null ) {
 						//values is not null and is checkable, we'll look deeper
-						final String breakProperties = checkSubElementsNullability( propertyTypes[i], value );
+						final String breakProperties = checkSubElementsNullability(
+								persistentAttributes.get( i ),
+								value
+						);
 						if ( breakProperties != null ) {
 							throw new PropertyValueException(
 								"not-null property references a null or transient value",
@@ -115,30 +125,36 @@ public final class Nullability {
 	 * check sub elements-nullability. Returns property path that break
 	 * nullability or null if none
 	 *
-	 * @param propertyType type to check
+	 * @param attribute the attribute to check
 	 * @param value value to check
 	 *
 	 * @return property path
 	 * @throws HibernateException error while getting subcomponent values
 	 */
-	private String checkSubElementsNullability(Type propertyType, Object value) throws HibernateException {
-		if ( propertyType.isComponentType() ) {
-			return checkComponentNullability( value, (EmbeddedType) propertyType );
+	private String checkSubElementsNullability(PersistentAttribute attribute, Object value) throws HibernateException {
+		final PersistentAttributeType persistentAttributeType = attribute.getPersistentAttributeType();
+		if ( persistentAttributeType == PersistentAttributeType.EMBEDDED ) {
+			return checkComponentNullability(
+					value,
+					( (SingularPersistentAttributeEmbedded) attribute ).getEmbeddedDescriptor()
+			);
 		}
 
-		if ( propertyType.getClassification().equals( Type.Classification.COLLECTION ) ) {
+		if ( persistentAttributeType == PersistentAttributeType.ELEMENT_COLLECTION ) {
 			// persistent collections may have components
-			final CollectionType collectionType = (CollectionType) propertyType;
-			final Type collectionElementType = collectionType.getElementType( session.getFactory() );
+			final PersistentCollectionDescriptor collectionDescriptor = ( (PluralAttributeCollection) attribute ).getPersistentCollectionMetadata();
+			final CollectionElement elementDescriptor = collectionDescriptor.getElementDescriptor();
 
-			if ( collectionElementType.isComponentType() ) {
+			if ( elementDescriptor.getClassification() == CollectionElement.ElementClassification.EMBEDDABLE ) {
 				// check for all components values in the collection
-				final EmbeddedType componentType = (EmbeddedType) collectionElementType;
-				final Iterator itr = CascadingActions.getLoadedElementsIterator( session, collectionType, value );
+				final Iterator itr = CascadingActions.getLoadedElementsIterator( session, collectionDescriptor, value );
 				while ( itr.hasNext() ) {
 					final Object compositeElement = itr.next();
 					if ( compositeElement != null ) {
-						return checkComponentNullability( compositeElement, componentType );
+						return checkComponentNullability(
+								compositeElement,
+								( (CollectionElementEmbedded) collectionDescriptor ).getEmbeddedDescriptor()
+						);
 					}
 				}
 			}
@@ -174,17 +190,18 @@ public final class Nullability {
 		final boolean[] nullability = embeddedTypeDescriptor.getPropertyNullability();
 		if ( nullability != null ) {
 			//do the test
-			final Object[] subValues = embeddedTypeDescriptor.getPropertyValues( value );
-			final Type[] propertyTypes = embeddedTypeDescriptor.getSubtypes();
-			for ( int i = 0; i < subValues.length; i++ ) {
-				final Object subValue = subValues[i];
-				if ( !nullability[i] && subValue==null ) {
-					return embeddedTypeDescriptor.getPropertyNames()[i];
+			final Object[] propertyValues = embeddedTypeDescriptor.getPropertyValues( value );
+			final List<PersistentAttribute> persistentAttributes = embeddedTypeDescriptor.getPersistentAttributes();
+			for ( int i = 0; i < propertyValues.length; i++ ) {
+				final Object propertyValue = propertyValues[i];
+				if ( !nullability[i] && propertyValue == null ) {
+					return ( persistentAttributes.get( i ) ).getAttributeName();
 				}
-				else if ( subValue != null ) {
-					final String breakProperties = checkSubElementsNullability( propertyTypes[i], subValue );
+				else if ( propertyValue != null ) {
+					final PersistentAttribute attribute = persistentAttributes.get( i );
+					final String breakProperties = checkSubElementsNullability( attribute, propertyValue );
 					if ( breakProperties != null ) {
-						return buildPropertyPath( embeddedTypeDescriptor.getPropertyNames()[i], breakProperties );
+						return buildPropertyPath( attribute.getAttributeName(), breakProperties );
 					}
 				}
 			}

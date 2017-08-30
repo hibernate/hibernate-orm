@@ -44,6 +44,10 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		this.delegate = delegate;
 	}
 
+	protected SessionFactoryOptions delegate() {
+		return delegate;
+	}
+
 	@Override
 	public StandardServiceRegistry getServiceRegistry() {
 		return delegate.getServiceRegistry();

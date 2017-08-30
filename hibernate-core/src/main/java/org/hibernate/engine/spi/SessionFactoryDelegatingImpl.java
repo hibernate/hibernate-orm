@@ -73,7 +73,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		this.delegate = delegate;
 	}
 
-	protected SessionFactoryImplementor getDelegate() {
+	protected SessionFactoryImplementor delegate() {
 		return delegate;
 	}
 

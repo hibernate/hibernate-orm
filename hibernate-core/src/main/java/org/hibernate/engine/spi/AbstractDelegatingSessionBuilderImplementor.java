@@ -20,14 +20,14 @@ public abstract class AbstractDelegatingSessionBuilderImplementor<T extends Sess
 		super( delegate );
 	}
 
-	protected SessionBuilderImplementor getDelegate() {
-		return (SessionBuilderImplementor) super.getDelegate();
+	protected SessionBuilderImplementor delegate() {
+		return (SessionBuilderImplementor) super.delegate();
 	}
 
 	@SuppressWarnings({ "unchecked", "deprecation" })
 	@Override
 	public T owner(SessionOwner sessionOwner) {
-		getDelegate().owner( sessionOwner );
+		delegate().owner( sessionOwner );
 		return (T) this;
 	}
 }

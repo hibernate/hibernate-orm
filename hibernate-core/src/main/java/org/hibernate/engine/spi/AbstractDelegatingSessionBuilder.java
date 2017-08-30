@@ -38,7 +38,7 @@ public abstract class AbstractDelegatingSessionBuilder<T extends SessionBuilder>
 		return (T) this;
 	}
 
-	protected SessionBuilder getDelegate() {
+	protected SessionBuilder delegate() {
 		return delegate;
 	}
 

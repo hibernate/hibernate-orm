@@ -53,7 +53,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	 */
 	protected abstract T getThis();
 
-	protected SessionFactoryBuilder getDelegate() {
+	protected SessionFactoryBuilder delegate() {
 		return delegate;
 	}
 

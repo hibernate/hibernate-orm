@@ -40,7 +40,7 @@ public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSes
 		return (T) this;
 	}
 
-	public SharedSessionBuilder getDelegate() {
+	public SharedSessionBuilder delegate() {
 		return delegate;
 	}
 

@@ -44,6 +44,10 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 		this.delegate = delegate;
 	}
 
+	protected MetadataBuildingOptions delegate() {
+		return delegate;
+	}
+
 	@Override
 	public StandardServiceRegistry getServiceRegistry() {
 		return delegate.getServiceRegistry();

@@ -104,6 +104,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		this( delegate, delegate );
 	}
 
+	/**
+	 * Returns the underlying delegate. Be careful that is has a different behavior from the {@link #getDelegate()}
+	 * method coming from the EntityManager interface which returns the current session.
+	 *
+	 * @see SessionDelegatorBaseImpl#getDelegate()
+	 */
+	protected SessionImplementor delegate() {
+		return delegate;
+	}
+
 	@Override
 	public <T> T execute(Callback<T> callback) {
 		return delegate.execute( callback );
@@ -622,6 +632,10 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	 * This is an implementation of EntityManager#getDelegate(). It returns the current session and not the delegate
 	 * session as it is what we want. The name of the method is misleading here but, as it is part of JPA, we cannot do
 	 * anything about it.
+	 * <p>
+	 * To get the underlying delegate, use {@link #delegate()} instead.
+	 *
+	 * @see SessionDelegatorBaseImpl#delegate()
 	 */
 	@Override
 	public Object getDelegate() {

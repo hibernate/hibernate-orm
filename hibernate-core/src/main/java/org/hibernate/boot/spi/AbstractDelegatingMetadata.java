@@ -48,6 +48,10 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 		this.delegate = delegate;
 	}
 
+	protected MetadataImplementor delegate() {
+		return delegate;
+	}
+
 	@Override
 	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return delegate.getIdentifierGeneratorFactory();

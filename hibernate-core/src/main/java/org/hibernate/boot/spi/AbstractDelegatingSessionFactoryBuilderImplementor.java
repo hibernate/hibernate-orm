@@ -21,23 +21,23 @@ public abstract class AbstractDelegatingSessionFactoryBuilderImplementor<T exten
 	}
 
 	@Override
-	protected SessionFactoryBuilderImplementor getDelegate() {
-		return (SessionFactoryBuilderImplementor) super.getDelegate();
+	protected SessionFactoryBuilderImplementor delegate() {
+		return (SessionFactoryBuilderImplementor) super.delegate();
 	}
 
 	@SuppressWarnings("deprecation")
 	@Override
 	public void markAsJpaBootstrap() {
-		getDelegate().markAsJpaBootstrap();
+		delegate().markAsJpaBootstrap();
 	}
 
 	@Override
 	public void disableJtaTransactionAccess() {
-		getDelegate().disableJtaTransactionAccess();
+		delegate().disableJtaTransactionAccess();
 	}
 
 	@Override
 	public SessionFactoryOptions buildSessionFactoryOptions() {
-		return getDelegate().buildSessionFactoryOptions();
+		return delegate().buildSessionFactoryOptions();
 	}
 }

@@ -336,18 +336,48 @@ class Antlr4Plugin implements Plugin<Project> {
 }
 
 class Antlr4GenerationTask extends DefaultTask {
-    def String baseInputDirectory = 'src/main/antlr'
-    def String packageName = 'org.hibernate.query.sqm.produce.internal.hql.grammar'
-    def List<String> grammarNames = ['HqlLexer.g4', 'HqlParser.g4']
+    String baseInputDirectory = 'src/main/antlr'
+    String outputDirectoryPath = "generated-src/antlr/main"
 
-    def String outputDirectoryPath = "generated-src/antlr/main"
+
+    Map packageGrammarNames = ['org.hibernate.query.sqm.produce.internal.hql.grammar' :  ['HqlLexer.g4', 'HqlParser.g4'],
+                                'org.hibernate.tool.hbm2ddl.grammar' : ['SqlStatementLexer.g4','SqlStatementParser.g4']]
+
+    // A map where the key is the grammar file and the value the package name
+    Map<File,String> sourceFilesPackageNames = [:]
 
     @InputFiles
     @SkipWhenEmpty
-    public FileCollection getSource() {
-        return this.getProject().files(
-                grammarNames.collect( {name-> baseInputDirectory + '/' + packageName.replace( '.', '/' ) + '/' + name } )
-        );
+    FileCollection getSource() {
+        List<String> sourceFileNames = []
+        getAllSources().each { packageName, names ->
+            names.forEach( {
+                sourceFileNames.add(it)
+                sourceFilesPackageNames.put(
+                        this.getProject().file(it),
+                        packageName
+                )
+            } )
+
+        }
+        return this.getProject().files( sourceFileNames )
+    }
+
+    // return Map where the key is the package name and the value is a list of grammar file belonging to the package
+    Map<String,List<String>> getAllSources(){
+        def result = [:];
+        packageGrammarNames.each {
+            packageName, names
+                ->
+                result.put(packageName, getPackageSources(packageName, names));
+        }
+        return result;
+    }
+
+    List<String> getPackageSources(packageName, names){
+        names.collect {
+            name -> baseInputDirectory + '/' + packageName.replace( '.', '/' ) + '/' + name
+        }
     }
 
     @OutputDirectory
@@ -358,21 +388,32 @@ class Antlr4GenerationTask extends DefaultTask {
     @TaskAction
     void antlrGeneration() {
         logger.lifecycle( "Starting custom Antlr (v4) grammar generation" )
+        source.forEach(
+                { grammarFile ->
+                    File packagedOutputDirectory = new File(
+                            outputDirectory,
+                            sourceFilesPackageNames.get( grammarFile ).replace( '.', '/' )
+                    )
 
-        File packagedOutputDirectory = new File( outputDirectory, packageName.replace( '.', '/' ) )
-        packagedOutputDirectory.mkdirs()
+                    if ( !packagedOutputDirectory.exists() ) {
+                        System.out.println( "#>>>> ${packagedOutputDirectory.absolutePath}" )
+                        packagedOutputDirectory.mkdirs()
+                    }
 
-        source.forEach({File grammarFile->
-            project.javaexec {
-                main 'org.antlr.v4.Tool'
-                classpath project.configurations.antlr
-                args '-o', packagedOutputDirectory.absolutePath
-                args '-lib', grammarFile.parentFile.absolutePath
-                args '-long-messages'
-                args '-listener'
-                args '-visitor'
-                args grammarFile.absolutePath
-            }
-        })
+                    project.javaexec {
+                        main 'org.antlr.v4.Tool'
+                        classpath project.configurations.antlr
+                        args '-o', packagedOutputDirectory.absolutePath
+                        args '-lib', grammarFile.parentFile.absolutePath
+                        args '-long-messages'
+                        args '-listener'
+                        args '-visitor'
+                        args grammarFile.absolutePath
+                    }
+
+
+                }
+        )
     }
+
 }

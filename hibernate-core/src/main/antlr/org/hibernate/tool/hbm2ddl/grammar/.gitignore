@@ -1,0 +1,3 @@
+# For some reason the tokens file is generated to the scm dir, not the
+# target/generated-src directory as we requested via specifying output dir.
+SqlStatementLexer.tokens

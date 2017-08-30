@@ -1365,7 +1365,12 @@ public final class AnnotationBinder {
 	private static void bindFilterDef(FilterDef defAnn, MetadataBuildingContext context) {
 		Map<String, Type> params = new HashMap<String, Type>();
 		for ( ParamDef param : defAnn.parameters() ) {
-			params.put( param.name(), context.getMetadataCollector().heuristicType( param.type() ) );
+			params.put( param.name(),
+						context.getMetadataCollector()
+								.getTypeConfiguration()
+								.getBasicTypeRegistry()
+								.getBasicType( param.type() )
+			);
 		}
 		FilterDefinition def = new FilterDefinition( defAnn.name(), defAnn.defaultCondition(), params );
 		LOG.debugf( "Binding filter definition: %s", def.getFilterName() );

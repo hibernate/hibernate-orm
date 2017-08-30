@@ -1437,7 +1437,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		final boolean tracing = LOG.isTraceEnabled();
 		if ( tracing ) {
-			LOG.trace( "Serializing persisatence-context" );
+			LOG.trace( "Serializing persistence-context" );
 		}
 
 		oos.writeBoolean( defaultReadOnly );
@@ -1533,7 +1533,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			SessionImplementor session) throws IOException, ClassNotFoundException {
 		final boolean tracing = LOG.isTraceEnabled();
 		if ( tracing ) {
-			LOG.trace( "Serializing persistent-context" );
+			LOG.trace( "Deserializing persistence-context" );
 		}
 		final StatefulPersistenceContext rtn = new StatefulPersistenceContext( session );
 		SessionFactoryImplementor sfi = session.getFactory();

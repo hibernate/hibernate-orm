@@ -8,6 +8,8 @@ package org.hibernate.engine.query.spi;
 
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.custom.CustomLoader;
+import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.service.Service;
 
@@ -16,6 +18,7 @@ import org.hibernate.service.Service;
  *
  * @author Steve Ebersole
  * @author Gunnar Morling
+ * @author Guillaume Smet
  */
 public interface NativeQueryInterpreter extends Service {
 	/**
@@ -38,4 +41,17 @@ public interface NativeQueryInterpreter extends Service {
 	 * @return A query plan for the specified native query.
 	 */
 	NativeSQLQueryPlan createQueryPlan(NativeSQLQuerySpecification specification, SessionFactoryImplementor sessionFactory);
+
+	/**
+	 * Creates a {@link CustomLoader} for the given {@link CustomQuery}.
+	 *
+	 * @param customQuery The CustomQuery to create a loader for
+	 * @param sessionFactory The current session factory
+	 *
+	 * @deprecated This method will be removed in 6.
+	 */
+	@Deprecated
+	default CustomLoader createCustomLoader(CustomQuery customQuery, SessionFactoryImplementor sessionFactory) {
+		return new CustomLoader( customQuery, sessionFactory );
+	}
 }

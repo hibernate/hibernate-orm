@@ -422,7 +422,7 @@ public final class SessionImpl
 		else {
 			super.close();
 		}
-		
+
 		if ( getFactory().getStatistics().isStatisticsEnabled() ) {
 			getFactory().getStatistics().closeSession();
 		}
@@ -1571,12 +1571,12 @@ public final class SessionImpl
 	public ScrollableResultsImplementor scroll(String query, QueryParameters queryParameters) throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
-		
+
 		HQLQueryPlan plan = queryParameters.getQueryPlan();
 		if ( plan == null ) {
 			plan = getQueryPlan( query, false );
 		}
-		
+
 		autoFlushIfRequired( plan.getQuerySpaces() );
 
 		dontFlushFromFind++;
@@ -2128,7 +2128,7 @@ public final class SessionImpl
 			log.tracev( "Scroll SQL query: {0}", customQuery.getSQL() );
 		}
 
-		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
+		CustomLoader loader = getFactory().getQueryPlanCache().getNativeQueryInterpreter().createCustomLoader( customQuery, getFactory() );
 
 		autoFlushIfRequired( loader.getQuerySpaces() );
 
@@ -2152,7 +2152,7 @@ public final class SessionImpl
 			log.tracev( "SQL query: {0}", customQuery.getSQL() );
 		}
 
-		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
+		CustomLoader loader = getFactory().getQueryPlanCache().getNativeQueryInterpreter().createCustomLoader( customQuery, getFactory() );
 
 		autoFlushIfRequired( loader.getQuerySpaces() );
 
@@ -2467,7 +2467,7 @@ public final class SessionImpl
 
 		private LobCreator lobCreator() {
 			// Always use NonContextualLobCreator.  If ContextualLobCreator is
-			// used both here and in WrapperOptions, 
+			// used both here and in WrapperOptions,
 			return NonContextualLobCreator.INSTANCE;
 		}
 

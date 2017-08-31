@@ -76,8 +76,8 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
 					"update"
 			);
 			entityManagerFactory =  Bootstrap.getEntityManagerFactoryBuilder(
-					new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
-					settings
+				new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
+				settings
 			).build().unwrap( SessionFactoryImplementor.class );
 
 			final EntityManagerFactory emf = entityManagerFactory;

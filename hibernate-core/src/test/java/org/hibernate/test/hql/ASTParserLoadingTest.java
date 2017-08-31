@@ -3786,19 +3786,23 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-11942" )
+	@TestForIssue( jiraKey = "HHH-11942" )
 	public void testOrderByExtraParenthesis() throws Exception {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery(
-				"select a from Product a " +
-				"where " +
-				"coalesce(a.description, :description) = :description ) " +
-				"order by a.description ", Product.class)
-			.setParameter( "description", "desc" )
-			.getResultList();
-
-			fail("Should throw parsing exception");
-		} );
+		try {
+			doInHibernate( this::sessionFactory, session -> {
+				session.createQuery(
+					"select a from Product a " +
+					"where " +
+					"coalesce(a.description, :description) = :description ) " +
+					"order by a.description ", Product.class)
+				.setParameter( "description", "desc" )
+				.getResultList();
+			} );
+		}
+		catch (IllegalArgumentException e) {
+			QueryException rootCause = (QueryException) e.getCause();
+			assertTrue( rootCause.getMessage().startsWith( "node to traverse cannot be null!" ) );
+		}
 	}
 
 	@RequiresDialectFeature(

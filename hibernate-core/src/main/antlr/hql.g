@@ -242,7 +242,7 @@ tokens
 }
 
 statement
-	: ( updateStatement | deleteStatement | selectStatement | insertStatement )
+	: ( updateStatement | deleteStatement | selectStatement | insertStatement ) (EOF!)
 	;
 
 // Without the optionalVersioned if the path starts with a keyword the parser fails

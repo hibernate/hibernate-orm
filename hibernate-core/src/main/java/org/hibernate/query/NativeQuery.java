@@ -10,10 +10,15 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+
+import javax.persistence.FlushModeType;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 
+import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.SQLQuery;
 import org.hibernate.SynchronizeableQuery;
@@ -106,4 +111,85 @@ public interface NativeQuery<T> extends Query<T>, SQLQuery<T>, SynchronizeableQu
 
 	@Override
 	NativeQuery<T> addSynchronizedEntityClass(Class entityClass) throws MappingException;
+
+	@Override
+	boolean isCallable();
+
+	@Override
+	NativeQuery<T> addScalar(String columnAlias);
+
+	@Override
+	NativeQuery<T> addScalar(String columnAlias, Type type);
+
+	@Override
+	RootReturn addRoot(String tableAlias, String entityName);
+
+	@Override
+	RootReturn addRoot(String tableAlias, Class entityType);
+
+	@Override
+	NativeQuery<T> addEntity(String entityName);
+
+	@Override
+	NativeQuery<T> addEntity(String tableAlias, String entityName);
+
+	@Override
+	NativeQuery<T> addEntity(String tableAlias, String entityName, LockMode lockMode);
+
+	@Override
+	NativeQuery<T> addEntity(Class entityType);
+
+	@Override
+	NativeQuery<T> addEntity(String tableAlias, Class entityType);
+
+	@Override
+	NativeQuery<T> addEntity(String tableAlias, Class entityClass, LockMode lockMode);
+
+	@Override
+	FetchReturn addFetch(String tableAlias, String ownerTableAlias, String joinPropertyName);
+
+	@Override
+	NativeQuery<T> addJoin(String tableAlias, String path);
+
+	@Override
+	NativeQuery<T> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName);
+
+	@Override
+	NativeQuery<T> addJoin(String tableAlias, String path, LockMode lockMode);
+
+	@Override
+	NativeQuery<T> setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	NativeQuery<T> setFlushMode(FlushModeType flushMode);
+
+	@Override
+	NativeQuery<T> setCacheMode(CacheMode cacheMode);
+
+	@Override
+	NativeQuery<T> setCacheable(boolean cacheable);
+
+	@Override
+	NativeQuery<T> setCacheRegion(String cacheRegion);
+
+	@Override
+	NativeQuery<T> setTimeout(int timeout);
+
+	@Override
+	NativeQuery<T> setFetchSize(int fetchSize);
+
+	@Override
+	NativeQuery<T> setReadOnly(boolean readOnly);
+
+	@Override
+	NativeQuery<T> setLockOptions(LockOptions lockOptions);
+
+	@Override
+	NativeQuery<T> setLockMode(String alias, LockMode lockMode);
+
+	@Override
+	NativeQuery<T> setComment(String comment);
+
+	@Override
+	NativeQuery<T> addQueryHint(String hint);
 }

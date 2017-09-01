@@ -86,7 +86,7 @@ public class StandardSQLFunction implements SQLFunction {
 	@Override
 	public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor sessionFactory) {
 		final StringBuilder buf = new StringBuilder();
-		buf.append( name ).append( '(' );
+		buf.append( getRenderedName( arguments) ).append( '(' );
 		for ( int i = 0; i < arguments.size(); i++ ) {
 			buf.append( arguments.get( i ) );
 			if ( i < arguments.size() - 1 ) {
@@ -94,6 +94,10 @@ public class StandardSQLFunction implements SQLFunction {
 			}
 		}
 		return buf.append( ')' ).toString();
+	}
+
+	protected String getRenderedName(List arguments) {
+		return getName();
 	}
 
 	@Override

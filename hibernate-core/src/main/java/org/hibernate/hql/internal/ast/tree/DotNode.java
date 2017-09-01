@@ -7,7 +7,7 @@
 package org.hibernate.hql.internal.ast.tree;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -512,6 +512,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 				// We will collect all the join columns from the LHS subtypes here
 				List<String[]> polymorphicJoinColumns = new ArrayList<>( subclassEntityNames.size() );
 
+				OUTER:
 				for ( String subclassEntityName : subclassEntityNames ) {
 					AbstractEntityPersister subclassPersister = (AbstractEntityPersister) getSessionFactoryHelper().getFactory()
 							.getMetamodel()
@@ -523,6 +524,12 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 						continue;
 					}
 
+					// Check for duplicates like this since we will mostly have just a few candidates
+					for ( String[] existingColumns : polymorphicJoinColumns ) {
+						if ( Arrays.deepEquals( existingColumns, joinColumns ) ) {
+							continue OUTER;
+						}
+					}
 					polymorphicJoinColumns.add( joinColumns );
 				}
 

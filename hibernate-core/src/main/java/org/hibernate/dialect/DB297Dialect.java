@@ -6,11 +6,14 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.function.DB2SubstringFunction;
+import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * An SQL dialect for DB2 9.7.
@@ -18,6 +21,11 @@ import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
  * @author Gail Badner
  */
 public class DB297Dialect extends DB2Dialect {
+
+	public DB297Dialect() {
+		super();
+		registerFunction( "substring", new DB2SubstringFunction() );
+	}
 
 	@Override
 	public String getCrossJoinSeparator() {

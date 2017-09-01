@@ -11,6 +11,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.PersistenceException;
 
+import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB297Dialect;
@@ -25,7 +26,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -57,20 +57,24 @@ public class DB297SubStringFunctionsTest extends BaseCoreFunctionalTestCase {
 		AnEntity anEntity = new AnEntity();
 		anEntity.description = "A very long, boring description.";
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					session.persist( anEntity );
-				}
-		);
+		Session session = openSession();
+		session.beginTransaction();
+		{
+			session.persist( anEntity );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@After
 	public void cleanup() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 					session.createQuery( "delete from AnEntity" ).executeUpdate();
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
@@ -79,15 +83,16 @@ public class DB297SubStringFunctionsTest extends BaseCoreFunctionalTestCase {
 
 		mostRecentStatementInspector.clear();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					String value = session.createQuery(
-							"select substring( e.description, 21, 11, octets ) from AnEntity e",
-							String.class
+		Session session = openSession();
+		session.beginTransaction();
+		{
+					String value = (String) session.createQuery(
+							"select substring( e.description, 21, 11, octets ) from AnEntity e"
 					).uniqueResult();
 					assertEquals( "description", value );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
 		assertTrue( mostRecentStatementInspector.mostRecentSql.contains( "substring(" ) );
 		assertTrue( mostRecentStatementInspector.mostRecentSql.contains( "octets" ) );
@@ -99,15 +104,17 @@ public class DB297SubStringFunctionsTest extends BaseCoreFunctionalTestCase {
 
 		mostRecentStatementInspector.clear();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					String value = session.createQuery(
-							"select substring( e.description, 21, 11 ) from AnEntity e",
-							String.class
+		Session session = openSession();
+		session.beginTransaction();
+		{
+					String value = (String) session.createQuery(
+							"select substring( e.description, 21, 11 ) from AnEntity e"
 					).uniqueResult();
 					assertEquals( "description", value );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
+
 		assertTrue( mostRecentStatementInspector.mostRecentSql.contains( "substr(" ) );
 	}
 
@@ -117,20 +124,22 @@ public class DB297SubStringFunctionsTest extends BaseCoreFunctionalTestCase {
 
 		mostRecentStatementInspector.clear();
 
+		Session session = openSession();
+		session.beginTransaction();
+
 		try {
-			doInHibernate(
-					this::sessionFactory, session -> {
-						String value = session.createQuery(
-								"select substr( e.description, 21, 11, octets ) from AnEntity e",
-								String.class
+						String value = (String) session.createQuery(
+								"select substr( e.description, 21, 11, octets ) from AnEntity e"
 						).uniqueResult();
 						assertEquals( "description", value );
-					}
-			);
-			fail( "Should have failed because substr cannot be used with string units." );
+						fail( "Should have failed because substr cannot be used with string units." );
 		}
-		catch (PersistenceException expected) {
-			assertTrue( SQLGrammarException.class.isInstance( expected.getCause() ) );
+		catch (SQLGrammarException expected) {
+			// expected
+		}
+		finally {
+			session.getTransaction().rollback();
+			session.close();
 		}
 
 		assertTrue( mostRecentStatementInspector.mostRecentSql.contains( "substr(" ) );
@@ -143,15 +152,17 @@ public class DB297SubStringFunctionsTest extends BaseCoreFunctionalTestCase {
 
 		mostRecentStatementInspector.clear();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					String value = session.createQuery(
-							"select substr( e.description, 21, 11 ) from AnEntity e",
-							String.class
+		Session session = openSession();
+		session.beginTransaction();
+		{
+					String value = (String) session.createQuery(
+							"select substr( e.description, 21, 11 ) from AnEntity e"
 					).uniqueResult();
 					assertEquals( "description", value );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
+
 		assertTrue( mostRecentStatementInspector.mostRecentSql.contains( "substr(" ) );
 	}
 

@@ -41,7 +41,7 @@ public class SynchronizationRegistryStandardImpl implements SynchronizationRegis
 		}
 
 		if ( synchronizations == null ) {
-			synchronizations = new LinkedHashSet<Synchronization>();
+			synchronizations = new LinkedHashSet<>();
 		}
 
 		final boolean added = synchronizations.add( synchronization );

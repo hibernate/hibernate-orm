@@ -6,13 +6,10 @@
  */
 package org.hibernate.stat.internal;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.hibernate.cache.spi.ExtendedStatisticsSupport;
 import org.hibernate.cache.spi.Region;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 
 /**
@@ -22,63 +19,50 @@ import org.hibernate.stat.SecondLevelCacheStatistics;
  */
 public class ConcurrentSecondLevelCacheStatisticsImpl extends CategorizedStatistics implements SecondLevelCacheStatistics {
 	private final transient Region region;
-	private final transient EntityRegionAccessStrategy entityRegionAccessStrategy;
-	private final transient CollectionRegionAccessStrategy collectionRegionAccessStrategy;
+
 	private AtomicLong hitCount = new AtomicLong();
 	private AtomicLong missCount = new AtomicLong();
 	private AtomicLong putCount = new AtomicLong();
 
-	ConcurrentSecondLevelCacheStatisticsImpl(
-			Region region,
-			EntityRegionAccessStrategy entityRegionAccessStrategy,
-			CollectionRegionAccessStrategy collectionRegionAccessStrategy) {
+	ConcurrentSecondLevelCacheStatisticsImpl(Region region) {
 		super( region.getName() );
 		this.region = region;
-		this.entityRegionAccessStrategy = entityRegionAccessStrategy;
-		this.collectionRegionAccessStrategy = collectionRegionAccessStrategy;
 	}
 
+	@Override
 	public long getHitCount() {
 		return hitCount.get();
 	}
 
+	@Override
 	public long getMissCount() {
 		return missCount.get();
 	}
 
+	@Override
 	public long getPutCount() {
 		return putCount.get();
 	}
 
+	@Override
 	public long getElementCountInMemory() {
-		return region.getElementCountInMemory();
+		return ExtendedStatisticsSupport.class.isInstance( region )
+				? ( (ExtendedStatisticsSupport) region ).getElementCountInMemory()
+				: Long.MIN_VALUE;
 	}
 
+	@Override
 	public long getElementCountOnDisk() {
-		return region.getElementCountOnDisk();
+		return ExtendedStatisticsSupport.class.isInstance( region )
+				? ( (ExtendedStatisticsSupport) region ).getElementCountOnDisk()
+				: Long.MIN_VALUE;
 	}
 
+	@Override
 	public long getSizeInMemory() {
-		return region.getSizeInMemory();
-	}
-
-	public Map getEntries() {
-		Map map = new HashMap();
-		for ( Object o : region.toMap().entrySet() ) {
-			Map.Entry me = (Map.Entry) o;
-			Object id;
-			if ( entityRegionAccessStrategy != null ) {
-				id = entityRegionAccessStrategy.getCacheKeyId( me.getKey() );
-			}
-			else if ( collectionRegionAccessStrategy != null ) {
-				id = collectionRegionAccessStrategy.getCacheKeyId( me.getKey() );
-			}
-			else {
-				id = me.getKey();
-			}
-			map.put( id, me.getValue() );
-		}
-		return map;
+		return ExtendedStatisticsSupport.class.isInstance( region )
+				? ( (ExtendedStatisticsSupport) region ).getSizeInMemory()
+				: Long.MIN_VALUE;
 	}
 
 	public String toString() {
@@ -87,7 +71,7 @@ public class ConcurrentSecondLevelCacheStatisticsImpl extends CategorizedStatist
 				.append( "[hitCount=").append( this.hitCount )
 				.append( ",missCount=").append( this.missCount )
 				.append( ",putCount=").append( this.putCount );
-		//not sure if this would ever be null but wanted to be careful
+		// not sure if this would ever be null but wanted to be careful
 		if ( region != null ) {
 			buf.append( ",elementCountInMemory=" ).append( this.getElementCountInMemory() )
 					.append( ",elementCountOnDisk=" ).append( this.getElementCountOnDisk() )

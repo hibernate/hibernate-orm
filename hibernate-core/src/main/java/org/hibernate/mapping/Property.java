@@ -23,7 +23,7 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeBasic;
+import org.hibernate.metamodel.model.domain.internal.BasicSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
@@ -424,7 +424,7 @@ public class Property implements Serializable, PersistentAttributeMapping {
 			SingularPersistentAttribute.Disposition singularAttributeDisposition,
 			RuntimeModelCreationContext context) {
 		if ( value instanceof BasicValueMapping ) {
-			return new SingularPersistentAttributeBasic(
+			return new BasicSingularPersistentAttribute(
 					container,
 					name,
 					resolvePropertyAccess( container, this, context ),

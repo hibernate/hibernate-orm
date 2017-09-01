@@ -28,7 +28,7 @@ import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -262,8 +262,8 @@ public abstract class AbstractEntityDescriptor<T>
 	}
 
 	@Override
-	public EntityRegionAccessStrategy getCacheAccessStrategy() {
-		return getHierarchy().getEntityRegionAccessStrategy();
+	public EntityDataAccess getCacheAccessStrategy() {
+		return getHierarchy().getEntityCacheAccess();
 	}
 
 	@Override

@@ -9,24 +9,25 @@ package org.hibernate.query.criteria.internal.selection;
 import java.util.List;
 
 import org.hibernate.query.criteria.CriteriaBuilderException;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.spi.JpaCriteriaBuilderImplementor;
 import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;
 import org.hibernate.query.sqm.produce.spi.criteria.JpaExpression;
 import org.hibernate.query.sqm.tree.select.SqmAliasedExpressionContainer;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class ArrayJpaSelectionImpl<T> extends AbstractCompoundSelection<T> {
 	public ArrayJpaSelectionImpl(
-			HibernateCriteriaBuilder criteriaBuilder,
-			Class<T> javaType,
+			JpaCriteriaBuilderImplementor criteriaBuilder,
+			JavaTypeDescriptor<T> javaTypeDescriptor,
 			List<JpaExpression<?>> expressions) {
-		super( criteriaBuilder, javaType, expressions );
-		if ( !javaType.isArray() ) {
+		super( criteriaBuilder, javaTypeDescriptor, expressions );
+		if ( !javaTypeDescriptor.getJavaType().isArray() ) {
 			throw new CriteriaBuilderException(
 					"Expecting array type as result-type for JpaArraySelection, but found : " +
-							javaType.getName()
+							javaTypeDescriptor.getJavaType().getName()
 			);
 		}
 	}

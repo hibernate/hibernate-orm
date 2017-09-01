@@ -15,7 +15,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeBasic;
+import org.hibernate.metamodel.model.domain.internal.BasicSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
@@ -453,7 +453,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	}
 
 	@Override
-	public void visitSingularAttributeBasic(SingularPersistentAttributeBasic attribute) {
+	public void visitSingularAttributeBasic(BasicSingularPersistentAttribute attribute) {
 	}
 
 	@Override

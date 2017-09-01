@@ -23,8 +23,8 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
@@ -106,8 +106,8 @@ public class PersisterClassProviderTest {
 
 		public GoofyProvider(
 				EntityMapping entityMapping,
-				EntityRegionAccessStrategy cacheAccessStrategy,
-				NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
+				EntityDataAccess cacheAccessStrategy,
+				NaturalIdDataAccess naturalIdRegionAccessStrategy,
 				RuntimeModelCreationContext creationContext) throws HibernateException {
 			super( entityMapping, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 			throw new GoofyException();
@@ -275,7 +275,7 @@ public class PersisterClassProviderTest {
         }
 
         @Override
-        public NaturalIdRegionAccessStrategy getNaturalIdCacheAccessStrategy() {
+        public NaturalIdDataAccess getNaturalIdCacheAccessStrategy() {
             return null;
         }
 
@@ -410,7 +410,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public EntityRegionAccessStrategy getCacheAccessStrategy() {
+		public EntityDataAccess getCacheAccessStrategy() {
 			return null;
 		}
 

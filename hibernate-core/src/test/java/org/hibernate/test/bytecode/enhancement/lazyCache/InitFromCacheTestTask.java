@@ -8,6 +8,7 @@ package org.hibernate.test.bytecode.enhancement.lazyCache;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
@@ -25,8 +26,9 @@ public class InitFromCacheTestTask extends AbstractCachingTestTask {
 	@Override
 	public void execute() {
 		EntityDescriptor p = sessionFactory().getEntityPersister( Document.class.getName() );
-		assertTrue( p.hasCache() );
-		BaseRegion region = (BaseRegion) p.getCacheAccessStrategy().getRegion();
+		final EntityDataAccess cacheAccess = sessionFactory().getCache().getEntityRegionAccess( p.getHierarchy().getRootEntityType() );
+		assertNotNull( cacheAccess );
+		BaseRegion region = (BaseRegion) cacheAccess.getRegion();
 
 		Session s = sessionFactory().openSession();
 		s.beginTransaction();
@@ -42,8 +44,6 @@ public class InitFromCacheTestTask extends AbstractCachingTestTask {
 		s.getTransaction().commit();
 		s.close();
 
-		StandardCacheEntryImpl cacheEntry = (StandardCacheEntryImpl) region.getDataMap().get( p.getCacheAccessStrategy().generateCacheKey( d.getId(), p, sessionFactory(), null ) );
-		assertNotNull( cacheEntry );
 		sessionFactory().getStatistics().clear();
 
 		s = sessionFactory().openSession();

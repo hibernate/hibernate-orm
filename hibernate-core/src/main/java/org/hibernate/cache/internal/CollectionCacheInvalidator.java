@@ -13,6 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionAction;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.boot.Metadata;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -106,7 +107,8 @@ public class CollectionCacheInvalidator
 			}
 			for ( String role : collectionRoles ) {
 				final PersistentCollectionDescriptor collectionDescriptor = factory.getTypeConfiguration().findCollectionPersister( role );
-				if ( !collectionDescriptor.hasCache() ) {
+				final CollectionDataAccess cacheAccess = collectionDescriptor.getCacheAccess();
+				if ( cacheAccess == null ) {
 					// ignore collection if no caching is used
 					continue;
 				}
@@ -136,9 +138,9 @@ public class CollectionCacheInvalidator
 				}
 				else {
 					LOG.debug( "Evict CollectionRegion " + role );
-					final SoftLock softLock = collectionDescriptor.getCacheAccessStrategy().lockRegion();
+					final SoftLock softLock = cacheAccess.lockRegion();
 					session.getActionQueue().registerProcess( (success, session1) -> {
-						collectionDescriptor.getCacheAccessStrategy().unlockRegion( softLock );
+						cacheAccess.unlockRegion( softLock );
 					} );
 				}
 			}

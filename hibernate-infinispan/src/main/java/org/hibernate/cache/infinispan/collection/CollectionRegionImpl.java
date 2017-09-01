@@ -14,7 +14,7 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.infinispan.AdvancedCache;
 
 import javax.transaction.TransactionManager;
@@ -43,7 +43,7 @@ public class CollectionRegionImpl extends BaseTransactionalDataRegion implements
 	}
 
 	@Override
-	public CollectionRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
+	public CollectionDataAccess buildAccessStrategy(AccessType accessType) throws CacheException {
 		checkAccessType( accessType );
 		AccessDelegate accessDelegate = createAccessDelegate(accessType);
 		return new CollectionAccess( this, accessDelegate );

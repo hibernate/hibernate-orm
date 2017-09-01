@@ -9,7 +9,7 @@ package org.hibernate.cache.infinispan.collection;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.access.AccessDelegate;
 import org.hibernate.cache.spi.CollectionRegion;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -22,7 +22,7 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
  * @author Galder Zamarreño
  * @since 3.5
  */
-class CollectionAccess implements CollectionRegionAccessStrategy {
+class CollectionAccess implements CollectionDataAccess {
 	private final CollectionRegionImpl region;
 	private final AccessDelegate delegate;
 

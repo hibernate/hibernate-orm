@@ -35,7 +35,7 @@ public class SortedExecutableListTest extends BaseUnitTestCase {
 	private static class AnExecutable implements Executable, Comparable, Serializable {
 
 		private final int n;
-		private Serializable[] spaces;
+		private String[] spaces;
 		private transient boolean afterDeserializeCalled;
 
 		public AnExecutable(int n, String... spaces) {
@@ -64,7 +64,7 @@ public class SortedExecutableListTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public Serializable[] getPropertySpaces() {
+		public String[] getPropertySpaces() {
 			return spaces;
 		}
 
@@ -165,13 +165,13 @@ public class SortedExecutableListTest extends BaseUnitTestCase {
 	@Test
 	public void testGetSpaces() {
 		l.add( action1 );
-		Set<Serializable> ss = l.getQuerySpaces();
+		Set<String> ss = l.getQuerySpaces();
 		Assert.assertEquals( 1, ss.size() );
 		Assert.assertTrue( ss.contains( "a" ) );
 		l.add( action2 );
 		l.add( action3 );
 		l.add( action4 );
-		Set<Serializable> ss2 = l.getQuerySpaces();
+		Set<String> ss2 = l.getQuerySpaces();
 		Assert.assertEquals( 4, ss2.size() );
 		Assert.assertTrue( ss2.contains( "a" ) );
 		Assert.assertTrue( ss2.contains( "b" ) );

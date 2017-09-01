@@ -35,7 +35,7 @@ As always the "trigger" for Beta1 is (relatively) stable API.
 
 === Alpha1
 
-* Drop `Query#iterate` support (shallow queries)?
+* [.line-through]#Drop `Query#iterate` support (shallow queries)?#
 * [.line-through]#Determine how to deal with `JpaExpression#getExpressionSqmType`.
 	It is only used in "basic contexts" (function return types, arithmetic results, etc)#
 * [.line-through]#split concept of NavigablePath and NavigableRole (PropertyPath renamed).  NavigablePath
@@ -209,7 +209,16 @@ might be done in 6.0 (again if resources allow), in 6.x or some `> 6` release.
 
 Unresolved/undecided design questions.
 
-
+* Are we continuing to support mapping entities which do not maintain their id as an entity attribute?
+* Move some methods from `EntityDescriptor` to more appropriate place:
+	** methods relating to identifier (`#getIdentifier`, etc) ought to move to `EntityIdentifier`
+	** methods relating to version (`#getVersion`, `#getCurrentVersion`, etc) ought to move to `VersionDescriptor`
+	** methods relating to natural-id ought to move to `NaturalIdDescriptor`
+* Move methods relating to the entity identifier from EntityDescriptor
+* Should a natural-id be considered mutable/immutable based on mutability of its included attributes?
+		ATM we rely on a specific configuration (`@org.hibernate.annotations.NaturalId#mutable`),
+		but couldn't this be simplified to just look at the mutability of the attributes making up the
+		natural-id?
 * Should `org.hibernate.mapping.SimpleValue` just implement `org.hibernate.type.spi.BasicTypeParameters`?
 		ATM I create an anonymous inner class, but `SimpleValue` implementing `BasicTypeParameters` would
 		save an object creation every time we need to resolve a BasicType.  This part of the design is still
@@ -267,9 +276,9 @@ Unresolved/undecided design questions.
 	the fact that it is virtual means it is not a "real" attribute - so why does it make
 	sense to model as such.  TBH I think that idea was added before Navigable was developed.
 	E.g. this comes up in 3 places:
-	* `NonAggregatedCompositeEntityIdentifier`
-	* `DiscriminatorDescriptor`
-	* back-refs
+	** `NonAggregatedCompositeEntityIdentifier`
+	** `DiscriminatorDescriptor`
+	** back-refs
 * consider allowing some Dialect decisions to be contextual, meaning giving it access to
 		information about the underlying database (DatabaseMetaData?) based on which it can
 		configure itself differently.  The idea is to help cut down on the explosion of
@@ -325,8 +334,40 @@ dialect.initialize( dbInfo );
 
 == Misc
 
-* Test (and possibly implement) the combination stuff discussed on a hibernate-semantic-query repo PR submitted by Gunnar,
- 		as outlined in the following comment : https://github.com/hibernate/hibernate-semantic-query/pull/3#issuecomment-145553684
+=== Entity-type expressions
+
+Test (and possibly implement) the combination stuff discussed on a hibernate-semantic-query repo PR
+submitted by Gunnar, as outlined in thise following comment : https://github.com/hibernate/hibernate-semantic-query/pull/3#issuecomment-145553684
+
+I've copied the gist of that PR discussion here in case we drop that no-longer-used repo...
+____
+So my idea is based on a few premises.
+
+First, the JPA spec only allows this in the WHERE clause. So these "entity type expressions" (the JPA term, section 4.6.17.5) are only allowed as a predicate. And specifically in conjunction with a limited set of predicate operators (=, <>, IN, NOT IN).
+
+The above premises come directly from the JPA spec. Another premise I have is that one of the expressions in the predicate has to be a TYPE function; all other forms really would not make sense. Bearing in mind that an "entity type expression" can be either (a) a TYPE function expression, (b) a parameter or (c) a entity-type-literal and leaving operator out of the equation for now, we'd have the following combinations:
+
+* `typeFunction` & `typeFunction`
+* `typeFunction` & `parameter`
+* `typeFunction` & `entityTypeLiteral`
+* `parameter` & `entityTypeLiteral`
+
+I argue that the last one makes no sense to allow. We can debate this one. But it is an important premise to the idea to recognize these expressions syntactically. Why? Because notice how, if we strip away the last combination, all the remaining combinations have at least one typeFunction expression. That would allow us to set up a special branch in the predicate rule to recognize this.
+
+Why is this such an important distinction (syntactic versus semantic)? In a word, performance. Specifically here: time, speed. The approach you took (validating each token text as an entity name) is valid, and it works. But you have to realize that every token/context we ask Antlr to evaluate as an expression will now involve a call to check whether the thing is an entity (so a series of method calls and eventually at least 2 Map lookups); for every possible thing that could evaluate as an expression.
+
+What is better, generally speaking, is to recognize that an expression should be an entity-type-expression based on syntax. The should be is important. Because now we move into syntactic analysis and semantic validation. So if during parsing we are able to recognize that this expression should be an entityTypeExpression, we can later validate that it is as we walk the parse tree. That will be a much more efficient check, because its limited.
+____
+
+A related discussion Andrea and I had regards possibly allowing a query to select the entity-type.  E.g.
+
+----
+select type(p) from Person p
+----
+
+Again, this is beyond what the JPA spec defines as supported so we don't have to support this.  But its doable,
+but I am not sure it is "usable".  If we do end up supporting this, the best "result type" is the Class although
+I am not sure how that would work with non-POJO models.
 
 
 == People to thank

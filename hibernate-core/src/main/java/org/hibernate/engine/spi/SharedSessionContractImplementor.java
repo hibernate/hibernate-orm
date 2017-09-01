@@ -17,6 +17,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
+import org.hibernate.cache.spi.CacheTransactionContext;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -140,9 +141,28 @@ public interface SharedSessionContractImplementor
 	void markForRollbackOnly();
 
 	/**
-	 * System time beforeQuery the start of the transaction
+	 * A system time {@link System#currentTimeMillis()} at or before the start
+	 * of the current transaction
 	 */
-	long getTimestamp();
+	default long getTransactionStartTimestamp() {
+		final CacheTransactionContext cctc = getCurrentCacheTransactionContext();
+		// todo (6.0) : is `System#currentTimeMillis` the appropriate reply outside of a txn boundary (cctc==null)?
+		return cctc != null ? cctc.getCurrentTransactionStartTimestamp() : System.currentTimeMillis();
+	}
+
+	/**
+	 * @deprecated (since 6.0) Use
+	 */
+	@Deprecated
+	default long getTimestamp() {
+		return getTransactionStartTimestamp();
+	}
+
+	/**
+	 * The current CacheTransactionContext associated with the Session.  This may
+	 * return {@code null} when the Session is not currently part of a transaction.
+	 */
+	CacheTransactionContext getCurrentCacheTransactionContext();
 
 	/**
 	 * Does this <tt>Session</tt> have an active Hibernate transaction

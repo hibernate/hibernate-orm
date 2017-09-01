@@ -14,14 +14,33 @@ import java.io.Serializable;
  * @author Gavin King
  */
 public interface CollectionStatistics extends Serializable {
-
+	/**
+	 * Number of times (since last Statistics clearing) this collection
+	 * has been loaded
+	 */
 	long getLoadCount();
 
+	/**
+	 * Number of times (since last Statistics clearing) this collection
+	 * has been fetched
+	 */
 	long getFetchCount();
 
+	/**
+	 * Number of times (since last Statistics clearing) this collection
+	 * has been recreated (rows potentially deleted and then rows (re-)inserted)
+	 */
 	long getRecreateCount();
 
+	/**
+	 * Number of times (since last Statistics clearing) this collection
+	 * has been removed
+	 */
 	long getRemoveCount();
 
+	/**
+	 * Number of times (since last Statistics clearing) this collection
+	 * has been updated
+	 */
 	long getUpdateCount();
 }

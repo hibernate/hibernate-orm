@@ -14,7 +14,7 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.WrongClassException;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
@@ -175,7 +175,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		final Object parent = doLoad( event, parentPersister, parentEntityKey, options );
 
 		final Serializable dependent = (Serializable) dependentIdType.instantiate( parent, event.getSession() );
-		dependentIdType.setPropertyValues( dependent, new Object[] {parent}, dependentPersister.getEntityMode() );
+		dependentIdType.setPropertyValues( dependent, new Object[] {parent}, dependentPersister.getHierarchy().getRepresentation() );
 		final EntityKey dependentEntityKey = event.getSession().generateEntityKey( dependent, dependentPersister );
 		event.setEntityId( dependent );
 
@@ -382,15 +382,16 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			final SessionImplementor source) {
 		SoftLock lock = null;
 		final Object ck;
-		final EntityRegionAccessStrategy cache = entityDescriptor.getCacheAccessStrategy();
-		if ( entityDescriptor.hasCache() ) {
-			ck = cache.generateCacheKey(
+		final EntityDescriptor rootDescriptor = entityDescriptor.getHierarchy().getRootEntityType();
+		final EntityDataAccess cacheAccess = rootDescriptor.getHierarchy().getEntityCacheAccess();
+		if ( cacheAccess != null ) {
+			ck = cacheAccess.generateCacheKey(
 					event.getEntityId(),
-					entityDescriptor,
+					entityDescriptor.getHierarchy(),
 					source.getFactory(),
 					source.getTenantIdentifier()
 			);
-			lock = entityDescriptor.getCacheAccessStrategy().lockItem( source, ck, null );
+			lock = cacheAccess.lockItem( source, ck, null );
 		}
 		else {
 			ck = null;
@@ -401,8 +402,8 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			entity = load( event, entityDescriptor, keyToLoad, options );
 		}
 		finally {
-			if ( entityDescriptor.hasCache() ) {
-				cache.unlockItem( source, ck, lock );
+			if ( cacheAccess != null ) {
+				cacheAccess.unlockItem( source, ck, lock );
 			}
 		}
 
@@ -476,7 +477,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			entity = loadFromDatasource( event, entityDescriptor );
 		}
 
-		if ( entity != null && entityDescriptor.hasNaturalIdentifier() ) {
+		if ( entity != null && entityDescriptor.getHierarchy().getNaturalIdDescriptor() != null ) {
 			event.getSession().getPersistenceContext().getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
 					entityDescriptor,
 					event.getEntityId(),
@@ -581,16 +582,18 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			final EntityKey entityKey) {
 
 		final SessionImplementor source = event.getSession();
-		final boolean useCache = entityDescriptor.hasCache()
-				&& source.getCacheMode().isGetEnabled()
-				&& event.getLockMode().lessThan( LockMode.READ );
+		if ( source.getCacheMode().isGetEnabled() && event.getLockMode().lessThan( LockMode.READ ) ) {
+			return null;
+		}
 
-		if ( !useCache ) {
+		final EntityDataAccess cacheAccess = entityDescriptor.getHierarchy().getEntityCacheAccess();
+
+		if ( cacheAccess == null ) {
 			// we can't use cache here
 			return null;
 		}
 
-		final Object ce = getFromSharedCache( event, entityDescriptor, source );
+		final Object ce = getFromSharedCache( event, entityDescriptor, cacheAccess, source );
 
 		if ( ce == null ) {
 			// nothing was found in cache
@@ -635,27 +638,27 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	}
 
 	private Object getFromSharedCache(
-		final LoadEvent event,
-		final EntityDescriptor entityDescriptor,
-		SessionImplementor source ) {
-		final EntityRegionAccessStrategy cache = entityDescriptor.getCacheAccessStrategy();
-		final Object ck = cache.generateCacheKey(
+			final LoadEvent event,
+			final EntityDescriptor entityDescriptor,
+			EntityDataAccess cacheAccess,
+			SessionImplementor source) {
+		final Object ck = cacheAccess.generateCacheKey(
 				event.getEntityId(),
-				entityDescriptor,
+				entityDescriptor.getHierarchy(),
 				source.getFactory(),
 				source.getTenantIdentifier()
 		);
 
-		final Object ce = CacheHelper.fromSharedCache( source, ck, entityDescriptor.getCacheAccessStrategy() );
+		final Object ce = CacheHelper.fromSharedCache( source, ck, cacheAccess);
 		if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
 			if ( ce == null ) {
-				source.getFactory().getStatisticsImplementor().secondLevelCacheMiss(
-						cache.getRegion().getName()
+				source.getFactory().getStatistics().secondLevelCacheMiss(
+						cacheAccess.getRegion().getName()
 				);
 			}
 			else {
-				source.getFactory().getStatisticsImplementor().secondLevelCacheHit(
-						cache.getRegion().getName()
+				source.getFactory().getStatistics().secondLevelCacheHit(
+						cacheAccess.getRegion().getName()
 				);
 			}
 		}

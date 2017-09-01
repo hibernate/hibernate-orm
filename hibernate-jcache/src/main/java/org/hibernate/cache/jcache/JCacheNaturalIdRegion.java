@@ -16,7 +16,7 @@ import org.hibernate.cache.jcache.access.ReadWriteNaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 
 /**
  * @author Alex Snaps
@@ -28,7 +28,7 @@ public class JCacheNaturalIdRegion extends JCacheTransactionalDataRegion impleme
 	}
 
 	@Override
-	public NaturalIdRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
+	public NaturalIdDataAccess buildAccessStrategy(AccessType accessType) throws CacheException {
 		switch ( accessType ) {
 			case READ_ONLY:
 				return new ReadOnlyNaturalIdRegionAccessStrategy( this );

@@ -29,15 +29,10 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cache.spi.QueryCache;
-import org.hibernate.cache.spi.Region;
-import org.hibernate.cache.spi.UpdateTimestampsCache;
-import org.hibernate.cache.spi.access.RegionAccessStrategy;
+import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cfg.Settings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
@@ -45,12 +40,14 @@ import org.hibernate.envers.AuditReader;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.ResultSetMappingDefinition;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
@@ -231,21 +228,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public QueryCache getQueryCache() {
-		return delegate.getQueryCache();
-	}
-
-	@Override
-	public QueryCache getQueryCache(String regionName) throws HibernateException {
-		return delegate.getQueryCache( regionName );
-	}
-
-	@Override
-	public UpdateTimestampsCache getUpdateTimestampsCache() {
-		return delegate.getUpdateTimestampsCache();
-	}
-
-	@Override
 	public StatisticsImplementor getStatisticsImplementor() {
 		return delegate.getStatisticsImplementor();
 	}
@@ -278,31 +260,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public IdentifierGenerator getIdentifierGenerator(String rootEntityName) {
 		return delegate.getIdentifierGenerator( rootEntityName );
-	}
-
-	@Override
-	public Region getSecondLevelCacheRegion(String regionName) {
-		return delegate.getSecondLevelCacheRegion( regionName );
-	}
-
-	@Override
-	public RegionAccessStrategy getSecondLevelCacheRegionAccessStrategy(String regionName) {
-		return delegate.getSecondLevelCacheRegionAccessStrategy( regionName );
-	}
-
-	@Override
-	public Region getNaturalIdCacheRegion(String regionName) {
-		return delegate.getNaturalIdCacheRegion( regionName );
-	}
-
-	@Override
-	public RegionAccessStrategy getNaturalIdCacheRegionAccessStrategy(String regionName) {
-		return delegate.getNaturalIdCacheRegionAccessStrategy( regionName );
-	}
-
-	@Override
-	public Map getAllSecondLevelCacheRegions() {
-		return delegate.getAllSecondLevelCacheRegions();
 	}
 
 	@Override

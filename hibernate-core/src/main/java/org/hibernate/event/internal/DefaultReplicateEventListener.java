@@ -23,12 +23,14 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.ReplicateEvent;
 import org.hibernate.event.spi.ReplicateEventListener;
+import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.Type;
 
 /**
  * Defines the default replicate event listener used by Hibernate to replicate
@@ -61,7 +63,11 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			return;
 		}
 
-		EntityDescriptor entityDescriptor = source.getEntityPersister( event.getEntityName(), entity );
+		final EntityDescriptor entityDescriptor = source.getEntityPersister( event.getEntityName(), entity );
+		final EntityIdentifier idDescriptor = entityDescriptor.getHierarchy().getIdentifierDescriptor();
+		final VersionDescriptor versionDescriptor = entityDescriptor.getHierarchy().getVersionDescriptor();
+
+		// todo (6.0) : move methods like `#getIdentifier`, `#getCurrentVersion`, etc from `EntityDescriptor` to `EntityIdentifier`, `VersionDescriptor`, etc
 
 		// get the id from the object
 		/*if ( entityDescriptor.isUnsaved(entity, source) ) {
@@ -97,13 +103,13 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			}
 
 			/// HHH-2378
-			final Object realOldVersion = entityDescriptor.isVersioned() ? oldVersion : null;
+			final Object realOldVersion = versionDescriptor != null ? oldVersion : null;
 
 			boolean canReplicate = replicationMode.shouldOverwriteCurrentVersion(
 					entity,
 					realOldVersion,
 					entityDescriptor.getVersion( entity ),
-					entityDescriptor.getVersionType()
+					versionDescriptor
 			);
 
 			// if can replicate, will result in a SQL UPDATE
@@ -126,7 +132,8 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 				);
 			}
 
-			final boolean regenerate = entityDescriptor.isIdentifierAssignedByInsert(); // prefer re-generation of identity!
+			// prefer re-generation of insert-generated identifiers
+			final boolean regenerate = PostInsertIdentifierGenerator.class.isInstance( idDescriptor.getIdentifierValueGenerator() );
 			final EntityKey key = regenerate ? null : source.generateEntityKey( id, entityDescriptor );
 
 			performSaveOrReplicate(
@@ -147,7 +154,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			Object entity,
 			Serializable id,
 			Object[] values,
-			List<Navigable> navigables,
+			List<PersistentAttribute> navigables,
 			EventSource source) {
 		//TODO: we use two visitors here, inefficient!
 		OnReplicateVisitor visitor = new OnReplicateVisitor( source, id, entity, false );

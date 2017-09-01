@@ -15,7 +15,6 @@ import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cache.spi.entry.StructuredCollectionCacheEntry;
 import org.hibernate.cache.spi.entry.StructuredMapCacheEntry;
@@ -37,10 +36,10 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.model.domain.internal.CollectionElementBasicImpl;
+import org.hibernate.metamodel.model.domain.internal.BasicCollectionElementImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionElementEmbeddedImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionElementEntityImpl;
-import org.hibernate.metamodel.model.domain.internal.CollectionIndexBasicImpl;
+import org.hibernate.metamodel.model.domain.internal.BasicCollectionIndexImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionIndexEmbeddedImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionIndexEntityImpl;
 import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
@@ -67,9 +66,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 
 	private final CollectionKey foreignKeyDescriptor;
 
-	// todo (6.0) - rework these per https://hibernate.atlassian.net/browse/HHH-11356
-	private final CollectionRegionAccessStrategy cacheAccessStrategy;
-
 	// todo (6.0) - rework this (and friend) per todo item...
 	//		* Redesign `org.hibernate.cache.spi.entry.CacheEntryStructure` and friends (with better names)
 	// 			and make more efficient.  At the moment, to cache, we:
@@ -95,15 +91,12 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 			Collection collectionBinding,
 			ManagedTypeDescriptor source,
 			String navigableName,
-			CollectionRegionAccessStrategy cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
 		this.sessionFactory = creationContext.getSessionFactory();
 		this.source = source;
 		this.navigableRole = source.getNavigableRole().append( navigableName );
 		this.collectionClassification = interpretCollectionClassification( collectionBinding );
 		this.foreignKeyDescriptor = new CollectionKey( this, collectionBinding );
-
-		this.cacheAccessStrategy = cacheAccessStrategy;
 
 		if ( sessionFactory.getSessionFactoryOptions().isStructuredCacheEntriesEnabled() ) {
 			cacheEntryStructure = collectionBinding.isMap()
@@ -186,7 +179,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 		}
 
 		if ( indexValueMapping instanceof BasicValueMapping ) {
-			return new CollectionIndexBasicImpl(
+			return new BasicCollectionIndexImpl(
 					persister,
 					indexedCollectionMapping,
 					creationContext
@@ -233,7 +226,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 		}
 
 		if ( bootCollectionDescriptor.getElement() instanceof BasicValueMapping ) {
-			return new CollectionElementBasicImpl(
+			return new BasicCollectionElementImpl(
 					collectionPersister,
 					bootCollectionDescriptor,
 					creationContext

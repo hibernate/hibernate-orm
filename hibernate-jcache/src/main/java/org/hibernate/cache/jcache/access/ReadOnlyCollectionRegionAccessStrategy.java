@@ -9,7 +9,7 @@ package org.hibernate.cache.jcache.access;
 
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.jcache.JCacheCollectionRegion;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
  */
 public class ReadOnlyCollectionRegionAccessStrategy
 		extends JCacheRegionAccessStrategy<JCacheCollectionRegion>
-		implements CollectionRegionAccessStrategy {
+		implements CollectionDataAccess {
 
 	public ReadOnlyCollectionRegionAccessStrategy(JCacheCollectionRegion jCacheCollectionRegion) {
 		super( jCacheCollectionRegion );

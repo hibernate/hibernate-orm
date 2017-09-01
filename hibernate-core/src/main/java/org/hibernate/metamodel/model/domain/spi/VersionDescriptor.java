@@ -11,7 +11,7 @@ package org.hibernate.metamodel.model.domain.spi;
  *
  * @author Steve Ebersole
  */
-public interface VersionDescriptor<O,J> extends SingularPersistentAttribute<O,J> {
+public interface VersionDescriptor<O,J> extends SingularPersistentAttribute<O,J>, BasicValuedNavigable<J> {
 	/**
 	 * Access to the value that indicates an unsaved (transient) entity
 	 *
@@ -24,6 +24,5 @@ public interface VersionDescriptor<O,J> extends SingularPersistentAttribute<O,J>
 		visitor.visitVersion( this );
 	}
 
-	// todo (6.0) : add a Comparator here?  This would be useful for byte[] (TSQL ROWVERSION types) based versions.  But how would we inject the right Comparator?
-
+	VersionSupport getVersionSupport();
 }

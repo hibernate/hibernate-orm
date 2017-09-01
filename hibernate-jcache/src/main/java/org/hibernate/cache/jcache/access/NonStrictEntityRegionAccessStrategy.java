@@ -9,7 +9,7 @@ package org.hibernate.cache.jcache.access;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.jcache.JCacheEntityRegion;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -20,7 +20,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
  * @author Alex Snaps
  */
 public class NonStrictEntityRegionAccessStrategy extends JCacheRegionAccessStrategy<JCacheEntityRegion>
-		implements EntityRegionAccessStrategy {
+		implements EntityDataAccess {
 
 	public NonStrictEntityRegionAccessStrategy(JCacheEntityRegion jCacheEntityRegion) {
 		super( jCacheEntityRegion );

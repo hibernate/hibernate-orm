@@ -16,5 +16,5 @@ public interface Startable {
 	/**
 	 * Start phase notification
 	 */
-	public void start();
+	void start();
 }

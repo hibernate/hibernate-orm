@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.produce.internal;
 
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
-import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeBasic;
+import org.hibernate.metamodel.model.domain.internal.BasicSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
@@ -132,7 +132,7 @@ public class NavigableBindingHelper {
 			case BASIC: {
 				return new SqmSingularAttributeReferenceBasic(
 						sourceBinding,
-						(SingularPersistentAttributeBasic) attribute
+						(BasicSingularPersistentAttribute) attribute
 				);
 			}
 			case EMBEDDED: {

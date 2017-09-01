@@ -179,10 +179,10 @@ public interface StatisticsImplementor extends Statistics, Service {
 	/**
 	 * Callback indicating execution of a natural id query
 	 *
-	 * @param regionName The name of the cache region
+	 * @param entityName The name of the entity defining the natural-id
 	 * @param time execution time
 	 */
-	void naturalIdQueryExecuted(String regionName, long time);
+	void naturalIdQueryExecuted(String entityName, long time);
 
 	/**
 	 * Callback indicating a put into the query cache.

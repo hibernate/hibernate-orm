@@ -17,7 +17,7 @@ import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactor
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 
 /**
  * A collection region specific wrapper around an Ehcache instance.
@@ -49,7 +49,7 @@ public class EhcacheNaturalIdRegion extends EhcacheTransactionalDataRegion imple
 	}
 
 	@Override
-	public NaturalIdRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
+	public NaturalIdDataAccess buildAccessStrategy(AccessType accessType) throws CacheException {
 		return getAccessStrategyFactory().createNaturalIdRegionAccessStrategy( this, accessType );
 	}
 }

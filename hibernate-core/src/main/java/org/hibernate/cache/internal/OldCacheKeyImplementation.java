@@ -8,8 +8,9 @@ package org.hibernate.cache.internal;
 
 import java.io.Serializable;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.internal.util.compare.EqualsHelper;
+import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Allows multiple entity classes / collection roles to be stored in the same cache region. Also allows for composite
@@ -26,35 +27,26 @@ import org.hibernate.internal.util.compare.EqualsHelper;
 @Deprecated
 final class OldCacheKeyImplementation implements Serializable {
 	private final Object id;
-	private final JavaTypeDescriptor javaTypeDescriptor;
-	private final String entityOrRoleName;
+	private final JavaTypeDescriptor idJavaTypeDescriptor;
+	private final NavigableRole navigableRole;
 	private final String tenantId;
+
 	private final int hashCode;
 
-	/**
-	 * Construct a new key for a collection or entity instance.
-	 * Note that an entity name should always be the root entity
-	 * name, not a subclass entity name.
-	 *
-	 * @param id The identifier associated with the cached data
-	 * @param javaTypeDescriptor The Hibernate javaTypeDescriptor mapping
-	 * @param entityOrRoleName The entity or collection-role name.
-	 * @param tenantId The tenant identifier associated this data.
-	 */
-	OldCacheKeyImplementation(
-			final Object id,
-			final JavaTypeDescriptor javaTypeDescriptor,
-			final String entityOrRoleName,
-			final String tenantId) {
+	public OldCacheKeyImplementation(
+			Object id,
+			JavaTypeDescriptor<Object> idJavaTypeDescriptor,
+			NavigableRole navigableRole,
+			String tenantId) {
 		this.id = id;
-		this.javaTypeDescriptor = javaTypeDescriptor;
-		this.entityOrRoleName = entityOrRoleName;
+		this.idJavaTypeDescriptor = idJavaTypeDescriptor;
+		this.navigableRole = navigableRole;
 		this.tenantId = tenantId;
-		this.hashCode = calculateHashCode( javaTypeDescriptor );
+		this.hashCode = calculateHashCode( idJavaTypeDescriptor, id, tenantId );
 	}
 
-	private int calculateHashCode(JavaTypeDescriptor type) {
-		int result = type.extractHashCode( id );
+	private static int calculateHashCode(JavaTypeDescriptor typeDescriptor, Object value, String tenantId) {
+		int result = typeDescriptor.extractHashCode( value );
 		result = 31 * result + ( tenantId != null ? tenantId.hashCode() : 0 );
 		return result;
 	}
@@ -76,8 +68,8 @@ final class OldCacheKeyImplementation implements Serializable {
 			return false;
 		}
 		final OldCacheKeyImplementation that = (OldCacheKeyImplementation) other;
-		return EqualsHelper.equals( entityOrRoleName, that.entityOrRoleName )
-				&& javaTypeDescriptor.areEqual( id, that.id)
+		return EqualsHelper.equals( navigableRole, that.navigableRole )
+				&& idJavaTypeDescriptor.areEqual( id, that.id)
 				&& EqualsHelper.equals( tenantId, that.tenantId );
 	}
 
@@ -89,6 +81,6 @@ final class OldCacheKeyImplementation implements Serializable {
 	@Override
 	public String toString() {
 		// Used to be required for OSCache
-		return entityOrRoleName + '#' + id.toString();
+		return navigableRole.getFullPath() + '#' + id.toString();
 	}
 }

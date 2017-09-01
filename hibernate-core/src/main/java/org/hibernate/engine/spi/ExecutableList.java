@@ -63,7 +63,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	 * exposed from {@link #getQuerySpaces}.  This value being {@code null} indicates that the
 	 * query spaces should be calculated.
 	 */
-	private transient Set<Serializable> querySpaces;
+	private transient Set<String> querySpaces;
 
 	/**
 	 * Creates a new ExecutableList with the default settings.
@@ -123,13 +123,13 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	 *
 	 * @return the querySpaces affected by the actions in this list
 	 */
-	public Set<Serializable> getQuerySpaces() {
+	public Set<String> getQuerySpaces() {
 		if ( querySpaces == null ) {
 			for ( E e : executables ) {
-				Serializable[] propertySpaces = e.getPropertySpaces();
+				String[] propertySpaces = e.getPropertySpaces();
 				if ( propertySpaces != null && propertySpaces.length > 0 ) {
 					if( querySpaces == null ) {
-						querySpaces = new HashSet<Serializable>();
+						querySpaces = new HashSet<>();
 					}
 					Collections.addAll( querySpaces, propertySpaces );
 				}
@@ -230,7 +230,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 			}
 		}
 
-		Serializable[] querySpaces = executable.getPropertySpaces();
+		String[] querySpaces = executable.getPropertySpaces();
 		if ( this.querySpaces != null && querySpaces != null ) {
 			Collections.addAll( this.querySpaces, querySpaces );
 		}
@@ -334,7 +334,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 			this.querySpaces = null;
 		}
 		else {
-			querySpaces = new HashSet<Serializable>( CollectionHelper.determineProperSizing( numberOfQuerySpaces ) );
+			querySpaces = new HashSet<>( CollectionHelper.determineProperSizing( numberOfQuerySpaces ) );
 			for ( int i = 0; i < numberOfQuerySpaces; i++ ) {
 				querySpaces.add( in.readUTF() );
 			}

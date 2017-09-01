@@ -9,7 +9,7 @@ package org.hibernate.metamodel.model.domain.spi;
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -53,10 +53,6 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *     </li>
  *     <li>
  *         String - The name of the collection's attribute relative to AttributeContainer
- *     </li>
- *     <li>
- *         {@link CollectionRegionAccessStrategy} - the second level caching strategy for this collection
- *     </li>
  *     <li>
  *         {@link RuntimeModelCreationContext} - access to additional
  *         information useful while constructing the persister.
@@ -64,11 +60,13 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * </ol>
  *
  * @see org.hibernate.collection.spi.PersistentCollection
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public interface PersistentCollectionDescriptor<O,C,E>
 		extends  NavigableContainer<C>, RootTableGroupProducer, TableGroupJoinProducer,
-		TableReferenceContributor, EmbeddedContainer<C> {
+		TableReferenceContributor, EmbeddedContainer<C>, Filterable {
 
 	Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
 
@@ -76,7 +74,6 @@ public interface PersistentCollectionDescriptor<O,C,E>
 			Collection.class,
 			ManagedTypeDescriptor.class,
 			String.class,
-			CollectionRegionAccessStrategy.class,
 			RuntimeModelCreationContext.class
 	};
 
@@ -90,20 +87,14 @@ public interface PersistentCollectionDescriptor<O,C,E>
 
 	void finishInitialization(Collection collectionBinding, RuntimeModelCreationContext creationContext);
 
-
 	CollectionClassification getCollectionClassification();
+
+	@Override
+	ManagedTypeDescriptor getContainer();
 
 	NavigableRole getNavigableRole();
 
 	PluralPersistentAttribute getDescribedAttribute() ;
-
-	/**
-	 * @deprecated Use {@link #getNavigableRole()} instead.
-	 */
-	@Deprecated
-	default String getRoleName() {
-		return getNavigableRole().getFullPath();
-	}
 
 	/**
 	 * Access information about the FK mapping to the "owner" of this collection
@@ -204,27 +195,23 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// legacy stuff
 
-	/**
-	 * Is this collection role cacheable
-	 */
-	default boolean hasCache() {
-		return getCacheAccessStrategy() != null;
-	}
 
 	/**
-	 * Get the cache
+	 * @deprecated Use {@link #getNavigableRole()} instead.
 	 */
-	CollectionRegionAccessStrategy getCacheAccessStrategy();
+	@Deprecated
+	default String getRoleName() {
+		return getNavigableRole().getFullPath();
+	}
 
 	/**
 	 * Get the cache structure
 	 */
 	CacheEntryStructure getCacheEntryStructure();
 
-	@Override
-	ManagedTypeDescriptor getContainer();
-
-	JavaTypeDescriptor getKeyJavaTypeDescriptor();
+	default JavaTypeDescriptor getKeyJavaTypeDescriptor() {
+		return getIndexDescriptor() == null ? null : getIndexDescriptor().getJavaTypeDescriptor();
+	}
 
 	// consider whether we want to keep any of this legacy stuff
 
@@ -396,7 +383,9 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	/**
 	 * Get the "space" that holds the persistent state
 	 */
-	Serializable[] getCollectionSpaces();
+	String[] getCollectionSpaces();
+
+	CollectionDataAccess getCacheAccess();
 //
 //	CollectionMetadata getCollectionDescriptor();
 //

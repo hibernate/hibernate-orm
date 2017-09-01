@@ -34,9 +34,11 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.NaturalIdentifierDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.VersionSupport;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.Type;
 
 /**
@@ -66,8 +68,9 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			return;
 		}
 
-		if ( persister.canExtractIdOutOfEntity() ) {
-
+		// todo (6.0) : iirc we removed the ability to define an entity whose class does not contain the id
+		//		so `canExtractIdOutOfEntity` should always be true
+		//if ( persister.canExtractIdOutOfEntity() ) {
 			Serializable oid = persister.getIdentifier( object, session );
 			if ( id == null ) {
 				throw new AssertionFailure( "null id in " + persister.getEntityName() + " entry (don't flush the Session afterQuery an exception occurs)" );
@@ -78,8 +81,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 								+ id + " to " + oid
 				);
 			}
-		}
-
+		//}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -89,45 +91,54 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			Object[] current,
 			Object[] loaded,
 			SessionImplementor session) {
-		final NaturalIdentifierDescriptor naturalIdentifierDescriptor = entityDescriptor.getHierarchy()
-				.getNaturalIdentifierDescriptor();
-		if ( naturalIdentifierDescriptor != null && entry.getStatus() != Status.READ_ONLY ) {
-			if ( !entityDescriptor.getEntityMetamodel().hasImmutableNaturalId() ) {
-				// SHORT-CUT: if the natural id is mutable (!immutable), no need to do the below checks
-				// EARLY EXIT!!!
-				return;
-			}
+		// mainly we are checking that the value of a natural-id defined as
+		// immutable has not been changed
+		final NaturalIdDescriptor naturalIdentifierDescriptor = entityDescriptor.getHierarchy().getNaturalIdDescriptor();
 
-			final int[] naturalIdentifierPropertiesIndexes = entityDescriptor.getNaturalIdentifierProperties();
-			final Type[] propertyTypes = entityDescriptor.getPropertyTypes();
-			final boolean[] propertyUpdateability = entityDescriptor.getPropertyUpdateability();
+		if ( naturalIdentifierDescriptor == null || entry.getStatus() == Status.READ_ONLY ) {
+			// no natural-id or the entity was loaded as read-only: nothing else to check
+			return;
+		}
 
-			final Object[] snapshot = loaded == null
-					? session.getPersistenceContext().getNaturalIdSnapshot( entry.getId(), entityDescriptor )
-					: session.getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues( loaded, entityDescriptor );
+		if ( naturalIdentifierDescriptor.isMutable() ) {
+			// the natural id is mutable: nothing else to check
+			return;
+		}
 
-			for ( int i = 0; i < naturalIdentifierPropertiesIndexes.length; i++ ) {
-				final int naturalIdentifierPropertyIndex = naturalIdentifierPropertiesIndexes[i];
-				if ( propertyUpdateability[naturalIdentifierPropertyIndex] ) {
-					// if the given natural id property is updatable (mutable), there is nothing to check
-					continue;
-				}
+		final Object[] snapshot = loaded == null
+				? session.getPersistenceContext().getNaturalIdSnapshot( entry.getId(), entityDescriptor )
+				: session.getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues( loaded, entityDescriptor );
 
-				final Type propertyType = propertyTypes[naturalIdentifierPropertyIndex];
-				if ( !propertyType.getJavaTypeDescriptor().areEqual( current[naturalIdentifierPropertyIndex], snapshot[i] ) ) {
-					throw new HibernateException(
-							String.format(
-									"An immutable natural identifier of entity %s was altered from %s to %s",
-									entityDescriptor.getEntityName(),
-									propertyTypes[naturalIdentifierPropertyIndex].toLoggableString(
-											snapshot[i]
-									),
-									propertyTypes[naturalIdentifierPropertyIndex].toLoggableString(
-											current[naturalIdentifierPropertyIndex]
-									)
-							)
-					);
-				}
+		// todo (6.0) : as-is this block assumes that the orders are the same - which is not necessarily accurate
+		int i = -1;
+
+		for ( PersistentAttribute persistentAttribute : naturalIdentifierDescriptor.getPersistentAttributes() ) {
+			i++;
+
+			// todo (6.0) : see the 6.0-todo doc "open question" regarding `@NaturalId#mutable`
+			//		here we assume that naturalIdentifierDescriptor.isMutable() check above
+			//		already verifies that (since the natural-id is considered immutable if we
+			//		get here) the attributes are also immutable
+			//if ( persistentAttribute.isMutable() ) {
+			//	continue;
+			//}
+
+			final Object previousAttributeValue = snapshot[i];
+			final Object currentAttributeValue = current[i];
+
+			final boolean changed = !persistentAttribute.getJavaTypeDescriptor().areEqual(
+					previousAttributeValue,
+					currentAttributeValue
+			);
+			if ( changed ) {
+				throw new HibernateException(
+						String.format(
+								"An immutable natural identifier of entity %s was altered from %s to %s",
+								entityDescriptor.getEntityName(),
+								persistentAttribute.getJavaTypeDescriptor().extractLoggableRepresentation( previousAttributeValue ),
+								persistentAttribute.getJavaTypeDescriptor().extractLoggableRepresentation( currentAttributeValue )
+						)
+				);
 			}
 		}
 	}
@@ -200,26 +211,23 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			EventSource session,
 			EntityDescriptor persister,
 			Type[] types,
-			Object[] values
-	) {
-		if ( persister.hasCollections() ) {
-
-			// wrap up any new collections directly referenced by the object
-			// or its components
-
-			// NOTE: we need to do the wrap here even if its not "dirty",
-			// because collections need wrapping but changes to _them_
-			// don't dirty the container. Also, for versioned data, we
-			// need to wrap beforeQuery calling searchForDirtyCollections
-
-			WrapVisitor visitor = new WrapVisitor( session );
-			// substitutes into values by side-effect
-			visitor.processEntityPropertyValues( values, types );
-			return visitor.isSubstitutionRequired();
-		}
-		else {
+			Object[] values) {
+		if ( !persister.hasCollections() ) {
 			return false;
 		}
+
+		// wrap up any new collections directly referenced by the object
+		// or its components
+
+		// NOTE: we need to do the wrap here even if its not "dirty",
+		// because collections need wrapping but changes to _them_
+		// don't dirty the container. Also, for versioned data, we
+		// need to wrap beforeQuery calling searchForDirtyCollections
+
+		WrapVisitor visitor = new WrapVisitor( session );
+		// substitutes into values by side-effect
+		visitor.processEntityPropertyValues( values, types );
+		return visitor.isSubstitutionRequired();
 	}
 
 	private boolean isUpdateNecessary(final FlushEntityEvent event, final boolean mightBeDirty) {
@@ -396,9 +404,12 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	 */
 	private Object getNextVersion(FlushEntityEvent event) throws HibernateException {
 
-		EntityEntry entry = event.getEntityEntry();
-		EntityDescriptor persister = entry.getPersister();
-		if ( persister.isVersioned() ) {
+		final EntityEntry entry = event.getEntityEntry();
+		final EntityDescriptor persister = entry.getPersister();
+		final VersionDescriptor versionDescriptor = persister.getHierarchy().getVersionDescriptor();
+
+		if ( versionDescriptor != null ) {
+			final VersionSupport versionSupport = persister.getHierarchy().getVersionDescriptor().getVersionSupport();
 
 			Object[] values = event.getPropertyValues();
 
@@ -418,7 +429,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				final Object nextVersion = isVersionIncrementRequired ?
 						Versioning.increment(
 								entry.getVersion(),
-								( (BasicType) persister.getVersionType() ).getVersionSupport(),
+								versionSupport,
 								event.getSession()
 						) :
 						entry.getVersion(); //use the current version
@@ -493,17 +504,27 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		}
 	}
 
+	@SuppressWarnings("RedundantIfStatement")
 	private boolean isCollectionDirtyCheckNecessary(EntityDescriptor persister, Status status) {
-		return ( status == Status.MANAGED || status == Status.READ_ONLY ) &&
-				persister.isVersioned() &&
-				persister.hasCollections();
+		if ( status != Status.MANAGED && status != Status.READ_ONLY ) {
+			return false;
+		}
+
+		if ( persister.getHierarchy().getVersionDescriptor() == null ) {
+			return false;
+		}
+
+		if ( !persister.hasCollections() ) {
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
 	 * Perform a dirty check, and attach the results to the event
 	 */
 	protected void dirtyCheck(final FlushEntityEvent event) throws HibernateException {
-
 		final Object entity = event.getEntity();
 		final Object[] values = event.getPropertyValues();
 		final SessionImplementor session = event.getSession();

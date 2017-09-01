@@ -6,6 +6,9 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import java.util.Set;
+
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 
@@ -20,4 +23,9 @@ public interface JdbcSelect extends JdbcOperation {
 	 * of the JDBC ResultSet back to object query results.
 	 */
 	ResultSetMappingDescriptor getResultSetMapping();
+
+	// todo (6.0) : better to return org.hibernate.metamodel.model.relational.spi.Table?
+	default Set<String> getQueriedTableNames() {
+		throw new NotYetImplementedException(  );
+	}
 }

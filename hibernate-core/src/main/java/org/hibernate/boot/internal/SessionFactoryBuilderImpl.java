@@ -35,8 +35,8 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cache.internal.StandardQueryCacheFactory;
-import org.hibernate.cache.spi.QueryCacheFactory;
+import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
+import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
@@ -377,8 +377,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyQueryCacheFactory(QueryCacheFactory factory) {
-		this.options.queryCacheFactory = factory;
+	public SessionFactoryBuilder applyQuerySpaceStalenessStrategyFactory(TimestampsCacheFactory factory) {
+		this.options.querySpaceStalenessStrategyFactory = factory;
 		return this;
 	}
 
@@ -593,7 +593,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		// Caching
 		private boolean secondLevelCacheEnabled;
 		private boolean queryCacheEnabled;
-		private QueryCacheFactory queryCacheFactory;
+		private TimestampsCacheFactory querySpaceStalenessStrategyFactory;
 		private String cacheRegionPrefix;
 		private boolean minimalPutsEnabled;
 		private boolean structuredCacheEntriesEnabled;
@@ -730,10 +730,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 			this.secondLevelCacheEnabled = cfgService.getSetting( USE_SECOND_LEVEL_CACHE, BOOLEAN, true );
 			this.queryCacheEnabled = cfgService.getSetting( USE_QUERY_CACHE, BOOLEAN, false );
-			this.queryCacheFactory = strategySelector.resolveDefaultableStrategy(
-					QueryCacheFactory.class,
+			this.querySpaceStalenessStrategyFactory = strategySelector.resolveDefaultableStrategy(
+					TimestampsCacheFactory.class,
 					configurationSettings.get( QUERY_CACHE_FACTORY ),
-					StandardQueryCacheFactory.INSTANCE
+					StandardTimestampsCacheFactory.INSTANCE
 			);
 			this.cacheRegionPrefix = ConfigurationHelper.extractPropertyValue(
 					CACHE_REGION_PREFIX,
@@ -1159,8 +1159,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 
 		@Override
-		public QueryCacheFactory getQueryCacheFactory() {
-			return queryCacheFactory;
+		public TimestampsCacheFactory getQuerySpaceStalenessStrategyFactory() {
+			return querySpaceStalenessStrategyFactory;
 		}
 
 		@Override
@@ -1487,8 +1487,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public QueryCacheFactory getQueryCacheFactory() {
-		return options.getQueryCacheFactory();
+	public TimestampsCacheFactory getQuerySpaceStalenessStrategyFactory() {
+		return options.getQuerySpaceStalenessStrategyFactory();
 	}
 
 	@Override

@@ -14,7 +14,7 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.infinispan.AdvancedCache;
 
 import javax.transaction.TransactionManager;
@@ -44,7 +44,7 @@ public class NaturalIdRegionImpl extends BaseTransactionalDataRegion
 	}
 
 	@Override
-	public NaturalIdRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
+	public NaturalIdDataAccess buildAccessStrategy(AccessType accessType) throws CacheException {
 		checkAccessType( accessType );
 		AccessDelegate accessDelegate = createAccessDelegate(accessType);
 		if ( accessType == AccessType.READ_ONLY || !getCacheDataDescription().isMutable() ) {

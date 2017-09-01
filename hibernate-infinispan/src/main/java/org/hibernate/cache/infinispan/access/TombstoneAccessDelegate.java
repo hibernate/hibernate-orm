@@ -99,7 +99,7 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 		}
 		// we can't use putForExternalRead since the PFER flag means that entry is not wrapped into context
 		// when it is present in the container. TombstoneCallInterceptor will deal with this.
-		putFromLoadCache.put(key, new TombstoneUpdate(session.getTimestamp(), value));
+		putFromLoadCache.put(key, new TombstoneUpdate(session.getTransactionStartTimestamp(), value));
 		return true;
 	}
 
@@ -127,7 +127,7 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
 		TransactionCoordinator transactionCoordinator = session.getTransactionCoordinator();
 		TombstoneSynchronization sync = new TombstoneSynchronization(transactionCoordinator, asyncWriteCache, requiresTransaction, region, key);
-		Tombstone tombstone = new Tombstone(sync.getUuid(), session.getTimestamp() + region.getTombstoneExpiration(), false);
+		Tombstone tombstone = new Tombstone(sync.getUuid(), session.getTransactionStartTimestamp() + region.getTombstoneExpiration(), false);
 		writeCache.put(key, tombstone, region.getTombstoneExpiration(), TimeUnit.MILLISECONDS);
 		transactionCoordinator.getLocalSynchronizations().registerSynchronization(sync);
 	}

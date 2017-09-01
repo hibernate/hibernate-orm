@@ -170,13 +170,13 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 
 	@Override
 	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) {
-		writeCache.put(key, getVersioned(value, version, session.getTimestamp()));
+		writeCache.put(key, getVersioned(value, version, session.getTransactionStartTimestamp()));
 		return true;
 	}
 
 	@Override
 	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
-		writeCache.put(key, getVersioned(value, currentVersion, session.getTimestamp()));
+		writeCache.put(key, getVersioned(value, currentVersion, session.getTransactionStartTimestamp()));
 		return true;
 	}
 

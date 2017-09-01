@@ -9,7 +9,7 @@ package org.hibernate.event.internal;
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.CacheHelper;
@@ -109,25 +109,30 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			return false;
 		}
 
-		final boolean useCache = collectionDescriptor.hasCache() && source.getCacheMode().isGetEnabled();
+		if ( ! source.getCacheMode().isGetEnabled() ) {
+			return false;
+		}
 
-		if ( !useCache ) {
+		final CollectionDataAccess cacheAccess = source.getFactory().getCache()
+				.getCollectionRegionAccess( collectionDescriptor );
+		if ( cacheAccess == null ) {
+			// not cached
 			return false;
 		}
 
 		final SessionFactoryImplementor factory = source.getFactory();
-		final CollectionRegionAccessStrategy cacheAccessStrategy = collectionDescriptor.getCacheAccessStrategy();
-		final Object ck = cacheAccessStrategy.generateCacheKey( id, collectionDescriptor, factory, source.getTenantIdentifier() );
-		final Object ce = CacheHelper.fromSharedCache( source, ck, collectionDescriptor.getCacheAccessStrategy() );
+
+		final Object ck = cacheAccess.generateCacheKey( id, collectionDescriptor, factory, source.getTenantIdentifier() );
+		final Object ce = CacheHelper.fromSharedCache( source, ck, cacheAccess );
 
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			if ( ce == null ) {
-				factory.getStatisticsImplementor()
-						.secondLevelCacheMiss( cacheAccessStrategy.getRegion().getName() );
+				factory.getStatistics()
+						.secondLevelCacheMiss( cacheAccess.getRegion().getName() );
 			}
 			else {
-				factory.getStatisticsImplementor()
-						.secondLevelCacheHit( cacheAccessStrategy.getRegion().getName() );
+				factory.getStatistics()
+						.secondLevelCacheHit( cacheAccess.getRegion().getName() );
 			}
 		}
 

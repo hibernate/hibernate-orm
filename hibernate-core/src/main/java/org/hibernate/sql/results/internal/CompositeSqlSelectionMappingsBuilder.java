@@ -8,7 +8,7 @@ package org.hibernate.sql.results.internal;
 
 import java.util.Map;
 
-import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeBasic;
+import org.hibernate.metamodel.model.domain.internal.BasicSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
@@ -47,7 +47,7 @@ public class CompositeSqlSelectionMappingsBuilder implements NavigableVisitation
 	// todo (6.0) : build the `attributeSqlSelectionGroupMap`
 
 	@Override
-	public void visitSingularAttributeBasic(SingularPersistentAttributeBasic attribute) {
+	public void visitSingularAttributeBasic(BasicSingularPersistentAttribute attribute) {
 		throw new NotYetImplementedException(  );
 	}
 

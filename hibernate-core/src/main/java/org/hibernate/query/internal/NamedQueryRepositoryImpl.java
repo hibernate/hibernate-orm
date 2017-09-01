@@ -12,7 +12,6 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.MappingException;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -20,6 +19,7 @@ import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.ResultSetMappingDefinition;
+import org.hibernate.sql.NotYetImplementedException;
 
 import org.jboss.logging.Logger;
 
@@ -145,7 +145,7 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 	}
 
 	@Override
-	public Map<String,HibernateException> checkNamedQueries(QueryEngine queryPlanCache) {
+	public Map<String,HibernateException> checkNamedQueries(QueryEngine queryEngine) {
 		Map<String,HibernateException> errors = new HashMap<>();
 
 		// Check named HQL queries
@@ -158,14 +158,13 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 			// this will throw an error if there's something wrong.
 			try {
 				log.debugf( "Checking named query: %s", namedQueryDefinition.getName() );
-				//TODO: BUG! this currently fails for named queries for non-POJO entities
-				queryPlanCache.getHQLQueryPlan( namedQueryDefinition.getQueryString(), false, Collections.EMPTY_MAP );
+				// todo (6.0) : this just builds the SQM AST - should it also try to build the SQL AST?
+				//		relatedly - do we want to cache these generated plans?
+				queryEngine.getSemanticQueryProducer().interpret( namedQueryDefinition.getQueryString() );
 			}
 			catch ( HibernateException e ) {
 				errors.put( namedQueryDefinition.getName(), e );
 			}
-
-
 		}
 
 		// Check native-sql queries
@@ -174,28 +173,82 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 			// this will throw an error if there's something wrong.
 			try {
 				log.debugf( "Checking named SQL query: %s", namedSQLQueryDefinition.getName() );
-				// TODO : would be really nice to cache the spec on the query-def so as to not have to re-calc the hash;
-				// currently not doable though because of the resultset-ref stuff...
-				NativeSQLQuerySpecification spec;
-				if ( namedSQLQueryDefinition.getResultSetRef() != null ) {
-					ResultSetMappingDefinition definition = getResultSetMappingDefinition( namedSQLQueryDefinition.getResultSetRef() );
-					if ( definition == null ) {
-						throw new MappingException( "Unable to find resultset-ref definition: " + namedSQLQueryDefinition.getResultSetRef() );
-					}
-					spec = new NativeSQLQuerySpecification(
-							namedSQLQueryDefinition.getQueryString(),
-							definition.getQueryReturns(),
-							namedSQLQueryDefinition.getQuerySpaces()
-					);
-				}
-				else {
-					spec =  new NativeSQLQuerySpecification(
-							namedSQLQueryDefinition.getQueryString(),
-							namedSQLQueryDefinition.getQueryResultBuilders(),
-							namedSQLQueryDefinition.getQuerySpaces()
-					);
-				}
-				queryPlanCache.getNativeSQLQueryPlan( spec );
+
+				// todo (6.0) : NativeQuery still needs some work.
+				//		1) consider this use case
+				//		2) consider ways to better allow OGM to redefine native query handling.  One
+				//			option here is to redefine NativeQueryInterpreter to handle:
+				//				a) parameter recognition - it does this already
+				//				b) build a org.hibernate.query.spi.SelectQueryPlan (what inputs?) - this
+				//					would mean re-purposing
+				//
+				// so for now, just throw an exception
+
+				throw new NotYetImplementedException(  );
+//
+//				// resolve the named ResultSetMappingDefinition, if one
+//				final ResultSetMappingDefinition resultSetMapping = namedSQLQueryDefinition.getResultSetRef() == null
+//						? null
+//						: getResultSetMappingDefinition( namedSQLQueryDefinition.getResultSetRef() );
+//
+//				// perform parameter recognition
+//				final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl( queryEngine.getSessionFactory() );
+//				queryEngine.getSessionFactory().getServiceRegistry()
+//						.getService( NativeQueryInterpreter.class )
+//						.recognizeParameters( namedSQLQueryDefinition.getQuery(), parameterRecognizer );
+//				parameterRecognizer.validate();
+//
+//				// prepare the NativeSelectQueryDefinition
+//				final NativeSelectQueryDefinition selectQueryDefinition = new NativeSelectQueryDefinition() {
+//					@Override
+//					public String getSqlString() {
+//						return namedSQLQueryDefinition.getQuery();
+//					}
+//
+//					@Override
+//					public boolean isCallable() {
+//						return namedSQLQueryDefinition.isCallable();
+//					}
+//
+//					@Override
+//					public List<JdbcParameterBinder> getParameterBinders() {
+//						return parameterRecognizer.getParameterBinders();
+//					}
+//
+//					@Override
+//					public ResultSetMappingDescriptor getResultSetMapping() {
+//						resultSetMapping.
+//						return resultSetMapping;
+//					}
+//
+//					@Override
+//					public RowTransformer getRowTransformer() {
+//						return null;
+//					}
+//				};
+//
+////				// TODO : would be really nice to cache the spec on the query-def so as to not have to re-calc the hash;
+////				// currently not doable though because of the ResultSet-ref stuff...
+////				NativeSQLQuerySpecification spec;
+////				if ( namedSQLQueryDefinition.getResultSetRef() != null ) {
+////					ResultSetMappingDefinition definition = getResultSetMappingDefinition( namedSQLQueryDefinition.getResultSetRef() );
+////					if ( definition == null ) {
+////						throw new MappingException( "Unable to find resultset-ref definition: " + namedSQLQueryDefinition.getResultSetRef() );
+////					}
+////					spec = new NativeSQLQuerySpecification(
+////							namedSQLQueryDefinition.getQueryString(),
+////							definition.getQueryReturns(),
+////							namedSQLQueryDefinition.getQuerySpaces()
+////					);
+////				}
+////				else {
+////					spec =  new NativeSQLQuerySpecification(
+////							namedSQLQueryDefinition.getQueryString(),
+////							namedSQLQueryDefinition.getQueryResultBuilders(),
+////							namedSQLQueryDefinition.getQuerySpaces()
+////					);
+////				}
+////				queryEngine.getNativeSQLQueryPlan( spec );
 			}
 			catch ( HibernateException e ) {
 				errors.put( namedSQLQueryDefinition.getName(), e );

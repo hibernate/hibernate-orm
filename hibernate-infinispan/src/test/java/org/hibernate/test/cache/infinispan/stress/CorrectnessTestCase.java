@@ -63,7 +63,7 @@ import org.hibernate.cache.infinispan.access.InvalidationCacheAccessDelegate;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.RegionAccessStrategy;
+import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.H2Dialect;
@@ -1001,7 +1001,7 @@ public abstract class CorrectnessTestCase {
    }
 
    private PutFromLoadValidator getPutFromLoadValidator(SessionFactoryImplementor sfi, String regionName) throws NoSuchFieldException, IllegalAccessException {
-      RegionAccessStrategy strategy = sfi.getSecondLevelCacheRegionAccessStrategy(regionName);
+      CachedDomainDataAccess strategy = sfi.getSecondLevelCacheRegionAccessStrategy( regionName);
       if (strategy == null) {
          return null;
       }

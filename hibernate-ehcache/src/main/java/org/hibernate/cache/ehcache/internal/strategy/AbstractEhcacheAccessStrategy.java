@@ -9,7 +9,9 @@ package org.hibernate.cache.ehcache.internal.strategy;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheTransactionalDataRegion;
-import org.hibernate.cache.spi.access.RegionAccessStrategy;
+import org.hibernate.cache.spi.access.CachedDomainDataAccess;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -54,8 +56,8 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	 * This method is a placeholder for method signatures supplied by interfaces pulled in further down the class
 	 * hierarchy.
 	 *
-	 * @see RegionAccessStrategy#putFromLoad(SharedSessionContractImplementor, Object, Object, long, Object)
-	 * @see RegionAccessStrategy#putFromLoad(SharedSessionContractImplementor, Object, Object, long, Object)
+	 * @see CachedDomainDataAccess#putFromLoad(SharedSessionContractImplementor, Object, Object, long, Object)
+	 * @see CachedDomainDataAccess#putFromLoad(SharedSessionContractImplementor, Object, Object, long, Object)
 	 */
 	public final boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version) throws CacheException {
 		return putFromLoad( session, key, value, txTimestamp, version, settings.isMinimalPutsEnabled() );
@@ -65,8 +67,8 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	 * This method is a placeholder for method signatures supplied by interfaces pulled in further down the class
 	 * hierarchy.
 	 *
-	 * @see RegionAccessStrategy#putFromLoad(SharedSessionContractImplementor, Object, Object, long, Object, boolean)
-	 * @see RegionAccessStrategy#putFromLoad(SharedSessionContractImplementor, Object, Object, long, Object, boolean)
+	 * @see CachedDomainDataAccess#putFromLoad(SharedSessionContractImplementor, Object, Object, long, Object, boolean)
+	 * @see CachedDomainDataAccess#putFromLoad(SharedSessionContractImplementor, Object, Object, long, Object, boolean)
 	 */
 	public abstract boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException;
@@ -76,8 +78,8 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	 *
 	 * @return <code>null</code>
 	 *
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#lockRegion()
-	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#lockRegion()
+	 * @see EntityDataAccess#lockRegion()
+	 * @see CollectionDataAccess#lockRegion()
 	 */
 	@SuppressWarnings("UnusedDeclaration")
 	public final SoftLock lockRegion() {
@@ -87,8 +89,8 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	/**
 	 * Region locks are not supported - perform a cache clear as a precaution.
 	 *
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#unlockRegion(org.hibernate.cache.spi.access.SoftLock)
-	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#unlockRegion(org.hibernate.cache.spi.access.SoftLock)
+	 * @see EntityDataAccess#unlockRegion(org.hibernate.cache.spi.access.SoftLock)
+	 * @see CollectionDataAccess#unlockRegion(org.hibernate.cache.spi.access.SoftLock)
 	 */
 	@SuppressWarnings("UnusedDeclaration")
 	public final void unlockRegion(SoftLock lock) throws CacheException {
@@ -98,8 +100,8 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	/**
 	 * A no-op since this is an asynchronous cache access strategy.
 	 *
-	 * @see RegionAccessStrategy#remove(SharedSessionContractImplementor, Object)
-	 * @see RegionAccessStrategy#remove(SharedSessionContractImplementor, Object)
+	 * @see CachedDomainDataAccess#remove(SharedSessionContractImplementor, Object)
+	 * @see CachedDomainDataAccess#remove(SharedSessionContractImplementor, Object)
 	 */
 	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
 	}
@@ -108,8 +110,8 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	 * Called to evict data from the entire region
 	 *
 	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#removeAll()
-	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#removeAll()
+	 * @see EntityDataAccess#removeAll()
+	 * @see CollectionDataAccess#removeAll()
 	 */
 	@SuppressWarnings("UnusedDeclaration")
 	public final void removeAll() throws CacheException {
@@ -119,8 +121,8 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	/**
 	 * Remove the given mapping without regard to transactional safety
 	 *
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#evict(java.lang.Object)
-	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#evict(java.lang.Object)
+	 * @see EntityDataAccess#evict(java.lang.Object)
+	 * @see CollectionDataAccess#evict(java.lang.Object)
 	 */
 	public final void evict(Object key) throws CacheException {
 		region.remove( key );
@@ -129,8 +131,8 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	/**
 	 * Remove all mappings without regard to transactional safety
 	 *
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#evictAll()
-	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#evictAll()
+	 * @see EntityDataAccess#evictAll()
+	 * @see CollectionDataAccess#evictAll()
 	 */
 	@SuppressWarnings("UnusedDeclaration")
 	public final void evictAll() throws CacheException {

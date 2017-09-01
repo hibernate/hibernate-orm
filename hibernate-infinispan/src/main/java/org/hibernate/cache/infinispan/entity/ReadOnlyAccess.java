@@ -8,12 +8,13 @@ package org.hibernate.cache.infinispan.entity;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.access.AccessDelegate;
-import org.hibernate.cache.spi.EntityRegion;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.DomainDataRegion;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
+import org.hibernate.sql.NotYetImplementedException;
 
 /**
  * A specialization of {@link ReadWriteAccess} that ensures we never update data.
@@ -22,7 +23,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
  * @author Galder Zamarreño
  * @since 3.5
  */
-class ReadOnlyAccess implements EntityRegionAccessStrategy {
+class ReadOnlyAccess implements EntityDataAccess {
 
 	protected final EntityRegionImpl region;
 	protected final AccessDelegate delegate;
@@ -30,6 +31,11 @@ class ReadOnlyAccess implements EntityRegionAccessStrategy {
 	ReadOnlyAccess(EntityRegionImpl region, AccessDelegate delegate) {
 		this.region = region;
 		this.delegate = delegate;
+	}
+
+	@Override
+	public boolean contains(Object key) {
+		throw new NotYetImplementedException(  );
 	}
 
 	public void evict(Object key) throws CacheException {
@@ -40,21 +46,33 @@ class ReadOnlyAccess implements EntityRegionAccessStrategy {
 		delegate.evictAll();
 	}
 
-	public Object get(SharedSessionContractImplementor session, Object key, long txTimestamp) throws CacheException {
-		return delegate.get( session, key, txTimestamp );
+	@Override
+	public Object get(SharedSessionContractImplementor session, Object key) {
+		return delegate.get( session, key, session.getTransactionStartTimestamp() );
 	}
 
-	public EntityRegion getRegion() {
-		return this.region;
+	@Override
+	public DomainDataRegion getRegion() {
+		throw new NotYetImplementedException(  );
 	}
 
-	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version) throws CacheException {
-		return delegate.putFromLoad( session, key, value, txTimestamp, version );
+	@Override
+	public boolean putFromLoad(
+			SharedSessionContractImplementor session,
+			Object key,
+			Object value,
+			Object version) {
+		return delegate.putFromLoad( session, key, value, session.getTransactionStartTimestamp(), version );
 	}
 
-	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
-			throws CacheException {
-		return delegate.putFromLoad( session, key, value, txTimestamp, version, minimalPutOverride );
+	@Override
+	public boolean putFromLoad(
+			SharedSessionContractImplementor session,
+			Object key,
+			Object value,
+			Object version,
+			boolean minimalPutOverride) {
+		return delegate.putFromLoad( session, key, value, session.getTransactionStartTimestamp(), version, minimalPutOverride );
 	}
 
 	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
@@ -103,8 +121,12 @@ class ReadOnlyAccess implements EntityRegionAccessStrategy {
 	}
 
 	@Override
-	public Object generateCacheKey(Object id, EntityDescriptor persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return region.getCacheKeysFactory().createEntityKey(id, persister, factory, tenantIdentifier);
+	public Object generateCacheKey(
+			Object id,
+			EntityHierarchy entityHierarchy,
+			SessionFactoryImplementor factory,
+			String tenantIdentifier) {
+		return region.getCacheKeysFactory().createEntityKey( id, entityHierarchy, factory, tenantIdentifier );
 	}
 
 	@Override

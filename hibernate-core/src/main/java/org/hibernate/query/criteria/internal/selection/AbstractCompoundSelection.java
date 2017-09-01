@@ -12,10 +12,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.persistence.criteria.Selection;
 
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.internal.expression.AbstractTupleElement;
+import org.hibernate.query.criteria.spi.JpaCriteriaBuilderImplementor;
 import org.hibernate.query.sqm.produce.spi.criteria.JpaExpression;
 import org.hibernate.query.sqm.produce.spi.criteria.select.JpaCompoundSelection;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -26,8 +27,8 @@ public abstract class AbstractCompoundSelection<X>
 	private List<JpaExpression<?>> expressions;
 
 	public AbstractCompoundSelection(
-			HibernateCriteriaBuilder criteriaBuilder,
-			Class<X> javaType,
+			JpaCriteriaBuilderImplementor criteriaBuilder,
+			JavaTypeDescriptor<X> javaType,
 			List<JpaExpression<?>> expressions) {
 		super( criteriaBuilder, javaType );
 		this.expressions = expressions;

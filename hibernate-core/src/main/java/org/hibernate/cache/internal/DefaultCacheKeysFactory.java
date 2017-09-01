@@ -9,8 +9,8 @@ package org.hibernate.cache.internal;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -40,27 +40,40 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @since 5.0
  */
 public class DefaultCacheKeysFactory {
-
-	public static Object createCollectionKey(Object id, PersistentCollectionDescriptor descriptor, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return new OldCacheKeyImplementation( id, descriptor.getKeyJavaTypeDescriptor(), descriptor.getNavigableRole().getFullPath(), tenantIdentifier );
-	}
-
-	public static Object createEntityKey(Object id, EntityDescriptor descriptor, SessionFactoryImplementor factory, String tenantIdentifier) {
+	public static Object createEntityKey(
+			Object id,
+			EntityHierarchy entityHierarchy,
+			SessionFactoryImplementor factory,
+			String tenantIdentifier) {
 		return new OldCacheKeyImplementation(
 				id,
-				descriptor.getIdentifierType().getJavaTypeDescriptor(),
-				descriptor.getHierarchy().getRootEntityType().getEntityName(),
+				entityHierarchy.getIdentifierDescriptor().getJavaTypeDescriptor(),
+				entityHierarchy.getRootEntityType().getNavigableRole(),
 				tenantIdentifier
 		);
 	}
 
-	public static Object createNaturalIdKey(Object[] naturalIdValues, EntityDescriptor descriptor, SharedSessionContractImplementor session) {
+	public static Object createNaturalIdKey(
+			Object[] naturalIdValues,
+			EntityHierarchy entityHierarchy,
+			SharedSessionContractImplementor session) {
 		return new OldNaturalIdCacheKey(
 				naturalIdValues,
-				descriptor.getPropertyTypes(),
-				descriptor.getNaturalIdentifierProperties(),
-				descriptor.getHierarchy().getRootEntityType().getEntityName(),
+				entityHierarchy,
 				session
+		);
+	}
+
+	public static Object createCollectionKey(
+			Object id,
+			PersistentCollectionDescriptor descriptor,
+			SessionFactoryImplementor factory,
+			String tenantIdentifier) {
+		return new OldCacheKeyImplementation(
+				id,
+				descriptor.getKeyJavaTypeDescriptor(),
+				descriptor.getNavigableRole(),
+				tenantIdentifier
 		);
 	}
 
@@ -83,13 +96,13 @@ public class DefaultCacheKeysFactory {
 		}
 
 		@Override
-		public Object createEntityKey(Object id, EntityDescriptor entityDescriptor, SessionFactoryImplementor factory, String tenantIdentifier) {
-			return DefaultCacheKeysFactory.createEntityKey(id, entityDescriptor, factory, tenantIdentifier);
+		public Object createEntityKey(Object id, EntityHierarchy entityHierarchy, SessionFactoryImplementor factory, String tenantIdentifier) {
+			return DefaultCacheKeysFactory.createEntityKey(id, entityHierarchy, factory, tenantIdentifier);
 		}
 
 		@Override
-		public Object createNaturalIdKey(Object[] naturalIdValues, EntityDescriptor entityDescriptor, SharedSessionContractImplementor session) {
-			return DefaultCacheKeysFactory.createNaturalIdKey(naturalIdValues, entityDescriptor, session);
+		public Object createNaturalIdKey(Object[] naturalIdValues, EntityHierarchy entityHierarchy, SharedSessionContractImplementor session) {
+			return DefaultCacheKeysFactory.createNaturalIdKey( naturalIdValues, entityHierarchy, session );
 		}
 
 		@Override

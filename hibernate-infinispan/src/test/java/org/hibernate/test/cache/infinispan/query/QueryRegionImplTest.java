@@ -20,7 +20,7 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.query.QueryResultsRegionImpl;
-import org.hibernate.cache.internal.StandardQueryCache;
+import org.hibernate.cache.internal.QueryResultsCacheImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
@@ -68,7 +68,7 @@ public class QueryRegionImplTest extends AbstractGeneralDataRegionTest {
 
 	@Override
 	protected String getStandardRegionName(String regionPrefix) {
-		return regionPrefix + "/" + StandardQueryCache.class.getName();
+		return regionPrefix + "/" + QueryResultsCacheImpl.class.getName();
 	}
 
    @Override

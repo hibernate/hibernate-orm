@@ -11,31 +11,31 @@ import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.CollectionRegion;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
- * Implementation of {@link CollectionRegionAccessStrategy} that handles {@link NonStopCacheException} using
+ * Implementation of {@link CollectionDataAccess} that handles {@link NonStopCacheException} using
  * {@link HibernateNonstopCacheExceptionHandler}
  *
  * @author Abhishek Sanoujam
  * @author Alex Snaps
  */
-public class NonstopAwareCollectionRegionAccessStrategy implements CollectionRegionAccessStrategy {
-	private final CollectionRegionAccessStrategy actualStrategy;
+public class NonstopAwareCollectionRegionAccessStrategy implements CollectionDataAccess {
+	private final CollectionDataAccess actualStrategy;
 	private final HibernateNonstopCacheExceptionHandler hibernateNonstopExceptionHandler;
 
 	/**
-	 * Constructor accepting the actual {@link CollectionRegionAccessStrategy} and the {@link HibernateNonstopCacheExceptionHandler}
+	 * Constructor accepting the actual {@link CollectionDataAccess} and the {@link HibernateNonstopCacheExceptionHandler}
 	 *
 	 * @param actualStrategy The wrapped strategy
 	 * @param hibernateNonstopExceptionHandler The exception handler
 	 */
 	public NonstopAwareCollectionRegionAccessStrategy(
-			CollectionRegionAccessStrategy actualStrategy,
+			CollectionDataAccess actualStrategy,
 			HibernateNonstopCacheExceptionHandler hibernateNonstopExceptionHandler) {
 		this.actualStrategy = actualStrategy;
 		this.hibernateNonstopExceptionHandler = hibernateNonstopExceptionHandler;
@@ -100,21 +100,10 @@ public class NonstopAwareCollectionRegionAccessStrategy implements CollectionReg
 	}
 
 	@Override
-	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		try {
-			return actualStrategy.putFromLoad( session, key, value, txTimestamp, version, minimalPutOverride );
-		}
-		catch (NonStopCacheException nonStopCacheException) {
-			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
-			return false;
-		}
-	}
-
-	@Override
-	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version) throws CacheException {
-		try {
-			return actualStrategy.putFromLoad( session, key, value, txTimestamp, version );
+			return actualStrategy.putFromLoad( session, key, value, version, minimalPutOverride );
 		}
 		catch (NonStopCacheException nonStopCacheException) {
 			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );

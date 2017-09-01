@@ -109,7 +109,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			LOG.tracev( "Evicting {0}", MessageHelper.infoString( entityDescriptor ) );
 		}
 
-		if ( entityDescriptor.hasNaturalIdentifier() ) {
+		if ( entityDescriptor.getHierarchy().getNaturalIdDescriptor() != null ) {
 			session.getPersistenceContext().getNaturalIdHelper().handleEviction(
 					object,
 					entityDescriptor,

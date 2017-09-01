@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeBasic;
+import org.hibernate.metamodel.model.domain.internal.BasicSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -20,7 +20,7 @@ import org.hibernate.sql.results.spi.QueryResultCreationContext;
 public class SqmSingularAttributeReferenceBasic extends AbstractSqmSingularAttributeReference {
 	public SqmSingularAttributeReferenceBasic(
 			SqmNavigableContainerReference sourceBinding,
-			SingularPersistentAttributeBasic boundNavigable) {
+			BasicSingularPersistentAttribute boundNavigable) {
 		super( sourceBinding, boundNavigable );
 	}
 
@@ -29,8 +29,8 @@ public class SqmSingularAttributeReferenceBasic extends AbstractSqmSingularAttri
 	}
 
 	@Override
-	public SingularPersistentAttributeBasic getReferencedNavigable() {
-		return (SingularPersistentAttributeBasic) super.getReferencedNavigable();
+	public BasicSingularPersistentAttribute getReferencedNavigable() {
+		return (BasicSingularPersistentAttribute) super.getReferencedNavigable();
 	}
 
 	@Override

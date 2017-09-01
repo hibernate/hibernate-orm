@@ -14,8 +14,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.hibernate.EntityMode;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.internal.CoreLogging;
@@ -216,17 +216,24 @@ public class BatchFetchQueue {
 
 	private boolean isCached(EntityKey entityKey, EntityDescriptor persister) {
 		final SharedSessionContractImplementor session = context.getSession();
-		if ( context.getSession().getCacheMode().isGetEnabled() && persister.hasCache() ) {
-			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			final Object key = cache.generateCacheKey(
-					entityKey.getIdentifier(),
-					persister,
-					session.getFactory(),
-					session.getTenantIdentifier()
-			);
-			return CacheHelper.fromSharedCache( session, key, cache ) != null;
+
+		if ( !session.getCacheMode().isGetEnabled() ) {
+			return false;
 		}
-		return false;
+
+		final EntityDataAccess cacheAccess = session.getFactory().getCache()
+				.getEntityRegionAccess( persister.getHierarchy().getRootEntityType() );
+		if ( cacheAccess == null ) {
+			return false;
+		}
+
+		final Object key = cacheAccess.generateCacheKey(
+				entityKey.getIdentifier(),
+				persister,
+				session.getFactory(),
+				session.getTenantIdentifier()
+		);
+		return CacheHelper.fromSharedCache( session, key, cacheAccess ) != null;
 	}
 	
 
@@ -304,7 +311,7 @@ public class BatchFetchQueue {
 					return keys; //the first key found afterQuery the given key
 				}
 
-				final boolean isEqual = collectionPersister.getKeyType().isEqual(
+				final boolean isEqual = collectionPersister.getForeignKeyDescriptor().isEqual(
 						id,
 						ce.getLoadedKey(),
 						collectionPersister.getFactory()
@@ -331,18 +338,21 @@ public class BatchFetchQueue {
 	}
 
 	private boolean isCached(Serializable collectionKey, PersistentCollectionDescriptor persister) {
-		SharedSessionContractImplementor session = context.getSession();
-		if ( session.getCacheMode().isGetEnabled() && persister.hasCache() ) {
-			CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			Object cacheKey = cache.generateCacheKey(
-					collectionKey,
-					persister,
-					session.getFactory(),
-					session.getTenantIdentifier()
-			);
-			return CacheHelper.fromSharedCache( session, cacheKey, cache ) != null;
+		final SharedSessionContractImplementor session = context.getSession();
+		final CollectionDataAccess cache = session.getFactory().getCache()
+				.getCollectionRegionAccess( persister );
+		if ( cache == null ) {
+			return false;
 		}
-		return false;
+
+		final Object cacheKey = cache.generateCacheKey(
+				collectionKey,
+				persister,
+				session.getFactory(),
+				session.getTenantIdentifier()
+		);
+
+		return CacheHelper.fromSharedCache( session, cacheKey, cache ) != null;
 	}
 
 }

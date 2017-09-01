@@ -18,7 +18,7 @@ import org.hibernate.LockMode;
 import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
@@ -29,9 +29,10 @@ import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.VersionSupport;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Gavin King
@@ -77,11 +78,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		EntityDescriptor persister = getEntityPersister( entityName, entity );
 		Serializable id = persister.getIdentifierDescriptor().getIdentifierValueGenerator().generate( this, entity );
 		Object[] state = persister.getPropertyValues( entity );
-		if ( persister.isVersioned() ) {
+
+		final VersionDescriptor versionDescriptor = persister.getHierarchy().getVersionDescriptor();
+		if ( versionDescriptor != null ) {
 			boolean substitute = Versioning.seedVersion(
 					state,
-					persister.getHierarchy().getVersionProperty(),
-					( (BasicType) persister.getVersionType() ).getVersionSupport(),
+					versionDescriptor,
 					this
 			);
 			if ( substitute ) {
@@ -132,10 +134,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		Serializable id = persister.getIdentifier( entity, this );
 		Object[] state = persister.getPropertyValues( entity );
 		Object oldVersion;
-		if ( persister.isVersioned() ) {
+		final VersionDescriptor<Object, Object> versionDescriptor = persister.getHierarchy().getVersionDescriptor();
+		if ( versionDescriptor != null ) {
 			oldVersion = persister.getVersion( entity );
-			Object newVersion = Versioning
-					.increment( oldVersion, ( (BasicType) persister.getVersionType() ).getVersionSupport(), this );
+			final VersionSupport versionSupport = versionDescriptor.getVersionSupport();
+			Object newVersion = Versioning.increment( oldVersion, versionSupport, this );
 			Versioning.setVersion( state, newVersion, persister );
 			persister.setPropertyValues( entity, state );
 		}
@@ -207,10 +210,16 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 //			);
 //		}
 
-		if ( persister.hasCache() ) {
-			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey( id, persister, getFactory(), getTenantIdentifier() );
-			cache.evict( ck );
+		final EntityDataAccess cacheAccess = persister.getFactory().getCache()
+				.getEntityRegionAccess( persister.getHierarchy() );
+		if ( cacheAccess != null ) {
+			final Object ck = cacheAccess.generateCacheKey(
+					id,
+					persister.getHierarchy(),
+					getFactory(),
+					getTenantIdentifier()
+			);
+			cacheAccess.evict( ck );
 		}
 
 		final LoadQueryInfluencers.InternalFetchProfileType previouslyEnabledInternalFetchProfileType =

@@ -144,7 +144,7 @@ public class DefaultPersistEventListener
 
 			// NOTE: entityEntry must be null to get here, so we cannot use any of its values
 			EntityDescriptor persister = source.getFactory().getEntityPersister( entityName );
-			if ( ForeignGenerator.class.isInstance( persister.getIdentifierGenerator() ) ) {
+			if ( ForeignGenerator.class.isInstance( persister.getHierarchy().getIdentifierDescriptor().getIdentifierValueGenerator() ) ) {
 				if ( LOG.isDebugEnabled() && persister.getIdentifier( entity, source ) != null ) {
 					LOG.debug( "Resetting entity id attribute to null for foreign generator" );
 				}

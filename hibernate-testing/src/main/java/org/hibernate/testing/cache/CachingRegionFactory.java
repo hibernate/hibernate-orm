@@ -1,30 +1,31 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.testing.cache;
 
 import java.util.Properties;
 
-import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cache.CacheException;
+import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
+import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
-import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CacheKeysFactory;
-import org.hibernate.cache.spi.CollectionRegion;
-import org.hibernate.cache.spi.EntityRegion;
-import org.hibernate.cache.spi.NaturalIdRegion;
+import org.hibernate.cache.spi.CacheTransactionContext;
+import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.jboss.logging.Logger;
 
 /**
  * @author Strong Liu
+ * @author Steve Ebersole
  */
 public class CachingRegionFactory implements RegionFactory {
 	private static final Logger LOG = Logger.getLogger( CachingRegionFactory.class.getName() );
@@ -33,7 +34,6 @@ public class CachingRegionFactory implements RegionFactory {
 
 	private final CacheKeysFactory cacheKeysFactory;
 
-	private SessionFactoryOptions settings;
 	private Properties properties;
 
 	public CachingRegionFactory() {
@@ -49,7 +49,7 @@ public class CachingRegionFactory implements RegionFactory {
 	}
 
 	public CachingRegionFactory(CacheKeysFactory cacheKeysFactory, Properties properties) {
-		LOG.warn( "CachingRegionFactory should be only used for testing." );
+		LOG.warn( "org.hibernate.testing.cache.CachingRegionFactory should be only used for testing." );
 		this.cacheKeysFactory = cacheKeysFactory;
 		this.properties = properties;
 	}
@@ -59,9 +59,7 @@ public class CachingRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public void start(SessionFactoryOptions settings, Properties properties) throws CacheException {
-		this.settings = settings;
-		this.properties = properties;
+	public void start() {
 	}
 
 	@Override
@@ -87,44 +85,40 @@ public class CachingRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
-			throws CacheException {
-		return new EntityRegionImpl( this, regionName, metadata, settings );
+	public CacheTransactionContext startingTransaction(SharedSessionContractImplementor session) {
+		return null;
 	}
 
 	@Override
-	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
-			throws CacheException {
-		return new NaturalIdRegionImpl( this, regionName, metadata, settings );
+	public DomainDataRegion buildDomainDataRegion(
+			DomainDataRegionConfig regionConfig,
+			DomainDataRegionBuildingContext buildingContext) {
+		return new DomainDataRegionImpl( regionConfig, this, buildingContext );
 	}
 
 	@Override
-	public CollectionRegion buildCollectionRegion(
+	public QueryResultsRegion buildQueryResultsRegion(
 			String regionName,
-			Properties properties,
-			CacheDataDescription metadata) throws CacheException {
-		return new CollectionRegionImpl( this, regionName, metadata, settings );
+			SessionFactoryImplementor sessionFactory) {
+		return new QueryResultsRegionImpl( regionName, sessionFactory );
 	}
 
 	@Override
-	public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties) throws CacheException {
-		return new QueryResultsRegionImpl( this, regionName );
+	public TimestampsRegion buildTimestampsRegion(
+			String regionName,
+			SessionFactoryImplementor sessionFactory) {
+		return new TimestampsRegionImpl( regionName, sessionFactory );
 	}
 
-	@Override
-	public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties) throws CacheException {
-		return new TimestampsRegionImpl( this, regionName );
-	}
-
-	private static class QueryResultsRegionImpl extends BaseGeneralDataRegion implements QueryResultsRegion {
-		QueryResultsRegionImpl(CachingRegionFactory cachingRegionFactory, String name) {
-			super( cachingRegionFactory, name );
+	private static class QueryResultsRegionImpl extends AbstractDirectAccessRegion implements QueryResultsRegion {
+		QueryResultsRegionImpl(String name, SessionFactoryImplementor sessionFactory) {
+			super( name );
 		}
 	}
 
-	private static class TimestampsRegionImpl extends BaseGeneralDataRegion implements TimestampsRegion {
-		TimestampsRegionImpl(CachingRegionFactory cachingRegionFactory, String name) {
-			super( cachingRegionFactory, name );
+	private static class TimestampsRegionImpl extends AbstractDirectAccessRegion implements TimestampsRegion {
+		TimestampsRegionImpl(String regionName, SessionFactoryImplementor sessionFactory) {
+			super( regionName );
 		}
 	}
 }

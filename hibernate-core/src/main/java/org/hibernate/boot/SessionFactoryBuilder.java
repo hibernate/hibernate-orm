@@ -16,7 +16,7 @@ import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.cache.spi.QueryCacheFactory;
+import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.metamodel.model.domain.Representation;
@@ -455,7 +455,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#QUERY_CACHE_FACTORY
 	 */
-	SessionFactoryBuilder applyQueryCacheFactory(QueryCacheFactory factory);
+	SessionFactoryBuilder applyQuerySpaceStalenessStrategyFactory(TimestampsCacheFactory factory);
 
 	/**
 	 * Apply a prefix to prepended to all cache region names for this SessionFactory.

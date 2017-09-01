@@ -356,9 +356,11 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	}
 
 	private boolean isVersionChanged(Object entity, EventSource source, EntityDescriptor entityDescriptor, Object target) {
-		if ( !entityDescriptor.isVersioned() ) {
+		if ( entityDescriptor.getHierarchy().getVersionDescriptor() == null ) {
+			// not versioned, obviously the version did not change :)
 			return false;
 		}
+
 		// for merging of versioned entities, we consider the version having
 		// been changed only when:
 		// 1) the two version values are different;

@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -43,7 +43,7 @@ public interface EntityHierarchy {
 	/**
 	 * Assuming that the hierarchy defines a natural-id, return its descriptor
 	 */
-	NaturalIdentifierDescriptor getNaturalIdentifierDescriptor();
+	NaturalIdDescriptor getNaturalIdDescriptor();
 
 	/**
 	 * Retrieve the descriptor for the hierarchy's discriminator, if one.  May
@@ -81,7 +81,7 @@ public interface EntityHierarchy {
 	 * the hierarchy is cached.  May return {@code null} if the hierarchy is not configured
 	 * for second-level caching.
 	 */
-	EntityRegionAccessStrategy getEntityRegionAccessStrategy();
+	EntityDataAccess getEntityCacheAccess();
 
 	String getWhere();
 

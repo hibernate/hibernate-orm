@@ -10,7 +10,7 @@ package org.hibernate.cache.jcache.access;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.jcache.JCacheNaturalIdRegion;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
@@ -20,7 +20,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
  */
 public class ReadWriteNaturalIdRegionAccessStrategy
 		extends AbstractReadWriteRegionAccessStrategy<JCacheNaturalIdRegion>
-		implements NaturalIdRegionAccessStrategy {
+		implements NaturalIdDataAccess {
 
 	public ReadWriteNaturalIdRegionAccessStrategy(JCacheNaturalIdRegion jCacheNaturalIdRegion) {
 		super ( jCacheNaturalIdRegion );

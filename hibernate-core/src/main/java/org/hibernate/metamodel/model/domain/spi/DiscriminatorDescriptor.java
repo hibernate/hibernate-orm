@@ -13,7 +13,8 @@ package org.hibernate.metamodel.model.domain.spi;
  * @author Hardy Ferentschik
  */
 public interface DiscriminatorDescriptor<O,J>
-		extends DomainTypeExposer<J>, VirtualPersistentAttribute<O,J>, SingularPersistentAttribute<O,J>, NavigableBasicValued<J> {
+		extends DomainTypeExposer<J>, VirtualPersistentAttribute<O,J>, SingularPersistentAttribute<O,J>,
+		BasicValuedNavigable<J> {
 
 	// todo (6.0) : why does this implement PersistentAttribute?
 	//		we do not support a model exposing the discriminator as a real attribute

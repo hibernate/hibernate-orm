@@ -9,8 +9,8 @@ package org.hibernate.cache.internal;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * Factory that does not fill in the entityName or role
@@ -22,19 +22,30 @@ public class SimpleCacheKeysFactory implements CacheKeysFactory {
 public static CacheKeysFactory INSTANCE = new SimpleCacheKeysFactory();
 
 	@Override
-	public Object createCollectionKey(Object id, PersistentCollectionDescriptor persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	public Object createEntityKey(
+			Object id,
+			EntityHierarchy entityHierarchy,
+			SessionFactoryImplementor factory,
+			String tenantIdentifier) {
 		return id;
 	}
 
 	@Override
-	public Object createEntityKey(Object id, EntityDescriptor persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return id;
-	}
-
-	@Override
-	public Object createNaturalIdKey(Object[] naturalIdValues, EntityDescriptor persister, SharedSessionContractImplementor session) {
+	public Object createNaturalIdKey(
+			Object[] naturalIdValues,
+			EntityHierarchy entityHierarchy,
+			SharedSessionContractImplementor session) {
 		// natural ids always need to be wrapped
-		return new OldNaturalIdCacheKey(naturalIdValues, persister.getPropertyTypes(), persister.getNaturalIdentifierProperties(), null, session);
+		return new OldNaturalIdCacheKey( naturalIdValues, entityHierarchy, session );
+	}
+
+	@Override
+	public Object createCollectionKey(
+			Object id,
+			PersistentCollectionDescriptor persister,
+			SessionFactoryImplementor factory,
+			String tenantIdentifier) {
+		return id;
 	}
 
 	@Override

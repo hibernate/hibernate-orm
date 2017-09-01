@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.ResolveNaturalIdEvent;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
@@ -120,13 +120,14 @@ public class DefaultResolveNaturalIdEventListener
 		);
 		
 		if ( stats ) {
-			final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = event.getEntityPersister().getNaturalIdCacheAccessStrategy();
+			final NaturalIdDataAccess naturalIdCacheAccessStrategy = event.getEntityPersister()
+					.getHierarchy()
+					.getNaturalIdDescriptor()
+					.getCacheAccess();
 			final String regionName = naturalIdCacheAccessStrategy == null ? null : naturalIdCacheAccessStrategy.getRegion().getName();
 			final long endTime = System.nanoTime();
 			final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-			factory.getStatisticsImplementor().naturalIdQueryExecuted(
-					regionName,
-					milliseconds );
+			factory.getStatistics().naturalIdQueryExecuted( regionName, milliseconds );
 		}
 		
 		//PK can be null if the entity doesn't exist

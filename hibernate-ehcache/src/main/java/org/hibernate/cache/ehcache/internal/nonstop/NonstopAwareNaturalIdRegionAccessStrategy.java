@@ -11,30 +11,30 @@ import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.NaturalIdRegion;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
- * Implementation of {@link NaturalIdRegionAccessStrategy} that handles {@link NonStopCacheException} using
+ * Implementation of {@link NaturalIdDataAccess} that handles {@link NonStopCacheException} using
  * {@link HibernateNonstopCacheExceptionHandler}
  *
  * @author Abhishek Sanoujam
  * @author Alex Snaps
  */
-public class NonstopAwareNaturalIdRegionAccessStrategy implements NaturalIdRegionAccessStrategy {
-	private final NaturalIdRegionAccessStrategy actualStrategy;
+public class NonstopAwareNaturalIdRegionAccessStrategy implements NaturalIdDataAccess {
+	private final NaturalIdDataAccess actualStrategy;
 	private final HibernateNonstopCacheExceptionHandler hibernateNonstopExceptionHandler;
 
 	/**
-	 * Constructor accepting the actual {@link NaturalIdRegionAccessStrategy} and the {@link HibernateNonstopCacheExceptionHandler}
+	 * Constructor accepting the actual {@link NaturalIdDataAccess} and the {@link HibernateNonstopCacheExceptionHandler}
 	 *
 	 * @param actualStrategy The wrapped NaturalIdRegionAccessStrategy
 	 * @param hibernateNonstopExceptionHandler The exception handler
 	 */
 	public NonstopAwareNaturalIdRegionAccessStrategy(
-			NaturalIdRegionAccessStrategy actualStrategy,
+			NaturalIdDataAccess actualStrategy,
 			HibernateNonstopCacheExceptionHandler hibernateNonstopExceptionHandler) {
 		this.actualStrategy = actualStrategy;
 		this.hibernateNonstopExceptionHandler = hibernateNonstopExceptionHandler;

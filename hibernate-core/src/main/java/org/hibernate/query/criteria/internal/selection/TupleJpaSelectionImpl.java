@@ -10,20 +10,22 @@ package org.hibernate.query.criteria.internal.selection;
 import java.util.List;
 import javax.persistence.Tuple;
 
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.spi.JpaCriteriaBuilderImplementor;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;
 import org.hibernate.query.sqm.produce.spi.criteria.JpaExpression;
 import org.hibernate.query.sqm.tree.select.SqmAliasedExpressionContainer;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class TupleJpaSelectionImpl extends AbstractCompoundSelection<Tuple> {
 	public TupleJpaSelectionImpl(
-			HibernateCriteriaBuilder criteriaBuilder,
-			Class<Tuple> javaType, List<JpaExpression<?>> expressions) {
+			JpaCriteriaBuilderImplementor criteriaBuilder,
+			JavaTypeDescriptor<Tuple> javaType,
+			List<JpaExpression<?>> expressions) {
 		super( criteriaBuilder, javaType, expressions );
 	}
 

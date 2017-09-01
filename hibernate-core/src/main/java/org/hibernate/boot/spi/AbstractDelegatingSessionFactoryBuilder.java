@@ -17,7 +17,7 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
-import org.hibernate.cache.spi.QueryCacheFactory;
+import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.metamodel.model.domain.Representation;
@@ -264,8 +264,8 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	}
 
 	@Override
-	public T applyQueryCacheFactory(QueryCacheFactory factory) {
-		delegate.applyQueryCacheFactory( factory );
+	public T applyQuerySpaceStalenessStrategyFactory(TimestampsCacheFactory factory) {
+		delegate.applyQuerySpaceStalenessStrategyFactory( factory );
 		return getThis();
 	}
 

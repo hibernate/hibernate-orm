@@ -7,7 +7,7 @@
 package org.hibernate.test.cache.infinispan.entity;
 
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.test.cache.infinispan.AbstractExtraAPITest;
 import org.junit.Test;
 
@@ -23,12 +23,12 @@ import static org.junit.Assert.assertEquals;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public class EntityRegionExtraAPITest extends AbstractExtraAPITest<EntityRegionAccessStrategy> {
+public class EntityRegionExtraAPITest extends AbstractExtraAPITest<EntityDataAccess> {
 	public static final String VALUE1 = "VALUE1";
 	public static final String VALUE2 = "VALUE2";
 
 	@Override
-	protected EntityRegionAccessStrategy getAccessStrategy() {
+	protected EntityDataAccess getAccessStrategy() {
 		return environment.getEntityRegion( REGION_NAME, CACHE_DATA_DESCRIPTION).buildAccessStrategy( accessType );
 	}
 

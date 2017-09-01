@@ -28,6 +28,7 @@ import org.hibernate.LockMode;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
+import org.hibernate.cache.spi.CacheTransactionContext;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
@@ -109,25 +110,27 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	protected boolean closed;
 	protected boolean waitingForAutoClose;
 
-	// transient & non-final for Serialization purposes - ugh
-	private transient SessionEventListenerManagerImpl sessionEventsManager = new SessionEventListenerManagerImpl();
+
+	// NOTE : these fields are transient & non-final for Serialization purposes - ugh
 	private transient EntityNameResolver entityNameResolver;
+
 	private transient JdbcConnectionAccess jdbcConnectionAccess;
 	private transient JdbcSessionContext jdbcSessionContext;
 	private transient JdbcCoordinator jdbcCoordinator;
+
 	private transient TransactionImplementor currentHibernateTransaction;
 	private transient TransactionCoordinator transactionCoordinator;
-	private transient Boolean useStreamForLobBinding;
-	private transient long timestamp;
+	private transient SessionEventListenerManagerImpl sessionEventsManager = new SessionEventListenerManagerImpl();
+	private transient CacheTransactionContext cacheTransactionContext;
+	protected transient ExceptionConverter exceptionConverter;
 
+	private transient Boolean useStreamForLobBinding;
 	private transient Integer jdbcBatchSize;
 
-	protected transient ExceptionConverter exceptionConverter;
 
 	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
 		this.sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUUID( null );
-		this.timestamp = factory.getCache().getRegionFactory().nextTimestamp();
 
 		this.flushMode = options.getInitialSessionFlushMode();
 
@@ -257,11 +260,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public String getTenantIdentifier() {
 		return tenantIdentifier;
-	}
-
-	@Override
-	public long getTimestamp() {
-		return timestamp;
 	}
 
 	@Override
@@ -395,13 +393,21 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
+	public void startTransactionBoundary() {
+		this.cacheTransactionContext = factory.getCache().getRegionFactory().startingTransaction( this );
+	}
+
+	@Override
+	public CacheTransactionContext getCurrentCacheTransactionContext() {
+		return cacheTransactionContext;
+	}
+
+	@Override
 	public Transaction beginTransaction() {
 		checkOpen();
 
 		Transaction result = getTransaction();
 		result.begin();
-
-		this.timestamp = factory.getCache().getRegionFactory().nextTimestamp();
 
 		return result;
 	}

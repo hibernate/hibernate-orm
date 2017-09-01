@@ -12,5 +12,5 @@ package org.hibernate.cache.spi;
  *
  * @author Steve Ebersole
  */
-public interface QueryResultsRegion extends GeneralDataRegion {
+public interface QueryResultsRegion extends DirectAccessRegion {
 }

@@ -16,6 +16,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Steve Ebersole
  */
 public interface VersionSupport<T> {
+	// todo (6.0) : add a Comparator here?  This would be useful for byte[] (TSQL ROWVERSION types) based versions.  But how would we inject the right Comparator?
+
 	/**
 	 * Generate an initial version.
 	 *

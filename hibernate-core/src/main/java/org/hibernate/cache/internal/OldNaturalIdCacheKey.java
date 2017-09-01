@@ -11,10 +11,12 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.compare.EqualsHelper;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
@@ -31,55 +33,73 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
  */
 @Deprecated
 public class OldNaturalIdCacheKey implements Serializable {
-	private final Serializable[] naturalIdValues;
 	private final String entityName;
 	private final String tenantId;
+
+	private final Serializable[] naturalIdValues;
+
 	private final int hashCode;
-	// "transient" is important here -- NaturalIdCacheKey needs to be Serializable
+
+	// transient is important here -- NaturalIdCacheKey needs to be Serializable
 	private transient ValueHolder<String> toString;
 
-	/**
-	 * Construct a new key for a caching natural identifier resolutions into the second level cache.
-	 * @param naturalIdValues The naturalIdValues associated with the cached data
-	 * @param propertyTypes
-	 * @param naturalIdPropertyIndexes
-	 * @param session The originating session
-	 */
 	public OldNaturalIdCacheKey(
-			final Object[] naturalIdValues,
-			JavaTypeDescriptor[] propertyTypes, int[] naturalIdPropertyIndexes, final String entityName,
-			final SharedSessionContractImplementor session) {
+			Object[] naturalIdValues,
+			EntityHierarchy entityHierarchy,
+			SharedSessionContractImplementor session) {
+		if ( naturalIdValues.length != entityHierarchy.getNaturalIdDescriptor().getPersistentAttributes().size() ) {
+			throw new HibernateException(
+					String.format(
+							"Number of natural-id values [%s] did not match the number of mapped natural-id attributes [%s]",
+							naturalIdValues.length,
+							entityHierarchy.getNaturalIdDescriptor().getPersistentAttributes().size()
+					)
+			);
+		}
 
-		this.entityName = entityName;
+		this.entityName = entityHierarchy.getRootEntityType().getEntityName();
 		this.tenantId = session.getTenantIdentifier();
 
 		this.naturalIdValues = new Serializable[naturalIdValues.length];
 
-		final SessionFactoryImplementor factory = session.getFactory();
-
 		final int prime = 31;
-		int result = 1;
-		result = prime * result + ( ( this.entityName == null ) ? 0 : this.entityName.hashCode() );
-		result = prime * result + ( ( this.tenantId == null ) ? 0 : this.tenantId.hashCode() );
-		for ( int i = 0; i < naturalIdValues.length; i++ ) {
-			final int naturalIdPropertyIndex = naturalIdPropertyIndexes[i];
-			final JavaTypeDescriptor javaTypeDescriptor = propertyTypes[naturalIdPropertyIndex];
+		int hashCodeCalculation = 1;
+		hashCodeCalculation = prime * hashCodeCalculation + ( ( this.entityName == null ) ? 0 : this.entityName.hashCode() );
+		hashCodeCalculation = prime * hashCodeCalculation + ( ( this.tenantId == null ) ? 0 : this.tenantId.hashCode() );
+
+		int i = -1;
+		for ( PersistentAttribute naturalIdAttribute : entityHierarchy.getNaturalIdDescriptor().getPersistentAttributes() ) {
+			i++;
+
+			final JavaTypeDescriptor javaTypeDescriptor = naturalIdAttribute.getJavaTypeDescriptor();
+
 			final Object value = naturalIdValues[i];
+			hashCodeCalculation = prime * hashCodeCalculation + (value != null ? javaTypeDescriptor.extractHashCode( value ) : 0);
 
-			result = prime * result + (value != null ? javaTypeDescriptor.extractHashCode( value ) : 0);
-
-			// The natural id may not be fully resolved in some situations.  See HHH-7513 for one of them
-			// (re-attaching a mutable natural id uses a database snapshot and hydration does not resolve associations).
-			// TODO: The snapshot should probably be revisited at some point.  Consider semi-resolving, hydrating, etc.
-			if (javaTypeDescriptor instanceof EntityJavaDescriptor && javaTypeDescriptor.getSemiResolvedType( factory ).getReturnedClass().isInstance( value )) {
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			// todo (6.0) : not sure how to best deal with this "semi-resolved" aspect in 6.0...
+//
+//			// The natural id may not be fully resolved in some situations.  See HHH-7513 for one of them
+//			// (re-attaching a mutable natural id uses a database snapshot and hydration does not resolve associations).
+//			// TODO: The snapshot should probably be revisited at some point.  Consider semi-resolving, hydrating, etc.
+//			//
+//			if (javaTypeDescriptor instanceof EntityJavaDescriptor && javaTypeDescriptor.getSemiResolvedType( factory ).getReturnedClass().isInstance( value )) {
+//				this.naturalIdValues[i] = (Serializable) value;
+//			}
+//			else {
+//				this.naturalIdValues[i] = javaTypeDescriptor.getMutabilityPlan().disassemble( value );
+//			}
+			// for now...
+			if ( EntityJavaDescriptor.class.isInstance( javaTypeDescriptor ) && !javaTypeDescriptor.getJavaType().isInstance( value ) ) {
 				this.naturalIdValues[i] = (Serializable) value;
 			}
 			else {
 				this.naturalIdValues[i] = javaTypeDescriptor.getMutabilityPlan().disassemble( value );
 			}
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		}
 
-		this.hashCode = result;
+		this.hashCode = hashCodeCalculation;
 		initTransients();
 	}
 

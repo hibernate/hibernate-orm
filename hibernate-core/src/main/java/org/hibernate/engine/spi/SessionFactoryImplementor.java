@@ -23,30 +23,24 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cache.spi.QueryCache;
-import org.hibernate.cache.spi.Region;
-import org.hibernate.cache.spi.UpdateTimestampsCache;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
-import org.hibernate.cache.spi.access.RegionAccessStrategy;
+import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cfg.Settings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.collections.streams.StreamUtils;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
+import org.hibernate.query.spi.ResultSetMappingDefinition;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
@@ -463,140 +457,4 @@ public interface SessionFactoryImplementor
 	}
 
 	EntityGraph findEntityGraphByName(String name);
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Move to CacheImplementor calls
-
-	/**
-	 * Get a named second-level cache region
-	 *
-	 * @param regionName The name of the region to retrieve.
-	 *
-	 * @return The name of the region
-	 *
-	 * @deprecated (since 5.2) Use this factory's {@link #getCache()} reference
-	 * to access Region via {@link CacheImplementor#determineEntityRegionAccessStrategy} or
-	 * {@link CacheImplementor#determineCollectionRegionAccessStrategy} instead.
-	 */
-	@Deprecated
-	default Region getSecondLevelCacheRegion(String regionName) {
-		final EntityRegionAccessStrategy entityRegionAccess = getCache().getEntityRegionAccess( regionName );
-		if ( entityRegionAccess != null ) {
-			return entityRegionAccess.getRegion();
-		}
-
-		final CollectionRegionAccessStrategy collectionRegionAccess = getCache().getCollectionRegionAccess( regionName );
-		if ( collectionRegionAccess != null ) {
-			return collectionRegionAccess.getRegion();
-		}
-
-		return null;
-	}
-
-	/**
-	 * Find the "access strategy" for the named cache region.
-	 *
-	 * @param regionName The name of the region
-	 *
-	 * @return That region's "access strategy"
-	 *
-	 *
-	 * @deprecated (since 5.2) Use this factory's {@link #getCache()} reference
-	 * to access {@link CacheImplementor#determineEntityRegionAccessStrategy} or
-	 * {@link CacheImplementor#determineCollectionRegionAccessStrategy} instead.
-	 */
-	@Deprecated
-	default RegionAccessStrategy getSecondLevelCacheRegionAccessStrategy(String regionName) {
-		final EntityRegionAccessStrategy entityRegionAccess = getCache().getEntityRegionAccess( regionName );
-		if ( entityRegionAccess != null ) {
-			return entityRegionAccess;
-		}
-
-		final CollectionRegionAccessStrategy collectionRegionAccess = getCache().getCollectionRegionAccess( regionName );
-		if ( collectionRegionAccess != null ) {
-			return collectionRegionAccess;
-		}
-
-		return null;
-	}
-
-	/**
-	 * Get a named natural-id cache region
-	 *
-	 * @param regionName The name of the region to retrieve.
-	 *
-	 * @return The region
-	 *
-	 * @deprecated (since 5.2) Use this factory's {@link #getCache()} ->
-	 * {@link CacheImplementor#getNaturalIdCacheRegionAccessStrategy(String)} ->
-	 * {@link NaturalIdRegionAccessStrategy#getRegion()} instead.
-	 */
-	@Deprecated
-	default Region getNaturalIdCacheRegion(String regionName) {
-		return getCache().getNaturalIdCacheRegionAccessStrategy( regionName ).getRegion();
-	}
-
-	/**
-	 * Find the "access strategy" for the named naturalId cache region.
-	 *
-	 * @param regionName The region name
-	 *
-	 * @return That region's "access strategy"
-	 *
-	 * @deprecated (since 5.2) Use this factory's {@link #getCache()} ->
-	 * {@link CacheImplementor#getNaturalIdCacheRegionAccessStrategy(String)} instead.
-	 */
-	@Deprecated
-	default RegionAccessStrategy getNaturalIdCacheRegionAccessStrategy(String regionName) {
-		return getCache().getNaturalIdCacheRegionAccessStrategy( regionName );
-	}
-
-	/**
-	 * Get a map of all the second level cache regions currently maintained in
-	 * this session factory.  The map is structured with the region name as the
-	 * key and the {@link Region} instances as the values.
-	 *
-	 * @return The map of regions
-	 *
-	 * @deprecated (since 5.2) with no direct replacement; use this factory's {@link #getCache()} reference
-	 * to access cache objects as needed.
-	 */
-	@Deprecated
-	Map getAllSecondLevelCacheRegions();
-
-	/**
-	 * Get the default query cache.
-	 *
-	 * @deprecated Use {@link CacheImplementor#getDefaultQueryCache()} instead
-	 */
-	@Deprecated
-	default QueryCache getQueryCache() {
-		return getCache().getDefaultQueryCache();
-	}
-
-	/**
-	 * Get a particular named query cache, or the default cache
-	 *
-	 * @param regionName the name of the cache region, or null for the default query cache
-	 *
-	 * @return the existing cache, or a newly created cache if none by that region name
-	 *
-	 * @deprecated Use {@link CacheImplementor#getQueryCache(String)} instead
-	 */
-	@Deprecated
-	default QueryCache getQueryCache(String regionName) {
-		return getCache().getQueryCache( regionName );
-	}
-
-	/**
-	 * Get the cache of table update timestamps
-	 *
-	 * @deprecated Use {@link CacheImplementor#getUpdateTimestampsCache()} instead
-	 */
-	@Deprecated
-	default UpdateTimestampsCache getUpdateTimestampsCache() {
-		return getCache().getUpdateTimestampsCache();
-	}
-
 }

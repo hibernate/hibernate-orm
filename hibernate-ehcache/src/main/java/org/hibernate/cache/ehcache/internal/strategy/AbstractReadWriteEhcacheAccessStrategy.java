@@ -15,7 +15,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheTransactionalDataRegion;
-import org.hibernate.cache.spi.access.RegionAccessStrategy;
+import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -54,8 +54,8 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
 	 * Returns <code>null</code> if the item is not readable.  Locked items are not readable, nor are items created
 	 * afterQuery the start of this transaction.
 	 *
-	 * @see RegionAccessStrategy#get(SharedSessionContractImplementor, Object, long)
-	 * @see RegionAccessStrategy#get(SharedSessionContractImplementor, Object, long)
+	 * @see CachedDomainDataAccess#get(SharedSessionContractImplementor, Object, long)
+	 * @see CachedDomainDataAccess#get(SharedSessionContractImplementor, Object, long)
 	 */
 	public final Object get(SharedSessionContractImplementor session, Object key, long txTimestamp) throws CacheException {
 		readLockIfNeeded( key );
@@ -79,8 +79,8 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
 	 * Returns <code>false</code> and fails to put the value if there is an existing un-writeable item mapped to this
 	 * key.
 	 *
-	 * @see RegionAccessStrategy#putFromLoad(SharedSessionContractImplementor, Object, Object, long, Object, boolean)
-	 * @see RegionAccessStrategy#putFromLoad(SharedSessionContractImplementor, Object, Object, long, Object, boolean)
+	 * @see CachedDomainDataAccess#putFromLoad(SharedSessionContractImplementor, Object, Object, long, Object, boolean)
+	 * @see CachedDomainDataAccess#putFromLoad(SharedSessionContractImplementor, Object, Object, long, Object, boolean)
 	 */
 	@Override
 	public final boolean putFromLoad(
@@ -111,8 +111,8 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
 	/**
 	 * Soft-lock a cache item.
 	 *
-	 * @see RegionAccessStrategy#lockItem(SharedSessionContractImplementor, Object, Object)
-	 * @see RegionAccessStrategy#lockItem(SharedSessionContractImplementor, Object, Object)
+	 * @see CachedDomainDataAccess#lockItem(SharedSessionContractImplementor, Object, Object)
+	 * @see CachedDomainDataAccess#lockItem(SharedSessionContractImplementor, Object, Object)
 	 */
 	public final SoftLock lockItem(SharedSessionContractImplementor session, Object key, Object version) throws CacheException {
 		region().writeLock( key );
@@ -135,8 +135,8 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
 	/**
 	 * Soft-unlock a cache item.
 	 *
-	 * @see RegionAccessStrategy#unlockItem(SharedSessionContractImplementor, Object, SoftLock)
-	 * @see RegionAccessStrategy#unlockItem(SharedSessionContractImplementor, Object, SoftLock)
+	 * @see CachedDomainDataAccess#unlockItem(SharedSessionContractImplementor, Object, SoftLock)
+	 * @see CachedDomainDataAccess#unlockItem(SharedSessionContractImplementor, Object, SoftLock)
 	 */
 	public final void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) throws CacheException {
 		region().writeLock( key );

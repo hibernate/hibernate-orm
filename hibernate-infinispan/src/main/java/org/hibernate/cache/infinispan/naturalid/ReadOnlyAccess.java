@@ -9,7 +9,7 @@ package org.hibernate.cache.infinispan.naturalid;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.access.AccessDelegate;
 import org.hibernate.cache.spi.NaturalIdRegion;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
@@ -17,7 +17,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
-class ReadOnlyAccess implements NaturalIdRegionAccessStrategy {
+class ReadOnlyAccess implements NaturalIdDataAccess {
 
 	protected final NaturalIdRegionImpl region;
 	protected final AccessDelegate delegate;

@@ -20,7 +20,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.criterion.DetachedCriteria;
@@ -94,14 +94,14 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		testData.prepare();
 
 		Session session = openSession();
-		long ts = ( ( SessionImplementor ) session ).getTimestamp();
+		long ts = ( ( SessionImplementor ) session ).getTransactionStartTimestamp();
 
 		// Force a collection into the second level cache, with its non-filtered elements
 		Salesperson sp = ( Salesperson ) session.load( Salesperson.class, testData.steveId );
 		Hibernate.initialize( sp.getOrders() );
 		PersistentCollectionDescriptor persister = sessionFactory().getCollectionPersister( Salesperson.class.getName() + ".orders" );
 		assertTrue( "No cache for collection", persister.hasCache() );
-		CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+		CollectionDataAccess cache = persister.getCacheAccessStrategy();
 		Object cacheKey = cache.generateCacheKey(
 				testData.steveId,
 				persister,
@@ -114,7 +114,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.close();
 
 		session = openSession();
-		ts = ( ( SessionImplementor ) session ).getTimestamp();
+		ts = ( ( SessionImplementor ) session ).getTransactionStartTimestamp();
 		session.enableFilter( "fulfilledOrders" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
 		sp = ( Salesperson ) session.createQuery( "from Salesperson as s where s.id = :id" )
 				.setParameter( "id", testData.steveId )

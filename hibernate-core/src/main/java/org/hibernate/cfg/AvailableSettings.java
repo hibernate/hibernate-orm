@@ -8,6 +8,7 @@ package org.hibernate.cfg;
 
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.resource.cdi.spi.ManagedBeanRegistry;
@@ -955,7 +956,7 @@ public interface AvailableSettings {
 	String USE_QUERY_CACHE = "hibernate.cache.use_query_cache";
 
 	/**
-	 * The {@link org.hibernate.cache.spi.QueryCacheFactory} implementation class.
+	 * The {@link TimestampsCacheFactory} implementation class.
 	 */
 	String QUERY_CACHE_FACTORY = "hibernate.cache.query_cache_factory";
 

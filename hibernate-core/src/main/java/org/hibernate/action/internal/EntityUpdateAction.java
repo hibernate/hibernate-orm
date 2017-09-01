@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.internal.Versioning;
@@ -96,7 +96,7 @@ public final class EntityUpdateAction extends EntityAction {
 			Object[] previousState,
 			SharedSessionContractImplementor session,
 			Serializable id) {
-		if ( ! entityDescriptor.hasNaturalIdentifier() ) {
+		if ( entityDescriptor.getHierarchy().getNaturalIdDescriptor() == null ) {
 			return null;
 		}
 
@@ -124,17 +124,18 @@ public final class EntityUpdateAction extends EntityAction {
 			// multiple actions queued during the same flush
 			previousVersion = entityDescriptor.getVersion( instance );
 		}
-		
+
 		final Object ck;
-		if ( entityDescriptor.hasCache() ) {
-			final EntityRegionAccessStrategy cache = entityDescriptor.getCacheAccessStrategy();
-			ck = cache.generateCacheKey(
-					id, 
-					entityDescriptor,
+		final EntityDescriptor rootEntityDescriptor = entityDescriptor.getHierarchy().getRootEntityType();
+		final EntityDataAccess cacheAccess = factory.getCache().getEntityRegionAccess( rootEntityDescriptor.getHierarchy() );
+		if ( cacheAccess != null ) {
+			ck = cacheAccess.generateCacheKey(
+					id,
+					rootEntityDescriptor.getHierarchy(),
 					factory,
 					session.getTenantIdentifier()
 			);
-			lock = cache.lockItem( session, ck, previousVersion );
+			lock = cacheAccess.lockItem( session, ck, previousVersion );
 		}
 		else {
 			ck = null;
@@ -183,18 +184,18 @@ public final class EntityUpdateAction extends EntityAction {
 			entry.postUpdate( instance, state, nextVersion );
 		}
 
-		if ( entityDescriptor.hasCache() ) {
+		if ( cacheAccess != null ) {
 			if ( entityDescriptor.isCacheInvalidationRequired() || entry.getStatus()!= Status.MANAGED ) {
-				entityDescriptor.getCacheAccessStrategy().remove( session, ck);
+				cacheAccess.remove( session, ck);
 			}
 			else if ( session.getCacheMode().isPutEnabled() ) {
 				//TODO: inefficient if that cache is just going to ignore the updated state!
-				final CacheEntry ce = entityDescriptor.buildCacheEntry( instance,state, nextVersion, getSession() );
+				final CacheEntry ce = entityDescriptor.buildCacheEntry( instance, state, nextVersion, getSession() );
 				cacheEntry = entityDescriptor.getCacheEntryStructure().structure( ce );
 
 				final boolean put = cacheUpdate( entityDescriptor, previousVersion, ck );
 				if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-					factory.getStatistics().secondLevelCachePut( getEntityDescriptor().getCacheAccessStrategy().getRegion().getName() );
+					factory.getStatistics().secondLevelCachePut( cacheAccess.getRegion().getName() );
 				}
 			}
 		}
@@ -218,7 +219,14 @@ public final class EntityUpdateAction extends EntityAction {
 		final SharedSessionContractImplementor session = getSession();
 		try {
 			session.getEventListenerManager().cachePutStart();
-			return entityDescriptor.getCacheAccessStrategy().update( session, ck, cacheEntry, nextVersion, previousVersion );
+			final EntityDescriptor rootDescriptor = entityDescriptor.getHierarchy().getRootEntityType();
+			return session.getFactory().getCache().getEntityRegionAccess( rootDescriptor.getHierarchy() ).update(
+					session,
+					ck,
+					cacheEntry,
+					nextVersion,
+					previousVersion
+			);
 		}
 		finally {
 			session.getEventListenerManager().cachePutEnd();
@@ -308,35 +316,37 @@ public final class EntityUpdateAction extends EntityAction {
 
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) throws CacheException {
+		final SessionFactoryImplementor factory = session.getFactory();
 		final EntityDescriptor entityDescriptor = getEntityDescriptor();
-		if ( entityDescriptor.hasCache() ) {
-			final EntityRegionAccessStrategy cache = entityDescriptor.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+		final EntityDescriptor rootEntityDescriptor = entityDescriptor.getHierarchy().getRootEntityType();
+		final EntityDataAccess cacheAccess = factory.getCache().getEntityRegionAccess( rootEntityDescriptor.getHierarchy() );
+		if ( cacheAccess != null ) {
+			final Object ck = cacheAccess.generateCacheKey(
 					getId(),
-					entityDescriptor,
-					session.getFactory(),
+					entityDescriptor.getHierarchy(),
+					factory,
 					session.getTenantIdentifier()
 					
 			);
 
-			if ( success &&
-					cacheEntry != null &&
-					!entityDescriptor.isCacheInvalidationRequired() &&
-					session.getCacheMode().isPutEnabled() ) {
-				final boolean put = cacheAfterUpdate( cache, ck );
+			if ( success
+					&& cacheEntry != null
+					&& !entityDescriptor.isCacheInvalidationRequired()
+					&& session.getCacheMode().isPutEnabled() ) {
+				final boolean put = cacheAfterUpdate( cacheAccess, ck );
 
 				if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-					getSession().getFactory().getStatistics().secondLevelCachePut( cache.getRegion().getName() );
+					factory.getStatistics().secondLevelCachePut( cacheAccess.getRegion().getName() );
 				}
 			}
 			else {
-				cache.unlockItem(session, ck, lock );
+				cacheAccess.unlockItem(session, ck, lock );
 			}
 		}
 		postCommitUpdate( success );
 	}
 
-	private boolean cacheAfterUpdate(EntityRegionAccessStrategy cache, Object ck) {
+	private boolean cacheAfterUpdate(EntityDataAccess cache, Object ck) {
 		final SharedSessionContractImplementor session = getSession();
 		SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		try {

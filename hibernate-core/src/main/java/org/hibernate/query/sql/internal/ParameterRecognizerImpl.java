@@ -89,19 +89,19 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		}
 	}
 
-	boolean hadMainOutputParameter() {
+	public boolean hadMainOutputParameter() {
 		return hadMainOutputParameter;
 	}
 
-	Map<String, QueryParameter> getNamedQueryParameters() {
+	public Map<String, QueryParameter> getNamedQueryParameters() {
 		return namedQueryParameters;
 	}
 
-	Map<Integer, QueryParameter> getPositionalQueryParameters() {
+	public Map<Integer, QueryParameter> getPositionalQueryParameters() {
 		return positionalQueryParameters;
 	}
 
-	List<JdbcParameterBinder> getParameterBinders() {
+	public List<JdbcParameterBinder> getParameterBinders() {
 		return parameterBinders;
 	}
 

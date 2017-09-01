@@ -19,7 +19,7 @@ import java.util.stream.StreamSupport;
 
 import org.hibernate.CacheMode;
 import org.hibernate.ScrollMode;
-import org.hibernate.cache.spi.QueryCache;
+import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.internal.ScrollableResultsIterator;
@@ -293,9 +293,9 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		if ( queryCacheEnabled && executionContext.getQueryOptions().getCacheMode().isGetEnabled() ) {
 			log.debugf( "Reading Query result cache data per CacheMode#isGetEnabled [%s]", cacheMode.name() );
 
-			final QueryCache queryCache = executionContext.getSession().getFactory()
+			final QueryResultsCache queryCache = executionContext.getSession().getFactory()
 					.getCache()
-					.getQueryCache( executionContext.getQueryOptions().getResultCacheRegionName() );
+					.getQueryResultsCache( executionContext.getQueryOptions().getResultCacheRegionName() );
 
 			// todo (6.0) : not sure that it is at all important that we account for QueryResults
 			//		these cached values are "lower level" than that, representing the
@@ -313,16 +313,9 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			cachedResults = queryCache.get(
 					// todo (6.0) : QueryCache#get takes the `queryResultsCacheKey` see tat discussion above
 					queryResultsCacheKey,
-					// todo (6.0) : QueryCache#get also takes a `Type[] returnTypes` argument which ought to either:
-					// 		1) be replaced with the Return graph
-					//		2) removed (and Return graph made part of the QueryKey)
-					null,
-					// todo (6.0) : QueryCache#get also takes a `isNaturalKeyLookup` argument which should go away
-					// 		that is no longer the supported way to perform a load-by-naturalId
-					false,
 					// todo (6.0) : `querySpaces` and `session` make perfect sense as args, but its odd passing those into this method just to pass along
 					//		atm we do not even collect querySpaces, but we need to
-					null,
+					jdbcSelect.getQueriedTableNames(),
 					executionContext.getSession()
 			);
 

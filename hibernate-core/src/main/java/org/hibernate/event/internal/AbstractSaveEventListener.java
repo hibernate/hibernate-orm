@@ -38,6 +38,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.spi.BasicType;
 
@@ -403,12 +404,12 @@ public abstract class AbstractSaveEventListener
 				entityDescriptor.getPropertyJavaTypeDescriptors()
 		);
 
-		//keep the existing version number in the case of replicate!
-		if ( entityDescriptor.isVersioned() ) {
+		// keep the existing version number in the case of replicate!
+		final VersionDescriptor versionDescriptor = entityDescriptor.getHierarchy().getVersionDescriptor();
+		if ( versionDescriptor != null ) {
 			substitute = Versioning.seedVersion(
 					values,
-					entityDescriptor.getVersionProperty(),
-					( (BasicType) entityDescriptor.getVersionType() ).getVersionSupport(),
+					versionDescriptor,
 					source
 			) || substitute;
 		}

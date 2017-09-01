@@ -61,7 +61,7 @@ public class ProxyInterceptor extends EmptyInterceptor {
 				return ProxyHelper.newCompanyProxy( id );
 			}
 		}
-		return super.instantiate( entityName, entityMode, id );
+		return super.instantiate( entityName, entityMode.asRepresentation(), id );
 	}
 
 }

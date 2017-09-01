@@ -832,4 +832,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		this.entityNameResolvers.addAll( persister.getEntityNameResolvers() );
 	}
 
+	public Set<EntityHierarchy> getEntityHierarchies() {
+		return entityHierarchies;
+	}
 }

@@ -9,7 +9,7 @@ package org.hibernate.sql.results.internal.values;
 import java.sql.SQLException;
 
 import org.hibernate.CacheMode;
-import org.hibernate.cache.spi.QueryCache;
+import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.Limit;
@@ -80,9 +80,9 @@ public class JdbcValuesSourceResultSetImpl extends AbstractJdbcValuesSource {
 		final CacheMode cacheMode = queryOptions.getCacheMode();
 
 		if ( queryCacheEnabled && cacheMode.isPutEnabled() ) {
-			final QueryCache queryCache = persistenceContext.getFactory()
+			final QueryResultsCache queryCache = persistenceContext.getFactory()
 					.getCache()
-					.getQueryCache( queryOptions.getResultCacheRegionName() );
+					.getQueryResultsCache( queryOptions.getResultCacheRegionName() );
 
 			return new QueryCachePutManagerEnabledImpl( queryCache, queryCacheKey );
 		}

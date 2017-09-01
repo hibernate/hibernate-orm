@@ -18,6 +18,8 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.junit.Test;
 import junit.framework.Assert;
 
+import static org.junit.Assert.assertNotNull;
+
 /**
  * @author Emmanuel Bernard
  */
@@ -33,7 +35,9 @@ public class XmlTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em = getOrCreateEntityManager();
 		SharedSessionContractImplementor session = em.unwrap( SharedSessionContractImplementor.class );
 		EntityDescriptor entityPersister= session.getFactory().getEntityPersister( Lighter.class.getName() );
-		Assert.assertTrue(entityPersister.hasCache());
+		assertNotNull(
+				session.getFactory().getCache().getEntityRegionAccess( entityPersister.getHierarchy().getRootEntityType() )
+		);
 	}
 
 	@Override

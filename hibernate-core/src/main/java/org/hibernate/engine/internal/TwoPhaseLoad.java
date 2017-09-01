@@ -13,7 +13,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -91,8 +91,8 @@ public final class TwoPhaseLoad {
 			);
 
 		if ( version != null && LOG.isTraceEnabled() ) {
-			final String versionStr = persister.isVersioned()
-					? persister.getVersionType().toLoggableString( version, session.getFactory() )
+			final String versionStr = persister.getHierarchy().getVersionDescriptor() != null
+					? persister.getHierarchy().getVersionDescriptor().getJavaTypeDescriptor().extractLoggableRepresentation( version )
 					: "null";
 			LOG.tracef( "Version: %s", versionStr );
 		}
@@ -168,7 +168,8 @@ public final class TwoPhaseLoad {
 		persister.setPropertyValues( entity, hydratedState );
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		if ( persister.hasCache() && session.getCacheMode().isPutEnabled() ) {
+		final EntityDataAccess cacheAccess = persister.getHierarchy().getEntityCacheAccess();
+		if ( cacheAccess != null && session.getCacheMode().isPutEnabled() ) {
 
 			if ( debugEnabled ) {
 				LOG.debugf(
@@ -179,8 +180,12 @@ public final class TwoPhaseLoad {
 
 			final Object version = Versioning.getVersion( hydratedState, persister );
 			final CacheEntry entry = persister.buildCacheEntry( entity, hydratedState, version, session );
-			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			final Object cacheKey = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
+			final Object cacheKey = cacheAccess.generateCacheKey(
+					id,
+					persister.getHierarchy(),
+					factory,
+					session.getTenantIdentifier()
+			);
 
 			// explicit handling of caching for rows just inserted and then somehow forced to be read
 			// from the database *within the same transaction*.  usually this is done by
@@ -189,7 +194,7 @@ public final class TwoPhaseLoad {
 			//
 			// we need to be careful not to clobber the lock here in the cache so that it can be rolled back if need be
 			if ( session.getPersistenceContext().wasInsertedDuringTransaction( persister, id ) ) {
-				cache.update(
+				cacheAccess.update(
 						session,
 						cacheKey,
 						persister.getCacheEntryStructure().structure( entry ),
@@ -201,17 +206,16 @@ public final class TwoPhaseLoad {
 				final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 				try {
 					eventListenerManager.cachePutStart();
-					final boolean put = cache.putFromLoad(
+					final boolean put = cacheAccess.putFromLoad(
 							session,
 							cacheKey,
 							persister.getCacheEntryStructure().structure( entry ),
-							session.getTimestamp(),
 							version,
 							useMinimalPuts( session, entityEntry )
 					);
 
 					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatistics().secondLevelCachePut( cache.getRegion().getName() );
+						factory.getStatistics().secondLevelCachePut( cacheAccess.getRegion().getName() );
 					}
 				}
 				finally {
@@ -220,7 +224,7 @@ public final class TwoPhaseLoad {
 			}
 		}
 
-		if ( persister.hasNaturalIdentifier() ) {
+		if ( persister.getHierarchy().getNaturalIdDescriptor() != null ) {
 			persistenceContext.getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
 					persister,
 					id,

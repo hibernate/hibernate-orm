@@ -14,7 +14,7 @@ import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.test.cache.infinispan.AbstractEntityCollectionRegionTest;
 import org.infinispan.AdvancedCache;
 
@@ -45,7 +45,7 @@ public class CollectionRegionImplTest extends AbstractEntityCollectionRegionTest
 
 	@Override
 	protected void putInRegion(Region region, Object key, Object value) {
-		CollectionRegionAccessStrategy strategy = ((CollectionRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL);
+		CollectionDataAccess strategy = ((CollectionRegion) region).buildAccessStrategy( AccessType.TRANSACTIONAL);
 		strategy.putFromLoad(null, key, value, System.currentTimeMillis(), new Integer(1));
 	}
 

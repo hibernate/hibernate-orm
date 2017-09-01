@@ -439,6 +439,12 @@ public class InfinispanRegionFactory implements RegionFactory {
 		return manager;
 	}
 
+
+	@Override
+	public void start() {
+
+	}
+
 	@Override
 	public void start(SessionFactoryOptions settings, Properties properties) throws CacheException {
 		log.debug( "Starting Infinispan region factory" );

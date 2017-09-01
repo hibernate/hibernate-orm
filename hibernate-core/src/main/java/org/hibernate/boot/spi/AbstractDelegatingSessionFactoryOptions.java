@@ -19,7 +19,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.cache.spi.QueryCacheFactory;
+import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.loader.BatchFetchStyle;
@@ -246,8 +246,8 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public QueryCacheFactory getQueryCacheFactory() {
-		return delegate.getQueryCacheFactory();
+	public TimestampsCacheFactory getQuerySpaceStalenessStrategyFactory() {
+		return delegate.getQuerySpaceStalenessStrategyFactory();
 	}
 
 	@Override

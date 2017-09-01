@@ -14,7 +14,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.CollectionRegion;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -29,7 +29,7 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
  */
 public class TransactionalEhcacheCollectionRegionAccessStrategy
 		extends AbstractEhcacheAccessStrategy<EhcacheCollectionRegion>
-		implements CollectionRegionAccessStrategy {
+		implements CollectionDataAccess {
 
 	private final Ehcache ehcache;
 

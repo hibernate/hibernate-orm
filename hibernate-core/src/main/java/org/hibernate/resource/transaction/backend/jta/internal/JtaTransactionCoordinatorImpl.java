@@ -13,7 +13,6 @@ import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
@@ -74,7 +73,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 			TransactionCoordinatorBuilder transactionCoordinatorBuilder,
 			TransactionCoordinatorOwner owner,
 			boolean autoJoinTransactions) {
-		this.observers = new ArrayList<TransactionObserver>();
+		this.observers = new ArrayList<>();
 		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
 		this.transactionCoordinatorOwner = owner;
 		this.autoJoinTransactions = autoJoinTransactions;
@@ -100,7 +99,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 			boolean preferUserTransactions,
 			boolean performJtaThreadTracking,
 			TransactionObserver... observers) {
-		this.observers = new ArrayList<TransactionObserver>();
+		this.observers = new ArrayList<>();
 		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
 		this.transactionCoordinatorOwner = owner;
 		this.autoJoinTransactions = autoJoinTransactions;
@@ -159,6 +158,9 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		getSynchronizationCallbackCoordinator().synchronizationRegistered();
 		synchronizationRegistered = true;
 		log.debug( "Hibernate RegisteredSynchronization successfully registered with JTA platform" );
+
+		// report entering into a "transactional context"
+		getTransactionCoordinatorOwner().startTransactionBoundary();
 	}
 
 	@Override
@@ -193,6 +195,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		return synchronizationRegistered;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public TransactionCoordinatorOwner getTransactionCoordinatorOwner(){
 		return this.transactionCoordinatorOwner;
 	}
@@ -319,10 +322,6 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		try {
 			transactionCoordinatorOwner.beforeTransactionCompletion();
 		}
-		catch (HibernateException e) {
-			physicalTransactionDelegate.markRollbackOnly();
-			throw e;
-		}
 		catch (RuntimeException re) {
 			physicalTransactionDelegate.markRollbackOnly();
 			throw re;
@@ -379,7 +378,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		private final JtaTransactionAdapter jtaTransactionAdapter;
 		private boolean invalid;
 
-		public TransactionDriverControlImpl(JtaTransactionAdapter jtaTransactionAdapter) {
+		TransactionDriverControlImpl(JtaTransactionAdapter jtaTransactionAdapter) {
 			this.jtaTransactionAdapter = jtaTransactionAdapter;
 		}
 
@@ -395,6 +394,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 			JtaTransactionCoordinatorImpl.this.joinJtaTransaction();
 		}
 
+		@SuppressWarnings("WeakerAccess")
 		protected void errorIfInvalid() {
 			if ( invalid ) {
 				throw new IllegalStateException( "Physical-transaction delegate is no longer valid" );

@@ -14,7 +14,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.MappedSuperclassMapping;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorClassResolver;
@@ -183,7 +183,7 @@ public final class RuntimeModelDescriptorFactoryImpl
 			Collection collectionBinding,
 			ManagedTypeDescriptor<O> source,
 			String localName,
-			CollectionRegionAccessStrategy cacheAccessStrategy,
+			CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) throws HibernateException {
 		// If the metadata for the collection specified an explicit persister class, use it
 		Class<? extends PersistentCollectionDescriptor> persisterClass = collectionBinding.getCollectionPersisterClass();
@@ -200,7 +200,7 @@ public final class RuntimeModelDescriptorFactoryImpl
 			Collection collectionBinding,
 			ManagedTypeDescriptor source,
 			String localName,
-			CollectionRegionAccessStrategy cacheAccessStrategy,
+			CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) {
 		try {
 			Constructor<? extends PersistentCollectionDescriptor> constructor = persisterClass.getConstructor( PersistentCollectionDescriptor.CONSTRUCTOR_SIGNATURE );

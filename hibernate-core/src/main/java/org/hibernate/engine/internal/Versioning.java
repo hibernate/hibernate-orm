@@ -9,6 +9,7 @@ package org.hibernate.engine.internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.VersionSupport;
 
 import org.jboss.logging.Logger;
@@ -49,18 +50,14 @@ public final class Versioning {
 	 * contract for the version property <b>if required</b> and inject it into
 	 * the snapshot state.
 	 *
-	 * @param fields The current snapshot state
-	 * @param versionProperty The index of the version property
-	 * @param versionType The version type
-	 * @param session The originating session
 	 * @return True if we injected a new version value into the fields array; false
 	 * otherwise.
 	 */
 	public static boolean seedVersion(
 			Object[] fields,
-			int versionProperty,
-			VersionSupport versionType,
+			VersionDescriptor versionDescriptor,
 			SharedSessionContractImplementor session) {
+
 		final Object initialVersion = fields[versionProperty];
 		if (
 			initialVersion==null ||
@@ -70,7 +67,7 @@ public final class Versioning {
 			// TODO: shift it into unsaved-value strategy
 			( (initialVersion instanceof Number) && ( (Number) initialVersion ).longValue()<0 )
 		) {
-			fields[versionProperty] = seed( versionType, session );
+			fields[versionProperty] = seed( versionDescriptor.getVersionSupport(), session );
 			return true;
 		}
 		LOG.tracev( "Using initial version: {0}", initialVersion );
@@ -108,9 +105,11 @@ public final class Versioning {
 	 * @param persister The entity persister
 	 */
 	public static void setVersion(Object[] fields, Object version, EntityDescriptor persister) {
-		if ( !persister.isVersioned() ) {
+		final VersionDescriptor<Object, Object> versionDescriptor = persister.getHierarchy().getVersionDescriptor();
+		if ( versionDescriptor == null ) {
 			return;
 		}
+
 		fields[ persister.getVersionProperty() ] = version;
 	}
 
@@ -122,9 +121,11 @@ public final class Versioning {
 	 * @return The extracted optimistic locking value
 	 */
 	public static Object getVersion(Object[] fields, EntityDescriptor persister) {
-		if ( !persister.isVersioned() ) {
-			return null;
+		final VersionDescriptor<Object, Object> versionDescriptor = persister.getHierarchy().getVersionDescriptor();
+		if ( versionDescriptor == null ) {
+			return;
 		}
+
 		return fields[ persister.getVersionProperty() ];
 	}
 

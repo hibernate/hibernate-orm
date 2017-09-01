@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.metamodel.model.domain.spi.CollectionIndexBasic;
+import org.hibernate.metamodel.model.domain.spi.BasicCollectionIndex;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
@@ -20,8 +20,8 @@ public class SqmCollectionIndexReferenceBasic extends AbstractSqmCollectionIndex
 	}
 
 	@Override
-	public CollectionIndexBasic getReferencedNavigable() {
-		return (CollectionIndexBasic) getPluralAttributeBinding().getReferencedNavigable()
+	public BasicCollectionIndex getReferencedNavigable() {
+		return (BasicCollectionIndex) getPluralAttributeBinding().getReferencedNavigable()
 				.getPersistentCollectionMetadata()
 				.getIndexDescriptor();
 	}

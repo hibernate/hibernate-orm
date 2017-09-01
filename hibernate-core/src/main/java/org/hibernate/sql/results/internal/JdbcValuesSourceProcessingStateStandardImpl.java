@@ -14,7 +14,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.internal.Versioning;
@@ -262,7 +262,8 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		persister.setPropertyValues( entity, hydratedState );
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		if ( persister.hasCache() && session.getCacheMode().isPutEnabled() ) {
+		final EntityDataAccess cacheAccess = factory.getCache().getEntityRegionAccess( persister.getHierarchy() );
+		if ( cacheAccess != null && session.getCacheMode().isPutEnabled() ) {
 
 			if ( debugEnabled ) {
 				log.debugf(
@@ -273,8 +274,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 			final Object version = Versioning.getVersion( hydratedState, persister );
 			final CacheEntry entry = persister.buildCacheEntry( entity, hydratedState, version, session );
-			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			final Object cacheKey = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
+			final Object cacheKey = cacheAccess.generateCacheKey( id, persister.getHierarchy(), factory, session.getTenantIdentifier() );
 
 			// explicit handling of caching for rows just inserted and then somehow forced to be read
 			// from the database *within the same transaction*.  usually this is done by
@@ -283,7 +283,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 			//
 			// we need to be careful not to clobber the lock here in the cache so that it can be rolled back if need be
 			if ( session.getPersistenceContext().wasInsertedDuringTransaction( persister, id ) ) {
-				cache.update(
+				cacheAccess.update(
 						session,
 						cacheKey,
 						persister.getCacheEntryStructure().structure( entry ),
@@ -295,18 +295,17 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 				final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 				try {
 					eventListenerManager.cachePutStart();
-					final boolean put = cache.putFromLoad(
+					final boolean put = cacheAccess.putFromLoad(
 							session,
 							cacheKey,
 							persister.getCacheEntryStructure().structure( entry ),
-							session.getTimestamp(),
 							version,
 							//useMinimalPuts( session, entityEntry )
 							false
 					);
 
 					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatistics().secondLevelCachePut( cache.getRegion().getName() );
+						factory.getStatistics().secondLevelCachePut( cacheAccess.getRegion().getName() );
 					}
 				}
 				finally {
@@ -315,7 +314,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 			}
 		}
 
-		if ( persister.getHierarchy().getNaturalIdentifierDescriptor() != null ) {
+		if ( persister.getHierarchy().getNaturalIdDescriptor() != null ) {
 			persistenceContext.getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
 					persister,
 					id,

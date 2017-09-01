@@ -18,12 +18,6 @@ import java.io.Serializable;
 public interface QueryStatistics extends Serializable {
 	long getExecutionCount();
 
-	long getCacheHitCount();
-
-	long getCachePutCount();
-
-	long getCacheMissCount();
-
 	long getExecutionRowCount();
 
 	long getExecutionAvgTime();

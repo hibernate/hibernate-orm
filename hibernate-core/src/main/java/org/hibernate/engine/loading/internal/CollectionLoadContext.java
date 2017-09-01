@@ -16,7 +16,7 @@ import java.util.Set;
 
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -26,6 +26,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
@@ -242,16 +243,17 @@ public class CollectionLoadContext {
 		}
 
 
-		// add to cache if:
-		boolean addToCache =
-				// there were no queued additions
-				hasNoQueuedAdds
-				// and the role has a cache
-				&& persister.hasCache()
-				// and this is not a forced initialization during flush
-				&& session.getCacheMode().isPutEnabled() && !ce.isDoremove();
-		if ( addToCache ) {
-			addCollectionToCache( lce, persister );
+		// optionally add to cache...
+		if ( session.getCacheMode().isPutEnabled() ) {
+			// there were no queued additions
+			if ( hasNoQueuedAdds ) {
+				if ( !ce.isDoremove() ) {
+					final CollectionDataAccess cacheAccess = persister.getCacheAccess();
+					if ( cacheAccess != null ) {
+						addCollectionToCache( lce, persister );
+					}
+				}
+			}
 		}
 
 		if ( LOG.isDebugEnabled() ) {
@@ -323,7 +325,7 @@ public class CollectionLoadContext {
 		}
 
 		final CollectionCacheEntry entry = new CollectionCacheEntry( lce.getCollection(), persister );
-		final CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+		final CollectionDataAccess cache = persister.getCacheAccess();
 		final Object cacheKey = cache.generateCacheKey(
 				lce.getKey(),
 				persister,
@@ -332,10 +334,10 @@ public class CollectionLoadContext {
 		);
 
 		boolean isPutFromLoad = true;
-		if ( persister.isAssociation() ) {
+		if ( EntityValuedNavigable.class.isInstance( persister.getElementDescriptor() ) ) {
+			EntityDescriptor elementEntityDescriptor = ( (EntityValuedNavigable) persister.getElementDescriptor() ).getEntityDescriptor();
 			for ( Serializable id : entry.getState() ) {
-				EntityDescriptor entityPersister = persister.getElementType().getElementPersister();
-				if ( session.getPersistenceContext().wasInsertedDuringTransaction( entityPersister, id ) ) {
+				if ( session.getPersistenceContext().wasInsertedDuringTransaction( elementEntityDescriptor, id ) ) {
 					isPutFromLoad = false;
 					break;
 				}
@@ -350,13 +352,12 @@ public class CollectionLoadContext {
 						session,
 						cacheKey,
 						persister.getCacheEntryStructure().structure( entry ),
-						session.getTimestamp(),
 						version,
 						factory.getSessionFactoryOptions().isMinimalPutsEnabled() && session.getCacheMode()!= CacheMode.REFRESH
 				);
 
 				if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-					factory.getStatistics().secondLevelCachePut( persister.getCacheAccessStrategy().getRegion().getName() );
+					factory.getStatistics().secondLevelCachePut( persister.getCacheAccess().getRegion().getName() );
 				}
 			}
 			finally {

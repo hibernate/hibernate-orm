@@ -14,9 +14,8 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.action.spi.AfterTransactionCompletionProcess;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
@@ -24,17 +23,17 @@ import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers.InternalFetchProfileType;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.Type;
 
 /**
  * Defines the default refresh event listener used by hibernate for refreshing entities
@@ -140,7 +139,9 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			}
 		}
 
-		if ( persister.hasCache() ) {
+		final EntityDataAccess cacheAccess = persister.getHierarchy().getEntityCacheAccess();
+
+		if ( cacheAccess != null ) {
 			Object previousVersion = null;
 			if ( persister.isVersionPropertyGenerated() ) {
 				// we need to grab the version value from the entity, otherwise
@@ -148,21 +149,17 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				// multiple actions queued during the same flush
 				previousVersion = persister.getVersion( object );
 			}
-			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+			final Object ck = cacheAccess.generateCacheKey(
 					id,
-					persister,
+					persister.getHierarchy(),
 					source.getFactory(),
 					source.getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( source, ck, previousVersion );
-			source.getActionQueue().registerProcess( new AfterTransactionCompletionProcess() {
-				@Override
-				public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-					cache.unlockItem( session, ck, lock );
-				}
-			} );
-			cache.remove( source, ck );
+			final SoftLock lock = cacheAccess.lockItem( source, ck, previousVersion );
+			source.getActionQueue().registerProcess(
+					(success, session) -> cacheAccess.unlockItem( session, ck, lock )
+			);
+			cacheAccess.remove( source, ck );
 		}
 
 		evictCachedCollections( persister, id, source );
@@ -198,32 +195,31 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		evictCachedCollections( entityDescriptor.getPersistentAttributes(), id, source );
 	}
 
+	@SuppressWarnings("unchecked")
 	private void evictCachedCollections(List<PersistentAttribute> persistentAttributes, Serializable id, EventSource source)
 			throws HibernateException {
-		for ( PersistentAttribute type : persistentAttributes ) {
-			if ( type.getClassification().equals( Type.Classification.COLLECTION ) ) {
-				PersistentCollectionDescriptor collectionPersister = source.getFactory().getTypeConfiguration().findCollectionPersister( ( (CollectionType) type ).getRole() );
-				if ( collectionPersister.hasCache() ) {
-					final CollectionRegionAccessStrategy cache = collectionPersister.getCacheAccessStrategy();
-					final Object ck = cache.generateCacheKey(
+		for ( PersistentAttribute attribute : persistentAttributes ) {
+			if ( PluralPersistentAttribute.class.isInstance( attribute ) ) {
+				final PersistentCollectionDescriptor collectionPersister = ( (PluralPersistentAttribute) attribute ).getPersistentCollectionMetadata();
+				final CollectionDataAccess cacheAccess = source.getFactory().getCache()
+						.getCollectionRegionAccess( collectionPersister );
+				if ( cacheAccess != null ) {
+					final Object ck = cacheAccess.generateCacheKey(
 						id,
 						collectionPersister,
 						source.getFactory(),
 						source.getTenantIdentifier()
 					);
-					final SoftLock lock = cache.lockItem( source, ck, null );
-					source.getActionQueue().registerProcess( new AfterTransactionCompletionProcess() {
-						@Override
-						public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-							cache.unlockItem( session, ck, lock );
-						}
-					} );
-					cache.remove( source, ck );
+					final SoftLock lock = cacheAccess.lockItem( source, ck, null );
+					source.getActionQueue().registerProcess(
+							(success, session) -> cacheAccess.unlockItem( session, ck, lock )
+					);
+					cacheAccess.remove( source, ck );
 				}
 			}
-			else if ( type.isComponentType() ) {
-				EmbeddedType actype = (EmbeddedType) type;
-				evictCachedCollections( actype.getSubtypes(), id, source );
+			else if ( EmbeddedValuedNavigable.class.isInstance( attribute ) ) {
+				EmbeddedValuedNavigable composite = (EmbeddedValuedNavigable) attribute;
+				evictCachedCollections( composite.getEmbeddedDescriptor().getPersistentAttributes(), id, source );
 			}
 		}
 	}

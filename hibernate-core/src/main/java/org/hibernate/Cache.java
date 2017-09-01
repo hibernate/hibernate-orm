@@ -91,21 +91,15 @@ public interface Cache extends javax.persistence.Cache {
 	void evictEntityRegions();
 
 	/**
-	 * Evicts all naturalId data from the given region (i.e. for all entities of
-	 * type).
-	 *
-	 * @param naturalIdClass The naturalId class.
+	 * Evicts all naturalId data for the given entity type.
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
-	void evictNaturalIdRegion(Class naturalIdClass);
+	void evictNaturalIdRegion(Class entityClass);
 
 	/**
-	 * Evicts all naturalId data from the given region (i.e. for all entities of
-	 * type).
-	 *
-	 * @param naturalIdName The naturalId name.
+	 * Evicts all naturalId data for the given entity type - by name
 	 */
-	void evictNaturalIdRegion(String naturalIdName);
+	void evictNaturalIdRegion(String entityName);
 
 	/**
 	 * Evict data from all naturalId regions.

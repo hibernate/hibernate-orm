@@ -11,8 +11,8 @@ import java.util.Collection;
 
 import org.hibernate.EntityMode;
 import org.hibernate.boot.model.domain.BasicValueMapping;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -30,7 +30,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.InheritanceStrategy;
-import org.hibernate.metamodel.model.domain.spi.NaturalIdentifierDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
@@ -45,7 +45,6 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	private static final Logger log = Logger.getLogger( EntityHierarchyImpl.class );
 
 	private final EntityDescriptor rootEntityPersister;
-	private final EntityRegionAccessStrategy caching;
 
 	private final InheritanceStrategy inheritanceStrategy;
 	private final EntityMode entityMode;
@@ -54,7 +53,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	private final EntityIdentifier identifierDescriptor;
 	private final DiscriminatorDescriptor discriminatorDescriptor;
 	private final VersionDescriptor versionDescriptor;
-	private final NaturalIdentifierDescriptor naturalIdentifierDescriptor;
+	private final NaturalIdDescriptor naturalIdentifierDescriptor;
 	private final RowIdDescriptor rowIdDescriptor;
 	private final TenantDiscrimination tenantDiscrimination;
 
@@ -62,16 +61,17 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	private final boolean mutable;
 	private final boolean implicitPolymorphismEnabled;
 
+	private EntityDataAccess caching;
+
 	public EntityHierarchyImpl(
 			RuntimeModelCreationContext creationContext,
 			EntityDescriptor rootEntityPersister,
-			RootClass rootEntityBinding,
-			EntityRegionAccessStrategy caching,
-			NaturalIdRegionAccessStrategy naturalIdCaching) {
+			RootClass rootEntityBinding) {
 		log.debugf( "Creating EntityHierarchy root EntityPersister : %s", rootEntityPersister );
 
+
 		this.rootEntityPersister = rootEntityPersister;
-		this.caching = caching;
+
 		this.inheritanceStrategy = interpretInheritanceType( rootEntityBinding );
 		this.entityMode = rootEntityBinding.getEntityMappingHierarchy().getEntityMode();
 		this.optimisticLockStyle = rootEntityBinding.getEntityMappingHierarchy().getOptimisticLockStyle();
@@ -215,7 +215,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		return null;
 	}
 
-	private NaturalIdentifierDescriptor interpretNaturalIdentifierDescriptor(
+	private static NaturalIdDescriptor interpretNaturalIdentifierDescriptor(
 			EntityHierarchyImpl entityHierarchy,
 			RootClass rootEntityBinding,
 			RuntimeModelCreationContext creationContext) {
@@ -223,11 +223,9 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			return null;
 		}
 
-		final NaturalIdRegionAccessStrategy accessStrategy = creationContext.getSessionFactory()
-				.getCache()
-				.determineNaturalIdRegionAccessStrategy( rootEntityBinding );
+		return new NaturalIdDescriptor() {
+			private NaturalIdDataAccess cacheAccess;
 
-		return new NaturalIdentifierDescriptor() {
 			@Override
 			public Collection<PersistentAttribute> getPersistentAttributes() {
 				throw new NotYetImplementedException(  );
@@ -239,8 +237,14 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			}
 
 			@Override
-			public NaturalIdRegionAccessStrategy getNaturalIdRegionAccessStrategy() {
-				return accessStrategy;
+			public boolean isMutable() {
+				// todo (6.0) : boot model needs to expose whether the natural-id is mutable
+				return true;
+			}
+
+			@Override
+			public NaturalIdDataAccess getCacheAccess() {
+				return entityHierarchy.getRootEntityType().getFactory().getCache().getNaturalIdRegionAccess( entityHierarchy );
 			}
 		};
 	}
@@ -286,7 +290,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	}
 
 	@Override
-	public NaturalIdentifierDescriptor getNaturalIdentifierDescriptor() {
+	public NaturalIdDescriptor getNaturalIdDescriptor() {
 		return naturalIdentifierDescriptor;
 	}
 
@@ -307,7 +311,10 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	}
 
 	@Override
-	public EntityRegionAccessStrategy getEntityRegionAccessStrategy() {
+	public EntityDataAccess getEntityCacheAccess() {
+		if ( caching == null ) {
+			caching = rootEntityPersister.getFactory().getCache().getEntityRegionAccess( this );
+		}
 		return caching;
 	}
 

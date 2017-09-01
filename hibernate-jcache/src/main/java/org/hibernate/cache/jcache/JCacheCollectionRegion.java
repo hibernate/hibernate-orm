@@ -16,7 +16,7 @@ import org.hibernate.cache.jcache.access.ReadWriteCollectionRegionAccessStrategy
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 
 /**
  * @author Alex Snaps
@@ -28,7 +28,7 @@ public class JCacheCollectionRegion extends JCacheTransactionalDataRegion implem
 	}
 
 	@Override
-	public CollectionRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
+	public CollectionDataAccess buildAccessStrategy(AccessType accessType) throws CacheException {
 		switch ( accessType ) {
 			case READ_ONLY:
 				return new ReadOnlyCollectionRegionAccessStrategy( this );

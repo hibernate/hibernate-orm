@@ -6,11 +6,14 @@
  */
 package org.hibernate.metamodel.model.creation.spi;
 
+import org.hibernate.boot.model.domain.EmbeddedMapping;
+import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
+import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
@@ -43,7 +46,7 @@ public interface RuntimeModelCreationContext {
 
 	PersistentCollectionTuplizerFactory getPersistentCollectionTuplizerFactory();
 
-	void registerEntityDescriptor(EntityDescriptor entityDescriptor);
-	void registerCollectionDescriptor(PersistentCollectionDescriptor collectionDescriptor);
-	void registerEmbeddableDescriptor(EmbeddedTypeDescriptor embeddedTypeDescriptor);
+	void registerEntityDescriptor(EntityDescriptor runtimeDescriptor, EntityMapping bootDescriptor);
+	void registerCollectionDescriptor(PersistentCollectionDescriptor runtimeDescriptor, Collection bootDescriptor);
+	void registerEmbeddableDescriptor(EmbeddedTypeDescriptor runtimeDescriptor, EmbeddedMapping bootDescriptor);
 }

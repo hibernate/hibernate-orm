@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -106,16 +106,17 @@ public class NaturalIdXrefDelegate {
 			}
 		}
 
-		if ( persister.hasNaturalIdCache() ) {
-			final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = persister
-					.getNaturalIdCacheAccessStrategy();
-			final Object naturalIdCacheKey = naturalIdCacheAccessStrategy.generateCacheKey( naturalIdValues, persister, session() );
-			naturalIdCacheAccessStrategy.evict( naturalIdCacheKey );
+		final NaturalIdDataAccess cacheAccess = persister.getHierarchy()
+				.getNaturalIdDescriptor()
+				.getCacheAccess();
+		if ( cacheAccess != null ) {
+			final Object naturalIdCacheKey = cacheAccess.generateCacheKey( naturalIdValues, persister, session() );
+			cacheAccess.evict( naturalIdCacheKey );
 
 			if ( sessionCachedNaturalIdValues != null
 					&& !Arrays.equals( sessionCachedNaturalIdValues, naturalIdValues ) ) {
-				final Object sessionNaturalIdCacheKey = naturalIdCacheAccessStrategy.generateCacheKey( sessionCachedNaturalIdValues, persister, session() );
-				naturalIdCacheAccessStrategy.evict( sessionNaturalIdCacheKey );
+				final Object sessionNaturalIdCacheKey = cacheAccess.generateCacheKey( sessionCachedNaturalIdValues, persister, session() );
+				cacheAccess.evict( sessionNaturalIdCacheKey );
 			}
 		}
 
@@ -146,7 +147,7 @@ public class NaturalIdXrefDelegate {
 	 * @return The root entityDescriptor.
 	 */
 	protected EntityDescriptor locatePersisterForKey(EntityDescriptor entityDescriptor) {
-		return persistenceContext.getSession().getFactory().getEntityPersister( entityDescriptor.getRootEntityName() );
+		return entityDescriptor.getHierarchy().getRootEntityType();
 	}
 
 	/**
@@ -159,10 +160,10 @@ public class NaturalIdXrefDelegate {
 	 * @param naturalIdValues The natural id values
 	 */
 	protected void validateNaturalId(EntityDescriptor persister, Object[] naturalIdValues) {
-		if ( !persister.hasNaturalIdentifier() ) {
-			throw new IllegalArgumentException( "Entity did not define a natrual-id" );
+		if ( persister.getHierarchy().getNaturalIdDescriptor() == null  ) {
+			throw new IllegalArgumentException( "Entity did not define a natural-id" );
 		}
-		if ( persister.getNaturalIdentifierProperties().length != naturalIdValues.length ) {
+		if ( persister.getHierarchy().getNaturalIdDescriptor().getPersistentAttributes().size() != naturalIdValues.length ) {
 			throw new IllegalArgumentException( "Mismatch between expected number of natural-id values and found." );
 		}
 	}
@@ -218,7 +219,7 @@ public class NaturalIdXrefDelegate {
 				if ( LOG.isTraceEnabled() ) {
 					LOG.trace(
 							"Resolved natural key -> primary key resolution in session cache: " +
-									persister.getRootEntityName() + "#[" +
+									persister.getEntityName() + "#[" +
 									Arrays.toString( naturalIdValues ) + "]"
 					);
 				}
@@ -233,22 +234,22 @@ public class NaturalIdXrefDelegate {
 		}
 
 		// Session cache miss, see if second-level caching is enabled
-		if ( !persister.hasNaturalIdCache() ) {
+		final NaturalIdDataAccess cacheAccess = persister.getHierarchy().getNaturalIdDescriptor().getCacheAccess();
+		if ( cacheAccess == null ) {
 			return null;
 		}
 
 		// Try resolution from second-level cache
-		final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
-		final Object naturalIdCacheKey = naturalIdCacheAccessStrategy.generateCacheKey( naturalIdValues, persister, session() );
+		final Object naturalIdCacheKey = cacheAccess.generateCacheKey( naturalIdValues, persister, session() );
 
-		pk = CacheHelper.fromSharedCache( session(), naturalIdCacheKey, naturalIdCacheAccessStrategy );
+		pk = CacheHelper.fromSharedCache( session(), naturalIdCacheKey, cacheAccess );
 
 		// Found in second-level cache, store in session cache
 		final SessionFactoryImplementor factory = session().getFactory();
 		if ( pk != null ) {
 			if ( factory.getStatistics().isStatisticsEnabled() ) {
-				factory.getStatisticsImplementor().naturalIdCacheHit(
-						naturalIdCacheAccessStrategy.getRegion().getName()
+				factory.getStatistics().naturalIdCacheHit(
+						cacheAccess.getRegion().getName()
 				);
 			}
 
@@ -258,7 +259,7 @@ public class NaturalIdXrefDelegate {
 						"Found natural key [%s] -> primary key [%s] xref in second-level cache for %s",
 						Arrays.toString( naturalIdValues ),
 						pk,
-						persister.getRootEntityName()
+						persister.getEntityName()
 				);
 			}
 
@@ -274,7 +275,7 @@ public class NaturalIdXrefDelegate {
 			entityNaturalIdResolutionCache.naturalIdToPkMap.put( cachedNaturalId, pk );
 		}
 		else if ( factory.getStatistics().isStatisticsEnabled() ) {
-			factory.getStatisticsImplementor().naturalIdCacheMiss( naturalIdCacheAccessStrategy.getRegion().getName() );
+			factory.getStatistics().naturalIdCacheMiss( cacheAccess.getRegion().getName() );
 		}
 
 		return pk;

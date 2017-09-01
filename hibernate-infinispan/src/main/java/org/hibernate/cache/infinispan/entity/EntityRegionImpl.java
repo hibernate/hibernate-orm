@@ -14,7 +14,7 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 
 import org.infinispan.AdvancedCache;
 
@@ -44,7 +44,7 @@ public class EntityRegionImpl extends BaseTransactionalDataRegion implements Ent
 	}
 
 	@Override
-	public EntityRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
+	public EntityDataAccess buildAccessStrategy(AccessType accessType) throws CacheException {
 		checkAccessType(accessType);
 		AccessDelegate accessDelegate = createAccessDelegate(accessType);
 		if ( accessType == AccessType.READ_ONLY || !getCacheDataDescription().isMutable() ) {

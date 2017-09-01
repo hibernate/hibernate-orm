@@ -73,7 +73,7 @@ import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.engine.profile.Association;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
-import org.hibernate.engine.spi.CacheImplementor;
+import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
@@ -177,7 +177,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient TypeConfiguration typeConfiguration;
 	private final transient MetamodelImpl metamodel;
 	private final transient PersistenceUnitUtil jpaPersistenceUnitUtil;
-	private final transient CacheImplementor cacheAccess;
+	private final transient CacheImplementor cacheEngine;
 
 	private final transient QueryEngine queryEngine;
 
@@ -238,7 +238,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 		}
 		maskOutSensitiveInformation( this.properties );
-		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );
+		this.cacheEngine = this.serviceRegistry.getService( CacheImplementor.class );
 		this.jpaPersistenceUnitUtil = new PersistenceUnitUtilImpl( this );
 
 		for ( SessionFactoryObserver sessionFactoryObserver : options.getSessionFactoryObservers() ) {
@@ -661,11 +661,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public Map getAllSecondLevelCacheRegions() {
-		return null;
-	}
-
-	@Override
 	public SessionFactoryOptions getSessionFactoryOptions() {
 		return sessionFactoryOptions;
 	}
@@ -729,7 +724,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		settings.getMultiTableBulkIdStrategy().release( metamodel, buildLocalConnectionAccess() );
 
 		queryEngine.close();
-		cacheAccess.close();
+		cacheEngine.close();
 		metamodel.close();
 
 		if ( delayedDropAction != null ) {
@@ -749,7 +744,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	public CacheImplementor getCache() {
 		validateNotClosed();
-		return cacheAccess;
+		return cacheEngine;
 	}
 
 	@Override

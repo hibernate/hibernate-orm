@@ -24,7 +24,7 @@ public interface Executable {
 	 *
 	 * @return The spaces affected by this action.
 	 */
-	Serializable[] getPropertySpaces();
+	String[] getPropertySpaces();
 
 	/**
 	 * Called beforeQuery executing any actions.  Gives actions a chance to perform any preparation.

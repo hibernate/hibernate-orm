@@ -23,9 +23,9 @@ import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.collection.spi.CollectionClassification;
@@ -89,8 +89,8 @@ public class GoofyRuntimeModelDescriptorClassProvider implements RuntimeModelDes
 	public static class NoopEntityPersister extends AbstractEntityDescriptor implements EntityDescriptor {
 		public NoopEntityPersister(
 				EntityMapping entityMapping,
-				EntityRegionAccessStrategy cacheAccessStrategy,
-				NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
+				EntityDataAccess cacheAccessStrategy,
+				NaturalIdDataAccess naturalIdRegionAccessStrategy,
 				RuntimeModelCreationContext creationContext) throws HibernateException {
 			super( entityMapping, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 			throw new GoofyException(NoopEntityPersister.class);
@@ -426,7 +426,7 @@ public class GoofyRuntimeModelDescriptorClassProvider implements RuntimeModelDes
 		}
 
 		@Override
-		public EntityRegionAccessStrategy getCacheAccessStrategy() {
+		public EntityDataAccess getCacheAccessStrategy() {
 			return null;
 		}
 		
@@ -436,7 +436,7 @@ public class GoofyRuntimeModelDescriptorClassProvider implements RuntimeModelDes
 		}
 
 		@Override
-		public NaturalIdRegionAccessStrategy getNaturalIdCacheAccessStrategy() {
+		public NaturalIdDataAccess getNaturalIdCacheAccessStrategy() {
 			return null;
 		}
 
@@ -664,7 +664,7 @@ public class GoofyRuntimeModelDescriptorClassProvider implements RuntimeModelDes
 				Collection collectionBinding,
 				ManagedTypeDescriptor source,
 				String navigableName,
-				CollectionRegionAccessStrategy cacheAccessStrategy,
+				CollectionDataAccess cacheAccessStrategy,
 				RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
 			super( collectionBinding, source, navigableName, cacheAccessStrategy, creationContext );
 			throw new GoofyException(NoopCollectionPersister.class);
@@ -724,7 +724,7 @@ public class GoofyRuntimeModelDescriptorClassProvider implements RuntimeModelDes
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public CollectionRegionAccessStrategy getCacheAccessStrategy() {
+		public CollectionDataAccess getCacheAccessStrategy() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 

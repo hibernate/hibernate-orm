@@ -102,6 +102,7 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
 		return net.sf.ehcache.util.Timestamper.next();
 	}
 
+
 	@Override
 	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {

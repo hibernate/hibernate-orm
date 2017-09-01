@@ -6,27 +6,52 @@
  */
 package org.hibernate.stat;
 
-import java.io.Serializable;
-import java.util.Map;
-
 /**
- * Second level cache statistics of a specific region
+ * Cache statistics pertaining to a specific data region
  *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public interface SecondLevelCacheStatistics extends Serializable {
-	
-	long getHitCount();
-
-	long getMissCount();
-
+public interface SecondLevelCacheStatistics {
+	/**
+	 * The number of cache puts into the region since the last Statistics
+	 * clearing
+	 */
 	long getPutCount();
 
+	/**
+	 * The number of successful cache look-ups against the region since the
+	 * last Statistics clearing
+	 */
+	long getHitCount();
+
+	/**
+	 * The number of unsuccessful cache look-ups against the region since the
+	 * last Statistics clearing
+	 */
+	long getMissCount();
+
+	/**
+	 * The number of elements currently in memory within the cache provider.
+	 *
+	 * This is an optional value contingent upon the underlying provider defining
+	 * {@link org.hibernate.cache.spi.ExtendedStatisticsSupport}
+	 */
 	long getElementCountInMemory();
 
+	/**
+	 * The number of elements currently stored to disk within the cache provider.
+	 *
+	 * This is an optional value contingent upon the underlying provider defining
+	 * {@link org.hibernate.cache.spi.ExtendedStatisticsSupport}
+	 */
 	long getElementCountOnDisk();
 
+	/**
+	 * The size that the in-memory elements take up within the cache provider.
+	 *
+	 * This is an optional value contingent upon the underlying provider defining
+	 * {@link org.hibernate.cache.spi.ExtendedStatisticsSupport}
+	 */
 	long getSizeInMemory();
-
-	Map getEntries();
 }

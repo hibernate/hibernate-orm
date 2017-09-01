@@ -6,9 +6,8 @@
  */
 package org.hibernate.cache.spi;
 
-import java.util.Map;
-
 import org.hibernate.cache.CacheException;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Defines a contract for accessing a particular named region within the 
@@ -17,6 +16,51 @@ import org.hibernate.cache.CacheException;
  * @author Steve Ebersole
  */
 public interface Region {
+	// todo (6.0) : consider a multi-part name representation for a few reasons:
+	//		1) encapsulate the qualified/non-qualified aspects into one thing
+	//		2) parameter type safety (RegionName rather than just String)
+
+	class Name {
+		public static Name generate(String qualifier, String localName) {
+			return new Name( qualifier, localName );
+		}
+
+		private final String qualifier;
+		private final String localName;
+		private final String qualifiedName;
+
+		private Name(String qualifier, String localName) {
+			this.qualifier = qualifier;
+			this.localName = localName;
+
+			this.qualifiedName = qualify( qualifier, localName );
+		}
+
+		private String qualify(String qualifier, String localName) {
+			if ( StringHelper.isEmpty( qualifier ) ) {
+				return localName;
+			}
+
+			while ( qualifier.endsWith( "." ) ) {
+				qualifier = qualifier.substring( 0, qualifier.length()-1 );
+			}
+
+			return qualifier + '.' + localName;
+		}
+
+		public String getQualifier() {
+			return qualifier;
+		}
+
+		public String getLocalName() {
+			return localName;
+		}
+
+		public String getQualifiedName() {
+			return qualifiedName;
+		}
+	}
+
 	/**
 	 * Retrieve the name of this region.
 	 *
@@ -32,68 +76,4 @@ public interface Region {
 	 * @throws org.hibernate.cache.CacheException Indicates problem shutting down
 	 */
 	void destroy() throws CacheException;
-
-	/**
-	 * Determine whether this region contains data for the given key.
-	 * <p/>
-	 * The semantic here is whether the cache contains data visible for the
-	 * current call context.  This should be viewed as a "best effort", meaning
-	 * blocking should be avoid if possible.
-	 *
-	 * @param key The cache key
-	 *
-	 * @return True if the underlying cache contains corresponding data; false
-	 * otherwise.
-	 */
-	boolean contains(Object key);
-
-	/**
-	 * The number of bytes is this cache region currently consuming in memory.
-	 *
-	 * @return The number of bytes consumed by this region; -1 if unknown or
-	 * unsupported.
-	 */
-	long getSizeInMemory();
-
-	/**
-	 * The count of entries currently contained in the regions in-memory store.
-	 *
-	 * @return The count of entries in memory; -1 if unknown or unsupported.
-	 */
-	long getElementCountInMemory();
-
-	/**
-	 * The count of entries currently contained in the regions disk store.
-	 *
-	 * @return The count of entries on disk; -1 if unknown or unsupported.
-	 */
-	long getElementCountOnDisk();
-
-	/**
-	 * Get the contents of this region as a map.
-	 * <p/>
-	 * Implementors which do not support this notion
-	 * should simply return an empty map.
-	 *
-	 * @return The content map.
-	 */
-	Map toMap();
-
-	/**
-	 * Get the next timestamp according to the underlying cache implementor.
-	 *
-	 * @todo Document the usages of this method so providers know exactly what is expected.
-	 *
-	 * @return The next timestamp
-	 */
-	long nextTimestamp();
-
-	/**
-	 * Get a timeout value.
-	 *
-	 * @todo Again, document the usages of this method so providers know exactly what is expected.
-	 *
-	 * @return The time out value
-	 */
-	int getTimeout();
 }

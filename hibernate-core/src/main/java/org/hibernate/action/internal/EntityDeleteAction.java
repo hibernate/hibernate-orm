@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -86,10 +86,11 @@ public class EntityDeleteAction extends EntityAction {
 		}
 
 		final Object ck;
-		if ( persister.hasCache() ) {
-			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			ck = cache.generateCacheKey( id, persister, session.getFactory(), session.getTenantIdentifier() );
-			lock = cache.lockItem( session, ck, version );
+
+		final EntityDataAccess cacheAccess = persister.getHierarchy().getEntityCacheAccess();
+		if ( cacheAccess != null ) {
+			ck = cacheAccess.generateCacheKey( id, persister.getHierarchy(), session.getFactory(), session.getTenantIdentifier() );
+			lock = cacheAccess.lockItem( session, ck, version );
 		}
 		else {
 			ck = null;
@@ -112,9 +113,9 @@ public class EntityDeleteAction extends EntityAction {
 
 		persistenceContext.removeEntity( entry.getEntityKey() );
 		persistenceContext.removeProxy( entry.getEntityKey() );
-		
-		if ( persister.hasCache() ) {
-			persister.getCacheAccessStrategy().remove( session, ck);
+
+		if ( cacheAccess != null ) {
+			cacheAccess.remove( session, ck);
 		}
 
 		persistenceContext.getNaturalIdHelper().removeSharedNaturalIdCrossReference( persister, id, naturalIdValues );
@@ -186,16 +187,16 @@ public class EntityDeleteAction extends EntityAction {
 
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) throws HibernateException {
-		EntityDescriptor entityPersister = getEntityDescriptor();
-		if ( entityPersister.hasCache() ) {
-			EntityRegionAccessStrategy cache = entityPersister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+		final EntityDescriptor entityPersister = getEntityDescriptor();
+		final EntityDataAccess cacheAccess = entityPersister.getHierarchy().getEntityCacheAccess();
+		if ( cacheAccess != null ) {
+			final Object ck = cacheAccess.generateCacheKey(
 					getId(),
-					entityPersister,
+					entityPersister.getHierarchy(),
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			cache.unlockItem( session, ck, lock );
+			cacheAccess.unlockItem( session, ck, lock );
 		}
 		postCommitDelete( success );
 	}

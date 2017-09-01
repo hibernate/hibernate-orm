@@ -18,9 +18,8 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.cache.spi.OptimisticCacheSource;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -30,18 +29,18 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.internal.FilterAliasGenerator;
-import org.hibernate.loader.spi.NaturalIdLoader;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
-import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.loader.spi.MultiLoadOptions;
 import org.hibernate.loader.spi.EntityLocker;
 import org.hibernate.loader.spi.MultiIdEntityLoader;
+import org.hibernate.loader.spi.MultiLoadOptions;
+import org.hibernate.loader.spi.NaturalIdLoader;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.loader.spi.SingleUniqueKeyEntityLoader;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorClassResolver;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorFactory;
+import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
+import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
@@ -69,7 +68,7 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 @Incubating
 public interface EntityDescriptor<T>
 		extends EntityValuedNavigable<T>, NavigableContainer<T>, EmbeddedContainer<T>,
-				RootTableGroupProducer, OptimisticCacheSource, IdentifiableTypeDescriptor<T>, EntityType<T> {
+				RootTableGroupProducer, IdentifiableTypeDescriptor<T>, EntityType<T>, Filterable {
 
 	// todo (6.0) : ? - can OptimisticCacheSource stuff go away?
 	// 		It was added for caches like JBoss Tree Cache that supported MVCC-based
@@ -85,10 +84,10 @@ public interface EntityDescriptor<T>
 	 *         to be handled by the persister
 	 *     </li>
 	 *     <li>
-	 *         {@link EntityRegionAccessStrategy} - the second level caching strategy for this entity
+	 *         {@link EntityDataAccess} - the second level caching strategy for this entity
 	 *     </li>
 	 *     <li>
-	 *         {@link NaturalIdRegionAccessStrategy} - the second level caching strategy for the natural-id
+	 *         {@link NaturalIdDataAccess} - the second level caching strategy for the natural-id
 	 *         defined for this entity, if one
 	 *     </li>
 	 *     <li>
@@ -156,16 +155,16 @@ public interface EntityDescriptor<T>
 	 * type has not been concretely bound and is instead bound on the root entity.
 	 *
 	 * @todo (6.0) : we should consider doing the same for normal attributes (and version?) as well
-	 * 		in terms of cases where generic type parameters for an entity hierarchy have not
-	 * 		been bound as of the root entity
-	 *
-	 * 	@todo (6.0) : how should we handle the attribute as defined on the MappedSuperclass and the attribute defined on the subclass (with the conretely bound parameter type)?
-	 * 		I mean specifically.. do we mark the MappedSuperclass attributes (somehow) as having an "unbound" attribute type and
-	 * 		mark the subclass attribute as being a "bridged" attribute?
-	 *
+	 * in terms of cases where generic type parameters for an entity hierarchy have not
+	 * been bound as of the root entity
+	 * @todo (6.0) : how should we handle the attribute as defined on the MappedSuperclass and the attribute defined on the subclass (with the conretely bound parameter type)?
+	 * I mean specifically.. do we mark the MappedSuperclass attributes (somehow) as having an "unbound" attribute type and
+	 * mark the subclass attribute as being a "bridged" attribute?
 	 * @since 6.0
 	 */
-	EntityIdentifier getIdentifierDescriptor();
+	default EntityIdentifier getIdentifierDescriptor() {
+		return getHierarchy().getIdentifierDescriptor();
+	}
 
 	/**
 	 * Get the EntityEntryFactory indicated for the entity mapped by this persister.
@@ -459,14 +458,7 @@ public interface EntityDescriptor<T>
 	 * Should lazy properties of this entity be cached?
 	 */
 	boolean isLazyPropertiesCacheable();
-	/**
-	 * Does this class have a cache.
-	 */
-	boolean hasCache();
-	/**
-	 * Get the cache (optional operation)
-	 */
-	EntityRegionAccessStrategy getCacheAccessStrategy();
+
 	/**
 	 * Get the cache structure
 	 */

@@ -10,7 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.MappedSuperclassMapping;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassImpl;
@@ -46,11 +46,9 @@ public interface RuntimeModelDescriptorFactory extends Service {
 			EntityMapping bootMapping,
 			RuntimeModelCreationContext creationContext) throws HibernateException;
 
-	default <J> MappedSuperclassDescriptor<J> createMappedSuperclassDescriptor(
+	<J> MappedSuperclassDescriptor<J> createMappedSuperclassDescriptor(
 			MappedSuperclassMapping bootMapping,
-			RuntimeModelCreationContext creationContext) throws HibernateException {
-		return new MappedSuperclassImpl<>();
-	}
+			RuntimeModelCreationContext creationContext) throws HibernateException;
 
 	/**
 	 * Create a collection persister instance.
@@ -71,7 +69,7 @@ public interface RuntimeModelDescriptorFactory extends Service {
 			Collection collectionBinding,
 			ManagedTypeDescriptor<O> source,
 			String localName,
-			CollectionRegionAccessStrategy cacheAccessStrategy,
+			CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) throws HibernateException;
 
 	/**

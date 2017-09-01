@@ -14,7 +14,7 @@ import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.QueryException;
-import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeBasic;
+import org.hibernate.metamodel.model.domain.internal.BasicSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
@@ -326,7 +326,7 @@ public class QueryResultBuilderRootEntity
 		}
 
 		@Override
-		public void visitSingularAttributeBasic(SingularPersistentAttributeBasic attribute) {
+		public void visitSingularAttributeBasic(BasicSingularPersistentAttribute attribute) {
 			throw new NotYetImplementedException(  );
 		}
 

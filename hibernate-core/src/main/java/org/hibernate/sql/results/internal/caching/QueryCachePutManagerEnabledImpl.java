@@ -9,7 +9,7 @@ package org.hibernate.sql.results.internal.caching;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.cache.spi.QueryCache;
+import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryKey;
 
 /**
@@ -19,13 +19,12 @@ import org.hibernate.cache.spi.QueryKey;
  * @author Steve Ebersole
  */
 public class QueryCachePutManagerEnabledImpl implements QueryCachePutManager {
-
-	private final QueryCache queryCache;
+	private final QueryResultsCache queryCache;
 	private final QueryKey queryKey;
 
 	private List<Object[]> dataToCache;
 
-	public QueryCachePutManagerEnabledImpl(QueryCache queryCache, QueryKey queryKey) {
+	public QueryCachePutManagerEnabledImpl(QueryResultsCache queryCache, QueryKey queryKey) {
 		this.queryCache = queryCache;
 		this.queryKey = queryKey;
 	}
@@ -40,12 +39,10 @@ public class QueryCachePutManagerEnabledImpl implements QueryCachePutManager {
 
 	@Override
 	public void finishUp() {
-		// todo : see discussion regarding these arguments back on QueryCacheDataAccessEnabled
 		queryCache.put(
 				queryKey,
-				null,
-				null,
-				false,
+				dataToCache,
+				// todo (6.0) : needs access to Session to pass along to cache call
 				null
 		);
 	}

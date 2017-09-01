@@ -70,7 +70,7 @@ public enum LockMode {
 	 * Similar to {@link #UPGRADE} except that, for versioned entities,
 	 * it results in a forced version increment.
 	 *
-	 * @deprecated instead use PESSIMISTIC_FORCE_INCREMENT
+	 * @deprecated instead use {@link #PESSIMISTIC_FORCE_INCREMENT}
 	 */
 	@Deprecated
 	FORCE( 15, "force" ),

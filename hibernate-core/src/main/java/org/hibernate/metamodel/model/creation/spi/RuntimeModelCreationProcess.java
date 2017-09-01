@@ -8,19 +8,25 @@ package org.hibernate.metamodel.model.creation.spi;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
 import javax.persistence.NamedSubgraph;
 import javax.persistence.metamodel.Attribute;
 
+import org.hibernate.boot.model.domain.EmbeddedMapping;
+import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
+import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -29,6 +35,7 @@ import org.hibernate.graph.internal.AttributeNodeImpl;
 import org.hibernate.graph.internal.EntityGraphImpl;
 import org.hibernate.graph.internal.SubgraphImpl;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.metamodel.model.domain.internal.EntityHierarchyImpl;
@@ -61,6 +68,8 @@ public class RuntimeModelCreationProcess {
 
 	private final Map<IdentifiableTypeMapping,IdentifiableTypeDescriptor> runtimeByBoot = new HashMap<>();
 	private final Map<IdentifiableTypeDescriptor,IdentifiableTypeMapping> bootByRuntime = new HashMap<>();
+
+	private final Map<String, DomainDataRegionConfigImpl.Builder> regionConfigBuilders = new ConcurrentHashMap<>();
 
 	public RuntimeModelCreationProcess(
 			SessionFactoryImplementor sessionFactory,
@@ -116,8 +125,8 @@ public class RuntimeModelCreationProcess {
 
 			// todo (6.0) : these will all change based on the Cache changes planned for 6.0
 
-			final EntityRegionAccessStrategy accessStrategy = resolveEntityCacheAccessStrategy( entry.getKey() );
-			final NaturalIdRegionAccessStrategy naturalIdAccessStrategy = resolveNaturalIdCacheAccessStrategy( entry.getKey() );
+			final EntityDataAccess accessStrategy = resolveEntityCacheAccessStrategy( entry.getKey() );
+			final NaturalIdDataAccess naturalIdAccessStrategy = resolveNaturalIdCacheAccessStrategy( entry.getKey() );
 
 			final EntityHierarchyImpl runtimeHierarchy = new EntityHierarchyImpl(
 					creationContext,
@@ -133,6 +142,13 @@ public class RuntimeModelCreationProcess {
 		descriptorFactory.finishUp( creationContext );
 
 		mappingMetadata.getNamedEntityGraphs().values().forEach( this::applyNamedEntityGraph );
+
+		sessionFactory.getCache().prime(
+				regionConfigBuilders.values()
+						.stream()
+						.map( DomainDataRegionConfigImpl.Builder::build )
+						.collect( Collectors.toSet() )
+		);
 	}
 
 	private void walkSupers(
@@ -176,13 +192,13 @@ public class RuntimeModelCreationProcess {
 		throw new NotYetImplementedException(  );
 	}
 
-	private EntityRegionAccessStrategy resolveEntityCacheAccessStrategy(EntityMappingHierarchy mappingHierarchy) {
+	private EntityDataAccess resolveEntityCacheAccessStrategy(EntityMappingHierarchy mappingHierarchy) {
 		//final RootClass rootEntityMapping = mappingHierarchy.getRootType();
 		//return sessionFactory.getCache().determineEntityRegionAccessStrategy(  );
 		return null;
 	}
 
-	private NaturalIdRegionAccessStrategy resolveNaturalIdCacheAccessStrategy(EntityMappingHierarchy mappingHierarchy) {
+	private NaturalIdDataAccess resolveNaturalIdCacheAccessStrategy(EntityMappingHierarchy mappingHierarchy) {
 		// atm natural-id caching can only be specified on the root Entity
 		//final RootClass rootEntityMapping = mappingHierarchy.getRootType();
 		//return sessionFactory.getCache().determineEntityRegionAccessStrategy(  );
@@ -360,18 +376,68 @@ public class RuntimeModelCreationProcess {
 		}
 
 		@Override
-		public void registerEntityDescriptor(EntityDescriptor entityDescriptor) {
-			getTypeConfiguration().register( entityDescriptor );
+		public void registerEntityDescriptor(EntityDescriptor runtimeDescriptor, EntityMapping bootDescriptor) {
+			getTypeConfiguration().register( runtimeDescriptor );
+			if ( RootClass.class.isInstance( bootDescriptor ) ) {
+				final RootClass rootBootMapping = (RootClass) bootDescriptor;
+				final AccessType accessType = AccessType.fromExternalName( rootBootMapping.getCacheConcurrencyStrategy() );
+				if ( accessType != null ) {
+					addEntityCachingConfig( runtimeDescriptor, rootBootMapping, accessType );
+				}
+
+				if ( rootBootMapping.getNaturalIdCacheRegionName() != null ) {
+					addNaturalIdCachingConfig( runtimeDescriptor, rootBootMapping, accessType );
+				}
+			}
+		}
+
+		private void addEntityCachingConfig(
+				EntityDescriptor runtimeDescriptor,
+				RootClass bootDescriptor,
+				AccessType accessType) {
+			final DomainDataRegionConfigImpl.Builder  builder = locateBuilder( bootDescriptor.getNaturalIdCacheRegionName() );
+			builder.addEntityConfig( runtimeDescriptor.getHierarchy(), accessType );
+		}
+
+		private DomainDataRegionConfigImpl.Builder  locateBuilder(String regionName) {
+			return regionConfigBuilders.computeIfAbsent(
+					regionName,
+					DomainDataRegionConfigImpl.Builder ::new
+			);
+		}
+
+		private void addNaturalIdCachingConfig(
+				EntityDescriptor runtimeDescriptor,
+				RootClass bootDescriptor,
+				AccessType accessType) {
+			final DomainDataRegionConfigImpl.Builder configBuilder = locateBuilder( bootDescriptor.getCacheRegionName() );
+			configBuilder.addNaturalIdConfig( runtimeDescriptor.getHierarchy(), accessType );
 		}
 
 		@Override
-		public void registerCollectionDescriptor(PersistentCollectionDescriptor collectionDescriptor) {
-			getTypeConfiguration().register( collectionDescriptor );
+		public void registerCollectionDescriptor(
+				PersistentCollectionDescriptor runtimeDescriptor,
+				Collection bootDescriptor) {
+			getTypeConfiguration().register( runtimeDescriptor );
+			final AccessType accessType = AccessType.fromExternalName( bootDescriptor.getCacheConcurrencyStrategy() );
+			if ( accessType != null ) {
+				addCollectionCachingConfig( runtimeDescriptor, bootDescriptor, accessType );
+			}
+		}
+
+		private void addCollectionCachingConfig(
+				PersistentCollectionDescriptor runtimeDescriptor,
+				Collection bootDescriptor,
+				AccessType accessType) {
+			final DomainDataRegionConfigImpl.Builder configBuilder = locateBuilder( bootDescriptor.getCacheRegionName() );
+			configBuilder.addCollectionConfig( runtimeDescriptor, accessType );
 		}
 
 		@Override
-		public void registerEmbeddableDescriptor(EmbeddedTypeDescriptor embeddedTypeDescriptor) {
-			getTypeConfiguration().register( embeddedTypeDescriptor );
+		public void registerEmbeddableDescriptor(
+				EmbeddedTypeDescriptor runtimeDescriptor,
+				EmbeddedMapping bootDescriptor) {
+			getTypeConfiguration().register( runtimeDescriptor );
 		}
 	}
 }

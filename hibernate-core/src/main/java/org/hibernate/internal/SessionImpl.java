@@ -132,7 +132,7 @@ import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.loader.spi.MultiLoadOptions;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.NaturalIdentifierDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.procedure.ProcedureCall;
@@ -251,7 +251,7 @@ public final class SessionImpl
 		applyProperties();
 
 		if ( TRACE_ENABLED ) {
-			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), getTimestamp() );
+			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), getTransactionStartTimestamp() );
 		}
 	}
 
@@ -1425,7 +1425,7 @@ public final class SessionImpl
 		checkTransactionSynchStatus();
 		Object result = getInterceptor().instantiate(
 				persister.getEntityName(),
-				persister.getRepresentation(),
+				persister.getHierarchy().getRepresentation(),
 				id
 		);
 		if ( result == null ) {
@@ -2418,7 +2418,7 @@ public final class SessionImpl
 		private BaseNaturalIdLoadAccessImpl(EntityDescriptor entityPersister) {
 			this.entityPersister = entityPersister;
 
-			if ( !entityPersister.hasNaturalIdentifier() ) {
+			if ( entityPersister.getHierarchy().getNaturalIdDescriptor() == null ) {
 				throw new HibernateException(
 						String.format( "Entity [%s] did not define a natural id", entityPersister.getEntityName() )
 				);
@@ -2454,8 +2454,8 @@ public final class SessionImpl
 				// synchronization (this process) was disabled
 				return;
 			}
-			if ( entityPersister.getHierarchy().getNaturalIdentifierDescriptor() != null
-					|| !entityPersister.getHierarchy().getNaturalIdentifierDescriptor().isMutable() ) {
+			if ( entityPersister.getHierarchy().getNaturalIdDescriptor() != null
+					|| !entityPersister.getHierarchy().getNaturalIdDescriptor().isMutable() ) {
 				// only mutable natural-ids need this processing
 				return;
 			}
@@ -2582,8 +2582,8 @@ public final class SessionImpl
 		private SimpleNaturalIdLoadAccessImpl(EntityDescriptor entityPersister) {
 			super( entityPersister );
 
-			final NaturalIdentifierDescriptor naturalIdentifierDescriptor = entityPersister.getHierarchy()
-					.getNaturalIdentifierDescriptor();
+			final NaturalIdDescriptor naturalIdentifierDescriptor = entityPersister.getHierarchy()
+					.getNaturalIdDescriptor();
 
 			if ( naturalIdentifierDescriptor == null ) {
 				throw new HibernateException(
@@ -2660,6 +2660,12 @@ public final class SessionImpl
 		public Optional<T> loadOptional(Serializable naturalIdValue) {
 			return Optional.ofNullable( load( naturalIdValue ) );
 		}
+	}
+
+	@Override
+	public void startTransactionBoundary() {
+		checkOpenOrWaitingForAutoClose();
+		super.startTransactionBoundary();
 	}
 
 	@Override

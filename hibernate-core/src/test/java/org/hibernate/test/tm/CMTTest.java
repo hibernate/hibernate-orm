@@ -16,8 +16,10 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.criterion.Order;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 
 import org.hibernate.testing.DialectChecks;
@@ -67,7 +69,13 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );
 		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount() );
 		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCacheMissCount() );
-		assertNotNull( sessionFactory().getEntityPersister( "Item" ).getCacheAccessStrategy() );
+
+		final EntityDescriptor entityDescriptor = sessionFactory().getTypeConfiguration().resolveEntityDescriptor( "Item" );
+		assertNotNull( entityDescriptor );
+
+		final EntityDataAccess cacheAccess = entityDescriptor.getHierarchy().getEntityCacheAccess();
+		assertNotNull( cacheAccess );
+
 		assertEquals( 0, sessionFactory().getStatistics().getEntityLoadCount() );
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();

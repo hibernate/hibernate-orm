@@ -2,7 +2,7 @@ package org.hibernate.test.cache.infinispan;
 
 import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.access.RegionAccessStrategy;
+import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mock;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public abstract class AbstractExtraAPITest<S extends RegionAccessStrategy> extends AbstractNonFunctionalTest {
+public abstract class AbstractExtraAPITest<S extends CachedDomainDataAccess> extends AbstractNonFunctionalTest {
 	@Rule
 	public InfinispanTestingSetup infinispanTestIdentifier = new InfinispanTestingSetup();
 

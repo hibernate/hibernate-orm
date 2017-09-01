@@ -10,6 +10,8 @@ import org.hibernate.HibernateException;
 
 /**
  * Indicates that an unknown AccessType external name was encountered
+ * or that an AccessType was requested that the underlying cache provider
+ * does not support.
  *
  * @author Steve Ebersole
  *

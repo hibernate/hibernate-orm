@@ -20,7 +20,7 @@ import org.hibernate.cache.infinispan.access.NonTxInvalidationCacheAccessDelegat
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.access.TxInvalidationCacheAccessDelegate;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.hibernate.test.cache.infinispan.AbstractRegionAccessStrategyTest;
@@ -48,7 +48,7 @@ import static org.junit.Assert.assertTrue;
  * @since 3.5
  */
 public class CollectionRegionAccessStrategyTest extends
-		AbstractRegionAccessStrategyTest<CollectionRegionImpl, CollectionRegionAccessStrategy> {
+		AbstractRegionAccessStrategyTest<CollectionRegionImpl, CollectionDataAccess> {
 	protected static int testCount;
 
 	@Override
@@ -62,7 +62,7 @@ public class CollectionRegionAccessStrategyTest extends
 	}
 
 	@Override
-	protected CollectionRegionAccessStrategy getAccessStrategy(CollectionRegionImpl region) {
+	protected CollectionDataAccess getAccessStrategy(CollectionRegionImpl region) {
 		return region.buildAccessStrategy( accessType );
 	}
 
@@ -93,7 +93,7 @@ public class CollectionRegionAccessStrategyTest extends
 				Callable<Void> pferCallable = new Callable<Void>() {
 					public Void call() throws Exception {
 						SharedSessionContractImplementor session = mockedSession();
-						delegate.putFromLoad(session, "k1", "v1", session.getTimestamp(), null );
+						delegate.putFromLoad(session, "k1", "v1", session.getTransactionStartTimestamp(), null );
 						return null;
 					}
 				};
@@ -189,14 +189,14 @@ public class CollectionRegionAccessStrategyTest extends
 				try {
 					SharedSessionContractImplementor session = mockedSession();
 					withTx(localEnvironment, session, () -> {
-						assertNull(localAccessStrategy.get(session, KEY, session.getTimestamp()));
+						assertNull(localAccessStrategy.get(session, KEY, session.getTransactionStartTimestamp()));
 
 						writeLatch1.await();
 
 						if (useMinimalAPI) {
-							localAccessStrategy.putFromLoad(session, KEY, VALUE2, session.getTimestamp(), 2, true);
+							localAccessStrategy.putFromLoad(session, KEY, VALUE2, session.getTransactionStartTimestamp(), 2, true);
 						} else {
-							localAccessStrategy.putFromLoad(session, KEY, VALUE2, session.getTimestamp(), 2);
+							localAccessStrategy.putFromLoad(session, KEY, VALUE2, session.getTransactionStartTimestamp(), 2);
 						}
 						return null;
 					});
@@ -231,9 +231,9 @@ public class CollectionRegionAccessStrategyTest extends
 		long txTimestamp = System.currentTimeMillis();
 
 		SharedSessionContractImplementor s1 = mockedSession();
-		assertEquals( VALUE2, localAccessStrategy.get(s1, KEY, s1.getTimestamp() ) );
+		assertEquals( VALUE2, localAccessStrategy.get(s1, KEY, s1.getTransactionStartTimestamp() ) );
 		SharedSessionContractImplementor s2 = mockedSession();
-		Object remoteValue = remoteAccessStrategy.get(s2, KEY, s2.getTimestamp());
+		Object remoteValue = remoteAccessStrategy.get(s2, KEY, s2.getTransactionStartTimestamp());
 		if (isUsingInvalidation()) {
 			assertEquals( VALUE1, remoteValue);
 		}

@@ -11,31 +11,31 @@ import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.EntityRegion;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
- * Implementation of {@link EntityRegionAccessStrategy} that handles {@link net.sf.ehcache.constructs.nonstop.NonStopCacheException} using
+ * Implementation of {@link EntityDataAccess} that handles {@link net.sf.ehcache.constructs.nonstop.NonStopCacheException} using
  * {@link HibernateNonstopCacheExceptionHandler}
  *
  * @author Abhishek Sanoujam
  * @author Alex Snaps
  */
-public class NonstopAwareEntityRegionAccessStrategy implements EntityRegionAccessStrategy {
-	private final EntityRegionAccessStrategy actualStrategy;
+public class NonstopAwareEntityRegionAccessStrategy implements EntityDataAccess {
+	private final EntityDataAccess actualStrategy;
 	private final HibernateNonstopCacheExceptionHandler hibernateNonstopExceptionHandler;
 
 	/**
-	 * Constructor accepting the actual {@link EntityRegionAccessStrategy} and the {@link HibernateNonstopCacheExceptionHandler}
+	 * Constructor accepting the actual {@link EntityDataAccess} and the {@link HibernateNonstopCacheExceptionHandler}
 	 *
 	 * @param actualStrategy The wrapped EntityRegionAccessStrategy
 	 * @param hibernateNonstopExceptionHandler The exception handler
 	 */
 	public NonstopAwareEntityRegionAccessStrategy(
-			EntityRegionAccessStrategy actualStrategy,
+			EntityDataAccess actualStrategy,
 			HibernateNonstopCacheExceptionHandler hibernateNonstopExceptionHandler) {
 		this.actualStrategy = actualStrategy;
 		this.hibernateNonstopExceptionHandler = hibernateNonstopExceptionHandler;

@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttrib
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.NavigableBasicValued;
+import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -41,7 +41,7 @@ import static org.hibernate.metamodel.model.domain.internal.PersisterHelper.reso
  */
 public class EntityIdentifierSimpleImpl<O,J>
 		extends AbstractSingularPersistentAttribute<O,J>
-		implements EntityIdentifierSimple<O,J>, NavigableBasicValued<J> {
+		implements EntityIdentifierSimple<O,J>, BasicValuedNavigable<J> {
 
 	private final String name;
 	private final Column column;

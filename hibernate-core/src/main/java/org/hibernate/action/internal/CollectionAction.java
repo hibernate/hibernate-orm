@@ -12,7 +12,7 @@ import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -75,15 +75,15 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		// we need to obtain the lock beforeQuery any actions are executed, since this may be an inverse="true"
 		// bidirectional association and it is one of the earlier entity actions which actually updates
 		// the database (this action is responsible for second-level cache invalidation only)
-		if ( collectionDescriptor.hasCache() ) {
-			final CollectionRegionAccessStrategy cache = collectionDescriptor.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+		final CollectionDataAccess cacheAccess = collectionDescriptor.getCacheAccess();
+		if ( cacheAccess != null ) {
+			final Object ck = cacheAccess.generateCacheKey(
 					key,
 					collectionDescriptor,
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( session, ck, null );
+			final SoftLock lock = cacheAccess.lockItem( session, ck, null );
 			// the old behavior used key as opposed to getKey()
 			afterTransactionProcess = new CacheCleanupProcess( key, collectionDescriptor, lock );
 		}
@@ -102,7 +102,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	}
 
 	@Override
-	public Serializable[] getPropertySpaces() {
+	public String[] getPropertySpaces() {
 		return collectionDescriptor.getCollectionSpaces();
 	}
 
@@ -128,15 +128,15 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	}
 
 	protected final void evict() throws CacheException {
-		if ( collectionDescriptor.hasCache() ) {
-			final CollectionRegionAccessStrategy cache = collectionDescriptor.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+		final CollectionDataAccess cacheAccess = collectionDescriptor.getCacheAccess();
+		if ( cacheAccess != null ) {
+			final Object ck = cacheAccess.generateCacheKey(
 					key,
 					collectionDescriptor,
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			cache.remove( session, ck);
+			cacheAccess.remove( session, ck);
 		}
 	}
 
@@ -173,7 +173,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 
 		@Override
 		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-			final CollectionRegionAccessStrategy cache = collectionDescriptor.getCacheAccessStrategy();
+			final CollectionDataAccess cache = collectionDescriptor.getCacheAccess();
 			final Object ck = cache.generateCacheKey(
 					key,
 					collectionDescriptor,

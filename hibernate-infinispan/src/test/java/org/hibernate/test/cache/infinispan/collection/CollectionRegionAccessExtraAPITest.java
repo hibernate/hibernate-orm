@@ -6,10 +6,8 @@
  */
 package org.hibernate.test.cache.infinispan.collection;
 
-import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.test.cache.infinispan.AbstractExtraAPITest;
-import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
 
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
@@ -18,9 +16,9 @@ import static org.mockito.Mockito.mock;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public class CollectionRegionAccessExtraAPITest extends AbstractExtraAPITest<CollectionRegionAccessStrategy> {
+public class CollectionRegionAccessExtraAPITest extends AbstractExtraAPITest<CollectionDataAccess> {
 	@Override
-	protected CollectionRegionAccessStrategy getAccessStrategy() {
+	protected CollectionDataAccess getAccessStrategy() {
 		return environment.getCollectionRegion( REGION_NAME, CACHE_DATA_DESCRIPTION).buildAccessStrategy( accessType );
 	}
 }

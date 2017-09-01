@@ -9,6 +9,7 @@ package org.hibernate;
 import java.io.Serializable;
 import java.util.Iterator;
 
+import org.hibernate.metamodel.model.domain.Representation;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -217,20 +218,41 @@ public interface Interceptor {
 			Object[] previousState,
 			String[] propertyNames,
 			JavaTypeDescriptor[] javaTypeDescriptors);
+
 	/**
 	 * Instantiate the entity class. Return <tt>null</tt> to indicate that Hibernate should use
 	 * the default constructor of the class. The identifier property of the returned instance
 	 * should be initialized with the given identifier.
 	 *
 	 * @param entityName the name of the entity
-	 * @param entityMode The type of entity instance to be returned.
+	 * @param entityMode The domain model representation (pojo, map, etc)
+	 * @param id the identifier of the new instance
+	 *
+	 * @return an instance of the class, or <tt>null</tt> to choose default behaviour
+	 *
+	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+	 *
+	 * @deprecated (since 6.0) Use {@link #instantiate(String, Representation, Serializable)} instead
+	 */
+	@Deprecated
+	Object instantiate(String entityName, EntityMode entityMode, Serializable id) throws CallbackException;
+
+	/**
+	 * Instantiate the entity class. Return <tt>null</tt> to indicate that Hibernate should use
+	 * the default constructor of the class. The identifier property of the returned instance
+	 * should be initialized with the given identifier.
+	 *
+	 * @param entityName the name of the entity
+	 * @param modelRepresentation The domain model representation (pojo, map, etc)
 	 * @param id the identifier of the new instance
 	 *
 	 * @return an instance of the class, or <tt>null</tt> to choose default behaviour
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	Object instantiate(String entityName, EntityMode entityMode, Serializable id) throws CallbackException;
+	default Object instantiate(String entityName, Representation modelRepresentation, Serializable id) throws CallbackException {
+		return instantiate( entityName, EntityMode.fromRepresentation( modelRepresentation ), id );
+	}
 
 	/**
 	 * Get the entity name for a persistent or transient instance.

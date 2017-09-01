@@ -20,7 +20,7 @@ import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cache.spi.QueryCacheFactory;
+import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.loader.BatchFetchStyle;
@@ -130,7 +130,7 @@ public interface SessionFactoryOptionsState {
 
 	boolean isQueryCacheEnabled();
 
-	QueryCacheFactory getQueryCacheFactory();
+	TimestampsCacheFactory getQuerySpaceStalenessStrategyFactory();
 
 	String getCacheRegionPrefix();
 

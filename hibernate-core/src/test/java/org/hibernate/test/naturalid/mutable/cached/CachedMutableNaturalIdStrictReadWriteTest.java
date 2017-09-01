@@ -15,7 +15,7 @@ import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.stat.NaturalIdCacheStatistics;
+import org.hibernate.stat.NaturalIdQueryStatistics;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.junit.Test;
@@ -41,7 +41,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends
 		session.getTransaction().commit();
 		session.close();
 
-		final NaturalIdCacheStatistics stats = sessionFactory().getStatistics().getNaturalIdCacheStatistics(
+		final NaturalIdQueryStatistics stats = sessionFactory().getStatistics().getNaturalIdStatistics(
 				"hibernate.test." + AllCached.class.getName() + "##NaturalId"
 		);
 
@@ -199,13 +199,13 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends
 		session.getTransaction().commit();
 		session.close();
 
-		NaturalIdCacheStatistics statistics = sessionFactory().getStatistics().getNaturalIdCacheStatistics( naturalIdCacheRegion );
+		NaturalIdQueryStatistics statistics = sessionFactory().getStatistics().getNaturalIdStatistics( naturalIdCacheRegion );
 		assertEquals( 1, statistics.getPutCount() );
 
 		sessionFactory().getStatistics().clear();
 
 		// Refresh statistics reference.
-		statistics = sessionFactory().getStatistics().getNaturalIdCacheStatistics( naturalIdCacheRegion );
+		statistics = sessionFactory().getStatistics().getNaturalIdStatistics( naturalIdCacheRegion );
 		assertEquals( 0, statistics.getPutCount() );
 
 		session = openSession();

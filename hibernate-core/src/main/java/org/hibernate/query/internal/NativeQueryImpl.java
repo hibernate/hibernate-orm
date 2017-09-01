@@ -7,6 +7,10 @@
 package org.hibernate.query.internal;
 
 import java.io.Serializable;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -622,6 +626,78 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 
 	@Override
 	public NativeQueryImplementor<T> setParameter(int position, Object value, TemporalType temporalType) {
+		super.setParameter( position, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<T> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType) {
+		super.setParameter( param, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<T> setParameter(Parameter<LocalDateTime> param, LocalDateTime value, TemporalType temporalType) {
+		super.setParameter( param, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<T> setParameter(Parameter<ZonedDateTime> param, ZonedDateTime value, TemporalType temporalType) {
+		super.setParameter( param, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<T> setParameter(Parameter<OffsetDateTime> param, OffsetDateTime value, TemporalType temporalType) {
+		super.setParameter( param, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<T> setParameter(String name, Instant value, TemporalType temporalType) {
+		super.setParameter( name, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<T> setParameter(String name, LocalDateTime value, TemporalType temporalType) {
+		super.setParameter( name, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<T> setParameter(String name, ZonedDateTime value, TemporalType temporalType) {
+		super.setParameter( name, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<T> setParameter(String name, OffsetDateTime value, TemporalType temporalType) {
+		super.setParameter( name, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<T> setParameter(int position, Instant value, TemporalType temporalType) {
+		super.setParameter( position, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<T> setParameter(int position, LocalDateTime value, TemporalType temporalType) {
+		super.setParameter( position, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<T> setParameter(int position, ZonedDateTime value, TemporalType temporalType) {
+		super.setParameter( position, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<T> setParameter(int position, OffsetDateTime value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}

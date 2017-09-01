@@ -274,22 +274,27 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		return w;
 	}
 
-	private HqlParser parse(boolean filter) throws TokenStreamException, RecognitionException {
+	private HqlParser parse(boolean filter) throws TokenStreamException {
 		// Parse the query string into an HQL AST.
 		final HqlParser parser = HqlParser.getInstance( hql );
 		parser.setFilter( filter );
 
 		LOG.debugf( "parse() - HQL: %s", hql );
-		parser.statement();
+		try {
+			parser.statement();
+		}
+		catch (RecognitionException e) {
+			throw new HibernateException( "Unexpected error parsing HQL", e );
+		}
 
 		final AST hqlAst = parser.getAST();
+		parser.getParseErrorHandler().throwQueryException();
 
 		final NodeTraverser walker = new NodeTraverser( new JavaConstantConverter( factory ) );
 		walker.traverseDepthFirst( hqlAst );
 
 		showHqlAst( hqlAst );
 
-		parser.getParseErrorHandler().throwQueryException();
 		return parser;
 	}
 

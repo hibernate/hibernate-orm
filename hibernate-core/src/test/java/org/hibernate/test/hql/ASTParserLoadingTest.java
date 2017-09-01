@@ -47,6 +47,7 @@ import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
+import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.persister.entity.DiscriminatorType;
@@ -77,6 +78,7 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -85,6 +87,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -3797,11 +3800,13 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					"order by a.description ", Product.class)
 				.setParameter( "description", "desc" )
 				.getResultList();
+				fail("Should have thrown exception");
 			} );
 		}
 		catch (IllegalArgumentException e) {
-			QueryException rootCause = (QueryException) e.getCause();
-			assertTrue( rootCause.getMessage().startsWith( "node to traverse cannot be null!" ) );
+			final Throwable cause = e.getCause();
+			assertThat( cause, instanceOf( QuerySyntaxException.class ) );
+			assertTrue( cause.getMessage().contains( "expecting EOF, found ')'" ) );
 		}
 	}
 

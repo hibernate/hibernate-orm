@@ -11,7 +11,6 @@ import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.QueryException;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -81,7 +80,7 @@ public class JpaFunctionTest extends BaseEntityManagerFunctionalTestCase {
 			} );
 		}
 		catch ( Exception e ) {
-			assertEquals( QueryException.class, e.getCause().getClass() );
+			assertEquals( QuerySyntaxException.class, e.getCause().getClass() );
 		}
 	}
 

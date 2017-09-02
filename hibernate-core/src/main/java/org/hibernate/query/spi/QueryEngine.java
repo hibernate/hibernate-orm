@@ -10,11 +10,10 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.internal.QueryInterpretationsImpl;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.internal.SemanticQueryProducerImpl;
 import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
 
@@ -29,7 +28,7 @@ public class QueryEngine {
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final NamedQueryRepository namedQueryRepository;
-	private final CriteriaBuilderImpl criteriaBuilder;
+	private final HibernateCriteriaBuilder criteriaBuilder;
 	private final SemanticQueryProducer semanticQueryProducer;
 	private final QueryInterpretations queryInterpretations;
 	private final SqmFunctionRegistry sqmFunctionRegistry;
@@ -41,7 +40,11 @@ public class QueryEngine {
 		this.sessionFactory = sessionFactory;
 		this.namedQueryRepository = namedQueryRepository;
 		this.semanticQueryProducer = new SemanticQueryProducerImpl( sessionFactory );
-		this.criteriaBuilder = new CriteriaBuilderImpl( sessionFactory );
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// todo (6.0) : re-enable this, to initialize whatever class ultimately represents our SPI view of the JPA CriteriaBuilder...
+		//this.criteriaBuilder = new CriteriaBuilderImpl( sessionFactory );
+		this.criteriaBuilder = null;
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		this.queryInterpretations = new QueryInterpretationsImpl( sessionFactory );
 		this.sqmFunctionRegistry = sqmFunctionRegistry;
 

@@ -7,7 +7,6 @@
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.LockModeType;
@@ -18,9 +17,8 @@ import javax.persistence.criteria.CriteriaUpdate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.query.criteria.internal.ValueHandlerFactory;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -187,13 +185,6 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 		}
 
 		ResultMetadataValidator getResultMetadataValidator();
-
-		/**
-		 * Get the conversions for the individual tuples in the query results.
-		 *
-		 * @return Value conversions to be applied to the JPA QL results
-		 */
-		List<ValueHandlerFactory.ValueHandler> getValueHandlers();
 
 		/**
 		 * Get the explicit parameter types.  Generally speaking these would apply to implicit named

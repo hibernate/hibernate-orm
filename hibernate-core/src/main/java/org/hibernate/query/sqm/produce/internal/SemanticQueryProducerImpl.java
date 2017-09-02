@@ -13,7 +13,6 @@ import javax.persistence.criteria.CriteriaUpdate;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.QueryException;
-import org.hibernate.query.sqm.produce.internal.criteria.CriteriaInterpreter;
 import org.hibernate.query.sqm.produce.internal.hql.HqlParseTreeBuilder;
 import org.hibernate.query.sqm.produce.internal.hql.HqlParseTreePrinter;
 import org.hibernate.query.sqm.produce.internal.hql.SemanticQueryBuilder;
@@ -24,6 +23,7 @@ import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
+import org.hibernate.sql.NotYetImplementedException;
 
 /**
  * Standard implementation of SemanticQueryInterpreter
@@ -61,40 +61,16 @@ public class SemanticQueryProducerImpl implements SemanticQueryProducer {
 
 	@Override
 	public SqmSelectStatement interpret(CriteriaQuery query) {
-		try {
-			return CriteriaInterpreter.interpretSelectCriteria( query, new ParsingContext( sessionFactory ) );
-		}
-		catch (QueryException e) {
-			throw e;
-		}
-		catch (Exception e) {
-			throw new InterpretationException( "<criteria>", e );
-		}
+		throw new NotYetImplementedException(  );
 	}
 
 	@Override
 	public SqmDeleteStatement interpret(CriteriaDelete criteria) {
-		try {
-			return CriteriaInterpreter.interpretDeleteCriteria( criteria, new ParsingContext( sessionFactory ) );
-		}
-		catch (QueryException e) {
-			throw e;
-		}
-		catch (Exception e) {
-			throw new InterpretationException( "<criteria>", e );
-		}
+		throw new NotYetImplementedException(  );
 	}
 
 	@Override
 	public SqmUpdateStatement interpret(CriteriaUpdate criteria) {
-		try {
-			return CriteriaInterpreter.interpretUpdateCriteria( criteria, new ParsingContext( sessionFactory ) );
-		}
-		catch (QueryException e) {
-			throw e;
-		}
-		catch (Exception e) {
-			throw new InterpretationException( "<criteria>", e );
-		}
+		throw new NotYetImplementedException(  );
 	}
 }

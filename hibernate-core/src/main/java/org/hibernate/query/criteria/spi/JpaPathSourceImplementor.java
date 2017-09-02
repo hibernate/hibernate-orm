@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import javax.persistence.criteria.Path;
 import javax.persistence.metamodel.Bindable;
 
 import org.hibernate.Incubating;

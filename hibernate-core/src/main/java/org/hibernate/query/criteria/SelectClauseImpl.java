@@ -34,7 +34,7 @@ public class SelectClauseImpl<T> implements JpaSelectClause<T> {
 
 	@Override
 	public JpaSelection<? extends T> getSelection() {
-		return jpaSelection;
+		return (JpaSelection<? extends T>) jpaSelection;
 	}
 
 	public void setJpaSelection(JpaSelectionImplementor<? extends T> jpaSelection) {

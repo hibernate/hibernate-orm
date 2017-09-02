@@ -101,6 +101,7 @@ import org.hibernate.query.criteria.spi.JpaSelectionImplementor;
 import org.hibernate.query.sqm.produce.spi.criteria.JpaCriteriaQuery;
 import org.hibernate.query.sqm.produce.spi.criteria.from.JpaRoot;
 import org.hibernate.query.sqm.produce.spi.criteria.select.JpaCompoundSelection;
+import org.hibernate.sql.NotYetImplementedException;
 
 /**
  * Hibernate implementation of the JPA {@link CriteriaBuilder} contract.
@@ -193,10 +194,6 @@ public class CriteriaBuilderImpl implements JpaCriteriaBuilderImplementor, Seria
 	}
 
 	@Override
-	public  void checkIsJpaPredicate(Predicate predicate) {
-	}
-
-	@Override
 	public JpaCompoundSelection<Tuple> tuple(Selection<?>... selections) {
 		return tuple( Arrays.asList( selections ) );
 	}
@@ -209,8 +206,9 @@ public class CriteriaBuilderImpl implements JpaCriteriaBuilderImplementor, Seria
 	 * @return The tuple compound selection
 	 */
 	public JpaCompoundSelection<Tuple> tuple(List<Selection<?>> selections) {
-		checkMultiSelect( selections );
-		return new TupleJpaSelectionImpl( this, Tuple.class, toExpressions( selections ) );
+		throw new NotYetImplementedException(  );
+//		checkMultiSelect( selections );
+//		return new TupleJpaSelectionImpl( this, Tuple.class, toExpressions( selections ) );
 	}
 
 	private <X> List<JpaSelectionImplementor<X>> toExpressions(List<Selection<X>> selections) {
@@ -252,8 +250,9 @@ public class CriteriaBuilderImpl implements JpaCriteriaBuilderImplementor, Seria
 	 * @return The array compound selection
 	 */
 	public <Y> JpaCompoundSelection<Y> array(Class<Y> type, List<Selection<?>> selections) {
-		checkMultiSelect( selections );
-		return new ArrayJpaSelectionImpl<>( this, type, toExpressions( selections ) );
+		throw new NotYetImplementedException(  );
+//		checkMultiSelect( selections );
+//		return new ArrayJpaSelectionImpl<>( this, type, toExpressions( selections ) );
 	}
 
 	@Override
@@ -271,8 +270,9 @@ public class CriteriaBuilderImpl implements JpaCriteriaBuilderImplementor, Seria
 	 * @return The <b>view</b> compound selection.
 	 */
 	public <Y> JpaCompoundSelection<Y> construct(Class<Y> result, List<Selection<?>> selections) {
-		checkMultiSelect( selections );
-		return new DynamicInstantiationImpl<>( this, result, toExpressions( selections ) );
+		throw new NotYetImplementedException(  );
+//		checkMultiSelect( selections );
+//		return new DynamicInstantiationImpl<>( this, result, toExpressions( selections ) );
 	}
 
 
@@ -728,7 +728,8 @@ public class CriteriaBuilderImpl implements JpaCriteriaBuilderImplementor, Seria
 
 	@Override
 	public <T> JpaExpressionImplementor<T> function(String name, Class<T> returnType, Expression<?>... arguments) {
-		return new ParameterizedFunctionExpression<>( this, returnType, name, arguments );
+		throw new NotYetImplementedException(  );
+//		return new ParameterizedFunctionExpression<>( this, returnType, name, arguments );
 	}
 
 	/**
@@ -740,7 +741,8 @@ public class CriteriaBuilderImpl implements JpaCriteriaBuilderImplementor, Seria
 	 * @return The function expression
 	 */
 	public <T> Expression<T> function(String name, Class<T> returnType) {
-		return new BasicFunctionExpression<>( this, returnType, name );
+		throw new NotYetImplementedException(  );
+//		return new BasicFunctionExpression<>( this, returnType, name );
 	}
 
 	@Override
@@ -1262,7 +1264,8 @@ public class CriteriaBuilderImpl implements JpaCriteriaBuilderImplementor, Seria
 	}
 
 	public <Y> JpaCoalesce<Y> coalesce(Class<Y> type, Expression<? extends Y> exp1, Expression<? extends Y> exp2) {
-		return new CoalesceExpression<>( this, type ).value( exp1 ).value( exp2 );
+		throw new NotYetImplementedException(  );
+//		return new CoalesceExpression<>( this, type ).value( exp1 ).value( exp2 );
 	}
 
 	@Override
@@ -1272,7 +1275,8 @@ public class CriteriaBuilderImpl implements JpaCriteriaBuilderImplementor, Seria
 	}
 
 	public <Y> JpaCoalesce<Y> coalesce(Class<Y> type, Expression<? extends Y> exp1, Y exp2) {
-		return new CoalesceExpression<>( this, type ).value( exp1 ).value( exp2 );
+		throw new NotYetImplementedException(  );
+//		return new CoalesceExpression<>( this, type ).value( exp1 ).value( exp2 );
 	}
 
 	@Override
@@ -1281,7 +1285,8 @@ public class CriteriaBuilderImpl implements JpaCriteriaBuilderImplementor, Seria
 	}
 
 	public <T> JpaCoalesce<T> coalesce(Class<T> type) {
-		return new CoalesceExpression<>( this, type );
+		throw new NotYetImplementedException(  );
+//		return new CoalesceExpression<>( this, type );
 	}
 
 	@Override
@@ -1338,8 +1343,9 @@ public class CriteriaBuilderImpl implements JpaCriteriaBuilderImplementor, Seria
 
 	@Override
 	public <C extends Collection<?>> JpaExpressionImplementor<Integer> size(C c) {
-		int size = c == null ? 0 : c.size();
-		return new LiteralExpression<>(this, Integer.class, size);
+		throw new NotYetImplementedException(  );
+//		int size = c == null ? 0 : c.size();
+//		return new LiteralExpression<>(this, Integer.class, size);
 	}
 
 	@Override
@@ -1450,8 +1456,9 @@ public class CriteriaBuilderImpl implements JpaCriteriaBuilderImplementor, Seria
 
 	@Override
 	public <M extends Map<?, ?>> JpaExpressionImplementor<Integer> mapSize(M map) {
-		int size = map == null ? 0 : map.size();
-		return new LiteralExpression<>( this, Integer.class, size );
+		throw new NotYetImplementedException(  );
+//		int size = map == null ? 0 : map.size();
+//		return new LiteralExpression<>( this, Integer.class, size );
 	}
 
 	@SuppressWarnings("unchecked")

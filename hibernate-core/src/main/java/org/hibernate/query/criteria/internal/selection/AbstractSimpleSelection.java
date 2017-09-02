@@ -25,8 +25,8 @@ public abstract class AbstractSimpleSelection<X>
 		implements JpaSelectionImplementor<X>, Serializable {
 	public AbstractSimpleSelection(
 			JpaCriteriaBuilderImplementor criteriaBuilder,
-			JavaTypeDescriptor<X> javaType) {
-		super( criteriaBuilder, javaType );
+			JavaTypeDescriptor<X> javaTypeDescriptor) {
+		super( criteriaBuilder, javaTypeDescriptor );
 	}
 
 	public JpaSelectionImplementor<X> alias(String alias) {

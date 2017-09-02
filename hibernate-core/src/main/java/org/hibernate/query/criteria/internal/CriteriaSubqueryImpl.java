@@ -31,6 +31,7 @@ import org.hibernate.query.criteria.JpaSetJoinImplementor;
 import org.hibernate.query.criteria.internal.expression.DelegatedExpressionImpl;
 import org.hibernate.query.criteria.internal.expression.AbstractExpression;
 import org.hibernate.query.criteria.internal.path.RootImpl;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * The Hibernate implementation of the JPA {@link Subquery} contract.  Mostlty a set of delegation to its internal
@@ -44,9 +45,9 @@ public class CriteriaSubqueryImpl<T> extends AbstractExpression<T> implements Su
 
 	public CriteriaSubqueryImpl(
 			CriteriaBuilderImpl criteriaBuilder,
-			Class<T> javaType,
+			JavaTypeDescriptor<T> javaTypeDescriptor,
 			CommonAbstractCriteria parent) {
-		super( criteriaBuilder, javaType);
+		super( criteriaBuilder, javaTypeDescriptor);
 		this.parent = parent;
 		this.queryStructure = new QueryStructure<T>( this, criteriaBuilder );
 	}
@@ -72,10 +73,10 @@ public class CriteriaSubqueryImpl<T> extends AbstractExpression<T> implements Su
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public Class<T> getResultType() {
-		return getJavaType();
+		return (Class<T>) getJavaType();
 	}
-
 
 	// ROOTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

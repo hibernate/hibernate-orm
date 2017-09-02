@@ -9,10 +9,10 @@ package org.hibernate.query.criteria.internal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.persistence.criteria.AbstractQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
@@ -32,6 +32,9 @@ import org.hibernate.query.sqm.produce.spi.criteria.JpaOrder;
 import org.hibernate.query.sqm.produce.spi.criteria.JpaPredicate;
 import org.hibernate.query.sqm.produce.spi.criteria.JpaQuerySpec;
 import org.hibernate.query.sqm.produce.spi.criteria.JpaSubquery;
+import org.hibernate.query.sqm.produce.spi.criteria.from.JpaFromClause;
+import org.hibernate.query.sqm.produce.spi.criteria.select.JpaSelectClause;
+import org.hibernate.sql.NotYetImplementedException;
 
 /**
  * Models basic query structure.  Used as a delegate in implementing both
@@ -45,6 +48,13 @@ import org.hibernate.query.sqm.produce.spi.criteria.JpaSubquery;
  * @author Steve Ebersole
  */
 public class QueryStructure<T> implements JpaQuerySpec<T> {
+
+	// todo (6.0) : things that contain a QueryStructure ought to use SqmQuerySpec instead
+	//		to fit with having SQM simply act as our JPA criteria impls.
+	//
+	//		this class will be deleted in the temporary cleanup for compilation until
+	//		Christian finishes that work
+
 	private final AbstractQuery<T> owner;
 	private final CriteriaBuilderImpl criteriaBuilder;
 	private final boolean isSubQuery;
@@ -67,14 +77,10 @@ public class QueryStructure<T> implements JpaQuerySpec<T> {
 	// PARAMETERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public Set<ParameterExpression<?>> getParameters() {
-		final Set<ParameterExpression<?>> parameters = new LinkedHashSet<ParameterExpression<?>>();
-		final ParameterRegistry registry = new ParameterRegistry() {
-			public void registerParameter(ParameterExpression<?> parameter) {
-				parameters.add( parameter );
-			}
-		};
+		final Set<ParameterExpression<?>> parameters = new LinkedHashSet<>();
+		final ParameterRegistry registry = parameters::add;
 
-		ParameterContainer.Helper.possibleParameter(selection, registry);
+		ParameterContainer.Helper.possibleParameter(getSelection(), registry);
 		ParameterContainer.Helper.possibleParameter(restriction, registry);
 		ParameterContainer.Helper.possibleParameter(having, registry);
 		if ( subqueries != null ) {
@@ -98,26 +104,32 @@ public class QueryStructure<T> implements JpaQuerySpec<T> {
 	// SELECTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public boolean isDistinct() {
-		return distinct;
+		return jpaSelectClause.isDistinct();
 	}
 
 	public void setDistinct(boolean distinct) {
-		this.distinct = distinct;
+		jpaSelectClause.setDistinct( distinct );
+	}
+
+	@Override
+	public JpaSelectClause<T> getSelectClause() {
+		return jpaSelectClause;
 	}
 
 	public Selection<? extends T> getSelection() {
-		return selection;
+		return getSelectClause().getSelection();
 	}
 
 	public void setSelection(Selection<? extends T> selection) {
-		this.selection = selection;
+		throw new NotYetImplementedException(  );
+//		this.selection = selection;
 	}
 
 
 	// ROOTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public Set<Root<?>> getRoots() {
-		return roots;
+		return fromClause.getRoots().stream().map( jpaRoot -> (Root<?>) jpaRoot ).collect( Collectors.toSet() );
 	}
 
 	public <X> Root<X> from(Class<X> entityClass) {
@@ -132,8 +144,13 @@ public class QueryStructure<T> implements JpaQuerySpec<T> {
 
 	public <X> Root<X> from(EntityType<X> entityType) {
 		RootImpl<X> root = new RootImpl<X>( criteriaBuilder, entityType );
-		roots.add( root );
+		fromClause.addRoot( root );
 		return root;
+	}
+
+	@Override
+	public JpaFromClause getFromClause() {
+		return fromClause;
 	}
 
 
@@ -143,57 +160,63 @@ public class QueryStructure<T> implements JpaQuerySpec<T> {
 		if ( !isSubQuery ) {
 			throw new IllegalStateException( "Query is not identified as sub-query" );
 		}
-		if ( correlationRoots == null ) {
-			correlationRoots = new HashSet<JpaFromImplementor>();
-		}
-		correlationRoots.add( fromImplementor );
+
+		throw new NotYetImplementedException(  );
+
+//		if ( correlationRoots == null ) {
+//			correlationRoots = new HashSet<JpaFromImplementor>();
+//		}
+//		correlationRoots.add( fromImplementor );
 	}
 
 	public Set<Join<?, ?>> collectCorrelatedJoins() {
 		if ( !isSubQuery ) {
 			throw new IllegalStateException( "Query is not identified as sub-query" );
 		}
-		final Set<Join<?, ?>> correlatedJoins;
-		if ( correlationRoots != null ) {
-			correlatedJoins = new HashSet<Join<?,?>>();
-			for ( JpaFromImplementor<?,?> correlationRoot : correlationRoots ) {
-				if (correlationRoot instanceof Join<?,?> && correlationRoot.isCorrelated()) {
-					correlatedJoins.add( (Join<?,?>) correlationRoot );
-				}
-				correlatedJoins.addAll( correlationRoot.getJoins() );
-			}
-		}
-		else {
-			correlatedJoins = Collections.emptySet();
-		}
-		return correlatedJoins;
+
+		throw new NotYetImplementedException(  );
+
+//		final Set<Join<?, ?>> correlatedJoins;
+//		if ( correlationRoots != null ) {
+//			correlatedJoins = new HashSet<Join<?,?>>();
+//			for ( JpaFromImplementor<?,?> correlationRoot : correlationRoots ) {
+//				if (correlationRoot instanceof Join<?,?> && correlationRoot.isCorrelated()) {
+//					correlatedJoins.add( (Join<?,?>) correlationRoot );
+//				}
+//				correlatedJoins.addAll( correlationRoot.getJoins() );
+//			}
+//		}
+//		else {
+//			correlatedJoins = Collections.emptySet();
+//		}
+//		return correlatedJoins;
 	}
 
 
 	// RESTRICTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public Predicate getRestriction() {
+	public JpaPredicate getRestriction() {
 		return restriction;
 	}
 
 	public void setRestriction(Predicate restriction) {
-		this.restriction = restriction;
+		this.restriction = (JpaPredicate) restriction;
 	}
 
 
 	// GROUPINGS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public List<Expression<?>> getGroupings() {
-		return groupings;
+		return groupings.stream().map( jpaExpression -> (Expression<?>) jpaExpression ).collect( Collectors.toList() );
 	}
 
 	public void setGroupings(List<Expression<?>> groupings) {
-		this.groupings = groupings;
+		this.groupings = groupings.stream().map( expression -> (JpaExpression<?>) expression ).collect( Collectors.toList() );
 	}
 
 	public void setGroupings(Expression<?>... groupings) {
 		if ( groupings != null && groupings.length > 0 ) {
-			this.groupings = Arrays.asList( groupings );
+			this.groupings = Arrays.asList( groupings ).stream().map( expression -> (JpaExpression<?>) expression ).collect( Collectors.toList() );
 		}
 		else {
 			this.groupings = Collections.emptyList();
@@ -205,25 +228,33 @@ public class QueryStructure<T> implements JpaQuerySpec<T> {
 	}
 
 	public void setHaving(Predicate having) {
-		this.having = having;
+		this.having = (JpaPredicate) having;
 	}
 
+	@Override
+	public List<JpaOrder> getOrderList() {
+		return jpaOrderByList;
+	}
 
 	// SUB-QUERIES ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public List<Subquery<?>> getSubqueries() {
-		return subqueries;
+		return subqueries.stream().map( jpaSubquery -> (Subquery<?>) jpaSubquery ).collect( Collectors.toList() );
 	}
 
 	public List<Subquery<?>> internalGetSubqueries() {
 		if ( subqueries == null ) {
 			subqueries = new ArrayList<>();
 		}
-		return subqueries;
+		return subqueries.stream().map( jpaSubquery -> (Subquery<?>) jpaSubquery ).collect( Collectors.toList() );
 	}
 
 	public <U> Subquery<U> subquery(Class<U> subqueryType) {
-		CriteriaSubqueryImpl<U> subquery = new CriteriaSubqueryImpl<U>( criteriaBuilder, subqueryType, owner );
+		CriteriaSubqueryImpl<U> subquery = new CriteriaSubqueryImpl<U>(
+				criteriaBuilder,
+				criteriaBuilder.resolveJavaTypeDescriptor( subqueryType ),
+				owner
+		);
 		internalGetSubqueries().add( subquery );
 		return subquery;
 	}

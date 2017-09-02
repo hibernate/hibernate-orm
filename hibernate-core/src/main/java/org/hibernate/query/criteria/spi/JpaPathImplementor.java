@@ -18,7 +18,6 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.query.sqm.produce.spi.criteria.JpaExpression;
 import org.hibernate.query.sqm.produce.spi.criteria.path.JpaPath;
-import org.hibernate.query.sqm.produce.spi.criteria.path.JpaPathSource;
 
 /**
  * Hibernate ORM specialization of the JPA {@link Path}
@@ -51,7 +50,7 @@ public interface JpaPathImplementor<X> extends JpaExpressionImplementor<X>, Path
 	Navigable getNavigable();
 
 	@Override
-	JpaPathSource<?> getParentPath();
+	JpaPathSourceImplementor<?> getParentPath();
 
 	/**
 	 * Defines handling for the JPA 2.1 TREAT down-casting feature.

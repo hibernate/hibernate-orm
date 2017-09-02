@@ -84,7 +84,7 @@ public class CriteriaUpdateImpl<T> extends AbstractManipulationCriteriaQuery<T> 
 		if ( ! SingularAttributePath.class.isInstance( attributePath ) ) {
 			throw new IllegalArgumentException(
 					"Attribute path for assignment must represent a singular attribute ["
-							+ ( (JpaPathImplementor) attributePath ).getPathIdentifier() + "]"
+							+ ( (JpaPathImplementor) attributePath ).getNavigable().getNavigableRole().getFullPath() + "]"
 			);
 		}
 		if ( value == null ) {

@@ -28,4 +28,8 @@ public abstract class AbstractNode implements JpaCriteriaNode, Serializable {
 	public JpaCriteriaBuilderImplementor getCriteriaBuilder() {
 		return criteriaBuilder;
 	}
+
+	protected JpaCriteriaBuilderImplementor criteriaBuilder() {
+		return criteriaBuilder;
+	}
 }

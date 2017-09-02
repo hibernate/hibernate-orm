@@ -22,20 +22,20 @@ public abstract class AbstractTupleElement<X>
 		extends AbstractNode
 		implements JpaTupleElementImplementor<X>, Serializable {
 	private final JavaTypeDescriptor<X> originalJavaType;
-	private JavaTypeDescriptor<X> javaType;
+	private JavaTypeDescriptor<X> javaTypeDescriptor;
 	private String alias;
 
 	protected AbstractTupleElement(
 			JpaCriteriaBuilderImplementor criteriaBuilder,
-			JavaTypeDescriptor<X>javaType) {
+			JavaTypeDescriptor<X> javaTypeDescriptor) {
 		super( criteriaBuilder );
-		this.originalJavaType = javaType;
-		this.javaType = javaType;
+		this.originalJavaType = javaTypeDescriptor;
+		this.javaTypeDescriptor = javaTypeDescriptor;
 	}
 
 	@Override
 	public JavaTypeDescriptor<X> getJavaTypeDescriptor() {
-		return javaType;
+		return javaTypeDescriptor;
 	}
 
 	public JavaTypeDescriptor<X> getOriginalJavaTypeDescriptor() {
@@ -43,8 +43,17 @@ public abstract class AbstractTupleElement<X>
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	protected void resetJavaType(JavaTypeDescriptor targetType) {
-		this.javaType = targetType;
+	protected void resetJavaTypeDescriptor(JavaTypeDescriptor newDescriptor) {
+		this.javaTypeDescriptor = newDescriptor;
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	protected void resetJavaTypeDescriptorIfNotSet(JavaTypeDescriptor newDescriptor) {
+		if ( javaTypeDescriptor != null ) {
+			return;
+		}
+
+		this.javaTypeDescriptor = newDescriptor;
 	}
 
 	@Override

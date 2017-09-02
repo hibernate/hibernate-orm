@@ -9,15 +9,14 @@ package org.hibernate.query.criteria.internal.expression;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.persistence.criteria.Expression;
 
-import org.hibernate.query.criteria.spi.JpaCoalesce;
-import org.hibernate.query.criteria.spi.JpaExpressionImplementor;
+import org.hibernate.HibernateException;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.criteria.spi.JpaCoalesce;
+import org.hibernate.query.criteria.spi.JpaExpressionImplementor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Models an ANSI SQL <tt>COALESCE</tt> expression.  <tt>COALESCE</tt> is a specialized <tt>CASE</tt> statement.
@@ -26,7 +25,6 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  */
 public class CoalesceExpression<T> extends AbstractExpression<T> implements JpaCoalesce<T>, Serializable {
 	private final List<JpaExpressionImplementor<? extends T>> expressions;
-	private Class<T> javaType;
 
 	public CoalesceExpression(CriteriaBuilderImpl criteriaBuilder) {
 		this( criteriaBuilder, null );
@@ -34,15 +32,9 @@ public class CoalesceExpression<T> extends AbstractExpression<T> implements JpaC
 
 	public CoalesceExpression(
 			CriteriaBuilderImpl criteriaBuilder,
-			Class<T> javaType) {
-		super( criteriaBuilder, javaType );
-		this.javaType = javaType;
+			JavaTypeDescriptor<T> javaTypeDescriptor) {
+		super( criteriaBuilder, javaTypeDescriptor );
 		this.expressions = new ArrayList<>();
-	}
-
-	@Override
-	public Class<T> getJavaType() {
-		return javaType;
 	}
 
 	public JpaCoalesce<T> value(T value) {
@@ -60,10 +52,16 @@ public class CoalesceExpression<T> extends AbstractExpression<T> implements JpaC
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public JpaCoalesce<T> value(JpaExpressionImplementor<? extends T> value) {
-		expressions.add( value );
-		if ( javaType == null ) {
-			javaType = (Class<T>) value.getJavaType();
+		if ( value == null ) {
+			throw new HibernateException( "Illegal argument: value to add to coalesce args cannot be null" );
 		}
+
+		expressions.add( value );
+
+		resetJavaTypeDescriptorIfNotSet(
+				criteriaBuilder().resolveJavaTypeDescriptor( (Class<T>) value.getJavaType() )
+		);
+
 		return this;
 	}
 
@@ -75,10 +73,5 @@ public class CoalesceExpression<T> extends AbstractExpression<T> implements JpaC
 		for ( Expression expression : getExpressions() ) {
 			Helper.possibleParameter(expression, registry);
 		}
-	}
-
-	@Override
-	public SqmExpression visitExpression(CriteriaVisitor visitor) {
-		return visitor.visitCoalesce( expressions.stream().collect( Collectors.toList() ) );
 	}
 }

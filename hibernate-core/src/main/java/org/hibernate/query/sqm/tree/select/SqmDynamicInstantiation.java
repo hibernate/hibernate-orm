@@ -11,9 +11,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 
 import org.jboss.logging.Logger;
 
@@ -27,8 +31,7 @@ import static org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicIns
  * @author Steve Ebersole
  */
 public class SqmDynamicInstantiation
-		implements SqmExpression,
-				SqmAliasedExpressionContainer<SqmDynamicInstantiationArgument> {
+		implements QueryResultProducer, SqmNode, SqmAliasedExpressionContainer<SqmDynamicInstantiationArgument> {
 
 	private static final Logger log = Logger.getLogger( SqmDynamicInstantiation.class );
 
@@ -59,13 +62,12 @@ public class SqmDynamicInstantiation
 	}
 
 	@Override
-	public ExpressableType getExpressionType() {
-		return null;
-	}
-
-	@Override
-	public ExpressableType getInferableType() {
-		return null;
+	public QueryResult createQueryResult(
+			Object expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		throw new NotYetImplementedException(  );
+//		return new DynamicInstantiationQueryResultImpl( ... );
 	}
 
 	public SqmDynamicInstantiationTarget getInstantiationTarget() {

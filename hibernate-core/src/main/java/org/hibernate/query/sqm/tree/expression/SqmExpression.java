@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.query.sqm.tree.SqmNode;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.results.spi.Selectable;
@@ -16,7 +17,7 @@ import org.hibernate.sql.results.spi.Selectable;
  *
  * @author Steve Ebersole
  */
-public interface SqmExpression extends Selectable {
+public interface SqmExpression extends SqmNode, Selectable {
 	// todo : contemplate way to incorporate DomainReference into expressions in place of the removed types.
 
 	/**

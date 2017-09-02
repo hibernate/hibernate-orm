@@ -209,6 +209,10 @@ might be done in 6.0 (again if resources allow), in 6.x or some `> 6` release.
 
 Unresolved/undecided design questions.
 
+* See notes in `org.hibernate.metamodel.model.domain.spi.Navigable` and
+	`org.hibernate.sql.results.spi.QueryResultProducer` regarding the current improper mixing of
+	SQM and SQL AST concepts.
+
 * Are we continuing to support mapping entities which do not maintain their id as an entity attribute?
 * Move some methods from `EntityDescriptor` to more appropriate place:
 	** methods relating to identifier (`#getIdentifier`, etc) ought to move to `EntityIdentifier`

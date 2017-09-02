@@ -62,6 +62,7 @@ public interface SqmNavigableReference extends SqmExpression, NavigableReference
 			Expression expression,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
-		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
+		assert expression == null;
+		return getReferencedNavigable().createQueryResult( null, this, resultVariable, creationContext );
 	}
 }

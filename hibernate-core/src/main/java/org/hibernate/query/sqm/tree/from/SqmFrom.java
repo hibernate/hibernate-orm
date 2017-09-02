@@ -6,22 +6,27 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmNode;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
 
 /**
  * Models a Bindable's inclusion in the {@code FROM} clause.
  *
  * @author Steve Ebersole
  */
-public interface SqmFrom extends TableGroupInfoSource {
+public interface SqmFrom extends TableGroupInfoSource, SqmNode {
 	/**
 	 * Obtain reference to the FromElementSpace that this FromElement belongs to.
 	 */
 	SqmFromElementSpace getContainingSpace();
 
+	/**
+	 * The Navigable reference (SqmExpression) that can be used to represent this
+	 * from-element in other clauses.
+	 *
+	 * E.g. in a query like `select p from Person p` this SqmNavigableReference
+	 * would represent the `p` reference in the SELECT clause.
+	 */
 	SqmNavigableReference getNavigableReference();
-
-	<T> T accept(SemanticQueryWalker<T> walker);
 }

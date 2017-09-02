@@ -8,15 +8,17 @@ package org.hibernate.query.sqm.tree;
 
 import java.util.Set;
 
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-
 /**
  * The basic SQM statement contract.
  *
  * @author Steve Ebersole
  */
-public interface SqmStatement {
-	Set<SqmParameter> getQueryParameters();
+public interface SqmStatement extends SqmNode {
 
-	<T> T accept(SemanticQueryWalker<T> walker);
+	// todo (6.0) : review potentially removing this as a SqmNode.
+	// 		implementing SemanticQueryWalker visitation here effectively makes the
+	// 		statement a SqmNode - which caused some issue somewhere, although I forget
+	//		the details.  Review this an decide if this is a problem or ok
+
+	Set<SqmParameter> getQueryParameters();
 }

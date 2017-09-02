@@ -7,7 +7,11 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.sql.results.spi.Selectable;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.ast.tree.spi.from.TableReference;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * Models a "piece" of the application's domain model that can be navigated
@@ -15,7 +19,7 @@ import org.hibernate.sql.results.spi.Selectable;
  *
  * @author Steve Ebersole
  */
-public interface Navigable<T> extends DomainType<T>, Selectable {
+public interface Navigable<T> extends DomainType<T> {
 	/**
 	 * The NavigableContainer which contains this Navigable.
 	 */
@@ -41,8 +45,30 @@ public interface Navigable<T> extends DomainType<T>, Selectable {
 
 	// todo (6.0) : Use (pass in) Selection instead of expression+alias
 	// todo (6.0) : ^^ Actually get rid of Selection :)
+	// todo (6.0) : another option (thinking this is the best one) is to ask Navigable to generate an SqmExpression (SqmNavigableReference) given some form of `SqmFrom` and a QueryResult given a `SqmNavigableReference`
+	//		- in addition to the creation of QueryResults, we'd also need a method for "non-root" Navigables
+	// 			to be able to generate Fetches (`Fetchable`?)
+	//		the overall flow would be:
+	//			1) Navigable -> SqmNavigableReference
+	//			2) ( (QueryResultProducer) SqmNavigableReference ) -> QueryResult
+	//			3) ( (Fetchable) Navigable ) -> Fetch(FetchParent)
+	//
+	//		something like:
+	SqmNavigableReference createSqmExpression(SqmFrom sourceSqmFrom, SomeCreationContext creationContext);
 
+	interface SomeCreationContext {
+		// org.hibernate.query.sqm.produce.spi.ParsingContext?
+		// org.hibernate.query.sqm.produce.spi.ResolutionContext?
+		// a new `SqmNodeCreationContext`?
+	}
 
+	QueryResult createQueryResult(
+			TableReference tableReference,
+			SqmNavigableReference navigableReference,
+			String resultVariable,
+			QueryResultCreationContext creationContext);
+	// ^^ or possibly have SqmNavigableReference expose its TableReference
+	//		I like this (^^) option better
 
 	/**
 	 * Obtain a loggable representation.

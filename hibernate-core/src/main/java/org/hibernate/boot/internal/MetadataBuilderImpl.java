@@ -309,7 +309,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass) {
+	public <O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass) {
 		applyAttributeConverter(
 				AttributeConverterDefinition.from(
 						this.bootstrapContext.getClassmateContext(),
@@ -320,7 +320,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass, boolean autoApply) {
+	public <O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass, boolean autoApply) {
 		applyAttributeConverter(
 				AttributeConverterDefinition.from(
 						this.bootstrapContext.getClassmateContext(),

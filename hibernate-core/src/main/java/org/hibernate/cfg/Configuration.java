@@ -753,7 +753,7 @@ public class Configuration {
 	 * @param autoApply Should the AttributeConverter be auto applied to property types as specified
 	 * by its "entity attribute" parameterized type?
 	 */
-	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass, boolean autoApply) {
+	public <O,R> void addAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass, boolean autoApply) {
 		addAttributeConverter( AttributeConverterDefinition.from( classmateContext , attributeConverterClass, autoApply ) );
 	}
 
@@ -762,7 +762,7 @@ public class Configuration {
 	 *
 	 * @param attributeConverterClass The AttributeConverter class.
 	 */
-	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass) {
+	public <O,R> void addAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass) {
 		addAttributeConverter( AttributeConverterDefinition.from( classmateContext, attributeConverterClass ) );
 	}
 

@@ -370,33 +370,33 @@ public class CascadingActions {
 			return true;
 		}
 
-		@Override
-		public void noCascade(
-				EventSource session,
-				Object parent,
-				EntityDescriptor entityDescriptor,
-				JavaTypeDescriptor propertyType,
-				int propertyIndex) {
-			if ( propertyType instanceof EntityJavaDescriptorImpl ) {
-				Object child = entityDescriptor.getPropertyValue( parent, propertyIndex );
-				String childEntityName = entityDescriptor.getEntityName();
-
-				if ( child != null
-						&& !isInManagedState( child, session )
-						&& !(child instanceof HibernateProxy) //a proxy cannot be transient and it breaks ForeignKeys.isTransient
-						&& ForeignKeys.isTransient( childEntityName, child, null, session ) ) {
-					String parentEntiytName = entityDescriptor.getEntityName();
-					String propertyName = entityDescriptor.getPropertyNames()[propertyIndex];
-					throw new TransientPropertyValueException(
-							"object references an unsaved transient instance - save the transient instance beforeQuery flushing",
-							childEntityName,
-							parentEntiytName,
-							propertyName
-					);
-
-				}
-			}
-		}
+//		@Override
+//		public void noCascade(
+//				EventSource session,
+//				Object parent,
+//				EntityDescriptor entityDescriptor,
+//				JavaTypeDescriptor propertyType,
+//				int propertyIndex) {
+//			if ( propertyType instanceof EntityJavaDescriptorImpl ) {
+//				Object child = entityDescriptor.getPropertyValue( parent, propertyIndex );
+//				String childEntityName = entityDescriptor.getEntityName();
+//
+//				if ( child != null
+//						&& !isInManagedState( child, session )
+//						&& !(child instanceof HibernateProxy) //a proxy cannot be transient and it breaks ForeignKeys.isTransient
+//						&& ForeignKeys.isTransient( childEntityName, child, null, session ) ) {
+//					String parentEntiytName = entityDescriptor.getEntityName();
+//					String propertyName = entityDescriptor.getPropertyNames()[propertyIndex];
+//					throw new TransientPropertyValueException(
+//							"object references an unsaved transient instance - save the transient instance beforeQuery flushing",
+//							childEntityName,
+//							parentEntiytName,
+//							propertyName
+//					);
+//
+//				}
+//			}
+//		}
 
 		@Override
 		public boolean performOnLazyProperty() {

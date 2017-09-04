@@ -39,7 +39,8 @@ import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.type.Type;
+import org.hibernate.naming.Identifier;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -590,23 +591,16 @@ public class BinderHelper {
 		do {
 			result = current;
 			Table currentTable = current.getTable();
-			try {
-				context.getMetadataCollector().getPhysicalColumnName( currentTable, columnName );
+			final Identifier columnNameIdentifier = Identifier.toIdentifier( columnName );
+			if ( currentTable.getColumn( columnNameIdentifier ) != null ) {
 				found = true;
-			}
-			catch (MappingException me) {
-				//swallow it
 			}
 			Iterator joins = current.getJoinIterator();
 			while ( !found && joins.hasNext() ) {
 				result = joins.next();
 				currentTable = ( (Join) result ).getTable();
-				try {
-					context.getMetadataCollector().getPhysicalColumnName( currentTable, columnName );
+				if ( currentTable.getColumn( columnNameIdentifier ) != null ) {
 					found = true;
-				}
-				catch (MappingException me) {
-					//swallow it
 				}
 			}
 			current = current.getSuperclass();
@@ -732,16 +726,19 @@ public class BinderHelper {
 			value.setMetaType( metaAnnDef.metaType() );
 
 			HashMap values = new HashMap();
-			Type metaType = context.getMetadataCollector().heuristicType( value.getMetaType() );
+			JavaTypeDescriptor javaTypeDescriptor = context.getMetadataCollector()
+					.getTypeConfiguration()
+					.getJavaTypeDescriptorRegistry()
+					.getDescriptor( value.getMetaType() );
 			for (MetaValue metaValue : metaAnnDef.metaValues()) {
 				try {
-					Object discrim = metaType.getJavaTypeDescriptor().fromString( metaValue.value() );
+					Object discrim = javaTypeDescriptor.fromString( metaValue.value() );
 					String entityName = metaValue.targetEntity().getName();
 					values.put( discrim, entityName );
 				}
 				catch (ClassCastException cce) {
 					throw new MappingException( "metaType was not a DiscriminatorType: "
-							+ metaType.getName() );
+							+ javaTypeDescriptor.getTypeName() );
 				}
 				catch (Exception e) {
 					throw new MappingException( "could not interpret metaValue", e );

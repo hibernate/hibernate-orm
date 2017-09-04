@@ -17,6 +17,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.SimpleSelect;
@@ -59,7 +60,7 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 				final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 				try {
 					getLockable().getIdentifierType().nullSafeSet( st, id, 1, session );
-					if ( getLockable().isVersioned() ) {
+					if ( StringHelper.isNotEmpty( getLockable().getVersionColumnName() ) ) {
 						getLockable().getVersionType().nullSafeSet(
 								st,
 								version,
@@ -109,7 +110,7 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 				.setTableName( getLockable().getRootTableName() )
 				.addColumn( getLockable().getRootTableIdentifierColumnNames()[0] )
 				.addCondition( getLockable().getRootTableIdentifierColumnNames(), "=?" );
-		if ( getLockable().isVersioned() ) {
+		if ( StringHelper.isNotEmpty( getLockable().getVersionColumnName() ) ) {
 			select.addCondition( getLockable().getVersionColumnName(), "=?" );
 		}
 		if ( factory.getSessionFactoryOptions().isCommentsEnabled() ) {

@@ -50,6 +50,15 @@ public interface EntityEntry {
 
 	Object getVersion();
 
+	default EntityDescriptor getDescriptor(){
+		return getPersister();
+	}
+
+	/**
+	 *
+	 * @deprecated use {@link #getDescriptor()}
+	 */
+	@Deprecated
 	EntityDescriptor getPersister();
 
 	/**

@@ -194,14 +194,14 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Abs
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<?, ?>> attributeConverterClass) {
+	public <O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass) {
 		delegate.applyAttributeConverter( attributeConverterClass );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(
-			Class<? extends AttributeConverter<?, ?>> attributeConverterClass, boolean autoApply) {
+	public <O,R> MetadataBuilder applyAttributeConverter(
+			Class<? extends AttributeConverter<O, R>> attributeConverterClass, boolean autoApply) {
 		delegate.applyAttributeConverter( attributeConverterClass, autoApply );
 		return getThis();
 	}

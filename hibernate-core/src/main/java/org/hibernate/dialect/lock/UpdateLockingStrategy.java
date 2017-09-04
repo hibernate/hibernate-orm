@@ -17,6 +17,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
@@ -54,7 +55,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 		if ( lockMode.lessThan( LockMode.UPGRADE ) ) {
 			throw new HibernateException( "[" + lockMode + "] not valid for update statement" );
 		}
-		if ( !lockable.isVersioned() ) {
+		if ( StringHelper.isEmpty( lockable.getVersionColumnName() ) ) {
 			LOG.writeLocksNotSupported( lockable.getEntityName() );
 			this.sql = null;
 		}
@@ -70,7 +71,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 			Object object,
 			int timeout,
 			SharedSessionContractImplementor session) throws StaleObjectStateException, JDBCException {
-		if ( !lockable.isVersioned() ) {
+		if ( StringHelper.isEmpty( lockable.getVersionColumnName() ) ) {
 			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
 
@@ -85,9 +86,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 				lockable.getIdentifierType().nullSafeSet( st, id, offset, session );
 				offset += lockable.getIdentifierType().getColumnSpan();
 
-				if ( lockable.isVersioned() ) {
-					lockable.getVersionType().nullSafeSet( st, version, offset, session );
-				}
+				lockable.getVersionType().nullSafeSet( st, version, offset, session );
 
 				final int affected = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
 				if ( affected < 0 ) {

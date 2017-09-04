@@ -53,21 +53,6 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 	}
 
 	@Override
-	public boolean isVersioned() {
-		return false;
-	}
-
-	@Override
-	public Comparator getVersionComparator() {
-		return null;
-	}
-
-//	@Override
-	public FetchStrategy getMappedFetchStrategy() {
-		return null;
-	}
-
-	@Override
 	public String asLoggableText() {
 		return null;
 	}
@@ -315,11 +300,6 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 	}
 
 	@Override
-	public boolean hasCache() {
-		return false;
-	}
-
-	@Override
 	public CacheEntryStructure getCacheEntryStructure() {
 		return null;
 	}
@@ -329,16 +309,6 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 			Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
 		return null;
 	}
-
-//	@Override
-	public boolean hasNaturalIdCache() {
-		return false;
-	}
-
-//	@Override
-//	public ClassMetadata getClassMetadata() {
-//		return null;
-//	}
 
 	@Override
 	public boolean isBatchLoadable() {

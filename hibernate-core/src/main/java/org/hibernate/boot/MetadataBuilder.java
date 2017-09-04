@@ -364,7 +364,7 @@ public interface MetadataBuilder {
 	 *
 	 * @see org.hibernate.cfg.AttributeConverterDefinition#from(Class)
 	 */
-	MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass);
+	<O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass);
 
 	/**
 	 * Adds an AttributeConverter by its Class plus a boolean indicating whether to auto apply it.
@@ -377,7 +377,7 @@ public interface MetadataBuilder {
 	 *
 	 * @see org.hibernate.cfg.AttributeConverterDefinition#from(Class, boolean)
 	 */
-	MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass, boolean autoApply);
+	<O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass, boolean autoApply);
 
 	/**
 	 * Adds an AttributeConverter instance.
@@ -388,7 +388,7 @@ public interface MetadataBuilder {
 	 *
 	 * @see org.hibernate.cfg.AttributeConverterDefinition#from(AttributeConverter)
 	 */
-	MetadataBuilder applyAttributeConverter(AttributeConverter<?,?> attributeConverter);
+	MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter);
 
 	/**
 	 * Adds an AttributeConverter instance, explicitly indicating whether to auto-apply.

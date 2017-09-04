@@ -86,13 +86,13 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityDescriptor persister,
+			final EntityDescriptor entityDescriptor,
 			final EntityMode entityMode,
 			final String tenantId,
 			final boolean disableVersionIncrement,
 			final PersistenceContext persistenceContext) {
 		this( status, loadedState, rowId, id, version, lockMode, existsInDatabase,
-				persister,disableVersionIncrement, persistenceContext
+				entityDescriptor,disableVersionIncrement, persistenceContext
 		);
 	}
 
@@ -104,7 +104,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityDescriptor persister,
+			final EntityDescriptor entityDescriptor,
 			final boolean disableVersionIncrement,
 			final PersistenceContext persistenceContext) {
 		setCompressedValue( EnumState.STATUS, status );
@@ -120,7 +120,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 		this.version=version;
 		setCompressedValue( EnumState.LOCK_MODE, lockMode );
 		setCompressedValue( BooleanState.IS_BEING_REPLICATED, disableVersionIncrement );
-		this.persister=persister;
+		this.persister=entityDescriptor;
 		this.persistenceContext = persistenceContext;
 	}
 
@@ -141,7 +141,9 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			final boolean existsInDatabase,
 			final boolean isBeingReplicated,
 			final PersistenceContext persistenceContext) {
-		this.persister = ( factory == null ? null : factory.getEntityPersister( entityName ) );
+		this.persister = ( factory == null ?
+				null :
+				factory.getTypeConfiguration().resolveEntityDescriptor( entityName ) );
 		this.id = id;
 		setCompressedValue( EnumState.STATUS, status );
 		setCompressedValue( EnumState.PREVIOUS_STATUS, previousStatus );
@@ -243,7 +245,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			if ( getId() == null ) {
 				throw new IllegalStateException( "cannot generate an EntityKey when id is null.");
 			}
-			cachedEntityKey = new EntityKey( getId(), getPersister() );
+			cachedEntityKey = new EntityKey( getId(), getDescriptor() );
 		}
 		return cachedEntityKey;
 	}
@@ -269,9 +271,9 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 		this.loadedState = updatedState;
 		setLockMode( LockMode.WRITE );
 
-		if ( getPersister().isVersioned() ) {
+		if ( getDescriptor().getHierarchy().getVersionDescriptor() != null ) {
 			this.version = nextVersion;
-			getPersister().setPropertyValue( entity, getPersister().getVersionProperty(), nextVersion );
+			getDescriptor().setPropertyValue( entity, getDescriptor().getVersionProperty(), nextVersion );
 		}
 
 		if( entity instanceof SelfDirtinessTracker ) {
@@ -281,7 +283,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 		getPersistenceContext().getSession()
 				.getFactory()
 				.getCustomEntityDirtinessStrategy()
-				.resetDirty( entity, getPersister(), (Session) getPersistenceContext().getSession() );
+				.resetDirty( entity, getDescriptor(), (Session) getPersistenceContext().getSession() );
 	}
 
 	@Override
@@ -346,11 +348,11 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
 				getPersistenceContext().getSession().getFactory().getCustomEntityDirtinessStrategy();
-		if ( customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), (Session) getPersistenceContext().getSession() ) ) {
-			return ! customEntityDirtinessStrategy.isDirty( entity, getPersister(), (Session) getPersistenceContext().getSession() );
+		if ( customEntityDirtinessStrategy.canDirtyCheck( entity, getDescriptor(), (Session) getPersistenceContext().getSession() ) ) {
+			return ! customEntityDirtinessStrategy.isDirty( entity, getDescriptor(), (Session) getPersistenceContext().getSession() );
 		}
 
-		if ( getPersister().hasMutableProperties() ) {
+		if ( getDescriptor().hasMutableProperties() ) {
 			return false;
 		}
 
@@ -361,7 +363,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	public boolean isModifiableEntity() {
 		final Status status = getStatus();
 		final Status previousStatus = getPreviousStatus();
-		return getPersister().getJavaTypeDescriptor().getMutabilityPlan().isMutable()
+		return getDescriptor().getJavaTypeDescriptor().getMutabilityPlan().isMutable()
 				&& status != Status.READ_ONLY
 				&& ! ( status == Status.DELETED && previousStatus == Status.READ_ONLY );
 	}
@@ -373,7 +375,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 		// TODO:  use LockMode.PESSIMISTIC_FORCE_INCREMENT
 		//noinspection deprecation
 		setLockMode( LockMode.FORCE );
-		persister.setPropertyValue( entity, getPersister().getVersionProperty(), nextVersion );
+		persister.setPropertyValue( entity, getDescriptor().getVersionProperty(), nextVersion );
 	}
 
 	@Override
@@ -400,7 +402,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 				throw new IllegalStateException( "Cannot make an immutable entity modifiable." );
 			}
 			setStatus( Status.MANAGED );
-			loadedState = getPersister().getPropertyValues( entity );
+			loadedState = getDescriptor().getPropertyValues( entity );
 			getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
 					persister,
 					id,
@@ -414,7 +416,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	@Override
 	public String toString() {
 		return "EntityEntry" +
-				MessageHelper.infoString( getPersister().getEntityName(), id ) +
+				MessageHelper.infoString( getDescriptor().getEntityName(), id ) +
 				'(' + getStatus() + ')';
 	}
 

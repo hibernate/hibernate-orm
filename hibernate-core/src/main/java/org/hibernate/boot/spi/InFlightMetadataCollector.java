@@ -209,7 +209,8 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 
 
 	void addAttributeConverter(AttributeConverterDefinition converter);
-	void addAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass);
+
+	<O,R> void addAttributeConverter(Class<? extends AttributeConverter<O,R>> converterClass);
 
 	AttributeConverterAutoApplyHandler getAttributeConverterAutoApplyHandler();
 

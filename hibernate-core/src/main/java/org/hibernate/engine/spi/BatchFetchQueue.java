@@ -341,17 +341,17 @@ public class BatchFetchQueue {
 		return keys; //we ran out of keys to try
 	}
 
-	private boolean isCached(Serializable collectionKey, PersistentCollectionDescriptor collectionDescriptor) {
+	private boolean isCached(Serializable collectionKey, PersistentCollectionDescriptor persister) {
 		final SharedSessionContractImplementor session = context.getSession();
 		final CollectionDataAccess cache = session.getFactory().getCache()
-				.getCollectionRegionAccess( collectionDescriptor );
+				.getCollectionRegionAccess( persister );
 		if ( cache == null ) {
 			return false;
 		}
 
 		final Object cacheKey = cache.generateCacheKey(
 				collectionKey,
-				collectionDescriptor,
+				persister,
 				session.getFactory(),
 				session.getTenantIdentifier()
 		);

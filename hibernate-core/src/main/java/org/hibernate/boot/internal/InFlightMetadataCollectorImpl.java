@@ -368,7 +368,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public void addAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
+	public <O,R> void addAttributeConverter(Class<? extends AttributeConverter<O, R>> converterClass) {
 		addAttributeConverter( AttributeConverterDefinition.from(
 				getBootstrapContext().getClassmateContext(),
 				converterClass

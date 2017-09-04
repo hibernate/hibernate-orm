@@ -6,12 +6,17 @@
  */
 package org.hibernate.query;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
 import javax.persistence.FlushModeType;
+import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 
@@ -28,6 +33,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public interface NativeQuery<T> extends Query<T>, SQLQuery<T>, SynchronizeableQuery<T> {
+
 	@Override
 	NativeQuery<T> setFlushMode(FlushMode flushMode);
 
@@ -81,6 +87,42 @@ public interface NativeQuery<T> extends Query<T>, SQLQuery<T>, SynchronizeableQu
 
 	@Override
 	NativeQuery<T> setParameter(int position, Date value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(Parameter<LocalDateTime> param, LocalDateTime value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(Parameter<ZonedDateTime> param, ZonedDateTime value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(Parameter<OffsetDateTime> param, OffsetDateTime value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(String name, Instant value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(String name, LocalDateTime value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(String name, ZonedDateTime value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(String name, OffsetDateTime value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(int position, Instant value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(int position, LocalDateTime value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(int position, ZonedDateTime value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(int position, OffsetDateTime value, TemporalType temporalType);
 
 	@Override
 	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<P> values);
@@ -192,4 +234,16 @@ public interface NativeQuery<T> extends Query<T>, SQLQuery<T>, SynchronizeableQu
 
 	@Override
 	NativeQuery<T> addQueryHint(String hint);
+
+	@Override
+	NativeQuery<T> setMaxResults(int maxResult);
+
+	@Override
+	NativeQuery<T> setFirstResult(int startPosition);
+
+	@Override
+	NativeQuery<T> setHint(String hintName, Object value);
+
+	@Override
+	NativeQuery<T> setLockMode(LockModeType lockMode);
 }

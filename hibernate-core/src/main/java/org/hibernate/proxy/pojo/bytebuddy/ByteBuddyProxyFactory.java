@@ -14,34 +14,31 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
-import net.bytebuddy.TypeCache;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.ProxyConfiguration;
+import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.type.CompositeType;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.NamingStrategy;
+import net.bytebuddy.TypeCache;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.scaffold.TypeValidation;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 import net.bytebuddy.implementation.FieldAccessor;
-import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.SuperMethodCall;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatchers;
 
-import static net.bytebuddy.matcher.ElementMatchers.named;
 import static org.hibernate.internal.CoreLogging.messageLogger;
+import static net.bytebuddy.matcher.ElementMatchers.*;
 
 public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyProxyFactory.class );
@@ -95,26 +92,23 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 		}
 		key.addAll( Arrays.<Class<?>>asList( interfaces ) );
 
-		return CACHE.findOrInsert(persistentClass.getClassLoader(), new TypeCache.SimpleKey(key), new Callable<Class<?>>() {
-			@Override
-			public Class<?> call() throws Exception {
-				return new ByteBuddy()
-						.with(TypeValidation.DISABLED)
-						.with(new NamingStrategy.SuffixingRandom("HibernateProxy"))
-						.subclass(interfaces.length == 1 ? persistentClass : Object.class, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING)
-						.implement((Type[]) interfaces)
-						.method(ElementMatchers.isVirtual().and(ElementMatchers.not(ElementMatchers.isFinalizer())))
-						.intercept(MethodDelegation.to(ProxyConfiguration.InterceptorDispatcher.class))
-						.method(ElementMatchers.nameStartsWith("$$_hibernate_").and(ElementMatchers.isVirtual()))
-						.intercept(SuperMethodCall.INSTANCE)
-						.defineField(ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE)
-						.implement(ProxyConfiguration.class)
-						.intercept(FieldAccessor.ofField(ProxyConfiguration.INTERCEPTOR_FIELD_NAME).withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC))
-						.make()
-						.load(persistentClass.getClassLoader())
-						.getLoaded();
-			}
-		}, CACHE);
+		return CACHE.findOrInsert( persistentClass.getClassLoader(), new TypeCache.SimpleKey(key), () ->
+			new ByteBuddy()
+			.ignore( isSynthetic().and( named( "getMetaClass" ).and( returns( td -> "groovy.lang.MetaClass".equals( td.getName() ) ) ) ) )
+			.with(TypeValidation.DISABLED)
+			.with(new NamingStrategy.SuffixingRandom("HibernateProxy"))
+			.subclass(interfaces.length == 1 ? persistentClass : Object.class, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING)
+			.implement((Type[]) interfaces)
+			.method(isVirtual().and(not(isFinalizer())))
+			.intercept(MethodDelegation.to(ProxyConfiguration.InterceptorDispatcher.class))
+			.method(nameStartsWith("$$_hibernate_").and(isVirtual()))
+			.intercept(SuperMethodCall.INSTANCE)
+			.defineField(ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE)
+			.implement(ProxyConfiguration.class)
+			.intercept(FieldAccessor.ofField(ProxyConfiguration.INTERCEPTOR_FIELD_NAME).withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC))
+			.make()
+			.load(persistentClass.getClassLoader())
+			.getLoaded(), CACHE);
 	}
 
 	@Override

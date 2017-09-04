@@ -8,11 +8,11 @@ package org.hibernate.event.internal;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.List;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
@@ -40,6 +40,7 @@ import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.VersionSupport;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * An event that occurs for each entity instance at flush time
@@ -153,7 +154,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final EventSource session = event.getSession();
 		final EntityDescriptor entityDescriptor = entry.getPersister();
 		final Status status = entry.getStatus();
-		final Type[] types = entityDescriptor.getPropertyTypes();
+		final List persistentAttributes = entityDescriptor.getPersistentAttributes();
 
 		final boolean mightBeDirty = entry.requiresDirtyCheck( entity );
 
@@ -162,7 +163,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		event.setPropertyValues( values );
 
 		//TODO: avoid this for non-new instances where mightBeDirty==false
-		boolean substitute = wrapCollections( session, entityDescriptor, types, values );
+		boolean substitute = wrapCollections( session, entityDescriptor, persistentAttributes, values );
 
 		if ( isUpdateNecessary( event, mightBeDirty ) ) {
 			substitute = scheduleUpdate( event ) || substitute;
@@ -177,7 +178,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			// Search for collections by reachability, updating their role.
 			// We don't want to touch collections reachable from a deleted object
 			if ( entityDescriptor.hasCollections() ) {
-				new FlushVisitor( session, entity ).processEntityPropertyValues( values, types );
+				new FlushVisitor( session, entity ).processEntityPropertyValues( values, persistentAttributes );
 			}
 		}
 
@@ -210,7 +211,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	private boolean wrapCollections(
 			EventSource session,
 			EntityDescriptor persister,
-			Type[] types,
+			List<PersistentAttribute> persistentAttributes,
 			Object[] values) {
 		if ( !persister.hasCollections() ) {
 			return false;
@@ -226,7 +227,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		WrapVisitor visitor = new WrapVisitor( session );
 		// substitutes into values by side-effect
-		visitor.processEntityPropertyValues( values, types );
+		visitor.processEntityPropertyValues( values, persistentAttributes );
 		return visitor.isSubstitutionRequired();
 	}
 
@@ -335,21 +336,21 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	protected boolean handleInterception(FlushEntityEvent event) {
 		SessionImplementor session = event.getSession();
 		EntityEntry entry = event.getEntityEntry();
-		EntityDescriptor persister = entry.getPersister();
+		EntityDescriptor entityDescriptor = entry.getDescriptor();
 		Object entity = event.getEntity();
 
 		//give the Interceptor a chance to modify property values
 		final Object[] values = event.getPropertyValues();
-		final boolean intercepted = invokeInterceptor( session, entity, entry, values, persister );
+		final boolean intercepted = invokeInterceptor( session, entity, entry, values, entityDescriptor );
 
 		//now we might need to recalculate the dirtyProperties array
 		if ( intercepted && event.isDirtyCheckPossible() && !event.isDirtyCheckHandledByInterceptor() ) {
 			int[] dirtyProperties;
 			if ( event.hasDatabaseSnapshot() ) {
-				dirtyProperties = persister.findModified( event.getDatabaseSnapshot(), values, entity, session );
+				dirtyProperties = entityDescriptor.findModified( event.getDatabaseSnapshot(), values, entity, session );
 			}
 			else {
-				dirtyProperties = persister.findDirty( values, entry.getLoadedState(), entity, session );
+				dirtyProperties = entityDescriptor.findDirty( values, entry.getLoadedState(), entity, session );
 			}
 			event.setDirtyProperties( dirtyProperties );
 		}
@@ -366,7 +367,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		boolean isDirty = false;
 		if ( entry.getStatus() != Status.DELETED ) {
 			if ( callbackRegistry.preUpdate( entity ) ) {
-				isDirty = copyState( entity, persister.getPropertyTypes(), values, session.getFactory() );
+				isDirty = copyState( entity, persister.getPropertyJavaTypeDescriptors(), values, session.getFactory() );
 			}
 		}
 
@@ -382,7 +383,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		return answerFromInterceptor || isDirty;
 	}
 
-	private boolean copyState(Object entity, Type[] types, Object[] state, SessionFactory sf) {
+	private boolean copyState(Object entity, JavaTypeDescriptor[] javaTypeDescriptors, Object[] state, SessionFactory sf) {
 		// copy the entity state into the state array and return true if the state has changed
 		ClassMetadata metadata = sf.getClassMetadata( entity.getClass() );
 		Object[] newState = metadata.getPropertyValues( entity );
@@ -391,7 +392,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		for ( int index = 0; index < size ; index++ ) {
 			if ( ( state[index] == LazyPropertyInitializer.UNFETCHED_PROPERTY &&
 					newState[index] != LazyPropertyInitializer.UNFETCHED_PROPERTY ) ||
-					( state[index] != newState[index] && !types[index].isEqual( state[index], newState[index] ) ) ) {
+					( state[index] != newState[index] && !javaTypeDescriptors[index].areEqual( state[index], newState[index] ) ) ) {
 				isDirty = true;
 				state[index] = newState[index];
 			}
@@ -494,7 +495,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 					event.getSession(),
 					persister.getPropertyVersionability()
 			);
-			visitor.processEntityPropertyValues( event.getPropertyValues(), persister.getPropertyTypes() );
+			visitor.processEntityPropertyValues( event.getPropertyValues(), persister.getPersistentAttributes() );
 			boolean hasDirtyCollections = visitor.wasDirtyCollectionFound();
 			event.setHasDirtyCollection( hasDirtyCollections );
 			return hasDirtyCollections;
@@ -568,7 +569,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				session.getFactory().getCustomEntityDirtinessStrategy().findDirty(
 						entity,
 						persister,
-						(Session) session,
+						session,
 						context
 				);
 				dirtyProperties = context.found;

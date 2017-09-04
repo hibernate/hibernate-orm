@@ -20,6 +20,7 @@ import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
@@ -35,8 +36,14 @@ import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.ast.tree.spi.from.TableReference;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -50,6 +57,21 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 			EntityMapping bootMapping,
 			RuntimeModelCreationContext creationContext) throws HibernateException {
 		super( bootMapping, creationContext );
+	}
+
+	@Override
+	public SqmNavigableReference createSqmExpression(
+			SqmFrom sourceSqmFrom, SomeCreationContext creationContext) {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			TableReference tableReference,
+			SqmNavigableReference navigableReference,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		throw new NotYetImplementedException(  );
 	}
 
 	@Override
@@ -509,5 +531,15 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 	@Override
 	public void registerAffectingFetchProfile(String fetchProfileName) {
 
+	}
+
+	@Override
+	public boolean hasCollections() {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session) {
+		throw new NotYetImplementedException(  );
 	}
 }

@@ -738,4 +738,6 @@ public interface EntityDescriptor<T>
 	 * Does this entity define a natural-id.
 	 */
 	boolean hasNaturalIdentifier();
+
+	boolean hasCollections();
 }

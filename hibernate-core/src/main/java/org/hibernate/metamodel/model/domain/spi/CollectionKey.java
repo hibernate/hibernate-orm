@@ -14,24 +14,31 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class CollectionKey {
 	private final AbstractPersistentCollectionDescriptor collectionPersister;
+	private final JavaTypeDescriptor javaTypeDescriptor;
 
 	private ForeignKey.ColumnMappings joinColumnMappings;
 
 	public CollectionKey(AbstractPersistentCollectionDescriptor<?,?,?> collectionPersister, Collection mappingBinding) {
 		this.collectionPersister = collectionPersister;
+		javaTypeDescriptor = mappingBinding.getJavaTypeDescriptor();
 	}
 
 	public ForeignKey.ColumnMappings getJoinColumnMappings() {
 		return joinColumnMappings;
 	}
 
-//	public ForeignKey.ColumnMappings buildJoinColumnMappings(List<Column> joinTargetColumns) {
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return javaTypeDescriptor;
+	}
+
+	//	public ForeignKey.ColumnMappings buildJoinColumnMappings(List<Column> joinTargetColumns) {
 //		// NOTE : called from JoinableAttributeContainer#resolveColumnMappings do not "refactor" into #getJoinColumnMappings()
 //
 //		// NOTE : joinTargetColumns are the owner's columns we join to (target) whereas #resolveJoinSourceColumns()

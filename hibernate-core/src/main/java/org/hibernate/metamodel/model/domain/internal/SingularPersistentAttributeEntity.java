@@ -25,6 +25,7 @@ import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey.ColumnMappings;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
@@ -190,11 +191,13 @@ public class SingularPersistentAttributeEntity<O,J>
 
 	@Override
 	public QueryResult createQueryResult(
-			Expression expression,
+			TableReference tableReference,
+			SqmNavigableReference navigableReference,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		return entityDescriptor.createQueryResult(
-				expression,
+				tableReference,
+				navigableReference,
 				resultVariable,
 				creationContext
 		);

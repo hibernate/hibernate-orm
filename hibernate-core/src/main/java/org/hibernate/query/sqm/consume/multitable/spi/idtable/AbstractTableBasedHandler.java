@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.sqm.consume.multitable.spi.Handler;
 import org.hibernate.query.sqm.consume.multitable.spi.HandlerCreationContext;
 import org.hibernate.query.sqm.consume.multitable.spi.HandlerExecutionContext;
@@ -164,7 +165,7 @@ public abstract class AbstractTableBasedHandler implements Handler {
 		if ( sessionUidSupport.needsSessionUidColumn() ) {
 			// we need to insert the uid into the id-table to properly identify the rows later
 			entityIdSelect.getSelectClause().addSqlSelection(
-					generateSessionUidLiteralExpression( executionContext ).createSqlExpression().createSqlSelection(
+					generateSessionUidLiteralExpression( executionContext ).createSqlSelection(
 							idTableInfo.getPhysicalColumns().size()
 					)
 			);
@@ -236,9 +237,8 @@ public abstract class AbstractTableBasedHandler implements Handler {
 					new RelationalPredicate(
 							RelationalPredicate.Operator.EQUAL,
 							new ColumnReference(
-									sessUidColumn,
-									StandardSpiBasicTypes.STRING,
-									( (IdTableGroup) tableSpace.getRootTableGroup() ).getPrimaryTableReference()
+									tableSpace.getRootTableGroup(),
+									sessUidColumn
 							),
 							generateSessionUidLiteralExpression( executionContext )
 					)

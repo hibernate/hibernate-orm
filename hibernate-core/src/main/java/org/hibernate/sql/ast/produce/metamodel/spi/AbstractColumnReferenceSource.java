@@ -96,7 +96,7 @@ public abstract class AbstractColumnReferenceSource implements ColumnReferenceSo
 							") to ColumnBinding via TableGroup [" + this + "]"
 			);
 		}
-		final ColumnReference columnBinding = new ColumnReference( column, tableBinding );
+		final ColumnReference columnBinding = new ColumnReference( tableBinding, column );
 		columnBindingMap.put( column, columnBinding );
 		return columnBinding;
 	}

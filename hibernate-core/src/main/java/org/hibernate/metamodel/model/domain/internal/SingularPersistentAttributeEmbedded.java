@@ -22,10 +22,13 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.results.internal.CompositeFetchImpl;
 import org.hibernate.sql.results.internal.CompositeQueryResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
@@ -140,12 +143,12 @@ public class SingularPersistentAttributeEmbedded<O,J>
 
 	@Override
 	public QueryResult createQueryResult(
-			Expression expression,
+			TableReference tableReference,
+			SqmNavigableReference navigableReference,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		return new CompositeQueryResultImpl( resultVariable, embeddedDescriptor );
 	}
-
 
 	@Override
 	public Fetch generateFetch(
@@ -157,6 +160,7 @@ public class SingularPersistentAttributeEmbedded<O,J>
 		// todo (6.0) : use qualifier to create the SqlSelection mappings
 		return new CompositeFetchImpl(
 				fetchParent,
+				qualifier,
 				this,
 				fetchStrategy,
 				creationContext

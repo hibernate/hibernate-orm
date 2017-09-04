@@ -85,7 +85,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 
 	private final org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor keyJavaTypeDescriptor;
 
-	private final Serializable[] spaces;
+	private final String[] spaces;
 
 	public AbstractPersistentCollectionDescriptor(
 			Collection collectionBinding,
@@ -270,7 +270,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 	}
 
 	@Override
-	public Serializable[] getCollectionSpaces() {
+	public String[] getCollectionSpaces() {
 		return spaces;
 	}
 

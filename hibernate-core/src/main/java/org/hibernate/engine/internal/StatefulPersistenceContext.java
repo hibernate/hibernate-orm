@@ -1673,7 +1673,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void registerInsertedKey(EntityDescriptor persister, Serializable id) {
 		// we only are worried about registering these if the persister defines caching
 		final EntityDataAccess cacheAccess = session.getFactory().getCache()
-				.getEntityRegionAccess( persister.getHierarchy().getRootEntityType() );
+				.getEntityRegionAccess( persister.getHierarchy() );
 		if ( cacheAccess != null ) {
 			if ( insertedKeysMap == null ) {
 				insertedKeysMap = new HashMap<>();
@@ -1692,7 +1692,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public boolean wasInsertedDuringTransaction(EntityDescriptor persister, Serializable id) {
 		// again, we only really care if the entity is cached
 		final EntityDataAccess cacheAccess = persister.getFactory().getCache()
-				.getEntityRegionAccess( persister.getHierarchy().getRootEntityType() );
+				.getEntityRegionAccess( persister.getHierarchy() );
 		if ( cacheAccess != null ) {
 			if ( insertedKeysMap != null ) {
 				final List<Serializable> insertedEntityIds = insertedKeysMap.get(
@@ -1739,7 +1739,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			if ( justAddedLocally ) {
 				final NaturalIdDataAccess cacheAccess = persister.getFactory().getCache()
-						.getNaturalIdRegionAccess( persister.getHierarchy().getRootEntityType() );
+						.getNaturalIdRegionAccess( persister.getHierarchy() );
 				if ( cacheAccess != null ) {
 					managedSharedCacheEntries( persister, cacheAccess, id, naturalIdValues, null, CachedNaturalIdValueSource.LOAD );
 				}
@@ -1778,7 +1778,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			final NaturalIdDataAccess cacheAccess = persister.getFactory().getCache()
-					.getNaturalIdRegionAccess( persister.getHierarchy().getRootEntityType() );
+					.getNaturalIdRegionAccess( persister.getHierarchy() );
 			if ( cacheAccess == null ) {
 				// nothing to do
 				return;
@@ -1915,7 +1915,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			final NaturalIdDataAccess cacheAccess = persister.getFactory().getCache()
-					.getNaturalIdRegionAccess( persister.getHierarchy().getRootEntityType() );
+					.getNaturalIdRegionAccess( persister.getHierarchy() );
 			if ( cacheAccess == null ) {
 				// nothing to do
 				return;

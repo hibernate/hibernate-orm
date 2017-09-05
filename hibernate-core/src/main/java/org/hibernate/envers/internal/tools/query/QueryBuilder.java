@@ -20,6 +20,7 @@ import org.hibernate.envers.internal.entities.RevisionTypeType;
 import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Triple;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.Query;
 
 /**
@@ -251,7 +252,7 @@ public class QueryBuilder {
 				query.setParameter(
 						paramValue.getKey(),
 						paramValue.getValue(),
-						RevisionTypeType.INSTANCE
+						(AllowableParameterType) RevisionTypeType.INSTANCE
 				);
 			}
 			else {

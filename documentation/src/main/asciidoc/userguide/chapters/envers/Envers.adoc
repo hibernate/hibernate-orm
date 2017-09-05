@@ -927,16 +927,23 @@ include::{extrasdir}/envers-tracking-properties-changes-queries-at-revision-exam
 ====
 
 [[envers-tracking-modified-entities-queries]]
-=== Querying for entities modified in a given revision
+=== Querying for entity types modified in a given revision
 
-The basic query allows retrieving entity names and corresponding Java classes changed in a specified revision:
+[NOTE]
+====
+The methods described below can be used only when the default mechanism of tracking changed entity types is enabled (see <<envers-tracking-modified-entities-revchanges>>).
+====
 
-[source,java]
+This basic query allows retrieving entity names and corresponding Java classes changed in a specified revision:
+
+[[envers-tracking-modified-entities-queries-example]]
+.Retrieving entity names and corresponding Java classes changed in a specified revision
+====
+[source, JAVA, indent=0]
 ----
-modifiedEntityTypes = getAuditReader()
-	.getCrossTypeRevisionChangesReader()
-	.findEntityTypes( revisionNumber );
+include::{sourcedir}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-queries-example]
 ----
+====
 
 Other queries (also accessible from `org.hibernate.envers.CrossTypeRevisionChangesReader`):
 
@@ -951,8 +958,6 @@ Other queries (also accessible from `org.hibernate.envers.CrossTypeRevisionChang
 `Map<RevisionType, List<Object>> findEntitiesGroupByRevisionType( Number )`::
   Returns a map containing lists of entity snapshots grouped by modification operation (e.g. addition, update and removal).
   Executes `3N+1` SQL queries, where `N` is a number of different entity classes modified within specified revision.
-
-Note that methods described above can be legally used only when the default mechanism of tracking changed entity names is enabled (see <<envers-tracking-modified-entities-revchanges>>).
 
 [[envers-querying-entity-relation-jobs]]
 === Querying for entities using entity relation joins

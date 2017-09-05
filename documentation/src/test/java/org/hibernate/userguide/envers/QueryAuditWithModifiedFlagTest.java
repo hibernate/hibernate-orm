@@ -6,9 +6,6 @@
  */
 package org.hibernate.userguide.envers;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +22,6 @@ import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -84,13 +80,6 @@ public class QueryAuditWithModifiedFlagTest extends BaseEntityManagerFunctionalT
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Customer customer = entityManager.getReference( Customer.class, 1L );
 			entityManager.remove( customer );
-		} );
-
-		List<Number> revisions = doInJPA( this::entityManagerFactory, entityManager -> {
-			 return AuditReaderFactory.get( entityManager ).getRevisions(
-				Customer.class,
-				1L
-			);
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {

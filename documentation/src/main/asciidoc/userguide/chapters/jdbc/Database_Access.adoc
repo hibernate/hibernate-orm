@@ -19,8 +19,9 @@ Hibernate will internally determine which `ConnectionProvider` to use based on t
 4. else if any setting prefixed by `hibernate.proxool.` is set -> <<database-connectionprovider-proxool>>
 5. else if any setting prefixed by `hibernate.hikari.` is set -> <<database-connectionprovider-hikari>>
 6. else if any setting prefixed by `hibernate.vibur.` is set -> <<database-connectionprovider-vibur>>
-7. else if `hibernate.connection.url` is set -> <<database-connectionprovider-drivermanager>>
-8. else -> <<database-connectionprovider-provided>>
+7. else if any setting prefixed by `hibernate.agroal.` is set -> <<database-connectionprovider-agroal>>
+8. else if `hibernate.connection.url` is set -> <<database-connectionprovider-drivermanager>>
+9. else -> <<database-connectionprovider-provided>>
 
 [[database-connectionprovider-datasource]]
 === Using DataSources
@@ -136,6 +137,26 @@ Additionally, this `ConnectionProvider` will pick up the following Hibernate-spe
 `hibernate.connection.password`:: Mapped to Vibur's `password` setting
 `hibernate.connection.isolation`:: Mapped to Vibur's `defaultTransactionIsolationValue` setting. See <<ConnectionProvider support for transaction isolation setting>>.
 `hibernate.connection.autocommit`:: Mapped to Vibur's `defaultAutoCommit` setting
+
+[[database-connectionprovider-agroal]]
+=== Using Agroal
+
+[IMPORTANT]
+====
+To use this integration, the application must include the hibernate-agroal module jar (as well as its dependencies) on the classpath.
+====
+
+Hibernate also provides support for applications to use http://agroal.github.io/[Agroal] connection pool.
+
+Set all of your Agroal settings in Hibernate prefixed by `hibernate.agroal.` and this `ConnectionProvider` will pick them up and pass them along to Agroal connection pool.
+Additionally, this `ConnectionProvider` will pick up the following Hibernate-specific properties and map them to the corresponding Agroal ones (any `hibernate.agroal.` prefixed ones have precedence):
+
+`hibernate.connection.driver_class`:: Mapped to Agroal's `driverClassName` setting
+`hibernate.connection.url`:: Mapped to Agroal's `jdbcUrl` setting
+`hibernate.connection.username`:: Mapped to Agroal's `principal` setting
+`hibernate.connection.password`:: Mapped to Agroal's `credential` setting
+`hibernate.connection.isolation`:: Mapped to Agroal's `jdbcTransactionIsolation` setting. See <<ConnectionProvider support for transaction isolation setting>>.
+`hibernate.connection.autocommit`:: Mapped to Agroal's `autoCommit` setting
 
 [[database-connectionprovider-drivermanager]]
 === Using Hibernate's built-in (and unsupported) pooling

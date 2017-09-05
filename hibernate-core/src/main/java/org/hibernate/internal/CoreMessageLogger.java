@@ -1795,4 +1795,10 @@ public interface CoreMessageLogger extends BasicLogger {
 			Object id
 	);
 
+	@LogMessage(level = WARN)
+	@Message(value = "Agroal properties were encountered, but the Agroal ConnectionProvider was not found on the classpath; these properties are going to be ignored.",
+			id = 486)
+	void agroalProviderClassNotFound();
+
+
 }

@@ -19,6 +19,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.criteria.JoinType;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.envers.AuditReaderFactory;
@@ -224,6 +225,39 @@ public class QueryAuditTest extends BaseEntityManagerFunctionalTestCase {
 			//end::revisions-of-entity-query-minimize-example[]
 
 			assertEquals( 1, revision );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			{
+				//tag::envers-querying-entity-relation-inner-join[]
+				AuditQuery innerJoinAuditQuery = AuditReaderFactory
+				.get( entityManager )
+				.createQuery()
+				.forEntitiesAtRevision( Customer.class, 1 )
+				.traverseRelation( "address", JoinType.INNER );
+				//end::envers-querying-entity-relation-inner-join[]
+			}
+			{
+				//tag::envers-querying-entity-relation-left-join[]
+				AuditQuery innerJoinAuditQuery = AuditReaderFactory
+				.get( entityManager )
+				.createQuery()
+				.forEntitiesAtRevision( Customer.class, 1 )
+				.traverseRelation( "address", JoinType.LEFT );
+				//end::envers-querying-entity-relation-left-join[]
+			}
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::envers-querying-entity-relation-join-restriction[]
+			Customer customer = (Customer) AuditReaderFactory
+			.get( entityManager )
+			.createQuery()
+			.forEntitiesAtRevision( Customer.class, 1 )
+			.traverseRelation( "address", JoinType.INNER )
+			.add( AuditEntity.property( "country" ).eq( "România" ) )
+			.getSingleResult();
+			//end::envers-querying-entity-relation-join-restriction[]
 		} );
 	}
 

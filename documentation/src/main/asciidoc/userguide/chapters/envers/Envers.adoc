@@ -959,60 +959,79 @@ Other queries (also accessible from `org.hibernate.envers.CrossTypeRevisionChang
   Returns a map containing lists of entity snapshots grouped by modification operation (e.g. addition, update and removal).
   Executes `3N+1` SQL queries, where `N` is a number of different entity classes modified within specified revision.
 
-[[envers-querying-entity-relation-jobs]]
+[[envers-querying-entity-relation-joins]]
 === Querying for entities using entity relation joins
 
-Audit queries support the ability to apply constraints, projections, and sort operations based on entity relations.  In order
-to traverse entity relations through an audit query, you must use the relation traversal API with a join type.
-
-[IMPORTANT]
+[WARNING]
 ====
 Relation join queries are considered experimental and may change in future releases.
 ====
 
+Audit queries support the ability to apply constraints, projections, and sort operations based on entity relations.  In order
+to traverse entity relations through an audit query, you must use the relation traversal API with a join type.
+
 [NOTE]
 ====
-Relation joins can only be applied to `*-to-one` mappings and can only be specified using `JoinType.LEFT` or
-`JoinType.INNER`.
+Relation joins can be applied to `many-to-one` and `many-to-one` mappings only when using `JoinType.LEFT` or `JoinType.INNER`.
 ====
 
 The basis for creating an entity relation join query is as follows:
 
-[source,java]
+[[envers-querying-entity-relation-inner-join]]
+.INNER JOIN entity audit query
+====
+[source, JAVA, indent=0]
 ----
-// create an inner join query
-AuditQuery query = getAuditReader().createQuery()
-    .forEntitiesAtRevision( Car.class, 1 )
-    .traverseRelation( "owner", JoinType.INNER );
+include::{sourcedir}/QueryAuditTest.java[tags=envers-querying-entity-relation-inner-join]
+----
+====
 
-// create a left join query
-AuditQuery query = getAuditReader().createQuery()
-    .forEntitiesAtRevision( Car.class, 1 )
-    .traverseRelation( "owner", JoinType.LEFT );
+[[envers-querying-entity-relation-left-join]]
+.LEFT JOIN entity audit query
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/QueryAuditTest.java[tags=envers-querying-entity-relation-left-join]
+----
+====
+
+Like any other query, constraints may be added to restrict the results.
+
+For example, to find all `Customers` entities whose addresses are in `România`,
+you can use the following query:
+
+[[envers-querying-entity-relation-join-restriction]]
+.Filtering the join relation with a WHERE clause predicate
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/QueryAuditTest.java[tags=envers-querying-entity-relation-join-restriction]
 ----
 
-Like any other query, constraints may be added to restrict the results.  For example, to find all `Car` entities that
-have an owner with a name starting with `Joe`, you would use:
+[source, SQL, indent=0]
+----
+include::{extrasdir}/envers-querying-entity-relation-join-restriction.sql[]
+----
+====
 
-[source,java]
+It is also possible to traverse beyond the first relation in an entity graph.
+
+For example, to find all `Customer` entities
+where the country entity belonging to the address attribute is `România`:
+
+[[envers-querying-entity-relation-nested-join-restriction]]
+.Filtering a nested join relation with a WHERE clause predicate
+====
+[source, JAVA, indent=0]
 ----
-AuditQuery query = getAuditReader().createQuery()
-    .forEntitiesAtRevision( Car.class, 1 )
-    .traverseRelation( "owner", JoinType.INNER )
-    .add( AuditEntity.property( "name" ).like( "Joe%" ) );
+include::{sourcedir}/QueryAuditAdressCountryTest.java[tags=envers-querying-entity-relation-nested-join-restriction]
 ----
 
-It is also possible to traverse beyond the first relation in an entity graph.  For example, to find all `Car` entities
-where the owner's address has a street number that equals `1234`:
-
-[source,java]
+[source, SQL, indent=0]
 ----
-AuditQuery query = getAuditReader().createQuery()
-    .forEntitiesAtRevision( Car.class, 1 )
-    .traverseRelation( "owner", JoinType.INNER )
-    .traverseRelation( "address", JoinType.INNER )
-    .add( AuditEntity.property( "streetNumber" ).eq( 1234 ) );
+include::{extrasdir}/envers-querying-entity-relation-nested-join-restriction.sql[]
 ----
+====
 
 Complex constraints may also be added that are applicable to properties of nested relations or the base query entity or
 relation state, such as testing for `null`.  For example, the following query illustrates how to find all `Car` entities where

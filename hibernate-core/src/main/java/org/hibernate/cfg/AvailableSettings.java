@@ -175,6 +175,15 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to pass along the CDI BeanManager, if any, to be used.
+	 *
+	 * According to JPA, strictly, the BeanManager should be passed in
+	 * at boot-time and be ready for use at that time.  However not all
+	 * environments can do this (WildFly for one).  To accommodate such
+	 * environments, Hibernate provides an SPI via
+	 * {@link org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager} that
+	 * can be used to provide delayed BeanManager access.  Long story
+	 * short, this setting could be typed as BeanManager or as
+	 * {@link org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager}.
 	 */
 	String CDI_BEAN_MANAGER = "javax.persistence.bean.manager";
 

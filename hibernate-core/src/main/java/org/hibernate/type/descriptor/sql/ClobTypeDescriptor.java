@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Arrays;
 
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -41,19 +42,34 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getClob( name ), options );
+				if ( options.useStringForCLobBinding() ) {
+					return STRING_BINDING.getExtractor( javaTypeDescriptor ).extract( rs, name, options );
+				}
+				else {
+					return javaTypeDescriptor.wrap( rs.getClob( name ), options );
+				}
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 					throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getClob( index ), options );
+				if ( options.useStringForCLobBinding() ) {
+					return STRING_BINDING.getExtractor( javaTypeDescriptor ).extract( statement, index, options );
+				}
+				else {
+					return javaTypeDescriptor.wrap( statement.getClob( index ), options );
+				}
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getClob( name ), options );
+				if ( options.useStringForCLobBinding() ) {
+					return STRING_BINDING.getExtractor( javaTypeDescriptor ).extract( statement, new String[] { name }, options );
+				}
+				else {
+					return javaTypeDescriptor.wrap( statement.getClob( name ), options );
+				}
 			}
 		};
 	}
@@ -76,6 +92,9 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 					if ( options.useStreamForLobBinding() ) {
 						STREAM_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
 					}
+					else if ( options.useStringForCLobBinding() ) {
+						STRING_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
+					}
 					else {
 						CLOB_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
 					}
@@ -86,6 +105,9 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 						throws SQLException {
 					if ( options.useStreamForLobBinding() ) {
 						STREAM_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, name, options );
+					}
+					else if ( options.useStringForCLobBinding() ) {
+						STRING_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, name, options );
 					}
 					else {
 						CLOB_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, name, options );
@@ -115,7 +137,7 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 	};
 
 
-	public static final ClobTypeDescriptor POSTGRESQL_CLOB_BINDING = new ClobTypeDescriptor() {
+	public static final ClobTypeDescriptor STRING_BINDING = new ClobTypeDescriptor() {
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicExtractor<X>( javaTypeDescriptor, this ) {

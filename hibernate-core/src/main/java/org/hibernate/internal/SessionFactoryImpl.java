@@ -1085,6 +1085,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		private String tenantIdentifier;
 		private TimeZone jdbcTimeZone;
 		private boolean queryParametersValidationEnabled;
+		private boolean useStringForClobBinding;
 
 		private List<SessionEventListener> listeners;
 
@@ -1111,6 +1112,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			listeners = sessionFactory.getSessionFactoryOptions().getBaselineSessionEventsListenerBuilder().buildBaselineList();
 			queryParametersValidationEnabled = sessionFactory.getSessionFactoryOptions().isQueryParametersValidationEnabled();
+			this.useStringForClobBinding = sessionFactory.getSessionFactoryOptions().isUseStringForClobBinding();
 		}
 
 
@@ -1207,6 +1209,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public TimeZone getJdbcTimeZone() {
 			return jdbcTimeZone;
+		}
+
+		@Override
+		public boolean isUseStringForClobBinding() {
+			return useStringForClobBinding;
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1454,6 +1461,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		public StatelessSessionBuilder setQueryParameterValidation(boolean enabled) {
 			queryParametersValidationEnabled = enabled;
 			return this;
+		}
+
+		@Override
+		public boolean isUseStringForClobBinding() {
+			return sessionFactory.getSessionFactoryOptions().isUseStringForClobBinding();
 		}
 	}
 

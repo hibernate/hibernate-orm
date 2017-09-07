@@ -223,4 +223,6 @@ public interface SessionFactoryOptions {
 	default boolean isQueryParametersValidationEnabled(){
 		return isJpaBootstrap();
 	}
+
+	boolean isUseStringForClobBinding();
 }

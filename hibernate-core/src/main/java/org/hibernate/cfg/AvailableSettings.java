@@ -8,6 +8,7 @@ package org.hibernate.cfg;
 
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -719,6 +720,19 @@ public interface AvailableSettings {
 	 * Use <tt>java.io</tt> streams to read / write binary data from / to JDBC
 	 */
 	String USE_STREAMS_FOR_BINARY = "hibernate.jdbc.use_streams_for_binary";
+
+	/**
+	 * Use <tt>String</tt> to read / write Clob data from / to JDBC.
+	 *
+	 * By default, the {@link Dialect#useInputStreamToInsertBlob()} option is used to save Clob object types.
+	 * {@link org.hibernate.dialect.PostgreSQL81Dialect#useInputStreamToInsertBlob()} does not use Clob binary streaming by default,
+	 * and that's where the <tt>hibernate.jdbc.use_string_for_clob<tt> property can be used
+	 * to save the Clob using the {@link org.hibernate.type.descriptor.sql.ClobTypeDescriptor#STRING_BINDING }, so, instead of saving an OID,
+	 * the actual String value is saved in the <tt>text</tt> column.
+	 *
+	 * @since 5.2.11
+	 */
+	String USE_STRING_FOR_CLOB = "hibernate.jdbc.use_string_for_clob";
 
 	/**
 	 * Use JDBC scrollable <tt>ResultSet</tt>s. This property is only necessary when there is

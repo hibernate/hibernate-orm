@@ -383,4 +383,9 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	public boolean isQueryParametersValidationEnabled() {
 		return delegate.isQueryParametersValidationEnabled();
 	}
+
+	@Override
+	public boolean isUseStringForClobBinding() {
+		return delegate.isUseStringForClobBinding();
+	}
 }

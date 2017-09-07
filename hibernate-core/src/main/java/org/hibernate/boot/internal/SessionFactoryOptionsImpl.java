@@ -127,6 +127,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 
 	private final Map<String, SQLFunction> sqlFunctions;
 	private boolean queryParametersValidationEnabled;
+	private boolean useStringForClobBinding;
 
 	public SessionFactoryOptionsImpl(SessionFactoryOptionsState state) {
 		this.serviceRegistry = state.getServiceRegistry();
@@ -207,6 +208,8 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.jdbcTimeZone = state.getJdbcTimeZone();
 
 		this.queryParametersValidationEnabled = state.isQueryParametersValidationEnabled();
+
+		this.useStringForClobBinding = state.isUseStringForClobBinding();
 	}
 
 	@Override
@@ -541,5 +544,10 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public boolean isQueryParametersValidationEnabled() {
 		return queryParametersValidationEnabled;
+	}
+
+	@Override
+	public boolean isUseStringForClobBinding() {
+		return useStringForClobBinding;
 	}
 }

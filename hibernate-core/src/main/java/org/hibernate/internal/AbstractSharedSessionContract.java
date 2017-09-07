@@ -130,6 +130,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private transient TransactionImplementor currentHibernateTransaction;
 	private transient TransactionCoordinator transactionCoordinator;
 	private transient Boolean useStreamForLobBinding;
+	private transient boolean useStringForClobBinding;
 	private transient long timestamp;
 
 	private Integer jdbcBatchSize;
@@ -157,6 +158,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		this.interceptor = interpret( options.getInterceptor() );
 		this.jdbcTimeZone = options.getJdbcTimeZone();
+		this.useStringForClobBinding = options.isUseStringForClobBinding();
 
 		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
 		this.jdbcSessionContext = new JdbcSessionContextImpl( this, statementInspector );
@@ -475,6 +477,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					|| getJdbcServices().getJdbcEnvironment().getDialect().useInputStreamToInsertBlob();
 		}
 		return useStreamForLobBinding;
+	}
+
+	@Override
+	public boolean useStringForCLobBinding() {
+		return useStringForClobBinding;
 	}
 
 	@Override

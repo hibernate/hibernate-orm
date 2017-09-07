@@ -564,6 +564,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private boolean wrapResultSetsEnabled;
 		private TimeZone jdbcTimeZone;
 		private boolean queryParametersValidationEnabled;
+		private boolean useStringForClobBinding;
 
 		private Map<String, SQLFunction> sqlFunctions;
 
@@ -775,6 +776,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 					VALIDATE_QUERY_PARAMETERS,
 					configurationSettings,
 					true
+			);
+
+			this.useStringForClobBinding = ConfigurationHelper.getBoolean(
+					USE_STRING_FOR_CLOB,
+					configurationSettings,
+					false
 			);
 		}
 
@@ -1213,6 +1220,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 
 		@Override
+		public boolean isUseStringForClobBinding() {
+			return useStringForClobBinding;
+		}
+
+		@Override
 		public boolean isQueryParametersValidationEnabled() {
 			return this.queryParametersValidationEnabled;
 		}
@@ -1543,5 +1555,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public boolean isQueryParametersValidationEnabled() {
 		return options.isQueryParametersValidationEnabled();
+	}
+
+	@Override
+	public boolean isUseStringForClobBinding() {
+		return options.isUseStringForClobBinding();
 	}
 }

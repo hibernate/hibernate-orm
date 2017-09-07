@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.lob;
 
-import java.io.UnsupportedEncodingException;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.List;
@@ -17,9 +16,10 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.ClobProxy;
 import org.hibernate.query.Query;
 
@@ -31,7 +31,6 @@ import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -39,9 +38,8 @@ import static org.junit.Assert.fail;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-11477")
-@RequiresDialect(PostgreSQL81Dialect.class)
-public class LobStringTest extends BaseCoreFunctionalTestCase {
-
+public class StringToClobTest extends BaseCoreFunctionalTestCase {
+	//SQL Server - VARCHAR(MAX) is limited to 8000 bytes only
 	private static final int LONG_STRING_SIZE = 3999;
 
 	private final String value1 = buildRecursively( LONG_STRING_SIZE, 'x' );
@@ -53,9 +51,15 @@ public class LobStringTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		configuration.setProperty( AvailableSettings.USE_STRING_FOR_CLOB, Boolean.TRUE.toString() );
+	}
+
+	@Override
 	protected void prepareTest() throws Exception {
 		TestEntity entity = new TestEntity();
-		doInHibernate( this::sessionFactory, session -> {
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
 
 			entity.setFirstLobField( value1 );
 			entity.setSecondLobField( value2 );
@@ -63,7 +67,7 @@ public class LobStringTest extends BaseCoreFunctionalTestCase {
 			session.save( entity );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
 			final TestEntity testEntity = session.find( TestEntity.class, entity.getId() );
 			assertThat( testEntity.getFirstLobField(), is( value1 ) );
 		} );
@@ -72,7 +76,7 @@ public class LobStringTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-11477")
 	public void testHqlQuery() {
-		doInHibernate( this::sessionFactory, session -> {
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
 			final Query query = session.createQuery( "from TestEntity" );
 
 			final List<TestEntity> results = query.list();
@@ -96,13 +100,11 @@ public class LobStringTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-11477")
 	public void testUsingStringLobAnnotatedPropertyInHqlQuery() {
-		doInHibernate( this::sessionFactory, session -> {
-			final List<TestEntity> results = session.createNativeQuery(
-				"select te.* " +
-				"from test_entity te " +
-				"where lower(convert_from(lo_get(cast(te.firstLobField as oid)), 'UTF8')) LIKE :value", TestEntity.class )
-			.setParameter( "value", value1 )
-			.list();
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			final Query query = session.createQuery( "from TestEntity where LOWER(firstLobField) LIKE :value" );
+			query.setParameter( "value", value1 );
+
+			final List<TestEntity> results = query.list();
 
 			assertThat( results.size(), is( 1 ) );
 
@@ -122,13 +124,11 @@ public class LobStringTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-11477")
 	public void testSelectStringLobAnnotatedInHqlQuery() {
-		doInHibernate( this::sessionFactory, session -> {
-			final List<String> results = session.createNativeQuery(
-				"select convert_from(lo_get(cast(te.secondLobField as oid)), 'UTF8') " +
-				"from test_entity te " +
-				"where lower(convert_from(lo_get(cast(te.firstLobField as oid)), 'UTF8')) LIKE :value" )
-			.setParameter( "value", value1 )
-			.list();
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			final Query query = session.createQuery(
+					"select t.secondLobField from TestEntity t where LOWER(t.firstLobField) LIKE :value" );
+			query.setParameter( "value", value1 );
+			final List<String> results = query.list();
 
 			assertThat( results.size(), is( 1 ) );
 
@@ -139,13 +139,11 @@ public class LobStringTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-11477")
 	public void testUsingLobPropertyInHqlQuery() {
-		doInHibernate( this::sessionFactory, session -> {
-			final List<String> results = session.createNativeQuery(
-				"select convert_from(lo_get(cast(te.secondLobField as oid)), 'UTF8') " +
-				"from test_entity te " +
-				"where lower(convert_from(lo_get(cast(te.clobField as oid)), 'UTF8')) LIKE :value" )
-			.setParameter( "value", value2 )
-			.list();
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			final Query query = session.createQuery(
+					"select t.secondLobField from TestEntity t where LOWER(t.clobField) LIKE :value" );
+			query.setParameter( "value", ClobProxy.generateProxy( value2 ) );
+			final List<String> results = query.list();
 
 			assertThat( results.size(), is( 1 ) );
 
@@ -156,21 +154,20 @@ public class LobStringTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-11477")
 	public void testSelectClobPropertyInHqlQuery() {
-		doInHibernate( this::sessionFactory, session -> {
-			final List<byte[]> results = session.createNativeQuery(
-				"select lo_get(cast(te.clobField as oid)) " +
-				"from test_entity te " +
-				"where lower(convert_from(lo_get(cast(te.clobField as oid)), 'UTF8')) LIKE :value" )
-			.setParameter( "value", value2 )
-			.list();
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			final Query query = session.createQuery(
+					"select t.clobField from TestEntity t where LOWER(t.clobField) LIKE :value" );
+			query.setParameter( "value", ClobProxy.generateProxy( value2 ) );
+			final List<Clob> results = query.list();
 
 			assertThat( results.size(), is( 1 ) );
 
+			final Clob clobField = results.get( 0 );
 			try {
-				assertThat( new String( results.get( 0 ), "UTF8"), is( value2 ) );
+				assertThat( clobField.getSubString( 1, (int) clobField.length() ), is( value2 ) );
 			}
-			catch (UnsupportedEncodingException e) {
-				fail(e.getMessage());
+			catch (SQLException e) {
+				fail( e.getMessage() );
 			}
 		} );
 	}

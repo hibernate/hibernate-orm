@@ -250,14 +250,16 @@ public class QueryAuditTest extends BaseEntityManagerFunctionalTestCase {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::envers-querying-entity-relation-join-restriction[]
-			Customer customer = (Customer) AuditReaderFactory
+			List<Customer> customers = AuditReaderFactory
 			.get( entityManager )
 			.createQuery()
 			.forEntitiesAtRevision( Customer.class, 1 )
 			.traverseRelation( "address", JoinType.INNER )
 			.add( AuditEntity.property( "country" ).eq( "România" ) )
-			.getSingleResult();
+			.getResultList();
 			//end::envers-querying-entity-relation-join-restriction[]
+
+			assertEquals( 1, customers.size() );
 		} );
 	}
 

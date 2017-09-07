@@ -98,6 +98,7 @@ public class ManyToManyUnidirectionalTest extends BaseEntityManagerFunctionalTes
 		@Id
 		@GeneratedValue
 		private Long id;
+
 		@ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 		private List<Address> addresses = new ArrayList<>();
 

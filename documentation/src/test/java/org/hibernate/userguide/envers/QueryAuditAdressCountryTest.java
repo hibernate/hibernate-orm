@@ -30,10 +30,12 @@ import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.test.legacy.Custom;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Vlad Mihalcea
@@ -83,34 +85,103 @@ public class QueryAuditAdressCountryTest extends BaseEntityManagerFunctionalTest
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			Customer customer = entityManager.find( Customer.class, 1L );
-			customer.setLastName( "Doe Jr." );
-		} );
-
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Customer customer = entityManager.getReference( Customer.class, 1L );
-			entityManager.remove( customer );
-		} );
-
-		List<Number> revisions = doInJPA( this::entityManagerFactory, entityManager -> {
-			 return AuditReaderFactory.get( entityManager ).getRevisions(
-				Customer.class,
-				1L
-			);
-		} );
-
-		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::envers-querying-entity-relation-nested-join-restriction[]
-			Customer customer = (Customer) AuditReaderFactory
+			List<Customer> customers = AuditReaderFactory
 			.get( entityManager )
 			.createQuery()
 			.forEntitiesAtRevision( Customer.class, 1 )
 			.traverseRelation( "address", JoinType.INNER )
 			.traverseRelation( "country", JoinType.INNER )
 			.add( AuditEntity.property( "name" ).eq( "România" ) )
-			.getSingleResult();
+			.getResultList();
+
+			assertEquals( 1, customers.size() );
 			//end::envers-querying-entity-relation-nested-join-restriction[]
 		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::envers-querying-entity-relation-join-multiple-restrictions[]
+			List<Customer> customers = AuditReaderFactory
+			.get( entityManager )
+			.createQuery()
+			.forEntitiesAtRevision( Customer.class, 1 )
+			.traverseRelation( "address", JoinType.LEFT, "a" )
+			.add(
+				AuditEntity.or(
+					AuditEntity.property( "a", "city" ).eq( "Cluj-Napoca" ),
+					AuditEntity.relatedId( "country" ).eq( null )
+				)
+			)
+			.getResultList();
+			//end::envers-querying-entity-relation-join-multiple-restrictions[]
+
+			assertEquals( 1, customers.size() );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::envers-querying-entity-relation-nested-join-multiple-restrictions[]
+			List<Customer> customers = AuditReaderFactory
+			.get( entityManager )
+			.createQuery()
+			.forEntitiesAtRevision( Customer.class, 1 )
+			.traverseRelation( "address", JoinType.INNER, "a" )
+			.traverseRelation( "country", JoinType.INNER, "cn" )
+			.up()
+			.up()
+			.add(
+				AuditEntity.disjunction()
+				.add( AuditEntity.property( "a", "city" ).eq( "Cluj-Napoca" ) )
+				.add( AuditEntity.property( "cn", "name" ).eq( "România" ) )
+			)
+			.addOrder( AuditEntity.property( "createdOn" ).asc() )
+			.getResultList();
+			//end::envers-querying-entity-relation-nested-join-multiple-restrictions[]
+
+			assertEquals( 1, customers.size() );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::envers-querying-entity-relation-nested-join-multiple-restrictions-combined-entities[]
+			Customer customer = entityManager.createQuery(
+				"select c " +
+				"from Customer c " +
+				"join fetch c.address a " +
+				"join fetch a.country " +
+				"where c.id = :id", Customer.class )
+			.setParameter( "id", 1L )
+			.getSingleResult();
+
+			customer.setLastName( "Doe Sr." );
+
+			customer.getAddress().setCity(
+				customer.getAddress().getCountry().getName()
+			);
+			//end::envers-querying-entity-relation-nested-join-multiple-restrictions-combined-entities[]
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+
+			//tag::envers-querying-entity-relation-nested-join-multiple-restrictions-combined[]
+			List<Number> revisions = AuditReaderFactory.get( entityManager ).getRevisions(
+				Customer.class,
+				1L
+			);
+
+			List<Customer> customers = AuditReaderFactory
+			.get( entityManager )
+			.createQuery()
+			.forEntitiesAtRevision( Customer.class, revisions.get( revisions.size() - 1 ) )
+			.traverseRelation( "address", JoinType.INNER, "a" )
+			.traverseRelation( "country", JoinType.INNER, "cn" )
+			.up()
+			.up()
+			.add( AuditEntity.property( "a", "city" ).eqProperty( "cn", "name" ) )
+			.getResultList();
+			//end::envers-querying-entity-relation-nested-join-multiple-restrictions-combined[]
+
+			assertEquals( 1, customers.size() );
+		} );
+
 	}
 
 	@Audited

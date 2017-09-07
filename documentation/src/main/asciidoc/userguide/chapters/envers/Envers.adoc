@@ -997,7 +997,7 @@ include::{sourcedir}/QueryAuditTest.java[tags=envers-querying-entity-relation-le
 
 Like any other query, constraints may be added to restrict the results.
 
-For example, to find all `Customers` entities whose addresses are in `România`,
+For example, to find a `Customers` entities at a given revision whose addresses are in `România`,
 you can use the following query:
 
 [[envers-querying-entity-relation-join-restriction]]
@@ -1016,8 +1016,8 @@ include::{extrasdir}/envers-querying-entity-relation-join-restriction.sql[]
 
 It is also possible to traverse beyond the first relation in an entity graph.
 
-For example, to find all `Customer` entities
-where the country entity belonging to the address attribute is `România`:
+For example, to find all `Customer` entities at a given revision
+with the country attribute of the address property being `România`:
 
 [[envers-querying-entity-relation-nested-join-restriction]]
 .Filtering a nested join relation with a WHERE clause predicate
@@ -1033,63 +1033,78 @@ include::{extrasdir}/envers-querying-entity-relation-nested-join-restriction.sql
 ----
 ====
 
-Complex constraints may also be added that are applicable to properties of nested relations or the base query entity or
-relation state, such as testing for `null`.  For example, the following query illustrates how to find all `Car` entities where
-the owner's age is `20` or that the car has _no_ owner:
+Constraints may also be added to the properties of nested joined relations, such as testing for `null`.
 
-[source,java]
+For example, the following query illustrates how to find all `Customer` entities at a given revision
+having the `address` in `Cluj-Napoca` or the `address` does _not_ have any country entity reference:
+
+[[envers-querying-entity-relation-join-multiple-restrictions]]
+.Filtering a join relation using multiple predicates
+====
+[source, JAVA, indent=0]
 ----
-AuditQuery query = getAuditReader().createQuery()
-    .forEntitiesAtRevision( Car.class, 1 )
-    .traverseRelation( "owner", JoinType.LEFT, "p" )
-    .up()
-    .add(
-        AuditEntity.or(
-            AuditEntity.property( "p", "age" ).eq( 20 ),
-            AuditEntity.relatedId( "owner" ).eq( null )
-        )
-    )
-    .addOrder( AuditEntity.property( "make" ).asc() );
+include::{sourcedir}/QueryAuditAdressCountryTest.java[tags=envers-querying-entity-relation-join-multiple-restrictions]
 ----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/envers-querying-entity-relation-join-multiple-restrictions.sql[]
+----
+====
 
 [NOTE]
 ====
 Queries can use the `up` method to navigate back up the entity graph.
 ====
 
-Disjunction criterion may also be applied to relation join queries.  For example, the following query will find all
-`Car` entities where the owner's age is `20` or that the owner lives at an address where the street number equals `1234`:
+Disjunction criterion may also be applied to relation join queries.
 
-[source,java]
+For example, the following query will find all `Customer` entities at a given revision
+where the country name is `România` or that the `Customer` lives in `Cluj-Napoca`:
+
+[[envers-querying-entity-relation-nested-join-multiple-restrictions]]
+.Filtering a nested join relation using multiple predicates
+====
+[source, JAVA, indent=0]
 ----
-AuditQuery query = getAuditReader().createQuery()
-    .forEntitiesAtRevision( Car.class, 1 )
-    .traverseRelation( "owner", JoinType.INNER, "p" )
-    .traverseRelation( "address", JoinType.INNER, "a" )
-    .up()
-    .up()
-    .add(
-        AuditEntity.disjunction()
-            .add( AuditEntity.property( "p", "age" ).eq( 20 ) )
-            .add( AuditEntity.property( "a", "streetNumber" ).eq( 1234 )
-        )
-    )
-    .addOrder( AuditEntity.property( "make" ).asc() );
+include::{sourcedir}/QueryAuditAdressCountryTest.java[tags=envers-querying-entity-relation-nested-join-multiple-restrictions]
 ----
 
-Lastly, this example illustrates how related entity properties can be compared as a constraint.  This query shows how to
-find the `Car` entities where the owner's `age` equals the `streetNumber` of where the owner lives:
+[source, SQL, indent=0]
+----
+include::{extrasdir}/envers-querying-entity-relation-nested-join-multiple-restrictions.sql[]
+----
+====
 
-[source,java]
+Lastly, this example illustrates how related entity properties can be compared in a single constraint.
+
+Assuming, the `Customer` and the `Address` were previously changed as follows:
+
+[[envers-querying-entity-relation-nested-join-multiple-restrictions-combined-entities]]
+.Changing the `Address` to match the `Country` name
+====
+[source, JAVA, indent=0]
 ----
-AuditQuery query = getAuditReader().createQuery()
-    .forEntitiesAtRevision( Car.class, 1 )
-    .traverseRelation( "owner", JoinType.INNER, "p" )
-    .traverseRelation( "address", JoinType.INNER, "a" )
-    .up()
-    .up()
-    .add( AuditEntity.property( "p", "age" ).eqProperty( "a", "streetNumber" ) );
+include::{sourcedir}/QueryAuditAdressCountryTest.java[tags=envers-querying-entity-relation-nested-join-multiple-restrictions-combined-entities]
 ----
+====
+
+The following query shows how to find the `Customer` entities
+where the `city` property of the `address` attribute equals the `name` of the associated `country` attribute.
+
+[[envers-querying-entity-relation-nested-join-multiple-restrictions-combined]]
+.Filtering a nested join relation using multiple predicates
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/QueryAuditAdressCountryTest.java[tags=envers-querying-entity-relation-nested-join-multiple-restrictions-combined]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/envers-querying-entity-relation-nested-join-multiple-restrictions-combined.sql[]
+----
+====
 
 [[envers-conditional-auditing]]
 === Conditional auditing

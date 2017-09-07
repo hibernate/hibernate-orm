@@ -184,6 +184,7 @@ public class QueryAuditAdressCountryTest extends BaseEntityManagerFunctionalTest
 
 	}
 
+	//tag::envers-generateschema-example[]
 	@Audited
 	@Entity(name = "Customer")
 	public static class Customer {
@@ -202,6 +203,9 @@ public class QueryAuditAdressCountryTest extends BaseEntityManagerFunctionalTest
 
 		@ManyToOne(fetch = FetchType.LAZY)
 		private Address address;
+
+		//Getters and setters omitted for brevity
+	//end::envers-generateschema-example[]
 
 		public Long getId() {
 			return id;
@@ -242,6 +246,7 @@ public class QueryAuditAdressCountryTest extends BaseEntityManagerFunctionalTest
 		public void setAddress(Address address) {
 			this.address = address;
 		}
+	//tag::envers-generateschema-example[]
 	}
 
 	@Audited
@@ -260,6 +265,8 @@ public class QueryAuditAdressCountryTest extends BaseEntityManagerFunctionalTest
 
 		private String streetNumber;
 
+		//Getters and setters omitted for brevity
+	//end::envers-generateschema-example[]
 		public Long getId() {
 			return id;
 		}
@@ -299,6 +306,7 @@ public class QueryAuditAdressCountryTest extends BaseEntityManagerFunctionalTest
 		public void setStreetNumber(String streetNumber) {
 			this.streetNumber = streetNumber;
 		}
+	//tag::envers-generateschema-example[]
 	}
 
 	@Audited
@@ -309,6 +317,9 @@ public class QueryAuditAdressCountryTest extends BaseEntityManagerFunctionalTest
 		private Long id;
 
 		private String name;
+
+		//Getters and setters omitted for brevity
+	//end::envers-generateschema-example[]
 
 		public Long getId() {
 			return id;
@@ -325,5 +336,7 @@ public class QueryAuditAdressCountryTest extends BaseEntityManagerFunctionalTest
 		public void setName(String name) {
 			this.name = name;
 		}
+	//tag::envers-generateschema-example[]
 	}
+	//end::envers-generateschema-example[]
 }

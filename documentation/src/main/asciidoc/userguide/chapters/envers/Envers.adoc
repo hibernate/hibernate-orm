@@ -1109,13 +1109,14 @@ include::{extrasdir}/envers-querying-entity-relation-nested-join-multiple-restri
 [[envers-conditional-auditing]]
 === Conditional auditing
 
-Envers persists audit data in reaction to various Hibernate events (e.g. `post update`, `post insert`, and so on), using a series of event listeners from the `org.hibernate.envers.event.spi` package.
+Envers persists audit data in reaction to various Hibernate events (e.g. `post update`, `post insert`, and so on),
+using a series of event listeners from the `org.hibernate.envers.event.spi` package.
 By default, if the Envers jar is in the classpath, the event listeners are auto-registered with Hibernate.
 
 Conditional auditing can be implemented by overriding some of the Envers event listeners.
 To use customized Envers event listeners, the following steps are needed:
 
-. Turn off automatic Envers event listeners registration by setting the `hibernate.listeners.envers.autoRegister` Hibernate property to `false`.
+. Turn off automatic Envers event listeners registration by setting the `hibernate.envers.autoRegisterListeners` Hibernate property to `false`.
 
 . Create subclasses for appropriate event listeners.
   For example, if you want to conditionally audit entity insertions, extend the `org.hibernate.envers.event.spi.EnversPostInsertEventListenerImpl` class.
@@ -1129,8 +1130,8 @@ To use customized Envers event listeners, the following steps are needed:
 
 [NOTE]
 ====
-The use of `hibernate.listeners.envers.autoRegister` has been deprecated.  A new configuration setting
-`hibernate.envers.autoRegisterListeners` should be used instead.
+The use of `hibernate.listeners.envers.autoRegister` has been deprecated.
+A new configuration setting `hibernate.envers.autoRegisterListeners` should be used instead.
 ====
 
 [[envers-schema]]
@@ -1144,13 +1145,15 @@ The audit table contains the following columns:
 
 id:: `id` of the original entity (this can be more then one column in the case of composite primary keys)
 revision number:: an integer, which matches to the revision number in the revision entity table.
-revision type:: a small integer
-audited fields:: propertied from the original entity being audited
+revision type:: The `org.hibernate.envers.RevisionType` enumeration ordinal stating if the change represent an INSERT, UPDATE or DELETE.
+audited fields:: properties from the original entity being audited
 
-The primary key of the audit table is the combination of the original id of the entity and the revision number, so there can be at most one historic entry for a given entity instance at a given revision.
+The primary key of the audit table is the combination of the original id of the entity and the revision number,
+so there can be at most one historic entry for a given entity instance at a given revision.
 
 The current entity data is stored in the original table and in the audit table.
 This is a duplication of data, however as this solution makes the query system much more powerful, and as memory is cheap, hopefully this won't be a major drawback for the users.
+
 A row in the audit table with entity id `ID`, revision `N` and data `D` means: entity with id `ID` has data `D` from revision `N` upwards.
 Hence, if we want to find an entity at revision `M`, we have to search for a row in the audit table, which has the revision number smaller or equal to `M`, but as large as possible.
 If no such row is found, or a row with a "deleted" marker is found, it means that the entity didn't exist at that revision.
@@ -1166,100 +1169,41 @@ The name of this table can be configured, the name of its columns as well as add
 [NOTE]
 ====
 While global revisions are a good way to provide correct auditing of relations, some people have pointed out that this may be a bottleneck in systems, where data is very often modified.
+
 One viable solution is to introduce an option to have an entity "locally revisioned", that is revisions would be created for it independently.
 This woulld not enable correct versioning of relations, but it would work without the `REVINFO` table.
+
 Another possibility is to introduce a notion of "revisioning groups", which would group entities sharing the same revision numbering.
 Each such group would have to consist of one or more strongly connected components belonging to the entity graph induced by relations between entities.
-Your opinions on the subject are very welcome on the forum! :)
+
+Your opinions on the subject are very welcome on the forum.
 ====
 
 [[envers-generateschema]]
-=== Generating schema with Ant
+=== Generating Envers schema with Hibernate hbm2ddl tool
 
-If you would like to generate the database schema file with the Hibernate Tools Ant task, you simply need to use the
-`org.hibernate.tool.ant.HibernateToolTask` to do so.  This task will generate the definitions of all entities, both of
-which are audited by Envers and those which are not.
+If you would like to generate the database schema file with Hibernate,
+you simply need to use the hbm2ddl too.
 
-For example:
+This task will generate the definitions of all entities, both of which are audited by Envers and those which are not.
 
-[source,xml]
+See the <<chapters/schema/Schema.adoc#schema-generation, Schema generation>> chapter for more info.
+
+For the following entities, Hibernate is going to generate the following database schema:
+
+[[envers-generateschema-example]]
+.Filtering a nested join relation using multiple predicates
+====
+[source, JAVA, indent=0]
 ----
-<target name="schemaexport" depends="build-demo" description="Exports a generated schema to DB and file">
-  <taskdef
-    name="hibernatetool"
-    classname="org.hibernate.tool.ant.HibernateToolTask"
-    classpathref="build.demo.classpath"
-  />
-  <hibernatetool destdir=".">
-    <classpath>
-      <fileset refid="lib.hibernate" />
-      <path location="${build.demo.dir}" />
-      <path location="${build.main.dir}" />
-    </classpath>
-    <jpaconfiguration persistenceunit="ConsolePU" />
-    <hbm2ddl
-      drop="false"
-      create="true"
-      export="false"
-      outputfilename="entities-ddl.sql"
-      delimiter=";"
-      format="true"
-    />
-  </hibernatetool>
-</target>
+include::{sourcedir}/QueryAuditAdressCountryTest.java[tags=envers-generateschema-example]
 ----
 
-Will generate the following schema:
-
-[source,sql]
+[source, SQL, indent=0]
 ----
-create table Address (
-	id integer generated by default as identity (start with 1),
-	flatNumber integer,
-	houseNumber integer,
-	streetName varchar(255),
-	primary key (id)
-);
-
-create table Address_AUD (
-	id integer not null,
-	REV integer not null,
-	flatNumber integer,
-	houseNumber integer,
-	streetName varchar(255),
-	REVTYPE tinyint,
-	primary key (id, REV)
-);
-
-create table Person (
-	id integer generated by default as identity (start with 1),
-	name varchar(255),
-	surname varchar(255),
-	address_id integer,
-	primary key (id)
-);
-
-create table Person_AUD (
-	id integer not null,
-	REV integer not null,
-	name varchar(255),
-	surname varchar(255),
-	REVTYPE tinyint,
-	address_id integer,
-	primary key (id, REV)
-);
-
-create table REVINFO (
-	REV integer generated by default as identity (start with 1),
-	REVTSTMP bigint,
-	primary key (REV)
-);
-
-alter table Person
-	add constraint FK8E488775E4C3EA63
-	foreign key (address_id)
-	references Address;
+include::{extrasdir}/envers-generateschema-example.sql[]
 ----
+====
 
 [[envers-mappingexceptions]]
 === Mapping exceptions
@@ -1426,6 +1370,6 @@ And sometime in 2011, the last partition (or 'extension bucket') is split into t
 .  http://hibernate.org[Hibernate main page]
 .  http://community.jboss.org/en/envers?view=discussions[Forum]
 .  https://hibernate.atlassian.net/[JIRA issue tracker] (when adding issues concerning Envers, be sure to select the "envers" component!)
-.  irc://irc.freenode.net:6667/envers[IRC channel]
+.  https://hibernate.hipchat.com/chat/room/1238636[HipChat channel]
 .  https://community.jboss.org/wiki/EnversFAQ[FAQ]
 

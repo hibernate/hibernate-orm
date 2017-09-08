@@ -476,10 +476,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	public String getForUpdateString(final String aliases, final LockOptions lockOptions) {
 		LockMode lockMode = lockOptions.getLockMode();
 
-		if ( LockMode.OPTIMISTIC.equals( lockMode ) || LockMode.OPTIMISTIC_FORCE_INCREMENT.equals( lockMode ) ) {
-			return "";
-		}
-
 		final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
 		while ( itr.hasNext() ) {
 			// seek the highest lock mode
@@ -495,7 +491,12 @@ public abstract class AbstractHANADialect extends Dialect {
 			return getForUpdateString( lockMode );
 		}
 
-		String clause = getForUpdateString( lockMode ) + " of " + aliases;
+		final String updateString = getForUpdateString( lockMode );
+		if ( updateString.isEmpty() ) {
+			return updateString;
+		}
+
+		String clause =  updateString + " of " + aliases;
 		if(lockOptions.getTimeOut() == LockOptions.NO_WAIT) {
 			clause += " nowait";
 		}

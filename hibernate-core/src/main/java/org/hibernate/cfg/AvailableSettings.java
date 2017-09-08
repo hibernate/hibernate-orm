@@ -11,6 +11,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryLiteralRendering;
+import org.hibernate.resource.cdi.spi.ExtendedBeanManager;
 import org.hibernate.resource.cdi.spi.ManagedBeanRegistry;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -179,6 +180,20 @@ public interface AvailableSettings {
 	/**
 	 * Used to pass along the CDI BeanManager, if any, to be used.
 	 *
+	 * According to JPA, strictly, the BeanManager should be passed in
+	 * at boot-time and be ready for use at that time.  However not all
+	 * environments can do this (WildFly for one).  To accommodate such
+	 * environments, Hibernate provides an SPI via
+	 * {@link ExtendedBeanManager} that
+	 * can be used to provide delayed BeanManager access.  Long story
+	 * short, this setting could be typed as BeanManager or as
+	 * {@link ExtendedBeanManager}.
+	 *
+	 * This setting is used to configure Hibernate ORM's access to
+	 * the BeanManager (either directly or via {@link ExtendedBeanManager}).
+	 * Code that wishes to integrate with the configured BeanManager is
+	 * instead expected to use the {@link ManagedBeanRegistry} service.
+	 *
 	 * @see #CDI_BEAN_REGISTRY
 	 */
 	String CDI_BEAN_MANAGER = "javax.persistence.bean.manager";
@@ -196,8 +211,9 @@ public interface AvailableSettings {
 	 *     </li>
 	 * </ul>
 	 * <p/>
-	 * For the first cases it is expected that the named Class define a ctor accepting the BeanManager
-	 * reference *as an {@link Object}*.
+	 * For the first cases it is expected that the named Class define a ctor
+	 * accepting the {@link #CDI_BEAN_MANAGER} reference *as an
+	 * {@link Object}*.
 	 *
 	 * @see #CDI_BEAN_MANAGER
 	 */

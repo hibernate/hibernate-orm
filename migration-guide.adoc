@@ -125,15 +125,50 @@ PostgreSQL dialect with:
 [source,java]
 ----
 public SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-   if(sqlCode == Types.CLOB){
-     return ClobTypeDescriptor.CLOB_BINDING;
-    }
-    return super.getSqlTypeDescriptorOverride( sqlCode );
+	if( sqlCode == Types.CLOB ){
+		return ClobTypeDescriptor.CLOB_BINDING;
+	}
+	return super.getSqlTypeDescriptorOverride( sqlCode );
 }
 ----
 
 In addition, any `Clob` values and values for `String`, `character[]`, `Character[]` attributes that are annotated with
-`@Lob` that were persisted using 5.2.9 or 5.2.10 should be updated to store the values as PostgreSQL Large Objects.
+`@Lob` that were stored as variable-length character strings using 5.2.9 or 5.2.10 should be updated to store the values
+as PostgreSQL Large Objects before migrating to 5.2.11.
+
+For example, if variable-length character strings were stored by 5.2.9 or 5.2.10 for the following mapping:
+
+[source,java]
+----
+@Entity(name = "TestEntity")
+@Table(name = "TEST_ENTITY")
+public static class TestEntity {
+	@Id
+	@GeneratedValue
+	private long id;
+
+	@Lob
+	String firstLobField;
+
+	@Lob
+	String secondLobField;
+
+	@Lob
+	Clob clobField;
+
+	...
+}
+----
+
+the variable-length character strings can be converted to PostgreSQL Large Objects by executing the following SQL:
+
+[source,sql]
+----
+update test_entity
+set clobfield = lo_from_bytea( 0, cast( clobfield as bytea ) ),
+    firstlobfield = lo_from_bytea( 0, cast( firstlobfield as bytea ) ),
+    secondlobfield = lo_from_bytea( 0, cast( secondlobfield as bytea ) )
+----
 
 == Misc
 

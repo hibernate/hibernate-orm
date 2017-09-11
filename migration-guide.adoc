@@ -94,6 +94,81 @@ This strategy may require `hibernate.default_schema` and/or `hibernate.default_c
 To use the old strategy, which executes a `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call for
 each javax.persistence.Entity, use the property setting `hibernate.hbm2ddl.jdbc_metadata_extraction_strategy=individually`.
 
+== Changes to how Clob values are processed using PostgreSQL81Dialect and its subclasses
+
+Up to and including 5.2.8, `Clob` values and values for `String`, `character[]`, and `Character[]` attributes that are
+annotated with `@Lob` were:
+
+* bound using `Clob` representations of the data (using `PreparedStatement#setClob` or `CallableStatement#setClob`);
+* retrieved as `Clob` values (using `ResultSet#getClob` or `CallableStatement#getClob`), which were converted to the
+appropriate Java type;
+* stored as PostgreSQL Large Objects; i.e., an `OID` for the value is stored in a `text` column,
+ which refers to the actual data stored in a different (PostgreSQL-specific) table.
+
+In 5.2.9 and 5.2.10, due to the fix for https://hibernate.atlassian.net/browse/HHH-11477[HHH-11477], `Clob` values and values for `String`, `character[]`, and `Character[]`
+attributes that are annotated with `@Lob` were:
+
+* bound using `String` representations of the data (using `PreparedStatement#setString` or `CallableStatement#setString`);
+* retrieved as `String` values (using `ResultSet#getString` or `CallableStatement#getString`), which were converted
+to the appropriate Java type;
+* stored as variable-length character strings.
+
+In 5.2.11, the fix for https://hibernate.atlassian.net/browse/HHH-11477[HHH-11477] was reverted
+(https://hibernate.atlassian.net/browse/HHH-11614[HHH-11614]) to restore the 5.2.8 behavior.
+
+As a consequence of these changes, data persisted using a version of Hibernate prior to 5.2.9 cannot be read
+using 5.2.9 or 5.2.10. Data persisted using Hibernate 5.2.9 or 5.2.10 can no longer be read using 5.2.11 or later.
+
+A workaround that can be used in 5.2.9 and 5.2.10 that will restore the 5.2.8/5.2.11 behavior is to override the
+PostgreSQL dialect with:
+
+[source,java]
+----
+public SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+	if( sqlCode == Types.CLOB ){
+		return ClobTypeDescriptor.CLOB_BINDING;
+	}
+	return super.getSqlTypeDescriptorOverride( sqlCode );
+}
+----
+
+In addition, any `Clob` values and values for `String`, `character[]`, `Character[]` attributes that are annotated with
+`@Lob` that were stored as variable-length character strings using 5.2.9 or 5.2.10 should be updated to store the values
+as PostgreSQL Large Objects before migrating to 5.2.11.
+
+For example, if variable-length character strings were stored by 5.2.9 or 5.2.10 for the following mapping:
+
+[source,java]
+----
+@Entity(name = "TestEntity")
+@Table(name = "TEST_ENTITY")
+public static class TestEntity {
+	@Id
+	@GeneratedValue
+	private long id;
+
+	@Lob
+	String firstLobField;
+
+	@Lob
+	String secondLobField;
+
+	@Lob
+	Clob clobField;
+
+	...
+}
+----
+
+the variable-length character strings can be converted to PostgreSQL Large Objects by executing the following SQL:
+
+[source,sql]
+----
+update test_entity
+set clobfield = lo_from_bytea( 0, cast( clobfield as bytea ) ),
+    firstlobfield = lo_from_bytea( 0, cast( firstlobfield as bytea ) ),
+    secondlobfield = lo_from_bytea( 0, cast( secondlobfield as bytea ) )
+----
 
 == Misc
 
@@ -111,4 +186,4 @@ each javax.persistence.Entity, use the property setting `hibernate.hbm2ddl.jdbc_
 * Setting `hibernate.listeners.envers.autoRegister` has been deprecated in favor of
   `hibernate.envers.autoRegisterListeners`.
 * AuditReader#getCurrentRevision has been deprecated in favor of `org.hibernate.envers.RevisionListener`.
-* As of 5.2.11, NoopOptimizer#generate will no longer skip negative values and 0 when it has a positive increment size; instead it will return the value obtained from the database.  
+* As of 5.2.11, NoopOptimizer#generate will no longer skip negative values and 0 when it has a positive increment size; instead it will return the value obtained from the database.

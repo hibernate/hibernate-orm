@@ -17,6 +17,7 @@ import javax.persistence.Lob;
 
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -34,6 +35,7 @@ import static org.junit.Assert.assertEquals;
  */
 @TestForIssue(jiraKey = "HHH-9834")
 @SkipForDialect(Oracle8iDialect.class)
+@SkipForDialect(value = PostgreSQL81Dialect.class, jiraKey = "HHH-11477", comment = "@Lob field in HQL predicate fails with error about text = bigint")
 public class StringMapNationalizedLobTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

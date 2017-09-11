@@ -107,9 +107,6 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 						: value;
 				return (X) clob;
 			}
-			else if ( String.class.isAssignableFrom( type ) ) {
-				return (X) DataHelper.extractString( value.getCharacterStream());
-			}
 		}
 		catch ( SQLException e ) {
 			throw new HibernateException( "Unable to access clob stream", e );
@@ -131,9 +128,6 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 		else if ( Reader.class.isAssignableFrom( value.getClass() ) ) {
 			Reader reader = (Reader) value;
 			return options.getLobCreator().createClob( DataHelper.extractString( reader ) );
-		}
-		else if ( String.class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().createClob( (String) value );
 		}
 
 		throw unknownWrap( value.getClass() );

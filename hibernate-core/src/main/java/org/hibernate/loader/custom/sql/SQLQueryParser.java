@@ -60,6 +60,10 @@ public class SQLQueryParser {
 		return aliasesFound>0;
 	}
 
+	protected String getOriginalQueryString() {
+		return originalQueryString;
+	}
+
 	public String process() {
 		String processedSql = substituteBrackets( originalQueryString );
 		processedSql = substituteParams( processedSql );
@@ -68,7 +72,7 @@ public class SQLQueryParser {
 
 	// TODO: should "record" how many properties we have reffered to - and if we 
 	//       don't get'em'all we throw an exception! Way better than trial and error ;)
-	private String substituteBrackets(String sqlQuery) throws QueryException {
+	protected String substituteBrackets(String sqlQuery) throws QueryException {
 
 		StringBuilder result = new StringBuilder( sqlQuery.length() + 20 );
 		int left, right;

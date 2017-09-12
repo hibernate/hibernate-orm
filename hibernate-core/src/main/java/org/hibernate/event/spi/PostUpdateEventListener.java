@@ -8,15 +8,11 @@ package org.hibernate.event.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.persister.entity.EntityPersister;
-
 /**
  * Called after updating the datastore
  * 
  * @author Gavin King
  */
-public interface PostUpdateEventListener extends Serializable {
-	public void onPostUpdate(PostUpdateEvent event);
-
-	public boolean requiresPostCommitHanding(EntityPersister persister);
+public interface PostUpdateEventListener extends Serializable, PostActionEventListener {
+	void onPostUpdate(PostUpdateEvent event);
 }

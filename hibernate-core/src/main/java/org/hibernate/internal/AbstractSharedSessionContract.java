@@ -236,7 +236,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public Interceptor getInterceptor() {
-		checkTransactionSynchStatus();
 		return interceptor;
 	}
 

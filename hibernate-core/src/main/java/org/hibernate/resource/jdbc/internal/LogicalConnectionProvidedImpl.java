@@ -28,6 +28,13 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	private final boolean initiallyAutoCommit;
 	private boolean closed;
 
+	/**
+	 * This constructor should only be used when making a shareable connection or for testing.
+	 *
+	 * @param providedConnection - the provided connection.
+	 *
+	 * @see #makeShareableCopy()
+	 */
 	public LogicalConnectionProvidedImpl(Connection providedConnection) {
 		this( providedConnection, new ResourceRegistryStandardImpl() );
 	}

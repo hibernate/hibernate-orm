@@ -12,8 +12,6 @@ import java.sql.NClob;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import org.hibernate.engine.jdbc.batch.spi.Batch;
-
 /**
  * A registry for tracking JDBC resources
  *
@@ -56,13 +54,6 @@ public interface ResourceRegistry {
 	 * @param statement Statement from which {@link java.sql.ResultSet} has been generated.
 	 */
 	void register(ResultSet resultSet, Statement statement);
-
-	/**
-	 * Register a Batch resource.
-	 *
-	 * @param batch current processing baatch.
-	 */
-	void register(Batch batch);
 
 	/**
 	 * Release a previously registered result set.

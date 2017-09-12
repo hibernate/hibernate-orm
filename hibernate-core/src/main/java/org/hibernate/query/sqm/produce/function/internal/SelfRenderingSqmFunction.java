@@ -41,7 +41,7 @@ public class SelfRenderingSqmFunction implements SqlAstFunctionProducer {
 	}
 
 	@Override
-	public AllowableFunctionReturnType getExpressionType() {
+	public AllowableFunctionReturnType getExpressableType() {
 		return impliedResultType;
 	}
 

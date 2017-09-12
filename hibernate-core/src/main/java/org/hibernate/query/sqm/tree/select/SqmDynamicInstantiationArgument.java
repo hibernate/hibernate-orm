@@ -6,24 +6,25 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-
 /**
  * Represents an individual argument to a dynamic instantiation.
  *
  * @author Steve Ebersole
  */
-public class SqmDynamicInstantiationArgument implements SqmAliasedExpression {
-	private final SqmExpression selectExpression;
+public class SqmDynamicInstantiationArgument implements SqmAliasedNode {
+	private final SqmSelectableNode selectableNode;
 	private final String alias;
 
-	public SqmDynamicInstantiationArgument(SqmExpression selectExpression, String alias) {
-		this.selectExpression = selectExpression;
+	public SqmDynamicInstantiationArgument(
+			SqmSelectableNode selectableNode,
+			String alias) {
+		this.selectableNode = selectableNode;
 		this.alias = alias;
 	}
 
-	public SqmExpression getExpression() {
-		return selectExpression;
+	@Override
+	public SqmSelectableNode getSelectableNode() {
+		return selectableNode;
 	}
 
 	public String getAlias() {

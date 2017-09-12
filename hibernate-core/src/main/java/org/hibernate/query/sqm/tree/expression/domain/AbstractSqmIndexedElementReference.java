@@ -43,13 +43,13 @@ public abstract class AbstractSqmIndexedElementReference
 	}
 
 	@Override
-	public CollectionElement getExpressionType() {
+	public CollectionElement getExpressableType() {
 		return (CollectionElement) getReferencedNavigable();
 	}
 
 	@Override
 	public CollectionElement getInferableType() {
-		return getExpressionType();
+		return getExpressableType();
 	}
 
 	@Override

@@ -36,7 +36,7 @@ public class SqmCountStarFunction extends AbstractSqmAggregateFunction {
 
 	public static SqmExpression STAR = new SqmExpression() {
 		@Override
-		public BasicValuedExpressableType getExpressionType() {
+		public BasicValuedExpressableType getExpressableType() {
 			throw new UnsupportedOperationException( "Illegal attempt to visit * as argument of count(*)" );
 		}
 

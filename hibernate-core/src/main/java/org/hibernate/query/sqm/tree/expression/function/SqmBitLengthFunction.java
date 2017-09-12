@@ -21,7 +21,7 @@ public class SqmBitLengthFunction extends AbstractSqmFunction {
 	private final SqmExpression argument;
 
 	public SqmBitLengthFunction(SqmExpression argument) {
-		this( argument, (AllowableFunctionReturnType) argument.getExpressionType() );
+		this( argument, (AllowableFunctionReturnType) argument.getExpressableType() );
 	}
 
 	public SqmBitLengthFunction(

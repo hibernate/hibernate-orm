@@ -31,7 +31,7 @@ public class SqmMapEntryBinding implements SqmExpression {
 	}
 
 	@Override
-	public ExpressableType getExpressionType() {
+	public ExpressableType getExpressableType() {
 		return null;
 	}
 

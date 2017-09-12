@@ -55,7 +55,7 @@ public class SelfRenderingFunctionSqlAstExpression implements SelfRenderingExpre
 
 	@Override
 	public AllowableFunctionReturnType getType() {
-		return sqmExpression.getExpressionType();
+		return sqmExpression.getExpressableType();
 	}
 
 	@Override

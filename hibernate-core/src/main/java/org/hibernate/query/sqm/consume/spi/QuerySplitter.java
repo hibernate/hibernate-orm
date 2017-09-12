@@ -20,27 +20,27 @@ import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
-import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
-import org.hibernate.query.sqm.tree.expression.ConcatSqmExpression;
-import org.hibernate.query.sqm.tree.expression.ConstantEnumSqmExpression;
-import org.hibernate.query.sqm.tree.expression.ConstantFieldSqmExpression;
-import org.hibernate.query.sqm.tree.expression.EntityTypeLiteralSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralBigDecimalSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralBigIntegerSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralCharacterSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralDoubleSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralFalseSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralFloatSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralIntegerSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralLongSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralNullSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralStringSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralTrueSqmExpression;
-import org.hibernate.query.sqm.tree.expression.NamedParameterSqmExpression;
-import org.hibernate.query.sqm.tree.expression.PositionalParameterSqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
+import org.hibernate.query.sqm.tree.expression.SqmConcat;
+import org.hibernate.query.sqm.tree.expression.SqmConstantEnum;
+import org.hibernate.query.sqm.tree.expression.SqmConstantFieldReference;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralBigDecimal;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralBigInteger;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralCharacter;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralDouble;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralFalse;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralFloat;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralInteger;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralLong;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralString;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralTrue;
+import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
+import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SubQuerySqmExpression;
-import org.hibernate.query.sqm.tree.expression.UnaryOperationSqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
+import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
@@ -90,7 +90,6 @@ import org.hibernate.query.sqm.tree.set.SqmSetClause;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 
 /**
  * Handles splitting queries containing unmapped polymorphic references.
@@ -368,7 +367,7 @@ public class QuerySplitter {
 			for ( SqmSelection selection : selectClause.getSelections() ) {
 				copy.addSelection(
 						new SqmSelection(
-								(SqmExpression) selection.getExpression().accept( this ),
+								(SqmExpression) selection.getWrappedNode().accept( this ),
 								selection.getAlias()
 						)
 				);
@@ -382,7 +381,7 @@ public class QuerySplitter {
 			for ( SqmDynamicInstantiationArgument aliasedArgument : dynamicInstantiation.getArguments() ) {
 				copy.addArgument(
 						new SqmDynamicInstantiationArgument(
-								(SqmExpression) aliasedArgument.getExpression().accept( this ),
+								(SqmExpression) aliasedArgument.getWrappedNode().accept( this ),
 								aliasedArgument.getAlias()
 						)
 				);
@@ -591,23 +590,23 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public PositionalParameterSqmExpression visitPositionalParameterExpression(PositionalParameterSqmExpression expression) {
-			return new PositionalParameterSqmExpression( expression.getPosition(), expression.allowMultiValuedBinding() );
+		public SqmPositionalParameter visitPositionalParameterExpression(SqmPositionalParameter expression) {
+			return new SqmPositionalParameter( expression.getPosition(), expression.allowMultiValuedBinding() );
 		}
 
 		@Override
-		public NamedParameterSqmExpression visitNamedParameterExpression(NamedParameterSqmExpression expression) {
-			return new NamedParameterSqmExpression( expression.getName(), expression.allowMultiValuedBinding() );
+		public SqmNamedParameter visitNamedParameterExpression(SqmNamedParameter expression) {
+			return new SqmNamedParameter( expression.getName(), expression.allowMultiValuedBinding() );
 		}
 
 		@Override
-		public EntityTypeLiteralSqmExpression visitEntityTypeLiteralExpression(EntityTypeLiteralSqmExpression expression) {
-			return new EntityTypeLiteralSqmExpression( expression.getExpressionType() );
+		public SqmLiteralEntityType visitEntityTypeLiteralExpression(SqmLiteralEntityType expression) {
+			return new SqmLiteralEntityType( expression.getExpressableType() );
 		}
 
 		@Override
-		public UnaryOperationSqmExpression visitUnaryOperationExpression(UnaryOperationSqmExpression expression) {
-			return new UnaryOperationSqmExpression(
+		public SqmUnaryOperation visitUnaryOperationExpression(SqmUnaryOperation expression) {
+			return new SqmUnaryOperation(
 					expression.getOperation(),
 					(SqmExpression) expression.getOperand().accept( this )
 			);
@@ -621,7 +620,7 @@ public class QuerySplitter {
 			}
 			return new SqmGenericFunction(
 					expression.getFunctionName(),
-					expression.getExpressionType(),
+					expression.getExpressableType(),
 					argumentsCopy
 			);
 		}
@@ -639,7 +638,7 @@ public class QuerySplitter {
 			return handleDistinct(
 					new SqmAvgFunction(
 							(SqmExpression) expression.getArgument().accept( this ),
-							expression.getExpressionType()
+							expression.getExpressableType()
 					),
 					expression.isDistinct()
 			);
@@ -657,7 +656,7 @@ public class QuerySplitter {
 		@Override
 		public SqmCountStarFunction visitCountStarFunction(SqmCountStarFunction expression) {
 			return handleDistinct(
-					new SqmCountStarFunction( expression.getExpressionType() ),
+					new SqmCountStarFunction( expression.getExpressableType() ),
 					expression.isDistinct()
 			);
 
@@ -668,7 +667,7 @@ public class QuerySplitter {
 			return handleDistinct(
 					new SqmCountFunction(
 							(SqmExpression) expression.getArgument().accept( this ),
-							expression.getExpressionType()
+							expression.getExpressableType()
 					),
 					expression.isDistinct()
 			);
@@ -679,7 +678,7 @@ public class QuerySplitter {
 			return handleDistinct(
 					new SqmMaxFunction(
 							(SqmExpression) expression.getArgument().accept( this ),
-							expression.getExpressionType()
+							expression.getExpressableType()
 					),
 					expression.isDistinct()
 			);
@@ -690,7 +689,7 @@ public class QuerySplitter {
 			return handleDistinct(
 					new SqmMinFunction(
 							(SqmExpression) expression.getArgument().accept( this ),
-							expression.getExpressionType()
+							expression.getExpressableType()
 					),
 					expression.isDistinct()
 			);
@@ -701,70 +700,70 @@ public class QuerySplitter {
 			return handleDistinct(
 					new SqmSumFunction(
 							(SqmExpression) expression.getArgument().accept( this ),
-							expression.getExpressionType()
+							expression.getExpressableType()
 					),
 					expression.isDistinct()
 			);
 		}
 
 		@Override
-		public LiteralStringSqmExpression visitLiteralStringExpression(LiteralStringSqmExpression expression) {
-			return new LiteralStringSqmExpression( expression.getLiteralValue(), expression.getExpressionType() );
+		public SqmLiteralString visitLiteralStringExpression(SqmLiteralString expression) {
+			return new SqmLiteralString( expression.getLiteralValue(), expression.getExpressableType() );
 		}
 
 		@Override
-		public LiteralCharacterSqmExpression visitLiteralCharacterExpression(LiteralCharacterSqmExpression expression) {
-			return new LiteralCharacterSqmExpression( expression.getLiteralValue(), expression.getExpressionType() );
+		public SqmLiteralCharacter visitLiteralCharacterExpression(SqmLiteralCharacter expression) {
+			return new SqmLiteralCharacter( expression.getLiteralValue(), expression.getExpressableType() );
 		}
 
 		@Override
-		public LiteralDoubleSqmExpression visitLiteralDoubleExpression(LiteralDoubleSqmExpression expression) {
-			return new LiteralDoubleSqmExpression( expression.getLiteralValue(), expression.getExpressionType() );
+		public SqmLiteralDouble visitLiteralDoubleExpression(SqmLiteralDouble expression) {
+			return new SqmLiteralDouble( expression.getLiteralValue(), expression.getExpressableType() );
 		}
 
 		@Override
-		public LiteralIntegerSqmExpression visitLiteralIntegerExpression(LiteralIntegerSqmExpression expression) {
-			return new LiteralIntegerSqmExpression( expression.getLiteralValue(), expression.getExpressionType() );
+		public SqmLiteralInteger visitLiteralIntegerExpression(SqmLiteralInteger expression) {
+			return new SqmLiteralInteger( expression.getLiteralValue(), expression.getExpressableType() );
 		}
 
 		@Override
-		public LiteralBigIntegerSqmExpression visitLiteralBigIntegerExpression(LiteralBigIntegerSqmExpression expression) {
-			return new LiteralBigIntegerSqmExpression( expression.getLiteralValue(), expression.getExpressionType() );
+		public SqmLiteralBigInteger visitLiteralBigIntegerExpression(SqmLiteralBigInteger expression) {
+			return new SqmLiteralBigInteger( expression.getLiteralValue(), expression.getExpressableType() );
 		}
 
 		@Override
-		public LiteralBigDecimalSqmExpression visitLiteralBigDecimalExpression(LiteralBigDecimalSqmExpression expression) {
-			return new LiteralBigDecimalSqmExpression( expression.getLiteralValue(), expression.getExpressionType() );
+		public SqmLiteralBigDecimal visitLiteralBigDecimalExpression(SqmLiteralBigDecimal expression) {
+			return new SqmLiteralBigDecimal( expression.getLiteralValue(), expression.getExpressableType() );
 		}
 
 		@Override
-		public LiteralFloatSqmExpression visitLiteralFloatExpression(LiteralFloatSqmExpression expression) {
-			return new LiteralFloatSqmExpression( expression.getLiteralValue(), expression.getExpressionType() );
+		public SqmLiteralFloat visitLiteralFloatExpression(SqmLiteralFloat expression) {
+			return new SqmLiteralFloat( expression.getLiteralValue(), expression.getExpressableType() );
 		}
 
 		@Override
-		public LiteralLongSqmExpression visitLiteralLongExpression(LiteralLongSqmExpression expression) {
-			return new LiteralLongSqmExpression( expression.getLiteralValue(), expression.getExpressionType() );
+		public SqmLiteralLong visitLiteralLongExpression(SqmLiteralLong expression) {
+			return new SqmLiteralLong( expression.getLiteralValue(), expression.getExpressableType() );
 		}
 
 		@Override
-		public LiteralTrueSqmExpression visitLiteralTrueExpression(LiteralTrueSqmExpression expression) {
-			return new LiteralTrueSqmExpression( expression.getExpressionType() );
+		public SqmLiteralTrue visitLiteralTrueExpression(SqmLiteralTrue expression) {
+			return new SqmLiteralTrue( expression.getExpressableType() );
 		}
 
 		@Override
-		public LiteralFalseSqmExpression visitLiteralFalseExpression(LiteralFalseSqmExpression expression) {
-			return new LiteralFalseSqmExpression( expression.getExpressionType() );
+		public SqmLiteralFalse visitLiteralFalseExpression(SqmLiteralFalse expression) {
+			return new SqmLiteralFalse( expression.getExpressableType() );
 		}
 
 		@Override
-		public LiteralNullSqmExpression visitLiteralNullExpression(LiteralNullSqmExpression expression) {
-			return new LiteralNullSqmExpression();
+		public SqmLiteralNull visitLiteralNullExpression(SqmLiteralNull expression) {
+			return new SqmLiteralNull();
 		}
 
 		@Override
-		public ConcatSqmExpression visitConcatExpression(ConcatSqmExpression expression) {
-			return new ConcatSqmExpression(
+		public SqmConcat visitConcatExpression(SqmConcat expression) {
+			return new SqmConcat(
 					(SqmExpression) expression.getLeftHandOperand().accept( this ),
 					(SqmExpression) expression.getRightHandOperand().accept( this )
 			);
@@ -778,39 +777,39 @@ public class QuerySplitter {
 			}
 
 			return new SqmConcatFunction(
-					(BasicValuedExpressableType) expression.getExpressionType(),
+					(BasicValuedExpressableType) expression.getExpressableType(),
 					arguments
 			);
 		}
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public ConstantEnumSqmExpression visitConstantEnumExpression(ConstantEnumSqmExpression expression) {
-			return new ConstantEnumSqmExpression( expression.getValue(), expression.getExpressionType() );
+		public SqmConstantEnum visitConstantEnumExpression(SqmConstantEnum expression) {
+			return new SqmConstantEnum( expression.getLiteralValue(), expression.getExpressableType() );
 		}
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public ConstantFieldSqmExpression visitConstantFieldExpression(ConstantFieldSqmExpression expression) {
-			return new ConstantFieldSqmExpression( expression.getSourceField(), expression.getValue(), expression.getExpressionType() );
+		public SqmConstantFieldReference visitConstantFieldReference(SqmConstantFieldReference expression) {
+			return new SqmConstantFieldReference( expression.getSourceField(), expression.getValue(), expression.getExpressableType() );
 		}
 
 		@Override
-		public BinaryArithmeticSqmExpression visitBinaryArithmeticExpression(BinaryArithmeticSqmExpression expression) {
-			return new BinaryArithmeticSqmExpression(
+		public SqmBinaryArithmetic visitBinaryArithmeticExpression(SqmBinaryArithmetic expression) {
+			return new SqmBinaryArithmetic(
 					expression.getOperation(),
 					(SqmExpression) expression.getLeftHandOperand().accept( this ),
 					(SqmExpression) expression.getRightHandOperand().accept( this ),
-					expression.getExpressionType()
+					expression.getExpressableType()
 			);
 		}
 
 		@Override
-		public SubQuerySqmExpression visitSubQueryExpression(SubQuerySqmExpression expression) {
-			return new SubQuerySqmExpression(
+		public SqmSubQuery visitSubQueryExpression(SqmSubQuery expression) {
+			return new SqmSubQuery(
 					visitQuerySpec( expression.getQuerySpec() ),
 					// assume already validated
-					expression.getQuerySpec().getSelectClause().getSelections().get( 0 ).getExpression().getExpressionType()
+					expression.getQuerySpec().getSelectClause().getSelections().get( 0 ).getWrappedNode().getExpressionType()
 			);
 		}
 	}

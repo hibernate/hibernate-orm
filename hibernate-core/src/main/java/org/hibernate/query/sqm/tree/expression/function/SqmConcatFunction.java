@@ -10,17 +10,17 @@ import java.util.List;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.expression.ConcatSqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmConcat;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
- * Differs from {@link ConcatSqmExpression} in that
+ * Differs from {@link SqmConcat} in that
  * the function can have multiple arguments, whereas ConcatExpression only has 2.
  *
  * CONCAT is also one of Hibernate's standard SQM functions which every Dialect
  * must support.
  *
- * @see ConcatSqmExpression
+ * @see SqmConcat
  *
  * @author Steve Ebersole
  */

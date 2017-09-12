@@ -41,8 +41,8 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralSqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
@@ -533,7 +533,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	interface HqlLiteralResolver {
 		String getKey();
 
-		<T> LiteralSqmExpression<T> resolveLiteral(String literal);
+		<T> SqmLiteral<T> resolveLiteral(String literal);
 	}
 	//
 	//		I say related because both deal with custom user types as used in a SQM.
@@ -541,8 +541,8 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	public BasicValuedExpressableType resolveArithmeticType(
 			BasicValuedExpressableType firstType,
 			BasicValuedExpressableType secondType,
-			org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression.Operation operation) {
-		return resolveArithmeticType( firstType, secondType, operation == BinaryArithmeticSqmExpression.Operation.DIVIDE );
+			SqmBinaryArithmetic.Operation operation) {
+		return resolveArithmeticType( firstType, secondType, operation == SqmBinaryArithmetic.Operation.DIVIDE );
 	}
 
 	/**

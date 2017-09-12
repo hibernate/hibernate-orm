@@ -23,13 +23,13 @@ public class SqmMaxElementReferenceBasic
 	}
 
 	@Override
-	public BasicCollectionElement getExpressionType() {
+	public BasicCollectionElement getExpressableType() {
 		return (BasicCollectionElement) getReferencedNavigable();
 	}
 
 	@Override
 	public BasicCollectionElement getInferableType() {
-		return getExpressionType();
+		return getExpressableType();
 	}
 
 	@Override

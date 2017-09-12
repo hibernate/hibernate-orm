@@ -81,7 +81,7 @@ public class StandardAnsiSqlSqmAggregationFunctionTemplates {
 				AllowableFunctionReturnType impliedResultType) {
 			final SqmExpression argument = arguments.get( 0 );
 
-			final Class argumentJavaType = argument.getExpressionType().getJavaType();
+			final Class argumentJavaType = argument.getExpressableType().getJavaType();
 			final boolean isFloatingPointNumber = Float.class.isInstance( argumentJavaType )
 					|| Double.class.isInstance( argumentJavaType );
 			final boolean needsCast = sqlCastTypeForFloatingPointArgTypes != null && !isFloatingPointNumber;
@@ -156,7 +156,7 @@ public class StandardAnsiSqlSqmAggregationFunctionTemplates {
 			final SqmExpression argument = arguments.get( 0 );
 			return new SqmSumFunction(
 					argument,
-					deduceReturnType( argument.getExpressionType() )
+					deduceReturnType( argument.getExpressableType() )
 			);
 		}
 

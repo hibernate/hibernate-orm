@@ -27,7 +27,7 @@ public class SqmColumnReference implements SqmExpression {
 	}
 
 	@Override
-	public ExpressableType getExpressionType() {
+	public ExpressableType getExpressableType() {
 		return null;
 	}
 

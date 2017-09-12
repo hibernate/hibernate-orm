@@ -77,13 +77,13 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 	}
 
 	@Override
-	public EntityValuedExpressableType getExpressionType() {
+	public EntityValuedExpressableType getExpressableType() {
 		return entityReference;
 	}
 
 	@Override
 	public EntityValuedExpressableType getInferableType() {
-		return getExpressionType();
+		return getExpressableType();
 	}
 
 	@Override

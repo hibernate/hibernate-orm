@@ -37,13 +37,13 @@ public class SqmCollectionIndexReferenceEntity
 	}
 
 	@Override
-	public EntityValuedExpressableType getExpressionType() {
+	public EntityValuedExpressableType getExpressableType() {
 		return getReferencedNavigable();
 	}
 
 	@Override
 	public EntityValuedExpressableType getInferableType() {
-		return getExpressionType();
+		return getExpressableType();
 	}
 
 	@Override

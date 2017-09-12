@@ -8,6 +8,8 @@ package org.hibernate.query.sqm.tree;
 
 import java.util.Set;
 
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
+
 /**
  * The basic SQM statement contract.
  *

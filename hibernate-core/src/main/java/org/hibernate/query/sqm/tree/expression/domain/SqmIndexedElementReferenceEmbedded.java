@@ -32,13 +32,13 @@ public class SqmIndexedElementReferenceEmbedded
 	}
 
 	@Override
-	public CollectionElementEmbedded getExpressionType() {
+	public CollectionElementEmbedded getExpressableType() {
 		return getReferencedNavigable();
 	}
 
 	@Override
 	public CollectionElementEmbedded getInferableType() {
-		return getExpressionType();
+		return getExpressableType();
 	}
 
 	@Override

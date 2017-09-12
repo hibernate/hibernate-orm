@@ -12,21 +12,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.hibernate.query.sqm.tree.SqmParameter;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.expression.NamedParameterSqmExpression;
-import org.hibernate.query.sqm.tree.expression.PositionalParameterSqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
+import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.SemanticException;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmStatement implements SqmStatement, ParameterCollector {
-	private Map<String,NamedParameterSqmExpression> namedQueryParameters;
-	private Map<Integer,PositionalParameterSqmExpression> positionalQueryParameters;
+	private Map<String,SqmNamedParameter> namedQueryParameters;
+	private Map<Integer,SqmPositionalParameter> positionalQueryParameters;
 
 	@Override
-	public void addParameter(NamedParameterSqmExpression parameter) {
+	public void addParameter(SqmNamedParameter parameter) {
 		assert parameter.getName() != null;
 		assert parameter.getPosition() == null;
 
@@ -38,7 +38,7 @@ public abstract class AbstractSqmStatement implements SqmStatement, ParameterCol
 	}
 
 	@Override
-	public void addParameter(PositionalParameterSqmExpression parameter) {
+	public void addParameter(SqmPositionalParameter parameter) {
 		assert parameter.getPosition() != null;
 		assert parameter.getName() == null;
 

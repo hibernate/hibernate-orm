@@ -8,6 +8,7 @@ package org.hibernate.sql.results.spi;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Represents a result value in the domain query results.  Acts as the
@@ -36,12 +37,9 @@ public interface QueryResult extends ResultSetMappingNode {
 	 */
 	String getResultVariable();
 
-	/**
-	 * Gets descriptor describing the type of the return.
-	 *
-	 * @return The type of the scalar return.
-	 */
-	ExpressableType getType();
+	default JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getResultAssembler().getJavaTypeDescriptor();
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// todo (6.0) : Consider a single "resolution" phase for QueryResult

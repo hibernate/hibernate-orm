@@ -19,7 +19,7 @@ public class SqmMinFunction
 	public static final String NAME = "min";
 
 	public SqmMinFunction(SqmExpression argument) {
-		super( argument, (AllowableFunctionReturnType) argument.getExpressionType() );
+		super( argument, (AllowableFunctionReturnType) argument.getExpressableType() );
 	}
 
 	public SqmMinFunction(SqmExpression argument, AllowableFunctionReturnType resultType) {

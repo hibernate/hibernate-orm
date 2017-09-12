@@ -12,31 +12,31 @@ import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
-import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
-import org.hibernate.query.sqm.tree.expression.CaseSearchedSqmExpression;
-import org.hibernate.query.sqm.tree.expression.CaseSimpleSqmExpression;
-import org.hibernate.query.sqm.tree.expression.CollectionSizeSqmExpression;
-import org.hibernate.query.sqm.tree.expression.ConcatSqmExpression;
-import org.hibernate.query.sqm.tree.expression.ConstantEnumSqmExpression;
-import org.hibernate.query.sqm.tree.expression.ConstantFieldSqmExpression;
-import org.hibernate.query.sqm.tree.expression.EntityTypeLiteralSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralBigDecimalSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralBigIntegerSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralCharacterSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralDoubleSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralFalseSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralFloatSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralIntegerSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralLongSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralNullSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralStringSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralTrueSqmExpression;
-import org.hibernate.query.sqm.tree.expression.NamedParameterSqmExpression;
-import org.hibernate.query.sqm.tree.expression.ParameterizedEntityTypeSqmExpression;
-import org.hibernate.query.sqm.tree.expression.PositionalParameterSqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
+import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
+import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
+import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
+import org.hibernate.query.sqm.tree.expression.SqmConcat;
+import org.hibernate.query.sqm.tree.expression.SqmConstantEnum;
+import org.hibernate.query.sqm.tree.expression.SqmConstantFieldReference;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralBigDecimal;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralBigInteger;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralCharacter;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralDouble;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralFalse;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralFloat;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralInteger;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralLong;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralString;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralTrue;
+import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
+import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
+import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SubQuerySqmExpression;
-import org.hibernate.query.sqm.tree.expression.UnaryOperationSqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
+import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.domain.AbstractSpecificSqmCollectionIndexReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReference;
@@ -113,11 +113,6 @@ import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
  */
 @SuppressWarnings({"unchecked", "WeakerAccess"})
 public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
-	@Override
-	public T visitStatement(SqmStatement statement) {
-		return statement.accept( this );
-	}
-
 	@Override
 	public T visitSelectStatement(SqmSelectStatement statement) {
 		visitQuerySpec( statement.getQuerySpec() );
@@ -221,13 +216,8 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public T visitSelection(SqmSelection selection) {
-		selection.getExpression().accept( this );
+		selection.getSelectableNode().accept( this );
 		return (T) selection;
-	}
-
-	@Override
-	public T visitDynamicInstantiation(SqmDynamicInstantiation dynamicInstantiation) {
-		return (T) dynamicInstantiation;
 	}
 
 	@Override
@@ -355,17 +345,17 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitPositionalParameterExpression(PositionalParameterSqmExpression expression) {
+	public T visitPositionalParameterExpression(SqmPositionalParameter expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitNamedParameterExpression(NamedParameterSqmExpression expression) {
+	public T visitNamedParameterExpression(SqmNamedParameter expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitEntityTypeLiteralExpression(EntityTypeLiteralSqmExpression expression) {
+	public T visitEntityTypeLiteralExpression(SqmLiteralEntityType expression) {
 		return (T) expression;
 	}
 
@@ -375,12 +365,12 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitParameterizedEntityTypeExpression(ParameterizedEntityTypeSqmExpression expression) {
+	public T visitParameterizedEntityTypeExpression(SqmParameterizedEntityType expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitUnaryOperationExpression(UnaryOperationSqmExpression sqmExpression) {
+	public T visitUnaryOperationExpression(SqmUnaryOperation sqmExpression) {
 		sqmExpression.getOperand().accept( this );
 		return (T) sqmExpression;
 	}
@@ -518,7 +508,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	// expressions
 
 	@Override
-	public T visitPluralAttributeSizeFunction(CollectionSizeSqmExpression function) {
+	public T visitPluralAttributeSizeFunction(SqmCollectionSize function) {
 		return (T) function;
 	}
 
@@ -563,94 +553,94 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitLiteralStringExpression(LiteralStringSqmExpression expression) {
+	public T visitLiteralStringExpression(SqmLiteralString expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitLiteralCharacterExpression(LiteralCharacterSqmExpression expression) {
+	public T visitLiteralCharacterExpression(SqmLiteralCharacter expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitLiteralDoubleExpression(LiteralDoubleSqmExpression expression) {
+	public T visitLiteralDoubleExpression(SqmLiteralDouble expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitLiteralIntegerExpression(LiteralIntegerSqmExpression expression) {
+	public T visitLiteralIntegerExpression(SqmLiteralInteger expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitLiteralBigIntegerExpression(LiteralBigIntegerSqmExpression expression) {
+	public T visitLiteralBigIntegerExpression(SqmLiteralBigInteger expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitLiteralBigDecimalExpression(LiteralBigDecimalSqmExpression expression) {
+	public T visitLiteralBigDecimalExpression(SqmLiteralBigDecimal expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitLiteralFloatExpression(LiteralFloatSqmExpression expression) {
+	public T visitLiteralFloatExpression(SqmLiteralFloat expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitLiteralLongExpression(LiteralLongSqmExpression expression) {
+	public T visitLiteralLongExpression(SqmLiteralLong expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitLiteralTrueExpression(LiteralTrueSqmExpression expression) {
+	public T visitLiteralTrueExpression(SqmLiteralTrue expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitLiteralFalseExpression(LiteralFalseSqmExpression expression) {
+	public T visitLiteralFalseExpression(SqmLiteralFalse expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitLiteralNullExpression(LiteralNullSqmExpression expression) {
+	public T visitLiteralNullExpression(SqmLiteralNull expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitConcatExpression(ConcatSqmExpression expression) {
+	public T visitConcatExpression(SqmConcat expression) {
 		expression.getLeftHandOperand().accept( this );
 		expression.getRightHandOperand().accept( this );
 		return (T) expression;
 	}
 
 	@Override
-	public T visitConstantEnumExpression(ConstantEnumSqmExpression expression) {
+	public T visitConstantEnumExpression(SqmConstantEnum expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitConstantFieldExpression(ConstantFieldSqmExpression expression) {
+	public T visitConstantFieldReference(SqmConstantFieldReference expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitBinaryArithmeticExpression(BinaryArithmeticSqmExpression expression) {
+	public T visitBinaryArithmeticExpression(SqmBinaryArithmetic expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitSubQueryExpression(SubQuerySqmExpression expression) {
+	public T visitSubQueryExpression(SqmSubQuery expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitSimpleCaseExpression(CaseSimpleSqmExpression expression) {
+	public T visitSimpleCaseExpression(SqmCaseSimple expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitSearchedCaseExpression(CaseSearchedSqmExpression expression) {
+	public T visitSearchedCaseExpression(SqmCaseSearched expression) {
 		return (T) expression;
 	}
 

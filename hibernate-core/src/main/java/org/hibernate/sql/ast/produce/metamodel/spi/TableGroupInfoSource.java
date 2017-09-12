@@ -17,7 +17,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
  * @author Steve Ebersole
  *
  * @apiNote The point of this contract was to isolate the different sources
- * (HQL, NativeQuery, etc) of SQL AST trees, especially around producing
+ * (HQL, NativeQuery, LoadPlan) of SQL AST trees, especially around producing
  * TableGroups and NavigableReferences ({@link NavigableReferenceInfo}).  Not
  * happy with the definition of these contracts as-is - they were done in haste
  * just to get "something working"; but they should be revisited.

@@ -18,13 +18,13 @@ public abstract class AbstractSpecificSqmCollectionIndexReference extends Abstra
 	}
 
 	@Override
-	public ExpressableType getExpressionType() {
+	public ExpressableType getExpressableType() {
 		return getReferencedNavigable();
 	}
 
 	@Override
 	public ExpressableType getInferableType() {
-		return getExpressionType();
+		return getExpressableType();
 	}
 
 	@Override

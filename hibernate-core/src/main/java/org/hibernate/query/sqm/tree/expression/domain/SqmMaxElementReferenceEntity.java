@@ -36,13 +36,13 @@ public class SqmMaxElementReferenceEntity
 	}
 
 	@Override
-	public CollectionElementEntity getExpressionType() {
+	public CollectionElementEntity getExpressableType() {
 		return (CollectionElementEntity) getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor();
 	}
 
 	@Override
 	public CollectionElementEntity getInferableType() {
-		return getExpressionType();
+		return getExpressableType();
 	}
 
 	@Override

@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.jboss.logging.Logger;
 
 /**
  * Base contract for any SQM AST node.
@@ -14,6 +14,10 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
  * @author Steve Ebersole
  */
 public interface SqmNode {
-	String asLoggableText();
-	<T> T accept(SemanticQueryWalker<T> walker);
+	Logger log = Logger.getLogger( SqmNode.class );
+
+	default String asLoggableText() {
+		log.warnf( "#asLoggableText not defined for %s - using #toString", getClass().getName() );
+		return toString();
+	}
 }

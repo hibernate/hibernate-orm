@@ -45,7 +45,7 @@ public interface SqlAstFunctionProducer extends SqmFunction {
 	}
 
 	@Override
-	default AllowableFunctionReturnType getExpressionType() {
+	default AllowableFunctionReturnType getExpressableType() {
 		return null;
 	}
 

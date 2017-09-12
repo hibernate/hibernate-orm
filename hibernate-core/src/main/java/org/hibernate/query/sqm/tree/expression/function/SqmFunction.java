@@ -16,7 +16,7 @@ public interface SqmFunction extends SqmExpression {
 	String getFunctionName();
 
 	@Override
-	AllowableFunctionReturnType getExpressionType();
+	AllowableFunctionReturnType getExpressableType();
 
 	boolean hasArguments();
 }

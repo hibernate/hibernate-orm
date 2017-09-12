@@ -91,13 +91,13 @@ public abstract class AbstractSqmAttributeReference<A extends PersistentAttribut
 	}
 
 	@Override
-	public ExpressableType getExpressionType() {
+	public ExpressableType getExpressableType() {
 		return getReferencedNavigable();
 	}
 
 	@Override
 	public ExpressableType getInferableType() {
-		return getExpressionType();
+		return getExpressableType();
 	}
 
 	@Override

@@ -36,7 +36,7 @@ public class CompositeQueryResultAssembler implements QueryResultAssembler {
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return returnComposite.getType().getJavaTypeDescriptor();
+		return returnComposite.getJavaTypeDescriptor();
 	}
 
 	@Override

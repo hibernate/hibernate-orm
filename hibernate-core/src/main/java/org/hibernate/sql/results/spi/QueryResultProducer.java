@@ -6,25 +6,20 @@
  */
 package org.hibernate.sql.results.spi;
 
+import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+
 /**
- * AFAIK this is only used in SQM interpretation.  If that holds true, it is
- * perhaps better to move this contract to a more appropriate SQM-based package.
- * `org.hibernate.query.sqm.consume.spi`?
+ * Represents something that can produce a {@link QueryResultProducer}
+ * instances which can be used as selection items and
+ * dynamic-instantiation args in a domain query.
  *
  * @author Steve Ebersole
  */
 public interface QueryResultProducer<T> {
-
-	// todo (6.0) : currently we have a lot of mixing of SQM and SQL AST node contract
-	//		mainly to make creation of the QueryResult easier.  A better option
-	//		is to also define a SqlExpressionProducer to help break up that mixing
-	//		I.e., `( (SqlExpressionProducer) someReference ) -> (Sql)Expression`
-	//
-	// 		One example of `SqlExpressionProducer`s is `SqmExpression`, although some
-	// 		`SqmExpression` impls produce more than one (Sql)Expression (e.g.
-	// 		`SqmNavigableReference`).  Others?  Or perhaps `SqmExpression` et.al.
-	// 		expose one-or-more (List) of `SqlExpressionProducer` instances rather
-	//		than extending it.
+	default JavaTypeDescriptor getProducedJavaTypeDescriptor() {
+		throw new NotYetImplementedException(  );
+	}
 
 	QueryResult createQueryResult(
 			T expression,

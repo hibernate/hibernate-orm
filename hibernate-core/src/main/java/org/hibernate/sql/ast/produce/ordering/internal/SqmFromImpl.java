@@ -107,7 +107,7 @@ public class SqmFromImpl implements SqmFrom {
 		}
 
 		@Override
-		public ExpressableType getExpressionType() {
+		public ExpressableType getExpressableType() {
 			return null;
 		}
 

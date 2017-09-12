@@ -13,7 +13,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.SqlTreeException;
@@ -38,7 +37,7 @@ public class SqmJdbcFunctionEscapeWrapper
 	}
 
 	public SqmJdbcFunctionEscapeWrapper(SqmFunction wrappedSqmFunction) {
-		super( null, Collections.singletonList( wrappedSqmFunction ), wrappedSqmFunction.getExpressionType() );
+		super( null, Collections.singletonList( wrappedSqmFunction ), wrappedSqmFunction.getExpressableType() );
 		this.wrappedSqmFunction = wrappedSqmFunction;
 	}
 

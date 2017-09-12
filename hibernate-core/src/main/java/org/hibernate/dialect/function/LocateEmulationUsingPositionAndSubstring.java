@@ -18,10 +18,10 @@ import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunctio
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
 import org.hibernate.query.sqm.produce.function.spi.SqmFunctionRegistryAware;
-import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralIntegerSqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralInteger;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmTupleExpression;
+import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.function.SqmNonStandardFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
@@ -43,7 +43,7 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 public class LocateEmulationUsingPositionAndSubstring
 		extends AbstractSqmFunctionTemplate
 		implements SqmFunctionRegistryAware {
-	public static final SqmExpression ONE = new LiteralIntegerSqmExpression( 1 );
+	public static final SqmExpression ONE = new SqmLiteralInteger( 1 );
 
 	private final SqmFunctionProducer positionFunctionProducer;
 	private final SqmFunctionProducer substringFunctionProducer;
@@ -121,7 +121,7 @@ public class LocateEmulationUsingPositionAndSubstring
 
 		final ExpressableType resolvedIntResultType = impliedResultType != null
 				? impliedResultType
-				: start.getExpressionType() == null ? ONE.getExpressionType() : start.getExpressionType();
+				: start.getExpressableType() == null ? ONE.getExpressableType() : start.getExpressableType();
 
 		// (position( $pattern in substring($string, $start) ) + $start-1)
 
@@ -137,22 +137,22 @@ public class LocateEmulationUsingPositionAndSubstring
 				Arrays.asList( pattern, substringCall )
 		);
 
-		final SqmExpression startMinusOne = new BinaryArithmeticSqmExpression(
-				BinaryArithmeticSqmExpression.Operation.SUBTRACT,
+		final SqmExpression startMinusOne = new SqmBinaryArithmetic(
+				SqmBinaryArithmetic.Operation.SUBTRACT,
 				start,
 				ONE,
 				resolvedIntResultType
 		);
 
 
-		final SqmExpression positionPluStartMinusOne = new BinaryArithmeticSqmExpression(
-				BinaryArithmeticSqmExpression.Operation.ADD,
+		final SqmExpression positionPluStartMinusOne = new SqmBinaryArithmetic(
+				SqmBinaryArithmetic.Operation.ADD,
 				positionCall,
 				startMinusOne,
 				resolvedIntResultType
 		);
 
-		return new SqmTupleExpression( positionPluStartMinusOne );
+		return new SqmTuple( positionPluStartMinusOne );
 	}
 
 	private SqmExpression build2ArgVariation(

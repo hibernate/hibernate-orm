@@ -6,13 +6,13 @@
  */
 package org.hibernate.query.sqm.tree.internal;
 
-import org.hibernate.query.sqm.tree.expression.NamedParameterSqmExpression;
-import org.hibernate.query.sqm.tree.expression.PositionalParameterSqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
+import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 
 /**
  * @author Steve Ebersole
  */
 public interface ParameterCollector {
-	void addParameter(NamedParameterSqmExpression parameter);
-	void addParameter(PositionalParameterSqmExpression parameter);
+	void addParameter(SqmNamedParameter parameter);
+	void addParameter(SqmPositionalParameter parameter);
 }

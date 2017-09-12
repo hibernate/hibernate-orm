@@ -29,13 +29,13 @@ public class SqmMaxIndexReferenceEntity
 	}
 
 	@Override
-	public CollectionIndexEntity getExpressionType() {
-		return (CollectionIndexEntity) super.getExpressionType();
+	public CollectionIndexEntity getExpressableType() {
+		return (CollectionIndexEntity) super.getExpressableType();
 	}
 
 	@Override
 	public CollectionIndexEntity getInferableType() {
-		return getExpressionType();
+		return getExpressableType();
 	}
 
 	@Override

@@ -68,13 +68,13 @@ public class TreatedNavigableReference
 	}
 
 	@Override
-	public ExpressableType getExpressionType() {
+	public ExpressableType getExpressableType() {
 		return subclassIndicator;
 	}
 
 	@Override
 	public ExpressableType getInferableType() {
-		return getExpressionType();
+		return getExpressableType();
 	}
 
 	@Override

@@ -86,13 +86,13 @@ public class AliasRegistry {
 		}
 		final SqmNavigableReference binding = navigableBindingsByAlias.get( alias );
 		if ( binding != null ) {
-			if ( !selection.getExpression().getExpressionType().equals( binding.getExpressionType() ) ) {
+			if ( !selection.getWrappedNode().getExpressionType().equals( binding.getExpressableType() ) ) {
 				throw new AliasCollisionException(
 						String.format(
 								Locale.ENGLISH,
 								"Alias [%s] used in select-clause for %s is also used in from element: %s for %s",
 								alias,
-								selection.getExpression().getExpressionType(),
+								selection.getWrappedNode().getExpressionType(),
 								binding,
 								binding.getReferencedNavigable()
 						)

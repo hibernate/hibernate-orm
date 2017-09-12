@@ -24,13 +24,13 @@ public abstract class AbstractSqmFunction implements SqmFunction {
 	}
 
 	@Override
-	public AllowableFunctionReturnType getExpressionType() {
+	public AllowableFunctionReturnType getExpressableType() {
 		return resultType;
 	}
 
 	@Override
 	public AllowableFunctionReturnType getInferableType() {
-		return getExpressionType();
+		return getExpressableType();
 	}
 
 	@Override
@@ -39,7 +39,7 @@ public abstract class AbstractSqmFunction implements SqmFunction {
 		return new ScalarQueryResultImpl(
 				resultVariable,
 				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
-				(BasicValuedExpressableType) getExpressionType()
+				(BasicValuedExpressableType) getExpressableType()
 		);
 	}
 }

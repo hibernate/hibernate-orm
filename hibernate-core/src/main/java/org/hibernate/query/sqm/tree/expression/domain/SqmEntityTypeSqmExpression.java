@@ -31,13 +31,13 @@ public class SqmEntityTypeSqmExpression implements SqmExpression {
 	}
 
 	@Override
-	public ExpressableType getExpressionType() {
+	public ExpressableType getExpressableType() {
 		return binding.getReferencedNavigable();
 	}
 
 	@Override
 	public ExpressableType getInferableType() {
-		return getExpressionType();
+		return getExpressableType();
 	}
 
 	@Override

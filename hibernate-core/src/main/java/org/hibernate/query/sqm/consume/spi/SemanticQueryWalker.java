@@ -10,32 +10,31 @@ import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
-import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
-import org.hibernate.query.sqm.tree.expression.CaseSearchedSqmExpression;
-import org.hibernate.query.sqm.tree.expression.CaseSimpleSqmExpression;
-import org.hibernate.query.sqm.tree.expression.CollectionSizeSqmExpression;
-import org.hibernate.query.sqm.tree.expression.ConcatSqmExpression;
-import org.hibernate.query.sqm.tree.expression.ConstantEnumSqmExpression;
-import org.hibernate.query.sqm.tree.expression.ConstantFieldSqmExpression;
-import org.hibernate.query.sqm.tree.expression.EntityTypeLiteralSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralBigDecimalSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralBigIntegerSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralCharacterSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralDoubleSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralFalseSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralFloatSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralIntegerSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralLongSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralNullSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralStringSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralTrueSqmExpression;
-import org.hibernate.query.sqm.tree.expression.NamedParameterSqmExpression;
-import org.hibernate.query.sqm.tree.expression.ParameterizedEntityTypeSqmExpression;
-import org.hibernate.query.sqm.tree.expression.PositionalParameterSqmExpression;
-import org.hibernate.query.sqm.tree.expression.SubQuerySqmExpression;
-import org.hibernate.query.sqm.tree.expression.UnaryOperationSqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
+import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
+import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
+import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
+import org.hibernate.query.sqm.tree.expression.SqmConcat;
+import org.hibernate.query.sqm.tree.expression.SqmConstantEnum;
+import org.hibernate.query.sqm.tree.expression.SqmConstantFieldReference;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralBigDecimal;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralBigInteger;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralCharacter;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralDouble;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralFalse;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralFloat;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralInteger;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralLong;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralString;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralTrue;
+import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
+import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
+import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
+import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
+import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.domain.AbstractSpecificSqmCollectionIndexReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReference;
@@ -98,7 +97,6 @@ import org.hibernate.query.sqm.tree.predicate.NullnessSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.OrSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
-import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.set.SqmAssignment;
@@ -109,7 +107,6 @@ import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
  * @author Steve Ebersole
  */
 public interface SemanticQueryWalker<T> {
-	T visitStatement(SqmStatement statement);
 
 	T visitUpdateStatement(SqmUpdateStatement statement);
 
@@ -149,8 +146,6 @@ public interface SemanticQueryWalker<T> {
 
 	T visitSelection(SqmSelection selection);
 
-	T visitDynamicInstantiation(SqmDynamicInstantiation dynamicInstantiation);
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// expressions - navigable
@@ -177,17 +172,17 @@ public interface SemanticQueryWalker<T> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// expressions - general
 
-	T visitPositionalParameterExpression(PositionalParameterSqmExpression expression);
+	T visitPositionalParameterExpression(SqmPositionalParameter expression);
 
-	T visitNamedParameterExpression(NamedParameterSqmExpression expression);
+	T visitNamedParameterExpression(SqmNamedParameter expression);
 
-	T visitEntityTypeLiteralExpression(EntityTypeLiteralSqmExpression expression);
+	T visitEntityTypeLiteralExpression(SqmLiteralEntityType expression);
 
 	T visitEntityTypeExpression(SqmEntityTypeSqmExpression expression);
 
-	T visitParameterizedEntityTypeExpression(ParameterizedEntityTypeSqmExpression expression);
+	T visitParameterizedEntityTypeExpression(SqmParameterizedEntityType expression);
 
-	T visitUnaryOperationExpression(UnaryOperationSqmExpression expression);
+	T visitUnaryOperationExpression(SqmUnaryOperation expression);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -296,7 +291,7 @@ public interface SemanticQueryWalker<T> {
 
 
 
-	T visitPluralAttributeSizeFunction(CollectionSizeSqmExpression function);
+	T visitPluralAttributeSizeFunction(SqmCollectionSize function);
 
 
 	T visitPluralAttributeIndexFunction(SqmCollectionIndexReference function);
@@ -313,41 +308,41 @@ public interface SemanticQueryWalker<T> {
 
 	T visitMinIndexFunction(SqmMinIndexReferenceBasic function);
 
-	T visitLiteralStringExpression(LiteralStringSqmExpression expression);
+	T visitLiteralStringExpression(SqmLiteralString expression);
 
-	T visitLiteralCharacterExpression(LiteralCharacterSqmExpression expression);
+	T visitLiteralCharacterExpression(SqmLiteralCharacter expression);
 
-	T visitLiteralDoubleExpression(LiteralDoubleSqmExpression expression);
+	T visitLiteralDoubleExpression(SqmLiteralDouble expression);
 
-	T visitLiteralIntegerExpression(LiteralIntegerSqmExpression expression);
+	T visitLiteralIntegerExpression(SqmLiteralInteger expression);
 
-	T visitLiteralBigIntegerExpression(LiteralBigIntegerSqmExpression expression);
+	T visitLiteralBigIntegerExpression(SqmLiteralBigInteger expression);
 
-	T visitLiteralBigDecimalExpression(LiteralBigDecimalSqmExpression expression);
+	T visitLiteralBigDecimalExpression(SqmLiteralBigDecimal expression);
 
-	T visitLiteralFloatExpression(LiteralFloatSqmExpression expression);
+	T visitLiteralFloatExpression(SqmLiteralFloat expression);
 
-	T visitLiteralLongExpression(LiteralLongSqmExpression expression);
+	T visitLiteralLongExpression(SqmLiteralLong expression);
 
-	T visitLiteralTrueExpression(LiteralTrueSqmExpression expression);
+	T visitLiteralTrueExpression(SqmLiteralTrue expression);
 
-	T visitLiteralFalseExpression(LiteralFalseSqmExpression expression);
+	T visitLiteralFalseExpression(SqmLiteralFalse expression);
 
-	T visitLiteralNullExpression(LiteralNullSqmExpression expression);
+	T visitLiteralNullExpression(SqmLiteralNull expression);
 
-	T visitConcatExpression(ConcatSqmExpression expression);
+	T visitConcatExpression(SqmConcat expression);
 
 	T visitConcatFunction(SqmConcatFunction expression);
 
-	T visitConstantEnumExpression(ConstantEnumSqmExpression expression);
+	T visitConstantEnumExpression(SqmConstantEnum expression);
 
-	T visitConstantFieldExpression(ConstantFieldSqmExpression expression);
+	T visitConstantFieldReference(SqmConstantFieldReference expression);
 
-	T visitBinaryArithmeticExpression(BinaryArithmeticSqmExpression expression);
+	T visitBinaryArithmeticExpression(SqmBinaryArithmetic expression);
 
-	T visitSubQueryExpression(SubQuerySqmExpression expression);
+	T visitSubQueryExpression(SqmSubQuery expression);
 
-	T visitSimpleCaseExpression(CaseSimpleSqmExpression expression);
+	T visitSimpleCaseExpression(SqmCaseSimple expression);
 
-	T visitSearchedCaseExpression(CaseSearchedSqmExpression expression);
+	T visitSearchedCaseExpression(SqmCaseSearched expression);
 }

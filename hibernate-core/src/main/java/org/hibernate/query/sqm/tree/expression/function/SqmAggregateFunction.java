@@ -16,7 +16,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
  */
 public interface SqmAggregateFunction extends SqmFunction, Distinctable {
 	@Override
-	BasicValuedExpressableType getExpressionType();
+	BasicValuedExpressableType getExpressableType();
 
 	SqmExpression getArgument();
 	boolean isDistinct();

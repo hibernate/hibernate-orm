@@ -51,9 +51,9 @@ public class CoalesceEmulationUsingNvl
 		return new NvlFunctionTemplate.SqmNvlFunction(
 				arg1,
 				arg2,
-				(AllowableFunctionReturnType) (arg1.getExpressionType() == null
-						? arg2.getExpressionType()
-						: arg1.getExpressionType())
+				(AllowableFunctionReturnType) (arg1.getExpressableType() == null
+						? arg2.getExpressableType()
+						: arg1.getExpressableType())
 		);
 	}
 }

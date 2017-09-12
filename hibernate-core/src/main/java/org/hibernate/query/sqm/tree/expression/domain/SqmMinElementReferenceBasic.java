@@ -22,13 +22,13 @@ public class SqmMinElementReferenceBasic extends AbstractSpecificSqmElementRefer
 	}
 
 	@Override
-	public BasicCollectionElement getExpressionType() {
+	public BasicCollectionElement getExpressableType() {
 		return (BasicCollectionElement) getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor();
 	}
 
 	@Override
 	public BasicCollectionElement getInferableType() {
-		return getExpressionType();
+		return getExpressableType();
 	}
 
 	@Override

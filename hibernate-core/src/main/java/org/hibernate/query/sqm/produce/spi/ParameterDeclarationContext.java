@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.produce.spi;
 
-import org.hibernate.query.sqm.tree.SqmParameter;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
 /**
  * Describes the context in which a parameter is declared.  This is  used mainly to

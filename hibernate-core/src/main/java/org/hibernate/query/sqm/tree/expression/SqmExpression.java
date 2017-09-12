@@ -6,10 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.sqm.tree.SqmNode;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.results.spi.Selectable;
 
 /**
  * The base contract for any kind of expression node in the SQM tree.
@@ -17,15 +16,13 @@ import org.hibernate.sql.results.spi.Selectable;
  *
  * @author Steve Ebersole
  */
-public interface SqmExpression extends SqmNode, Selectable {
-	// todo : contemplate way to incorporate DomainReference into expressions in place of the removed types.
-
+public interface SqmExpression extends SqmSelectableNode, SqmTypedNode {
 	/**
-	 * Obtain reference to the expression's type
+	 * Obtain reference to the expression's ExpressableType
 	 *
 	 * @return The expression's type.
 	 */
-	ExpressableType getExpressionType();
+	ExpressableType getExpressableType();
 
 	/**
 	 * Obtain reference to the type, or {@code null}, for this expression that can be used
@@ -37,16 +34,4 @@ public interface SqmExpression extends SqmNode, Selectable {
 	 * @see ImpliedTypeSqmExpression#impliedType
 	 */
 	ExpressableType getInferableType();
-
-	/**
-	 * Visitation method
-	 *
-	 * @param walker The visitation walker.
-	 * @param <T> The expected result type.
-	 *
-	 * @return The visitation result
-	 */
-	<T> T accept(SemanticQueryWalker<T> walker);
-
-	String asLoggableText();
 }

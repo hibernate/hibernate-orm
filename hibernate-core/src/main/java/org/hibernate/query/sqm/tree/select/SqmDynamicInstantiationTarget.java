@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.select;
 
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Represents the thing-to-be-instantiated in a dynamic instantiation expression.  Hibernate
@@ -23,6 +24,8 @@ public interface SqmDynamicInstantiationTarget<T> {
 	 */
 	DynamicInstantiationNature getNature();
 
+	JavaTypeDescriptor<T> getTargetTypeDescriptor();
+
 	/**
 	 * For {@link DynamicInstantiationNature#CLASS} this will return the Class to be instantiated.  For
 	 * {@link DynamicInstantiationNature#MAP} and {@link DynamicInstantiationNature#LIST} this will return {@code Map.class}
@@ -30,5 +33,7 @@ public interface SqmDynamicInstantiationTarget<T> {
 	 *
 	 * @return The type to be instantiated.
 	 */
-	Class getJavaType();
+	default Class getJavaType() {
+		return getTargetTypeDescriptor().getJavaType();
+	}
 }

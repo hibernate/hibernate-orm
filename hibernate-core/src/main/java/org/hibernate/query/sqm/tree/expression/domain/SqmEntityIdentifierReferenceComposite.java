@@ -59,7 +59,7 @@ public class SqmEntityIdentifierReferenceComposite
 	}
 
 	@Override
-	public EntityIdentifierComposite getExpressionType() {
+	public EntityIdentifierComposite getExpressableType() {
 		return getReferencedNavigable();
 	}
 

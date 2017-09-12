@@ -66,12 +66,12 @@ public class StandardFunctionReturnTypeResolvers {
 					List<SqmExpression> arguments) {
 				final Optional<SqmExpression> firstNonNull = arguments.stream()
 						.filter(
-								sqmExpression -> sqmExpression.getExpressionType() != null
-										&& sqmExpression.getExpressionType() instanceof AllowableFunctionReturnType
+								sqmExpression -> sqmExpression.getExpressableType() != null
+										&& sqmExpression.getExpressableType() instanceof AllowableFunctionReturnType
 						)
 						.findFirst();
 				if ( firstNonNull.isPresent() ) {
-					return useImpliedTypeIfPossible( (AllowableFunctionReturnType) firstNonNull.get().getExpressionType(), impliedType );
+					return useImpliedTypeIfPossible( (AllowableFunctionReturnType) firstNonNull.get().getExpressableType(), impliedType );
 				}
 				else {
 					return impliedType;
@@ -105,7 +105,7 @@ public class StandardFunctionReturnTypeResolvers {
 
 	private static AllowableFunctionReturnType extractArgumentType(List<SqmExpression> arguments, int position) {
 		final SqmExpression specifiedArgument = arguments.get( position-1 );
-		final ExpressableType specifiedArgType = specifiedArgument.getExpressionType();
+		final ExpressableType specifiedArgType = specifiedArgument.getExpressableType();
 		if ( !AllowableFunctionReturnType.class.isInstance( specifiedArgType ) ) {
 			throw new QueryException(
 					String.format(

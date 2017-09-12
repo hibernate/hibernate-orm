@@ -19,8 +19,8 @@ public class BooleanExpressionSqmPredicate implements SqmPredicate {
 	private final SqmExpression booleanExpression;
 
 	public BooleanExpressionSqmPredicate(SqmExpression booleanExpression) {
-		assert booleanExpression.getExpressionType() != null;
-		final Class expressionJavaType = ( (BasicType) booleanExpression.getExpressionType() ).getJavaType();
+		assert booleanExpression.getExpressableType() != null;
+		final Class expressionJavaType = ( (BasicType) booleanExpression.getExpressableType() ).getJavaType();
 		assert boolean.class.equals( expressionJavaType ) || Boolean.class.equals( expressionJavaType );
 
 		this.booleanExpression = booleanExpression;

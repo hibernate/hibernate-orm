@@ -27,7 +27,6 @@ import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.QueryResultProducer;
-import org.hibernate.sql.results.spi.Selectable;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -38,7 +37,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class DynamicInstantiation<T> implements Selectable {
+public class DynamicInstantiation<T> implements QueryResultProducer {
 	private static final Logger log = Logger.getLogger( DynamicInstantiation.class );
 
 	private final DynamicInstantiationNature nature;
@@ -116,6 +115,23 @@ public class DynamicInstantiation<T> implements Selectable {
 	@Override
 	public String toString() {
 		return "DynamicInstantiation(" + getTargetJavaType().getName() + ")";
+	}
+
+
+	public static QueryResult createQueryResult(
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+
+		getInstantiationTarget().getNature();
+		interpretInstantiationTarget( getInstantiationTarget() );
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			Object expression,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return null;
 	}
 
 	@Override
@@ -248,5 +264,20 @@ public class DynamicInstantiation<T> implements Selectable {
 
 			return new DynamicInstantiationInjectionAssemblerImpl( dynamicInstantiation.getTargetJavaTypeDescriptor(), argumentReaders );
 		}
+	}
+
+	class Builder {
+		private final DynamicInstantiationNature nature;
+		private final JavaTypeDescriptor<T> targetJavaTypeDescriptor;
+		private List<DynamicInstantiationArgument> arguments;
+
+		public Builder(
+				DynamicInstantiationNature nature,
+				JavaTypeDescriptor<T> targetJavaTypeDescriptor) {
+			this.nature = nature;
+			this.targetJavaTypeDescriptor = targetJavaTypeDescriptor;
+		}
+
+
 	}
 }

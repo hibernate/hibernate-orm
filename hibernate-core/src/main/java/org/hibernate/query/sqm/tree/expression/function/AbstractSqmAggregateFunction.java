@@ -35,13 +35,13 @@ public abstract class AbstractSqmAggregateFunction
 	}
 
 	@Override
-	public BasicValuedExpressableType getExpressionType() {
-		return (BasicValuedExpressableType) super.getExpressionType();
+	public BasicValuedExpressableType getExpressableType() {
+		return (BasicValuedExpressableType) super.getExpressableType();
 	}
 
 	@Override
 	public BasicValuedExpressableType getInferableType() {
-		return getExpressionType();
+		return getExpressableType();
 	}
 
 	@Override

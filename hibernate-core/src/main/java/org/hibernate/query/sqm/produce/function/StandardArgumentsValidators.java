@@ -100,13 +100,13 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator of(Class javaType) {
 		return arguments -> arguments.forEach(
 				sqmExpression -> {
-					if ( !javaType.isInstance( sqmExpression.getExpressionType().getJavaType() ) ) {
+					if ( !javaType.isInstance( sqmExpression.getExpressableType().getJavaType() ) ) {
 						throw new QueryException(
 								String.format(
 										Locale.ROOT,
 										"Function expects arguments to be of type %s, but %s found",
 										javaType.getName(),
-										sqmExpression.getExpressionType().getJavaType()
+										sqmExpression.getExpressableType().getJavaType()
 								)
 						);
 					}

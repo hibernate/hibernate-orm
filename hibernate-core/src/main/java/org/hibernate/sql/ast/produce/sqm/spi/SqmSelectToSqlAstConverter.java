@@ -43,7 +43,6 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.QueryResultProducer;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -148,9 +147,8 @@ public class SqmSelectToSqlAstConverter
 
 	@Override
 	public Void visitSelection(SqmSelection sqmSelection) {
-		final QueryResultProducer expression = (QueryResultProducer) sqmSelection.getExpression().accept( this );
-		final QueryResult queryResult = expression.createQueryResult(
-				expression,
+		final QueryResult queryResult = sqmSelection.getSelectableNode().createQueryResult(
+				this,
 				sqmSelection.getAlias(),
 				this
 		);
@@ -182,6 +180,7 @@ public class SqmSelectToSqlAstConverter
 	@Override
 	@SuppressWarnings("unchecked")
 	public DynamicInstantiation visitDynamicInstantiation(SqmDynamicInstantiation sqmDynamicInstantiation) {
+		DynamicInstantiation.
 		final DynamicInstantiation dynamicInstantiation = new DynamicInstantiation(
 				sqmDynamicInstantiation.getInstantiationTarget().getNature(),
 				interpretInstantiationTarget( sqmDynamicInstantiation.getInstantiationTarget() )
@@ -191,8 +190,8 @@ public class SqmSelectToSqlAstConverter
 			// build the ArgumentReader essentially defined by the expression's
 			// QueryResultAssembler via QueryResultProducer -> QueryResult -> QueryResultAssembler
 			dynamicInstantiation.addArgument(
-					argument.getAlias(),
-					(QueryResultProducer) argument.getExpression().accept( this )
+					argument.getVisitableNode().accept( this ),
+					argument.getAlias()
 			);
 		}
 

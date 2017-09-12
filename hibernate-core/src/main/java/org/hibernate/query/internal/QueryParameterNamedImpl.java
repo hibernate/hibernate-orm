@@ -8,7 +8,7 @@
 package org.hibernate.query.internal;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
-import org.hibernate.query.sqm.tree.SqmParameter;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
 /**
  * QueryParameter impl for named-parameters in HQL, JPQL or Criteria queries.

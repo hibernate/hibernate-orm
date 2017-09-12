@@ -29,11 +29,12 @@ public class DynamicInstantiationArgument {
 	}
 
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
-	public ArgumentReader buildArgumentReader(QueryResultCreationContext resolutionContext) {
+	public ArgumentReader buildArgumentReader(QueryResultCreationContext context) {
 		final QueryResult queryResult = argumentResultProducer.createQueryResult(
+
 				argumentResultProducer,
 				alias,
-				resolutionContext
+				context
 		);
 
 		return new ArgumentReader(

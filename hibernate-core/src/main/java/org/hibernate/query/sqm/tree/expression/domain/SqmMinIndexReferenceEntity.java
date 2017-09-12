@@ -34,7 +34,7 @@ public class SqmMinIndexReferenceEntity
 	}
 
 	@Override
-	public EntityValuedExpressableType getExpressionType() {
+	public EntityValuedExpressableType getExpressableType() {
 		return getReferencedNavigable();
 	}
 

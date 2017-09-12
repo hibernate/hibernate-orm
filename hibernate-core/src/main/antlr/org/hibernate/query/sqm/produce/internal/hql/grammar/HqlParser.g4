@@ -126,7 +126,7 @@ selection
 	// I have noticed that without this predicate, Antlr will sometimes
 	// interpret `select a.b from Something ...` as `from` being the
 	// select-expression alias
-	: selectExpression (resultIdentifier)?
+	: (dynamicInstantiation | jpaSelectObjectSyntax | expression) (resultIdentifier)?
 	;
 
 resultIdentifier
@@ -134,11 +134,11 @@ resultIdentifier
 	| IDENTIFIER
 	;
 
-selectExpression
-	:	dynamicInstantiation
-	|	jpaSelectObjectSyntax
-	|	expression
-	;
+//selectExpression
+//	:	dynamicInstantiation
+//	|	jpaSelectObjectSyntax
+//	|	expression
+//	;
 
 dynamicInstantiation
 	: NEW dynamicInstantiationTarget LEFT_PAREN dynamicInstantiationArgs RIGHT_PAREN

@@ -19,7 +19,7 @@ public class SqmAvgFunction
 	public static final String NAME = "avg";
 
 	public SqmAvgFunction(SqmExpression argument) {
-		super( argument, (AllowableFunctionReturnType) argument.getExpressionType() );
+		super( argument, (AllowableFunctionReturnType) argument.getExpressableType() );
 	}
 
 	public SqmAvgFunction(SqmExpression argument, AllowableFunctionReturnType resultType) {

@@ -8,24 +8,24 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SubQuerySqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
 
 /**
  * @author Steve Ebersole
  */
 public class InSubQuerySqmPredicate extends AbstractNegatableSqmPredicate implements InSqmPredicate {
 	private final SqmExpression testExpression;
-	private final SubQuerySqmExpression subQueryExpression;
+	private final SqmSubQuery subQueryExpression;
 
 	public InSubQuerySqmPredicate(
 			SqmExpression testExpression,
-			SubQuerySqmExpression subQueryExpression) {
+			SqmSubQuery subQueryExpression) {
 		this( testExpression, subQueryExpression, false );
 	}
 
 	public InSubQuerySqmPredicate(
 			SqmExpression testExpression,
-			SubQuerySqmExpression subQueryExpression,
+			SqmSubQuery subQueryExpression,
 			boolean negated) {
 		super( negated );
 		this.testExpression = testExpression;
@@ -37,7 +37,7 @@ public class InSubQuerySqmPredicate extends AbstractNegatableSqmPredicate implem
 		return testExpression;
 	}
 
-	public SubQuerySqmExpression getSubQueryExpression() {
+	public SqmSubQuery getSubQueryExpression() {
 		return subQueryExpression;
 	}
 

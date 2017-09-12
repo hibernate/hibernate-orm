@@ -17,7 +17,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.streams.StingArrayCollector;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.JpaTupleBuilder;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
@@ -26,10 +25,8 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.exec.internal.RowTransformerSingularReturnImpl;
@@ -80,7 +77,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				for ( SqmSelection selection : sqm.getQuerySpec().getSelectClause().getSelections() ) {
 					tupleElementList.add(
 							new TupleElementImpl(
-									selection.getExpression().getExpressionType().getJavaTypeDescriptor().getJavaType(),
+									selection.getWrappedNode().getExpressionType().getJavaTypeDescriptor().getJavaType(),
 									selection.getAlias()
 							)
 					);
@@ -90,7 +87,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 //						sqm.getQuerySpec().getSelectClause().getSelections()
 //								.stream()
 //								.map( selection -> (TupleElement<?>) new TupleElementImpl(
-//										( (SqmTypeImplementor) selection.asExpression().getExpressionType() ).getDomainType().getReturnedClass(),
+//										( (SqmTypeImplementor) selection.asExpression().getExpressableType() ).getDomainType().getReturnedClass(),
 //										selection.getAlias()
 //								) )
 //								.collect( Collectors.toList() )

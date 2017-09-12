@@ -20,7 +20,7 @@ public class SqmMaxFunction
 	public static final String NAME = "max";
 
 	public SqmMaxFunction(SqmExpression argument) {
-		super( argument, (AllowableFunctionReturnType) argument.getExpressionType() );
+		super( argument, (AllowableFunctionReturnType) argument.getExpressableType() );
 	}
 
 	public SqmMaxFunction(SqmExpression argument, BasicValuedExpressableType resultType) {

@@ -91,7 +91,7 @@ public class SqmUpdateToSqlAstConverterMultiTable
 
 		this.entityDescriptor = sqmStatement.getEntityFromElement()
 				.getNavigableReference()
-				.getExpressionType()
+				.getExpressableType()
 				.getEntityDescriptor();
 
 		// Ask the entity descriptor to create a TableGroup.  This TableGroup

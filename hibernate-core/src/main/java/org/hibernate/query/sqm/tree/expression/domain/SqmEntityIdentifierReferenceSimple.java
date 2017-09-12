@@ -34,7 +34,7 @@ public class SqmEntityIdentifierReferenceSimple
 	}
 
 	@Override
-	public ExpressableType getExpressionType() {
+	public ExpressableType getExpressableType() {
 		return entityIdentifier;
 	}
 

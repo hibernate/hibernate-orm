@@ -10,15 +10,45 @@ import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttribute
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
+import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
+ * `select p1.address, p2.address from Person p1, Person p2`
+ *
+ * table PERSON (
+ *     ID,
+ *     NAME,
+ *     ...
+ * )
+ *
+ * table Address (
+ *     ID,
+ *     PERS_ID,
+ *     ...
+ * )
+ *
+ * QueryResult (p1)
+ *     Fetch(p1.address)
+ * QueryResult(p2)
+ *     Fetch(p2.address)
+ *
+ * select p1, p2
+ * from Person p1 join fetch p1.address,
+ * 	 Person p2 join fetch p2.address
+ *
+ * SELECT a1.*, a2.*
+ * FROM (person p1 join address a1 on p1.id = a1.pers_id)
+ *     join (person p2 join address a2 on p2.id = a2.pers_id)
+ *
  * @author Steve Ebersole
  */
-public class SqmSingularAttributeReferenceEntity extends AbstractSqmSingularAttributeReference implements
-		SqmEntityTypedReference {
+public class SqmSingularAttributeReferenceEntity
+		extends AbstractSqmSingularAttributeReference
+		implements SqmEntityTypedReference {
 	public SqmSingularAttributeReferenceEntity(
 			SqmNavigableContainerReference domainReferenceBinding,
 			SingularPersistentAttributeEntity boundNavigable) {
@@ -31,17 +61,17 @@ public class SqmSingularAttributeReferenceEntity extends AbstractSqmSingularAttr
 
 	@Override
 	public SingularPersistentAttributeEntity getReferencedNavigable() {
-		return (SingularPersistentAttributeEntity) super.getExpressionType();
+		return (SingularPersistentAttributeEntity) super.getExpressableType();
 	}
 
 	@Override
-	public EntityValuedExpressableType getExpressionType() {
-		return (EntityValuedExpressableType) super.getExpressionType();
+	public EntityValuedExpressableType getExpressableType() {
+		return (EntityValuedExpressableType) super.getExpressableType();
 	}
 
 	@Override
 	public EntityValuedExpressableType getInferableType() {
-		return getExpressionType();
+		return getExpressableType();
 	}
 
 	@Override
@@ -51,7 +81,7 @@ public class SqmSingularAttributeReferenceEntity extends AbstractSqmSingularAttr
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return super.getExpressionType().getPersistenceType();
+		return super.getExpressableType().getPersistenceType();
 	}
 
 	@Override
@@ -60,6 +90,9 @@ public class SqmSingularAttributeReferenceEntity extends AbstractSqmSingularAttr
 			Expression expression,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
-		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
+		getExportedFromElement()
+		FromClauseIndex idx - creationContext.getFromClauseIndex().;
+		final TableGroup tableGroup = idx.resolveTableGroup( getExportedFromElement().getUniqueIdentifier() );
+		return getReferencedNavigable().createQueryResult( tableGroup, this, resultVariable, creationContext );
 	}
 }

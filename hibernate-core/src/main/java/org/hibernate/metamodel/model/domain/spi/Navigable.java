@@ -69,6 +69,11 @@ public interface Navigable<T> extends DomainType<T> {
 			QueryResultCreationContext creationContext);
 	// ^^ or possibly have SqmNavigableReference expose its TableReference
 	//		I like this (^^) option better
+	//
+	// todo (6.0) : ^^ not TableReference.  The way this should work is through FromClauseIndex and being able to resolve the TableGroup/ColumnReferenceSource here based on the SqmFrom#uniqueIdentifier
+	//		perhaps best option is to resolve this ColumnReferenceSource as part
+	//		of SqmNavigableReference generation of a QueryResult (via QueryResultProducer)
+	//		and pass that in here
 
 	/**
 	 * Obtain a loggable representation.

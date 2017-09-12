@@ -24,7 +24,7 @@ public class SqmNullifFunction extends AbstractSqmFunction {
 	public SqmNullifFunction(
 			SqmExpression first,
 			SqmExpression second) {
-		super( (AllowableFunctionReturnType) (first == null ? second.getExpressionType() : first.getExpressionType()) );
+		super( (AllowableFunctionReturnType) (first == null ? second.getExpressableType() : first.getExpressableType()) );
 		this.first = first;
 		this.second = second;
 	}

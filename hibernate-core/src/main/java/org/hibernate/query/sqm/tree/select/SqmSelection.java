@@ -6,33 +6,37 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
 /**
  * Represents an individual selection within a select clause.
  *
  * @author Steve Ebersole
  */
-public class SqmSelection implements SqmAliasedExpression {
-	private final SqmExpression selectExpression;
+public class SqmSelection implements SqmAliasedNode, SqmVisitableNode {
+	private final SqmSelectableNode selectableNode;
 	private final String alias;
 
-	public SqmSelection(SqmExpression selectExpression, String alias) {
-		this.selectExpression = selectExpression;
+	public SqmSelection(
+			SqmSelectableNode selectableNode,
+			String alias) {
+		this.selectableNode = selectableNode;
 		this.alias = alias;
 	}
 
-	public SqmSelection(SqmExpression selectExpression) {
-		this( selectExpression, null );
-	}
-
 	@Override
-	public SqmExpression getExpression() {
-		return selectExpression;
+	public SqmSelectableNode getSelectableNode() {
+		return selectableNode;
 	}
 
 	@Override
 	public String getAlias() {
 		return alias;
+	}
+
+	@Override
+	public <T> T accept(SemanticQueryWalker<T> walker) {
+		return walker.visitSelection( this );
 	}
 }

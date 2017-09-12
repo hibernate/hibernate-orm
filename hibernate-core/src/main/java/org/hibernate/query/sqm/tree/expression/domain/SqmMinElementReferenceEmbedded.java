@@ -31,13 +31,13 @@ public class SqmMinElementReferenceEmbedded
 	}
 
 	@Override
-	public CollectionElement getExpressionType() {
+	public CollectionElement getExpressableType() {
 		return getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor();
 	}
 
 	@Override
 	public CollectionElement getInferableType() {
-		return getExpressionType();
+		return getExpressableType();
 	}
 
 	@Override

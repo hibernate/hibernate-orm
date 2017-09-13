@@ -26,6 +26,7 @@ import org.hibernate.envers.strategy.AuditStrategy;
  * The related entities information can be added gradually, and when complete, the query generator can be built.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public final class QueryGeneratorBuilder {
 	private final GlobalConfiguration globalCfg;
@@ -34,7 +35,8 @@ public final class QueryGeneratorBuilder {
 	private final MiddleIdData referencingIdData;
 	private final String auditMiddleEntityName;
 	private final List<MiddleIdData> idDatas;
-	private final boolean revisionTypeInId;
+	private final boolean elementRevisionTypeInId;
+	private final boolean keyRevisionTypeInId;
 
 	QueryGeneratorBuilder(
 			GlobalConfiguration globalCfg,
@@ -42,13 +44,15 @@ public final class QueryGeneratorBuilder {
 			AuditStrategy auditStrategy,
 			MiddleIdData referencingIdData,
 			String auditMiddleEntityName,
-			boolean revisionTypeInId) {
+			boolean keyRevisionTypeInId,
+			boolean elementRevisionTypeInId) {
 		this.globalCfg = globalCfg;
 		this.verEntCfg = verEntCfg;
 		this.auditStrategy = auditStrategy;
 		this.referencingIdData = referencingIdData;
 		this.auditMiddleEntityName = auditMiddleEntityName;
-		this.revisionTypeInId = revisionTypeInId;
+		this.keyRevisionTypeInId = keyRevisionTypeInId;
+		this.elementRevisionTypeInId = elementRevisionTypeInId;
 
 		idDatas = new ArrayList<>();
 	}
@@ -61,20 +65,20 @@ public final class QueryGeneratorBuilder {
 		if ( idDatas.size() == 0 ) {
 			return new OneEntityQueryGenerator(
 					verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-					revisionTypeInId, componentDatas
+					elementRevisionTypeInId, componentDatas
 			);
 		}
 		else if ( idDatas.size() == 1 ) {
 			if ( idDatas.get( 0 ).isAudited() ) {
 				return new TwoEntityQueryGenerator(
 						globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-						idDatas.get( 0 ), revisionTypeInId, componentDatas
+						idDatas.get( 0 ), elementRevisionTypeInId, keyRevisionTypeInId, componentDatas
 				);
 			}
 			else {
 				return new TwoEntityOneAuditedQueryGenerator(
 						verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-						idDatas.get( 0 ), revisionTypeInId, componentDatas
+						idDatas.get( 0 ), elementRevisionTypeInId, componentDatas
 				);
 			}
 		}
@@ -88,7 +92,7 @@ public final class QueryGeneratorBuilder {
 
 			return new ThreeEntityQueryGenerator(
 					globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-					idDatas.get( 0 ), idDatas.get( 1 ), revisionTypeInId, componentDatas
+					idDatas.get( 0 ), idDatas.get( 1 ), elementRevisionTypeInId, componentDatas
 			);
 		}
 		else {

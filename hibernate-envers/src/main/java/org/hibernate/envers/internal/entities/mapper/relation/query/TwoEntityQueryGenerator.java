@@ -34,8 +34,8 @@ public final class TwoEntityQueryGenerator extends AbstractRelationQueryGenerato
 			GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg,
 			AuditStrategy auditStrategy, String versionsMiddleEntityName,
 			MiddleIdData referencingIdData, MiddleIdData referencedIdData,
-			boolean revisionTypeInId, MiddleComponentData... componentData) {
-		super( verEntCfg, referencingIdData, revisionTypeInId );
+			boolean elementRevisionTypeInId, boolean keyRevisionTypeInId, MiddleComponentData... componentData) {
+		super( verEntCfg, referencingIdData, keyRevisionTypeInId, elementRevisionTypeInId );
 
 		/*
 		 * The valid query that we need to create:
@@ -120,7 +120,7 @@ public final class TwoEntityQueryGenerator extends AbstractRelationQueryGenerato
 		final String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
 		final String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
 		final String eeOriginalIdPropertyPath = MIDDLE_ENTITY_ALIAS + "." + originalIdPropertyName;
-		final String revisionTypePropName = getRevisionTypePath();
+		final String revisionTypePropName = getElementRevisionTypePath();
 		// (selecting e entities at revision :revision)
 		// --> based on auditStrategy (see above)
 		auditStrategy.addEntityAtRevisionRestriction(
@@ -149,7 +149,7 @@ public final class TwoEntityQueryGenerator extends AbstractRelationQueryGenerato
 		rootParameters.addWhereWithNamedParam( revisionTypePropName, "!=", DEL_REVISION_TYPE_PARAMETER );
 		// e.revision_type != DEL
 		rootParameters.addWhereWithNamedParam(
-				REFERENCED_ENTITY_ALIAS + "." + revisionTypePropName,
+				REFERENCED_ENTITY_ALIAS + "." + getKeyRevisionTypePath(),
 				false,
 				"!=",
 				DEL_REVISION_TYPE_PARAMETER
@@ -169,7 +169,7 @@ public final class TwoEntityQueryGenerator extends AbstractRelationQueryGenerato
 		// Restrictions to match all rows deleted at exactly given revision.
 		final Parameters removed = disjoint.addSubParameters( "and" );
 		final String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
-		final String revisionTypePropName = getRevisionTypePath();
+		final String revisionTypePropName = getElementRevisionTypePath();
 		// Excluding current revision, because we need to match data valid at the previous one.
 		createValidDataRestrictions(
 				globalCfg,
@@ -194,7 +194,7 @@ public final class TwoEntityQueryGenerator extends AbstractRelationQueryGenerato
 		removed.addWhereWithNamedParam( revisionTypePropName, "=", DEL_REVISION_TYPE_PARAMETER );
 		// e.revision_type = DEL
 		removed.addWhereWithNamedParam(
-				REFERENCED_ENTITY_ALIAS + "." + revisionTypePropName,
+				REFERENCED_ENTITY_ALIAS + "." + getKeyRevisionTypePath(),
 				false,
 				"=",
 				DEL_REVISION_TYPE_PARAMETER

@@ -43,7 +43,7 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 			boolean revisionTypeInId,
 			String mappedBy,
 			boolean mappedByKey) {
-		super( verEntCfg, referencingIdData, revisionTypeInId );
+		super( verEntCfg, referencingIdData, revisionTypeInId, revisionTypeInId );
 
 		this.mappedBy = mappedBy;
 
@@ -124,7 +124,7 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 				true
 		);
 		// e.revision_type != DEL
-		rootParameters.addWhereWithNamedParam( getRevisionTypePath(), false, "!=", DEL_REVISION_TYPE_PARAMETER );
+		rootParameters.addWhereWithNamedParam( getElementRevisionTypePath(), false, "!=", DEL_REVISION_TYPE_PARAMETER );
 	}
 
 	/**
@@ -143,7 +143,7 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 		// e.revision = :revision
 		removed.addWhereWithNamedParam( verEntCfg.getRevisionNumberPath(), false, "=", REVISION_PARAMETER );
 		// e.revision_type = DEL
-		removed.addWhereWithNamedParam( getRevisionTypePath(), false, "=", DEL_REVISION_TYPE_PARAMETER );
+		removed.addWhereWithNamedParam( getElementRevisionTypePath(), false, "=", DEL_REVISION_TYPE_PARAMETER );
 	}
 
 	@Override

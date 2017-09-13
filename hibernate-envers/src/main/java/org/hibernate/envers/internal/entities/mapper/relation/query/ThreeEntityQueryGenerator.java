@@ -38,7 +38,7 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 			MiddleIdData referencingIdData, MiddleIdData referencedIdData,
 			MiddleIdData indexIdData, boolean revisionTypeInId,
 			MiddleComponentData... componentData) {
-		super( verEntCfg, referencingIdData, revisionTypeInId );
+		super( verEntCfg, referencingIdData, revisionTypeInId, revisionTypeInId );
 
 		/*
 		 * The valid query that we need to create:
@@ -148,7 +148,7 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 		final String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
 		final String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
 		final String eeOriginalIdPropertyPath = MIDDLE_ENTITY_ALIAS + "." + originalIdPropertyName;
-		final String revisionTypePropName = getRevisionTypePath();
+		final String revisionTypePropName = getElementRevisionTypePath();
 		// (selecting e entities at revision :revision)
 		// --> based on auditStrategy (see above)
 		auditStrategy.addEntityAtRevisionRestriction(
@@ -219,7 +219,7 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 		// Restrictions to match all rows deleted at exactly given revision.
 		final Parameters removed = disjoint.addSubParameters( "and" );
 		final String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
-		final String revisionTypePropName = getRevisionTypePath();
+		final String revisionTypePropName = getElementRevisionTypePath();
 		// Excluding current revision, because we need to match data valid at the previous one.
 		createValidDataRestrictions(
 				globalCfg, auditStrategy, referencedIdData, versionsMiddleEntityName, remQb, valid, false, indexIdData, componentData

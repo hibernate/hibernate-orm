@@ -24,18 +24,23 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
  * Base class for implementers of {@code RelationQueryGenerator} contract.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public abstract class AbstractRelationQueryGenerator implements RelationQueryGenerator {
 	protected final AuditEntitiesConfiguration verEntCfg;
 	protected final MiddleIdData referencingIdData;
-	protected final boolean revisionTypeInId;
+	protected final boolean keyRevisionTypeInId;
+	protected final boolean elementRevisionTypeInId;
 
 	protected AbstractRelationQueryGenerator(
-			AuditEntitiesConfiguration verEntCfg, MiddleIdData referencingIdData,
-			boolean revisionTypeInId) {
+			AuditEntitiesConfiguration verEntCfg,
+			MiddleIdData referencingIdData,
+			boolean keyRevisionTypeInId,
+			boolean elementRevisionTypeInId) {
 		this.verEntCfg = verEntCfg;
 		this.referencingIdData = referencingIdData;
-		this.revisionTypeInId = revisionTypeInId;
+		this.keyRevisionTypeInId = keyRevisionTypeInId;
+		this.elementRevisionTypeInId = elementRevisionTypeInId;
 	}
 
 	/**
@@ -63,10 +68,12 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 		return query;
 	}
 
-	protected String getRevisionTypePath() {
-		return revisionTypeInId
-				? verEntCfg.getOriginalIdPropName() + "." + verEntCfg.getRevisionTypePropName()
-				: verEntCfg.getRevisionTypePropName();
+	protected String getElementRevisionTypePath() {
+		return getRevisionTypePath( this.elementRevisionTypeInId );
+	}
+
+	protected String getKeyRevisionTypePath() {
+		return getRevisionTypePath( this.keyRevisionTypeInId );
 	}
 
 	protected String queryToString(QueryBuilder query) {
@@ -77,5 +84,11 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 		final StringBuilder sb = new StringBuilder();
 		query.build( sb, queryParamValues );
 		return sb.toString();
+	}
+
+	private String getRevisionTypePath(boolean revisionTypeInId) {
+		return revisionTypeInId
+				? verEntCfg.getOriginalIdPropName() + "." + verEntCfg.getRevisionTypePropName()
+				: verEntCfg.getRevisionTypePropName();
 	}
 }

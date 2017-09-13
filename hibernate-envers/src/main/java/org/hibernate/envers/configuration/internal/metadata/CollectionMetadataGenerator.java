@@ -95,6 +95,9 @@ import org.jboss.logging.Logger;
  * @author Chris Cranford
  */
 public final class CollectionMetadataGenerator {
+
+	// todo: this class should undergo major changes to differentiate between various collection types.
+
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
 			EnversMessageLogger.class,
 			CollectionMetadataGenerator.class.getName()
@@ -449,7 +452,8 @@ public final class CollectionMetadataGenerator {
 				mainGenerator.getAuditStrategy(),
 				referencingIdData,
 				auditMiddleEntityName,
-				isRevisionTypeInId()
+				isKeyRevisionTypeInId(),
+				isElementRevisionTypeInId()
 		);
 
 		// Adding the XML mapping for the referencing entity, if the relation isn't inverse.
@@ -471,7 +475,7 @@ public final class CollectionMetadataGenerator {
 				queryGeneratorBuilder,
 				referencedPrefix,
 				propertyAuditingData.getJoinTable().inverseJoinColumns(),
-				!isLobMapElementType()
+				!isLobMapElementType() && isMapElementInPrimaryKey()
 		);
 
 		// ******
@@ -855,9 +859,9 @@ public final class CollectionMetadataGenerator {
 
 		// Adding the revision type property to the entity xml.
 		mainGenerator.addRevisionType(
-				isRevisionTypeInId() ? middleEntityXmlId : middleEntityXml,
+				isElementRevisionTypeInId() ? middleEntityXmlId : middleEntityXml,
 				middleEntityXml,
-				isRevisionTypeInId()
+				isElementRevisionTypeInId()
 		);
 
 		// All other properties should also be part of the primary key of the middle entity.
@@ -1024,12 +1028,30 @@ public final class CollectionMetadataGenerator {
 	}
 
 	/**
-	 * Returns whether the revision type column part of the collection table's primary key.
+	 * Returns whether the revision type column of the collection element is part of the collection table's primary key.
 	 *
 	 * @return {@code true} if the revision type should be part of the primary key, otherwise {@code false}.
 	 */
-	private boolean isRevisionTypeInId() {
+	private boolean isElementRevisionTypeInId() {
 		return isEmbeddableElementType() || isLobMapElementType();
+	}
+
+	/**
+	 * Returns whether the revision type column of the map-key is part of the collection table's primary key.
+	 *
+	 * NOTE: It is safe to call this method, even for non-map collection types as this method will always return
+	 * {@code false} for non-map collection types.
+	 *
+	 * @return {@code true} if the revision type should be part of the primary key, otherwise {@code false}.
+	 */
+	private boolean isKeyRevisionTypeInId() {
+		if ( propertyValue instanceof org.hibernate.mapping.Map ) {
+			final Type type = propertyValue.getKey().getType();
+			if ( !type.isComponentType() && !type.isAssociationType() ) {
+				return ( type instanceof MaterializedClobType ) || ( type instanceof MaterializedNClobType );
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -1046,5 +1068,18 @@ public final class CollectionMetadataGenerator {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Returns whether we believe the map element should be included as part of the middle table's primary key.
+	 *
+	 * @return {@code true} if the element should be included as part of the key, otherwise {@code false}.
+	 */
+	private boolean isMapElementInPrimaryKey() {
+		if ( propertyValue instanceof IndexedCollection ) {
+			final Value index = ( (IndexedCollection) propertyValue ).getIndex();
+			return !index.getType().isEntityType();
+		}
+		return true;
 	}
 }

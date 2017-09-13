@@ -24,6 +24,14 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
  * @author Steve Ebersole
  */
 public interface SqlAstFunctionProducer extends SqmFunction {
+	/**
+	 * Generate the SQL AST form of the function as an expression.
+	 *
+	 * To be able to use this in the select-clause, the returned
+	 * expression must also implement the
+	 * {@link org.hibernate.sql.results.spi.QueryResultProducer}
+	 * contract
+	 */
 	Expression convertToSqlAst(SqmToSqlAstConverter walker);
 
 	@Override

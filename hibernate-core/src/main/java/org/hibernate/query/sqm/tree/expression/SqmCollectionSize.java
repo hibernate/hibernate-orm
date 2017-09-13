@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
@@ -13,6 +14,7 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 
 /**
  * Represents the {@code SIZE()} function.
@@ -20,7 +22,7 @@ import org.hibernate.sql.results.spi.QueryResultCreationContext;
  * @author Steve Ebersole
  * @author Gunnar Morling
  */
-public class SqmCollectionSize implements SqmExpression {
+public class SqmCollectionSize implements SqmExpression, QueryResultProducer {
 	private final SqmPluralAttributeReference pluralAttributeBinding;
 	private final BasicValuedExpressableType sizeType;
 
@@ -55,11 +57,13 @@ public class SqmCollectionSize implements SqmExpression {
 
 	@Override
 	public QueryResult createQueryResult(
-			Expression expression, String resultVariable, QueryResultCreationContext creationContext) {
-		return new ScalarQueryResultImpl(
-				resultVariable,
-				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
-				getExpressableType()
-		);
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		throw new NotYetImplementedException(  );
+//		return new ScalarQueryResultImpl(
+//				resultVariable,
+//				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
+//				getExpressableType()
+//		);
 	}
 }

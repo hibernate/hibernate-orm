@@ -18,6 +18,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Adds a JDBC function escape (i.e. `{fn <wrapped-function-call>})  around the wrapped function
@@ -83,5 +84,10 @@ public class SqmJdbcFunctionEscapeWrapper
 		sqlAppender.appendSql( "{fn " );
 		sqlAstArguments.get( 0 ).accept( walker );
 		sqlAppender.appendSql( "}" );
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getExpressableType().getJavaTypeDescriptor();
 	}
 }

@@ -30,6 +30,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -202,6 +203,11 @@ public class LocateEmulationUsingPositionAndSubstring
 			sqlAppender.appendSql( " in " );
 			sqlAstArguments.get( 1 ).accept( walker );
 			sqlAppender.appendSql( ")" );
+		}
+
+		@Override
+		public JavaTypeDescriptor getJavaTypeDescriptor() {
+			return getExpressableType().getJavaTypeDescriptor();
 		}
 	}
 

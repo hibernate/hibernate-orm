@@ -10,14 +10,18 @@ package org.hibernate.sql.ast.tree.spi.expression;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
+import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole
  */
 public class BinaryArithmeticExpression
-		implements Expression, SqlExpressable {
+		implements Expression, SqlExpressable, QueryResultProducer {
 	private final Operation operation;
 	private final Expression lhsOperand;
 	private final Expression rhsOperand;
@@ -50,6 +54,17 @@ public class BinaryArithmeticExpression
 	@Override
 	public void accept(SqlAstWalker  walker) {
 		walker.visitBinaryArithmeticExpression( this );
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return new ScalarQueryResultImpl(
+				resultVariable,
+				creationContext.getSqlSelectionResolver().resolveSqlSelection( this ),
+				resultType
+		);
 	}
 
 	public enum Operation {

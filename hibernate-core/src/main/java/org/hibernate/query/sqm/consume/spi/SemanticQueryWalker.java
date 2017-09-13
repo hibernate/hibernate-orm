@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.consume.spi;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
@@ -107,6 +108,7 @@ import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
  * @author Steve Ebersole
  */
 public interface SemanticQueryWalker<T> {
+	SessionFactoryImplementor getSessionFactory();
 
 	T visitUpdateStatement(SqmUpdateStatement statement);
 

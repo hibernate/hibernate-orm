@@ -17,6 +17,7 @@ import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 import org.hibernate.sql.results.spi.Selectable;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.spi.BasicType;
@@ -24,7 +25,7 @@ import org.hibernate.type.spi.BasicType;
 /**
  * @author Steve Ebersole
  */
-public class CaseSimpleExpression implements Expression, Selectable, SqlExpressable {
+public class CaseSimpleExpression implements Expression, Selectable, SqlExpressable, QueryResultProducer {
 	private final ExpressableType type;
 	private final Expression fixture;
 
@@ -60,12 +61,11 @@ public class CaseSimpleExpression implements Expression, Selectable, SqlExpressa
 
 	@Override
 	public QueryResult createQueryResult(
-			Expression expression,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		return new ScalarQueryResultImpl(
 				resultVariable,
-				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
+				creationContext.getSqlSelectionResolver().resolveSqlSelection( this ),
 				getType()
 		);
 	}

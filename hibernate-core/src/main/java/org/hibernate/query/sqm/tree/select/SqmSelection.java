@@ -25,6 +25,10 @@ public class SqmSelection implements SqmAliasedNode, SqmVisitableNode {
 		this.alias = alias;
 	}
 
+	public SqmSelection(SqmSelectableNode selectableNode) {
+		this( selectableNode, null );
+	}
+
 	@Override
 	public SqmSelectableNode getSelectableNode() {
 		return selectableNode;

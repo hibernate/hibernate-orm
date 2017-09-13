@@ -10,9 +10,15 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
@@ -23,7 +29,7 @@ import org.hibernate.sql.results.spi.SqlSelection;
  *
  * @author Steve Ebersole
  */
-public interface NavigableReference extends Expression {
+public interface NavigableReference extends Expression, QueryResultProducer {
 
 	// todo (6.0) : remove this contract completely.  A navigable is never a (Sql)Expression
 
@@ -32,6 +38,30 @@ public interface NavigableReference extends Expression {
 	@Override
 	default SqlSelection createSqlSelection(int jdbcPosition) {
 		throw new UnsupportedOperationException(  );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public QueryResult createQueryResult(
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		getExportedFromElement()
+		FromClauseIndex idx - creationContext.getFromClauseIndex().;
+		idx.
+		final TableGroup tableGroup = idx.resolveTableGroup( getExportedFromElement().getUniqueIdentifier() );
+		return getReferencedNavigable().createQueryResult( tableGroup, this, resultVariable, creationContext );
+	}
+	@Override
+	default QueryResult createQueryResult(
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		getSqlExpressionQualifier().
+		// todo (6.0) : the problem here is needing to be able to resolve the TableGroup(s) we need to pass in to the Navigable
+		throw new NotYetImplementedException(  );
+		creationContext.
+
+		return getNavigable().createQueryResult( null, this, resultVariable, creationContext );
+		return null;
 	}
 
 	/**

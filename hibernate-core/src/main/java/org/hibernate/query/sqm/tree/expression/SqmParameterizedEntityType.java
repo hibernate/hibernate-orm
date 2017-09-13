@@ -11,13 +11,15 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.QueryResultProducer;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Entity type expression based on a parameter - `TYPE( :someParam )`
  *
  * @author Steve Ebersole
  */
-public class SqmParameterizedEntityType implements SqmExpression {
+public class SqmParameterizedEntityType implements SqmExpression, QueryResultProducer {
 	private final SqmParameter parameterExpression;
 
 	public SqmParameterizedEntityType(SqmParameter parameterExpression) {
@@ -46,10 +48,14 @@ public class SqmParameterizedEntityType implements SqmExpression {
 
 	@Override
 	public QueryResult createQueryResult(
-			Expression expression,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		throw new UnsupportedOperationException( "At the moment, selection of an entity's type as a QueryResult is not supported" );
 		// todo (6.0) : but could be ^^ - consider adding support for this (returning Class)
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getExpressableType().getJavaTypeDescriptor();
 	}
 }

@@ -81,16 +81,6 @@ public class SqmCaseSearched implements SqmExpression, ImpliedTypeSqmExpression 
 		return "<searched-case>";
 	}
 
-	@Override
-	public QueryResult createQueryResult(
-			Expression expression, String resultVariable, QueryResultCreationContext creationContext) {
-		return new ScalarQueryResultImpl(
-				resultVariable,
-				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
-				(BasicValuedExpressableType) getExpressableType()
-		);
-	}
-
 	public static class WhenFragment {
 		private final SqmPredicate predicate;
 		private final SqmExpression result;

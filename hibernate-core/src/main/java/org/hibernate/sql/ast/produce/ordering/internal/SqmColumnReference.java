@@ -14,7 +14,8 @@ import org.hibernate.sql.ast.consume.spi.SelfRenderingExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.sql.results.spi.Selectable;
+import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -47,6 +48,11 @@ public class SqmColumnReference implements SqmExpression {
 		return null;
 	}
 
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return null;
+	}
+
 	private class ExplicitColumnReference implements SelfRenderingExpression {
 		@Override
 		public void renderToSql(
@@ -69,8 +75,8 @@ public class SqmColumnReference implements SqmExpression {
 		}
 
 		@Override
-		public Selectable getSelectable() {
-			return null;
+		public SqlSelection createSqlSelection(int jdbcPosition) {
+			throw new UnsupportedOperationException( "Only intended for use in order-by clause" );
 		}
 	}
 }

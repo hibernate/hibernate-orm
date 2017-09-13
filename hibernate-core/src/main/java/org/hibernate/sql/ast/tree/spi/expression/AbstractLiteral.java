@@ -13,7 +13,11 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
+import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
@@ -25,7 +29,7 @@ import org.hibernate.sql.results.spi.SqlSelection;
  * @author Steve Ebersole
  */
 public abstract class AbstractLiteral
-		implements JdbcParameterBinder, Expression, SqlExpressable {
+		implements JdbcParameterBinder, Expression, SqlExpressable, QueryResultProducer {
 	private final Object value;
 	private final BasicValuedExpressableType type;
 	private final boolean inSelect;
@@ -59,6 +63,20 @@ public abstract class AbstractLiteral
 		return new SqlSelectionImpl(
 				getType().getBasicType().getSqlSelectionReader(),
 				jdbcPosition
+		);
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+
+		// todo (6.0) : consider just returning the literal value back directly
+
+		return new ScalarQueryResultImpl(
+				resultVariable,
+				creationContext.getSqlSelectionResolver().resolveSqlSelection( this ),
+				getType()
 		);
 	}
 

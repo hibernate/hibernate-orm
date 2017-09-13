@@ -61,14 +61,4 @@ public abstract class AbstractSqmLiteral<T> implements SqmLiteral<T> {
 	public String asLoggableText() {
 		return "Literal( " + value + ")";
 	}
-
-	@Override
-	public QueryResult createQueryResult(
-			Expression expression, String resultVariable, QueryResultCreationContext creationContext) {
-		return new ScalarQueryResultImpl(
-				resultVariable,
-				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
-				getExpressableType()
-		);
-	}
 }

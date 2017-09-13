@@ -12,6 +12,8 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.QueryResultProducer;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Represents an reference to an entity type as a literal.  This is the JPA
@@ -22,11 +24,16 @@ import org.hibernate.sql.results.spi.QueryResultCreationContext;
  *
  * @author Steve Ebersole
  */
-public class SqmLiteralEntityType implements SqmExpression {
+public class SqmLiteralEntityType implements SqmExpression, QueryResultProducer {
 	private final EntityValuedExpressableType entityType;
 
 	public SqmLiteralEntityType(EntityValuedExpressableType entityType) {
 		this.entityType = entityType;
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getExpressableType().getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -45,13 +52,7 @@ public class SqmLiteralEntityType implements SqmExpression {
 	}
 
 	@Override
-	public String asLoggableText() {
-		return "TYPE(" + entityType + ")";
-	}
-
-	@Override
 	public QueryResult createQueryResult(
-			Expression expression,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		throw new TreeException("Selecting an entity type is not allowed. An entity type expression can be used to restrict query polymorphism ");
@@ -59,4 +60,8 @@ public class SqmLiteralEntityType implements SqmExpression {
 	}
 
 
+	@Override
+	public String asLoggableText() {
+		return "TYPE(" + entityType + ")";
+	}
 }

@@ -21,12 +21,12 @@ import java.util.function.Function;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
-import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.sqm.LiteralNumberFormatException;
 import org.hibernate.query.sqm.NotYetImplementedException;
@@ -59,36 +59,33 @@ import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
-import org.hibernate.query.sqm.tree.SqmVisitableNode;
+import org.hibernate.query.sqm.tree.expression.ImpliedTypeSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmConcat;
 import org.hibernate.query.sqm.tree.expression.SqmConstantEnum;
 import org.hibernate.query.sqm.tree.expression.SqmConstantFieldReference;
 import org.hibernate.query.sqm.tree.expression.SqmConstantReference;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
-import org.hibernate.query.sqm.tree.expression.ImpliedTypeSqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralBigDecimal;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralBigInteger;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralCharacter;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralDouble;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralFalse;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralFloat;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralInteger;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralLong;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
-import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralString;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralTrue;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
-import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
@@ -129,6 +126,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAggregateFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
@@ -136,6 +134,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLowerFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimFunction;
@@ -176,13 +175,13 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.sql.ast.tree.spi.TrimSpecification;
-import org.hibernate.sql.results.spi.QueryResultProducer;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -427,41 +426,37 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	@Override
 	public SqmSelection visitSelection(HqlParser.SelectionContext ctx) {
 		final String resultIdentifier = interpretResultIdentifier( ctx.resultIdentifier() );
-		QueryResultProducer queryResultProducer = visitQueryResultProducer( ctx );
+		SqmSelectableNode selectableNode = visitSelectableNode( ctx );
 
-		if ( queryResultProducer instanceof SqmPluralAttributeReference ) {
-			final SqmPluralAttributeReference pluralAttributeBinding = (SqmPluralAttributeReference) queryResultProducer;
+		if ( selectableNode instanceof SqmPluralAttributeReference ) {
+			final SqmPluralAttributeReference pluralAttributeBinding = (SqmPluralAttributeReference) selectableNode;
 			final CollectionElement elementReference = pluralAttributeBinding.getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor();
 			switch ( elementReference.getClassification() ) {
 				case ANY: {
 					throw new NotYetImplementedException(  );
 				}
 				case BASIC: {
-					queryResultProducer = new SqmCollectionElementReferenceBasic( pluralAttributeBinding );
+					selectableNode = new SqmCollectionElementReferenceBasic( pluralAttributeBinding );
 					break;
 				}
 				case EMBEDDABLE: {
-					queryResultProducer = new SqmCollectionElementReferenceEmbedded( pluralAttributeBinding );
+					selectableNode = new SqmCollectionElementReferenceEmbedded( pluralAttributeBinding );
 					break;
 				}
 				case ONE_TO_MANY:
 				case MANY_TO_MANY: {
-					queryResultProducer = new SqmCollectionElementReferenceEntity( pluralAttributeBinding );
+					selectableNode = new SqmCollectionElementReferenceEntity( pluralAttributeBinding );
 					break;
 				}
 			}
 		}
 
-		final SqmSelection selection = new SqmSelection(
-				null,
-				queryResultProducer,
-				resultIdentifier
-		);
+		final SqmSelection selection = new SqmSelection( selectableNode, resultIdentifier );
 		querySpecProcessingStateStack.getCurrent().getFromElementBuilder().getAliasRegistry().registerAlias( selection );
 		return selection;
 	}
 
-	protected QueryResultProducer visitQueryResultProducer(HqlParser.SelectionContext ctx) {
+	private SqmSelectableNode visitSelectableNode(HqlParser.SelectionContext ctx) {
 		if ( ctx.dynamicInstantiation() != null ) {
 			return visitDynamicInstantiation( ctx.dynamicInstantiation() );
 		}
@@ -582,14 +577,13 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	@Override
 	public SqmDynamicInstantiationArgument visitDynamicInstantiationArg(HqlParser.DynamicInstantiationArgContext ctx) {
 		return new SqmDynamicInstantiationArgument(
-				(SqmVisitableNode) ctx.dynamicInstantiationArgExpression(),
 				visitDynamicInstantiationArgExpression( ctx.dynamicInstantiationArgExpression() ),
 				ctx.identifier() == null ? null : ctx.identifier().getText()
 		);
 	}
 
 	@Override
-	public QueryResultProducer visitDynamicInstantiationArgExpression(HqlParser.DynamicInstantiationArgExpressionContext ctx) {
+	public SqmSelectableNode visitDynamicInstantiationArgExpression(HqlParser.DynamicInstantiationArgExpressionContext ctx) {
 		if ( ctx.dynamicInstantiation() != null ) {
 			return visitDynamicInstantiation( ctx.dynamicInstantiation() );
 		}
@@ -2763,11 +2757,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	}
 
 	private static ExpressableType determineTypeDescriptor(SqmSelectClause selectClause) {
-		if ( selectClause.getSelections().size() != 1 ) {
-			return null;
-		}
-
-		final SqmSelection selection = selectClause.getSelections().get( 0 );
-		return selection.getQueryResultProducer().getExpressionType();
+		throw new org.hibernate.sql.NotYetImplementedException(  );
+//		if ( selectClause.getSelections().size() != 1 ) {
+//			return null;
+//		}
+//
+//		final SqmSelection selection = selectClause.getSelections().get( 0 );
+//		return selection.getSelectableNode().ggetJavaTypeDescriptor().getExpressionType();
 	}
 }

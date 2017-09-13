@@ -6,28 +6,16 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
-import org.hibernate.sql.results.internal.DynamicInstantiationQueryResultImpl;
-import org.hibernate.sql.results.internal.instantiation.ArgumentReader;
-import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationConstructorAssemblerImpl;
-import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationInjectionAssemblerImpl;
-import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationListAssemblerImpl;
-import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationMapAssemblerImpl;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultAssembler;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -76,7 +64,7 @@ public class SqmDynamicInstantiation
 	}
 
 	@Override
-	public JavaTypeDescriptor getProducedJavaTypeDescriptor() {
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return getInstantiationTarget().getTargetTypeDescriptor();
 	}
 
@@ -127,87 +115,35 @@ public class SqmDynamicInstantiation
 	}
 
 	@Override
-	public QueryResult createQueryResult(
-			SemanticQueryWalker walker,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-
-		boolean areAllArgumentsAliased = true;
-		boolean areAnyArgumentsAliased = false;
-		final Set<String> aliases = new HashSet<>();
-		final List<String> duplicatedAliases = new ArrayList<>();
-
+	@SuppressWarnings("unchecked")
+	public <T> T accept(SemanticQueryWalker<T> walker) {
 		final DynamicInstantiationNature instantiationNature = getInstantiationTarget().getNature();
 		final JavaTypeDescriptor<Object> targetTypeDescriptor = interpretInstantiationTarget(
 				getInstantiationTarget(),
-				creationContext
+				walker.getSessionFactory()
 		);
 
-		final List<ArgumentReader> argumentReaders = new ArrayList<>();
-		for ( SqmDynamicInstantiationArgument argument : getArguments() ) {
-			final SqmSelectableNode selectableNode = argument.getSelectableNode();
-//			final QueryResultProducer argumentResultProducer = argument.getQueryResultProducer();
+		final DynamicInstantiation dynamicInstantiation = new DynamicInstantiation(
+				instantiationNature,
+				targetTypeDescriptor
+		);
 
-			if ( argument.getAlias() == null ) {
-				areAllArgumentsAliased = false;
-
-				if ( instantiationNature == MAP ) {
-					log.warnf(
-							"Argument [%s] for dynamic Map instantiation did not declare an 'injection alias', " +
-									"but such aliases are needed for dynamic Map instantiations; " +
-									"will likely cause problems later processing query results",
-							selectableNode.asLoggableText()
-					);
-				}
-			}
-			else {
-				if ( !aliases.add( argument.getAlias() ) ) {
-					duplicatedAliases.add( argument.getAlias() );
-					log.debugf( "Query defined duplicate resultVariable encountered multiple declarations of [%s]", argument.getAlias() );
-				}
-				areAnyArgumentsAliased = true;
-
-				if ( instantiationNature == LIST ) {
-					log.debugf(
-							"Argument [%s] for dynamic List instantiation declared an 'injection alias' [%s] " +
-									"but such aliases are ignored for dynamic List instantiations",
-							selectableNode.asLoggableText(),
-							argument.getAlias()
-					);
-				}
-			}
-
-			final QueryResult queryResult = selectableNode.createQueryResult(
-					walker,
-					argument.getAlias(),
-					creationContext
-			);
-
-			argumentReaders.add(
-					new ArgumentReader(
-							queryResult.getResultAssembler(),
-							argument.getAlias()
-					)
+		for ( SqmDynamicInstantiationArgument sqmArgument : getArguments() ) {
+			dynamicInstantiation.addArgument(
+					sqmArgument.getAlias(),
+					(QueryResultProducer) sqmArgument.getSelectableNode().accept( walker )
 			);
 		}
 
-		final QueryResultAssembler assembler = resolveAssembler(
-				instantiationNature,
-				targetTypeDescriptor,
-				areAllArgumentsAliased,
-				areAnyArgumentsAliased,
-				duplicatedAliases,
-				argumentReaders,
-				creationContext
-		);
+		dynamicInstantiation.complete();
 
-		return new DynamicInstantiationQueryResultImpl( resultVariable, assembler );
+		return (T) dynamicInstantiation;
 	}
 
 	@SuppressWarnings("unchecked")
 	private <T> JavaTypeDescriptor<T> interpretInstantiationTarget(
 			SqmDynamicInstantiationTarget instantiationTarget,
-			QueryResultCreationContext creationContext) {
+			SessionFactoryImplementor sessionFactory) {
 		final Class<T> targetJavaType;
 
 		if ( instantiationTarget.getNature() == DynamicInstantiationNature.LIST ) {
@@ -220,101 +156,9 @@ public class SqmDynamicInstantiation
 			targetJavaType = instantiationTarget.getJavaType();
 		}
 
-		return creationContext.getSessionFactory()
-				.getTypeConfiguration()
+		return sessionFactory.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( targetJavaType );
-	}
-
-	@SuppressWarnings("unchecked")
-	private static QueryResultAssembler resolveAssembler(
-			DynamicInstantiationNature nature,
-			JavaTypeDescriptor targetJavaTypeDescriptor,
-			boolean areAllArgumentsAliased,
-			boolean areAnyArgumentsAliased,
-			List<String> duplicatedAliases,
-			List<ArgumentReader> argumentReaders,
-			QueryResultCreationContext creationContext) {
-
-		if ( nature == DynamicInstantiationNature.LIST ) {
-			if ( log.isDebugEnabled() && areAnyArgumentsAliased ) {
-				log.debug( "One or more arguments for List dynamic instantiation (`new list(...)`) specified an alias; ignoring" );
-			}
-			return new DynamicInstantiationListAssemblerImpl(
-					(BasicJavaDescriptor<List>) targetJavaTypeDescriptor,
-					argumentReaders
-			);
-		}
-		else if ( nature == DynamicInstantiationNature.MAP ) {
-			if ( ! areAllArgumentsAliased ) {
-				throw new IllegalStateException( "Map dynamic instantiation contained one or more arguments with no alias" );
-			}
-			if ( !duplicatedAliases.isEmpty() ) {
-				throw new IllegalStateException(
-						"Map dynamic instantiation contained arguments with duplicated aliases [" + StringHelper.join( ",", duplicatedAliases ) + "]"
-				);
-			}
-			return new DynamicInstantiationMapAssemblerImpl(
-					(BasicJavaDescriptor<Map>) targetJavaTypeDescriptor,
-					argumentReaders
-			);
-		}
-		else {
-			// find a constructor matching argument types
-			constructor_loop:
-			for ( Constructor constructor : targetJavaTypeDescriptor.getJavaType().getDeclaredConstructors() ) {
-				if ( constructor.getParameterTypes().length != argumentReaders.size() ) {
-					continue;
-				}
-
-				for ( int i = 0; i < argumentReaders.size(); i++ ) {
-					final ArgumentReader argumentReader = argumentReaders.get( i );
-					final JavaTypeDescriptor argumentTypeDescriptor = creationContext.getSessionFactory()
-							.getTypeConfiguration()
-							.getJavaTypeDescriptorRegistry()
-							.getDescriptor( constructor.getParameterTypes()[i] );
-
-					final boolean assignmentCompatible = Compatibility.areAssignmentCompatible(
-							argumentTypeDescriptor,
-							argumentReader.getJavaTypeDescriptor()
-					);
-					if ( !assignmentCompatible ) {
-						log.debugf(
-								"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
-								i,
-								constructor.getParameterTypes()[i].getName(),
-								argumentTypeDescriptor.getJavaType().getName()
-						);
-						continue constructor_loop;
-					}
-				}
-
-				constructor.setAccessible( true );
-				return new DynamicInstantiationConstructorAssemblerImpl(
-						constructor,
-						targetJavaTypeDescriptor,
-						argumentReaders
-				);
-			}
-
-			log.debugf(
-					"Could not locate appropriate constructor for dynamic instantiation of [%s]; attempting bean-injection instantiation",
-					targetJavaTypeDescriptor.getTypeName()
-			);
-
-
-			if ( ! areAllArgumentsAliased ) {
-				throw new IllegalStateException( "Bean-injection dynamic instantiation contained one or more arguments with no alias" );
-			}
-			if ( !duplicatedAliases.isEmpty() ) {
-				throw new IllegalStateException(
-						"Bean-injection dynamic instantiation contained arguments with duplicated aliases [" + StringHelper
-								.join( ",", duplicatedAliases ) + "]"
-				);
-			}
-
-			return new DynamicInstantiationInjectionAssemblerImpl( targetJavaTypeDescriptor, argumentReaders );
-		}
 	}
 
 	public SqmDynamicInstantiation makeShallowCopy() {

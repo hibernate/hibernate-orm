@@ -9,5 +9,5 @@ package org.hibernate.sql.ast.tree.spi.expression;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractStandardFunction implements StandardFunction {
+public abstract class AbstractStandardFunction extends AbstractFunction implements StandardFunction {
 }

@@ -14,14 +14,18 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
+import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
  */
-public class CaseSearchedExpression implements Expression, SqlExpressable {
+public class CaseSearchedExpression implements Expression, SqlExpressable, QueryResultProducer {
 	private final ExpressableType type;
 
 	private List<WhenFragment> whenFragments = new ArrayList<>();
@@ -58,6 +62,17 @@ public class CaseSearchedExpression implements Expression, SqlExpressable {
 		return new SqlSelectionImpl(
 				getType().getSqlSelectionReader(),
 				jdbcPosition
+		);
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return new ScalarQueryResultImpl(
+				resultVariable,
+				creationContext.getSqlSelectionResolver().resolveSqlSelection( this ),
+				getType()
 		);
 	}
 

@@ -83,16 +83,4 @@ public class SqmSingularAttributeReferenceEntity
 	public PersistenceType getPersistenceType() {
 		return super.getExpressableType().getPersistenceType();
 	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		getExportedFromElement()
-		FromClauseIndex idx - creationContext.getFromClauseIndex().;
-		final TableGroup tableGroup = idx.resolveTableGroup( getExportedFromElement().getUniqueIdentifier() );
-		return getReferencedNavigable().createQueryResult( tableGroup, this, resultVariable, creationContext );
-	}
 }

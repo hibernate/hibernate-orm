@@ -16,13 +16,12 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface QueryResultProducer<T> {
+public interface QueryResultProducer {
 	default JavaTypeDescriptor getProducedJavaTypeDescriptor() {
 		throw new NotYetImplementedException(  );
 	}
 
 	QueryResult createQueryResult(
-			T expression,
 			String resultVariable,
 			QueryResultCreationContext creationContext);
 }

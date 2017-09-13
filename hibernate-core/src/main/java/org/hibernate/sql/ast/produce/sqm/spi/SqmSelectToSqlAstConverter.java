@@ -19,14 +19,12 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
+import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
-import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
-import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.produce.internal.SqlSelectPlanImpl;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
@@ -37,14 +35,12 @@ import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
-import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -147,7 +143,28 @@ public class SqmSelectToSqlAstConverter
 
 	@Override
 	public Void visitSelection(SqmSelection sqmSelection) {
-		final QueryResult queryResult = sqmSelection.getSelectableNode().createQueryResult(
+
+		// 1) walk the argument "expression"
+		// 2) generate/collect the QueryResult
+
+		//		`select p.name as n from Person p`
+
+		// SqmSelection#getSelectableNode will be 1 of 2 things:
+		//		1) dynamic-instantiation
+		//		2) expression
+		//
+		// 		in the first case nothing should be put into the SQL tree
+
+		final QueryResultProducer<SemanticQueryWalker> resultProducer = sqmSelection.getSelectableNode().walkAsSelection( this );
+
+//
+//		final SqmSelectableNode selectableNode = (SqmSelectableNode) sqmSelection.getSelectableNode().accept( this );
+//
+//
+//
+//		final QueryResultProducer resultProducer = (QueryResultProducer) sqmSelection.getSelectableNode().accept( this );
+
+		final QueryResult queryResult = resultProducer.createQueryResult(
 				this,
 				sqmSelection.getAlias(),
 				this
@@ -175,49 +192,6 @@ public class SqmSelectToSqlAstConverter
 				this,
 				getQueryOptions().getEntityGraphQueryHint()
 		).process( fetchParent );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public DynamicInstantiation visitDynamicInstantiation(SqmDynamicInstantiation sqmDynamicInstantiation) {
-		DynamicInstantiation.
-		final DynamicInstantiation dynamicInstantiation = new DynamicInstantiation(
-				sqmDynamicInstantiation.getInstantiationTarget().getNature(),
-				interpretInstantiationTarget( sqmDynamicInstantiation.getInstantiationTarget() )
-		);
-
-		for ( SqmDynamicInstantiationArgument argument : sqmDynamicInstantiation.getArguments() ) {
-			// build the ArgumentReader essentially defined by the expression's
-			// QueryResultAssembler via QueryResultProducer -> QueryResult -> QueryResultAssembler
-			dynamicInstantiation.addArgument(
-					argument.getVisitableNode().accept( this ),
-					argument.getAlias()
-			);
-		}
-
-		// todo (6.0) : make this a "builder"
-		dynamicInstantiation.complete();
-
-		return dynamicInstantiation;
-	}
-
-	private <T> JavaTypeDescriptor<T> interpretInstantiationTarget(SqmDynamicInstantiationTarget instantiationTarget) {
-		final Class<T> targetJavaType;
-
-		if ( instantiationTarget.getNature() == DynamicInstantiationNature.LIST ) {
-			targetJavaType = (Class<T>) List.class;
-		}
-		else if ( instantiationTarget.getNature() == DynamicInstantiationNature.MAP ) {
-			targetJavaType = (Class<T>) Map.class;
-		}
-		else {
-			targetJavaType = instantiationTarget.getJavaType();
-		}
-
-		return getSqlAstBuildingContext().getSessionFactory()
-				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( targetJavaType );
 	}
 
 	@Override

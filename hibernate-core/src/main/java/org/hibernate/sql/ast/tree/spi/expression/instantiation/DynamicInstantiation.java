@@ -16,7 +16,6 @@ import java.util.Set;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.ast.produce.ConversionException;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.internal.DynamicInstantiationQueryResultImpl;
 import org.hibernate.sql.results.internal.instantiation.ArgumentReader;
 import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationConstructorAssemblerImpl;
@@ -117,30 +116,10 @@ public class DynamicInstantiation<T> implements QueryResultProducer {
 		return "DynamicInstantiation(" + getTargetJavaType().getName() + ")";
 	}
 
-
-	public static QueryResult createQueryResult(
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-
-		getInstantiationTarget().getNature();
-		interpretInstantiationTarget( getInstantiationTarget() );
-	}
-
 	@Override
 	public QueryResult createQueryResult(
-			Object expression,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
-		return null;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-
 		boolean areAllArgumentsAliased = true;
 		boolean areAnyArgumentsAliased = false;
 		final Set<String> aliases = new HashSet<>();
@@ -173,7 +152,7 @@ public class DynamicInstantiation<T> implements QueryResultProducer {
 				creationContext
 		);
 
-		return new DynamicInstantiationQueryResultImpl( this, resultVariable, assembler );
+		return new DynamicInstantiationQueryResultImpl( resultVariable, assembler );
 	}
 
 	@SuppressWarnings("unchecked")

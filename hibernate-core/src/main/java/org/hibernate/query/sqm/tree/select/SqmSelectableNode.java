@@ -8,18 +8,22 @@ package org.hibernate.query.sqm.tree.select;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.sql.results.spi.QueryResultProducer;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
 /**
  * Defines a SQM AST node that can be used as a selection in the query,
- * or as an argument to a dynamic-instantiation
+ * or as an argument to a dynamic-instantiation.
  *
  * @author Steve Ebersole
  */
-public interface SqmSelectableNode extends QueryResultProducer<SemanticQueryWalker>, SqmTypedNode {
+public interface SqmSelectableNode extends SqmTypedNode, SqmVisitableNode {
+	/**
+	 * The expectation is that the walking method for SqmSelectableNode
+	 * will return some reference to a
+	 * {@link org.hibernate.sql.results.spi.QueryResultProducer} which can be
+	 * used to generate a {@link org.hibernate.sql.results.spi.QueryResult}
+	 * for this selection in the SQM query
+	 */
 	@Override
-	default JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getProducedJavaTypeDescriptor();
-	}
+	<T> T accept(SemanticQueryWalker<T> walker);
 }

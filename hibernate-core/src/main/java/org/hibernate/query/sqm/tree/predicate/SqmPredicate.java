@@ -6,10 +6,14 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
-import org.hibernate.query.sqm.tree.SqmNode;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.SqmVisitableNode;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqmPredicate extends SqmNode {
+public interface SqmPredicate extends SqmVisitableNode, SqmTypedNode {
+	@Override
+	JavaTypeDescriptor<Boolean> getJavaTypeDescriptor();
 }

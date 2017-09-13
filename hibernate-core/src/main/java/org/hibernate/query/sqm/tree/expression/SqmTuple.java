@@ -72,9 +72,10 @@ public class SqmTuple implements SqmExpression {
 
 	@Override
 	public QueryResult createQueryResult(
-			SemanticQueryWalker expression,
+			SemanticQueryWalker walker,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
+		walker.visT
 		return null;
 	}
 

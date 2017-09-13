@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 
 /**
  * @author Steve Ebersole
@@ -41,14 +42,16 @@ public class SqmCollectionElementReferenceEmbedded
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		throw new NotYetImplementedException(  );
+		return walker.visitPluralAttributeElementBinding( this );
 	}
 
-	@Override
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
-	}
+//
+//
+//	@Override
+//	public QueryResult createQueryResult(
+//			Expression expression,
+//			String resultVariable,
+//			QueryResultCreationContext creationContext) {
+//		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
+//	}
 }

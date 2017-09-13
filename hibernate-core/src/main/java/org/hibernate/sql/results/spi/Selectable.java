@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.spi;
 
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 
 /**
  * Represents something that is selectable at the object level.  This is
@@ -15,6 +14,7 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
  * selectable at the SQL/JDBC level.
  *
  * Essentially acts as a template (in the pattern sense) for "selections" -
+ * represented by {@link QueryResult}
  * represented by {@link QueryResult}
  *
  * @implNote  Generally speaking any query expression is also selectable.  However
@@ -34,6 +34,11 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
  * 	    		same info
  *
  * @author Steve Ebersole
+ *
+ * todo (6.0) : remove this completely.  It is inaccurate that a SQL Selectiable is the same as a QueryResultProducer
+ * 		QueryResultProducer is more driven by the SQM tree
  */
-public interface Selectable extends QueryResultProducer<Expression> {
+public interface Selectable {
+	// `select p.address from Person p`
+	// `select a1.id, a1.street, ... from ...`
 }

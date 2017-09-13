@@ -17,6 +17,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 
 /**
@@ -71,26 +72,30 @@ public class SqmTuple implements SqmExpression {
 	}
 
 	@Override
-	public QueryResult createQueryResult(
-			SemanticQueryWalker walker,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		walker.visT
-		return null;
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getExpressableType().getJavaTypeDescriptor();
 	}
 
-	@Override
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		// todo (6.0) : pretty sure this is not correct.
-		//		should return a result over all the expressions, not just the first -
-		//		a "composite" result.
-		//
-		// todo (6.0) : ultimately the problem here is expecting the "resolved" SQL AST node to be passed in.
-		//		really resolving these SQL AST nodes should be done here.
-		return groupedExpressions.get( 0 ).createQueryResult( expression, resultVariable, creationContext );
-	}
+//	@Override
+//	public QueryResult createQueryResult(
+//			SemanticQueryWalker walker,
+//			String resultVariable,
+//			QueryResultCreationContext creationContext) {
+//		return null;
+//	}
+//
+//	@Override
+//	public QueryResult createQueryResult(
+//			Expression expression,
+//			String resultVariable,
+//			QueryResultCreationContext creationContext) {
+//		// todo (6.0) : pretty sure this is not correct.
+//		//		should return a result over all the expressions, not just the first -
+//		//		a "composite" result.
+//		//
+//		// todo (6.0) : ultimately the problem here is expecting the "resolved" SQL AST node to be passed in.
+//		//		really resolving these SQL AST nodes should be done here.
+//		return groupedExpressions.get( 0 ).createQueryResult( expression, resultVariable, creationContext );
+//	}
 
 }

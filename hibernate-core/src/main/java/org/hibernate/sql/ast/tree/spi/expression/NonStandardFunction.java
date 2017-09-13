@@ -21,7 +21,7 @@ import org.hibernate.sql.results.spi.SqlSelection;
  *
  * @author Steve Ebersole
  */
-public class NonStandardFunction extends AbstractFunction implements Function {
+public class NonStandardFunction extends AbstractFunction {
 	private final String functionName;
 	private final List<Expression> arguments;
 	private final AllowableFunctionReturnType resultType;

@@ -9,19 +9,15 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmCaseSearched implements SqmExpression, ImpliedTypeSqmExpression {
+public class SqmCaseSearched implements ImpliedTypeSqmExpression {
 	private List<WhenFragment> whenFragments = new ArrayList<>();
 	private SqmExpression otherwise;
 
@@ -79,6 +75,11 @@ public class SqmCaseSearched implements SqmExpression, ImpliedTypeSqmExpression 
 	@Override
 	public String asLoggableText() {
 		return "<searched-case>";
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return expressableType.getJavaTypeDescriptor();
 	}
 
 	public static class WhenFragment {

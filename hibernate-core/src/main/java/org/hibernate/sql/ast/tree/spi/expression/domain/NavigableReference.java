@@ -40,29 +40,28 @@ public interface NavigableReference extends Expression, QueryResultProducer {
 		throw new UnsupportedOperationException(  );
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public QueryResult createQueryResult(
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		getExportedFromElement()
-		FromClauseIndex idx - creationContext.getFromClauseIndex().;
-		idx.
-		final TableGroup tableGroup = idx.resolveTableGroup( getExportedFromElement().getUniqueIdentifier() );
-		return getReferencedNavigable().createQueryResult( tableGroup, this, resultVariable, creationContext );
-	}
-	@Override
-	default QueryResult createQueryResult(
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		getSqlExpressionQualifier().
-		// todo (6.0) : the problem here is needing to be able to resolve the TableGroup(s) we need to pass in to the Navigable
-		throw new NotYetImplementedException(  );
-		creationContext.
-
-		return getNavigable().createQueryResult( null, this, resultVariable, creationContext );
-		return null;
-	}
+////	@Override
+////	@SuppressWarnings("unchecked")
+////	public QueryResult createQueryResult(
+////			String resultVariable,
+////			QueryResultCreationContext creationContext) {
+//////		getExportedFromElement();
+//////		FromClauseIndex idx - creationContext.getFromClauseIndex().;
+//////		idx.
+////		final TableGroup tableGroup = idx.resolveTableGroup( getExportedFromElement().getUniqueIdentifier() );
+////		return getReferencedNavigable().createQueryResult( tableGroup, this, resultVariable, creationContext );
+////	}
+//	@Override
+//	default QueryResult createQueryResult(
+//			String resultVariable,
+//			QueryResultCreationContext creationContext) {
+////		getSqlExpressionQualifier().
+//		// todo (6.0) : the problem here is needing to be able to resolve the TableGroup(s) we need to pass in to the Navigable
+//		throw new NotYetImplementedException(  );
+//
+////		return getNavigable().createQueryResult( null, this, resultVariable, creationContext );
+////		return null;
+//	}
 
 	/**
 	 * Get the Navigable referenced by this expression

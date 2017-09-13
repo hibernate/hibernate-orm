@@ -10,6 +10,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -54,5 +55,10 @@ public class SqmRoot extends AbstractSqmFrom {
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitRootEntityFromElement( this );
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getNavigableReference().getJavaTypeDescriptor();
 	}
 }

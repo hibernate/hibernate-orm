@@ -13,11 +13,13 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmUnaryOperation implements ImpliedTypeSqmExpression {
+
 	public enum Operation {
 		PLUS,
 		MINUS
@@ -69,13 +71,8 @@ public class SqmUnaryOperation implements ImpliedTypeSqmExpression {
 	}
 
 	@Override
-	public QueryResult createQueryResult(
-			Expression expression, String resultVariable, QueryResultCreationContext creationContext) {
-		return new ScalarQueryResultImpl(
-				resultVariable,
-				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
-				getExpressableType()
-		);
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return typeDescriptor.getJavaTypeDescriptor();
 	}
 
 	public SqmExpression getOperand() {

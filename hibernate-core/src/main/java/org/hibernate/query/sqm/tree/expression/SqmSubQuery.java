@@ -6,13 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.sqm.tree.TreeException;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -50,10 +47,14 @@ public class SqmSubQuery implements SqmExpression {
 		return "<subquery>";
 	}
 
-
 	@Override
-	public QueryResult createQueryResult(
-			Expression expression, String resultVariable, QueryResultCreationContext creationContext) {
-		throw new TreeException( "Selecting a SubQuery type is not allowed.");
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return expressableType.getJavaTypeDescriptor();
 	}
+
+//	@Override
+//	public QueryResult createQueryResult(
+//			Expression expression, String resultVariable, QueryResultCreationContext creationContext) {
+//		throw new TreeException( "Selecting a SubQuery type is not allowed.");
+//	}
 }

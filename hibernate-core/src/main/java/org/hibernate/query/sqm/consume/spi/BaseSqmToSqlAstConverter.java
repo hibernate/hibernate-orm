@@ -191,7 +191,6 @@ public abstract class BaseSqmToSqlAstConverter
 		SUBQUERY
 	}
 
-	private final SqlAstBuildingContext sqlAstBuildingContext;
 	private final QueryOptions queryOptions;
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
@@ -206,20 +205,15 @@ public abstract class BaseSqmToSqlAstConverter
 	private final Stack<SqmSelectToSqlAstConverter.Shallowness> shallownessStack = new Stack<>( SqmSelectToSqlAstConverter.Shallowness.NONE );
 	private final Stack<NavigableReference> navigableReferenceStack = new Stack<>();
 
-
 	public BaseSqmToSqlAstConverter(
 			SqlAstBuildingContext sqlAstBuildingContext,
 			QueryOptions queryOptions) {
-		this.sqlAstBuildingContext = sqlAstBuildingContext;
+		super( sqlAstBuildingContext );
 		this.queryOptions = queryOptions;
 	}
 
 	protected QuerySpec currentQuerySpec() {
 		return querySpecStack.getCurrent();
-	}
-
-	public SqlAstBuildingContext getSqlAstBuildingContext() {
-		return sqlAstBuildingContext;
 	}
 
 	public QueryOptions getQueryOptions() {

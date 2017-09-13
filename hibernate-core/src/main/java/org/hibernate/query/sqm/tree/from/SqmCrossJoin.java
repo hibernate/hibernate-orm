@@ -10,6 +10,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -48,5 +49,10 @@ public class SqmCrossJoin extends AbstractSqmFrom implements SqmJoin {
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitCrossJoinedFromElement( this );
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getNavigableReference().getJavaTypeDescriptor();
 	}
 }

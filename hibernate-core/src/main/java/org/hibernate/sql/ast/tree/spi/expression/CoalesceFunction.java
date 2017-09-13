@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.spi.BasicType;
@@ -19,7 +18,7 @@ import org.hibernate.type.spi.BasicType;
 /**
  * @author Steve Ebersole
  */
-public class CoalesceFunction implements StandardFunction {
+public class CoalesceFunction extends AbstractStandardFunction {
 	private List<Expression> values = new ArrayList<>();
 
 	public List<Expression> getValues() {

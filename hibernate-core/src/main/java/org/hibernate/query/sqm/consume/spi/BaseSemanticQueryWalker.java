@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.consume.spi;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
@@ -104,6 +105,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.set.SqmAssignment;
 import org.hibernate.query.sqm.tree.set.SqmSetClause;
+import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 
 /**
@@ -111,10 +113,25 @@ import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
  */
 @SuppressWarnings({"unchecked", "WeakerAccess"})
 public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
+	private final SqlAstBuildingContext sqlAstBuildingContext;
+
+	public BaseSemanticQueryWalker(SqlAstBuildingContext sqlAstBuildingContext) {
+		this.sqlAstBuildingContext = sqlAstBuildingContext;
+	}
+
+	public SqlAstBuildingContext getSqlAstBuildingContext() {
+		return sqlAstBuildingContext;
+	}
+
 	@Override
 	public T visitSelectStatement(SqmSelectStatement statement) {
 		visitQuerySpec( statement.getQuerySpec() );
 		return (T) statement;
+	}
+
+	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return sqlAstBuildingContext.getSessionFactory();
 	}
 
 	@Override

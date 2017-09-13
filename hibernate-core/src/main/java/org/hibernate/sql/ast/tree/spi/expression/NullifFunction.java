@@ -16,7 +16,7 @@ import org.hibernate.sql.results.spi.SqlSelection;
 /**
  * @author Steve Ebersole
  */
-public class NullifFunction implements StandardFunction {
+public class NullifFunction extends AbstractFunction {
 	private final Expression first;
 	private final Expression second;
 	private final AllowableFunctionReturnType type;

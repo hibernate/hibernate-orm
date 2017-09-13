@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -23,4 +24,5 @@ public class SqmLiteralBigDecimal extends AbstractSqmLiteral<BigDecimal> {
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitLiteralBigDecimalExpression( this );
 	}
+
 }

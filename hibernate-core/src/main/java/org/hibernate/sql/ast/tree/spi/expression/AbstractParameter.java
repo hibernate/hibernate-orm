@@ -18,6 +18,7 @@ import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 import org.hibernate.sql.results.spi.SqlSelection;
 
 import org.jboss.logging.Logger;
@@ -25,7 +26,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractParameter implements GenericParameter {
+public abstract class AbstractParameter implements GenericParameter, QueryResultProducer {
 	private static final Logger log = Logger.getLogger( AbstractParameter.class );
 
 	private final AllowableParameterType inferredType;
@@ -96,15 +97,14 @@ public abstract class AbstractParameter implements GenericParameter {
 
 	// todo (6.0) : both of the methods below are another manifestation of only really allowing basic (single column) valued parameters
 
+
 	@Override
 	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
+			String resultVariable, QueryResultCreationContext creationContext) {
 		return new ScalarQueryResultImpl(
 				resultVariable,
-				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
-				(BasicValuedExpressableType) expression.getType()
+				creationContext.getSqlSelectionResolver().resolveSqlSelection( this ),
+				(BasicValuedExpressableType) getType()
 		);
 	}
 

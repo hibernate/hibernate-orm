@@ -13,6 +13,7 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -60,5 +61,10 @@ public abstract class AbstractSqmLiteral<T> implements SqmLiteral<T> {
 	@Override
 	public String asLoggableText() {
 		return "Literal( " + value + ")";
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return type.getJavaTypeDescriptor();
 	}
 }

@@ -8,13 +8,10 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.lang.reflect.Field;
 
+import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Represents a constant that came from a static field reference.
@@ -71,19 +68,12 @@ public class SqmConstantFieldReference<T> implements SqmConstantReference<T> {
 	}
 
 	@Override
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		return new ScalarQueryResultImpl(
-				resultVariable,
-				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
-				getExpressableType()
-		);
+	public String asLoggableText() {
+		return "ConstantField(" + value + ")";
 	}
 
 	@Override
-	public String asLoggableText() {
-		return "ConstantField(" + value + ")";
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return typeDescriptor.getJavaTypeDescriptor();
 	}
 }

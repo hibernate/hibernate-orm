@@ -87,17 +87,17 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 		throw new IllegalStateException( "Could not resolve binding for table : " + table );
 	}
 
-	@Override
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		return getEntityDescriptor().createQueryResult(
-				expression,
-				resultVariable,
-				creationContext
-		);
-	}
+//	@Override
+//	public QueryResult createQueryResult(
+//			Expression expression,
+//			String resultVariable,
+//			QueryResultCreationContext creationContext) {
+//		return getEntityDescriptor().createQueryResult(
+//				expression,
+//				resultVariable,
+//				creationContext
+//		);
+//	}
 
 	@Override
 	public void render(SqlAppender sqlAppender, SqlAstWalker walker) {

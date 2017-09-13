@@ -10,22 +10,26 @@ package org.hibernate.sql.ast.tree.spi.expression;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
+import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
  * @author Steve Ebersole
  */
-public class UnaryOperation implements Expression, SqlExpressable {
+public class UnaryOperation implements Expression, SqlExpressable, QueryResultProducer {
+
 	public enum Operator {
 		PLUS,
-		MINUS
+		MINUS;
 	}
-
 	private final Operator operator;
+
 	private final Expression operand;
 	private final BasicValuedExpressableType type;
-
 	public UnaryOperation(Operator operator, Expression operand, BasicValuedExpressableType type) {
 		this.operator = operator;
 		this.operand = operand;
@@ -56,5 +60,15 @@ public class UnaryOperation implements Expression, SqlExpressable {
 	@Override
 	public void accept(SqlAstWalker  walker) {
 		walker.visitUnaryOperationExpression( this );
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			String resultVariable, QueryResultCreationContext creationContext) {
+		return new ScalarQueryResultImpl(
+				resultVariable,
+				creationContext.getSqlSelectionResolver().resolveSqlSelection( this ),
+				getType()
+		);
 	}
 }

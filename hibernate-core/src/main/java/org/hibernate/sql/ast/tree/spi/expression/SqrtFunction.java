@@ -15,7 +15,7 @@ import org.hibernate.sql.results.spi.SqlSelection;
 /**
  * @author Steve Ebersole
  */
-public class SqrtFunction extends AbstractStandardFunction implements StandardFunction {
+public class SqrtFunction extends AbstractStandardFunction {
 	private final Expression argument;
 	private final AllowableFunctionReturnType type;
 

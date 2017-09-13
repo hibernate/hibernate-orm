@@ -13,6 +13,7 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Models a positional parameter expression
@@ -83,13 +84,7 @@ public class SqmPositionalParameter implements SqmParameter {
 	}
 
 	@Override
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		return new ScalarQueryResultImpl( resultVariable,
-										  creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
-										  (BasicValuedExpressableType) getExpressableType()
-		);
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return expressableType.getJavaTypeDescriptor();
 	}
 }

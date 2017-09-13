@@ -12,6 +12,7 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -90,5 +91,10 @@ public class SqmAttributeJoin
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitQualifiedAttributeJoinFromElement( this );
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return attributeBinding.getJavaTypeDescriptor();
 	}
 }

@@ -16,7 +16,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class SqmCaseSimple implements SqmExpression, ImpliedTypeSqmExpression {
+public class SqmCaseSimple implements ImpliedTypeSqmExpression {
 	private final SqmExpression fixture;
 	private List<WhenFragment> whenFragments = new ArrayList<>();
 	private SqmExpression otherwise;

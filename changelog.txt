@@ -3,6 +3,131 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.2.10.Final (September 13, 2017)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/28600/
+
+** Bug
+    * [HHH-5933] - NoopOptimizer ignores negative allocationSize; uses default of 1 instead
+    * [HHH-10747] - Enhanced entity classes initialize lazy collections when loaded.
+    * [HHH-11283] - hibernate spatial - getSRID returning 0
+    * [HHH-11374] - ConcurrentStatisticsImpl#getSecondLevelCacheStatistics() throws NPE if second level cache is not activated
+    * [HHH-11463] - HBM mappings generate a foreign-key even when foreign-key="none" is specified.
+    * [HHH-11465] - [Patch] @AttributeOverride does not work for CompositeUserType inside of @Embeddable
+    * [HHH-11600] - Sap HANA PreparedStatement implements CallableStatement and is treated as such by Hibernate
+    * [HHH-11614] - Wrong result for @Lob column with postgresql DB since 5.2.9
+    * [HHH-11624] - LazyInitializationException on enhanced class for Map<String, String>
+    * [HHH-11634] - ActionQueue#InsertActionSorter fails to generate right order
+    * [HHH-11635] - MySQLSkipAutoCommitTest fails when run on MariaDB
+    * [HHH-11642] - SQLServerException: The index 2 is out of range when executiong Spring Data findAll(Pageable)
+    * [HHH-11645] - HikariCP shutdown() method is deprecated, close() should be called instead
+    * [HHH-11646] - Incorrect search-and-replace has changed "before" to "beforeQuery" and "after" with "afterQuery" during HHH-10664
+    * [HHH-11650] - Parenthesis are interpreted in WHERE conditions when using paging and SQL Server
+    * [HHH-11655] - SessionImpl does not load EntityPersister by entity name
+    * [HHH-11703] - Entity with Natural ID not being cached in the persistenceContext, causing extra queries
+    * [HHH-11707] - README.md claims Java 6 compatibility
+    * [HHH-11709] - NoopOptimizer skips negative values and 0 when it has a positive incrementSize
+    * [HHH-11712] - PostgreSQL does not support positive/negative initial sequence values for descending/ascending sequences unless MAXVALUE/MINVALUE is defined as well
+    * [HHH-11714] - Entities with InheritanceType.SINGLE_TABLE and SecondaryTable are not being saved correctly
+    * [HHH-11716] - @Transient annotation not respected when class defines 'get' and 'is' accessor variants
+    * [HHH-11718] - Fix various alerts reported by lgtm.com
+    * [HHH-11725] - Javadoc typo
+    * [HHH-11726] - PASS_DISTINCT_THROUGH hint is ignored when used in conjunction with maxResults/firstResult limiters
+    * [HHH-11728] - Typo in PooledConnections
+    * [HHH-11729] - Add clarifications in the User Guide related to how Hibernate FetchMode types translate to JPA
+    * [HHH-11730] - Unable to audit entity with originalId property
+    * [HHH-11739] - globally_quoted_identifiers_skip_column_definitions property does the opposite of what the doc describes
+    * [HHH-11740] - Default MultiTableBulkIdStrategy for DB2 does not work with connection pools
+    * [HHH-11743] - Query.stream() does not map Tuple
+    * [HHH-11747] - Pagination with DB2390Dialect: TypedQuery.getResultList() always returns the first "maxResults" rows of the table for each call
+    * [HHH-11748] - RelatedId queries against Id annotated properties result in AuditException
+    * [HHH-11762] - PersistenceUnitUtilImpl#getIdentifier throws MappingException for non-entity
+    * [HHH-11764] - JTS geometry being bound to byte array instead of PGgeometry
+    * [HHH-11768] - foreign key violation with order_inserts=true and cascading persist
+    * [HHH-11770] - Audit queries for a OneToMany that is mapped to an EmbeddedId fails.
+    * [HHH-11783] - Wrong comment in UpdateTimestampsCache
+    * [HHH-11788] - Project gitignore ignores test classes
+    * [HHH-11795] - Support Ant Task for Bytecode Enhancement
+    * [HHH-11804] - Embeddable class' name and the reference to it are different
+    * [HHH-11815] - @org.hibernate.annotations.Index and NullPointerException in IndexOrUniqueKeySecondPass
+    * [HHH-11818] - ClassCastException when binding a MaterializedNClobType value as NClob
+    * [HHH-11826] - ImplicitNamingStrategyComponentPathImpl generates invalid SQL for Entity with Embedded ElementCollection
+    * [HHH-11827] - JPA entity native query not eagerly fetching associations as suggested by documentation.
+    * [HHH-11830] - Shared Session memory leak via TransactionObserver reference
+    * [HHH-11832] - ManyToManyWithDynamicFilterTest fails on Sybase due to reserved word
+    * [HHH-11837] - MapsId and PrimaryKeyJoinColumn examples in the documentation should use OneToOne rather than ManyToOne
+    * [HHH-11841] - QueryException on map associaton when using Envers
+    * [HHH-11851] - BaseEnversFunctionalTestCase tests do not test against all parameterized audit strategies.
+    * [HHH-11864] - AutoCommit mode not reset after use by SchemaValidator
+    * [HHH-11868] - Documentation : Bad Hibernate type mapped to java.time.ZonedDateTime (Java 8)
+    * [HHH-11881] - Null Set collection elements are inserted into collection table
+    * [HHH-11884] - wrong class in returnedClass() in UserType example
+    * [HHH-11892] - Audit data not loaded for @ElementCollection
+    * [HHH-11897] - Fix support for Tuple results for native queries
+    * [HHH-11904] - EnumExplicitTypeTest test assert fails on mariadb clusters
+    * [HHH-11905] - AbstractLobTest Fails on Sybase
+    * [HHH-11910] - SchemaUpdateTest fails on databases using case-insensitive identifiers
+    * [HHH-11914] - SchemaUpdate.setHaltOnError(true) does nothing
+    * [HHH-11915] - DatabaseMetaData#getIndexInfo can return column names enclosed in quotes on PostgresPlus
+    * [HHH-11916] - Unnecessary initialization of lazy collection on PERSIST cascade
+    * [HHH-11922] - Entity with null many-to-one cannot be loaded when associated entity has composite ID with hibernate.create_empty_composites.enabled=true
+    * [HHH-11927] - CascadeMergeToChildBeforeParentTest should not assume the persisted entity has the id with a value of 1
+    * [HHH-11928] - Empty left join fetched collection is uninitialized when collection key is composite with hibernate.create_empty_composites.enabled=true
+    * [HHH-11935] - Log a warning and update documentation that enabling "empty" composites is an experimental feature
+    * [HHH-11944] - Fix the Session related delegating classes
+    * [HHH-11957] - DB2 substring method needs to be exposed in DB297Dialect
+    * [HHH-11982] - AbstractSharedSessionContract#getInterceptor should not call checkTransactionSynchStatus()
+
+** New Feature
+    * [HHH-11907] - Add the getResultStream() default method in org.hibernate.query.Query
+    * [HHH-11942] - ANTLR parser should fail when providing an extra parenthesis
+
+** Task
+    * [HHH-11698] - Upgrade to Byte Buddy 1.6.14 for improved JDK9 compatibility
+    * [HHH-11752] - Remove reference to old types.
+    * [HHH-11756] - Typo in public API method name: requiresPostCommitHanding on PostInsertEventListener
+    * [HHH-11808] - Update migration guide and documentation
+    * [HHH-11878] - Minor typo in CascadeStyles.java
+    * [HHH-11950] - Target WildFly 11 for produced hibernate-orm-modules
+
+** Improvement
+    * [HHH-8955] - Add HSQLDialect support for trunc
+    * [HHH-10934] - Preventing duplicate ForeignKey generation
+    * [HHH-11176] - Add support for Tuple results for native queries
+    * [HHH-11186] - Add examples for all Hibernate annotations
+    * [HHH-11290] - Migrate all documentation snippets that derive the source code from extras instead of actual Unit Tests
+    * [HHH-11411] - Two column navigation and search box for documentation
+    * [HHH-11500] - Provide the cause of the error when validating @Loader named queries
+    * [HHH-11526] - Documentation for custom collection types
+    * [HHH-11546] - Add support for SAP NetWeaver Application Server as JTA Platform
+    * [HHH-11647] - Use ALTER TABLE IF EXISTS on Postgres
+    * [HHH-11750] - Fix typos in Hibernate 5.2 user guide
+    * [HHH-11759] - Improve deterministic nature of generated SQL of audited properties.
+    * [HHH-11793] - Change docs to point out that EAGER associations cannot be turn to LAZY with entity graphs
+    * [HHH-11820] - Do not inject CollectionTracker into entity without collection
+    * [HHH-11824] - Remove reflection for accessing Types.REF_CURSOR
+    * [HHH-11886] - Elaborate Envers documentation and switch to actual source code examples
+    * [HHH-11929] - Improve Performance of SQLServer2012LimitHandler.hasOrderBy()
+    * [HHH-11934] - Add a protected getter for the delegate in SessionFactoryDelegatingImpl
+    * [HHH-11945] - Make ExceptionConverterImpl use SharedSessionContractImplementor instead of AbstractSharedSessionContract
+    * [HHH-11946] - Configure the Configurable services in SessionFactoryServiceRegistryImpl
+    * [HHH-11951] - Improve TransactionStatus javadoc
+    * [HHH-11956] - Add createCustomLoader() to the NativeQueryInterpreter contract
+    * [HHH-11962] - Unmark deprecated the NativeQuery methods and add missing covariant overrides
+
+** Patch
+    * [HHH-3924] - Use intern() to reuse strings and reduce memory usage
+
+** Deprecation
+    * [HHH-11660] - Deprecate org.hibernate.mapping.RelationalModel
+    * [HHH-11700] - Deprecate three org.hibernate.engine.spi.SessionFactoryImplementor methods
+    * [HHH-11737] - Remove dependency on legacy criteria package.
+
+** Remove Feature
+    * [HHH-11890] - Remove old docbook folder from the documentation module
+    * [HHH-11891] - Clarify documentation about Hibernate support for basic array types
+
+
 Changes in 5.2.10.Final (April 14, 2017)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/28100

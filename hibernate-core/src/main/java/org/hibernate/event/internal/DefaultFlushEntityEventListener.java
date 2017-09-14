@@ -13,7 +13,6 @@ import java.util.List;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
-import org.hibernate.SessionFactory;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.action.internal.EntityUpdateAction;
@@ -23,6 +22,7 @@ import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
@@ -383,10 +383,10 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		return answerFromInterceptor || isDirty;
 	}
 
-	private boolean copyState(Object entity, JavaTypeDescriptor[] javaTypeDescriptors, Object[] state, SessionFactory sf) {
+	private boolean copyState(Object entity, JavaTypeDescriptor[] javaTypeDescriptors, Object[] state, SessionFactoryImplementor sf) {
 		// copy the entity state into the state array and return true if the state has changed
-		ClassMetadata metadata = sf.getClassMetadata( entity.getClass() );
-		Object[] newState = metadata.getPropertyValues( entity );
+		EntityDescriptor entityDescriptor = sf.getTypeConfiguration().resolveEntityDescriptor( entity.getClass() );
+		Object[] newState = entityDescriptor.getPropertyValues( entity );
 		int size = newState.length;
 		boolean isDirty = false;
 		for ( int index = 0; index < size ; index++ ) {

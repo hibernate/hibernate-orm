@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.produce.internal.hql.navigable;
 
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -15,6 +16,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmDowncast;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
@@ -50,6 +52,24 @@ public class TreatedNavigableReference
 
 	public EntityValuedExpressableType getSubclassIndicator() {
 		return subclassIndicator;
+	}
+
+	// todo (6.0) : treated paths can in turn be aliased
+	// todo (6.0) : consider some relationship between DownCast and SqmFrom
+
+	@Override
+	public String getUniqueIdentifier() {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public String getIdentificationVariable() {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
+		return subclassIndicator.getEntityDescriptor();
 	}
 
 	@Override

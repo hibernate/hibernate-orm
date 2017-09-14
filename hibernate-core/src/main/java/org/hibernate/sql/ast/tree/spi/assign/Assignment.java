@@ -7,26 +7,32 @@
 package org.hibernate.sql.ast.tree.spi.assign;
 
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReference;
 import org.hibernate.sql.ast.tree.spi.SqlAstNode;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 
 /**
  * @author Steve Ebersole
  */
 public class Assignment implements SqlAstNode {
-	private final SingularAttributeReference stateField;
+	private final ColumnReference columnReference;
 	private final Expression assignedValue;
 
-	public Assignment(SingularAttributeReference stateField, Expression assignedValue) {
-		this.stateField = stateField;
+	public Assignment(ColumnReference columnReference, Expression assignedValue) {
+		this.columnReference = columnReference;
 		this.assignedValue = assignedValue;
 	}
 
-	public SingularAttributeReference getStateField() {
-		return stateField;
+	/**
+	 * The column being updated.
+	 */
+	public ColumnReference getColumnReference() {
+		return columnReference;
 	}
 
+	/**
+	 * The new assigned value
+	 */
 	public Expression getAssignedValue() {
 		return assignedValue;
 	}

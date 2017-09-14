@@ -10,7 +10,7 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
 
 /**
  * Specialization for SqlSelectables that do not need to be
- * qualified by a {@link SqlExpressionQualifier} to be treated as
+ * qualified by a {@link ColumnReferenceQualifier} to be treated as
  * a SqlSelection.  E.g. a literal
  *
  * @author Steve Ebersole

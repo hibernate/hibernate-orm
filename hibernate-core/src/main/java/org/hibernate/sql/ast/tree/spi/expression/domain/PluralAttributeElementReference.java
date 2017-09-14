@@ -10,8 +10,7 @@ package org.hibernate.sql.ast.tree.spi.expression.domain;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
 /**
@@ -21,7 +20,7 @@ public class PluralAttributeElementReference implements NavigableReference {
 	private final NavigableContainerReference collectionReference;
 
 	private final PersistentCollectionDescriptor collectionMetadata;
-	private final ColumnReferenceSource columnReferenceSource;
+	private final ColumnReferenceQualifier columnReferenceSource;
 	private final NavigablePath navigablePath;
 
 	public PluralAttributeElementReference(
@@ -36,18 +35,8 @@ public class PluralAttributeElementReference implements NavigableReference {
 	}
 
 	@Override
-	public CollectionElement getType() {
-		return getNavigable();
-	}
-
-	@Override
-	public SqlExpressionQualifier getSqlExpressionQualifier() {
+	public ColumnReferenceQualifier getSqlExpressionQualifier() {
 		return columnReferenceSource;
-	}
-
-	@Override
-	public void accept(SqlAstWalker walker) {
-		walker.visitPluralAttributeElement( this );
 	}
 
 	@Override

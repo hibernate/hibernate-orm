@@ -49,7 +49,7 @@ import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
@@ -359,7 +359,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 
 	@Override
 	public Expression resolveSqlExpression(
-			SqlExpressionQualifier qualifier,
+			ColumnReferenceQualifier qualifier,
 			QualifiableSqlExpressable sqlSelectable) {
 		throw new NotYetImplementedException(  );
 	}

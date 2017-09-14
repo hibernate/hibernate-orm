@@ -6,12 +6,13 @@
  */
 package org.hibernate.sql.results.spi;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValueExpressableType;
+
+import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public interface CompositeQueryResult extends CompositeMappingNode, QueryResult {
 	@Override
-	EmbeddedValueExpressableType getType();
+	EmbeddableJavaDescriptor getJavaTypeDescriptor();
 }

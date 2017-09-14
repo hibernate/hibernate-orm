@@ -10,11 +10,9 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 import org.jboss.logging.Logger;
 
@@ -89,7 +87,10 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return (T) exportedFromElement.getNavigableReference();
+		// todo (6.0) : this needs to vary based on who/what exactly created this entity-reference
+		//		- one option, in keeping with visitation, would be to have specific subclasses of
+		//			SqmEntityReference with different SemanticQueryWalker target methods
+		throw new NotYetImplementedException(  );
 	}
 
 	@Override
@@ -122,11 +123,4 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 		return containerReference;
 	}
 
-	@Override
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		return getReferencedNavigable().getEntityDescriptor().createQueryResult( expression, resultVariable, creationContext );
-	}
 }

@@ -13,8 +13,9 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.PluralAttributeFetchImpl;
 import org.hibernate.sql.results.internal.PluralAttributeQueryResultImpl;
 import org.hibernate.sql.results.spi.Fetch;
@@ -146,7 +147,7 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 
 	@Override
 	public QueryResult createQueryResult(
-			Expression expression,
+			NavigableReference navigableReference,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		return new PluralAttributeQueryResultImpl(
@@ -164,7 +165,7 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
-			SqlExpressionQualifier qualifier,
+			ColumnReferenceQualifier qualifier,
 			FetchStrategy fetchStrategy,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
@@ -196,7 +197,7 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 
 	@Override
 	public SqlSelectionGroup resolveSqlSelectionGroup(
-			SqlExpressionQualifier qualifier,
+			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
 		throw new NotYetImplementedException(  );
 	}

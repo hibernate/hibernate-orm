@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.tree.spi.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.QueryResultProducer;
@@ -39,7 +39,7 @@ public interface NavigableReference extends QueryResultProducer {
 		);
 	}
 
-	SqlExpressionQualifier getSqlExpressionQualifier();
+	ColumnReferenceQualifier getSqlExpressionQualifier();
 
 	/**
 	 * Get the Navigable referenced by this expression

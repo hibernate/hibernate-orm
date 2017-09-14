@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.model.relational.spi;
 
 import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -33,7 +33,7 @@ public interface Column extends QualifiableSqlExpressable {
 	SqlTypeDescriptor getSqlTypeDescriptor();
 
 	@Override
-	default Expression createSqlExpression(SqlExpressionQualifier qualifier) {
+	default Expression createSqlExpression(ColumnReferenceQualifier qualifier) {
 		return new ColumnReference( qualifier, this );
 	}
 

@@ -74,12 +74,4 @@ public class SqmIndexedElementReferenceEntity
 		// todo (6.0) : for the entity index classification we should point to the referenced entity's uid
 		return super.getUniqueIdentifier();
 	}
-
-	@Override
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
-	}
 }

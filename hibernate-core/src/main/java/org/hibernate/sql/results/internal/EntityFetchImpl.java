@@ -11,7 +11,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.spi.EntityFetch;
 import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -24,14 +24,14 @@ import org.hibernate.sql.results.spi.QueryResultCreationContext;
  */
 public class EntityFetchImpl extends AbstractFetchParent implements EntityFetch {
 	private final FetchParent fetchParent;
-	private final SqlExpressionQualifier qualifier;
+	private final ColumnReferenceQualifier qualifier;
 	private final FetchStrategy fetchStrategy;
 
 	private final EntitySqlSelectionMappings sqlSelectionMappings;
 
 	public EntityFetchImpl(
 			FetchParent fetchParent,
-			SqlExpressionQualifier qualifier,
+			ColumnReferenceQualifier qualifier,
 			EntityValuedNavigable fetchedNavigable,
 			NavigablePath navigablePath,
 			FetchStrategy fetchStrategy,
@@ -53,7 +53,7 @@ public class EntityFetchImpl extends AbstractFetchParent implements EntityFetch 
 	}
 
 	@Override
-	public SqlExpressionQualifier getSqlExpressionQualifier() {
+	public ColumnReferenceQualifier getSqlExpressionQualifier() {
 		return qualifier;
 	}
 

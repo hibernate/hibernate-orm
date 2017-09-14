@@ -96,10 +96,6 @@ public class OrderByFragmentRenderer extends AbstractSqlAstWalker {
 		appendSql( sqlFragment );
 	}
 
-	@Override
-	public void visitColumnReferenceExpression(ColumnReference columnReference) {
-		visitColumnReference( columnReference );
-	}
 
 	@Override
 	public void visitAssignment(Assignment assignment) {

@@ -25,6 +25,7 @@ import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey.ColumnMappings;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEntity;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -33,12 +34,11 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
@@ -194,9 +194,12 @@ public class SingularPersistentAttributeEntity<O,J>
 	@Override
 	public SqmNavigableReference createSqmExpression(
 			SqmFrom sourceSqmFrom,
+			SqmNavigableContainerReference containerReference,
 			SqmReferenceCreationContext creationContext) {
-		return new SqmSingularAttributeReferenceEntity(  );
-		return null;
+		return new SqmSingularAttributeReferenceEntity(
+				containerReference,
+				this
+		);
 	}
 
 	@Override
@@ -224,7 +227,7 @@ public class SingularPersistentAttributeEntity<O,J>
 	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
-			SqlExpressionQualifier qualifier,
+			ColumnReferenceQualifier qualifier,
 			FetchStrategy fetchStrategy,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
@@ -255,7 +258,7 @@ public class SingularPersistentAttributeEntity<O,J>
 
 	@Override
 	public void applyTableReferenceJoins(
-			ColumnReferenceSource lhs,
+			ColumnReferenceQualifier lhs,
 			JoinType joinType,
 			SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector joinCollector,
@@ -388,7 +391,7 @@ public class SingularPersistentAttributeEntity<O,J>
 
 	@Override
 	public SqlSelectionGroup resolveSqlSelectionGroup(
-			SqlExpressionQualifier qualifier,
+			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
 		throw new NotYetImplementedException(  );
 	}

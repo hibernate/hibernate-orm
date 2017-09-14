@@ -22,6 +22,9 @@ import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
+import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 
 /**
@@ -120,6 +123,14 @@ public class MappedSuperclassImpl<J>
 
 	@Override
 	public void visitNavigable(NavigableVisitationStrategy visitor) {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public SqlSelectionGroup resolveSqlSelectionGroup(
+			ColumnReferenceQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext) {
+		// todo (6.0) : we'd have to know all subclasses to be able to generate selection-clause all columns we possibly need for all subtypes
 		throw new NotYetImplementedException(  );
 	}
 

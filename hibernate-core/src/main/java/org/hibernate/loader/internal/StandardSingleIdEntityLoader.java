@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.sql.NotYetImplementedException;
 
 /**
  * @author Steve Ebersole
@@ -29,6 +30,6 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 
 	@Override
 	public T load(Serializable id, SharedSessionContractImplementor session, Options options) {
-		return null;
+		throw new NotYetImplementedException(  );
 	}
 }

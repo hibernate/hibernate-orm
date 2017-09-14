@@ -31,7 +31,7 @@ public interface SqlExpressionResolver {
 	 * Given a qualifier + a qualifiable SqlExpressable, resolve the
 	 * (Sql)Expression reference.
 	 */
-	Expression resolveSqlExpression(SqlExpressionQualifier qualifier, QualifiableSqlExpressable sqlSelectable);
+	Expression resolveSqlExpression(ColumnReferenceQualifier qualifier, QualifiableSqlExpressable sqlSelectable);
 
 	/**
 	 * Given a SqlExpressable not needing to be qualified, resolve the

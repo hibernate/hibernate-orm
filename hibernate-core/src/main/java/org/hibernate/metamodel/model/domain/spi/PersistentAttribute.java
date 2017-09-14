@@ -7,9 +7,6 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
-import org.hibernate.sql.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 
 /**
  * Models a persistent (mapped) attribute in Hibernate's "runtime model".

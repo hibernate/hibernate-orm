@@ -25,13 +25,16 @@ import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.results.internal.AbstractFetchParent;
 import org.hibernate.sql.results.internal.EntityQueryResultAssembler;
 import org.hibernate.sql.results.internal.EntityRootInitializer;
@@ -48,7 +51,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class QueryResultBuilderRootEntity
-		implements NativeQuery.RootReturn, WrappableQueryResultBuilder, SqlExpressionQualifier {
+		implements NativeQuery.RootReturn, WrappableQueryResultBuilder, ColumnReferenceQualifier {
 	private final String tableAlias;
 	private final EntityDescriptor entityDescriptor ;
 	private LockMode lockMode = LockMode.READ;
@@ -138,6 +141,21 @@ public class QueryResultBuilderRootEntity
 	}
 
 	@Override
+	public String getUniqueIdentifier() {
+		return tableAlias;
+	}
+
+	@Override
+	public TableReference locateTableReference(Table table) {
+		return null;
+	}
+
+	@Override
+	public ColumnReference resolveColumnReference(Column column) {
+		return null;
+	}
+
+	@Override
 	public Expression qualify(QualifiableSqlExpressable sqlSelectable) {
 		throw new NotYetImplementedException(  );
 	}
@@ -151,7 +169,7 @@ public class QueryResultBuilderRootEntity
 
 		public EntityQueryResultImpl(
 				EntityDescriptor entityDescriptor,
-				SqlExpressionQualifier qualifier,
+				ColumnReferenceQualifier qualifier,
 				String queryResultVariable,
 				List<String> explicitIdColumnAliases,
 				String explicitDiscriminatorColumnAlias,
@@ -196,8 +214,8 @@ public class QueryResultBuilderRootEntity
 		}
 
 		@Override
-		public EntityValuedExpressableType getType() {
-			return entityDescriptor;
+		public void registerInitializers(InitializerCollector collector) {
+			throw new NotYetImplementedException(  );
 		}
 
 		@Override
@@ -205,11 +223,17 @@ public class QueryResultBuilderRootEntity
 			return assembler;
 		}
 
-		@Override
-		public void registerInitializers(InitializerCollector collector) {
-			collector.addInitializer( initializer );
-			registerFetchInitializers( initializer, collector );
-		}
+
+//		@Override
+//		public QueryResultAssembler getResultAssembler() {
+//			return assembler;
+//		}
+
+//		@Override
+//		public void registerInitializers(InitializerCollector collector) {
+//			collector.addInitializer( initializer );
+//			registerFetchInitializers( initializer, collector );
+//		}
 	}
 
 	// todo (6.0 - need some form of SqlSelection, etc distinctions here to support duplicated columns - including fetches (potential duplicated unqualified column name which need to  be unique).
@@ -217,7 +241,7 @@ public class QueryResultBuilderRootEntity
 	private static class EntitySqlSelectionMappingsOverridableBuilder extends EntitySqlSelectionMappingsBuilder {
 		static EntitySqlSelectionMappings buildSqlSelectionMappings(
 				EntityDescriptor entityDescriptor,
-				SqlExpressionQualifier qualifier,
+				ColumnReferenceQualifier qualifier,
 				String explicitRowIdColumnAlias,
 				List<String> explicitIdColumnAliases,
 				String explicitDiscriminatorColumnAlias,
@@ -248,7 +272,7 @@ public class QueryResultBuilderRootEntity
 
 		public EntitySqlSelectionMappingsOverridableBuilder(
 				EntityDescriptor entityDescriptor,
-				SqlExpressionQualifier qualifier,
+				ColumnReferenceQualifier qualifier,
 				String explicitRowIdColumnAlias,
 				List<String> explicitIdColumnAliases,
 				String explicitDiscriminatorColumnAlias,

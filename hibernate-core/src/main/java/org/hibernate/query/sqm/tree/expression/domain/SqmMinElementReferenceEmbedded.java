@@ -65,13 +65,4 @@ public class SqmMinElementReferenceEmbedded
 		);
 		exportedFromElement = sqmFrom;
 	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
-	}
 }

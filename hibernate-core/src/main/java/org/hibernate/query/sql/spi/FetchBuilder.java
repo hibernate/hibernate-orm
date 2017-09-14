@@ -16,7 +16,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 
@@ -71,7 +71,7 @@ public class FetchBuilder implements NativeQuery.FetchReturn {
 
 		assert joinedNavigable instanceof Fetchable;
 
-		final SqlExpressionQualifier qualifier = null;
+		final ColumnReferenceQualifier qualifier = null;
 
 		final Fetch fetch = ( (Fetchable) joinedNavigable ).generateFetch(
 				fetchParent,

@@ -63,11 +63,6 @@ public abstract class AbstractSqmIndexedElementReference
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
-		throw new NotYetImplementedException(  );
-	}
-
-	@Override
 	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
 		return getPluralAttributeBinding();
 	}

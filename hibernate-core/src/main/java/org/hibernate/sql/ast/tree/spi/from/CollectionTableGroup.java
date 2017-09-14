@@ -12,14 +12,13 @@ import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.ElementColumnReferenceSource;
-import org.hibernate.sql.ast.produce.metamodel.spi.IndexColumnReferenceSource;
+import org.hibernate.sql.ast.produce.metamodel.spi.ElementColumnReferenceQualifier;
+import org.hibernate.sql.ast.produce.metamodel.spi.IndexColumnReferenceQualifier;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstWalker;
 import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
@@ -36,16 +35,16 @@ public class CollectionTableGroup implements TableGroup {
 	private final TableSpace tableSpace;
 	private final String uniqueIdentifier;
 	private final TableReference collectionTableReference;
-	private final ElementColumnReferenceSource elementTableGroup;
-	private final IndexColumnReferenceSource indexTableGroup;
+	private final ElementColumnReferenceQualifier elementTableGroup;
+	private final IndexColumnReferenceQualifier indexTableGroup;
 
 	public CollectionTableGroup(
 			PersistentCollectionDescriptor persister,
 			TableSpace tableSpace,
 			String uniqueIdentifier,
 			TableReference collectionTableReference,
-			ElementColumnReferenceSource elementTableGroup,
-			IndexColumnReferenceSource indexTableGroup) {
+			ElementColumnReferenceQualifier elementTableGroup,
+			IndexColumnReferenceQualifier indexTableGroup) {
 		this.persister = persister;
 		this.tableSpace = tableSpace;
 		this.uniqueIdentifier = uniqueIdentifier;

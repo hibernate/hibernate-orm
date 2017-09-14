@@ -10,12 +10,11 @@ import javax.persistence.AttributeConverter;
 
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.InitializerCollector;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.ScalarQueryResult;
 import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -50,8 +49,8 @@ public class ScalarQueryResultImpl implements ScalarQueryResult {
 	}
 
 	@Override
-	public BasicValuedExpressableType getType() {
-		return expressableType;
+	public BasicJavaDescriptor getJavaTypeDescriptor() {
+		return expressableType.getJavaTypeDescriptor();
 	}
 
 	@Override

@@ -12,10 +12,10 @@ import java.util.Map;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 
 /**
@@ -23,7 +23,7 @@ import org.hibernate.sql.ast.tree.spi.SqlAstNode;
  *
  * @author Steve Ebersole
  */
-public class TableReference implements SqlAstNode, ColumnReferenceSource {
+public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 	private final Table table;
 	private final String identificationVariable;
 

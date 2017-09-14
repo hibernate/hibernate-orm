@@ -45,10 +45,10 @@ import org.hibernate.query.sqm.consume.multitable.spi.UpdateHandler;
 import org.hibernate.query.sqm.consume.spi.QuerySplitter;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmNonSelectStatement;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
 
@@ -282,7 +282,11 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> implements HandlerExecutio
 	}
 
 	private SelectQueryPlan<R> buildSelectQueryPlan() {
-		final SqmSelectStatement[] concreteSqmStatements = QuerySplitter.split( (SqmSelectStatement) getSqmStatement() );
+		final SqmSelectStatement[] concreteSqmStatements = QuerySplitter.split(
+				(SqmSelectStatement) getSqmStatement(),
+				getSessionFactory()
+		);
+
 		if ( concreteSqmStatements.length > 1 ) {
 			return buildAggregatedSelectQueryPlan( concreteSqmStatements );
 		}

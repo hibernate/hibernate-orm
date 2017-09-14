@@ -10,6 +10,7 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.tree.spi.TrimSpecification;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Needed to pass TrimSpecification as an SqmExpression when we call out to
@@ -35,6 +36,11 @@ public class TrimSpecificationExpressionWrapper implements SqmExpression {
 
 	@Override
 	public ExpressableType getInferableType() {
+		return null;
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return null;
 	}
 

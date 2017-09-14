@@ -7,9 +7,6 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.BasicCollectionIndex;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * @author Steve Ebersole
@@ -23,13 +20,5 @@ public class SqmMaxIndexReferenceBasic extends AbstractSpecificSqmCollectionInde
 	@Override
 	public BasicCollectionIndex getReferencedNavigable() {
 		return (BasicCollectionIndex) super.getReferencedNavigable();
-	}
-
-	@Override
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
 	}
 }

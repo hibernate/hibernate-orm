@@ -42,9 +42,4 @@ public class SqmDeleteStatementImpl extends AbstractSqmStatement implements SqmD
 				whereClause
 		);
 	}
-
-	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitDeleteStatement( this );
-	}
 }

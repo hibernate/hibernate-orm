@@ -25,8 +25,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.EntityDataAccess;
-import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -123,17 +121,10 @@ public class RuntimeModelCreationProcess {
 			final IdentifiableTypeDescriptor rootRoot = entry.getValue();
 			final RootClass rootMapping = (RootClass) bootByRuntime.get( rootEntity );
 
-			// todo (6.0) : these will all change based on the Cache changes planned for 6.0
-
-			final EntityDataAccess accessStrategy = resolveEntityCacheAccessStrategy( entry.getKey() );
-			final NaturalIdDataAccess naturalIdAccessStrategy = resolveNaturalIdCacheAccessStrategy( entry.getKey() );
-
 			final EntityHierarchyImpl runtimeHierarchy = new EntityHierarchyImpl(
 					creationContext,
 					rootEntity,
-					rootMapping,
-					accessStrategy,
-					naturalIdAccessStrategy
+					rootMapping
 			);
 
 			finishInitialization( rootRoot, bootByRuntime.get( rootRoot ), creationContext, runtimeHierarchy );
@@ -190,19 +181,6 @@ public class RuntimeModelCreationProcess {
 	private void generateBootModelForeignKeys(InFlightMetadataCollector mappingMetadata) {
 		// walk the boot model and create all mapping FKs (so they are ready for db process)
 		throw new NotYetImplementedException(  );
-	}
-
-	private EntityDataAccess resolveEntityCacheAccessStrategy(EntityMappingHierarchy mappingHierarchy) {
-		//final RootClass rootEntityMapping = mappingHierarchy.getRootType();
-		//return sessionFactory.getCache().determineEntityRegionAccessStrategy(  );
-		return null;
-	}
-
-	private NaturalIdDataAccess resolveNaturalIdCacheAccessStrategy(EntityMappingHierarchy mappingHierarchy) {
-		// atm natural-id caching can only be specified on the root Entity
-		//final RootClass rootEntityMapping = mappingHierarchy.getRootType();
-		//return sessionFactory.getCache().determineEntityRegionAccessStrategy(  );
-		return null;
 	}
 
 	private IdentifiableTypeDescriptor<?> createIdentifiableType(

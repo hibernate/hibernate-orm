@@ -19,7 +19,6 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
@@ -143,29 +142,14 @@ public class SqmSelectToSqlAstConverter
 
 	@Override
 	public Void visitSelection(SqmSelection sqmSelection) {
+		final QueryResultProducer resultProducer = (QueryResultProducer) sqmSelection.getSelectableNode().accept( this );
 
-		// 1) walk the argument "expression"
-		// 2) generate/collect the QueryResult
-
-		//		`select p.name as n from Person p`
-
-		// SqmSelection#getSelectableNode will be 1 of 2 things:
-		//		1) dynamic-instantiation
-		//		2) expression
-		//
-		// 		in the first case nothing should be put into the SQL tree
-
-		final QueryResultProducer<SemanticQueryWalker> resultProducer = sqmSelection.getSelectableNode().walkAsSelection( this );
-
-//
-//		final SqmSelectableNode selectableNode = (SqmSelectableNode) sqmSelection.getSelectableNode().accept( this );
-//
-//
-//
-//		final QueryResultProducer resultProducer = (QueryResultProducer) sqmSelection.getSelectableNode().accept( this );
+		if ( getQuerySpecStack().depth() > 1 ) {
+			// we only need the QueryResults if we are in the top-level select-clause.
+			return null;
+		}
 
 		final QueryResult queryResult = resultProducer.createQueryResult(
-				this,
 				sqmSelection.getAlias(),
 				this
 		);

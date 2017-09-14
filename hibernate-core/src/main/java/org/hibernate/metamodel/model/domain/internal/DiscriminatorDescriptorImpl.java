@@ -22,11 +22,9 @@ import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
-import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelection;
@@ -198,11 +196,11 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 
 	@Override
 	public QueryResult createQueryResult(
-			Expression expression,
+			NavigableReference navigableReference,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		final SqlSelectionGroup group = resolveSqlSelectionGroup(
-				( (NavigableReference) expression ).getSqlExpressionQualifier(),
+				navigableReference.getSqlExpressionQualifier(),
 				creationContext
 		);
 
@@ -214,7 +212,7 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 	}
 
 	private SqlSelection resolveSqlSelection(
-			SqlExpressionQualifier qualifier,
+			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
 		return resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
 				resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
@@ -222,12 +220,5 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 						getBoundColumn()
 				)
 		);
-	}
-
-	@Override
-	public SqlSelectionGroup resolveSqlSelectionGroup(
-			SqlExpressionQualifier qualifier,
-			SqlSelectionGroupResolutionContext resolutionContext) {
-		return SqlSelectionGroupImpl.of( resolveSqlSelection( qualifier, resolutionContext ) );
 	}
 }

@@ -53,6 +53,11 @@ public class SqmFromImpl implements SqmFrom {
 	}
 
 	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return collectionDescriptor.getJavaTypeDescriptor();
+	}
+
+	@Override
 	public SqmFromElementSpace getContainingSpace() {
 		return space;
 	}

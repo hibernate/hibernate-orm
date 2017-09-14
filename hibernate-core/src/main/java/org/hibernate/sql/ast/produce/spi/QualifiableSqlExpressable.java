@@ -10,12 +10,12 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
 
 /**
  * Specialization for SqlSelectables that need to be qualified by a
- * {@link SqlExpressionQualifier} to be treated as a SqlSelection.
+ * {@link ColumnReferenceQualifier} to be treated as a SqlSelection.
  * E.g. a Column
  *
  * @author Steve Ebersole
  */
 public interface QualifiableSqlExpressable extends SqlExpressable {
 	// todo (6.0) : anything else to pass in?
-	Expression createSqlExpression(SqlExpressionQualifier qualifier);
+	Expression createSqlExpression(ColumnReferenceQualifier qualifier);
 }

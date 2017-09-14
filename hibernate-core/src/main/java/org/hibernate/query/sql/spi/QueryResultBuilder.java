@@ -27,7 +27,7 @@ public interface QueryResultBuilder {
 	//
 	//		For an attribute, it always represents a non-QueryResult.  At least I
 	// 		think that is accurate - validate this, can an attribute be defined
-	//		as a top-level QueryResult?  dynamic-instantiation argument?
+	//		as a top-level QueryResult?  dynamic-instantiation argument? - JPA at least does not support that
 	//
 	//		For dynamic-instantiation, it might represent:
 	//			1) a top-level QueryResult

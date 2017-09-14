@@ -8,8 +8,15 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.TableReferenceContributor;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
@@ -26,4 +33,22 @@ public interface EntityValuedNavigable<J>
 
 	EntityJavaDescriptor<J> getJavaTypeDescriptor();
 
+	@Override
+	default QueryResult createQueryResult(
+			NavigableReference navigableReference,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return getEntityDescriptor().createQueryResult(
+				navigableReference,
+				resultVariable,
+				creationContext
+		);
+	}
+
+	@Override
+	default SqlSelectionGroup resolveSqlSelectionGroup(
+			ColumnReferenceQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext) {
+		throw new NotYetImplementedException(  );
+	}
 }

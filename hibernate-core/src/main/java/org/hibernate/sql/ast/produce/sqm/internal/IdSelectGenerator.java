@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
@@ -99,12 +100,18 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 		entityIdSelectionTableSpace.setRootTableGroup( rootTableGroup );
 
 		final SqlSelectionGroup sqlSelectionGroup = entityDescriptor.getIdentifierDescriptor().resolveSqlSelectionGroup(
+				rootTableGroup,
 				new QueryResultCreationContext() {
 					final NavigablePath path = new NavigablePath();
 
 					@Override
 					public SessionFactoryImplementor getSessionFactory() {
 						return sessionFactory;
+					}
+
+					@Override
+					public SqlExpressionResolver getSqlSelectionResolver() {
+						return null;
 					}
 
 					@Override

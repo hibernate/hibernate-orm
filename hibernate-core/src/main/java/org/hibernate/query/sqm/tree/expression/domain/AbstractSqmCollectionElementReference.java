@@ -6,12 +6,13 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -101,5 +102,10 @@ public abstract class AbstractSqmCollectionElementReference extends AbstractSqmN
 	@Override
 	public Class getJavaType() {
 		return getReferencedNavigable().getJavaType();
+	}
+
+	@Override
+	public <T> T accept(SemanticQueryWalker<T> walker) {
+		return walker.visitPluralAttributeElementBinding( this );
 	}
 }

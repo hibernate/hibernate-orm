@@ -10,13 +10,11 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValueExpressableType;
 import org.hibernate.sql.results.spi.CompositeQueryResult;
-import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.InitializerCollector;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -50,10 +48,6 @@ public class CompositeQueryResultImpl extends AbstractFetchParent implements Com
 		return resultVariable;
 	}
 
-	@Override
-	public EmbeddedValueExpressableType getType() {
-		return getFetchContainer();
-	}
 
 	@Override
 	public QueryResultAssembler getResultAssembler() {
@@ -62,7 +56,12 @@ public class CompositeQueryResultImpl extends AbstractFetchParent implements Com
 
 	@Override
 	public EmbeddedTypeDescriptor getEmbeddedDescriptor() {
-		return getType().getEmbeddedDescriptor();
+		return getFetchContainer().getEmbeddedDescriptor();
+	}
+
+	@Override
+	public EmbeddableJavaDescriptor getJavaTypeDescriptor() {
+		return getEmbeddedDescriptor().getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -71,9 +70,9 @@ public class CompositeQueryResultImpl extends AbstractFetchParent implements Com
 		throw new NotYetImplementedException(  );
 	}
 
-	@Override
-	public Initializer generateInitializer(QueryResultCreationContext creationContext) {
-		// todo (6.0) : register the CompositeInitializer as well as the initializers for our fetches
-		throw new NotYetImplementedException(  );
-	}
+//	@Override
+//	public Initializer generateInitializer(QueryResultCreationContext creationContext) {
+//		// todo (6.0) : register the CompositeInitializer as well as the initializers for our fetches
+//		throw new NotYetImplementedException(  );
+//	}
 }

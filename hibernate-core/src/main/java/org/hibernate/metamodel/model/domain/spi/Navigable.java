@@ -11,7 +11,9 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerRefer
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
+import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
@@ -72,6 +74,7 @@ public interface Navigable<T> extends DomainType<T> {
 		// org.hibernate.query.sqm.produce.spi.ParsingContext?
 		// org.hibernate.query.sqm.produce.spi.ResolutionContext?
 		// a new `SqmNodeCreationContext`?
+		TableGroupResolver getTableGroupResolver();
 	}
 
 	default QueryResult createQueryResult(
@@ -81,8 +84,9 @@ public interface Navigable<T> extends DomainType<T> {
 		throw new NotYetImplementedException(  );
 	}
 
+	// todo (6.0) : Consider instead to resolve just the `List<SqlSelection>` and avoid the extra allocations here
 	SqlSelectionGroup resolveSqlSelectionGroup(
-			SqlExpressionQualifier qualifier,
+			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext);
 
 	/**

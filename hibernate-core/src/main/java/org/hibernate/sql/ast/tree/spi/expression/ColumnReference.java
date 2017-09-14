@@ -13,7 +13,7 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.results.spi.SqlSelection;
@@ -22,10 +22,10 @@ import org.hibernate.sql.results.spi.SqlSelection;
  * @author Steve Ebersole
  */
 public class ColumnReference implements Expression {
-	private final SqlExpressionQualifier qualifier;
+	private final ColumnReferenceQualifier qualifier;
 	private final Column column;
 
-	public ColumnReference(SqlExpressionQualifier qualifier, Column column) {
+	public ColumnReference(ColumnReferenceQualifier qualifier, Column column) {
 		this.qualifier = qualifier;
 		this.column = column;
 	}
@@ -38,7 +38,7 @@ public class ColumnReference implements Expression {
 		);
 	}
 
-	public SqlExpressionQualifier getQualifier() {
+	public ColumnReferenceQualifier getQualifier() {
 		return qualifier;
 	}
 

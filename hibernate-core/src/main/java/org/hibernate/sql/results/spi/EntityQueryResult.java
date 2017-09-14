@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.spi;
 
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * Further defines a first-level Return that is a reference to an entity
@@ -16,7 +16,9 @@ import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
  */
 public interface EntityQueryResult extends EntityMappingNode, QueryResult {
 	@Override
-	EntityValuedExpressableType getType();
+	default EntityJavaDescriptor getJavaTypeDescriptor() {
+		return getEntityDescriptor().getJavaTypeDescriptor();
+	}
 
 	default NavigablePath getNavigablePath() {
 		return new NavigablePath( getEntityDescriptor().getEntityName() );

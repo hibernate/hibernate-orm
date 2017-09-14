@@ -10,7 +10,7 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 
 /**
  * @author Steve Ebersole
@@ -35,7 +35,7 @@ public class SingularAttributeReference implements NavigableReference {
 	}
 
 	@Override
-	public SqlExpressionQualifier getSqlExpressionQualifier() {
+	public ColumnReferenceQualifier getSqlExpressionQualifier() {
 		// todo (6.0) : we need a combined TableSpace to act as the qualifier
 		//		combining the container table-space and the associated table-space (if one)
 		throw new NotYetImplementedException(  );

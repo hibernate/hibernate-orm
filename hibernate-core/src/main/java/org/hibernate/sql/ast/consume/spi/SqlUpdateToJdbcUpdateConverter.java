@@ -92,7 +92,7 @@ public class SqlUpdateToJdbcUpdateConverter
 	@Override
 	@SuppressWarnings("unchecked")
 	public void visitAssignment(Assignment assignment) {
-		assignment.getStateField().accept( this );
+		assignment.getColumnReference().accept( this );
 		appendSql( " = " );
 		assignment.getAssignedValue().accept( this );
 	}

@@ -8,7 +8,6 @@ package org.hibernate.sql.ast.produce.spi;
 
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 
 /**
  * @author Steve Ebersole
@@ -18,7 +17,7 @@ public interface TableReferenceContributor {
 	 * Apply the Tables mapped by this producer to the collector as TableReferences
 	 */
 	void applyTableReferenceJoins(
-			ColumnReferenceSource lhs,
+			ColumnReferenceQualifier lhs,
 			JoinType joinType,
 			SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector joinCollector,

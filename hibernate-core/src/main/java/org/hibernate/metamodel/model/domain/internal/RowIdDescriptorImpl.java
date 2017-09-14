@@ -23,8 +23,9 @@ import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.DerivedColumn;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
@@ -171,15 +172,17 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 
 	@Override
 	public QueryResult createQueryResult(
-			Expression expression,
+			NavigableReference navigableReference,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
+		// todo (6.0) : but like with discriminator, etc we *could* if we wanted to
+		//		exposed as a "virtual attribute" such as `select p.{type} from Person p`
 		throw new HibernateException( "Selection of ROW_ID from domain query is not supported" );
 	}
 
 	@Override
 	public SqlSelectionGroup resolveSqlSelectionGroup(
-			SqlExpressionQualifier qualifier,
+			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
 		return SqlSelectionGroupImpl.of(
 				resolutionContext.getSqlSelectionResolver().resolveSqlSelection(

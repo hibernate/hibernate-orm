@@ -10,7 +10,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 
 /**
  * @author Andrea Boriero
@@ -24,11 +24,11 @@ public class EntityReference extends AbstractNavigableContainerReference {
 
 	// todo (6.0) : see org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference and SqmRoot ctor
 
-	private final ColumnReferenceSource columnReferenceSource;
+	private final ColumnReferenceQualifier columnReferenceSource;
 	private final EntityValuedExpressableType expressionType;
 
 	public EntityReference(
-			ColumnReferenceSource columnReferenceSource,
+			ColumnReferenceQualifier columnReferenceSource,
 			EntityValuedExpressableType expressionType,
 			NavigablePath navigablePath,
 			NavigableContainerReference containerReference,
@@ -44,7 +44,7 @@ public class EntityReference extends AbstractNavigableContainerReference {
 	}
 
 	@Override
-	public SqlExpressionQualifier getSqlExpressionQualifier() {
+	public ColumnReferenceQualifier getSqlExpressionQualifier() {
 		return columnReferenceSource;
 	}
 

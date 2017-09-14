@@ -77,7 +77,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				for ( SqmSelection selection : sqm.getQuerySpec().getSelectClause().getSelections() ) {
 					tupleElementList.add(
 							new TupleElementImpl(
-									selection.getWrappedNode().getExpressionType().getJavaTypeDescriptor().getJavaType(),
+									selection.getSelectableNode().getJavaTypeDescriptor().getJavaType(),
 									selection.getAlias()
 							)
 					);

@@ -8,10 +8,9 @@ package org.hibernate.query.sqm.tree.internal;
 
 import java.util.Locale;
 
-import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.set.SqmSetClause;
 
 /**
@@ -50,10 +49,5 @@ public class SqmUpdateStatementImpl extends AbstractSqmStatement implements SqmU
 				"[no set clause]",
 				whereClause
 		);
-	}
-
-	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitUpdateStatement( this );
 	}
 }

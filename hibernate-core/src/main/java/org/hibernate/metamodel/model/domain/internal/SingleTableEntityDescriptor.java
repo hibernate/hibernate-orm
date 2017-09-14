@@ -36,6 +36,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
@@ -56,10 +57,13 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 		super( bootMapping, creationContext );
 	}
 
+	// `select ... from Person p order by p`
 	@Override
 	public SqmNavigableReference createSqmExpression(
-			SqmFrom sourceSqmFrom, SqmReferenceCreationContext creationContext) {
-		throw new NotYetImplementedException(  );
+			SqmFrom sourceSqmFrom,
+			SqmNavigableContainerReference containerReference,
+			SqmReferenceCreationContext creationContext) {
+		return sourceSqmFrom.getNavigableReference();
 	}
 
 	@Override
@@ -72,7 +76,7 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 
 	@Override
 	public String asLoggableText() {
-		return null;
+		return String.format( "SingleTableEntityDescriptor<%s>", getEntityName() );
 	}
 
 	@Override

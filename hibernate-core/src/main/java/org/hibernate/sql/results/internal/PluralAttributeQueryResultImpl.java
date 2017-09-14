@@ -27,11 +27,6 @@ public class PluralAttributeQueryResultImpl
 	}
 
 	@Override
-	public PluralPersistentAttribute getType() {
-		return getNavigable();
-	}
-
-	@Override
 	public String getResultVariable() {
 		return super.getResultVariable();
 	}

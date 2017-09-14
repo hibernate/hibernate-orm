@@ -6,7 +6,11 @@
  */
 package org.hibernate.sql.ast.produce.spi;
 
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.from.TableReference;
 
 /**
  * Contract for things that can act as the qualifier for a SqlSelection for a
@@ -19,16 +23,12 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
  *
  * @author Steve Ebersole
  */
-public interface SqlExpressionQualifier {
-	/**
-	 * Resolve the SqlSelection for the given QualifiableSqlSelectable
-	 * relative to this Qualifier.
-	 *
-	 * @implNote Do not call this method directly.  The expectation instead
-	 * is to call {@link SqlExpressionResolver#resolveSqlExpression(SqlExpressionQualifier, QualifiableSqlExpressable)}
-	 * and that that method will in turn call this method.  The reason being that
-	 * `SqlExpressionResolver#resolveSqlExpression` performs additional needed
-	 * logic.
-	 */
+public interface ColumnReferenceQualifier {
+	String getUniqueIdentifier();
+
+	TableReference locateTableReference(Table table);
+
+	ColumnReference resolveColumnReference(Column column);
+
 	Expression qualify(QualifiableSqlExpressable sqlSelectable);
 }

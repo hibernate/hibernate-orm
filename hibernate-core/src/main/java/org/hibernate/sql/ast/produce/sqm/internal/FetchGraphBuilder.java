@@ -22,11 +22,11 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
@@ -119,6 +119,7 @@ public class FetchGraphBuilder {
 			assert fetchedNavigableReference.getNavigable() instanceof Fetchable;
 			final Fetch fetch = ( (Fetchable) fetchedNavigableReference.getNavigable() ).generateFetch(
 					fetchParent,
+					tableGroup,
 					fetchStrategy,
 					fetchedJoin.getIdentificationVariable(),
 					builder
@@ -165,7 +166,7 @@ public class FetchGraphBuilder {
 							}
 
 							@Override
-							public ColumnReferenceSource getColumnReferenceSource() {
+							public ColumnReferenceQualifier getColumnReferenceQualifier() {
 								return parentTableGroup;
 							}
 
@@ -204,6 +205,8 @@ public class FetchGraphBuilder {
 
 			final Fetch fetch = ( (Fetchable) persistentAttribute ).generateFetch(
 					fetchParent,
+					// todo (6.0) : wtf?
+					null,
 					fetchStrategy,
 					null,
 					builder

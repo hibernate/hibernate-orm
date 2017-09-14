@@ -30,9 +30,4 @@ public class SqmSelectStatementImpl extends AbstractSqmStatement implements SqmS
 		}
 		this.querySpec = querySpec;
 	}
-
-	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitSelectStatement( this );
-	}
 }

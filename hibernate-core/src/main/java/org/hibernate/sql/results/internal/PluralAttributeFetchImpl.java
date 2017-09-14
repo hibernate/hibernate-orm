@@ -8,7 +8,7 @@ package org.hibernate.sql.results.internal;
 
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.FetchParentAccess;
 import org.hibernate.sql.results.spi.InitializerCollector;
@@ -22,13 +22,13 @@ import org.hibernate.sql.results.spi.QueryResultCreationContext;
 public class PluralAttributeFetchImpl extends AbstractPluralAttributeMappingNode implements PluralAttributeFetch {
 	private final FetchParent fetchParent;
 	private final FetchStrategy fetchStrategy;
-	private final SqlExpressionQualifier qualifier;
+	private final ColumnReferenceQualifier qualifier;
 	private final PluralPersistentAttribute pluralAttribute;
 	private final QueryResultCreationContext creationContext;
 
 	public PluralAttributeFetchImpl(
 			FetchParent fetchParent,
-			SqlExpressionQualifier qualifier,
+			ColumnReferenceQualifier qualifier,
 			PluralPersistentAttribute pluralAttribute,
 			FetchStrategy fetchStrategy,
 			String resultVariable,
@@ -44,7 +44,7 @@ public class PluralAttributeFetchImpl extends AbstractPluralAttributeMappingNode
 	}
 
 	@Override
-	public SqlExpressionQualifier getSqlExpressionQualifier() {
+	public ColumnReferenceQualifier getSqlExpressionQualifier() {
 		return qualifier;
 	}
 

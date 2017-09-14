@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.results.spi;
 
-import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 
 /**
  * Models the a persistent collection as root {@link QueryResult}.  Pertinent to collection initializers only.
@@ -14,6 +14,6 @@ import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
  * @author Steve Ebersole
  */
 public interface PluralAttributeQueryResult extends PluralAttributeMappingNode, QueryResult {
-	@Override
-	PluralPersistentAttribute getType();
+	// todo (6.0) : do we want to define a `org.hibernate.type.descriptor.java.spi.CollectionJavaType`
+	// 		like we do with `org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor`, e.g.
 }

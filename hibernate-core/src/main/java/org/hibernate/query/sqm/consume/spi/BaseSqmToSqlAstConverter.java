@@ -108,7 +108,7 @@ import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
@@ -147,7 +147,6 @@ import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
 import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.spi.expression.UpperFunction;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
@@ -169,7 +168,6 @@ import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
@@ -286,12 +284,12 @@ public abstract class BaseSqmToSqlAstConverter
 	//		its "ok" to do it for sub-queries as well - just wondering about the overhead.
 	private Map<QuerySpec,Map<Expression, SqlSelection>> sqlExpressionToSqlSelectionMapByQuerySpec;
 
-	private Map<QuerySpec,Map<SqlExpressionQualifier,Map<QualifiableSqlExpressable,SqlSelection>>> qualifiedSExpressionToSqlSelectionMapByQuerySpec;
+	private Map<QuerySpec,Map<ColumnReferenceQualifier,Map<QualifiableSqlExpressable,SqlSelection>>> qualifiedSExpressionToSqlSelectionMapByQuerySpec;
 
 	// todo (6.0) : is there ever a time when resolving a sqlSelectable relative to a qualifier ought to return different expressions for multiple references?
 
 	@Override
-	public Expression resolveSqlExpression(SqlExpressionQualifier qualifier, QualifiableSqlExpressable sqlSelectable) {
+	public Expression resolveSqlExpression(ColumnReferenceQualifier qualifier, QualifiableSqlExpressable sqlSelectable) {
 		return normalizeSqlExpression( qualifier.qualify( sqlSelectable ) );
 	}
 
@@ -340,7 +338,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		final SqlSelection sqlSelection = expression.createSqlSelection( sqlSelectionMap.size() );
 		currentQuerySpec().getSelectClause().addSqlSelection( sqlSelection );
-		sqlSelectionMap.put( expression, sqlSelection );
+		sqlSelectionMap.put( expression.getExpressable(), sqlSelection );
 
 		return sqlSelection;
 	}
@@ -565,7 +563,7 @@ public abstract class BaseSqmToSqlAstConverter
 					}
 
 					@Override
-					public ColumnReferenceSource getColumnReferenceSource() {
+					public ColumnReferenceQualifier getColumnReferenceQualifier() {
 						return getLhs();
 					}
 

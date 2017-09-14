@@ -17,7 +17,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggr
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelection;
@@ -29,7 +29,7 @@ import org.hibernate.sql.results.spi.SqlSelectionGroup;
 public class EntitySqlSelectionMappingsBuilder implements NavigableVisitationStrategy {
 	public static EntitySqlSelectionMappings buildSqlSelectionMappings(
 			EntityDescriptor entityDescriptor,
-			SqlExpressionQualifier qualifier,
+			ColumnReferenceQualifier qualifier,
 			QueryResultCreationContext creationContext) {
 		final EntitySqlSelectionMappingsBuilder strategy = new EntitySqlSelectionMappingsBuilder(
 				qualifier,
@@ -39,12 +39,12 @@ public class EntitySqlSelectionMappingsBuilder implements NavigableVisitationStr
 		return strategy.buildSqlSelectionMappings();
 	}
 
-	private final SqlExpressionQualifier qualifier;
+	private final ColumnReferenceQualifier qualifier;
 	private final QueryResultCreationContext creationContext;
 	private final EntitySqlSelectionMappingsImpl.Builder sqlSelectionMappingsBuilder = new EntitySqlSelectionMappingsImpl.Builder();
 
 	protected EntitySqlSelectionMappingsBuilder(
-			SqlExpressionQualifier qualifier,
+			ColumnReferenceQualifier qualifier,
 			QueryResultCreationContext creationContext) {
 		this.qualifier = qualifier;
 		this.creationContext = creationContext;
@@ -58,7 +58,7 @@ public class EntitySqlSelectionMappingsBuilder implements NavigableVisitationStr
 		return sqlSelectionMappingsBuilder.create();
 	}
 
-	protected SqlExpressionQualifier getQualifier() {
+	protected ColumnReferenceQualifier getQualifier() {
 		return qualifier;
 	}
 

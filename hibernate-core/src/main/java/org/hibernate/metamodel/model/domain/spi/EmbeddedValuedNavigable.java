@@ -10,7 +10,7 @@ import javax.persistence.metamodel.Type;
 
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValueExpressableType;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.CompositeQueryResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
@@ -56,7 +56,7 @@ public interface EmbeddedValuedNavigable<J> extends EmbeddedValueExpressableType
 
 	@Override
 	default SqlSelectionGroup resolveSqlSelectionGroup(
-			SqlExpressionQualifier qualifier,
+			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
 		final SqlSelectionGroupImpl group = new SqlSelectionGroupImpl();
 		for ( Column column : getEmbeddedDescriptor().collectColumns() ) {

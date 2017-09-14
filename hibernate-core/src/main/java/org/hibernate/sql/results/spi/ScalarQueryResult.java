@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.results.spi;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 
 /**
  * Represent a simple scalar return within a query result.  Generally this would be values of basic (String, Integer,
@@ -17,5 +17,5 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
  */
 public interface ScalarQueryResult extends QueryResult {
 	@Override
-	BasicValuedExpressableType getType();
+	BasicJavaDescriptor getJavaTypeDescriptor();
 }

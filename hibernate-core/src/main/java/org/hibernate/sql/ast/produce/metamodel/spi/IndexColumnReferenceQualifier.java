@@ -10,20 +10,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 
 /**
  * @author Steve Ebersole
  */
-public class IndexColumnReferenceSource
-		extends AbstractColumnReferenceSource
-		implements ColumnReferenceSource, TableReferenceJoinCollector {
+public class IndexColumnReferenceQualifier
+		extends AbstractColumnReferenceQualifier
+		implements ColumnReferenceQualifier, TableReferenceJoinCollector {
 	private TableReference root;
 	private List<TableReferenceJoin> joins;
 
-	public IndexColumnReferenceSource(String uniqueIdentifier) {
+	public IndexColumnReferenceQualifier(String uniqueIdentifier) {
 		super( uniqueIdentifier );
 	}
 

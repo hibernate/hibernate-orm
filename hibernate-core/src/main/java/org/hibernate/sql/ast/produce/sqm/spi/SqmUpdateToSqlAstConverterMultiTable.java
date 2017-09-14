@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
@@ -27,20 +26,23 @@ import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.UpdateStatement;
 import org.hibernate.sql.ast.tree.spi.UpdateStatement.UpdateStatementBuilder;
 import org.hibernate.sql.ast.tree.spi.assign.Assignment;
-import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReference;
+import org.hibernate.sql.ast.tree.spi.from.AbstractTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
+import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
+import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 
 import org.jboss.logging.Logger;
 
@@ -48,7 +50,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class SqmUpdateToSqlAstConverterMultiTable
-		extends BaseSqmToSqlAstConverter {
+		extends BaseSqmToSqlAstConverter implements SqlSelectionGroupResolutionContext {
 	private static final Logger log = Logger.getLogger( SqmUpdateToSqlAstConverterMultiTable.class );
 
 	public static List<UpdateStatement> interpret(
@@ -162,7 +164,28 @@ public class SqmUpdateToSqlAstConverterMultiTable
 			currentAssignmentContext.endStateFieldProcessing();
 			final Expression assignedValue = (Expression) sqmAssignment.getStateField().accept( this );
 
-			final Assignment assignment = new Assignment( stateField, assignedValue );
+			// todo (6.0) : consider SingularAttributeReference#generateSqlAssignments returning a List of Assignment references
+			//		representing the update of its (updatable) columns
+			// todo (6.0) : Do we want to allow updates against embedded values as well?
+			// 		- JPA defines support for updates only against basic (single-column) types,
+			//		this would be an "extension" feature as well as needing to be one of the "strict compliance checks"
+
+			// todo (6.0) : this also illustraes why being able to ask the Navigable for its list of (Sql)Expressions, rather than just SqlSelections, is important
+			//		in fact its probably a good idea to have Navigable be the place where we build all
+			// 		SqlNode references (TableGroups, Expressions, Assignments, etc
+
+//			final SqlSelectionGroup sqlSelectionGroup = stateField.getNavigable().resolveSqlSelectionGroup(
+//					entityTableGroup,
+//					this
+//			);
+//			assert sqlSelectionGroup.getSqlSelections().size() == 1;
+
+			final Assignment assignment = new Assignment(
+					// this needs to be a ColumnReference (the Expression) rather than a SqlSelection, as noted above in todos
+					//sqlSelectionGroup.getSqlSelections().get( 0 ),
+					null,
+					assignedValue
+			);
 			final TableReference assignmentTableReference = currentAssignmentContext.stateFieldTableReference;
 			UpdateStatementBuilder concreteUpdateStatementBuilder = updateStatementBuilderMap.get( assignmentTableReference );
 			if ( concreteUpdateStatementBuilder == null ) {
@@ -185,16 +208,22 @@ public class SqmUpdateToSqlAstConverterMultiTable
 		}
 	}
 
-	private class TableGroupMock implements TableGroup {
+	@Override
+	public SqlExpressionResolver getSqlSelectionResolver() {
+		return this;
+	}
+
+	@Override
+	public boolean shouldCreateShallowEntityResult() {
+		return false;
+	}
+
+	private class TableGroupMock extends AbstractTableGroup implements TableGroup {
 		private final EntityTableGroup entityTableGroup;
 
 		private TableGroupMock(EntityTableGroup entityTableGroup) {
+			super( entityTableGroup.getTableSpace(), entityTableGroup.getUniqueIdentifier() );
 			this.entityTableGroup = entityTableGroup;
-		}
-
-		@Override
-		public String getUniqueIdentifier() {
-			return null;
 		}
 
 		@Override
@@ -209,16 +238,6 @@ public class SqmUpdateToSqlAstConverterMultiTable
 		}
 
 		@Override
-		public ColumnReference resolveColumnReference(Column column) {
-			return null;
-		}
-
-		@Override
-		public TableSpace getTableSpace() {
-			return null;
-		}
-
-		@Override
 		public NavigableReference asExpression() {
 			return null;
 		}
@@ -226,6 +245,16 @@ public class SqmUpdateToSqlAstConverterMultiTable
 		@Override
 		public void render(SqlAppender sqlAppender, SqlAstWalker walker) {
 
+		}
+
+		@Override
+		protected TableReference getPrimaryTableReference() {
+			return entityTableGroup.locateTableReference( entityTableGroup.getEntityDescriptor().getPrimaryTable() );
+		}
+
+		@Override
+		protected List<TableReferenceJoin> getTableReferenceJoins() {
+			return null;
 		}
 	}
 

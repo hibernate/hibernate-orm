@@ -9,7 +9,7 @@ package org.hibernate.sql.results.spi;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 
 /**
  * Contract for fetches including entity, collection and composite.  Acts as the
@@ -37,7 +37,7 @@ public interface Fetch extends ResultSetMappingNode {
 	 */
 	FetchParent getFetchParent();
 
-	SqlExpressionQualifier getSqlExpressionQualifier();
+	ColumnReferenceQualifier getSqlExpressionQualifier();
 
 	/**
 	 * The Navigable being fetched

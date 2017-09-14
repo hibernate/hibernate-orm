@@ -7,9 +7,6 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * @author Steve Ebersole
@@ -21,18 +18,5 @@ public class SqmIndexedElementReferenceBasic
 			SqmPluralAttributeReference pluralAttributeBinding,
 			SqmExpression indexSelectionExpression) {
 		super( pluralAttributeBinding, indexSelectionExpression );
-	}
-
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		return getPluralAttributeBinding().getReferencedNavigable()
-				.getPersistentCollectionMetadata()
-				.getElementDescriptor()
-				.createQueryResult( expression, resultVariable, creationContext );
 	}
 }

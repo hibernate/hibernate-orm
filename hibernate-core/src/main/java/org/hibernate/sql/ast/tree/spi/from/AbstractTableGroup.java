@@ -8,15 +8,15 @@ package org.hibernate.sql.ast.tree.spi.from;
 
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.AbstractColumnReferenceSource;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.produce.metamodel.spi.AbstractColumnReferenceQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractTableGroup
-		extends AbstractColumnReferenceSource
-		implements TableGroup, ColumnReferenceSource {
+		extends AbstractColumnReferenceQualifier
+		implements TableGroup, ColumnReferenceQualifier {
 
 	private final TableSpace tableSpace;
 

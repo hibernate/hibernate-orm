@@ -791,10 +791,12 @@ public class QuerySplitter {
 
 		@Override
 		public SqmSubQuery visitSubQueryExpression(SqmSubQuery expression) {
+			// its not supported for a SubQuery to define a dynamic instantiation, so
+			//		any "selectable node" will only ever be an SqmExpression
 			return new SqmSubQuery(
 					visitQuerySpec( expression.getQuerySpec() ),
 					// assume already validated
-					expression.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode().getExpressionType()
+					( (SqmExpression) expression.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode() ).getExpressableType()
 			);
 		}
 	}

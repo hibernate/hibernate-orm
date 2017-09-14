@@ -9,15 +9,14 @@ package org.hibernate.sql.ast.tree.spi.expression.domain;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 
 /**
  * @author Steve Ebersole
  */
 public class PluralAttributeIndexReference implements NavigableReference {
 	private final NavigableContainerReference containerReference;
-	private final ColumnReferenceSource columnReferenceSource;
+	private final ColumnReferenceQualifier columnReferenceSource;
 	private final NavigablePath navigablePath;
 
 	private final PersistentCollectionDescriptor collectionPersister;
@@ -26,7 +25,7 @@ public class PluralAttributeIndexReference implements NavigableReference {
 	public PluralAttributeIndexReference(
 			NavigableContainerReference containerReference,
 			PersistentCollectionDescriptor collectionPersister,
-			ColumnReferenceSource columnReferenceSource,
+			ColumnReferenceQualifier columnReferenceSource,
 			NavigablePath navigablePath) {
 		this.containerReference = containerReference;
 		this.collectionPersister = collectionPersister;
@@ -41,18 +40,8 @@ public class PluralAttributeIndexReference implements NavigableReference {
 	}
 
 	@Override
-	public SqlExpressionQualifier getSqlExpressionQualifier() {
+	public ColumnReferenceQualifier getSqlExpressionQualifier() {
 		return columnReferenceSource;
-	}
-
-	@Override
-	public CollectionIndex getType() {
-		return getNavigable();
-	}
-
-	@Override
-	public void accept(SqlAstWalker walker) {
-		walker.visitPluralAttributeIndex( this );
 	}
 
 	@Override

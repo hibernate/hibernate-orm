@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.internal;
 
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -28,10 +27,5 @@ public class SqmInsertSelectStatementImpl extends AbstractSqmInsertStatement imp
 
 	public void setSelectQuery(SqmQuerySpec selectQuery) {
 		this.selectQuery = selectQuery;
-	}
-
-	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitInsertSelectStatement( this );
 	}
 }

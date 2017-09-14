@@ -15,6 +15,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -59,10 +61,12 @@ public class SchemaScriptFileGenerationTest {
 
 		final String fileContent = new String( Files.readAllBytes( createSchema.toPath() ) ).toLowerCase();
 
-		assertThat( fileContent.contains( "create table test_entity" ), is( true ) );
+		Pattern createStatementPattern = Pattern.compile( "create( (column|row))? table test_entity" );
+		Matcher createStatementMatcher = createStatementPattern.matcher( fileContent );
+		assertThat( createStatementMatcher.find(), is( true ) );
 		assertThat(
 				"The statement 'create table test_entity' is generated twice",
-				fileContent.replaceFirst( "create table test_entity", "" ).contains( "create table test_entity" ),
+				createStatementMatcher.find(),
 				is( false )
 		);
 

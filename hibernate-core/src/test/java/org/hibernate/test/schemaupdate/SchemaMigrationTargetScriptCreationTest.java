@@ -13,6 +13,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.EnumSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -83,9 +85,11 @@ public class SchemaMigrationTargetScriptCreationTest extends BaseCoreFunctionalT
 	@TestForIssue(jiraKey = "HHH-10684")
 	public void testTargetScriptIsCreated() throws Exception {
 		String fileContent = new String( Files.readAllBytes( output.toPath() ) );
+		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity" );
+		Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
 		assertThat(
 				"Script file : " + fileContent.toLowerCase(),
-				fileContent.toLowerCase().contains( "create table test_entity" ),
+				fileContentMatcher.find(),
 				is( true )
 		);
 	}

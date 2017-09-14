@@ -81,6 +81,11 @@ dependencies {
 			}
 		}
 	}
+	if (db.equalsIgnoreCase("hana")) {
+		dependencies {
+			testRuntime( libraries.hana )
+		}
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Java 9 ftw!

@@ -33,6 +33,7 @@ import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 
@@ -641,6 +642,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testCollection() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

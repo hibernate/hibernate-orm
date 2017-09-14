@@ -14,8 +14,9 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.event.spi.AbstractCollectionEvent;
-
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.event.collection.association.bidirectional.manytomany.ChildWithBidirectionalManyToMany;
 import org.junit.Test;
@@ -55,6 +56,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	public abstract Collection createCollection();
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testSaveParentEmptyChildren() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithNoChildren( "parent" );
@@ -74,6 +76,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testSaveParentOneChild() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
@@ -89,6 +92,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testUpdateParentNullToOneChild() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithNullChildren( "parent" );
@@ -115,6 +119,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testUpdateParentNoneToOneChild() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithNoChildren( "parent" );
@@ -140,6 +145,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testUpdateParentOneToTwoChildren() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
@@ -165,6 +171,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testUpdateParentOneToTwoSameChildren() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
@@ -203,6 +210,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testUpdateParentNullToOneChildDiffCollection() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithNullChildren( "parent" );
@@ -232,6 +240,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testUpdateParentNoneToOneChildDiffCollection() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithNoChildren( "parent" );
@@ -261,6 +270,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testUpdateParentOneChildDiffCollectionSameChild() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
@@ -302,6 +312,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testUpdateParentOneChildDiffCollectionDiffChild() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
@@ -343,6 +354,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testUpdateParentOneChildToNoneByRemove() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
@@ -378,6 +390,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testUpdateParentOneChildToNoneByClear() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
@@ -413,6 +426,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testUpdateParentTwoChildrenToOne() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
@@ -455,6 +469,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testDeleteParentWithNullChildren() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithNullChildren( "parent" );
@@ -473,6 +488,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testDeleteParentWithNoChildren() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithNoChildren( "parent" );
@@ -491,6 +507,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testDeleteParentAndChild() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
@@ -524,6 +541,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testMoveChildToDifferentParent() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
@@ -563,6 +581,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testMoveAllChildrenToDifferentParent() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
@@ -602,6 +621,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testMoveCollectionToDifferentParent() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
@@ -648,6 +668,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testMoveCollectionToDifferentParentFlushMoveToDifferentParent() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );

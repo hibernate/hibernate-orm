@@ -24,6 +24,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -561,6 +562,12 @@ public class TransactionUtil {
 				try (Statement st = connection.createStatement()) {
 					//Prepared Statements fail for SET commands
 					st.execute(String.format( "SET LOCK_TIMEOUT %d", millis / 10));
+				}
+			}
+			else if( Dialect.getDialect() instanceof AbstractHANADialect ) {
+				try (Statement st = connection.createStatement()) {
+					//Prepared Statements fail for SET commands
+					st.execute(String.format( "SET TRANSACTION LOCK WAIT TIMEOUT %d", millis ));
 				}
 			}
 			else {

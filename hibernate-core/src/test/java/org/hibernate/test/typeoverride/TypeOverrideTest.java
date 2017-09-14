@@ -13,6 +13,7 @@ import static org.junit.Assert.assertSame;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -57,6 +58,11 @@ public class TypeOverrideTest extends BaseCoreFunctionalTestCase {
 					BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING,
 					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
 			);
+		}
+		else if ( AbstractHANADialect.class.isInstance( getDialect() ) ) {
+			assertSame(
+					( (AbstractHANADialect) getDialect() ).getBlobTypeDescriptor(),
+					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT ) );
 		}
 		else {
 			assertSame(

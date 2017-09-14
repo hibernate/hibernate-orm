@@ -185,6 +185,11 @@ subprojects { subProject ->
 				testRuntime( libraries.db2 )
 			}
 		}
+		if (db.equalsIgnoreCase("hana")) {
+			dependencies {
+				testRuntime( libraries.hana )
+			}
+		}
 		// 6.6 gave me some NPE problems from within checkstyle...
 		checkstyle 'com.puppycrawl.tools:checkstyle:6.5'
 	}

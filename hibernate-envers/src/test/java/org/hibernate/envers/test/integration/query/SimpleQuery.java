@@ -195,6 +195,7 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 				.addProjection( AuditEntity.revisionNumber() )
 				.add( AuditEntity.property( "str1" ).le( "a" ) )
 				.add( AuditEntity.id().eq( id2 ) )
+				.addOrder( AuditEntity.revisionNumber().asc() )
 				.getResultList();
 
 		List revs_id3 = getAuditReader().createQuery()
@@ -250,6 +251,7 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 				.forRevisionsOfEntity( StrIntTestEntity.class, false, true )
 				.addProjection( AuditEntity.revisionType() )
 				.add( AuditEntity.id().eq( id1 ) )
+				.addOrder( AuditEntity.revisionNumber().asc() )
 				.getResultList();
 
 		assert result.size() == 3;

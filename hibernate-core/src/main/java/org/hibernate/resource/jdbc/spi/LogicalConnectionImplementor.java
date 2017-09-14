@@ -62,7 +62,10 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	 * Creates a shareable copy of itself for use in "shared sessions"
 	 *
 	 * @return The shareable copy.
+	 *
+	 * @deprecated This method is not used by Hibernate.
 	 */
+	@Deprecated
 	LogicalConnectionImplementor makeShareableCopy();
 
 	PhysicalJdbcTransaction getPhysicalJdbcTransaction();

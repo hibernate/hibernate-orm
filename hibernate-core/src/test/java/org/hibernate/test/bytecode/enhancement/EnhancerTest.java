@@ -53,6 +53,7 @@ import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicFieldAccessTe
 import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicPropertyAccessTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.cache.LazyInCacheTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.group.LazyGroupAccessTestTask;
+import org.hibernate.test.bytecode.enhancement.lazy.group.LazyGroupMappedByTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.group.LazyGroupUpdateTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.group.SimpleLazyGroupUpdateTestTask;
 import org.hibernate.test.bytecode.enhancement.lazyCache.InitFromCacheTestTask;
@@ -69,7 +70,12 @@ import org.junit.Test;
  * @author Luis Barreiro
  */
 public class EnhancerTest extends BaseUnitTestCase {
-
+	
+	@Test
+	public void testReadSingleLazy() {
+		EnhancerTestUtils.runEnhancerTestTask( LazyGroupMappedByTestTask.class );
+	}
+	
 	@Test
 	public void testBasic() {
 		EnhancerTestUtils.runEnhancerTestTask( BasicEnhancementTestTask.class );

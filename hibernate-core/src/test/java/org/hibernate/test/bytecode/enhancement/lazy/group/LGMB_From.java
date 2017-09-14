@@ -31,7 +31,7 @@ public class LGMB_From {
 	private String name;
 
 	// Lazy-Attribut without LazyGroup-Annotation (therefore Default-LazyGroup)
-	@Column(length = 65000, columnDefinition = "text")
+	@Column(length = 65000)
 	@Basic(fetch = FetchType.LAZY)
 	private String bigText;
 
@@ -42,7 +42,7 @@ public class LGMB_From {
 	private LGMB_To toRelation;
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(nullable = false)
 	private Long id;
 

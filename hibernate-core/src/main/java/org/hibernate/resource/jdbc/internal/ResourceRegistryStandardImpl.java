@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
+import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.jdbc.ResourceRegistry;
@@ -40,6 +41,8 @@ public class ResourceRegistryStandardImpl implements ResourceRegistry {
 	private List<NClob> nclobs;
 
 	private Statement lastQuery;
+
+	private Batch currentBatch;
 
 	@Override
 	public boolean hasRegisteredResources() {
@@ -207,6 +210,11 @@ public class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 	}
 
+	@Override
+	public void register(Batch batch) {
+		currentBatch = batch;
+	}
+
 	private JDBCException convert(SQLException e, String s) {
 		// todo : implement
 		return null;
@@ -284,6 +292,11 @@ public class ResourceRegistryStandardImpl implements ResourceRegistry {
 	@Override
 	public void releaseResources() {
 		log.trace( "Releasing JDBC resources" );
+
+		if( currentBatch != null ) {
+			currentBatch.release();
+			currentBatch = null;
+		}
 
 		for ( Map.Entry<Statement, Set<ResultSet>> entry : xref.entrySet() ) {
 			if ( entry.getValue() != null ) {

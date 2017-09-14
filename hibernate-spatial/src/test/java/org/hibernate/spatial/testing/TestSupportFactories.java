@@ -11,6 +11,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.testing.dialects.h2geodb.GeoDBTestSupport;
+import org.hibernate.spatial.testing.dialects.hana.HANATestSupport;
 import org.hibernate.spatial.testing.dialects.mysql.MySQL56TestSupport;
 import org.hibernate.spatial.testing.dialects.mysql.MySQLTestSupport;
 import org.hibernate.spatial.testing.dialects.oracle.OracleSDOTestSupport;
@@ -75,6 +76,9 @@ public class TestSupportFactories {
 		if ( "org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect".equals( canonicalName ) ||
 				"org.hibernate.spatial.dialect.oracle.OracleSpatialSDO10gDialect".equals( canonicalName )) {
 			return OracleSDOTestSupport.class;
+		}
+		if ( "org.hibernate.spatial.dialect.hana.HANASpatialDialect".equals( canonicalName ) ) {
+			return HANATestSupport.class;
 		}
 		throw new IllegalArgumentException( "Dialect not known in test suite" );
 	}

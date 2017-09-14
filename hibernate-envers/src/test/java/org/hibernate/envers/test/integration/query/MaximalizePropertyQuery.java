@@ -113,6 +113,7 @@ public class MaximalizePropertyQuery extends BaseEnversJPAFunctionalTestCase {
 						AuditEntity.property( "number" ).maximize()
 								.add( AuditEntity.id().eq( id2 ) )
 				)
+				.addOrder( AuditEntity.revisionNumber().asc() )
 				.getResultList();
 
 		assert Arrays.asList( 2, 3, 4 ).equals( revs_id1 );

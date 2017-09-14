@@ -92,6 +92,13 @@ ext {
                         'jdbc.user'  : 'db2inst1',
                         'jdbc.pass'  : 'db2inst1-pwd',
                         'jdbc.url'   : 'jdbc:db2://127.0.0.1:50000/hibern8'
+                ],
+                hana : [
+                        'db.dialect' : 'org.hibernate.dialect.HANAColumnStoreDialect',
+                        'jdbc.driver': 'com.sap.db.jdbc.Driver',
+                        'jdbc.user'  : 'HIBERNATE_TEST',
+                        'jdbc.pass'  : 'H1bernate_test',
+                        'jdbc.url'   : 'jdbc:sap://localhost:30015/'
                 ]
         ]
 }

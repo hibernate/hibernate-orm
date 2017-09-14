@@ -9,6 +9,9 @@ package org.hibernate.test.schemaupdate;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.EnumSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -55,7 +58,9 @@ public class SchemaUpdateGeneratingOnlyScriptFileTest {
 					.execute( EnumSet.of( TargetType.SCRIPT ), metadata );
 			
 			String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-			assertThat( fileContent.toLowerCase().contains( "create table test_entity" ), is( true ) );
+			Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity" );
+			Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
+			assertThat( fileContentMatcher.find(), is( true ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

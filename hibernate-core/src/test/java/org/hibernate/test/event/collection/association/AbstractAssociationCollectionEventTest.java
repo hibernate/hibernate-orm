@@ -9,17 +9,20 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.test.event.collection.AbstractCollectionEventTest;
 import org.hibernate.test.event.collection.ChildEntity;
 import org.hibernate.test.event.collection.CollectionListeners;
 import org.hibernate.test.event.collection.ParentWithCollection;
 import org.hibernate.test.event.collection.association.bidirectional.manytomany.ChildWithBidirectionalManyToMany;
+import org.hibernate.testing.SkipForDialect;
 
 /**
  * @author Gail Badner
  */
 public abstract class AbstractAssociationCollectionEventTest extends AbstractCollectionEventTest {
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testDeleteParentButNotChild() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );

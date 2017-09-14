@@ -58,11 +58,15 @@ public interface EmbeddedValuedNavigable<J> extends EmbeddedValueExpressableType
 	default SqlSelectionGroup resolveSqlSelectionGroup(
 			SqlExpressionQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
-		final SqlSelectionGroup group = new SqlSelectionGroupImpl();
+		final SqlSelectionGroupImpl group = new SqlSelectionGroupImpl();
 		for ( Column column : getEmbeddedDescriptor().collectColumns() ) {
-			resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
-					qualifier,
-					column
+			group.addSqlSelection(
+					resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
+							resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
+									qualifier,
+									column
+							)
+					)
 			);
 		}
 

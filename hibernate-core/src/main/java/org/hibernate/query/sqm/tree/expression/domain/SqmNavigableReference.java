@@ -28,6 +28,11 @@ import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
  * @author Steve Ebersole
  */
 public interface SqmNavigableReference extends SqmExpression, NavigableReferenceInfo {
+	// todo (6.0) : does NavigableReferenceInfo serve any purpose?
+	//		considering that NavigableReference is not really part of the SQL AST
+	//		not sure of the benefit of having a contract that serves to expose the
+	//		information needed to create NavigableReference as part of the SQL AST
+
 	/**
 	 * Get the Navigable reference that is the source ("lhs") of this reference.
 	 */

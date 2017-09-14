@@ -10,9 +10,20 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 
 /**
+ * Access to "source" information about a NavigableReference to be
+ * built - a set of parameters indicating information to encode into the
+ * NavigableReference - a "parameter object" for methods generating these
+ * NavigableReferences.
+ *
+ * This information varies depending on the particular source (HQL, loading, etc).
+ *
  * @author Steve Ebersole
+ *
+ * @apiNote The point of this contract is to isolate the different sources
+ * of SQL AST trees (HQL, NativeQuery, LoadPlan), especially around producing
+ * TableGroups and NavigableReferences ({@link NavigableReferenceInfo}).
  */
-public interface NavigableReferenceInfo extends TableGroupInfoSource, ExpressableType {
+public interface NavigableReferenceInfo extends TableGroupInfo, ExpressableType {
 	NavigableContainerReferenceInfo getNavigableContainerReferenceInfo();
 
 	Navigable getReferencedNavigable();

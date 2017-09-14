@@ -105,7 +105,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.set.SqmAssignment;
 import org.hibernate.query.sqm.tree.set.SqmSetClause;
-import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 
 /**
@@ -113,14 +112,10 @@ import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
  */
 @SuppressWarnings({"unchecked", "WeakerAccess"})
 public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
-	private final SqlAstBuildingContext sqlAstBuildingContext;
+	private final SessionFactoryImplementor sessionFactory;
 
-	public BaseSemanticQueryWalker(SqlAstBuildingContext sqlAstBuildingContext) {
-		this.sqlAstBuildingContext = sqlAstBuildingContext;
-	}
-
-	public SqlAstBuildingContext getSqlAstBuildingContext() {
-		return sqlAstBuildingContext;
+	public BaseSemanticQueryWalker(SessionFactoryImplementor sessionFactory) {
+		this.sessionFactory = sessionFactory;
 	}
 
 	@Override
@@ -131,7 +126,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public SessionFactoryImplementor getSessionFactory() {
-		return sqlAstBuildingContext.getSessionFactory();
+		return sessionFactory;
 	}
 
 	@Override

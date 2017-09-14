@@ -49,8 +49,4 @@ public interface PersistentAttribute<O,T> extends Navigable<T>, javax.persistenc
 	// 					SqlSelectionGroupResolutionContext resolutionContext
 	// 			);
 	//
-
-	SqlSelectionGroup resolveSqlSelectionGroup(
-			SqlExpressionQualifier qualifier,
-			SqlSelectionGroupResolutionContext resolutionContext);
 }

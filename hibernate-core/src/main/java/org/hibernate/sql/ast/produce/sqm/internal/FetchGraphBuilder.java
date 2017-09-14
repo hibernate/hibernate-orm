@@ -21,7 +21,7 @@ import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
@@ -141,7 +141,7 @@ public class FetchGraphBuilder {
 				assert persistentAttribute instanceof TableGroupJoinProducer;
 				final String fetchJoinTableGroupUid = builder.generateSqlAstNodeUid();
 				final TableGroupJoin fetchTableGroupJoin = ( (TableGroupJoinProducer) persistentAttribute ).createTableGroupJoin(
-						new TableGroupInfoSource() {
+						new TableGroupInfo() {
 							@Override
 							public String getUniqueIdentifier() {
 								return fetchJoinTableGroupUid;

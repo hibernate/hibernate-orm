@@ -121,11 +121,11 @@ public class CollectionIndexEntityImpl<J>
 
 	@Override
 	public QueryResult createQueryResult(
-			Expression expression,
+			NavigableReference navigableReference,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
-		assert expression instanceof EntityReference;
-		final EntityReference entityReference = (EntityReference) expression;
+		assert navigableReference instanceof EntityReference;
+		final EntityReference entityReference = (EntityReference) navigableReference;
 
 		return new EntityQueryResultImpl(
 				entityReference.getNavigable(),

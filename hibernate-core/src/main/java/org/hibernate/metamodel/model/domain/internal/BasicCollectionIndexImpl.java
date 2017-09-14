@@ -18,6 +18,7 @@ import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
@@ -74,12 +75,17 @@ public class BasicCollectionIndexImpl<J>
 
 	@Override
 	public QueryResult createQueryResult(
-			Expression expression,
+			NavigableReference navigableReference,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		return new ScalarQueryResultImpl(
 				resultVariable,
-				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),
+				creationContext.getSqlSelectionResolver().resolveSqlSelection(
+						creationContext.getSqlSelectionResolver().resolveSqlExpression(
+								navigableReference.getSqlExpressionQualifier(),
+								getBoundColumn()
+						)
+				),
 				this
 		);
 	}

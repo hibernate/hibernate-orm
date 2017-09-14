@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.io.Serializable;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
@@ -45,7 +44,7 @@ import org.hibernate.metamodel.model.domain.internal.CollectionIndexEntityImpl;
 import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
@@ -276,7 +275,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 
 	@Override
 	public TableGroup createRootTableGroup(
-			TableGroupInfoSource tableGroupInfo,
+			TableGroupInfo tableGroupInfo,
 			RootTableGroupContext tableGroupContext) {
 		throw new org.hibernate.sql.NotYetImplementedException(  );
 //		final SqlAliasBase sqlAliasBase = tableGroupContext.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
@@ -391,7 +390,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 
 	@Override
 	public TableGroupJoin createTableGroupJoin(
-			TableGroupInfoSource tableGroupInfoSource,
+			TableGroupInfo tableGroupInfoSource,
 			JoinType joinType,
 			JoinedTableGroupContext tableGroupJoinContext) {
 		throw new org.hibernate.sql.NotYetImplementedException(  );

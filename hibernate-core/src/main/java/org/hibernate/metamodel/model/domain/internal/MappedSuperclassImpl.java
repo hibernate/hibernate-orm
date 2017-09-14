@@ -22,9 +22,6 @@ import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 
 /**
@@ -129,14 +126,6 @@ public class MappedSuperclassImpl<J>
 	@Override
 	public Class<J> getJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
-	}
-
-	@Override
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		throw new NotYetImplementedException(  );
 	}
 
 	@Override

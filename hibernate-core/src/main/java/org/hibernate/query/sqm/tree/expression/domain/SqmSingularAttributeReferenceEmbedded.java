@@ -41,6 +41,7 @@ public class SqmSingularAttributeReferenceEmbedded
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
+		// todo (6.0) : define a QueryResultProducer that is also a tuple of SqlSelections (SqlSelectionGroup
 		return walker.visitEmbeddableValuedSingularAttribute( this );
 	}
 

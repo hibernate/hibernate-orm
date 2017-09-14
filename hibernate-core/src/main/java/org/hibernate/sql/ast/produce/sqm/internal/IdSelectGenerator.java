@@ -16,7 +16,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
@@ -24,7 +24,6 @@ import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
@@ -53,7 +52,7 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 		// Ask the entity descriptor to create a TableGroup.  This TableGroup
 		//		will contain all the individual TableReferences we need..
 		final EntityTableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
-				new TableGroupInfoSource() {
+				new TableGroupInfo() {
 					@Override
 					public String getUniqueIdentifier() {
 						return sourceSqmStatement.getEntityFromElement().getUniqueIdentifier();

@@ -90,12 +90,4 @@ public class TenantDiscriminationImpl implements TenantDiscrimination {
 	public boolean isUseParameterBinding() {
 		return useParameterBinding;
 	}
-
-	@Override
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		return null;
-	}
 }

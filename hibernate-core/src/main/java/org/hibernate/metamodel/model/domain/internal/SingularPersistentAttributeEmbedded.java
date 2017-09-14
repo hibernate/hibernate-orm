@@ -22,22 +22,13 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.results.internal.CompositeFetchImpl;
-import org.hibernate.sql.results.internal.CompositeQueryResultImpl;
-import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
-import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
@@ -142,15 +133,6 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	}
 
 	@Override
-	public QueryResult createQueryResult(
-			TableReference tableReference,
-			SqmNavigableReference navigableReference,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		return new CompositeQueryResultImpl( resultVariable, embeddedDescriptor );
-	}
-
-	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
 			SqlExpressionQualifier qualifier,
@@ -165,21 +147,6 @@ public class SingularPersistentAttributeEmbedded<O,J>
 				fetchStrategy,
 				creationContext
 		);
-	}
-
-	@Override
-	public SqlSelectionGroup resolveSqlSelectionGroup(
-			SqlExpressionQualifier qualifier,
-			SqlSelectionGroupResolutionContext resolutionContext) {
-		final SqlSelectionGroup group = new SqlSelectionGroupImpl();
-		for ( Column column : embeddedDescriptor.collectColumns() ) {
-			resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
-					qualifier,
-					column
-			);
-		}
-
-		return group;
 	}
 
 	@Override

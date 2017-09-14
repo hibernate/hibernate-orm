@@ -24,13 +24,18 @@ import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 import org.hibernate.sql.results.spi.Selectable;
 import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
+ * Representation of a function call in the SQL AST for impls that know how to
+ * render themselves.
+ *
  * @author Steve Ebersole
  */
-public class SelfRenderingFunctionSqlAstExpression implements SelfRenderingExpression, Selectable, SqlExpressable {
+public class SelfRenderingFunctionSqlAstExpression
+		implements SelfRenderingExpression, Selectable, SqlExpressable, QueryResultProducer {
 	private final SelfRenderingSqmFunction sqmExpression;
 	private final List<Expression> sqlAstArguments;
 
@@ -66,14 +71,14 @@ public class SelfRenderingFunctionSqlAstExpression implements SelfRenderingExpre
 		);
 	}
 
+
 	@Override
 	public QueryResult createQueryResult(
-			Expression expression,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		return new ScalarQueryResultImpl(
 				resultVariable,
-				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression),
+				creationContext.getSqlSelectionResolver().resolveSqlSelection( this ),
 				(BasicValuedExpressableType) getType()
 		);
 	}

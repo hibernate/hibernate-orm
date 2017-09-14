@@ -17,7 +17,6 @@ import org.hibernate.metamodel.model.domain.spi.BasicCollectionElement;
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
@@ -80,28 +79,6 @@ public class BasicCollectionElementImpl<J>
 	}
 
 	@Override
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		assert expression instanceof NavigableReference;
-		final NavigableReference navigableReference = (NavigableReference) expression;
-
-		assert this.equals( navigableReference.getNavigable() );
-
-		return new ScalarQueryResultImpl(
-				resultVariable,
-				creationContext.getSqlSelectionResolver().resolveSqlSelection(
-						creationContext.getSqlSelectionResolver().resolveSqlExpression(
-								navigableReference.getSqlExpressionQualifier(),
-								getBoundColumn()
-						)
-				),
-				getBasicType()
-		);
-	}
-
-	@Override
 	public Column getBoundColumn() {
 		return column;
 	}
@@ -119,5 +96,23 @@ public class BasicCollectionElementImpl<J>
 	@Override
 	public ValueExtractor getValueExtractor() {
 		return basicType.getValueExtractor();
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			NavigableReference navigableReference,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		assert this.equals( navigableReference.getNavigable() );
+		return new ScalarQueryResultImpl(
+				resultVariable,
+				creationContext.getSqlSelectionResolver().resolveSqlSelection(
+						creationContext.getSqlSelectionResolver().resolveSqlExpression(
+								navigableReference.getSqlExpressionQualifier(),
+								getBoundColumn()
+						)
+				),
+				this
+		);
 	}
 }

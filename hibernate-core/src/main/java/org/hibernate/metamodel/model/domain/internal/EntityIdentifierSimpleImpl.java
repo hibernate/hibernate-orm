@@ -24,6 +24,7 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
@@ -128,14 +129,14 @@ public class EntityIdentifierSimpleImpl<O,J>
 
 	@Override
 	public QueryResult createQueryResult(
-			Expression expression,
+			NavigableReference navigableReference,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		return new ScalarQueryResultImpl(
 				resultVariable,
 				creationContext.getSqlSelectionResolver().resolveSqlSelection(
 						creationContext.getSqlSelectionResolver().resolveSqlExpression(
-								creationContext.currentColumnReferenceSource(),
+								navigableReference.getSqlExpressionQualifier(),
 								column
 						)
 				),

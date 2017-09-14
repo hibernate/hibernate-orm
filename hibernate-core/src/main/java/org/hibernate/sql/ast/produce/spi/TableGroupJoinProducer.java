@@ -7,8 +7,7 @@
 package org.hibernate.sql.ast.produce.spi;
 
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 
 /**
@@ -34,7 +33,7 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 	 * @return The generated TableGroupJoin
 	 */
 	TableGroupJoin createTableGroupJoin(
-			TableGroupInfoSource tableGroupInfoSource,
+			TableGroupInfo tableGroupInfoSource,
 			JoinType joinType,
 			JoinedTableGroupContext tableGroupJoinContext);
 }

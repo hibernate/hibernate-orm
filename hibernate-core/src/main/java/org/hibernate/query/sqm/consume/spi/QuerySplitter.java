@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.query.sqm.ParsingException;
@@ -18,17 +19,17 @@ import org.hibernate.query.sqm.produce.internal.NavigableBindingHelper;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmConcat;
 import org.hibernate.query.sqm.tree.expression.SqmConstantEnum;
 import org.hibernate.query.sqm.tree.expression.SqmConstantFieldReference;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralBigDecimal;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralBigInteger;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralCharacter;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralDouble;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralFalse;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralFloat;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralInteger;
@@ -38,7 +39,6 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralString;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralTrue;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
@@ -81,8 +81,6 @@ import org.hibernate.query.sqm.tree.predicate.OrSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
-import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
-import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.set.SqmAssignment;
@@ -97,7 +95,9 @@ import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
  * @author Steve Ebersole
  */
 public class QuerySplitter {
-	public static SqmSelectStatement[] split(SqmSelectStatement statement) {
+	public static SqmSelectStatement[] split(
+			SqmSelectStatement statement,
+			SessionFactoryImplementor sessionFactory) {
 		// We only allow unmapped polymorphism in a very restricted way.  Specifically,
 		// the unmapped polymorphic reference can only be a root and can be the only
 		// root.  Use that restriction to locate the unmapped polymorphic reference
@@ -121,7 +121,8 @@ public class QuerySplitter {
 			final UnmappedPolymorphismReplacer replacer = new UnmappedPolymorphismReplacer(
 					statement,
 					unmappedPolymorphicReference,
-					mappedDescriptor
+					mappedDescriptor,
+					sessionFactory
 			);
 			expanded[i] = replacer.visitSelectStatement( statement );
 		}
@@ -140,14 +141,11 @@ public class QuerySplitter {
 		private UnmappedPolymorphismReplacer(
 				SqmSelectStatement selectStatement,
 				SqmRoot unmappedPolymorphicFromElement,
-				EntityDescriptor mappedDescriptor) {
+				EntityDescriptor mappedDescriptor,
+				SessionFactoryImplementor sessionFactory) {
+			super( sessionFactory );
 			this.unmappedPolymorphicFromElement = unmappedPolymorphicFromElement;
 			this.mappedDescriptor = mappedDescriptor;
-		}
-
-		@Override
-		public SqmStatement visitStatement(SqmStatement statement) {
-			throw new UnsupportedOperationException( "Not valid" );
 		}
 
 		@Override
@@ -345,7 +343,8 @@ public class QuerySplitter {
 
 			final SqmAttributeReference attributeBindingCopy = (SqmAttributeReference) NavigableBindingHelper.createNavigableBinding(
 					sourceBindingCopy,
-					fromElement.getAttributeReference().getReferencedNavigable()
+					fromElement.getAttributeReference().getReferencedNavigable(),
+					null
 			);
 
 			final SqmAttributeJoin copy = new SqmAttributeJoin(
@@ -367,22 +366,8 @@ public class QuerySplitter {
 			for ( SqmSelection selection : selectClause.getSelections() ) {
 				copy.addSelection(
 						new SqmSelection(
-								(SqmExpression) selection.getWrappedNode().accept( this ),
+								(SqmExpression) selection.getSelectableNode().accept( this ),
 								selection.getAlias()
-						)
-				);
-			}
-			return copy;
-		}
-
-		@Override
-		public SqmDynamicInstantiation visitDynamicInstantiation(SqmDynamicInstantiation dynamicInstantiation) {
-			SqmDynamicInstantiation copy = dynamicInstantiation.makeShallowCopy();
-			for ( SqmDynamicInstantiationArgument aliasedArgument : dynamicInstantiation.getArguments() ) {
-				copy.addArgument(
-						new SqmDynamicInstantiationArgument(
-								(SqmExpression) aliasedArgument.getWrappedNode().accept( this ),
-								aliasedArgument.getAlias()
 						)
 				);
 			}
@@ -791,7 +776,7 @@ public class QuerySplitter {
 		@Override
 		@SuppressWarnings("unchecked")
 		public SqmConstantFieldReference visitConstantFieldReference(SqmConstantFieldReference expression) {
-			return new SqmConstantFieldReference( expression.getSourceField(), expression.getValue(), expression.getExpressableType() );
+			return new SqmConstantFieldReference( expression.getSourceField(), expression.getLiteralValue(), expression.getExpressableType() );
 		}
 
 		@Override
@@ -809,7 +794,7 @@ public class QuerySplitter {
 			return new SqmSubQuery(
 					visitQuerySpec( expression.getQuerySpec() ),
 					// assume already validated
-					expression.getQuerySpec().getSelectClause().getSelections().get( 0 ).getWrappedNode().getExpressionType()
+					expression.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode().getExpressionType()
 			);
 		}
 	}

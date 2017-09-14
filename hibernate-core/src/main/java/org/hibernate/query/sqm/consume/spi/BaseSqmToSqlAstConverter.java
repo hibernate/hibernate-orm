@@ -169,6 +169,7 @@ import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
@@ -191,6 +192,7 @@ public abstract class BaseSqmToSqlAstConverter
 		SUBQUERY
 	}
 
+	private final SqlAstBuildingContext sqlAstBuildingContext;
 	private final QueryOptions queryOptions;
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
@@ -208,8 +210,13 @@ public abstract class BaseSqmToSqlAstConverter
 	public BaseSqmToSqlAstConverter(
 			SqlAstBuildingContext sqlAstBuildingContext,
 			QueryOptions queryOptions) {
-		super( sqlAstBuildingContext );
+		super( sqlAstBuildingContext.getSessionFactory() );
+		this.sqlAstBuildingContext = sqlAstBuildingContext;
 		this.queryOptions = queryOptions;
+	}
+
+	public SqlAstBuildingContext getSqlAstBuildingContext() {
+		return sqlAstBuildingContext;
 	}
 
 	protected QuerySpec currentQuerySpec() {
@@ -317,6 +324,25 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public Expression resolveSqlExpression(NonQualifiableSqlExpressable sqlSelectable) {
 		return normalizeSqlExpression( sqlSelectable.createExpression() );
+	}
+
+	@Override
+	public SqlSelection resolveSqlSelection(Expression expression) {
+		final Map<SqlExpressable,SqlSelection> sqlSelectionMap = sqlSelectionMapByQuerySpec.computeIfAbsent(
+				currentQuerySpec(),
+				k -> new HashMap<>()
+		);
+
+		final SqlSelection existing = sqlSelectionMap.get( expression );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final SqlSelection sqlSelection = expression.createSqlSelection( sqlSelectionMap.size() );
+		currentQuerySpec().getSelectClause().addSqlSelection( sqlSelection );
+		sqlSelectionMap.put( expression, sqlSelection );
+
+		return sqlSelection;
 	}
 
 

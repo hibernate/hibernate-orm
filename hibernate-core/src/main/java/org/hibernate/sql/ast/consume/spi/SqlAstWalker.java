@@ -97,15 +97,15 @@ public interface SqlAstWalker {
 
 	void visitTableReferenceJoin(TableReferenceJoin tableReferenceJoin);
 
-	void visitEntityExpression(EntityReference entityExpression);
-
-	void visitSingularAttributeReference(SingularAttributeReference attributeExpression);
-
-	void visitPluralAttribute(PluralAttributeReference pluralAttributeReference);
-
-	void visitPluralAttributeElement(PluralAttributeElementReference elementExpression);
-
-	void visitPluralAttributeIndex(PluralAttributeIndexReference indexExpression);
+//	void visitEntityExpression(EntityReference entityExpression);
+//
+//	void visitSingularAttributeReference(SingularAttributeReference attributeExpression);
+//
+//	void visitPluralAttribute(PluralAttributeReference pluralAttributeReference);
+//
+//	void visitPluralAttributeElement(PluralAttributeElementReference elementExpression);
+//
+//	void visitPluralAttributeIndex(PluralAttributeIndexReference indexExpression);
 
 	void visitColumnReference(ColumnReference columnReference);
 

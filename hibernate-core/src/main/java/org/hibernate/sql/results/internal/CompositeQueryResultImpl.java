@@ -16,6 +16,7 @@ import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.InitializerCollector;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelectionGroup;
 
 /**
  * @author Steve Ebersole
@@ -27,13 +28,14 @@ public class CompositeQueryResultImpl extends AbstractFetchParent implements Com
 
 	public CompositeQueryResultImpl(
 			String resultVariable,
-			EmbeddedValuedNavigable navigable) {
+			EmbeddedValuedNavigable navigable,
+			SqlSelectionGroup sqlSelections) {
 		super( navigable, new NavigablePath( navigable.getEmbeddedDescriptor().getRoleName() ) );
 		this.resultVariable = resultVariable;
 
 		this.assembler = new CompositeQueryResultAssembler(
 				this,
-				null,
+				sqlSelections.getSqlSelections(),
 				navigable.getEmbeddedDescriptor()
 		);
 	}

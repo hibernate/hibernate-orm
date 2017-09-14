@@ -26,18 +26,20 @@ import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey.ColumnMappings;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEntity;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.results.internal.EntityFetchImpl;
@@ -190,13 +192,19 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
+	public SqmNavigableReference createSqmExpression(
+			SqmFrom sourceSqmFrom,
+			SqmReferenceCreationContext creationContext) {
+		return new SqmSingularAttributeReferenceEntity(  );
+		return null;
+	}
+
+	@Override
 	public QueryResult createQueryResult(
-			TableReference tableReference,
-			SqmNavigableReference navigableReference,
+			NavigableReference navigableReference,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		return entityDescriptor.createQueryResult(
-				tableReference,
 				navigableReference,
 				resultVariable,
 				creationContext
@@ -266,7 +274,7 @@ public class SingularPersistentAttributeEntity<O,J>
 
 	@Override
 	public TableGroupJoin createTableGroupJoin(
-			TableGroupInfoSource tableGroupInfoSource,
+			TableGroupInfo tableGroupInfoSource,
 			JoinType joinType,
 			JoinedTableGroupContext tableGroupJoinContext) {
 		throw new NotYetImplementedException(  );

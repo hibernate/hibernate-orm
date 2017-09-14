@@ -22,22 +22,23 @@ public abstract class AbstractSqmSingularAttributeReference
 		super( navigableContainerReference, referencedNavigable );
 	}
 
+
 	public AbstractSqmSingularAttributeReference(SqmAttributeJoin fromElement) {
 		super( fromElement );
 	}
 
 	@Override
 	public String getUniqueIdentifier() {
-		return null;
+		return getExportedFromElement().getUniqueIdentifier();
 	}
 
 	@Override
 	public String getIdentificationVariable() {
-		return null;
+		return getExportedFromElement().getIdentificationVariable();
 	}
 
 	@Override
 	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
-		return null;
+		return getExportedFromElement().getIntrinsicSubclassEntityMetadata();
 	}
 }

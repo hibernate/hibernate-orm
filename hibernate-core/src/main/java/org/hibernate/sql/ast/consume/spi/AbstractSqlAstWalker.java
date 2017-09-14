@@ -328,48 +328,48 @@ public abstract class AbstractSqlAstWalker
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Expressions
 
-	@Override
-	public void visitSingularAttributeReference(SingularAttributeReference attributeExpression) {
-		// todo : this needs to operate differently in different contexts (mainly for associations)
-		//		e.g...
-		//			1) In the select clause we should render the complete column bindings for associations
-		//			2) In join predicates
-		renderColumnBindings( attributeExpression.getColumnReferences() );
-	}
-
-	private void renderColumnBindings(List<ColumnReference> columnBindings) {
-		if ( currentlyInPredicate && columnBindings.size() > 1 ) {
-			appendSql( "(" );
-		}
-
-		for ( ColumnReference columnBinding : columnBindings ) {
-			appendSql( columnBinding.getColumn().render( columnBinding.getIdentificationVariable() ) );
-		}
-
-		if ( currentlyInPredicate && columnBindings.size() > 1 ) {
-			appendSql( ")" );
-		}
-	}
-
-	@Override
-	public void visitEntityExpression(EntityReference entityExpression) {
-		renderColumnBindings( entityExpression.getColumnReferences() );
-	}
-
-	@Override
-	public void visitPluralAttributeElement(PluralAttributeElementReference elementExpression) {
-		renderColumnBindings( elementExpression.getColumnReferences() );
-
-	}
-
-	@Override
-	public void visitPluralAttributeIndex(PluralAttributeIndexReference indexExpression) {
-		renderColumnBindings( indexExpression.getColumnReferences() );
-	}
+//	@Override
+//	public void visitSingularAttributeReference(SingularAttributeReference attributeExpression) {
+//		// todo : this needs to operate differently in different contexts (mainly for associations)
+//		//		e.g...
+//		//			1) In the select clause we should render the complete column bindings for associations
+//		//			2) In join predicates
+//		renderColumnBindings( attributeExpression.getColumnReferences() );
+//	}
+//
+//	private void renderColumnBindings(List<ColumnReference> columnBindings) {
+//		if ( currentlyInPredicate && columnBindings.size() > 1 ) {
+//			appendSql( "(" );
+//		}
+//
+//		for ( ColumnReference columnBinding : columnBindings ) {
+//			appendSql( columnBinding.getColumn().render( columnBinding.getIdentificationVariable() ) );
+//		}
+//
+//		if ( currentlyInPredicate && columnBindings.size() > 1 ) {
+//			appendSql( ")" );
+//		}
+//	}
+//
+//	@Override
+//	public void visitEntityExpression(EntityReference entityExpression) {
+//		renderColumnBindings( entityExpression.getColumnReferences() );
+//	}
+//
+//	@Override
+//	public void visitPluralAttributeElement(PluralAttributeElementReference elementExpression) {
+//		renderColumnBindings( elementExpression.getColumnReferences() );
+//
+//	}
+//
+//	@Override
+//	public void visitPluralAttributeIndex(PluralAttributeIndexReference indexExpression) {
+//		renderColumnBindings( indexExpression.getColumnReferences() );
+//	}
 
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
-		appendSql( columnReference.getColumn().render( columnReference.getIdentificationVariable() ) );
+		appendSql( columnReference.renderSqlFragment() );
 	}
 
 
@@ -875,11 +875,11 @@ public abstract class AbstractSqlAstWalker
 		expression.renderToSql( sqlAppender, this, getSessionFactory() );
 	}
 
-	@Override
-	public void visitPluralAttribute(PluralAttributeReference pluralAttributeReference) {
-		// todo (6.0) - is this valid in the general sense?  Or specific to things like order-by rendering?
-		//		long story short... what should we do here?
-	}
+//	@Override
+//	public void visitPluralAttribute(PluralAttributeReference pluralAttributeReference) {
+//		// todo (6.0) - is this valid in the general sense?  Or specific to things like order-by rendering?
+//		//		long story short... what should we do here?
+//	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.spi;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 
@@ -26,5 +26,5 @@ public interface RootTableGroupProducer extends TableGroupProducer {
 	 *
 	 * @return The generated EntityTableGroup
 	 */
-	TableGroup createRootTableGroup(TableGroupInfoSource tableGroupInfo, RootTableGroupContext tableGroupContext);
+	TableGroup createRootTableGroup(TableGroupInfo tableGroupInfo, RootTableGroupContext tableGroupContext);
 }

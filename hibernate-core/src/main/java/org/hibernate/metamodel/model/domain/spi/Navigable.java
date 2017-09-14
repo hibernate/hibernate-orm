@@ -7,11 +7,16 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
+import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 
 /**
  * Models a "piece" of the application's domain model that can be navigated
@@ -53,27 +58,32 @@ public interface Navigable<T> extends DomainType<T> {
 	//			2) ( (QueryResultProducer) SqmNavigableReference ) -> QueryResult
 	//			3) ( (Fetchable) Navigable ) -> Fetch(FetchParent)
 	//
+	// see NavigableBindingHelper.createNavigableBinding
+	//
 	//		something like:
-	SqmNavigableReference createSqmExpression(SqmFrom sourceSqmFrom, SomeCreationContext creationContext);
+	default SqmNavigableReference createSqmExpression(
+			SqmFrom sourceSqmFrom,
+			SqmNavigableContainerReference containerReference,
+			SqmReferenceCreationContext creationContext) {
+		throw new NotYetImplementedException(  );
+	}
 
-	interface SomeCreationContext {
+	interface SqmReferenceCreationContext {
 		// org.hibernate.query.sqm.produce.spi.ParsingContext?
 		// org.hibernate.query.sqm.produce.spi.ResolutionContext?
 		// a new `SqmNodeCreationContext`?
 	}
 
-	QueryResult createQueryResult(
-			TableReference tableReference,
-			SqmNavigableReference navigableReference,
+	default QueryResult createQueryResult(
+			NavigableReference navigableReference,
 			String resultVariable,
-			QueryResultCreationContext creationContext);
-	// ^^ or possibly have SqmNavigableReference expose its TableReference
-	//		I like this (^^) option better
-	//
-	// todo (6.0) : ^^ not TableReference.  The way this should work is through FromClauseIndex and being able to resolve the TableGroup/ColumnReferenceSource here based on the SqmFrom#uniqueIdentifier
-	//		perhaps best option is to resolve this ColumnReferenceSource as part
-	//		of SqmNavigableReference generation of a QueryResult (via QueryResultProducer)
-	//		and pass that in here
+			QueryResultCreationContext creationContext) {
+		throw new NotYetImplementedException(  );
+	}
+
+	SqlSelectionGroup resolveSqlSelectionGroup(
+			SqlExpressionQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext);
 
 	/**
 	 * Obtain a loggable representation.

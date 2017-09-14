@@ -142,7 +142,8 @@ public class ParsingContext {
 				navigable,
 				k -> NavigableBindingHelper.createNavigableBinding(
 						lhs,
-						navigable
+						navigable,
+						null
 				)
 		);
 	}

@@ -10,8 +10,6 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
 
 /**
@@ -34,16 +32,6 @@ public class SingularAttributeReference implements NavigableReference {
 
 	public SingularPersistentAttribute<?,?> getReferencedAttribute() {
 		return referencedAttribute;
-	}
-
-	@Override
-	public ExpressableType getType() {
-		return referencedAttribute;
-	}
-
-	@Override
-	public void accept(SqlAstWalker walker) {
-		walker.visitSingularAttributeReference( this );
 	}
 
 	@Override

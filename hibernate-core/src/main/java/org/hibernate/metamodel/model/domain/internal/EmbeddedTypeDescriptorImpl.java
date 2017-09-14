@@ -28,10 +28,6 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.internal.CompositeQueryResultImpl;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
@@ -161,19 +157,6 @@ public class EmbeddedTypeDescriptorImpl<T>
 	@Override
 	public void visitNavigable(NavigableVisitationStrategy visitor) {
 		throw new UnsupportedOperationException(  );
-	}
-
-
-	@Override
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		return new CompositeQueryResultImpl(
-				// todo (6.0) : this constructor needs a lot of work
-				resultVariable,
-				this
-		);
 	}
 
 	@Override

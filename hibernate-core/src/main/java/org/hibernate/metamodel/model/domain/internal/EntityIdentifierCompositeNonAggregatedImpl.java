@@ -13,7 +13,6 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
@@ -23,7 +22,7 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.property.access.internal.PropertyAccessStrategyEmbeddedImpl;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
@@ -154,7 +153,7 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 
 	@Override
 	public QueryResult createQueryResult(
-			Expression expression,
+			NavigableReference expression,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		return embeddedDescriptor.createQueryResult(

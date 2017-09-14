@@ -81,30 +81,63 @@ public class NavigableBindingHelper {
 		return exporter.getExportedFromElement() == null ? null : exporter.getExportedFromElement() .getContainingSpace();
 	}
 
-	public static SqmNavigableReference createNavigableBinding(SqmNavigableContainerReference source, Navigable navigable) {
-		if ( navigable instanceof EntityIdentifier ) {
-			assert source instanceof SqmEntityTypedReference;
-			return createEntityIdentiferBinding( (SqmEntityTypedReference) source, (EntityIdentifier) navigable );
-		}
-		else if ( navigable instanceof SingularPersistentAttribute ) {
-			return createSingularAttributeBinding( source, (SingularPersistentAttribute) navigable );
-		}
-		else if ( navigable instanceof PluralPersistentAttribute ) {
-			return createPluralAttributeBinding( source, (PluralPersistentAttribute) navigable );
-		}
-		else if ( navigable instanceof CollectionElement ) {
-			return createCollectionElementBinding( source, (CollectionElement) navigable );
-		}
-		else if ( navigable instanceof CollectionIndex ) {
-			return createCollectionIndexBinding( source, (CollectionIndex) navigable );
-		}
-		else if ( navigable instanceof EntityValuedExpressableType ) {
-			// for anything else source should be null
-			assert source == null;
-			return createEntityBinding( (EntityValuedExpressableType) navigable );
-		}
+	//  `select p.age from Person p`
+	//	`select p.name from Person p`
+	//	`select p.address from Person p`
+	//	`select p.children from Person p`
 
-		throw new ParsingException( "Unexpected SqmNavigable for creation of NavigableBinding : " + navigable );
+	public static SqmNavigableReference createNavigableBinding(
+			SqmNavigableContainerReference source,
+			Navigable navigable,
+			Navigable.SqmReferenceCreationContext creationContext) {
+		// the source's `#getExportedFromElement` is always the from-element that "lhs" for any navigable reference -
+		// 	it is ultimately the thing used to "qualify" the reference values in the generated SQL.
+		//
+		// In cases where the navigable is basic or composite valued, this is pretty straight-forward
+		//
+		// In entity-valued-navigable cases
+
+		//		2)
+		//  `select p.age from Person p`
+		//		source = the nav-ref for the (Person p) SqmFrom - its #getExportedFrom is the (Person p)
+		//		navigable is the Person#age attribute
+
+
+		//	`select p.name from Person p`
+
+
+		return navigable.createSqmExpression( source.getExportedFromElement(), source, creationContext );
+
+
+		//	`select p.address from Person p`
+		//	`select p.children from Person p`
+
+
+
+
+//		if ( navigable instanceof EntityIdentifier ) {
+//			assert source instanceof SqmEntityTypedReference;
+//			return createEntityIdentiferBinding( (SqmEntityTypedReference) source, (EntityIdentifier) navigable );
+//		}
+//		else if ( navigable instanceof SingularPersistentAttribute ) {
+//			return createSingularAttributeBinding( source, (SingularPersistentAttribute) navigable );
+//		}
+//		else if ( navigable instanceof PluralPersistentAttribute ) {
+//			return createPluralAttributeBinding( source, (PluralPersistentAttribute) navigable );
+//		}
+//		else if ( navigable instanceof CollectionElement ) {
+//			return createCollectionElementBinding( source, (CollectionElement) navigable );
+//		}
+//		else if ( navigable instanceof CollectionIndex ) {
+//			return createCollectionIndexBinding( source, (CollectionIndex) navigable );
+//		}
+//		else if ( navigable instanceof EntityValuedExpressableType ) {
+//			// for anything else source should be null
+//			assert source == null;
+//			return createEntityBinding( (EntityValuedExpressableType) navigable );
+//		}
+//
+//		throw new ParsingException( "Unexpected SqmNavigable for creation of NavigableBinding : " + navigable );
 	}
 
 	private static SqmEntityIdentifierReference createEntityIdentiferBinding(

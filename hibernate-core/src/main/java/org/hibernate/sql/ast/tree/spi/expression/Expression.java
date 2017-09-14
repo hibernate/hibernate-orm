@@ -19,11 +19,22 @@ import org.hibernate.sql.results.spi.SqlSelectionProducer;
  * the easier later while processing the SQL AST to generate the appropriate
  * {@link org.hibernate.sql.exec.spi.JdbcOperation}
  *
+ * todo (6.0) : ^^ this is not strictly true anymore.
+ * 		we now use QueryResultProducer (via NavigableReference) for the discussed
+ * 		purpose, but these are not Expression implementors and are used
+ * 		only in SQM -> SQL AST conversion for generation of QueryResults.
+ * 		See discussion on SqmSelectableNode#accept
+ *
+ *
  *
  *
  * @author Steve Ebersole
  */
 public interface Expression extends SqlAstNode, SqlSelectionProducer {
+	// todo (6.0) : does it make sense for this to be an ExpressableType?
+	//		ExpressableType is more of a domain/SQM construct.  At the SQL level,
+	//		"tuples" aside, a BasicType or JavaTypeDescriptor makes more sense.
+
 	/**
 	 * Access the type for this expression.  See {@link ExpressableType}
 	 * for more detailed description.

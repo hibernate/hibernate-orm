@@ -24,7 +24,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
@@ -104,7 +104,7 @@ public class SqmUpdateToSqlAstConverterMultiTable
 		//		in the query so that we know some context for these assigned values.
 
 		this.entityTableGroup = entityDescriptor.createRootTableGroup(
-				new TableGroupInfoSource() {
+				new TableGroupInfo() {
 					@Override
 					public String getUniqueIdentifier() {
 						return sqmStatement.getEntityFromElement().getUniqueIdentifier();

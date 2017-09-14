@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -38,6 +39,11 @@ public class SelfRenderingSqmFunction implements SqlAstFunctionProducer {
 		this.renderingSupport = null;
 		this.sqmArguments = sqmArguments;
 		this.impliedResultType = impliedResultType;
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getExpressableType().getJavaTypeDescriptor();
 	}
 
 	@Override

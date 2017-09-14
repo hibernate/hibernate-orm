@@ -28,7 +28,6 @@ import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -56,11 +55,10 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
@@ -259,11 +257,6 @@ public abstract class AbstractEntityDescriptor<T>
 	@Override
 	public Class<T> getBindableJavaType() {
 		return getJavaType();
-	}
-
-	@Override
-	public EntityDataAccess getCacheAccessStrategy() {
-		return getHierarchy().getEntityCacheAccess();
 	}
 
 	@Override
@@ -478,7 +471,7 @@ public abstract class AbstractEntityDescriptor<T>
 	}
 
 	@Override
-	public EntityTableGroup createRootTableGroup(TableGroupInfoSource info, RootTableGroupContext tableGroupContext) {
+	public EntityTableGroup createRootTableGroup(TableGroupInfo info, RootTableGroupContext tableGroupContext) {
 		final SqlAliasBase sqlAliasBase = tableGroupContext.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
 
 		final TableReference primaryTableReference = resolvePrimaryTableReference( sqlAliasBase );
@@ -575,11 +568,10 @@ public abstract class AbstractEntityDescriptor<T>
 
 	@Override
 	public QueryResult createQueryResult(
-			Expression selectedExpression,
+			NavigableReference navigableReference,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
-		assert selectedExpression instanceof EntityValuedNavigable;
-		final NavigableReference navigableReference = (NavigableReference) selectedExpression;
+		assert navigableReference.getNavigable() instanceof EntityValuedNavigable;
 
 		return new EntityQueryResultImpl(
 				(EntityValuedNavigable) navigableReference.getNavigable(),
@@ -677,6 +669,6 @@ public abstract class AbstractEntityDescriptor<T>
 
 	@Override
 	public boolean hasNaturalIdentifier() {
-		return getHierarchy().getNaturalIdentifierDescriptor() != null;
+		return getHierarchy().getNaturalIdDescriptor() != null;
 	}
 }

@@ -22,7 +22,7 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
@@ -112,7 +112,7 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 
 	@Override
 	public QueryResult createQueryResult(
-			Expression expression,
+			NavigableReference expression,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		return embeddedMetadata.createQueryResult(

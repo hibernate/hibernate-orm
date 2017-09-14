@@ -41,7 +41,7 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorClassRes
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorFactory;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
@@ -221,7 +221,7 @@ public interface EntityDescriptor<T>
 	}
 
 	@Override
-	EntityTableGroup createRootTableGroup(TableGroupInfoSource info, RootTableGroupContext tableGroupContext);
+	EntityTableGroup createRootTableGroup(TableGroupInfo info, RootTableGroupContext tableGroupContext);
 
 
 	String[] getAffectedTableNames();

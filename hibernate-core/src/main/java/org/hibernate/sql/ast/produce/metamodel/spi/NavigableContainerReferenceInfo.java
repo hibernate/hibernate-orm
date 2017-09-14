@@ -9,6 +9,8 @@ package org.hibernate.sql.ast.produce.metamodel.spi;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 
 /**
+ * A container for NavigableReferenceInfo objects
+ *
  * @author Steve Ebersole
  */
 public interface NavigableContainerReferenceInfo extends NavigableReferenceInfo {

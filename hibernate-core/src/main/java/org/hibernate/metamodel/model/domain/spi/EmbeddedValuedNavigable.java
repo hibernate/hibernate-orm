@@ -8,7 +8,16 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValueExpressableType;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionQualifier;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.results.internal.CompositeQueryResultImpl;
+import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
@@ -28,5 +37,35 @@ public interface EmbeddedValuedNavigable<J> extends EmbeddedValueExpressableType
 	@Override
 	default Type.PersistenceType getPersistenceType() {
 		return Type.PersistenceType.EMBEDDABLE;
+	}
+
+	@Override
+	default QueryResult createQueryResult(
+			NavigableReference navigableReference,
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return new CompositeQueryResultImpl(
+				resultVariable,
+				getEmbeddedDescriptor(),
+				resolveSqlSelectionGroup(
+						navigableReference.getSqlExpressionQualifier(),
+						creationContext
+				)
+		);
+	}
+
+	@Override
+	default SqlSelectionGroup resolveSqlSelectionGroup(
+			SqlExpressionQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext) {
+		final SqlSelectionGroup group = new SqlSelectionGroupImpl();
+		for ( Column column : getEmbeddedDescriptor().collectColumns() ) {
+			resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
+					qualifier,
+					column
+			);
+		}
+
+		return group;
 	}
 }

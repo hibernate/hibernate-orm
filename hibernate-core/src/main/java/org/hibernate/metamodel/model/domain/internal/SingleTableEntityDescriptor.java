@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +20,6 @@ import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -32,16 +30,15 @@ import org.hibernate.loader.spi.MultiLoadOptions;
 import org.hibernate.loader.spi.NaturalIdLoader;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractEntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.type.Type;
@@ -61,14 +58,13 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 
 	@Override
 	public SqmNavigableReference createSqmExpression(
-			SqmFrom sourceSqmFrom, SomeCreationContext creationContext) {
+			SqmFrom sourceSqmFrom, SqmReferenceCreationContext creationContext) {
 		throw new NotYetImplementedException(  );
 	}
 
 	@Override
 	public QueryResult createQueryResult(
-			TableReference tableReference,
-			SqmNavigableReference navigableReference,
+			NavigableReference navigableReference,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
 		throw new NotYetImplementedException(  );

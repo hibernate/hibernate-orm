@@ -10,9 +10,6 @@ import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementEmbedded;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 import org.jboss.logging.Logger;
 

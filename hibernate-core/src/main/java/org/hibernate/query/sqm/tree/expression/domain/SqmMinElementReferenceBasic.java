@@ -9,9 +9,6 @@ package org.hibernate.query.sqm.tree.expression.domain;
 import org.hibernate.metamodel.model.domain.spi.BasicCollectionElement;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * @author Steve Ebersole

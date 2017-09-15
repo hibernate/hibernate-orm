@@ -8,9 +8,6 @@ package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.CollectionIndexEntity;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 import org.jboss.logging.Logger;
 

@@ -8,10 +8,9 @@ package org.hibernate.query.sqm.tree.internal;
 
 import java.util.Locale;
 
-import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 
 /**
  * @author Steve Ebersole

@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
@@ -16,7 +15,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
  *
  * @author Steve Ebersole
  */
-public interface SqmExpression extends SqmSelectableNode, SqmTypedNode {
+public interface SqmExpression extends SqmSelectableNode {
 	/**
 	 * Obtain reference to the expression's ExpressableType
 	 *

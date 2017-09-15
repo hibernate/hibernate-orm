@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.internal;
 
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 

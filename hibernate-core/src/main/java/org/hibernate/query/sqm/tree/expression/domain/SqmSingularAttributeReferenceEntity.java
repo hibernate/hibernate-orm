@@ -10,11 +10,6 @@ import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttribute
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * `select p1.address, p2.address from Person p1, Person p2`

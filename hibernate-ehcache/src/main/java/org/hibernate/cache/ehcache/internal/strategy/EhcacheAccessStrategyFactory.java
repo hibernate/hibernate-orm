@@ -6,6 +6,7 @@
  */
 package org.hibernate.cache.ehcache.internal.strategy;
 
+import org.hibernate.cache.ehcache.internal.regions.DomainDataRegionImpl;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheNaturalIdRegion;
@@ -25,37 +26,37 @@ public interface EhcacheAccessStrategyFactory {
 	/**
 	 * Create {@link EntityDataAccess} for the input {@link EhcacheEntityRegion} and {@link AccessType}
 	 *
-	 * @param entityRegion The entity region being wrapped
+	 * @param region The region being accessed
 	 * @param accessType The type of access to allow to the region
 	 *
 	 * @return the created {@link EntityDataAccess}
 	 */
-	public EntityDataAccess createEntityRegionAccessStrategy(
-			EhcacheEntityRegion entityRegion,
+	EntityDataAccess createEntityRegionAccessStrategy(
+			DomainDataRegionImpl region,
 			AccessType accessType);
 
 	/**
 	 * Create {@link CollectionDataAccess} for the input {@link EhcacheCollectionRegion} and {@link AccessType}
 	 *
-	 * @param collectionRegion The collection region being wrapped
+	 * @param region The region being accessed
 	 * @param accessType The type of access to allow to the region
 	 *
 	 * @return the created {@link CollectionDataAccess}
 	 */
-	public CollectionDataAccess createCollectionRegionAccessStrategy(
-			EhcacheCollectionRegion collectionRegion,
+	CollectionDataAccess createCollectionRegionAccessStrategy(
+			DomainDataRegionImpl region,
 			AccessType accessType);
 
 	/**
 	 * Create {@link NaturalIdDataAccess} for the input {@link EhcacheNaturalIdRegion} and {@link AccessType}
 	 *
-	 * @param naturalIdRegion The natural-id region being wrapped
+	 * @param region The region being accessed
 	 * @param accessType The type of access to allow to the region
 	 *
 	 * @return the created {@link NaturalIdDataAccess}
 	 */
-	public NaturalIdDataAccess createNaturalIdRegionAccessStrategy(
-			EhcacheNaturalIdRegion naturalIdRegion,
+	NaturalIdDataAccess createNaturalIdRegionAccessStrategy(
+			DomainDataRegionImpl region,
 			AccessType accessType);
 
 }

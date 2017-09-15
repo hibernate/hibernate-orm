@@ -58,6 +58,7 @@ public abstract class AbstractDomainDataRegion implements DomainDataRegion {
 		return sessionFactory;
 	}
 
+	@Override
 	public RegionFactory getRegionFactory() {
 		return regionFactory;
 	}

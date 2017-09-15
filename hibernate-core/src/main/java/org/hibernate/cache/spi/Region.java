@@ -68,6 +68,8 @@ public interface Region {
 	 */
 	String getName();
 
+	RegionFactory getRegionFactory();
+
 	/**
 	 * The "end state" contract of the region's lifecycle.  Called
 	 * during {@link org.hibernate.SessionFactory#close()} to give

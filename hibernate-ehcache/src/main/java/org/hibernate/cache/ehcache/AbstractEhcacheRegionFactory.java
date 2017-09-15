@@ -8,7 +8,6 @@ package org.hibernate.cache.ehcache;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Properties;
 
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
@@ -16,24 +15,24 @@ import net.sf.ehcache.Ehcache;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
+import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
+import org.hibernate.cache.ehcache.internal.CacheTransactionContextImpl;
 import org.hibernate.cache.ehcache.internal.nonstop.NonstopAccessStrategyFactory;
-import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
-import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
-import org.hibernate.cache.ehcache.internal.regions.EhcacheNaturalIdRegion;
-import org.hibernate.cache.ehcache.internal.regions.EhcacheQueryResultsRegion;
-import org.hibernate.cache.ehcache.internal.regions.EhcacheTimestampsRegion;
+import org.hibernate.cache.ehcache.internal.regions.DomainDataRegionImpl;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactoryImpl;
 import org.hibernate.cache.ehcache.management.impl.ProviderMBeanRegistrationHelper;
-import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.CollectionRegion;
-import org.hibernate.cache.spi.EntityRegion;
-import org.hibernate.cache.spi.NaturalIdRegion;
+import org.hibernate.cache.spi.CacheTransactionContext;
+import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.service.spi.InjectService;
+import org.hibernate.sql.NotYetImplementedException;
 
 import org.jboss.logging.Logger;
 
@@ -102,43 +101,30 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
 		return net.sf.ehcache.util.Timestamper.next();
 	}
 
-
 	@Override
-	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
-			throws CacheException {
-		return new EhcacheEntityRegion( accessStrategyFactory, getCache( regionName ), settings, metadata, properties );
+	public CacheTransactionContext createTransactionContext(SharedSessionContractImplementor session) {
+		return new CacheTransactionContextImpl( this );
 	}
 
 	@Override
-	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
-			throws CacheException {
-		return new EhcacheNaturalIdRegion(
-				accessStrategyFactory,
-				getCache( regionName ),
-				settings,
-				metadata,
-				properties
-		);
+	public DomainDataRegion buildDomainDataRegion(
+			DomainDataRegionConfig regionConfig,
+			DomainDataRegionBuildingContext buildingContext) {
+		return new DomainDataRegionImpl( regionConfig, this, buildingContext );
 	}
 
 	@Override
-	public CollectionRegion buildCollectionRegion(
+	public QueryResultsRegion buildQueryResultsRegion(
 			String regionName,
-			Properties properties,
-			CacheDataDescription metadata)
-			throws CacheException {
-		return new EhcacheCollectionRegion(
-				accessStrategyFactory,
-				getCache( regionName ),
-				settings,
-				metadata,
-				properties
-		);
+			SessionFactoryImplementor sessionFactory) {
+		throw new NotYetImplementedException(  );
 	}
 
 	@Override
-	public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties) throws CacheException {
-		return new EhcacheQueryResultsRegion( accessStrategyFactory, getCache( regionName ), properties );
+	public TimestampsRegion buildTimestampsRegion(
+			String regionName,
+			SessionFactoryImplementor sessionFactory) {
+		throw new NotYetImplementedException(  );
 	}
 
 	@InjectService
@@ -148,11 +134,6 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
 	}
 
 	private ClassLoaderService classLoaderService;
-
-	@Override
-	public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties) throws CacheException {
-		return new EhcacheTimestampsRegion( accessStrategyFactory, getCache( regionName ), properties );
-	}
 
 	private Ehcache getCache(String name) throws CacheException {
 		try {

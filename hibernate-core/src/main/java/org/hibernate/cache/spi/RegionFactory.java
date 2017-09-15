@@ -42,7 +42,7 @@ public interface RegionFactory extends Service, Startable, Stoppable {
 	 */
 	AccessType getDefaultAccessType();
 
-	CacheTransactionContext startingTransaction(SharedSessionContractImplementor session);
+	CacheTransactionContext createTransactionContext(SharedSessionContractImplementor session);
 
 	/**
 	 * Generate a timestamp.  This value is generally used for purpose of

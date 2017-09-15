@@ -394,7 +394,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public void startTransactionBoundary() {
-		this.cacheTransactionContext = factory.getCache().getRegionFactory().startingTransaction( this );
+		this.cacheTransactionContext = factory.getCache().getRegionFactory().createTransactionContext( this );
 	}
 
 	@Override

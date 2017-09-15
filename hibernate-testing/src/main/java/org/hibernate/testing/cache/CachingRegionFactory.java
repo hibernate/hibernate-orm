@@ -85,8 +85,8 @@ public class CachingRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public CacheTransactionContext startingTransaction(SharedSessionContractImplementor session) {
-		return null;
+	public CacheTransactionContext createTransactionContext(SharedSessionContractImplementor session) {
+		return new CacheTransactionContextImpl( this );
 	}
 
 	@Override
@@ -110,15 +110,4 @@ public class CachingRegionFactory implements RegionFactory {
 		return new TimestampsRegionImpl( regionName, sessionFactory );
 	}
 
-	private static class QueryResultsRegionImpl extends AbstractDirectAccessRegion implements QueryResultsRegion {
-		QueryResultsRegionImpl(String name, SessionFactoryImplementor sessionFactory) {
-			super( name );
-		}
-	}
-
-	private static class TimestampsRegionImpl extends AbstractDirectAccessRegion implements TimestampsRegion {
-		TimestampsRegionImpl(String regionName, SessionFactoryImplementor sessionFactory) {
-			super( regionName );
-		}
-	}
 }

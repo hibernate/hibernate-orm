@@ -32,7 +32,7 @@ public class NoCachingRegionFactory implements RegionFactory {
 	/**
 	 * Constructs a NoCachingRegionFactory.  Although access should generally use {@link #INSTANCE}
 	 */
-	public NoCachingRegionFactory() {
+	private NoCachingRegionFactory() {
 	}
 
 	@Override
@@ -54,15 +54,8 @@ public class NoCachingRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public CacheTransactionContext startingTransaction(SharedSessionContractImplementor session) {
-		return new CacheTransactionContext() {
-			final long timestamp = System.currentTimeMillis();
-
-			@Override
-			public long getCurrentTransactionStartTimestamp() {
-				return timestamp;
-			}
-		};
+	public CacheTransactionContext createTransactionContext(SharedSessionContractImplementor session) {
+		return new NoCachingTransactionContextImpl( this );
 	}
 
 	@Override

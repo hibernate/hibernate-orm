@@ -207,6 +207,46 @@ Failures related to Type and Navigable
   symbol:   method getCascadeStyle(int)
   location: variable componentType of type PersistentAttribute
 
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/BasicLazyInitializer.java:84: error: cannot find symbol
+		if ( componentIdType != null && componentIdType.isMethodOf( method ) ) {
+		                                               ^
+  symbol:   method isMethodOf(Method)
+  location: variable componentIdType of type EmbeddedTypeDescriptor
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/ForeignGenerator.java:90: error: cannot find symbol
+		final EntityType foreignValueSourceType;
+		      ^
+  symbol:   class EntityType
+  location: class ForeignGenerator
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/ForeignGenerator.java:92: error: cannot find symbol
+		if ( propertyType.getgetClassification().equals( Type.Classification.ENTITY ) ) {
+		                 ^
+  symbol:   method getgetClassification()
+  location: variable propertyType of type Type
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/ForeignGenerator.java:94: error: cannot find symbol
+			foreignValueSourceType = (EntityType) propertyType;
+			                          ^
+  symbol:   class EntityType
+  location: class ForeignGenerator
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/ForeignGenerator.java:98: error: cannot find symbol
+			foreignValueSourceType = (EntityType) persister.getPropertyType( PropertyPath.IDENTIFIER_MAPPER_PROPERTY + "." + propertyName );
+			                          ^
+  symbol:   class EntityType
+  location: class ForeignGenerator
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/ForeignGenerator.java:98: error: cannot find symbol
+			foreignValueSourceType = (EntityType) persister.getPropertyType( PropertyPath.IDENTIFIER_MAPPER_PROPERTY + "." + propertyName );
+			                                                                 ^
+  symbol:   variable PropertyPath
+  location: class ForeignGenerator
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/SelectGenerator.java:71: error: cannot find symbol
+		if ( persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
+		              ^
+  symbol:   method getEntityMetamodel()
+  location: variable persister of type PostInsertIdentityPersister
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/SelectGenerator.java:126: error: cannot find symbol
+			uniqueKeyType.nullSafeSet( ps, uniqueKeyValue, 1, session );
+			             ^
+  symbol:   method nullSafeSet(PreparedStatement,Object,int,SharedSessionContractImplementor)
+  location: variable uniqueKeyType of type Type
 
 ----
 
@@ -296,6 +336,28 @@ hhome/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-
   symbol:   method getKeyOfOwner(Object,SessionImplementor)
   location: variable descriptor of type PersistentCollectionDescriptor
 
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/internal/CollectionCacheInvalidator.java:116: error: cannot find symbol
+				String mappedBy = collectionDescriptor.getMappedByProperty();
+				                                      ^
+  symbol:   method getMappedByProperty()
+  location: variable collectionDescriptor of type PersistentCollectionDescriptor
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/internal/CollectionCacheInvalidator.java:117: error: cannot find symbol
+				if ( !collectionDescriptor.isManyToMany() &&
+				                          ^
+  symbol:   method isManyToMany()
+  location: variable collectionDescriptor of type PersistentCollectionDescriptor
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/internal/CollectionCacheInvalidator.java:119: error: cannot find symbol
+					int i = entityDescriptor.getEntityMetamodel().getPropertyIndex( mappedBy );
+					                        ^
+  symbol:   method getEntityMetamodel()
+  location: variable entityDescriptor of type EntityDescriptor
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/EvictVisitor.java:72: error: cannot find symbol
+		if (ce.getLoadedPersistentCollectionDescriptor() != null && ce.getLoadedPersistentCollectionDescriptor().getgetBatchSize() > 1) {
+		                                                                                                        ^
+  symbol:   method getgetBatchSize()
+  location: interface PersistentCollectionDescriptor
+
 
 ----
 
@@ -332,6 +394,73 @@ hhome/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-
   symbol:   method isSubclassEntityName(String)
   location: variable persister of type EntityDescriptor
 
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultMergeEventListener.java:219: error: cannot find symbol
+		final Serializable id = entityDescriptor.hasIdentifierProperty() ?
+		                                        ^
+  symbol:   method hasIdentifierProperty()
+  location: variable entityDescriptor of type EntityDescriptor
+
+
+----
+
+
+
+
+
+
+### Attribute-specific
+
+[code]
+----
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:906: error: cannot find symbol
+					.getGetter( embeddableType.getHibernateType().getPropertyIndex( attributeName ) );
+					                          ^
+  symbol:   method getHibernateType()
+  location: variable embeddableType of type EmbeddableTypeImpl
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:904: error: cannot find symbol
+			final Getter getter = embeddableType.getHibernateType()
+			                                    ^
+  symbol:   method getHibernateType()
+  location: variable embeddableType of type EmbeddableTypeImpl
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:908: error: cannot find symbol
+					? new MapMember( attributeName, attributeContext.getPropertyMapping().getType().getReturnedClass() )
+					                                                                     ^
+  symbol:   method getType()
+  location: class Property
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:965: error: cannot find symbol
+				final Integer index = entityDescriptor.getPropertyIndexOrNull( propertyName );
+				                                      ^
+  symbol:   method getPropertyIndexOrNull(String)
+  location: variable entityDescriptor of type EntityDescriptor
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:971: error: cannot find symbol
+					final Getter getter = entityDescriptor.getTuplizer().getGetter( index );
+					                                      ^
+  symbol:   method getTuplizer()
+  location: variable entityDescriptor of type EntityDescriptor
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:973: error: cannot find symbol
+							? new MapMember( propertyName, property.getType().getReturnedClass() )
+							                                       ^
+  symbol:   method getType()
+  location: variable property of type Property
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:987: error: cannot find symbol
+			final EntityMetamodel entityMetamodel = getDeclarerEntityDescriptor( identifiableType );
+			      ^
+  symbol: class EntityMetamodel
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:1016: error: cannot find symbol
+			if ( !versionPropertyName.equals( entityDescriptor.getVersionProperty().getName() ) ) {
+			                                                  ^
+  symbol:   method getVersionProperty()
+  location: variable entityDescriptor of type EntityDescriptor
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:1021: error: variable getter is already defined in method resolveMember(AttributeContext)
+			final Getter getter = entityDescriptor.getTuplizer().getVersionGetter();
+			             ^
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:1021: error: cannot find symbol
+			final Getter getter = entityDescriptor.getTuplizer().getVersionGetter();
+			                                      ^
+  symbol:   method getTuplizer()
+  location: variable entityDescriptor of type EntityDescriptor
+
+
 ----
 
 
@@ -360,7 +489,7 @@ hhome/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-
 
 
 
-### TypHelper
+### TypeHelper
 
 Specialized category because we have to decide best way to handle these TypeHelper calls, mainly
 in regards to visiting multiple Navigables - easily handled by `org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy`
@@ -380,20 +509,79 @@ internally) as well?
 			^
   symbol:   variable TypeHelper
   location: class TwoPhaseLoad
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/spi/entry/StructuredCacheEntry.java:52: error: cannot find symbol
+				TypeHelper.toLoggableString( state, subclassPersister.getPropertyTypes(), factory ),
+				^
+  symbol:   variable TypeHelper
+  location: class StructuredCacheEntry
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/spi/entry/StandardCacheEntryImpl.java:53: error: cannot find symbol
+		this.disassembledState = TypeHelper.disassemble(
+		                         ^
+  symbol:   variable TypeHelper
+  location: class StandardCacheEntryImpl
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/spi/entry/StandardCacheEntryImpl.java:60: error: cannot find symbol
+		this.disassembledStateText = TypeHelper.toLoggableString(
+		                             ^
+  symbol:   variable TypeHelper
+  location: class StandardCacheEntryImpl
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/spi/entry/StandardCacheEntryImpl.java:141: error: cannot find symbol
+		final Object[] assembledProps = TypeHelper.assemble(
+		                                ^
+  symbol:   variable TypeHelper
+  location: class StandardCacheEntryImpl
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/results/internal/JdbcValuesSourceProcessingStateStandardImpl.java:346: error: cannot find symbol
+			TypeHelper.deepCopy(
+			^
+  symbol:   variable TypeHelper
+  location: class JdbcValuesSourceProcessingStateStandardImpl
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/AbstractReassociateEventListener.java:64: error: cannot find symbol
+		TypeHelper.deepCopy(
+		^
+  symbol:   variable TypeHelper
+  location: class AbstractReassociateEventListener
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/AbstractSaveEventListener.java:289: error: cannot find symbol
+		TypeHelper.deepCopy(
+		^
+  symbol:   variable TypeHelper
+  location: class AbstractSaveEventListener
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultDeleteEventListener.java:338: error: cannot find symbol
+		TypeHelper.deepCopy( currentState, propTypes, copyability, deletedState, session );
+		^
+  symbol:   variable TypeHelper
+  location: class DefaultDeleteEventListener
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultMergeEventListener.java:404: error: cannot find symbol
+		final Object[] copiedValues = TypeHelper.replace(
+		                              ^
+  symbol:   variable TypeHelper
+  location: class DefaultMergeEventListener
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultMergeEventListener.java:430: error: cannot find symbol
+			copiedValues = TypeHelper.replaceAssociations(
+			               ^
+  symbol:   variable TypeHelper
+  location: class DefaultMergeEventListener
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultMergeEventListener.java:441: error: cannot find symbol
+			copiedValues = TypeHelper.replace(
+			               ^
+  symbol:   variable TypeHelper
+  location: class DefaultMergeEventListener
 
 ----
 
 
 
 
- ### Access to Navigable value from an instance of its container
 
- E.g., something like `EntityIdentifierDescriptor#getSnapshot`
+### Access to Navigable value from an instance of its container
+
+E.g., something like `EntityIdentifierDescriptor#getSnapshot`
 
 
- [code]
- ----
- /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:347: error: cannot find symbol
+[code]
+----
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:347: error: cannot find symbol
 			final Object[] dbValue = persister.getNaturalIdentifierSnapshot( id, session );
 			                                  ^
   symbol:   method getNaturalIdentifierSnapshot(Serializable,SharedSessionContractImplementor)
@@ -413,11 +601,38 @@ internally) as well?
   symbol:   method getPropertyValues(Object,EventSource)
   location: variable componentType of type PersistentAttribute
 
+----
 
 
----
 
 
+
+
+
+### Tuplizer/Representation
+
+
+[code]
+----
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/AnnotationBinder.java:2843: error: cannot find symbol
+				component.addTuplizer( mode, tuplizer.impl().getName() );
+				         ^
+  symbol:   method addTuplizer(EntityMode,String)
+  location: variable component of type Component
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/AnnotationBinder.java:2850: error: cannot find symbol
+			component.addTuplizer( mode, tuplizer.impl().getName() );
+			         ^
+  symbol:   method addTuplizer(EntityMode,String)
+  location: variable component of type Component
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultInitializeCollectionEventListener.java:75: error: cannot find symbol
+				ce.getLoadedPersistentCollectionDescriptor().initialize( ce.getLoadedKey(), source );
+				                                            ^
+  symbol:   method initialize(Serializable,SessionImplementor)
+  location: interface PersistentCollectionDescriptor
+
+----
 
 
 
@@ -482,6 +697,20 @@ internally) as well?
     symbol:   method resolve(Object,SharedSessionContractImplementor,Object)
     location: interface Type
 
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/SelectGenerator.java:139: error: cannot find symbol
+			return (Serializable) idType.nullSafeGet(
+			                            ^
+  symbol:   method nullSafeGet(ResultSet,String[],SharedSessionContractImplementor,Object)
+  location: variable idType of type Type
+
+
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/AbstractSaveEventListener.java:291: error: cannot find symbol
+				types,
+				^
+  symbol:   variable types
+  location: class AbstractSaveEventListener
+
 
 ----
 
@@ -498,6 +727,11 @@ internally) as well?
 						^
   symbol:   method fromString(String)
   location: interface JavaTypeDescriptor
+
+ /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/relational/spi/UnionSubclassTable.java:18: error: UnionSubclassTable is not abstract and does not override abstract method isExportable() in Table
+  public class UnionSubclassTable extends AbstractTable implements ExportableTable {
+         ^
+
 ----
 
 
@@ -505,13 +739,11 @@ internally) as well?
 
 
 
-
-## Still to categorize
+## Cascade
 
 
 [code]
 ----
-
 
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:298: error: incompatible types: Type cannot be converted to PersistentAttribute
 						types[i],
@@ -590,198 +822,20 @@ internally) as well?
 			                           ^
   symbol:   method getElementsIterator(Object,SharedSessionContractImplementor)
   location: variable collectionDescriptor of type PersistentCollectionDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ResultSetMappingBinder.java:205: error: cannot find symbol
-		return new NativeSQLQueryJoinReturn(
-		           ^
-  symbol:   class NativeSQLQueryJoinReturn
-  location: class ResultSetMappingBinder
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ResultSetMappingBinder.java:235: error: cannot find symbol
-		return new NativeSQLQueryCollectionReturn(
-		           ^
-  symbol:   class NativeSQLQueryCollectionReturn
-  location: class ResultSetMappingBinder
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ModelBinder.java:431: error: cannot find symbol
-				entityDescriptor.addTuplizer(
-				                ^
-  symbol:   method addTuplizer(EntityMode,String)
-  location: variable entityDescriptor of type PersistentClass
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ModelBinder.java:2619: error: cannot find symbol
-				componentBinding.addTuplizer(
-				                ^
-  symbol:   method addTuplizer(EntityMode,String)
-  location: variable componentBinding of type Component
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/EntityBinder.java:389: error: cannot find symbol
-				persistentClass.
-				               ^
-  symbol:   method addTuplizer(EntityMode,String)
-  location: variable persistentClass of type PersistentClass
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/EntityBinder.java:397: error: cannot find symbol
-			persistentClass.addTuplizer( mode, tuplizer.impl().getName() );
-			               ^
-  symbol:   method addTuplizer(EntityMode,String)
-  location: variable persistentClass of type PersistentClass
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:139: error: cannot find symbol
-			basicValue.makeVersion();
-			          ^
-  symbol:   method makeVersion()
-  location: variable basicValue of type BasicValue
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:145: error: cannot find symbol
-		this.timeStampVersionType = versionType;
-		    ^
-  symbol: variable timeStampVersionType
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:327: error: cannot find symbol
-		if ( !key && property.isAnnotationPresent( Temporal.class ) ) {
-		      ^
-  symbol:   variable key
-  location: class BasicValueBinder<T>
-  where T is a type-variable:
-    T extends Object declared in class BasicValueBinder
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:331: error: cannot find symbol
-		if ( key && property.isAnnotationPresent( MapKeyTemporal.class ) ) {
-		     ^
-  symbol:   variable key
-  location: class BasicValueBinder<T>
-  where T is a type-variable:
-    T extends Object declared in class BasicValueBinder
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:336: error: cannot find symbol
-		if ( !key && property.isAnnotationPresent( Enumerated.class ) ) {
-		      ^
-  symbol:   variable key
-  location: class BasicValueBinder<T>
-  where T is a type-variable:
-    T extends Object declared in class BasicValueBinder
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:340: error: cannot find symbol
-		if ( key && property.isAnnotationPresent( MapKeyEnumerated.class ) ) {
-		     ^
-  symbol:   variable key
-  location: class BasicValueBinder<T>
-  where T is a type-variable:
-    T extends Object declared in class BasicValueBinder
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:383: error: cannot find symbol
-			basicValue.makeVersion();
-			          ^
-  symbol:   method makeVersion()
-  location: variable basicValue of type BasicValue
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:527: error: cannot find symbol
-		this.key = key;
-		    ^
-  symbol: variable key
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:593: error: BasicValueBinder.BasicTypeResolverCollectionIdImpl is not abstract and does not override abstract method getSqlTypeDescriptor() in BasicTypeParameters
-	private class BasicTypeResolverCollectionIdImpl extends BasicTypeResolverSupport {
-	        ^
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/BasicLazyInitializer.java:84: error: cannot find symbol
-		if ( componentIdType != null && componentIdType.isMethodOf( method ) ) {
-		                                               ^
-  symbol:   method isMethodOf(Method)
-  location: variable componentIdType of type EmbeddedTypeDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/ForeignGenerator.java:90: error: cannot find symbol
-		final EntityType foreignValueSourceType;
-		      ^
-  symbol:   class EntityType
-  location: class ForeignGenerator
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/ForeignGenerator.java:92: error: cannot find symbol
-		if ( propertyType.getgetClassification().equals( Type.Classification.ENTITY ) ) {
-		                 ^
-  symbol:   method getgetClassification()
-  location: variable propertyType of type Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/ForeignGenerator.java:94: error: cannot find symbol
-			foreignValueSourceType = (EntityType) propertyType;
-			                          ^
-  symbol:   class EntityType
-  location: class ForeignGenerator
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/ForeignGenerator.java:98: error: cannot find symbol
-			foreignValueSourceType = (EntityType) persister.getPropertyType( PropertyPath.IDENTIFIER_MAPPER_PROPERTY + "." + propertyName );
-			                          ^
-  symbol:   class EntityType
-  location: class ForeignGenerator
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/ForeignGenerator.java:98: error: cannot find symbol
-			foreignValueSourceType = (EntityType) persister.getPropertyType( PropertyPath.IDENTIFIER_MAPPER_PROPERTY + "." + propertyName );
-			                                                                 ^
-  symbol:   variable PropertyPath
-  location: class ForeignGenerator
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/SelectGenerator.java:71: error: cannot find symbol
-		if ( persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
-		              ^
-  symbol:   method getEntityMetamodel()
-  location: variable persister of type PostInsertIdentityPersister
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/SelectGenerator.java:126: error: cannot find symbol
-			uniqueKeyType.nullSafeSet( ps, uniqueKeyValue, 1, session );
-			             ^
-  symbol:   method nullSafeSet(PreparedStatement,Object,int,SharedSessionContractImplementor)
-  location: variable uniqueKeyType of type Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/SelectGenerator.java:139: error: cannot find symbol
-			return (Serializable) idType.nullSafeGet(
-			                            ^
-  symbol:   method nullSafeGet(ResultSet,String[],SharedSessionContractImplementor,Object)
-  location: variable idType of type Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/relational/spi/UnionSubclassTable.java:18: error: UnionSubclassTable is not abstract and does not override abstract method isExportable() in Table
-public class UnionSubclassTable extends AbstractTable implements ExportableTable {
-       ^
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/domain/spi/AbstractManagedType.java:214: error: incompatible types: cannot infer type-variable(s) R,A,CAP#1,T#2
-		return attributes.stream().collect( Collectors.toSet() );
-		                                  ^
-    (argument mismatch; Collector<Attribute<T#3,?>,CAP#2,Set<Attribute<T#3,?>>> cannot be converted to Collector<? super Attribute,CAP#2,Set<Attribute<T#3,?>>>)
-  where R,A,T#1,T#2,T#3 are type-variables:
-    R extends Object declared in method <R,A>collect(Collector<? super T#1,A,R>)
-    A extends Object declared in method <R,A>collect(Collector<? super T#1,A,R>)
-    T#1 extends Object declared in interface Stream
-    T#2 extends Object declared in method <T#2>toSet()
-    T#3 extends Object declared in class AbstractManagedType
-  where CAP#1,CAP#2 are fresh type-variables:
-    CAP#1 extends Object from capture of ?
-    CAP#2 extends Object from capture of ?
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/FilterConfiguration.java:81: error: cannot find symbol
-						Joinable.class.cast( factory.getEntityPersister( entry.getValue() ) ).getTableName()
-						^
-  symbol:   class Joinable
-  location: class FilterConfiguration
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:906: error: cannot find symbol
-					.getGetter( embeddableType.getHibernateType().getPropertyIndex( attributeName ) );
-					                          ^
-  symbol:   method getHibernateType()
-  location: variable embeddableType of type EmbeddableTypeImpl
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:904: error: cannot find symbol
-			final Getter getter = embeddableType.getHibernateType()
-			                                    ^
-  symbol:   method getHibernateType()
-  location: variable embeddableType of type EmbeddableTypeImpl
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:908: error: cannot find symbol
-					? new MapMember( attributeName, attributeContext.getPropertyMapping().getType().getReturnedClass() )
-					                                                                     ^
-  symbol:   method getType()
-  location: class Property
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:965: error: cannot find symbol
-				final Integer index = entityDescriptor.getPropertyIndexOrNull( propertyName );
-				                                      ^
-  symbol:   method getPropertyIndexOrNull(String)
-  location: variable entityDescriptor of type EntityDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:971: error: cannot find symbol
-					final Getter getter = entityDescriptor.getTuplizer().getGetter( index );
-					                                      ^
-  symbol:   method getTuplizer()
-  location: variable entityDescriptor of type EntityDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:973: error: cannot find symbol
-							? new MapMember( propertyName, property.getType().getReturnedClass() )
-							                                       ^
-  symbol:   method getType()
-  location: variable property of type Property
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:987: error: cannot find symbol
-			final EntityMetamodel entityMetamodel = getDeclarerEntityDescriptor( identifiableType );
-			      ^
-  symbol: class EntityMetamodel
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:1016: error: cannot find symbol
-			if ( !versionPropertyName.equals( entityDescriptor.getVersionProperty().getName() ) ) {
-			                                                  ^
-  symbol:   method getVersionProperty()
-  location: variable entityDescriptor of type EntityDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:1021: error: variable getter is already defined in method resolveMember(AttributeContext)
-			final Getter getter = entityDescriptor.getTuplizer().getVersionGetter();
-			             ^
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:1021: error: cannot find symbol
-			final Getter getter = entityDescriptor.getTuplizer().getVersionGetter();
-			                                      ^
-  symbol:   method getTuplizer()
-  location: variable entityDescriptor of type EntityDescriptor
+
+
+----
+
+
+
+
+
+
+
+## Dialects
+
+[code]
+----
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/VarArgsSQLFunction.java:22: error: VarArgsSQLFunction is not abstract and does not override abstract method makeSqmFunctionExpression(List<SqmExpression>,AllowableFunctionReturnType) in SqmFunctionTemplate
 public class VarArgsSQLFunction implements SqmFunctionTemplate {
        ^
@@ -908,23 +962,170 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 					        ^
   symbol:   method getVersionType()
   location: variable lockable of type Lockable
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/procedure/internal/ProcedureCallImpl.java:966: error: incompatible types: cannot infer type-variable(s) R,A,CAP#1,T#2
-		return parameterManager.collectParameterRegistrations().stream().collect( Collectors.toSet() );
-		                                                                        ^
-    (argument mismatch; Collector<Parameter<?>,CAP#2,Set<Parameter<?>>> cannot be converted to Collector<? super ParameterRegistration,CAP#2,Set<Parameter<?>>>)
-  where R,A,T#1,T#2 are type-variables:
-    R extends Object declared in method <R,A>collect(Collector<? super T#1,A,R>)
-    A extends Object declared in method <R,A>collect(Collector<? super T#1,A,R>)
-    T#1 extends Object declared in interface Stream
-    T#2 extends Object declared in method <T#2>toSet()
-  where CAP#1,CAP#2 are fresh type-variables:
-    CAP#1 extends Object from capture of ?
-    CAP#2 extends Object from capture of ?
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/SessionFactoryImpl.java:820: error: cannot find symbol
-				.setQueryReturns( nativeSqlQuery.getQueryReturns() );
-				                                ^
-  symbol:   method getQueryReturns()
-  location: variable nativeSqlQuery of type NativeQuery
+
+
+----
+
+
+
+
+
+
+
+
+
+
+## Boot model
+
+[code]
+----
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ResultSetMappingBinder.java:205: error: cannot find symbol
+		return new NativeSQLQueryJoinReturn(
+		           ^
+  symbol:   class NativeSQLQueryJoinReturn
+  location: class ResultSetMappingBinder
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ResultSetMappingBinder.java:235: error: cannot find symbol
+		return new NativeSQLQueryCollectionReturn(
+		           ^
+  symbol:   class NativeSQLQueryCollectionReturn
+  location: class ResultSetMappingBinder
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ModelBinder.java:431: error: cannot find symbol
+				entityDescriptor.addTuplizer(
+				                ^
+  symbol:   method addTuplizer(EntityMode,String)
+  location: variable entityDescriptor of type PersistentClass
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ModelBinder.java:2619: error: cannot find symbol
+				componentBinding.addTuplizer(
+				                ^
+  symbol:   method addTuplizer(EntityMode,String)
+  location: variable componentBinding of type Component
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/EntityBinder.java:389: error: cannot find symbol
+				persistentClass.
+				               ^
+  symbol:   method addTuplizer(EntityMode,String)
+  location: variable persistentClass of type PersistentClass
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/EntityBinder.java:397: error: cannot find symbol
+			persistentClass.addTuplizer( mode, tuplizer.impl().getName() );
+			               ^
+  symbol:   method addTuplizer(EntityMode,String)
+  location: variable persistentClass of type PersistentClass
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:139: error: cannot find symbol
+			basicValue.makeVersion();
+			          ^
+  symbol:   method makeVersion()
+  location: variable basicValue of type BasicValue
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:145: error: cannot find symbol
+		this.timeStampVersionType = versionType;
+		    ^
+  symbol: variable timeStampVersionType
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:327: error: cannot find symbol
+		if ( !key && property.isAnnotationPresent( Temporal.class ) ) {
+		      ^
+  symbol:   variable key
+  location: class BasicValueBinder<T>
+  where T is a type-variable:
+    T extends Object declared in class BasicValueBinder
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:331: error: cannot find symbol
+		if ( key && property.isAnnotationPresent( MapKeyTemporal.class ) ) {
+		     ^
+  symbol:   variable key
+  location: class BasicValueBinder<T>
+  where T is a type-variable:
+    T extends Object declared in class BasicValueBinder
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:336: error: cannot find symbol
+		if ( !key && property.isAnnotationPresent( Enumerated.class ) ) {
+		      ^
+  symbol:   variable key
+  location: class BasicValueBinder<T>
+  where T is a type-variable:
+    T extends Object declared in class BasicValueBinder
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:340: error: cannot find symbol
+		if ( key && property.isAnnotationPresent( MapKeyEnumerated.class ) ) {
+		     ^
+  symbol:   variable key
+  location: class BasicValueBinder<T>
+  where T is a type-variable:
+    T extends Object declared in class BasicValueBinder
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:383: error: cannot find symbol
+			basicValue.makeVersion();
+			          ^
+  symbol:   method makeVersion()
+  location: variable basicValue of type BasicValue
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:527: error: cannot find symbol
+		this.key = key;
+		    ^
+  symbol: variable key
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:593: error: BasicValueBinder.BasicTypeResolverCollectionIdImpl is not abstract and does not override abstract method getSqlTypeDescriptor() in BasicTypeParameters
+	private class BasicTypeResolverCollectionIdImpl extends BasicTypeResolverSupport {
+	        ^
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:157: error: cannot find symbol
+			NativeSQLQueryRootReturn result = new NativeSQLQueryRootReturn(
+			^
+  symbol:   class NativeSQLQueryRootReturn
+  location: class ResultsetMappingSecondPass
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:157: error: cannot find symbol
+			NativeSQLQueryRootReturn result = new NativeSQLQueryRootReturn(
+			                                      ^
+  symbol:   class NativeSQLQueryRootReturn
+  location: class ResultsetMappingSecondPass
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:168: error: cannot find symbol
+					new NativeSQLQueryScalarReturn(
+					    ^
+  symbol:   class NativeSQLQueryScalarReturn
+  location: class ResultsetMappingSecondPass
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:170: error: cannot find symbol
+							column.type() != null ? context.getMetadataCollector().heuristicType( column.type().getName() ) : null
+							                                                      ^
+  symbol:   method heuristicType(String)
+  location: interface InFlightMetadataCollector
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:176: error: cannot find symbol
+			List<NativeSQLQueryScalarReturn> columnReturns = new ArrayList<NativeSQLQueryScalarReturn>();
+			     ^
+  symbol:   class NativeSQLQueryScalarReturn
+  location: class ResultsetMappingSecondPass
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:176: error: cannot find symbol
+			List<NativeSQLQueryScalarReturn> columnReturns = new ArrayList<NativeSQLQueryScalarReturn>();
+			                                                               ^
+  symbol:   class NativeSQLQueryScalarReturn
+  location: class ResultsetMappingSecondPass
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:179: error: cannot find symbol
+						new NativeSQLQueryScalarReturn(
+						    ^
+  symbol:   class NativeSQLQueryScalarReturn
+  location: class ResultsetMappingSecondPass
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:181: error: cannot find symbol
+								columnResult.type() != null ? context.getMetadataCollector().heuristicType( columnResult.type().getName() ) : null
+								                                                            ^
+  symbol:   method heuristicType(String)
+  location: interface InFlightMetadataCollector
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:186: error: cannot find symbol
+					new NativeSQLQueryConstructorReturn( constructorResult.targetClass(), columnReturns )
+					    ^
+  symbol:   class NativeSQLQueryConstructorReturn
+  location: class ResultsetMappingSecondPass
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/QueryBinder.java:124: error: incompatible types: String cannot be converted to EntityDescriptor
+					new QueryResultBuilderRootEntity( "alias1", queryAnn.resultClass().getName() );
+					                                                                          ^
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/QueryBinder.java:187: error: incompatible types: String cannot be converted to EntityDescriptor
+					new QueryResultBuilderRootEntity( "alias1", queryAnn.resultClass().getName() );
+					                                                                          ^
+
+
+----
+
+
+
+
+
+
+## ScrollableResults
+
+[code]
+----
+
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractScrollableResults.java:141: error: cannot find symbol
 		if ( holderInstantiator != null ) {
 		     ^
@@ -990,105 +1191,21 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 				^
   symbol:   method getQueryParameters()
   location: class FetchingScrollableResultsImpl
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/consume/spi/BaseSqmToSqlAstConverter.java:1016: error: incompatible types: Object cannot be converted to List<Expression>
-				.collect( Collectors.toList() );
-				        ^
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/internal/CollectionCacheInvalidator.java:116: error: cannot find symbol
-				String mappedBy = collectionDescriptor.getMappedByProperty();
-				                                      ^
-  symbol:   method getMappedByProperty()
-  location: variable collectionDescriptor of type PersistentCollectionDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/internal/CollectionCacheInvalidator.java:117: error: cannot find symbol
-				if ( !collectionDescriptor.isManyToMany() &&
-				                          ^
-  symbol:   method isManyToMany()
-  location: variable collectionDescriptor of type PersistentCollectionDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/internal/CollectionCacheInvalidator.java:119: error: cannot find symbol
-					int i = entityDescriptor.getEntityMetamodel().getPropertyIndex( mappedBy );
-					                        ^
-  symbol:   method getEntityMetamodel()
-  location: variable entityDescriptor of type EntityDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/spi/entry/StructuredCacheEntry.java:52: error: cannot find symbol
-				TypeHelper.toLoggableString( state, subclassPersister.getPropertyTypes(), factory ),
-				^
-  symbol:   variable TypeHelper
-  location: class StructuredCacheEntry
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/spi/entry/StandardCacheEntryImpl.java:53: error: cannot find symbol
-		this.disassembledState = TypeHelper.disassemble(
-		                         ^
-  symbol:   variable TypeHelper
-  location: class StandardCacheEntryImpl
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/spi/entry/StandardCacheEntryImpl.java:60: error: cannot find symbol
-		this.disassembledStateText = TypeHelper.toLoggableString(
-		                             ^
-  symbol:   variable TypeHelper
-  location: class StandardCacheEntryImpl
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/spi/entry/StandardCacheEntryImpl.java:141: error: cannot find symbol
-		final Object[] assembledProps = TypeHelper.assemble(
-		                                ^
-  symbol:   variable TypeHelper
-  location: class StandardCacheEntryImpl
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/AnnotationBinder.java:2843: error: cannot find symbol
-				component.addTuplizer( mode, tuplizer.impl().getName() );
-				         ^
-  symbol:   method addTuplizer(EntityMode,String)
-  location: variable component of type Component
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/AnnotationBinder.java:2850: error: cannot find symbol
-			component.addTuplizer( mode, tuplizer.impl().getName() );
-			         ^
-  symbol:   method addTuplizer(EntityMode,String)
-  location: variable component of type Component
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:157: error: cannot find symbol
-			NativeSQLQueryRootReturn result = new NativeSQLQueryRootReturn(
-			^
-  symbol:   class NativeSQLQueryRootReturn
-  location: class ResultsetMappingSecondPass
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:157: error: cannot find symbol
-			NativeSQLQueryRootReturn result = new NativeSQLQueryRootReturn(
-			                                      ^
-  symbol:   class NativeSQLQueryRootReturn
-  location: class ResultsetMappingSecondPass
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:168: error: cannot find symbol
-					new NativeSQLQueryScalarReturn(
-					    ^
-  symbol:   class NativeSQLQueryScalarReturn
-  location: class ResultsetMappingSecondPass
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:170: error: cannot find symbol
-							column.type() != null ? context.getMetadataCollector().heuristicType( column.type().getName() ) : null
-							                                                      ^
-  symbol:   method heuristicType(String)
-  location: interface InFlightMetadataCollector
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:176: error: cannot find symbol
-			List<NativeSQLQueryScalarReturn> columnReturns = new ArrayList<NativeSQLQueryScalarReturn>();
-			     ^
-  symbol:   class NativeSQLQueryScalarReturn
-  location: class ResultsetMappingSecondPass
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:176: error: cannot find symbol
-			List<NativeSQLQueryScalarReturn> columnReturns = new ArrayList<NativeSQLQueryScalarReturn>();
-			                                                               ^
-  symbol:   class NativeSQLQueryScalarReturn
-  location: class ResultsetMappingSecondPass
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:179: error: cannot find symbol
-						new NativeSQLQueryScalarReturn(
-						    ^
-  symbol:   class NativeSQLQueryScalarReturn
-  location: class ResultsetMappingSecondPass
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:181: error: cannot find symbol
-								columnResult.type() != null ? context.getMetadataCollector().heuristicType( columnResult.type().getName() ) : null
-								                                                            ^
-  symbol:   method heuristicType(String)
-  location: interface InFlightMetadataCollector
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:186: error: cannot find symbol
-					new NativeSQLQueryConstructorReturn( constructorResult.targetClass(), columnReturns )
-					    ^
-  symbol:   class NativeSQLQueryConstructorReturn
-  location: class ResultsetMappingSecondPass
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/QueryBinder.java:124: error: incompatible types: String cannot be converted to EntityDescriptor
-					new QueryResultBuilderRootEntity( "alias1", queryAnn.resultClass().getName() );
-					                                                                          ^
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/QueryBinder.java:187: error: incompatible types: String cannot be converted to EntityDescriptor
-					new QueryResultBuilderRootEntity( "alias1", queryAnn.resultClass().getName() );
-					                                                                          ^
+
+
+----
+
+
+
+
+
+
+
+## SchemaManagementTool
+
+
+[code]
+----
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/hbm2ddl/MultipleLinesSqlCommandExtractor.java:22: error: cannot find symbol
 		final SqlStatementLexer lexer = new SqlStatementLexer( reader );
 		      ^
@@ -1109,21 +1226,129 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 		                                      ^
   symbol:   class SqlStatementParser
   location: class MultipleLinesSqlCommandExtractor
+
+----
+
+
+
+
+
+
+
+
+
+## Misc
+
+
+[code]
+----
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/UnsavedValueFactory.java:93: error: cannot find symbol
+						.fromString( unsavedValue ) );
+						^
+  symbol:   method fromString(String)
+  location: interface JavaTypeDescriptor
+
+ /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/relational/spi/UnionSubclassTable.java:18: error: UnionSubclassTable is not abstract and does not override abstract method isExportable() in Table
+  public class UnionSubclassTable extends AbstractTable implements ExportableTable {
+         ^
+
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/domain/spi/AbstractManagedType.java:214: error: incompatible types: cannot infer type-variable(s) R,A,CAP#1,T#2
+		return attributes.stream().collect( Collectors.toSet() );
+		                                  ^
+    (argument mismatch; Collector<Attribute<T#3,?>,CAP#2,Set<Attribute<T#3,?>>> cannot be converted to Collector<? super Attribute,CAP#2,Set<Attribute<T#3,?>>>)
+  where R,A,T#1,T#2,T#3 are type-variables:
+    R extends Object declared in method <R,A>collect(Collector<? super T#1,A,R>)
+    A extends Object declared in method <R,A>collect(Collector<? super T#1,A,R>)
+    T#1 extends Object declared in interface Stream
+    T#2 extends Object declared in method <T#2>toSet()
+    T#3 extends Object declared in class AbstractManagedType
+  where CAP#1,CAP#2 are fresh type-variables:
+    CAP#1 extends Object from capture of ?
+    CAP#2 extends Object from capture of ?
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/FilterConfiguration.java:81: error: cannot find symbol
+						Joinable.class.cast( factory.getEntityPersister( entry.getValue() ) ).getTableName()
+						^
+  symbol:   class Joinable
+  location: class FilterConfiguration
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/procedure/internal/ProcedureCallImpl.java:966: error: incompatible types: cannot infer type-variable(s) R,A,CAP#1,T#2
+		return parameterManager.collectParameterRegistrations().stream().collect( Collectors.toSet() );
+		                                                                        ^
+    (argument mismatch; Collector<Parameter<?>,CAP#2,Set<Parameter<?>>> cannot be converted to Collector<? super ParameterRegistration,CAP#2,Set<Parameter<?>>>)
+  where R,A,T#1,T#2 are type-variables:
+    R extends Object declared in method <R,A>collect(Collector<? super T#1,A,R>)
+    A extends Object declared in method <R,A>collect(Collector<? super T#1,A,R>)
+    T#1 extends Object declared in interface Stream
+    T#2 extends Object declared in method <T#2>toSet()
+  where CAP#1,CAP#2 are fresh type-variables:
+    CAP#1 extends Object from capture of ?
+    CAP#2 extends Object from capture of ?
+
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/SessionFactoryImpl.java:820: error: cannot find symbol
+				.setQueryReturns( nativeSqlQuery.getQueryReturns() );
+				                                ^
+  symbol:   method getQueryReturns()
+  location: variable nativeSqlQuery of type NativeQuery
+
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/consume/spi/BaseSqmToSqlAstConverter.java:1016: error: incompatible types: Object cannot be converted to List<Expression>
+				.collect( Collectors.toList() );
+				        ^
+
+
+----
+
+
+
+
+
+
+
+
+
+## JDBC-level read/write (nullSafeGet/nullSafeSet)
+
+[code]
+----
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/results/internal/JdbcValuesSourceProcessingStateStandardImpl.java:244: error: cannot find symbol
 				hydratedState[i] = types[i].resolve( value, session, entity );
 				                           ^
   symbol:   method resolve(Object,SharedSessionContractImplementor,Object)
   location: interface Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/results/internal/JdbcValuesSourceProcessingStateStandardImpl.java:346: error: cannot find symbol
-			TypeHelper.deepCopy(
-			^
-  symbol:   variable TypeHelper
-  location: class JdbcValuesSourceProcessingStateStandardImpl
+
+----
+
+
+
+
+
+
+
+
+## Function (registry)
+
+[code]
+----
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/Template.java:744: error: cannot find symbol
 		return ! function.hasParenthesesIfNoArguments();
 		                 ^
   symbol:   method hasParenthesesIfNoArguments()
   location: variable function of type SqmFunctionTemplate
+
+----
+
+
+
+
+
+## Envers
+
+
+[code]
+----
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:402: error: cannot find symbol
 			if ( entityDescriptor instanceof JoinedSubclassEntityPersister ) {
 			                                 ^
@@ -1179,75 +1404,7 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 			           ^
   symbol:   method getColumnSpan()
   location: variable type of type Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/AbstractReassociateEventListener.java:64: error: cannot find symbol
-		TypeHelper.deepCopy(
-		^
-  symbol:   variable TypeHelper
-  location: class AbstractReassociateEventListener
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultInitializeCollectionEventListener.java:75: error: cannot find symbol
-				ce.getLoadedPersistentCollectionDescriptor().initialize( ce.getLoadedKey(), source );
-				                                            ^
-  symbol:   method initialize(Serializable,SessionImplementor)
-  location: interface PersistentCollectionDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/AbstractSaveEventListener.java:291: error: cannot find symbol
-				types,
-				^
-  symbol:   variable types
-  location: class AbstractSaveEventListener
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/AbstractSaveEventListener.java:289: error: cannot find symbol
-		TypeHelper.deepCopy(
-		^
-  symbol:   variable TypeHelper
-  location: class AbstractSaveEventListener
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultDeleteEventListener.java:338: error: cannot find symbol
-		TypeHelper.deepCopy( currentState, propTypes, copyability, deletedState, session );
-		^
-  symbol:   variable TypeHelper
-  location: class DefaultDeleteEventListener
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultMergeEventListener.java:219: error: cannot find symbol
-		final Serializable id = entityDescriptor.hasIdentifierProperty() ?
-		                                        ^
-  symbol:   method hasIdentifierProperty()
-  location: variable entityDescriptor of type EntityDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultMergeEventListener.java:404: error: cannot find symbol
-		final Object[] copiedValues = TypeHelper.replace(
-		                              ^
-  symbol:   variable TypeHelper
-  location: class DefaultMergeEventListener
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultMergeEventListener.java:430: error: cannot find symbol
-			copiedValues = TypeHelper.replaceAssociations(
-			               ^
-  symbol:   variable TypeHelper
-  location: class DefaultMergeEventListener
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultMergeEventListener.java:441: error: cannot find symbol
-			copiedValues = TypeHelper.replace(
-			               ^
-  symbol:   variable TypeHelper
-  location: class DefaultMergeEventListener
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/EvictVisitor.java:72: error: cannot find symbol
-		if (ce.getLoadedPersistentCollectionDescriptor() != null && ce.getLoadedPersistentCollectionDescriptor().getgetBatchSize() > 1) {
-		                                                                                                        ^
-  symbol:   method getgetBatchSize()
-  location: interface PersistentCollectionDescriptor
-
 
 ----
 
 
-
-
-Note: Some input files use or override a deprecated API.
-Note: Recompile with -Xlint:deprecation for details.
-Note: Some input files use unchecked or unsafe operations.
-Note: Recompile with -Xlint:unchecked for details.
-Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
-211 errors
-
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task ':hibernate-core:compileJava'.
-> Compilation failed; see the compiler error output for details.
-
-* Try:
-Run with --stacktrace option to get the stack trace. Run with --info or --debug option to get more log output.

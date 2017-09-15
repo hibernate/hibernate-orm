@@ -6,12 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Represents the ENTRY() function for obtaining the map entries from a {@code Map}-typed association.
@@ -28,6 +26,11 @@ public class SqmMapEntryBinding implements SqmExpression {
 
 	public SqmPluralAttributeReference getAttributeBinding() {
 		return attributeBinding;
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return null;
 	}
 
 	@Override
@@ -48,14 +51,5 @@ public class SqmMapEntryBinding implements SqmExpression {
 	@Override
 	public String asLoggableText() {
 		return "ENTRY(" + attributeBinding.asLoggableText() + ")";
-	}
-
-	@Override
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		throw new UnsupportedOperationException( "At the moment, selection of Map.Entry for persistent plural attribute is not supported" );
-		// todo (6.0) : could be supported though - consider adding support
 	}
 }

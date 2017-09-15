@@ -96,7 +96,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementRefere
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEmbeddableTypedReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypeSqmExpression;
+import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypeExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypedReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmIndexedElementReferenceBasic;
 import org.hibernate.query.sqm.tree.expression.domain.SqmIndexedElementReferenceEmbedded;
@@ -1428,7 +1428,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		else if ( ctx.entityTypeReference().path() != null ) {
 			final SqmNavigableReference binding = (SqmNavigableReference) ctx.entityTypeReference().path().accept( this );
 			validateBindingAsEntityTypeExpression( binding );
-			return new SqmEntityTypeSqmExpression( binding );
+			return new SqmEntityTypeExpression( binding );
 		}
 
 		throw new ParsingException( "Could not interpret grammar context as 'entity type' expression : " + ctx.getText() );

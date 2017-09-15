@@ -68,6 +68,7 @@ public class PersisterHelper {
 			ManagedTypeDescriptor declarer,
 			PersistentAttributeMapping attributeMapping,
 			RuntimeModelCreationContext persisterCreationContext) {
+		// todo (6.0) : atm access to the Representation is only available for IdentifiableTypes via EntityHierarchy.
 		if ( declarer.geEntityMode() == EntityMode.MAP ) {
 			return PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess( null, attributeMapping.getName() );
 		}

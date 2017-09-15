@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.tree.select;
 
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.results.spi.QueryResultProducer;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -29,6 +28,6 @@ public interface SqmAliasedNode extends SqmTypedNode {
 
 	@Override
 	default JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getSelectableNode().getProducedJavaTypeDescriptor();
+		return getSelectableNode().getJavaTypeDescriptor();
 	}
 }

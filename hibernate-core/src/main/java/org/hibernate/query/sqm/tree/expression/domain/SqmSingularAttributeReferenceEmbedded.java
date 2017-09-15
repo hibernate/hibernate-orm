@@ -9,9 +9,6 @@ package org.hibernate.query.sqm.tree.expression.domain;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * @author Steve Ebersole
@@ -43,14 +40,5 @@ public class SqmSingularAttributeReferenceEmbedded
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		// todo (6.0) : define a QueryResultProducer that is also a tuple of SqlSelections (SqlSelectionGroup
 		return walker.visitEmbeddableValuedSingularAttribute( this );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public QueryResult createQueryResult(
-			Expression expression,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		return getReferencedNavigable().createQueryResult( expression, resultVariable, creationContext );
 	}
 }

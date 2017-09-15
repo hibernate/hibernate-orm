@@ -9,13 +9,11 @@ package org.hibernate.sql.results.internal;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.results.spi.EntityQueryResult;
 import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 import org.hibernate.sql.results.spi.InitializerCollector;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Standard ReturnEntity impl
@@ -46,7 +44,7 @@ public class EntityQueryResultImpl extends AbstractFetchParent implements Entity
 		);
 
 		this.assembler = new EntityQueryResultAssembler(
-				getType().getJavaTypeDescriptor(),
+				getNavigable().getJavaTypeDescriptor(),
 				initializer
 		);
 	}
@@ -79,10 +77,5 @@ public class EntityQueryResultImpl extends AbstractFetchParent implements Entity
 	public void registerInitializers(InitializerCollector collector) {
 		collector.addInitializer( initializer );
 		registerFetchInitializers( initializer, collector );
-	}
-
-	@Override
-	public EntityValuedExpressableType getType() {
-		return getNavigable();
 	}
 }

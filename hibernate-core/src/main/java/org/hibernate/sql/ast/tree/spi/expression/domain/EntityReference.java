@@ -8,7 +8,6 @@ package org.hibernate.sql.ast.tree.spi.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 
@@ -46,15 +45,5 @@ public class EntityReference extends AbstractNavigableContainerReference {
 	@Override
 	public ColumnReferenceQualifier getSqlExpressionQualifier() {
 		return columnReferenceSource;
-	}
-
-	@Override
-	public EntityValuedExpressableType getType() {
-		return expressionType;
-	}
-
-	@Override
-	public void accept(SqlAstWalker walker) {
-		walker.visitEntityExpression( this );
 	}
 }

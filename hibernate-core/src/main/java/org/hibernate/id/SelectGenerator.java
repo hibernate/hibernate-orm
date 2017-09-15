@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.insert.AbstractSelectingDelegate;
 import org.hibernate.id.insert.IdentifierGeneratingInsert;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -51,26 +52,29 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 		if ( supplied != null ) {
 			return supplied;
 		}
-		int[] naturalIdPropertyIndices = persister.getNaturalIdentifierProperties();
-		if ( naturalIdPropertyIndices == null ) {
+
+		final NaturalIdDescriptor naturalIdDescriptor = persister.getHierarchy().getNaturalIdDescriptor();
+		if ( naturalIdDescriptor == null ) {
 			throw new IdentifierGenerationException(
 					"no natural-id property defined; need to specify [key] in " +
 							"generator parameters"
 			);
 		}
-		if ( naturalIdPropertyIndices.length > 1 ) {
+
+		if ( naturalIdDescriptor.getPersistentAttributes().size() > 1 ) {
 			throw new IdentifierGenerationException(
 					"select generator does not currently support composite " +
 							"natural-id properties; need to specify [key] in generator parameters"
 			);
 		}
+
 		if ( persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
 			throw new IdentifierGenerationException(
 					"natural-id also defined as insert-generated; need to specify [key] " +
 							"in generator parameters"
 			);
 		}
-		return persister.getPropertyNames()[naturalIdPropertyIndices[0]];
+		return naturalIdDescriptor.getPersistentAttributes().iterator().next().getName();
 	}
 
 

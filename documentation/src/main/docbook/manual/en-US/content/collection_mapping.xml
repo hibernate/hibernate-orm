@@ -544,7 +544,7 @@ public class Order {
    @ManyToOne
    public Customer getCustomer() { return customer; }
    public void setCustomer(Customer customer) { this.customer = customer; }
-   private Customer number;
+   private Customer customer;
 }
 
 -- Table schema
@@ -597,7 +597,7 @@ public class Order {
    @ManyToOne
    public Customer getCustomer() { return customer; }
    public void setCustomer(Customer customer) { this.customer = customer; }
-   private Customer number;
+   private Customer customer;
 }
 
 -- Table schema
@@ -713,7 +713,7 @@ public class Order {
    @ManyToOne
    public Customer getCustomer() { return customer; }
    public void setCustomer(Customer customer) { this.customer = customer; }
-   private Customer number;
+   private Customer customer;
 }
 
 -- Table schema
@@ -790,7 +790,7 @@ public class Order {
    @ManyToOne
    public Customer getCustomer() { return customer; }
    public void setCustomer(Customer customer) { this.customer = customer; }
-   private Customer number;
+   private Customer customer;
 }
 
 -- Table schema

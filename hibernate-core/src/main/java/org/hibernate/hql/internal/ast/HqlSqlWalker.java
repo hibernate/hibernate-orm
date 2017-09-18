@@ -19,8 +19,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.QueryException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.engine.internal.ParameterBinder;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.CollectionProperties;
 import org.hibernate.hql.internal.antlr.HqlSqlBaseWalker;
@@ -1418,6 +1420,10 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	public Set<String> getTreatAsDeclarationsByPath(String path) {
 		return hqlParser.getTreatMap().get( path );
+	}
+
+	public Dialect getDialect() {
+		return sessionFactoryHelper.getFactory().getServiceRegistry().getService( JdbcServices.class ).getDialect();
 	}
 
 	public static void panic() {

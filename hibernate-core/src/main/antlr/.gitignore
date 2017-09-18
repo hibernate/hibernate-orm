@@ -1,0 +1,12 @@
+# When using -lib with the Antlr v4 tool, Antlr will generate any token files into the
+# the indicated target.  Unfortunately, the main purpose of -lib is to name the directory
+# containing any imports (import grammars, import tokens, etc) needed by the grammar.
+#
+# So far our v4 usage has not needed this capability, so for now we simply leave off the
+# -lib option.  This ignore file makes sure that any token files inadvertently generated
+# here do not make it into SCM.
+#
+# Note that although we do not use grammar/token imports yet, it is very conceivable
+# that we will to unify HQL and order-by grammars.  We will need a solution for this at
+# that time.
+*.tokens

@@ -129,7 +129,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 		//TODO: reenable if we also fix the above todo
-		/*EntityPersister persister = getEntityPersister();
+		/*EntityPersister persister = getEntityDescriptor();
 		if ( success && persister.hasCache() && !persister.isCacheInvalidationRequired() ) {
 			persister.getCache().afterInsert( getGeneratedId(), cacheEntry );
 		}*/

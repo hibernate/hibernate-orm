@@ -1194,7 +1194,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 //			return oldElements;
 //		}
 //
-//		final EntityTypeImplementor entityPersister = session.getFactory().getEntityPersister( entityName );
+//		final EntityTypeImplementor entityPersister = session.getFactory().getEntityDescriptor( entityName );
 //		final Type idType = entityPersister.getIdentifierType();
 //		final boolean useIdDirect = mayUseIdDirect( idType );
 //
@@ -1258,7 +1258,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			SharedSessionContractImplementor session) {
 		throw new org.hibernate.sql.NotYetImplementedException(  );
 //		if ( entityInstance != null && ForeignKeys.isNotTransient( entityName, entityInstance, null, session ) ) {
-//			final EntityTypeImplementor entityPersister = session.getFactory().getEntityPersister( entityName );
+//			final EntityTypeImplementor entityPersister = session.getFactory().getEntityDescriptor( entityName );
 //			final Type idType = entityPersister.getIdentifierType();
 //
 //			final Serializable idOfCurrent = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, entityInstance, session );

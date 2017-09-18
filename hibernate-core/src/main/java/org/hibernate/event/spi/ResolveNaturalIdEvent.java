@@ -14,6 +14,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 
 /**
  * Defines an event class for the resolving of an entity id from the entity's natural-id
@@ -24,29 +26,32 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 public class ResolveNaturalIdEvent extends AbstractEvent {
 	public static final LockMode DEFAULT_LOCK_MODE = LockMode.NONE;
 
-	private final EntityDescriptor entityPersister;
+	private final EntityDescriptor entityDescriptor;
 	private final Map<String, Object> naturalIdValues;
 	private final Object[] orderedNaturalIdValues;
 	private final LockOptions lockOptions;
 
 	private Serializable entityId;
 
-	public ResolveNaturalIdEvent(Map<String, Object> naturalIdValues, EntityDescriptor entityPersister, EventSource source) {
-		this( naturalIdValues, entityPersister, new LockOptions(), source );
+	public ResolveNaturalIdEvent(
+			Map<String, Object> naturalIdValues,
+			EntityDescriptor entityDescriptor,
+			EventSource source) {
+		this( naturalIdValues, entityDescriptor, new LockOptions(), source );
 	}
 
 	public ResolveNaturalIdEvent(
 			Map<String, Object> naturalIdValues,
-			EntityDescriptor entityPersister,
+			EntityDescriptor entityDescriptor,
 			LockOptions lockOptions,
 			EventSource source) {
 		super( source );
 
-		if ( entityPersister == null ) {
+		if ( entityDescriptor == null ) {
 			throw new IllegalArgumentException( "EntityPersister is required for loading" );
 		}
 
-		if ( ! entityPersister.hasNaturalIdentifier() ) {
+		if ( ! entityDescriptor.hasNaturalIdentifier() ) {
 			throw new HibernateException( "Entity did not define a natural-id" );
 		}
 
@@ -54,13 +59,14 @@ public class ResolveNaturalIdEvent extends AbstractEvent {
 			throw new IllegalArgumentException( "natural-id to load is required" );
 		}
 
-		if ( entityPersister.getNaturalIdentifierProperties().length != naturalIdValues.size() ) {
+		final NaturalIdDescriptor naturalIdDescriptor = entityDescriptor.getHierarchy().getNaturalIdDescriptor();
+		if ( naturalIdDescriptor.getPersistentAttributes().size() != naturalIdValues.size() ) {
 			throw new HibernateException(
 					String.format(
-						"Entity [%s] defines its natural-id with %d properties but only %d were specified",
-						entityPersister.getEntityName(),
-						entityPersister.getNaturalIdentifierProperties().length,
-						naturalIdValues.size()
+							"Entity [%s] defines its natural-id with %d properties but only %d were specified",
+							entityDescriptor.getEntityName(),
+							naturalIdDescriptor.getPersistentAttributes().size(),
+							naturalIdValues.size()
 					)
 			);
 		}
@@ -72,21 +78,26 @@ public class ResolveNaturalIdEvent extends AbstractEvent {
 			lockOptions.setLockMode( DEFAULT_LOCK_MODE );
 		}
 
-		this.entityPersister = entityPersister;
+		this.entityDescriptor = entityDescriptor;
 		this.naturalIdValues = naturalIdValues;
 		this.lockOptions = lockOptions;
 
-		int[] naturalIdPropertyPositions = entityPersister.getNaturalIdentifierProperties();
-		orderedNaturalIdValues = new Object[naturalIdPropertyPositions.length];
+		this.orderedNaturalIdValues = new Object[ naturalIdDescriptor.getPersistentAttributes().size() ];
+
 		int i = 0;
-		for ( int position : naturalIdPropertyPositions ) {
-			final String propertyName = entityPersister.getPropertyNames()[position];
-			if ( ! naturalIdValues.containsKey( propertyName ) ) {
+		for ( PersistentAttribute naturalIdAttribute : naturalIdDescriptor.getPersistentAttributes() ) {
+			// todo (6.0) : still need to figure out ordering of array elements for "value arrays"
+			final String attributeName = naturalIdAttribute.getName();
+			if ( ! naturalIdValues.containsKey( attributeName ) ) {
 				throw new HibernateException(
-						String.format( "No value specified for natural-id property %s#%s", getEntityName(), propertyName )
+						String.format(
+								"No value specified for natural-id property %s#%s",
+								getEntityName(),
+								attributeName
+						)
 				);
 			}
-			orderedNaturalIdValues[i++] = naturalIdValues.get( entityPersister.getPropertyNames()[position] );
+			orderedNaturalIdValues[i++] = naturalIdValues.get( attributeName );
 		}
 	}
 
@@ -98,12 +109,12 @@ public class ResolveNaturalIdEvent extends AbstractEvent {
 		return orderedNaturalIdValues;
 	}
 
-	public EntityDescriptor getEntityPersister() {
-		return entityPersister;
+	public EntityDescriptor getEntityDescriptor() {
+		return entityDescriptor;
 	}
 
 	public String getEntityName() {
-		return getEntityPersister().getEntityName();
+		return getEntityDescriptor().getEntityName();
 	}
 
 	public LockOptions getLockOptions() {

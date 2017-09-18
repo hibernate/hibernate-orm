@@ -730,7 +730,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 //
 //		final Object entity;
 //
-//		subclassPersister = factory.getEntityPersister( entry.getSubclass() );
+//		subclassPersister = factory.getEntityDescriptor( entry.getSubclass() );
 //		final Object optionalObject = event.getInstanceToLoad();
 //		entity = optionalObject == null
 //				? session.instantiate( subclassPersister, entityId )
@@ -824,7 +824,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 //			);
 //		}
 //
-//		EntityDescriptor subclassPersister = factory.getEntityPersister( entry.getSubclass() );
+//		EntityDescriptor subclassPersister = factory.getEntityDescriptor( entry.getSubclass() );
 //		Object result = optionalObject == null ?
 //				session.instantiate( subclassPersister, id ) : optionalObject;
 //

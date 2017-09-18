@@ -133,7 +133,7 @@ public class StandardNaturalIdLoaderImpl implements NaturalIdLoader {
 //	}
 //
 //	private String generateEntityIdByNaturalIdSql(boolean[] valueNullness) {
-//		EntityPersister rootPersister = getFactory().getEntityPersister( getRootEntityName() );
+//		EntityPersister rootPersister = getFactory().getEntityDescriptor( getRootEntityName() );
 //		if ( rootPersister != this ) {
 //			if ( rootPersister instanceof AbstractEntityPersister ) {
 //				return ( (AbstractEntityPersister) rootPersister ).generateEntityIdByNaturalIdSql( valueNullness );

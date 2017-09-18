@@ -554,7 +554,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		log.tracef(
 //				"%s Starting root entity : %s",
 //				StringHelper.repeat( ">>", fetchSourceStack.size() ),
-//				entityDefinition.getEntityPersister().getEntityName()
+//				entityDefinition.getEntityDescriptor().getEntityName()
 //		);
 //
 //		if ( !supportsRootEntityReturns() ) {
@@ -566,7 +566,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		pushToStack( entityReturn );
 //
 //		// also add an AssociationKey for the root so we can later on recognize circular references back to the root.
-//		final Joinable entityPersister = (Joinable) entityDefinition.getEntityPersister();
+//		final Joinable entityPersister = (Joinable) entityDefinition.getEntityDescriptor();
 //		associationKeyRegistered(
 //				new AssociationKey( entityPersister.getTableName(), entityPersister.getKeyColumnNames() )
 //		);
@@ -577,7 +577,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		// Only process the entityDefinition if it is for the root return.
 //		final FetchSource currentSource = currentSource();
 //		final boolean isRoot = EntityReturn.class.isInstance( currentSource ) &&
-//				entityDefinition.getEntityPersister().equals( EntityReturn.class.cast( currentSource ).getEntityPersister() );
+//				entityDefinition.getEntityDescriptor().equals( EntityReturn.class.cast( currentSource ).getEntityDescriptor() );
 //		if ( !isRoot ) {
 //			// if not, this call should represent a fetch which will be handled in #finishingAttribute
 //			return;
@@ -590,7 +590,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		log.tracef(
 //				"%s Finished root entity : %s",
 //				StringHelper.repeat( "<<", fetchSourceStack.size() ),
-//				entityDefinition.getEntityPersister().getEntityName()
+//				entityDefinition.getEntityDescriptor().getEntityName()
 //		);
 //	}
 //
@@ -600,7 +600,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //			throw new WalkingException(
 //					String.format(
 //							"Mismatched FetchSource from stack on pop.  Expecting EntityReference(%s), but found %s",
-//							entityDefinition.getEntityPersister().getEntityName(),
+//							entityDefinition.getEntityDescriptor().getEntityName(),
 //							fetchSource
 //					)
 //			);
@@ -608,7 +608,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //
 //		final EntityReference entityReference = (EntityReference) fetchSource;
 //		// NOTE : this is not the most exhaustive of checks because of hierarchical associations (employee/manager)
-//		if ( ! entityReference.getEntityPersister().equals( entityDefinition.getEntityPersister() ) ) {
+//		if ( ! entityReference.getEntityDescriptor().equals( entityDefinition.getEntityDescriptor() ) ) {
 //			throw new WalkingException( "Mismatched FetchSource from stack on pop" );
 //		}
 //	}
@@ -621,18 +621,18 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		log.tracef(
 //				"%s Starting entity identifier : %s",
 //				StringHelper.repeat( ">>", fetchSourceStack.size() ),
-//				entityIdentifierDefinition.getEntityDefinition().getEntityPersister().getEntityName()
+//				entityIdentifierDefinition.getEntityDefinition().getEntityDescriptor().getEntityName()
 //		);
 //
 //		final EntityReference entityReference = (EntityReference) currentSource();
 //
 //		// perform some stack validation
-//		if ( ! entityReference.getEntityPersister().equals( entityIdentifierDefinition.getEntityDefinition().getEntityPersister() ) ) {
+//		if ( ! entityReference.getEntityDescriptor().equals( entityIdentifierDefinition.getEntityDefinition().getEntityDescriptor() ) ) {
 //			throw new WalkingException(
 //					String.format(
 //							"Encountered unexpected fetch owner [%s] in stack while processing entity identifier for [%s]",
-//							entityReference.getEntityPersister().getEntityName(),
-//							entityIdentifierDefinition.getEntityDefinition().getEntityPersister().getEntityName()
+//							entityReference.getEntityDescriptor().getEntityName(),
+//							entityIdentifierDefinition.getEntityDefinition().getEntityDescriptor().getEntityName()
 //					)
 //			);
 //		}
@@ -652,12 +652,12 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //				throw new WalkingException( "Unexpected state in FetchSource stack" );
 //			}
 //			final EntityReference entityReference = (EntityReference) currentSource;
-//			if ( entityReference.getEntityPersister().getEntityKeyDefinition() != entityIdentifierDefinition ) {
+//			if ( entityReference.getEntityDescriptor().getEntityKeyDefinition() != entityIdentifierDefinition ) {
 //				throw new WalkingException(
 //						String.format(
 //								"Encountered unexpected fetch owner [%s] in stack while processing entity identifier for [%s]",
-//								entityReference.getEntityPersister().getEntityName(),
-//								entityIdentifierDefinition.getEntityDefinition().getEntityPersister().getEntityName()
+//								entityReference.getEntityDescriptor().getEntityName(),
+//								entityIdentifierDefinition.getEntityDefinition().getEntityDescriptor().getEntityName()
 //						)
 //				);
 //			}
@@ -678,8 +678,8 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //			throw new WalkingException(
 //					String.format(
 //							"Encountered unexpected fetch owner [%s] in stack while processing entity identifier for [%s]",
-//							entityReference.getEntityPersister().getEntityName(),
-//							entityIdentifierDefinition.getEntityDefinition().getEntityPersister().getEntityName()
+//							entityReference.getEntityDescriptor().getEntityName(),
+//							entityIdentifierDefinition.getEntityDefinition().getEntityDescriptor().getEntityName()
 //					)
 //			);
 //		}
@@ -687,7 +687,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		log.tracef(
 //				"%s Finished entity identifier : %s",
 //				StringHelper.repeat( "<<", fetchSourceStack.size() ),
-//				entityIdentifierDefinition.getEntityDefinition().getEntityPersister().getEntityName()
+//				entityIdentifierDefinition.getEntityDefinition().getEntityDescriptor().getEntityName()
 //		);
 //	}
 //	// Collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1052,7 +1052,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //
 //		// go ahead and build the bidirectional fetch
 //		if ( attributeDefinition.getAssociationNature() == AssociationAttributeDefinition.AssociationNature.ENTITY ) {
-//			final Joinable currentEntityPersister = (Joinable) currentSource().resolveEntityReference().getEntityPersister();
+//			final Joinable currentEntityPersister = (Joinable) currentSource().resolveEntityReference().getEntityDescriptor();
 //			final AssociationKey currentEntityReferenceAssociationKey =
 //					new AssociationKey( currentEntityPersister.getTableName(), currentEntityPersister.getKeyColumnNames() );
 //			// if associationKey is equal to currentEntityReferenceAssociationKey

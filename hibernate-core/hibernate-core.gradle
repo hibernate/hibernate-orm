@@ -302,11 +302,40 @@ test {
 }
 
 
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Custom Antlr v4 Plugin (to work with Gradle 3)
+
+ext {
+    baseAntlrInputPath = 'src/main/antlr'
+    baseAntlrOutputPath = 'generated-src/antlr/main'
+}
+
+class GrammarDescriptor {
+    String packageName
+    String grammarName
+
+    GrammarDescriptor(String packageName, String grammarName) {
+        this.packageName = packageName
+        this.grammarName = grammarName
+    }
+
+    File resolveSourceFile(Project project) {
+        return project.file(
+                project.baseAntlrInputPath +
+                        '/' + packageName.replace( '.', '/' ) +
+                        '/' + grammarName + '.g4'
+        )
+    }
+
+    File resolveOutputFile(Project project) {
+        final File baseOutputDir = project.file( "${project.buildDir}/${project.baseAntlrOutputPath}/" )
+        final File packagedOutputDirectory = new File( baseOutputDir, packageName.replace( '.', '/' ) )
+
+        return new File( packagedOutputDirectory, grammarName + '.g4' )
+    }
+}
 
 class Antlr4Plugin implements Plugin<Project> {
     void apply(Project project) {
@@ -336,84 +365,53 @@ class Antlr4Plugin implements Plugin<Project> {
 }
 
 class Antlr4GenerationTask extends DefaultTask {
-    String baseInputDirectory = 'src/main/antlr'
-    String outputDirectoryPath = "generated-src/antlr/main"
+    static final String HQL_PCKG = 'org.hibernate.query.sqm.produce.internal.hql.grammar'
+    static final String IMPORT_SQL_PCKG = 'org.hibernate.tool.hbm2ddl.grammar'
 
-
-    Map packageGrammarNames = ['org.hibernate.query.sqm.produce.internal.hql.grammar' :  ['HqlLexer.g4', 'HqlParser.g4'],
-                                'org.hibernate.tool.hbm2ddl.grammar' : ['SqlStatementLexer.g4','SqlStatementParser.g4']]
-
-    // A map where the key is the grammar file and the value the package name
-    Map<File,String> sourceFilesPackageNames = [:]
+    List<GrammarDescriptor> grammarDescriptors = [
+            new GrammarDescriptor( HQL_PCKG, 'HqlLexer' ),
+            new GrammarDescriptor( HQL_PCKG, 'HqlParser' ),
+            new GrammarDescriptor( IMPORT_SQL_PCKG, 'SqlStatementLexer' ),
+            new GrammarDescriptor( IMPORT_SQL_PCKG, 'SqlStatementParser' )
+    ]
 
     @InputFiles
     @SkipWhenEmpty
     FileCollection getSource() {
-        List<String> sourceFileNames = []
-        getAllSources().each { packageName, names ->
-            names.forEach( {
-                sourceFileNames.add(it)
-                sourceFilesPackageNames.put(
-                        this.getProject().file(it),
-                        packageName
-                )
-            } )
-
-        }
-        return this.getProject().files( sourceFileNames )
-    }
-
-    // return Map where the key is the package name and the value is a list of grammar file belonging to the package
-    Map<String,List<String>> getAllSources(){
-        def result = [:];
-        packageGrammarNames.each {
-            packageName, names
-                ->
-                result.put(packageName, getPackageSources(packageName, names));
-        }
-        return result;
-    }
-
-    List<String> getPackageSources(packageName, names){
-        names.collect {
-            name -> baseInputDirectory + '/' + packageName.replace( '.', '/' ) + '/' + name
-        }
+        // only used for UP-TO-DATE checking
+        return project.files( grammarDescriptors*.resolveSourceFile( project ) )
     }
 
     @OutputDirectory
     File getOutputDirectory() {
-        return project.file( "${project.buildDir}/${outputDirectoryPath}" )
+        // only used for UP-TO-DATE checking
+        return project.file( "${project.buildDir}/${project.baseAntlrOutputPath}" )
     }
 
     @TaskAction
     void antlrGeneration() {
         logger.lifecycle( "Starting custom Antlr (v4) grammar generation" )
-        source.forEach(
-                { grammarFile ->
-                    File packagedOutputDirectory = new File(
-                            outputDirectory,
-                            sourceFilesPackageNames.get( grammarFile ).replace( '.', '/' )
-                    )
 
-                    if ( !packagedOutputDirectory.exists() ) {
-                        System.out.println( "#>>>> ${packagedOutputDirectory.absolutePath}" )
-                        packagedOutputDirectory.mkdirs()
-                    }
-
-                    project.javaexec {
-                        main 'org.antlr.v4.Tool'
-                        classpath project.configurations.antlr
-                        args '-o', packagedOutputDirectory.absolutePath
-                        args '-lib', grammarFile.parentFile.absolutePath
-                        args '-long-messages'
-                        args '-listener'
-                        args '-visitor'
-                        args grammarFile.absolutePath
-                    }
-
-
-                }
-        )
+        grammarDescriptors.forEach( { grammarDescriptor -> generate( grammarDescriptor ) } )
     }
 
+    def generate(GrammarDescriptor grammarDescriptor) {
+        final File sourceFile = grammarDescriptor.resolveSourceFile( project )
+        final File outputFile = grammarDescriptor.resolveOutputFile( project )
+
+        logger.lifecycle( "Starting Antlr grammar generation `${grammarDescriptor.grammarName} : [${sourceFile.absolutePath}] -> [${outputFile.absolutePath}]" )
+
+        outputFile.parentFile.mkdirs()
+
+        project.javaexec {
+            main 'org.antlr.v4.Tool'
+            classpath project.configurations.antlr
+            args '-o', outputFile.parentFile.absolutePath
+//            args '-lib', sourceFile.parentFile.absolutePath
+            args '-long-messages'
+            args '-listener'
+            args '-visitor'
+            args sourceFile.absolutePath
+        }
+    }
 }

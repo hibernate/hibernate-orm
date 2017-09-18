@@ -52,7 +52,7 @@ public class DefaultResolveNaturalIdEventListener
 	 * @return The loaded entity, or null.
 	 */
 	protected Serializable resolveNaturalId(final ResolveNaturalIdEvent event) {
-		final EntityDescriptor persister = event.getEntityPersister();
+		final EntityDescriptor persister = event.getEntityDescriptor();
 
 		final boolean traceEnabled = LOG.isTraceEnabled();
 		if ( traceEnabled ) {
@@ -92,7 +92,7 @@ public class DefaultResolveNaturalIdEventListener
 	 */
 	protected Serializable resolveFromCache(final ResolveNaturalIdEvent event) {
 		return event.getSession().getPersistenceContext().getNaturalIdHelper().findCachedNaturalIdResolution(
-				event.getEntityPersister(),
+				event.getEntityDescriptor(),
 				event.getOrderedNaturalIdValues()
 		);
 	}
@@ -113,14 +113,14 @@ public class DefaultResolveNaturalIdEventListener
 			startTime = System.nanoTime();
 		}
 		
-		final Serializable pk = event.getEntityPersister().loadEntityIdByNaturalId(
+		final Serializable pk = event.getEntityDescriptor().loadEntityIdByNaturalId(
 				event.getOrderedNaturalIdValues(),
 				event.getLockOptions(),
 				event.getSession()
 		);
 		
 		if ( stats ) {
-			final NaturalIdDataAccess naturalIdCacheAccessStrategy = event.getEntityPersister()
+			final NaturalIdDataAccess naturalIdCacheAccessStrategy = event.getEntityDescriptor()
 					.getHierarchy()
 					.getNaturalIdDescriptor()
 					.getCacheAccess();
@@ -133,7 +133,7 @@ public class DefaultResolveNaturalIdEventListener
 		//PK can be null if the entity doesn't exist
 		if (pk != null) {
 			event.getSession().getPersistenceContext().getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
-					event.getEntityPersister(),
+					event.getEntityDescriptor(),
 					pk,
 					event.getOrderedNaturalIdValues()
 			);

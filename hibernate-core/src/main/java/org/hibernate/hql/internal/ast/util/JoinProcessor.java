@@ -37,13 +37,13 @@ import org.hibernate.sql.JoinType;
 import org.hibernate.type.Type;
 
 /**
- * Performs the post-processing of the join information gathered during semantic analysis.
- * The join generating classes are complex, this encapsulates some of the JoinSequence-related
- * code.
+ * Performs the post-processing of the join information gathered during semantic analysis. The join generating classes
+ * are complex, this encapsulates some of the JoinSequence-related code.
  *
  * @author Joshua Davis
  */
 public class JoinProcessor implements SqlTokenTypes {
+
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JoinProcessor.class );
 
 	private final HqlSqlWalker walker;
@@ -63,9 +63,7 @@ public class JoinProcessor implements SqlTokenTypes {
 	 * Translates an AST join type (i.e., the token type) into a JoinFragment.XXX join type.
 	 *
 	 * @param astJoinType The AST join type (from HqlSqlTokenTypes or SqlTokenTypes)
-	 *
 	 * @return a JoinFragment.XXX join type.
-	 *
 	 * @see JoinFragment
 	 * @see SqlTokenTypes
 	 */
@@ -98,7 +96,7 @@ public class JoinProcessor implements SqlTokenTypes {
 			// found it easiest to simply reorder the FromElements here into ascending order
 			// in terms of injecting them into the resulting sql ast in orders relative to those
 			// expected by the old parser; this is definitely another of those "only needed
-			// for regression purposes".  The SyntheticAndFactory, then, simply injects them as it
+			// for regression purposes". The SyntheticAndFactory, then, simply injects them as it
 			// encounters them.
 			fromElements = new ArrayList();
 			ListIterator liter = fromClause.getFromElements().listIterator( fromClause.getFromElements().size() );
@@ -112,13 +110,14 @@ public class JoinProcessor implements SqlTokenTypes {
 			while ( liter.hasNext() ) {
 				FromElement fromElement = liter.next();
 
-				// We found an implied from element that is used in the WITH clause of another from element, so it need to become part of it's join sequence
+				// We found an implied from element that is used in the WITH clause of another from element, so it need
+				// to become part of it's join sequence
 				if ( fromElement instanceof ImpliedFromElement
 						&& fromElement.getOrigin().getWithClauseFragment() != null
 						&& fromElement.getOrigin().getWithClauseFragment().contains( fromElement.getTableAlias() ) ) {
 					fromElement.getOrigin().getJoinSequence().addJoin( (ImpliedFromElement) fromElement );
 					// This from element will be rendered as part of the origins join sequence
-					fromElement.setText("");
+					fromElement.setText( "" );
 				}
 				else {
 					fromElements.add( fromElement );
@@ -133,6 +132,7 @@ public class JoinProcessor implements SqlTokenTypes {
 			JoinSequence join = fromElement.getJoinSequence();
 			join.setSelector(
 					new JoinSequence.Selector() {
+
 						public boolean includeSubclasses(String alias) {
 							// The uber-rule here is that we need to include subclass joins if
 							// the FromElement is in any way dereferenced by a property from
@@ -144,8 +144,7 @@ public class JoinProcessor implements SqlTokenTypes {
 								LOG.tracev(
 										"Forcing inclusion of extra joins [alias={0}, containsTableAlias={1}]",
 										alias,
-										containsTableAlias
-								);
+										containsTableAlias );
 								return true;
 							}
 							boolean shallowQuery = walker.isShallowQuery();
@@ -153,8 +152,7 @@ public class JoinProcessor implements SqlTokenTypes {
 							boolean subQuery = fromClause.isSubQuery();
 							return includeSubclasses && containsTableAlias && !subQuery && !shallowQuery;
 						}
-					}
-			);
+					} );
 			addJoinNodes( query, join, fromElement );
 		}
 
@@ -164,8 +162,7 @@ public class JoinProcessor implements SqlTokenTypes {
 		JoinFragment joinFragment = join.toJoinFragment(
 				walker.getEnabledFilters(),
 				fromElement.useFromFragment() || fromElement.isDereferencedBySuperclassOrSubclassProperty(),
-				fromElement.getWithClauseFragment()
-		);
+				fromElement.getWithClauseFragment() );
 
 		String frag = joinFragment.toFromFragmentString();
 		String whereFrag = joinFragment.toWhereFragmentString();
@@ -182,14 +179,16 @@ public class JoinProcessor implements SqlTokenTypes {
 		// If there is a FROM fragment and the FROM element is an explicit, then add the from part.
 		if ( fromElement.useFromFragment() ||
 				( fromElement.getFromClause().isSubQuery()
-						&& fromElement.isDereferencedBySuperclassOrSubclassProperty() ) /*&& StringHelper.isNotEmpty( frag )*/ ) {
+						&& fromElement.isDereferencedBySuperclassOrSubclassProperty() ) /*
+																						 * && StringHelper.isNotEmpty(
+																						 * frag )
+																						 */ ) {
 			String fromFragment = processFromFragment( frag, join ).trim();
 			LOG.debugf( "Using FROM fragment [%s]", fromFragment );
 			processDynamicFilterParameters(
 					fromFragment,
 					fromElement,
-					walker
-			);
+					walker );
 		}
 
 		syntheticAndFactory.addWhereFragment(
@@ -197,13 +196,12 @@ public class JoinProcessor implements SqlTokenTypes {
 				whereFrag,
 				query,
 				fromElement,
-				walker
-		);
+				walker );
 	}
 
 	private String processFromFragment(String frag, JoinSequence join) {
 		String fromFragment = frag.trim();
-		// The FROM fragment will probably begin with ', '.  Remove this if it is present.
+		// The FROM fragment will probably begin with ', '. Remove this if it is present.
 		if ( fromFragment.startsWith( ", " ) ) {
 			fromFragment = fromFragment.substring( 2 );
 		}
@@ -237,15 +235,12 @@ public class JoinProcessor implements SqlTokenTypes {
 						",",
 						ArrayHelper.fillArray(
 								"?",
-								type.getColumnSpan( walker.getSessionFactoryHelper().getFactory() )
-						)
-				);
+								type.getColumnSpan( walker.getSessionFactoryHelper().getFactory() ) ) );
 				final String bindFragment;
 				if ( value != null && Collection.class.isInstance( value ) ) {
 					bindFragment = StringHelper.join(
 							",",
-							ArrayHelper.fillArray( typeBindFragment, ( (Collection) value ).size() )
-					);
+							ArrayHelper.fillArray( typeBindFragment, ( (Collection) value ).size() ) );
 				}
 				else {
 					bindFragment = typeBindFragment;
@@ -262,7 +257,28 @@ public class JoinProcessor implements SqlTokenTypes {
 	}
 
 	private static boolean hasDynamicFilterParam(String sqlFragment) {
-		return !sqlFragment.contains( ParserHelper.HQL_VARIABLE_PREFIX );
+		// Assert that the variable prefix is exactly one character. If this changes the code below must be adapted
+		assert ParserHelper.HQL_VARIABLE_PREFIX.length() == 1;
+		final char hqlVariablePrefixChar = ParserHelper.HQL_VARIABLE_PREFIX.charAt( 0 );
+
+		boolean quoted = false;
+		char lastChar = '\0';
+		for ( int i = 0; i < sqlFragment.length(); i++ ) {
+			char c = sqlFragment.charAt( i );
+			if ( c == '"' ) {
+				quoted = !quoted;
+			}
+			else if ( c == hqlVariablePrefixChar ) {
+				if ( !quoted ) {
+					if ( Character.isWhitespace( lastChar ) || i == 0 ) {
+						return false;
+					}
+				}
+			}
+
+			lastChar = c;
+		}
+		return true;
 	}
 
 	private static boolean hasCollectionFilterParam(String sqlFragment) {

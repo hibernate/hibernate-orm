@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.HibernateException;
@@ -26,15 +26,15 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * Delegate responsible for, in conjunction with the various
@@ -84,7 +84,6 @@ public final class Cascade {
 				LOG.tracev( "Processing cascade {0} for: {1}", action, persister.getEntityName() );
 			}
 
-//			final JavaTypeDescriptor[] types = persister.getPropertyJavaTypeDescriptors();
 			final List<PersistentAttribute> persistentAttributes = persister.getPersistentAttributes();
 			final String[] propertyNames = persister.getPropertyNames();
 			final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
@@ -152,7 +151,6 @@ public final class Cascade {
 			final String propertyName,
 			final Object anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
-		
 		if ( child != null ) {
 			if ( PluralPersistentAttribute.class.isInstance(attribute) || SingularPersistentAttributeEntity.class.isInstance( attribute ) ) {
 				if ( cascadeAssociationNow( cascadePoint, attribute ) ) {
@@ -178,14 +176,14 @@ public final class Cascade {
 						componentPathStackDepth,
 						parent,
 						child,
-						attribute,
+						(EmbeddedValuedNavigable) attribute,
 						anything
 				);
 			}
 		}
 		
 		// potentially we need to handle orphan deletes for one-to-ones here...
-		if ( isLogicalOneToOne( type ) ) {
+		if ( isLogicalOneToOne( attribute ) ) {
 			// We have a physical or logical one-to-one.  See if the attribute cascade settings and action-type require
 			// orphan checking
 			if ( style.hasOrphanDelete() && action.deleteOrphans() ) {
@@ -255,12 +253,12 @@ public final class Cascade {
 	 * Check if the association is a one to one in the logical model (either a shared-pk
 	 * or unique fk).
 	 *
-	 * @param type The type representing the attribute metadata
+	 * @param attribute The persistent attribute metadata
 	 *
 	 * @return True if the attribute represents a logical one to one association
 	 */
-	private static boolean isLogicalOneToOne(Type type) {
-		return type.getClassification().equals( Type.Classification.ENTITY ) && ( (EntityType) type ).isLogicalOneToOne();
+	private static boolean isLogicalOneToOne(PersistentAttribute attribute) {
+		return attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
 	}
 
 	private static boolean cascadeAssociationNow(final CascadePoint cascadePoint, PersistentAttribute attribute) {
@@ -274,19 +272,19 @@ public final class Cascade {
 			final int componentPathStackDepth,
 			final Object parent,
 			final Object child,
-			final PersistentAttribute componentType,
+			final EmbeddedValuedNavigable attribute,
 			final Object anything) {
 
 		Object[] children = null;
-		final Type[] types = componentType.getSubtypes();
-		final String[] propertyNames = componentType.getPropertyNames();
-		for ( int i = 0; i < types.length; i++ ) {
-			final CascadeStyle componentPropertyStyle = componentType.getCascadeStyle( i );
-			final String subPropertyName = propertyNames[i];
+		final List<PersistentAttribute> attributes = attribute.getContainer().getNavigables();
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			final PersistentAttribute subattribute = attributes.get( i );
+			final CascadeStyle componentPropertyStyle = subattribute.getCascadeStyle( i );
+			final String subPropertyName = subattribute.getName();
 			if ( componentPropertyStyle.doCascade( action ) ) {
-				if (children == null) {
+				if ( children == null ) {
 					// Get children on demand.
-					children = componentType.getPropertyValues( child, eventSource );
+					children = subattribute.getPropertyValues( child, eventSource );
 				}
 				cascadeProperty(
 						action,
@@ -295,12 +293,12 @@ public final class Cascade {
 						componentPathStackDepth + 1,
 						parent,
 						children[i],
-						types[i],
+						subattribute,
 						componentPropertyStyle,
 						subPropertyName,
 						anything,
 						false
-					);
+				);
 			}
 		}
 	}
@@ -348,11 +346,10 @@ public final class Cascade {
 			final CascadeStyle style,
 			final Object anything,
 			final PluralPersistentAttribute attribute) {
+		final CollectionElement collectionElement = attribute.getPersistentCollectionMetadata().getElementDescriptor();
 		final PersistentCollectionDescriptor persister = eventSource.getFactory()
 				.getTypeConfiguration()
-				.findCollectionPersister( attribute.getNavigableRole().getNavigableName() );
-		final javax.persistence.metamodel.Type elementType = attribute.getElementType();
-		final Type elemType = (Type) persister.getElementType();
+				.findCollectionPersister( attribute.getNavigableName() );
 
 		CascadePoint elementsCascadePoint = cascadePoint;
 		if ( cascadePoint == CascadePoint.AFTER_INSERT_BEFORE_DELETE ) {
@@ -360,9 +357,7 @@ public final class Cascade {
 		}
 
 		//cascade to current collection elements
-		if ( elemType.getClassification().equals( Type.Classification.ENTITY )
-				|| elemType.getClassification().equals( Type.Classification.ANY )
-				|| elemType.isComponentType() ) {
+		if ( collectionElement.getClassification() != CollectionElement.ElementClassification.BASIC ) {
 			cascadeCollectionElements(
 				action,
 				elementsCascadePoint,
@@ -370,11 +365,11 @@ public final class Cascade {
 				componentPathStackDepth,
 				parent,
 				child,
-				type,
+				attribute,
 				style,
-				elemType,
+				collectionElement,
 				anything,
-				persister.isCascadeDeleteEnabled()
+				persister
 			);
 		}
 	}
@@ -387,12 +382,12 @@ public final class Cascade {
 			final EventSource eventSource,
 			final Object parent,
 			final Object child,
-			final Type type,
+			final PersistentAttribute persistentAttribute,
 			final CascadeStyle style,
 			final Object anything,
 			final boolean isCascadeDeleteEnabled) {
-		final String entityName = type.getClassification().equals( Type.Classification.ENTITY )
-				? ( (EntityType) type ).getAssociatedEntityName()
+		final String entityName = persistentAttribute.getPersistenceType() == PersistenceType.ENTITY
+				? ( (SingularPersistentAttributeEntity) persistentAttribute ).getEntityName()
 				: null;
 		if ( style.reallyDoCascade( action ) ) {
 			//not really necessary, but good for consistency...
@@ -416,20 +411,20 @@ public final class Cascade {
 			final int componentPathStackDepth,
 			final Object parent,
 			final Object child,
-			final JavaTypeDescriptor collectionType,
+			final PluralPersistentAttribute attribute,
 			final CascadeStyle style,
-			final Type elemType,
+			final CollectionElement collectionElement,
 			final Object anything,
-			final boolean isCascadeDeleteEnabled) throws HibernateException {
+			final PersistentCollectionDescriptor persister) throws HibernateException {
 		final boolean reallyDoCascade = style.reallyDoCascade( action ) && child != CollectionType.UNFETCHED_COLLECTION;
 
 		if ( reallyDoCascade ) {
 			final boolean traceEnabled = LOG.isTraceEnabled();
 			if ( traceEnabled ) {
-				LOG.tracev( "Cascade {0} for collection: {1}", action, collectionType.getRole() );
+				LOG.tracev( "Cascade {0} for collection: {1}", action, attribute.getNavigableName() );
 			}
 
-			final Iterator itr = action.getCascadableChildrenIterator( eventSource, collectionType, child );
+			final Iterator itr = action.getCascadableChildrenIterator( eventSource, persister, child );
 			while ( itr.hasNext() ) {
 				cascadeProperty(
 						action,
@@ -438,7 +433,7 @@ public final class Cascade {
 						componentPathStackDepth,
 						parent,
 						itr.next(),
-						elemType,
+						attribute,
 						style,
 						null,
 						anything,
@@ -447,29 +442,29 @@ public final class Cascade {
 			}
 
 			if ( traceEnabled ) {
-				LOG.tracev( "Done cascade {0} for collection: {1}", action, collectionType.getRole() );
+				LOG.tracev( "Done cascade {0} for collection: {1}", action, attribute.getNavigableName() );
 			}
 		}
 
 		final boolean deleteOrphans = style.hasOrphanDelete()
 				&& action.deleteOrphans()
-				&& elemType.getClassification().equals( Type.Classification.ENTITY )
+				&& ( collectionElement.getJavaTypeDescriptor() instanceof EntityJavaDescriptor)
 				// a newly instantiated collection can't have orphans
 				&& child instanceof PersistentCollection;
 
 		if ( deleteOrphans ) {
 			final boolean traceEnabled = LOG.isTraceEnabled();
 			if ( traceEnabled ) {
-				LOG.tracev( "Deleting orphans for collection: {0}", collectionType.getRole() );
+				LOG.tracev( "Deleting orphans for collection: {0}", attribute.getNavigableName() );
 			}
 			// we can do the cast since orphan-delete does not apply to:
 			// 1. newly instantiated collections
 			// 2. arrays (we can't track orphans for detached arrays)
-			final String entityName = collectionType.getAssociatedEntityName( eventSource.getFactory() );
+			final String entityName = ((EntityJavaDescriptor)collectionElement.getJavaTypeDescriptor()).getEntityName();
 			deleteOrphans( eventSource, entityName, (PersistentCollection) child );
 
 			if ( traceEnabled ) {
-				LOG.tracev( "Done deleting orphans for collection: {0}", collectionType.getRole() );
+				LOG.tracev( "Done deleting orphans for collection: {0}", attribute.getNavigableName()  );
 			}
 		}
 	}

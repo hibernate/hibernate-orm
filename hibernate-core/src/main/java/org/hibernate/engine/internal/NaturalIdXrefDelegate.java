@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -346,7 +346,7 @@ public class NaturalIdXrefDelegate {
 	private static class CachedNaturalId implements Serializable {
 		private final EntityDescriptor persister;
 		private final Object[] values;
-		private final Type[] naturalIdTypes;
+		private final JavaTypeDescriptor[] naturalIdTypes;
 		private int hashCode;
 
 		public CachedNaturalId(EntityDescriptor persister, Object[] values) {
@@ -358,12 +358,12 @@ public class NaturalIdXrefDelegate {
 			hashCodeCalculation = prime * hashCodeCalculation + persister.hashCode();
 
 			final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
-			naturalIdTypes = new Type[ naturalIdPropertyIndexes.length ];
+			naturalIdTypes = new JavaTypeDescriptor[ naturalIdPropertyIndexes.length ];
 			int i = 0;
 			for ( int naturalIdPropertyIndex : naturalIdPropertyIndexes ) {
-				final Type type = persister.getPropertyType( persister.getPropertyNames()[ naturalIdPropertyIndex ] );
-				naturalIdTypes[i] = type;
-				final int elementHashCode = values[i] == null ? 0 : type.getHashCode( values[i] );
+				final JavaTypeDescriptor javaTypeDescriptor = persister.getPropertyJavaTypeDescriptor( persister.getPropertyNames()[ naturalIdPropertyIndex ] );
+				naturalIdTypes[i] = javaTypeDescriptor;
+				final int elementHashCode = values[i] == null ? 0 : javaTypeDescriptor.extractHashCode( values[i] );
 				hashCodeCalculation = prime * hashCodeCalculation + elementHashCode;
 				i++;
 			}
@@ -399,7 +399,7 @@ public class NaturalIdXrefDelegate {
 		private boolean isSame(Object[] otherValues) {
 			// lengths have already been verified at this point
 			for ( int i = 0; i < naturalIdTypes.length; i++ ) {
-				if ( ! naturalIdTypes[i].isEqual( values[i], otherValues[i], persister.getFactory() ) ) {
+				if ( ! naturalIdTypes[i].areEqual( values[i], otherValues[i] ) ) {
 					return false;
 				}
 			}
@@ -412,7 +412,7 @@ public class NaturalIdXrefDelegate {
 	 */
 	private static class NaturalIdResolutionCache implements Serializable {
 		private final EntityDescriptor persister;
-		private final Type[] naturalIdTypes;
+		private final JavaTypeDescriptor[] naturalIdTypes;
 
 		private Map<Serializable, CachedNaturalId> pkToNaturalIdMap = new ConcurrentHashMap<>();
 		private Map<CachedNaturalId, Serializable> naturalIdToPkMap = new ConcurrentHashMap<>();
@@ -423,10 +423,10 @@ public class NaturalIdXrefDelegate {
 			this.persister = persister;
 
 			final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
-			naturalIdTypes = new Type[ naturalIdPropertyIndexes.length ];
+			naturalIdTypes = new JavaTypeDescriptor[ naturalIdPropertyIndexes.length ];
 			int i = 0;
 			for ( int naturalIdPropertyIndex : naturalIdPropertyIndexes ) {
-				naturalIdTypes[i++] = persister.getPropertyType( persister.getPropertyNames()[ naturalIdPropertyIndex ] );
+				naturalIdTypes[i++] = persister.getPropertyJavaTypeDescriptor( persister.getPropertyNames()[ naturalIdPropertyIndex ] );
 			}
 		}
 

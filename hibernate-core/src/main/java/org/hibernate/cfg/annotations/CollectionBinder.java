@@ -98,6 +98,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.naming.Identifier;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 
@@ -1519,10 +1520,10 @@ public abstract class CollectionBinder {
 					column.setImplicit( false );
 					//not following the spec but more clean
 					column.setNullable( true );
-					column.setLength( Ejb3Column.DEFAULT_COLUMN_LENGTH );
+					column.setLength( Size.Builder.DEFAULT_LENGTH );
 					column.setLogicalColumnName( Identifier.toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME ) );
 					//TODO create an EMPTY_JOINS collection
-					column.setJoins( new HashMap<String, Join>() );
+					column.setJoins( new HashMap<>() );
 					column.setBuildingContext( buildingContext );
 					column.bind();
 					elementColumns[0] = column;

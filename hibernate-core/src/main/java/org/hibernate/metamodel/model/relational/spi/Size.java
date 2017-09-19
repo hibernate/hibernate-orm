@@ -84,7 +84,7 @@ public class Size implements Serializable {
 		//		but we do need to allow for user's to enable legacy behavior (aka these values)
 		//		if they wish - probably a named `DefaultSizeStrategy` instance
 
-		public static final int DEFAULT_LENGTH = 255;
+		public static final long DEFAULT_LENGTH = 255;
 		public static final int DEFAULT_PRECISION = 19;
 		public static final int DEFAULT_SCALE = 2;
 

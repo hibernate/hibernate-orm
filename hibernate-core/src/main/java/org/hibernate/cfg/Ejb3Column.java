@@ -52,7 +52,6 @@ public class Ejb3Column {
 	protected Map<String, Join> joins;
 	protected PropertyHolder propertyHolder;
 	private boolean isImplicit;
-	public static final int DEFAULT_COLUMN_LENGTH = 255;
 	public String sqlType;
 	private Long length;
 	private Integer precision;

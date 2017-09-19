@@ -52,6 +52,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.sql.Template;
 
 /**
@@ -265,7 +266,7 @@ public class MapBinder extends CollectionBinder {
 						Ejb3Column column = new Ejb3Column();
 						column.setImplicit( false );
 						column.setNullable( true );
-						column.setLength( Ejb3Column.DEFAULT_COLUMN_LENGTH );
+						column.setLength( Size.Builder.DEFAULT_LENGTH );
 						column.setLogicalColumnName( Collection.DEFAULT_KEY_COLUMN_NAME );
 						//TODO create an EMPTY_JOINS collection
 						column.setJoins( new HashMap<>() );

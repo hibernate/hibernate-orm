@@ -30,7 +30,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.NullPrecedence;
 import org.hibernate.ScrollMode;
-import org.hibernate.boot.model.JavaTypeDescriptor;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -68,7 +67,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.loader.BatchLoadSizingStrategy;
-import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.metamodel.model.relational.spi.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
@@ -103,7 +101,6 @@ import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
-import org.hibernate.tool.schema.spi.DefaultSizeStrategy;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
@@ -450,7 +447,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The database type name
 	 */
 	public String getCastTypeName(int code) {
-		return getTypeName( code, Column.DEFAULT_LENGTH, Column.DEFAULT_PRECISION, Column.DEFAULT_SCALE );
+		return getTypeName( code, Size.Builder.DEFAULT_LENGTH, Size.Builder.DEFAULT_PRECISION, Size.Builder.DEFAULT_SCALE );
 	}
 
 	/**
@@ -465,6 +462,10 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The cast expression
 	 */
 	public String cast(String value, int jdbcTypeCode, int length, int precision, int scale) {
+		return cast( value, jdbcTypeCode, (long) length, precision, scale );
+	}
+
+	public String cast(String value, int jdbcTypeCode, long length, int precision, int scale) {
 		if ( jdbcTypeCode == Types.CHAR ) {
 			return "cast(" + value + " as char(" + length + "))";
 		}
@@ -475,8 +476,8 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Return an expression casting the value to the specified type.  Simply calls
-	 * {@link #cast(String, int, int, int, int)} passing {@link Column#DEFAULT_PRECISION} and
-	 * {@link Column#DEFAULT_SCALE} as the precision/scale.
+	 * {@link #cast(String, int, int, int, int)} passing {@link Size.Builder#DEFAULT_PRECISION} and
+	 * {@link Size.Builder#DEFAULT_SCALE} as the precision/scale.
 	 *
 	 * @param value The value to cast
 	 * @param jdbcTypeCode The JDBC type code to cast to
@@ -485,12 +486,16 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The cast expression
 	 */
 	public String cast(String value, int jdbcTypeCode, int length) {
-		return cast( value, jdbcTypeCode, length, Column.DEFAULT_PRECISION, Column.DEFAULT_SCALE );
+		return cast( value, jdbcTypeCode, (long) length );
+	}
+
+	public String cast(String value, int jdbcTypeCode, long length) {
+		return cast( value, jdbcTypeCode, length, Size.Builder.DEFAULT_PRECISION, Size.Builder.DEFAULT_SCALE );
 	}
 
 	/**
 	 * Return an expression casting the value to the specified type.  Simply calls
-	 * {@link #cast(String, int, int, int, int)} passing {@link Column#DEFAULT_LENGTH} as the length
+	 * {@link #cast(String, int, int, int, int)} passing {@link Size.Builder#DEFAULT_LENGTH} as the length
 	 *
 	 * @param value The value to cast
 	 * @param jdbcTypeCode The JDBC type code to cast to
@@ -500,7 +505,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The cast expression
 	 */
 	public String cast(String value, int jdbcTypeCode, int precision, int scale) {
-		return cast( value, jdbcTypeCode, Column.DEFAULT_LENGTH, precision, scale );
+		return cast( value, jdbcTypeCode, Size.Builder.DEFAULT_LENGTH, precision, scale );
 	}
 
 	/**

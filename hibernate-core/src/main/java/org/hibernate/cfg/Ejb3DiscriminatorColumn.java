@@ -20,7 +20,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 public class Ejb3DiscriminatorColumn extends Ejb3Column {
 	public static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "DTYPE";
 	public static final String DEFAULT_DISCRIMINATOR_TYPE = "string";
-	private static final int DEFAULT_DISCRIMINATOR_LENGTH = 31;
+	private static final long DEFAULT_DISCRIMINATOR_LENGTH = 31;
 
 	private String discriminatorTypeName;
 
@@ -73,7 +73,7 @@ public class Ejb3DiscriminatorColumn extends Ejb3Column {
 			discriminatorColumn.setImplicit( false );
 		}
 		else if ( DiscriminatorType.STRING.equals( type ) || type == null ) {
-			if ( discAnn != null ) discriminatorColumn.setLength( discAnn.length() );
+			if ( discAnn != null ) discriminatorColumn.setLength( (long) discAnn.length() );
 			discriminatorColumn.setDiscriminatorTypeName( "string" );
 		}
 		else {

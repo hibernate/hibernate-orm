@@ -26,7 +26,7 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.query.sqm.consume.multitable.internal.StandardIdTableSupport;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
 import org.hibernate.query.sqm.consume.multitable.spi.idtable.IdTable;
@@ -559,7 +559,7 @@ public class MySQLDialect extends Dialect {
 	protected String fixedPointNumberCastTarget() {
 		// NOTE : the precision/scale are somewhat arbitrary choices, but MySQL/MariaDB
 		// effectively require *some* values
-		return "decimal(" + Column.DEFAULT_PRECISION + "," + Column.DEFAULT_SCALE + ")";
+		return "decimal(" + Size.Builder.DEFAULT_PRECISION + "," + Size.Builder.DEFAULT_SCALE + ")";
 	}
 
 	@Override

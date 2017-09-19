@@ -13,7 +13,6 @@ import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -22,16 +21,11 @@ import org.hibernate.type.spi.BasicType;
 public interface BasicValuedNavigable<J> extends BasicValuedExpressableType<J>, Navigable<J> {
 	Column getBoundColumn();
 
-	// todo (6.0) : dont particularly like this name.
 	BasicType<J> getBasicType();
 
 	@Override
 	default BasicJavaDescriptor<J> getJavaTypeDescriptor() {
 		return getBasicType().getJavaTypeDescriptor();
-	}
-
-	default SqlTypeDescriptor getSqlTypeDescriptor() {
-		return getBasicType().getSqlTypeDescriptor();
 	}
 
 	@Override

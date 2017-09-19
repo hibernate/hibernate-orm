@@ -15,7 +15,6 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**

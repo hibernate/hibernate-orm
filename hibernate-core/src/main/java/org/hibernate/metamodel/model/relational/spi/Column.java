@@ -28,7 +28,16 @@ public interface Column extends QualifiableSqlExpressable {
 
 	String toLoggableString();
 
+	// todo (6.0) : need to account for rendering a column for both read and write separately
+	//		this is to help account for custom read/write fragments on PhysicalColumn.  We
+	//		can apply the same logic (polymorphism) to DerivedColumns as well, except that:
+	//			1) the DerivedColumn's reader is always the formula expression (illegal to apply transformer)
+	//			2) the DerivedColumn's writer is always null. again illegal to apply transformer, and by definition a DerivedColumn is read-only
+
 	String render(String identificationVariable);
+
+	String renderReadExpression(String identificationVariable);
+	String renderWriteExpression(String identificationVariable);
 
 	SqlTypeDescriptor getSqlTypeDescriptor();
 

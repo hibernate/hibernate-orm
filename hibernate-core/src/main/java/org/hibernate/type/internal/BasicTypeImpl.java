@@ -39,6 +39,17 @@ public class BasicTypeImpl<T> implements BasicType<T>, SqlSelectionReader<T> {
 	}
 
 	public BasicTypeImpl setVersionSupport(VersionSupport<T> versionSupport){
+		// todo (6.0) : not sure this is the best place to define this...
+		// 		the purpose of this is to account for cases where the proper
+		//		VersionSupport to use is not the same as the JTD's
+		//		VersionSupport.  This only(?) happens when we have a
+		//		`byte[]` mapped to T-SQL ROWVERSION/TIMESTAMP data-type -
+		//		which is represented as a `byte[]`, but with a very
+		//		specific comparison algorithm.
+		//
+		//		the alternative is to handle this distinction when building
+		//		the VersionDescriptor - if the JTD is a `byte[]`, we'd use
+		//		a specialized VersionSupport
 		this.versionSupport = versionSupport;
 		return this;
 	}

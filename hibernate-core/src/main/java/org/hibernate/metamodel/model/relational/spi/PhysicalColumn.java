@@ -16,16 +16,20 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 public class PhysicalColumn implements Column {
 	private final Table table;
 	private final Identifier name;
+
 	private final SqlTypeDescriptor sqlTypeDescriptor;
+	private Size size;
+	private String sqlType;
+
 	private final String defaultValue;
+	private String checkConstraint;
 	private final boolean isNullable;
 	private final boolean isUnique;
 	private final String comment;
 
-	private String sqlType;
-	private String checkConstraint;
+	private String customReadExpr;
+	private String customWriteExpr;
 
-	private Size size;
 	public PhysicalColumn(
 			Table table,
 			Identifier name,

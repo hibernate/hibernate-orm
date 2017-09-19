@@ -17,6 +17,7 @@ import javax.persistence.MapKeyEnumerated;
 import javax.persistence.MapKeyTemporal;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Version;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.MapKeyType;
@@ -85,7 +86,6 @@ public class BasicValueBinder<T> {
 
 	private BasicJavaDescriptor<T> javaDescriptor;
 	private AttributeConverterDescriptor converterDescriptor;
-	private boolean isVersion;
 	private boolean isNationalized;
 	private boolean isLob;
 	private javax.persistence.EnumType enumType;
@@ -127,17 +127,6 @@ public class BasicValueBinder<T> {
 
 	public void setReferencedEntityName(String referencedEntityName) {
 		this.referencedEntityName = referencedEntityName;
-	}
-
-	public boolean isVersion() {
-		return isVersion;
-	}
-
-	public void setVersion(boolean isVersion) {
-		this.isVersion = isVersion;
-		if ( isVersion && basicValue != null ) {
-			basicValue.makeVersion();
-		}
 	}
 
 	public void setTimestampVersionType(String versionType) {
@@ -183,7 +172,7 @@ public class BasicValueBinder<T> {
 		}
 
 		if ( columns == null ) {
-			throw new AssertionFailure( "SimpleValueBinder.setColumns should be set beforeQuery SimpleValueBinder.setType" );
+			throw new AssertionFailure( "SimpleValueBinder.setColumns should be set before SimpleValueBinder.setType" );
 		}
 
 		XClass returnedClassOrElement = navigableXClass;
@@ -227,7 +216,7 @@ public class BasicValueBinder<T> {
 					|| buildingContext.getBuildingOptions().useNationalizedCharacterData();
 		}
 
-		applyAttributeConverter( navigableXProperty, converterDescriptor );
+		applyAttributeConverter( navigableXProperty, converterDescriptor, key );
 
 		Type explicitTypeAnn = null;
 		if ( key ) {
@@ -307,7 +296,7 @@ public class BasicValueBinder<T> {
 				.getDialect();
 	}
 
-	private void applyAttributeConverter(XProperty property, AttributeConverterDescriptor attributeConverterDescriptor) {
+	private void applyAttributeConverter(XProperty property, AttributeConverterDescriptor attributeConverterDescriptor, boolean key) {
 		if ( attributeConverterDescriptor == null ) {
 			return;
 		}
@@ -319,7 +308,7 @@ public class BasicValueBinder<T> {
 			return;
 		}
 
-		if ( isVersion ) {
+		if ( property.isAnnotationPresent( Version.class ) ) {
 			LOG.debugf( "Skipping AttributeConverter checks for version attribute [%s]", property.getName() );
 			return;
 		}
@@ -379,9 +368,6 @@ public class BasicValueBinder<T> {
 			table = columns[0].getTable();
 		}
 		basicValue = new BasicValue( buildingContext, table );
-		if ( isVersion ) {
-			basicValue.makeVersion();
-		}
 		if ( isNationalized ) {
 			basicValue.makeNationalized();
 		}
@@ -523,10 +509,6 @@ public class BasicValueBinder<T> {
 
 	}
 
-	public void setKey(boolean key) {
-		this.key = key;
-	}
-
 	public AccessType getAccessType() {
 		return accessType;
 	}
@@ -584,12 +566,6 @@ public class BasicValueBinder<T> {
 		}
 	}
 
-	private static BasicTypeResolver resolveMapKeyBasicTypeResolver(
-			MetadataBuildingContext buildingContext,
-			XProperty mapAttribute) {
-
-	}
-
 	private class BasicTypeResolverCollectionIdImpl extends BasicTypeResolverSupport {
 		public BasicTypeResolverCollectionIdImpl(
 				MetadataBuildingContext buildingContext,
@@ -600,6 +576,15 @@ public class BasicValueBinder<T> {
 
 		}
 
+		@Override
+		public BasicJavaDescriptor getJavaTypeDescriptor() {
+			throw new NotYetImplementedException(  );
+		}
+
+		@Override
+		public SqlTypeDescriptor getSqlTypeDescriptor() {
+			return null;
+		}
 	}
 
 	private static class BasicTypeResolverMapKeyImpl

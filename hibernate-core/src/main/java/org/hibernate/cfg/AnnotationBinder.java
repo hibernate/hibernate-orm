@@ -2334,7 +2334,6 @@ public final class AnnotationBinder {
 	}
 
 	private static void setVersionInformation(XProperty property, PropertyBinder propertyBinder) {
-		propertyBinder.getBasicValueBinder().setVersion( true );
 		if ( property.isAnnotationPresent( Source.class ) ) {
 			Source source = property.getAnnotation( Source.class );
 			propertyBinder.getBasicValueBinder().setTimestampVersionType( source.value().typeName() );

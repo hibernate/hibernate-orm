@@ -255,7 +255,7 @@ public class MapBinder extends CollectionBinder {
 				}
 				else {
 					BasicValueBinder elementBinder = new BasicValueBinder(
-							BasicValueBinder.Kind.COLLECTION_ELEMENT,
+							BasicValueBinder.Kind.COLLECTION_INDEX,
 							buildingContext
 					);
 					elementBinder.setReturnedClassName( mapKeyType );
@@ -281,7 +281,6 @@ public class MapBinder extends CollectionBinder {
 					elementBinder.setColumns( elementColumns );
 					//do not call setType as it extract the type from @Type
 					//the algorithm generally does not apply for map key anyway
-					elementBinder.setKey(true);
 					elementBinder.setType(
 							property,
 							keyXClass,

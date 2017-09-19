@@ -1169,55 +1169,10 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
   symbol:   class NativeSQLQueryCollectionReturn
   location: class ResultSetMappingBinder
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:139: error: cannot find symbol
-			basicValue.makeVersion();
-			          ^
-  symbol:   method makeVersion()
-  location: variable basicValue of type BasicValue
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:145: error: cannot find symbol
 		this.timeStampVersionType = versionType;
 		    ^
   symbol: variable timeStampVersionType
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:327: error: cannot find symbol
-		if ( !key && property.isAnnotationPresent( Temporal.class ) ) {
-		      ^
-  symbol:   variable key
-  location: class BasicValueBinder<T>
-  where T is a type-variable:
-    T extends Object declared in class BasicValueBinder
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:331: error: cannot find symbol
-		if ( key && property.isAnnotationPresent( MapKeyTemporal.class ) ) {
-		     ^
-  symbol:   variable key
-  location: class BasicValueBinder<T>
-  where T is a type-variable:
-    T extends Object declared in class BasicValueBinder
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:336: error: cannot find symbol
-		if ( !key && property.isAnnotationPresent( Enumerated.class ) ) {
-		      ^
-  symbol:   variable key
-  location: class BasicValueBinder<T>
-  where T is a type-variable:
-    T extends Object declared in class BasicValueBinder
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:340: error: cannot find symbol
-		if ( key && property.isAnnotationPresent( MapKeyEnumerated.class ) ) {
-		     ^
-  symbol:   variable key
-  location: class BasicValueBinder<T>
-  where T is a type-variable:
-    T extends Object declared in class BasicValueBinder
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:383: error: cannot find symbol
-			basicValue.makeVersion();
-			          ^
-  symbol:   method makeVersion()
-  location: variable basicValue of type BasicValue
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:527: error: cannot find symbol
-		this.key = key;
-		    ^
-  symbol: variable key
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:593: error: BasicValueBinder.BasicTypeResolverCollectionIdImpl is not abstract and does not override abstract method getSqlTypeDescriptor() in BasicTypeParameters
-	private class BasicTypeResolverCollectionIdImpl extends BasicTypeResolverSupport {
-	        ^
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:157: error: cannot find symbol
 			NativeSQLQueryRootReturn result = new NativeSQLQueryRootReturn(
 			^

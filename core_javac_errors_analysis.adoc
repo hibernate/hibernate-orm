@@ -515,19 +515,8 @@ hhome/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-
 
 [code]
 ----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:281: error: cannot find symbol
-		final Type[] types = componentType.getSubtypes();
-		                                  ^
-  symbol:   method getSubtypes()
-  location: variable componentType of type PersistentAttribute
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:282: error: cannot find symbol
-		final String[] propertyNames = componentType.getPropertyNames();
 		                                            ^
-  symbol:   method getPropertyNames()
-  location: variable componentType of type PersistentAttribute
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:284: error: cannot find symbol
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:282: error: cannot find symbol
 			final CascadeStyle componentPropertyStyle = componentType.getCascadeStyle( i );
 			                                                         ^
   symbol:   method getCascadeStyle(int)
@@ -553,35 +542,24 @@ A collection?  etc
 
 [code]
 ----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:188: error: cannot find symbol
-		if ( isLogicalOneToOne( type ) ) {
-		                        ^
-  symbol:   variable type
-  location: class Cascade
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:235: error: cannot find symbol
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:233: error: cannot find symbol
 							if (type.isAssociationType() && ((AssociationType)type).getForeignKeyDirection().equals(
 							    ^
   symbol:   variable type
   location: class Cascade
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:235: error: cannot find symbol
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:233: error: cannot find symbol
 							if (type.isAssociationType() && ((AssociationType)type).getForeignKeyDirection().equals(
 							                                  ^
   symbol:   class AssociationType
   location: class Cascade
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:235: error: cannot find symbol
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:233: error: cannot find symbol
 							if (type.isAssociationType() && ((AssociationType)type).getForeignKeyDirection().equals(
 							                                                  ^
   symbol:   variable type
   location: class Cascade
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:263: error: cannot find symbol
-		return type.getClassification().equals( Type.Classification.ENTITY ) && ( (EntityType) type ).isLogicalOneToOne();
-		                                                                           ^
-  symbol:   class EntityType
-  location: class Cascade
 
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:267: error: cannot find symbol
 		return attribute.getForeignKeyDirection().cascadeNow( cascadePoint );
@@ -647,24 +625,6 @@ A collection?  etc
 
 
 
-
-
-### Type calls -> JavaTypeDescriptor
-
-
-[code]
-----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/NaturalIdXrefDelegate.java:366: error: cannot find symbol
-				final int elementHashCode = values[i] == null ? 0 : type.getHashCode( values[i] );
-				                                                        ^
-  symbol:   method getHashCode(Object)
-  location: variable type of type Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/NaturalIdXrefDelegate.java:402: error: cannot find symbol
-				if ( ! naturalIdTypes[i].isEqual( values[i], otherValues[i], persister.getFactory() ) ) {
-				                        ^
-  symbol:   method isEqual(Object,Object,SessionFactoryImplementor)
-  location: interface Type
-----
 
 
 
@@ -833,7 +793,7 @@ E.g., something like `EntityIdentifierDescriptor#getSnapshot`
   location: interface EntityDescriptor
 
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:289: error: cannot find symbol
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:287: error: cannot find symbol
 					children = componentType.getPropertyValues( child, eventSource );
 					                        ^
   symbol:   method getPropertyValues(Object,EventSource)
@@ -876,90 +836,18 @@ E.g., something like `EntityIdentifierDescriptor#getSnapshot`
 [code]
 ----
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:298: error: incompatible types: Type cannot be converted to PersistentAttribute
-						types[i],
-						     ^
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:320: error: incompatible types: PersistentAttribute cannot be converted to Type
-			cascadeToOne( action, eventSource, parent, child, attribute, style, anything, isCascadeDeleteEnabled );
-			                                                  ^
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:355: error: cannot find symbol
-		final Type elemType = (Type) persister.getElementType();
-		                                      ^
-  symbol:   method getElementType()
-  location: variable persister of type PersistentCollectionDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:365: error: cannot find symbol
-				|| elemType.isComponentType() ) {
-				           ^
-  symbol:   method isComponentType()
-  location: variable elemType of type Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:373: error: cannot find symbol
-				type,
-				^
-  symbol:   variable type
-  location: class Cascade
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:377: error: cannot find symbol
-				persister.isCascadeDeleteEnabled()
-				         ^
-  symbol:   method isCascadeDeleteEnabled()
-  location: variable persister of type PersistentCollectionDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:395: error: cannot find symbol
-				? ( (EntityType) type ).getAssociatedEntityName()
-				     ^
-  symbol:   class EntityType
-  location: class Cascade
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:424: error: cannot find symbol
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:419: error: cannot find symbol
 		final boolean reallyDoCascade = style.reallyDoCascade( action ) && child != CollectionType.UNFETCHED_COLLECTION;
 		                                                                            ^
   symbol:   variable CollectionType
   location: class Cascade
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:429: error: cannot find symbol
-				LOG.tracev( "Cascade {0} for collection: {1}", action, collectionType.getRole() );
-				                                                                     ^
-  symbol:   method getRole()
-  location: variable collectionType of type JavaTypeDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:432: error: incompatible types: JavaTypeDescriptor cannot be converted to PersistentCollectionDescriptor
-			final Iterator itr = action.getCascadableChildrenIterator( eventSource, collectionType, child );
-			                                                                        ^
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:441: error: incompatible types: Type cannot be converted to PersistentAttribute
-						elemType,
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:440: error: cannot find symbol
+						isCascadeDeleteEnabled
 						^
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:450: error: cannot find symbol
-				LOG.tracev( "Done cascade {0} for collection: {1}", action, collectionType.getRole() );
-				                                                                          ^
-  symbol:   method getRole()
-  location: variable collectionType of type JavaTypeDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:463: error: cannot find symbol
-				LOG.tracev( "Deleting orphans for collection: {0}", collectionType.getRole() );
-				                                                                  ^
-  symbol:   method getRole()
-  location: variable collectionType of type JavaTypeDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:468: error: cannot find symbol
-			final String entityName = collectionType.getAssociatedEntityName( eventSource.getFactory() );
-			                                        ^
-  symbol:   method getAssociatedEntityName(SessionFactoryImplementor)
-  location: variable collectionType of type JavaTypeDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:472: error: cannot find symbol
-				LOG.tracev( "Done deleting orphans for collection: {0}", collectionType.getRole() );
-				                                                                       ^
-  symbol:   method getRole()
-  location: variable collectionType of type JavaTypeDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/CascadingActions.java:493: error: cannot find symbol
-		return collectionDescriptor.getElementsIterator( collection, session );
-		                           ^
-  symbol:   method getElementsIterator(Object,EventSource)
-  location: variable collectionDescriptor of type PersistentCollectionDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/CascadingActions.java:506: error: cannot find symbol
-			return collectionDescriptor.getElementsIterator( collection, session );
-			                           ^
-  symbol:   method getElementsIterator(Object,SharedSessionContractImplementor)
-  location: variable collectionDescriptor of type PersistentCollectionDescriptor
-
+  symbol:   variable isCascadeDeleteEnabled
+  location: class Cascade
 
 ----
-
-
-
-
 
 
 
@@ -1187,40 +1075,6 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 
 
 
-
-## SchemaManagementTool
-
-
-[code]
-----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/hbm2ddl/MultipleLinesSqlCommandExtractor.java:22: error: cannot find symbol
-		final SqlStatementLexer lexer = new SqlStatementLexer( reader );
-		      ^
-  symbol:   class SqlStatementLexer
-  location: class MultipleLinesSqlCommandExtractor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/hbm2ddl/MultipleLinesSqlCommandExtractor.java:22: error: cannot find symbol
-		final SqlStatementLexer lexer = new SqlStatementLexer( reader );
-		                                    ^
-  symbol:   class SqlStatementLexer
-  location: class MultipleLinesSqlCommandExtractor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/hbm2ddl/MultipleLinesSqlCommandExtractor.java:23: error: cannot find symbol
-		final SqlStatementParser parser = new SqlStatementParser( lexer );
-		      ^
-  symbol:   class SqlStatementParser
-  location: class MultipleLinesSqlCommandExtractor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/hbm2ddl/MultipleLinesSqlCommandExtractor.java:23: error: cannot find symbol
-		final SqlStatementParser parser = new SqlStatementParser( lexer );
-		                                      ^
-  symbol:   class SqlStatementParser
-  location: class MultipleLinesSqlCommandExtractor
-
-----
-
-
-
-
-
-
 ## Misc
 
 
@@ -1428,62 +1282,8 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 
 [code]
 ----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:402: error: cannot find symbol
-			if ( entityDescriptor instanceof JoinedSubclassEntityPersister ) {
-			                                 ^
-  symbol:   class JoinedSubclassEntityPersister
-  location: class ValidityAuditStrategy
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:491: error: cannot find symbol
-		update.addColumn( rootAuditedEntityDescriptor.toColumns( options.getRevisionEndFieldName() )[0] );
-		                                             ^
-  symbol:   method toColumns(String)
-  location: variable rootAuditedEntityDescriptor of type EntityDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:498: error: cannot find symbol
-			update.addColumn( rootAuditedEntityDescriptor.toColumns( options.getRevisionEndTimestampFieldName() )[0] );
-			                                             ^
-  symbol:   method toColumns(String)
-  location: variable rootAuditedEntityDescriptor of type EntityDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:506: error: cannot find symbol
-		update.addWhereColumn( auditedEntityDescriptor.toColumns( options.getRevisionEndFieldName() )[0], " is null" );
-		                                              ^
-  symbol:   method toColumns(String)
-  location: variable auditedEntityDescriptor of type EntityDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:550: error: cannot find symbol
-		update.addColumn( auditedEntityDescriptor.toColumns( options.getRevisionEndTimestampFieldName() )[0] );
-		                                         ^
-  symbol:   method toColumns(String)
-  location: variable auditedEntityDescriptor of type EntityDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:558: error: cannot find symbol
-		update.addWhereColumn( auditedEntityDescriptor.toColumns( options.getRevisionEndTimestampFieldName() )[0], " is null" );
-		                                              ^
-  symbol:   method toColumns(String)
-  location: variable auditedEntityDescriptor of type EntityDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:586: error: cannot find symbol
-		updateContext.addWhereColumn( auditedEntityDescriptor.toColumns( options.getRevisionNumberPath() )[0], " <> ?" );
-		                                                     ^
-  symbol:   method toColumns(String)
-  location: variable auditedEntityDescriptor of type EntityDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:615: error: cannot find symbol
-		if ( UnionSubclassEntityPersister.class.isInstance( rootEntityDescriptor ) ) {
-		     ^
-  symbol:   class UnionSubclassEntityPersister
-  location: class ValidityAuditStrategy
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:622: error: cannot find symbol
-			return auditedEntityDescriptor.getSubclassTableName( 0 );
-			                              ^
-  symbol:   method getSubclassTableName(int)
-  location: variable auditedEntityDescriptor of type EntityDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:683: error: cannot find symbol
-			type.nullSafeSet( ps, value, index, session );
-			    ^
-  symbol:   method nullSafeSet(PreparedStatement,Object,int,SessionImplementor)
-  location: variable type of type Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:684: error: cannot find symbol
-			return type.getColumnSpan();
-			           ^
-  symbol:   method getColumnSpan()
-  location: variable type of type Type
-
+home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:611: error: incompatible types: Type cannot be converted to BasicType
+		updateContext.bind( id, entityDescriptor.getIdentifierType() );
 ----
 
 

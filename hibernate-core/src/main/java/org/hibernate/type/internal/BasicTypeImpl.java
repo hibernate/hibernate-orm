@@ -11,36 +11,30 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 
-import org.hibernate.HibernateException;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.metamodel.model.domain.spi.VersionSupport;
-import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.ColumnDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class BasicTypeImpl<T> implements BasicType<T>, SqlSelectionReader<T> {
 	private final BasicJavaDescriptor javaDescriptor;
-	private final ColumnDescriptor columnMapping;
+	private final SqlTypeDescriptor sqlTypeDescriptor;
+
 	private VersionSupport<T> versionSupport;
 
 	@SuppressWarnings("unchecked")
 	public BasicTypeImpl(BasicJavaDescriptor javaDescriptor, SqlTypeDescriptor sqlTypeDescriptor) {
-		this( javaDescriptor, new ColumnDescriptor( sqlTypeDescriptor ) );
-	}
-
-	@SuppressWarnings("unchecked")
-	public BasicTypeImpl(BasicJavaDescriptor javaDescriptor, ColumnDescriptor columnMapping) {
 		this.javaDescriptor = javaDescriptor;
-		this.columnMapping = columnMapping;
+		this.sqlTypeDescriptor = sqlTypeDescriptor;
+
 		this.versionSupport = javaDescriptor.getVersionSupport();
 	}
 
@@ -61,20 +55,9 @@ public class BasicTypeImpl<T> implements BasicType<T>, SqlSelectionReader<T> {
 	}
 
 	@Override
-	public boolean areEqual(T x, T y) throws HibernateException {
-		return EqualsHelper.areEqual( x, y );
+	public SqlTypeDescriptor getSqlTypeDescriptor() {
+		return sqlTypeDescriptor;
 	}
-
-	@Override
-	public Class<T> getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
-	}
-
-	@Override
-	public ColumnDescriptor getColumnDescriptor() {
-		return columnMapping;
-	}
-
 
 	@Override
 	public Optional<VersionSupport<T>> getVersionSupport() {
@@ -127,11 +110,11 @@ public class BasicTypeImpl<T> implements BasicType<T>, SqlSelectionReader<T> {
 
 	@Override
 	public ValueBinder getValueBinder() {
-		return getColumnDescriptor().getSqlTypeDescriptor().getBinder( getJavaTypeDescriptor() );
+		return getSqlTypeDescriptor().getBinder( getJavaTypeDescriptor() );
 	}
 
 	@Override
 	public ValueExtractor<T> getValueExtractor() {
-		return getColumnDescriptor().getSqlTypeDescriptor().getExtractor( getJavaTypeDescriptor() );
+		return getSqlTypeDescriptor().getExtractor( getJavaTypeDescriptor() );
 	}
 }

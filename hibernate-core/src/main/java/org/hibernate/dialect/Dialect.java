@@ -30,6 +30,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.NullPrecedence;
 import org.hibernate.ScrollMode;
+import org.hibernate.boot.model.JavaTypeDescriptor;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -74,6 +75,7 @@ import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Index;
 import org.hibernate.metamodel.model.relational.spi.Sequence;
+import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -91,6 +93,7 @@ import org.hibernate.sql.ANSIJoinFragment;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -100,6 +103,7 @@ import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
+import org.hibernate.tool.schema.spi.DefaultSizeStrategy;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
@@ -425,6 +429,18 @@ public abstract class Dialect implements ConversionContext {
 		}
 		return result;
 	}
+
+	// todo (6.0) : use one of these (pick) vv, rather than ^^
+
+	public String getTypeName(int code, Size size) throws HibernateException {
+		throw new NotYetImplementedException(  );
+	}
+
+	public String getTypeName(SqlTypeDescriptor sqlTypeDescriptor, Size size) {
+		throw new NotYetImplementedException(  );
+	}
+
+	// todo (6.0) : related to above "SQL type name", also applies to cast target type names vv
 
 	/**
 	 * Get the name of the database type appropriate for casting operations

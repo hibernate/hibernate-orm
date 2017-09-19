@@ -464,7 +464,8 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		setReferencedColumn( logicalReferencedColumn );
 		initMappingColumn(
 				columnName,
-				null, referencedColumn.getLength(),
+				null,
+				referencedColumn.getLength(),
 				referencedColumn.getPrecision(),
 				referencedColumn.getScale(),
 				getMappingColumn() != null ? getMappingColumn().isNullable() : false,

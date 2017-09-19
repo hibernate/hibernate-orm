@@ -23,6 +23,10 @@ import java.sql.SQLException;
  * @author Steve Ebersole
  */
 public interface SqlSelectionReader<T> {
+
+	// todo (6.0) : rename these methods for consistency
+	//		- atm its a mix between read and extract.  pick one
+
 	/**
 	 * Read a value from the underlying JDBC ResultSet
 	 *

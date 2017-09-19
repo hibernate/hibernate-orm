@@ -25,7 +25,7 @@ public class ExportableColumn extends Column {
 				table,
 				name,
 				type,
-				database.getDialect().getTypeName( type.getColumnDescriptor().getSqlTypeDescriptor().getJdbcTypeCode() )
+				database.getDialect().getTypeName( type.getSqlTypeDescriptor().getJdbcTypeCode() )
 		);
 	}
 
@@ -46,7 +46,7 @@ public class ExportableColumn extends Column {
 
 	@Override
 	public SqlTypeDescriptor getSqlTypeDescriptor() {
-		return type.getColumnDescriptor().getSqlTypeDescriptor();
+		return type.getSqlTypeDescriptor();
 	}
 
 }

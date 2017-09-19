@@ -15,7 +15,6 @@ import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
@@ -30,6 +29,7 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.naming.Identifier;
 
 import org.jboss.logging.Logger;
 
@@ -54,9 +54,9 @@ public class Ejb3Column {
 	private boolean isImplicit;
 	public static final int DEFAULT_COLUMN_LENGTH = 255;
 	public String sqlType;
-	private int length = DEFAULT_COLUMN_LENGTH;
-	private int precision;
-	private int scale;
+	private Long length;
+	private Integer precision;
+	private Integer scale;
 	private Identifier logicalColumnName;
 	private String propertyName;
 	private boolean unique;
@@ -81,15 +81,15 @@ public class Ejb3Column {
 		return sqlType;
 	}
 
-	public int getLength() {
+	public Long getLength() {
 		return length;
 	}
 
-	public int getPrecision() {
+	public Integer getPrecision() {
 		return precision;
 	}
 
-	public int getScale() {
+	public Integer getScale() {
 		return scale;
 	}
 
@@ -152,15 +152,15 @@ public class Ejb3Column {
 		this.sqlType = sqlType;
 	}
 
-	public void setLength(int length) {
+	public void setLength(Long length) {
 		this.length = length;
 	}
 
-	public void setPrecision(int precision) {
+	public void setPrecision(Integer precision) {
 		this.precision = precision;
 	}
 
-	public void setScale(int scale) {
+	public void setScale(Integer scale) {
 		this.scale = scale;
 	}
 
@@ -220,9 +220,9 @@ public class Ejb3Column {
 	protected void initMappingColumn(
 			Identifier columnName,
 			String propertyName,
-			int length,
-			int precision,
-			int scale,
+			Long length,
+			Integer precision,
+			Integer scale,
 			boolean nullable,
 			String sqlType,
 			boolean unique,
@@ -543,8 +543,8 @@ public class Ejb3Column {
 
 					column.setImplicit( false );
 					column.setSqlType( sqlType );
-					column.setLength( col.length() );
-					column.setPrecision( col.precision() );
+					column.setLength( interpretLength( col ) );
+					column.setPrecision( interpretPrecision( col ) );
 					column.setScale( col.scale() );
 					if ( columnName == null && !StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
 						column.setLogicalColumnName( buildLogicalName( database, inferredData.getPropertyName() + suffixForDefaultColumnName ) );
@@ -573,6 +573,60 @@ public class Ejb3Column {
 			}
 		}
 		return columns;
+	}
+
+	private static Long interpretLength(javax.persistence.Column col) {
+		if ( col == null ) {
+			return null;
+		}
+
+		if ( col.length() == 255 ) {
+			// JPA annotation defines 255 as the default value for this
+			//		Column#length attribute.  Until we us Jandex we
+			//		do not know whether the 255 here was explicitly set
+			//		or is just the JVM-applied default.  We assume the later
+			//		which creates a small possibility of an "error" for that
+			//		specific value if explicitly set
+			return null;
+		}
+
+		return (long) col.length();
+	}
+
+	private static Integer interpretPrecision(javax.persistence.Column col) {
+		if ( col == null ) {
+			return null;
+		}
+
+		if ( col.precision() == 0 ) {
+			// JPA annotation defines 0 as the default value for this
+			//		Column#precision attribute.  Until we us Jandex we
+			//		do not know whether the 0 here was explicitly set
+			//		or is just the JVM-applied default.  We assume the later
+			//		which creates a small possibility of an "error" for that
+			//		specific value if explicitly set
+			return null;
+		}
+
+		return col.precision();
+	}
+
+	private static Integer interpretScale(javax.persistence.Column col) {
+		if ( col == null ) {
+			return null;
+		}
+
+		if ( col.scale() == 0 ) {
+			// JPA annotation defines 0 as the default value for this
+			//		Column#scale attribute.  Until we us Jandex we
+			//		do not know whether the 0 here was explicitly set
+			//		or is just the JVM-applied default.  We assume the later
+			//		which creates a small possibility of an "error" for that
+			//		specific value if explicitly set
+			return null;
+		}
+
+		return col.scale();
 	}
 
 	private static Identifier buildLogicalName(Database database, String name) {
@@ -650,7 +704,6 @@ public class Ejb3Column {
 				&& !inferredData.getProperty().isArray() ) {
 			column.setNullable( false );
 		}
-		column.setLength( DEFAULT_COLUMN_LENGTH );
 		final String propertyName = inferredData.getPropertyName();
 		column.setPropertyName(
 				BinderHelper.getRelativePath( propertyHolder, propertyName )

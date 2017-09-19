@@ -11,33 +11,37 @@ import java.util.Optional;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.metamodel.model.domain.spi.VersionSupport;
-import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
- * Redefines the Type contract in terms of "basic" or "value" types.  All Type methods are implemented
- * using delegation with the bundled SqlTypeDescriptor, JavaTypeDescriptor and AttributeConverter.
+ * Redefines the Type contract in terms of "basic" or "value" types which is
+ * a mapping from a Java type (JavaTypeDescriptor) to a single SQL type
+ * (SqlTypeDescriptor).
  *
  * @author Steve Ebersole
  *
  * @since 6.0
  */
 public interface BasicType<T>
-		extends Type<T>, ExpressableType<T>, javax.persistence.metamodel.BasicType<T>, BasicValuedExpressableType<T> {
+		extends Type<T>, BasicValuedExpressableType<T>, javax.persistence.metamodel.BasicType<T> {
 	@Override
 	BasicJavaDescriptor<T> getJavaTypeDescriptor();
+
+	/**
+	 * The descriptor of the SQL type part of this basic-type
+	 */
+	SqlTypeDescriptor getSqlTypeDescriptor();
 
 	/**
 	 * Get the SqlSelectionReader that can be used to read values of this type
 	 * from JDBC ResultSets
 	 */
 	SqlSelectionReader<T> getSqlSelectionReader();
-
-	ColumnDescriptor getColumnDescriptor();
-
 
 	@Override
 	default Classification getClassification() {

@@ -46,15 +46,14 @@ import org.hibernate.envers.internal.revisioninfo.RevisionTimestampValueResolver
 import org.hibernate.envers.internal.tools.MutableBoolean;
 import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.type.descriptor.java.internal.LongJavaDescriptor;
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.jboss.logging.Logger;
 
 import org.dom4j.Document;
 import org.dom4j.Element;
-
-import org.hibernate.type.descriptor.java.internal.LongJavaDescriptor;
-import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -528,7 +527,7 @@ public class RevisionInfoConfigurationBuilder {
 	}
 
 	private String getBasicTypeSqlType(BasicType basicType) {
-		final int sqlType = basicType.getColumnDescriptor().getSqlTypeDescriptor().getJdbcTypeCode();
+		final int sqlType = basicType.getSqlTypeDescriptor().getJdbcTypeCode();
 		return metadata.getDatabase().getDialect().getTypeName( sqlType );
 	}
 }

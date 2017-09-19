@@ -106,7 +106,7 @@ public class Any extends SimpleValue {
 
 		@Override
 		public SqlTypeDescriptor resolveSqlTypeDescriptor() {
-			return typesResolvers[index].resolveBasicType().getColumnDescriptor().getSqlTypeDescriptor();
+			return typesResolvers[index].resolveBasicType().getSqlTypeDescriptor();
 		}
 	}
 }

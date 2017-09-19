@@ -64,7 +64,6 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 				&& parameterName != null;
 
 		final ValueExtractor valueExtractor = ( (BasicValuedExpressableType) ormType ).getBasicType()
-				.getColumnDescriptor()
 				.getSqlTypeDescriptor()
 				.getExtractor( ormType.getJavaTypeDescriptor() );
 

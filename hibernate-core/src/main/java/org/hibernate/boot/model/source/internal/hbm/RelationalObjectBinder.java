@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.boot.model.TruthValue;
-import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.source.spi.ColumnSource;
 import org.hibernate.boot.model.source.spi.DerivedValueSource;
@@ -23,6 +22,7 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.naming.Identifier;
 
 /**
  * Centralized binding of columns and formulas.
@@ -131,22 +131,13 @@ public class RelationalObjectBinder {
 			if ( columnSource.getSizeSource().getLength() != null ) {
 				column.setLength( columnSource.getSizeSource().getLength() );
 			}
-			else {
-				column.setLength( Column.DEFAULT_LENGTH );
-			}
 
 			if ( columnSource.getSizeSource().getScale() != null ) {
 				column.setScale( columnSource.getSizeSource().getScale() );
 			}
-			else {
-				column.setScale( Column.DEFAULT_SCALE );
-			}
 
 			if ( columnSource.getSizeSource().getPrecision() != null ) {
 				column.setPrecision( columnSource.getSizeSource().getPrecision() );
-			}
-			else {
-				column.setPrecision( Column.DEFAULT_PRECISION );
 			}
 		}
 

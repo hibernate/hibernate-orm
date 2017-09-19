@@ -9,7 +9,6 @@ package org.hibernate.type.internal;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BooleanBasicType;
-import org.hibernate.type.spi.ColumnDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -17,16 +16,6 @@ import org.hibernate.type.spi.ColumnDescriptor;
 public class BooleanBasicTypeImpl<U> extends BasicTypeImpl<Boolean> implements BooleanBasicType<U> {
 	private final U trueValue;
 	private final U falseValue;
-
-	public BooleanBasicTypeImpl(
-			BasicJavaDescriptor javaDescriptor,
-			ColumnDescriptor columnMapping,
-			U trueValue,
-			U falseValue) {
-		super( javaDescriptor, columnMapping );
-		this.trueValue = trueValue;
-		this.falseValue = falseValue;
-	}
 
 	public BooleanBasicTypeImpl(
 			BasicJavaDescriptor javaDescriptor,

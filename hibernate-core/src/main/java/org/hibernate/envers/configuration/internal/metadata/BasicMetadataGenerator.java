@@ -7,7 +7,6 @@
 package org.hibernate.envers.configuration.internal.metadata;
 
 import java.util.Properties;
-
 import javax.persistence.EnumType;
 
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
@@ -15,7 +14,7 @@ import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
-import org.hibernate.type.spi.ColumnDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 import org.dom4j.Element;
 
@@ -80,8 +79,8 @@ public final class BasicMetadataGenerator {
 			useNamed = parameters.getProperty( NAMED );
 		}
 		else {
-			final ColumnDescriptor columnDescriptor = value.resolveType().getColumnDescriptor();
-			useNamed = columnDescriptor.equals( IntegerSqlDescriptor.INSTANCE ) ? "false" : "true";
+			final SqlTypeDescriptor descriptor = value.resolveType().getSqlTypeDescriptor();
+			useNamed = descriptor.equals( IntegerSqlDescriptor.INSTANCE ) ? "false" : "true";
 		}
 		parent.addElement( "param" ).addAttribute( "name", NAMED ).setText( useNamed );
 	}

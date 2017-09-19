@@ -838,7 +838,7 @@ public final class AuditMetadataGenerator {
 	}
 
 	private String getBasicTypeSqlType(BasicType basicType) {
-		final int sqlType = basicType.getColumnDescriptor().getSqlTypeDescriptor().getJdbcTypeCode();
+		final int sqlType = basicType.getSqlTypeDescriptor().getJdbcTypeCode();
 		return metadata.getDatabase().getDialect().getTypeName( sqlType );
 	}
 }

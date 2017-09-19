@@ -111,7 +111,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 //			}
 			BasicType basicType = assertTyping( BasicType.class, type );
 			assertSame( StringJavaDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.CLOB, basicType.getColumnDescriptor().getSqlTypeDescriptor().getJdbcTypeCode() );
+			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getJdbcTypeCode() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -167,7 +167,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			}
 			BasicType basicType = assertTyping( BasicType.class, type );
 			assertSame( StringJavaDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.CLOB, basicType.getColumnDescriptor().getSqlTypeDescriptor().getJdbcTypeCode() );
+			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getJdbcTypeCode() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -196,7 +196,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			}
 			BasicType basicType = assertTyping( BasicType.class, type );
 			assertSame( StringJavaDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.CLOB, basicType.getColumnDescriptor().getSqlTypeDescriptor().getJdbcTypeCode() );
+			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getJdbcTypeCode() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -224,7 +224,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			}
 			BasicType basicType = assertTyping( BasicType.class, type );
 			assertSame( StringJavaDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.VARCHAR, basicType.getColumnDescriptor().getSqlTypeDescriptor().getJdbcTypeCode() );
+			assertEquals( Types.VARCHAR, basicType.getSqlTypeDescriptor().getJdbcTypeCode() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -338,7 +338,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			}
 			BasicType basicType = assertTyping( BasicType.class, type );
 			assertTyping( EnumJavaDescriptor.class, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.VARCHAR, basicType.getColumnDescriptor().getSqlTypeDescriptor().getJdbcTypeCode() );
+			assertEquals( Types.VARCHAR, basicType.getSqlTypeDescriptor().getJdbcTypeCode() );
 
 			// then lets build the SF and verify its use...
 			final SessionFactory sf = metadata.buildSessionFactory();

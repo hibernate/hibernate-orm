@@ -8,8 +8,6 @@ package org.hibernate.metamodel.model.relational.spi;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.naming.Identifier;
-import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.results.spi.SqlSelectionReader;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -23,14 +21,11 @@ public class PhysicalColumn implements Column {
 	private final boolean isNullable;
 	private final boolean isUnique;
 	private final String comment;
+
 	private String sqlType;
 	private String checkConstraint;
-	private int length;
-	private int precision;
-	private int scale;
 
-	private final SqlSelectionReader sqlSelectionReader;
-
+	private Size size;
 	public PhysicalColumn(
 			Table table,
 			Identifier name,
@@ -59,8 +54,6 @@ public class PhysicalColumn implements Column {
 		this.isNullable = isNullable;
 		this.isUnique = isUnique;
 		this.comment = comment;
-
-		this.sqlSelectionReader = new SqlSelectionReaderImpl( sqlTypeDescriptor.getJdbcTypeCode() );
 	}
 
 	public Identifier getName() {
@@ -113,28 +106,12 @@ public class PhysicalColumn implements Column {
 		return comment;
 	}
 
-	public int getLength() {
-		return length;
+	public Size getSize() {
+		return size;
 	}
 
-	public void setLength(int length) {
-		this.length = length;
-	}
-
-	public int getPrecision() {
-		return precision;
-	}
-
-	public void setPrecision(int precision) {
-		this.precision = precision;
-	}
-
-	public int getScale() {
-		return scale;
-	}
-
-	public void setScale(int scale) {
-		this.scale = scale;
+	public void setSize(Size size) {
+		this.size = size;
 	}
 
 	public void setCheckConstraint(String checkConstraint) {
@@ -145,9 +122,9 @@ public class PhysicalColumn implements Column {
 		if ( sqlType == null ) {
 			sqlType = dialect.getTypeName(
 					getSqlTypeDescriptor().getJdbcTypeCode(),
-					getLength(),
-					getPrecision(),
-					getScale()
+					getSize().getLength(),
+					getSize().getPrecision(),
+					getSize().getScale()
 			);
 		}
 		return sqlType;

@@ -146,8 +146,7 @@ public class Update {
 				.getBasicType( javaTypeDescriptor.getJavaType() );
 		return addColumn(
 				columnName,
-				basicType.getColumnDescriptor()
-						.getSqlTypeDescriptor()
+				basicType.getSqlTypeDescriptor()
 						.getJdbcLiteralFormatter( basicType.getJavaTypeDescriptor() )
 						.toJdbcLiteral( value, dialect, session )
 		);

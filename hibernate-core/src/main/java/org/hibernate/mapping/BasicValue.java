@@ -93,7 +93,7 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 	public class BasicValueSqlTypeDescriptorResolver implements SqlTypeDescriptorResolver {
 		@Override
 		public SqlTypeDescriptor resolveSqlTypeDescriptor() {
-			return resolveType().getColumnDescriptor().getSqlTypeDescriptor();
+			return resolveType().getSqlTypeDescriptor();
 		}
 	}
 

@@ -14,6 +14,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
+import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.sql.Template;
@@ -25,29 +26,28 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  * @author Gavin King
  */
 public class Column implements Selectable, Serializable, Cloneable {
-
-	public static final int DEFAULT_LENGTH = 255;
-	public static final int DEFAULT_PRECISION = 19;
-	public static final int DEFAULT_SCALE = 2;
-
-	private int length = DEFAULT_LENGTH;
-	private int precision = DEFAULT_PRECISION;
-	private int scale = DEFAULT_SCALE;
+	private Identifier tableName;
 	private Identifier name;
+
+	private SqlTypeDescriptor sqlTypeDescriptor;
+	private SimpleValue.SqlTypeDescriptorResolver sqlTypeCodeResolver;
+	private String sqlType;
+
+	int uniqueInteger;
+
+	private boolean quoted;
+
+	private Long length;
+	private Integer precision;
+	private Integer scale;
+
 	private boolean nullable = true;
 	private boolean unique;
-	private String sqlType;
-	private boolean quoted;
-	int uniqueInteger;
 	private String checkConstraint;
 	private String comment;
 	private String defaultValue;
 	private String customWrite;
 	private String customRead;
-	private SqlTypeDescriptor sqlTypeDescriptor;
-	private SimpleValue.SqlTypeDescriptorResolver sqlTypeCodeResolver;
-
-	private Identifier tableName;
 
 	public Column(String columnName) {
 		setName( Identifier.toIdentifier( columnName ) );
@@ -57,20 +57,20 @@ public class Column implements Selectable, Serializable, Cloneable {
 		setName( columnName );
 	}
 
-	public int getLength() {
-		return length;
-	}
-
-	public void setLength(int length) {
-		this.length = length;
-	}
-
 	public Identifier getName() {
 		return name;
 	}
 
 	public Identifier getTableName(){
 		return tableName;
+	}
+
+	public Long getLength() {
+		return length;
+	}
+
+	public void setLength(long length) {
+		this.length = length;
 	}
 
 	public void setTableName(Identifier tableName) {
@@ -233,9 +233,13 @@ public class Column implements Selectable, Serializable, Cloneable {
 				isNullable(),
 				isUnique()
 		);
-		column.setLength( getLength() );
-		column.setPrecision( getPrecision() );
-		column.setScale( getScale() );
+
+		column.setSize(
+				new Size.Builder().setLength( getLength() )
+						.setPrecision( getPrecision() )
+						.setScale( getScale() )
+						.build()
+		);
 		column.setCheckConstraint( getCheckConstraint() );
 		return column;
 	}

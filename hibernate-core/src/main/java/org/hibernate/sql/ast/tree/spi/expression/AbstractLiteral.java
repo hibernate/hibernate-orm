@@ -87,7 +87,6 @@ public abstract class AbstractLiteral
 			int startPosition,
 			ParameterBindingContext context) throws SQLException {
 		getType().getBasicType()
-				.getColumnDescriptor()
 				.getSqlTypeDescriptor()
 				.getBinder( getType().getJavaTypeDescriptor() )
 				.bind( statement, value, startPosition, context.getSession() );

@@ -31,7 +31,7 @@ public interface BasicValuedNavigable<J> extends BasicValuedExpressableType<J>, 
 	}
 
 	default SqlTypeDescriptor getSqlTypeDescriptor() {
-		return getBasicType().getColumnDescriptor().getSqlTypeDescriptor();
+		return getBasicType().getSqlTypeDescriptor();
 	}
 
 	@Override

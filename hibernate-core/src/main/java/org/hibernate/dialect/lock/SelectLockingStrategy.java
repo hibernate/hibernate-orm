@@ -18,6 +18,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.SimpleSelect;
@@ -57,12 +58,19 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 		try {
 			final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
-				getLockable().getIdentifierType().nullSafeSet( st, id, 1, session );
+				final AllowableParameterType identifierParameterType = (AllowableParameterType) getLockable().getHierarchy()
+						.getIdentifierDescriptor();
+
+				identifierParameterType.getValueBinder().bind( st, id, 1, session );
+
 				if ( StringHelper.isNotEmpty( getLockable().getVersionColumnName() ) ) {
-					getLockable().getVersionType().nullSafeSet(
+					getLockable().getHierarchy()
+							.getVersionDescriptor()
+							.getBasicType()
+							.getValueBinder().bind(
 							st,
 							version,
-							getLockable().getIdentifierType().getColumnSpan() + 1,
+							identifierParameterType.getNumberOfJdbcParametersToBind() + 1,
 							session
 					);
 				}

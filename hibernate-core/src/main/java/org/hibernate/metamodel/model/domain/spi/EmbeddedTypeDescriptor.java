@@ -14,11 +14,7 @@ import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.mapping.Component;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValueExpressableType;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
-import org.hibernate.type.descriptor.spi.ValueBinder;
-import org.hibernate.type.descriptor.spi.ValueExtractor;
 
 /**
  * Mapping for an embeddable.
@@ -32,8 +28,7 @@ import org.hibernate.type.descriptor.spi.ValueExtractor;
  * @author Steve Ebersole
  */
 public interface EmbeddedTypeDescriptor<T>
-		extends InheritanceCapable<T>, EmbeddedContainer<T>, EmbeddedValueExpressableType<T>, EmbeddableType<T>,
-		EmbeddedValuedNavigable<T> {
+		extends InheritanceCapable<T>, EmbeddedContainer<T>, EmbeddableType<T>,	EmbeddedValuedNavigable<T> {
 
 	Class[] STANDARD_CTOR_SIGNATURE = new Class[] {
 			Component.class,
@@ -135,19 +130,4 @@ public interface EmbeddedTypeDescriptor<T>
 	 * Get the nullability of the properties of this class
 	 */
 	boolean[] getPropertyNullability();
-
-	@Override
-	default ValueBinder getValueBinder() {
-		throw new NotYetImplementedException(  );
-	}
-
-	@Override
-	default ValueExtractor getValueExtractor() {
-		throw new NotYetImplementedException(  );
-	}
-
-	@Override
-	default int getNumberOfJdbcParametersToBind() {
-		throw new NotYetImplementedException(  );
-	}
 }

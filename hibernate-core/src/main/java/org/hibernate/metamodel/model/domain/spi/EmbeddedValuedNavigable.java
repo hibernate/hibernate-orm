@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain.spi;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValueExpressableType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
@@ -19,6 +20,8 @@ import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
+import org.hibernate.type.descriptor.spi.ValueBinder;
+import org.hibernate.type.descriptor.spi.ValueExtractor;
 
 /**
  * Describes parts of the domain model that can be composite values.
@@ -71,5 +74,20 @@ public interface EmbeddedValuedNavigable<J> extends EmbeddedValueExpressableType
 		}
 
 		return group;
+	}
+
+	@Override
+	default ValueBinder getValueBinder() {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	default ValueExtractor getValueExtractor() {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	default int getNumberOfJdbcParametersToBind() {
+		throw new NotYetImplementedException(  );
 	}
 }

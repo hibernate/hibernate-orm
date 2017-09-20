@@ -18,9 +18,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
+import org.hibernate.type.descriptor.spi.ValueBinder;
 
 import org.jboss.logging.Logger;
 
@@ -78,13 +80,19 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 			try {
 				final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 				try {
-					lockable.getVersionType().nullSafeSet( st, version, 1, session );
+					final ValueBinder versionValueBinder = lockable.getHierarchy()
+							.getVersionDescriptor()
+							.getBasicType()
+							.getValueBinder();
+					versionValueBinder.bind( st, version, 1, session );
 					int offset = 2;
 
-					lockable.getIdentifierType().nullSafeSet( st, id, offset, session );
-					offset += lockable.getIdentifierType().getColumnSpan();
+					final AllowableParameterType identifierParameterType = (AllowableParameterType) lockable.getHierarchy()
+							.getIdentifierDescriptor();
+					identifierParameterType.getValueBinder().bind( st, id, offset, session );
+					offset += identifierParameterType.getNumberOfJdbcParametersToBind();
 
-					lockable.getVersionType().nullSafeSet( st, version, offset, session );
+					versionValueBinder.bind( st, version, offset, session );
 
 					final int affected = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
 					// todo:  should this instead check for exactly one row modified?

@@ -851,7 +851,7 @@ E.g., something like `EntityIdentifierDescriptor#getSnapshot`
 
 
 
-## Dialects / functions / locking
+## Dialects / functions
 
 [code]
 ----
@@ -866,21 +866,6 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 		                                  ^
   symbol:   variable PostgresUUIDType
   location: class PostgreSQL82Dialect
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/SelectLockingStrategy.java:60: error: cannot find symbol
-				getLockable().getIdentifierType().nullSafeSet( st, id, 1, session );
-				                                 ^
-  symbol:   method nullSafeSet(PreparedStatement,Serializable,int,SharedSessionContractImplementor)
-  location: interface Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/SelectLockingStrategy.java:65: error: cannot find symbol
-							getLockable().getIdentifierType().getColumnSpan() + 1,
-							                                 ^
-  symbol:   method getColumnSpan()
-  location: interface Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/SelectLockingStrategy.java:62: error: cannot find symbol
-					getLockable().getVersionType().nullSafeSet(
-					             ^
-  symbol:   method getVersionType()
-  location: interface Lockable
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/Oracle12cDialect.java:45: error: cannot find symbol
 			typeContributions.contributeType( MaterializedBlobType.INSTANCE, "byte[]", byte[].class.getName() );
 			                                  ^
@@ -891,96 +876,6 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 			                                  ^
   symbol:   variable WrappedMaterializedBlobType
   location: class Oracle12cDialect
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/UpdateLockingStrategy.java:83: error: cannot find symbol
-				lockable.getVersionType().nullSafeSet( st, version, 1, session );
-				        ^
-  symbol:   method getVersionType()
-  location: variable lockable of type Lockable
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/UpdateLockingStrategy.java:86: error: cannot find symbol
-				lockable.getIdentifierType().nullSafeSet( st, id, offset, session );
-				                            ^
-  symbol:   method nullSafeSet(PreparedStatement,Serializable,int,SharedSessionContractImplementor)
-  location: interface Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/UpdateLockingStrategy.java:87: error: cannot find symbol
-				offset += lockable.getIdentifierType().getColumnSpan();
-				                                      ^
-  symbol:   method getColumnSpan()
-  location: interface Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/UpdateLockingStrategy.java:89: error: cannot find symbol
-				lockable.getVersionType().nullSafeSet( st, version, offset, session );
-				        ^
-  symbol:   method getVersionType()
-  location: variable lockable of type Lockable
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticReadSelectLockingStrategy.java:62: error: cannot find symbol
-					getLockable().getIdentifierType().nullSafeSet( st, id, 1, session );
-					                                 ^
-  symbol:   method nullSafeSet(PreparedStatement,Serializable,int,SharedSessionContractImplementor)
-  location: interface Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticReadSelectLockingStrategy.java:67: error: cannot find symbol
-								getLockable().getIdentifierType().getColumnSpan() + 1,
-								                                 ^
-  symbol:   method getColumnSpan()
-  location: interface Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticReadSelectLockingStrategy.java:64: error: cannot find symbol
-						getLockable().getVersionType().nullSafeSet(
-						             ^
-  symbol:   method getVersionType()
-  location: interface Lockable
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticWriteUpdateLockingStrategy.java:80: error: cannot find symbol
-					lockable.getVersionType().nullSafeSet( st, version, 1, session );
-					        ^
-  symbol:   method getVersionType()
-  location: variable lockable of type Lockable
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticWriteUpdateLockingStrategy.java:83: error: cannot find symbol
-					lockable.getIdentifierType().nullSafeSet( st, id, offset, session );
-					                            ^
-  symbol:   method nullSafeSet(PreparedStatement,Serializable,int,SharedSessionContractImplementor)
-  location: interface Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticWriteUpdateLockingStrategy.java:84: error: cannot find symbol
-					offset += lockable.getIdentifierType().getColumnSpan();
-					                                      ^
-  symbol:   method getColumnSpan()
-  location: interface Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticWriteUpdateLockingStrategy.java:86: error: cannot find symbol
-					lockable.getVersionType().nullSafeSet( st, version, offset, session );
-					        ^
-  symbol:   method getVersionType()
-  location: variable lockable of type Lockable
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticWriteSelectLockingStrategy.java:61: error: cannot find symbol
-					getLockable().getIdentifierType().nullSafeSet( st, id, 1, session );
-					                                 ^
-  symbol:   method nullSafeSet(PreparedStatement,Serializable,int,SharedSessionContractImplementor)
-  location: interface Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticWriteSelectLockingStrategy.java:66: error: cannot find symbol
-								getLockable().getIdentifierType().getColumnSpan() + 1,
-								                                 ^
-  symbol:   method getColumnSpan()
-  location: interface Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticWriteSelectLockingStrategy.java:63: error: cannot find symbol
-						getLockable().getVersionType().nullSafeSet(
-						             ^
-  symbol:   method getVersionType()
-  location: interface Lockable
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticReadUpdateLockingStrategy.java:81: error: cannot find symbol
-					lockable.getVersionType().nullSafeSet( st, version, 1, session );
-					        ^
-  symbol:   method getVersionType()
-  location: variable lockable of type Lockable
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticReadUpdateLockingStrategy.java:84: error: cannot find symbol
-					lockable.getIdentifierType().nullSafeSet( st, id, offset, session );
-					                            ^
-  symbol:   method nullSafeSet(PreparedStatement,Serializable,int,SharedSessionContractImplementor)
-  location: interface Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticReadUpdateLockingStrategy.java:85: error: cannot find symbol
-					offset += lockable.getIdentifierType().getColumnSpan();
-					                                      ^
-  symbol:   method getColumnSpan()
-  location: interface Type
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/PessimisticReadUpdateLockingStrategy.java:87: error: cannot find symbol
-					lockable.getVersionType().nullSafeSet( st, version, offset, session );
-					        ^
-  symbol:   method getVersionType()
-  location: variable lockable of type Lockable
 
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/Template.java:744: error: cannot find symbol
 		return ! function.hasParenthesesIfNoArguments();

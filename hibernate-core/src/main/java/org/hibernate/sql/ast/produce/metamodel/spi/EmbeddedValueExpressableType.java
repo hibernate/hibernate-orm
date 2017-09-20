@@ -6,12 +6,13 @@
  */
 package org.hibernate.sql.ast.produce.metamodel.spi;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public interface EmbeddedValueExpressableType<T> extends ExpressableType<T> {
+public interface EmbeddedValueExpressableType<T> extends ExpressableType<T>, AllowableParameterType<T> {
 	EmbeddedTypeDescriptor getEmbeddedDescriptor();
 
 	default int getNumberOfJdbcParametersForRestriction() {

@@ -8,6 +8,8 @@ package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
+import java.util.List;
+import java.util.function.Supplier;
 
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.procedure.ParameterRegistration;
@@ -90,7 +92,7 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 						.getService( RefCursorSupport.class )
 						.getResultSet( ProcedureOutputsImpl.this.callableStatement, refCursorParam.getPosition() );
 			}
-			return buildResultSetOutput( extractResults( resultSet ) );
+			return buildResultSetOutput( () -> extractResults( resultSet ) );
 		}
 	}
 

@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.hibernate.JDBCException;
 import org.hibernate.engine.spi.QueryParameters;
@@ -199,6 +200,10 @@ public class OutputsImpl implements Outputs {
 
 		protected Output buildResultSetOutput(List list) {
 			return new ResultSetOutputImpl( list );
+		}
+
+		protected Output buildResultSetOutput(Supplier<List> listSupplier) {
+			return new ResultSetOutputImpl( listSupplier );
 		}
 
 		protected Output buildUpdateCountOutput(int updateCount) {

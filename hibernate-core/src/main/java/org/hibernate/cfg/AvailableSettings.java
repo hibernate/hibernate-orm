@@ -1570,7 +1570,7 @@ public interface AvailableSettings {
 	 * Global setting for whether NULL parameter bindings should be passed to database
 	 * procedure/function calls as part of {@link org.hibernate.procedure.ProcedureCall}
 	 * handling.  Implicitly Hibernate will not pass the NULL, the intention being to allow
-	 * any default argumnet values to be applied.
+	 * any default argument values to be applied.
 	 * <p/>
 	 * This defines a global setting, which can them be controlled per parameter via
 	 * {@link org.hibernate.procedure.ParameterRegistration#enablePassingNulls(boolean)}

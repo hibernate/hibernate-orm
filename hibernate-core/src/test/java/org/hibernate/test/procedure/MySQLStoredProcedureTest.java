@@ -40,8 +40,8 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-				Person.class,
-				Phone.class,
+			Person.class,
+			Phone.class,
 		};
 	}
 
@@ -54,51 +54,50 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
 
 		try {
 			Session session = entityManager.unwrap( Session.class );
-			session.doWork( new Work() {
-				@Override
-				public void execute(Connection connection) throws SQLException {
-					Statement statement = null;
-					try {
-						statement = connection.createStatement();
-						statement.executeUpdate(
-								"CREATE PROCEDURE sp_count_phones (" +
-										"   IN personId INT, " +
-										"   OUT phoneCount INT " +
-										") " +
-										"BEGIN " +
-										"    SELECT COUNT(*) INTO phoneCount " +
-										"    FROM Phone p " +
-										"    WHERE p.person_id = personId; " +
-										"END"
-						);
-						statement.executeUpdate(
-								"CREATE PROCEDURE sp_phones(IN personId INT) " +
-										"BEGIN " +
-										"    SELECT *  " +
-										"    FROM Phone   " +
-										"    WHERE person_id = personId;  " +
-										"END"
-						);
-						statement.executeUpdate(
-								"CREATE FUNCTION fn_count_phones(personId integer)  " +
-										"RETURNS integer " +
-										"DETERMINISTIC " +
-										"READS SQL DATA " +
-										"BEGIN " +
-										"    DECLARE phoneCount integer; " +
-										"    SELECT COUNT(*) INTO phoneCount " +
-										"    FROM Phone p " +
-										"    WHERE p.person_id = personId; " +
-										"    RETURN phoneCount; " +
-										"END"
-						);
-					} finally {
-						if ( statement != null ) {
-							statement.close();
-						}
+			session.doWork( connection -> {
+				Statement statement = null;
+				try {
+					statement = connection.createStatement();
+					statement.executeUpdate(
+						"CREATE PROCEDURE sp_count_phones (" +
+						"   IN personId INT, " +
+						"   OUT phoneCount INT " +
+						") " +
+						"BEGIN " +
+						"    SELECT COUNT(*) INTO phoneCount " +
+						"    FROM Phone p " +
+						"    WHERE p.person_id = personId; " +
+						"END"
+					);
+
+					statement.executeUpdate(
+						"CREATE PROCEDURE sp_phones(IN personId INT) " +
+						"BEGIN " +
+						"    SELECT *  " +
+						"    FROM Phone   " +
+						"    WHERE person_id = personId;  " +
+						"END"
+					);
+
+					statement.executeUpdate(
+						"CREATE FUNCTION fn_count_phones(personId integer)  " +
+						"RETURNS integer " +
+						"DETERMINISTIC " +
+						"READS SQL DATA " +
+						"BEGIN " +
+						"    DECLARE phoneCount integer; " +
+						"    SELECT COUNT(*) INTO phoneCount " +
+						"    FROM Phone p " +
+						"    WHERE p.person_id = personId; " +
+						"    RETURN phoneCount; " +
+						"END"
+					);
+				} finally {
+					if ( statement != null ) {
+						statement.close();
 					}
 				}
-			}  );
+			} );
 		}
 		finally {
 			entityManager.getTransaction().rollback();
@@ -140,16 +139,13 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
 
 		try {
 			Session session = entityManager.unwrap( Session.class );
-			session.doWork( new Work() {
-				@Override
-				public void execute(Connection connection) throws SQLException {
-					try (Statement statement = connection.createStatement()) {
-						statement.executeUpdate( "DROP PROCEDURE IF EXISTS sp_count_phones" );
-					}
-					catch (SQLException ignore) {
-					}
+			session.doWork( connection -> {
+				try (Statement statement = connection.createStatement()) {
+					statement.executeUpdate( "DROP PROCEDURE IF EXISTS sp_count_phones" );
 				}
-			}  );
+				catch (SQLException ignore) {
+				}
+			} );
 		}
 		finally {
 			entityManager.getTransaction().rollback();
@@ -161,16 +157,13 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
 
 		try {
 			Session session = entityManager.unwrap( Session.class );
-			session.doWork( new Work() {
-				@Override
-				public void execute(Connection connection) throws SQLException {
-					try (Statement statement = connection.createStatement()) {
-						statement.executeUpdate( "DROP PROCEDURE IF EXISTS sp_phones" );
-					}
-					catch (SQLException ignore) {
-					}
+			session.doWork( connection -> {
+				try (Statement statement = connection.createStatement()) {
+					statement.executeUpdate( "DROP PROCEDURE IF EXISTS sp_phones" );
 				}
-			}  );
+				catch (SQLException ignore) {
+				}
+			} );
 		}
 		finally {
 			entityManager.getTransaction().rollback();
@@ -182,16 +175,13 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
 
 		try {
 			Session session = entityManager.unwrap( Session.class );
-			session.doWork( new Work() {
-				@Override
-				public void execute(Connection connection) throws SQLException {
-					try (Statement statement = connection.createStatement()) {
-						statement.executeUpdate( "DROP FUNCTION IF EXISTS fn_count_phones" );
-					}
-					catch (SQLException ignore) {
-					}
+			session.doWork( connection -> {
+				try (Statement statement = connection.createStatement()) {
+					statement.executeUpdate( "DROP FUNCTION IF EXISTS fn_count_phones" );
 				}
-			}  );
+				catch (SQLException ignore) {
+				}
+			} );
 		}
 		finally {
 			entityManager.getTransaction().rollback();

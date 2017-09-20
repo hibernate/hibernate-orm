@@ -37,6 +37,13 @@ ext {
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:postgresql:hibernate_orm_test'
                 ],
+                pgsql_docker : [
+                        'db.dialect' : 'org.hibernate.dialect.PostgreSQL95Dialect',
+                        'jdbc.driver': 'org.postgresql.Driver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:postgresql://127.0.0.1/hibernate_orm_test'
+                ],
                 mysql : [
                         'db.dialect' : 'org.hibernate.dialect.MySQL57Dialect',
                         'jdbc.driver': 'com.mysql.jdbc.Driver',

@@ -8,6 +8,7 @@ package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Calendar;
 import java.util.Date;
 import javax.persistence.ParameterMode;
@@ -117,11 +118,12 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 		this.type = type;
 
 		if ( mode == ParameterMode.REF_CURSOR ) {
-			return;
+			this.sqlTypes = new int[]{ Types.REF_CURSOR };
 		}
-
-		this.passNulls = initialPassNullsSetting;
-		setHibernateType( hibernateType );
+		else {
+			this.passNulls = initialPassNullsSetting;
+			setHibernateType( hibernateType );
+		}
 	}
 
 	private AbstractParameterRegistrationImpl(
@@ -384,9 +386,6 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 	public T extract(CallableStatement statement) {
 		if ( mode == ParameterMode.IN ) {
 			throw new ParameterMisuseException( "IN parameter not valid for output extraction" );
-		}
-		else if ( mode == ParameterMode.REF_CURSOR ) {
-			throw new ParameterMisuseException( "REF_CURSOR parameters should be accessed via results" );
 		}
 
 		// TODO: sqlTypesToUse.length > 1 does not seem to have a working use case (HHH-10769).

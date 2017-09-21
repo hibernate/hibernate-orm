@@ -239,6 +239,10 @@ subprojects { subProject ->
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// testing
 	subProject.tasks.withType( Test.class ).all { task ->
+		if ( JavaVersion.current().isJava9Compatible() ) {
+			// Byteman needs this property to be set, https://developer.jboss.org/thread/274997
+			task.jvmArgs += ["-Djdk.attach.allowAttachSelf=true"]
+		}
 		task.jvmArgs += [
 				'-XX:+HeapDumpOnOutOfMemoryError',
 				"-XX:HeapDumpPath=${project.file( "${project.buildDir}/OOM-dump.hprof" ).absolutePath}",

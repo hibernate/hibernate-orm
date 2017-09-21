@@ -36,10 +36,10 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 	private static final MethodFilter EXCLUDE_FILTER = m -> {
 		// skip finalize methods and Groovy getMetaClass
 		return !(
-			m.getParameterCount() == 0 && m.getName().equals( "finalize" ) || (
-				m.getName().equals( "getMetaClass" ) &&
-			  	m.getReturnType().getName().equals( "groovy.lang.MetaClass" )
-			)
+				m.getParameterCount() == 0 && m.getName().equals( "finalize" ) || (
+						m.getName().equals( "getMetaClass" ) &&
+								m.getReturnType().getName().equals( "groovy.lang.MetaClass" )
+				)
 		);
 	};
 

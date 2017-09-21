@@ -9,17 +9,20 @@ package org.hibernate.id;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 @TestForIssue(jiraKey = "HHH-8611")
-@RequiresDialectFeature( DialectChecks.SupportsIdentityColumns.class )
+@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class FlushIdGenTest extends BaseCoreFunctionalTestCase {
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column") 
 	public void testPersistBeforeTransaction() {
 		Session session = openSession();
 		RootEntity ent1_0 = new RootEntity();
@@ -29,7 +32,7 @@ public class FlushIdGenTest extends BaseCoreFunctionalTestCase {
 		session.persist( ent1_1 );
 
 		Transaction tx = session.beginTransaction();
-		tx.commit(); //flush
+		tx.commit(); // flush
 	}
 
 	@Override

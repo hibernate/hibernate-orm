@@ -12,6 +12,8 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -20,6 +22,7 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Chris Jones and Gail Badner
  */
+@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

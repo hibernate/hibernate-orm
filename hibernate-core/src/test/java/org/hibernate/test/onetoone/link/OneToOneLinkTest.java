@@ -17,6 +17,7 @@ import java.util.Date;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -33,6 +34,7 @@ public class OneToOneLinkTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(value = Oracle10gDialect.class, comment = "oracle12c returns time in getDate.  For now, skip.")
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testOneToOneViaAssociationTable() {
 		Person p = new Person();
 		p.setName("Gavin King");

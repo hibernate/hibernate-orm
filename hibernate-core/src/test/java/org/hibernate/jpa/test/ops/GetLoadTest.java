@@ -12,8 +12,9 @@ import javax.persistence.EntityManager;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -29,6 +30,7 @@ import static org.junit.Assert.fail;
  */
 public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testGetLoad() {
 		clearCounts();
 

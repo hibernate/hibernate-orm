@@ -16,6 +16,8 @@ import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 public interface EntitySqlSelectionMappings {
 	SqlSelection getRowIdSqlSelection();
 
+	// todo (6.0) : as discussed elsewhere, drop SqlSelectionGroup and just use List<SqlSelection>
+
 	SqlSelectionGroup getIdSqlSelectionGroup();
 
 	SqlSelection getDiscriminatorSqlSelection();

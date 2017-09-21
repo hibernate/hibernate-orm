@@ -20,6 +20,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * The root class of an inheritance hierarchy
@@ -48,8 +49,10 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private int nextSubclassId;
 	private boolean cachingExplicitlyRequested;
 
-	public RootClass(MetadataBuildingContext metadataBuildingContext) {
-		super( metadataBuildingContext, new EntityMappingHierarchyImpl() );
+	public RootClass(
+			MetadataBuildingContext metadataBuildingContext,
+			EntityJavaDescriptor javaTypeDescriptor) {
+		super( metadataBuildingContext, javaTypeDescriptor, new EntityMappingHierarchyImpl() );
 		getEntityMappingHierarchy().setRootType( this );
 	}
 

@@ -18,16 +18,16 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.model.domain.Representation;
 import org.hibernate.metamodel.model.domain.spi.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
-import org.hibernate.metamodel.model.domain.spi.Instantiator;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.RepresentationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
@@ -41,43 +41,33 @@ public class EmbeddedTypeDescriptorImpl<T>
 	private final EmbeddedContainer container;
 	private final NavigableRole navigableRole;
 
-	private final Representation representationMode;
-	private final Instantiator instantiator;
+	private final RepresentationStrategy representationStrategy;
 
 	public EmbeddedTypeDescriptorImpl(
 			EmbeddedMapping embeddedMapping,
 			EmbeddedContainer container,
 			String localName,
 			RuntimeModelCreationContext creationContext) {
-		super( resolveJtd( creationContext, embeddedMapping ) );
+		super(
+				embeddedMapping,
+				resolveJtd( creationContext, embeddedMapping ),
+				creationContext
+		);
+
+		// todo (6.0) : support for specific MutalibilityPlan and Comparator
+
 		this.container = container;
 		this.navigableRole = container.getNavigableRole().append( localName );
 
-		setTypeConfiguration( creationContext.getTypeConfiguration() );
-
-		this.representationMode = embeddedMapping.getValueMapping().getExplicitRepresentation();
-		this.instantiator = resolveInstantiator( embeddedMapping.getValueMapping(), creationContext );
-	}
-
-	private Instantiator resolveInstantiator(
-			EmbeddedValueMapping embeddedValueMapping,
-			RuntimeModelCreationContext creationContext) {
-		Instantiator instantiator = embeddedValueMapping.getExplicitInstantiator();
-		if ( instantiator == null ) {
-			instantiator = creationContext.getInstantiatorFactory().createEmbeddableInstantiator(
-					embeddedValueMapping,
-					this,
-					// todo (6.0) - resolve reflection optimizer
-					null
-			);
-		}
-
-		return instantiator;
+		this.representationStrategy = creationContext.getMetadata().getMetadataBuildingOptions()
+				.getRepresentationStrategySelector()
+				.resolveRepresentationStrategy( embeddedMapping, creationContext);
 	}
 
 	@SuppressWarnings("unchecked")
 	private static <T> EmbeddableJavaDescriptor<T> resolveJtd(RuntimeModelCreationContext creationContext, EmbeddedMapping embeddedMapping) {
-		JavaTypeDescriptorRegistry jtdr = creationContext.getTypeConfiguration().getJavaTypeDescriptorRegistry();
+		final JavaTypeDescriptorRegistry jtdr = creationContext.getTypeConfiguration().getJavaTypeDescriptorRegistry();
+
 		EmbeddableJavaDescriptor<T> jtd = (EmbeddableJavaDescriptor<T>) jtdr.getDescriptor( embeddedMapping.getName() );
 		if ( jtd == null ) {
 			final Class<T> javaType;
@@ -113,6 +103,7 @@ public class EmbeddedTypeDescriptorImpl<T>
 		for ( PersistentAttributeMapping attributeMapping : embeddedValueMapping.getDeclaredPersistentAttributes() ) {
 			final PersistentAttribute persistentAttribute = attributeMapping.makeRuntimeAttribute(
 					this,
+					embeddedValueMapping,
 					SingularPersistentAttribute.Disposition.NORMAL,
 					creationContext
 			);
@@ -131,11 +122,6 @@ public class EmbeddedTypeDescriptorImpl<T>
 	@Override
 	public EmbeddedContainer<?> getContainer() {
 		return container;
-	}
-
-	@Override
-	public Instantiator getInstantiator() {
-		return instantiator;
 	}
 
 	@Override
@@ -181,31 +167,31 @@ public class EmbeddedTypeDescriptorImpl<T>
 
 	@Override
 	public void setPropertyValues(Object object, Object[] values) {
-		throw new org.hibernate.sql.NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public void setPropertyValue(Object object, int i, Object value) {
-		throw new org.hibernate.sql.NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public Object[] getPropertyValues(Object object) {
-		throw new org.hibernate.sql.NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public Object getPropertyValue(Object object, int i) throws HibernateException {
-		throw new org.hibernate.sql.NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public Object getPropertyValue(Object object, String propertyName) {
-		throw new org.hibernate.sql.NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public boolean[] getPropertyNullability() {
-		throw new org.hibernate.sql.NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

@@ -15,11 +15,13 @@ import javax.persistence.NamedEntityGraph;
 import javax.persistence.NamedSubgraph;
 import javax.persistence.metamodel.Attribute;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.EmbeddedMapping;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -40,11 +42,10 @@ import org.hibernate.metamodel.model.domain.internal.EntityHierarchyImpl;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
-import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -58,6 +59,7 @@ public class RuntimeModelCreationProcess {
 	private static final Logger log = Logger.getLogger( RuntimeModelCreationProcess.class );
 
 	private final SessionFactoryImplementor sessionFactory;
+	private final BootstrapContext bootstrapContext;
 	private final MetadataBuildingContext metadataBuildingContext;
 	private final RuntimeModelDescriptorFactory descriptorFactory;
 
@@ -71,8 +73,10 @@ public class RuntimeModelCreationProcess {
 
 	public RuntimeModelCreationProcess(
 			SessionFactoryImplementor sessionFactory,
+			BootstrapContext bootstrapContext,
 			MetadataBuildingContext metadataBuildingContext) {
 		this.sessionFactory = sessionFactory;
+		this.bootstrapContext = bootstrapContext;
 		this.metadataBuildingContext = metadataBuildingContext;
 
 		this.descriptorFactory = sessionFactory.getServiceRegistry().getService( RuntimeModelDescriptorFactory.class );
@@ -180,7 +184,7 @@ public class RuntimeModelCreationProcess {
 
 	private void generateBootModelForeignKeys(InFlightMetadataCollector mappingMetadata) {
 		// walk the boot model and create all mapping FKs (so they are ready for db process)
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	private IdentifiableTypeDescriptor<?> createIdentifiableType(
@@ -314,6 +318,11 @@ public class RuntimeModelCreationProcess {
 		}
 
 		@Override
+		public BootstrapContext getBootstrapContext() {
+			return bootstrapContext;
+		}
+
+		@Override
 		public SessionFactoryImplementor getSessionFactory() {
 			return sessionFactory;
 		}
@@ -344,8 +353,8 @@ public class RuntimeModelCreationProcess {
 		}
 
 		@Override
-		public InstantiatorFactory getInstantiatorFactory() {
-			return metadataBuildingContext.getBootstrapContext().getInstantiatorFactory();
+		public RepresentationStrategySelector getRepresentationStrategySelector() {
+			return metadataBuildingContext.getBuildingOptions().getRepresentationStrategySelector();
 		}
 
 		@Override

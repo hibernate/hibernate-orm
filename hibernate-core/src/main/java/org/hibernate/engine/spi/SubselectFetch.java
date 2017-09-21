@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 import org.jboss.logging.Logger;
 
@@ -58,7 +58,7 @@ public class SubselectFetch {
 //			final QueryParameters queryParameters,
 			final Set resultingEntityKeys,
 			final Map namedParameterLocMap) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		this(
 //				createSubselectFetchQueryFragment( queryParameters ),
 //				alias,
@@ -91,7 +91,7 @@ public class SubselectFetch {
 //			final QueryParameters queryParameters,
 			final Set resultingEntityKeys,
 			final Map namedParameterLocMap) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		this.resultingEntityKeys = resultingEntityKeys;
 //		this.queryParameters = queryParameters;
 //		this.namedParameterLocMap = namedParameterLocMap;

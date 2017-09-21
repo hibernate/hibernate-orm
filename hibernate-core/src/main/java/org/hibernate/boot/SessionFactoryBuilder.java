@@ -19,8 +19,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.loader.BatchFetchStyle;
-import org.hibernate.metamodel.model.domain.Representation;
-import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
@@ -228,22 +227,6 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#ENABLE_LAZY_LOAD_NO_TRANS
 	 */
 	SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled);
-
-	/**
-	 * Applies the default Representation to use for mappings
-	 *
-	 * todo (6.0) - this really ought to be moved to to MetadataBuilder
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_ENTITY_MODE
-	 */
-	SessionFactoryBuilder applyDefaultRepresentation(Representation representation);
-
-	/**
-	 * Specify the InstantiatorFactory to use
-	 *
-	 * todo (6.0) - ?this really ought to be moved to to MetadataBuilder?
-	 */
-	SessionFactoryBuilder applyInstantiatorFactory(InstantiatorFactory instantiatorFactory);
 
 	/**
 	 * How should updates and deletes that span multiple tables be handled?

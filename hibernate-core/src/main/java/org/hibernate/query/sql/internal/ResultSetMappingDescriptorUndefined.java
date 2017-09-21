@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.sql.spi.ResolvingSqlSelectionImpl;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.ResultSetMapping;
 import org.hibernate.sql.results.spi.SqlSelection;
@@ -39,7 +39,7 @@ public class ResultSetMappingDescriptorUndefined implements ResultSetMappingDesc
 			//		moving the stuff we need to BasicValuedExpressableType
 			//		and dropping BasicValuedExpressableType#getBasicType
 
-			throw new NotYetImplementedException(  );
+			throw new NotYetImplementedFor6Exception(  );
 //			queryResults.add( ... );
 		}
 

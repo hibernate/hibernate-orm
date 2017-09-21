@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
@@ -58,7 +58,7 @@ public class SqmCollectionSize implements SqmExpression, QueryResultProducer {
 	public QueryResult createQueryResult(
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		return new ScalarQueryResultImpl(
 //				resultVariable,
 //				creationContext.getSqlSelectionResolver().resolveSqlSelection( expression ),

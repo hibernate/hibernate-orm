@@ -14,6 +14,7 @@ import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.PersistentCollectionTuplizer;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.loader.spi.CollectionLoader;
@@ -386,6 +387,8 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	String[] getCollectionSpaces();
 
 	CollectionDataAccess getCacheAccess();
+
+	void initialize(Serializable loadedKey, SharedSessionContractImplementor session);
 //
 //	CollectionMetadata getCollectionDescriptor();
 //

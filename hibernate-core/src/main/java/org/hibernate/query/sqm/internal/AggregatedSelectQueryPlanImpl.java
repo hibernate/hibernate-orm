@@ -12,7 +12,7 @@ import java.util.List;
 import org.hibernate.ScrollMode;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
@@ -38,6 +38,6 @@ public class AggregatedSelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 
 	@Override
 	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, ExecutionContext executionContext) {
-		throw new NotYetImplementedException();
+		throw new NotYetImplementedFor6Exception();
 	}
 }

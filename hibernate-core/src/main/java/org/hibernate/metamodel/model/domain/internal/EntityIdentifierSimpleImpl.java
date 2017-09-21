@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.boot.model.domain.BasicValueMapping;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.Property;
@@ -19,9 +21,11 @@ import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
@@ -34,8 +38,6 @@ import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.spi.BasicType;
 
-import static org.hibernate.metamodel.model.domain.internal.PersisterHelper.resolvePropertyAccess;
-
 /**
  * @author Steve Ebersole
  */
@@ -47,16 +49,23 @@ public class EntityIdentifierSimpleImpl<O,J>
 	private final Column column;
 	private final BasicType<J> basicType;
 
+	@SuppressWarnings("unchecked")
 	public EntityIdentifierSimpleImpl(
 			EntityHierarchy hierarchy,
 			IdentifiableTypeDescriptor declarer,
+			IdentifiableTypeMapping bootDeclarer,
 			Property property,
 			BasicValueMapping<J> basicValueMapping,
 			RuntimeModelCreationContext creationContext) {
 		super(
-				hierarchy.getRootEntityType(),
+				(ManagedTypeDescriptor<O>) hierarchy.getRootEntityType().getJavaTypeDescriptor(),
 				property.getName(),
-				resolvePropertyAccess( declarer, property, creationContext ),
+				declarer.getRepresentationStrategy().generatePropertyAccess(
+						bootDeclarer,
+						property,
+						declarer,
+						Environment.getBytecodeProvider()
+				),
 				Disposition.ID,
 				false,
 				basicValueMapping
@@ -152,7 +161,7 @@ public class EntityIdentifierSimpleImpl<O,J>
 	public SqlSelectionGroup resolveSqlSelectionGroup(
 			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
-		throw new org.hibernate.sql.NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override

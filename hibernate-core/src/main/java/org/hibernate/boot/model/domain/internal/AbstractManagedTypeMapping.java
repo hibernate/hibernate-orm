@@ -10,12 +10,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
-
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -25,9 +27,23 @@ import org.jboss.logging.Logger;
 public abstract class AbstractManagedTypeMapping implements ManagedTypeMappingImplementor {
 	private static final Logger log = Logger.getLogger( AbstractManagedTypeMapping.class );
 
-	private Class<?> javaType;
+	private final ManagedJavaDescriptor javaTypeDescriptor;
 	private ManagedTypeMapping superTypeMapping;
 	private TreeMap<String, PersistentAttributeMapping> declaredAttributeMappings;
+
+	public AbstractManagedTypeMapping(ManagedJavaDescriptor javaTypeDescriptor) {
+		this.javaTypeDescriptor = javaTypeDescriptor;
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return javaTypeDescriptor;
+	}
+
+	@Override
+	public String getName() {
+		return getJavaTypeDescriptor().getTypeName();
+	}
 
 	@Override
 	public void addDeclaredPersistentAttribute(PersistentAttributeMapping attribute) {
@@ -89,6 +105,16 @@ public abstract class AbstractManagedTypeMapping implements ManagedTypeMappingIm
 	@Override
 	public void setSuperManagedType(ManagedTypeMapping superTypeMapping) {
 		this.superTypeMapping = superTypeMapping;
+	}
+
+	@Override
+	public void setExplicitRepresentationMode(RepresentationMode mode) {
+		throw new UnsupportedOperationException( "Support for ManagedType-specific explicit RepresentationMode not yet implemented" );
+	}
+
+	@Override
+	public RepresentationMode getExplicitRepresentationMode() {
+		return null;
 	}
 
 	@Override

@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.tree.spi.expression.domain;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 
 /**
@@ -33,7 +33,7 @@ public class PluralAttributeReference implements NavigableReference {
 	public ColumnReferenceQualifier getSqlExpressionQualifier() {
 		// todo (6.0) : we need a combined TableSpace to act as the qualifier
 		//		combining collection-table, element table and index table
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override

@@ -16,7 +16,7 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 /**
  * @author Steve Ebersole
@@ -31,16 +31,16 @@ public class DomainDataRegionImpl extends AbstractDomainDataRegion {
 
 	@Override
 	protected EntityDataAccess generateEntityAccess(EntityDataCachingConfig entityAccessConfig) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	protected CollectionDataAccess generateCollectionAccess(CollectionDataCachingConfig cachingConfig) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	protected NaturalIdDataAccess generateNaturalIdAccess(NaturalIdDataCachingConfig naturalIdAccessConfig) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

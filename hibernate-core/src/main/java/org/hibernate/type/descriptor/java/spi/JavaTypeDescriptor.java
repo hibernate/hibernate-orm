@@ -17,6 +17,8 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface JavaTypeDescriptor<T> extends org.hibernate.type.descriptor.java.JavaTypeDescriptor<T>  {
+	// todo (6.0) : Use this as a cache for reflection lookups on the Java type
+
 	/**
 	 * Obtain the "recommended" SQL type descriptor for this Java type.  The recommended
 	 * aspect comes from the JDBC spec (mostly).

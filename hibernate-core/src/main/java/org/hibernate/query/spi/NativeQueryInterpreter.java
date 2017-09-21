@@ -14,7 +14,7 @@ import org.hibernate.query.sql.spi.NativeNonSelectQueryPlan;
 import org.hibernate.query.sql.spi.NativeSelectQueryDefinition;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
 import org.hibernate.service.Service;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 /**
  * Service contract for dealing with native queries.
@@ -54,6 +54,6 @@ public interface NativeQueryInterpreter extends Service {
 	default NativeNonSelectQueryPlan createQueryPlan(
 			NativeNonSelectQueryDefinition queryDefinition,
 			SessionFactoryImplementor sessionFactory) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

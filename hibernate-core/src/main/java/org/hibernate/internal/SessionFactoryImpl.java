@@ -294,14 +294,12 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			LOG.debug( "Instantiated session factory" );
 
 			this.typeConfiguration = metadata.getTypeConfiguration();
-			this.typeConfiguration.scope( this );
+			this.typeConfiguration.scope( this, bootstrapContext );
 
 			this.metamodel = new MetamodelImpl(
 					this,
 					metadata.getTypeConfiguration()
 			);
-			this.metamodel.initialize( metadata, determineJpaMetaModelPopulationSetting( properties ) );
-
 
 			this.sqmFunctionRegistry = new SqmFunctionRegistry();
 			jdbcServices.getDialect().initializeFunctionRegistry( sqmFunctionRegistry );

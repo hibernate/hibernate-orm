@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.model.domain.internal;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
@@ -14,6 +13,7 @@ import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 
 /**
  * @author Chris Cranford
@@ -28,12 +28,11 @@ public class EntityMappingHierarchyImpl implements EntityMappingHierarchyImpleme
 	private ValueMapping discriminatorValueMapping;
 
 	private OptimisticLockStyle optimisticLockStyle;
-	private EntityMode entityMode;
+	private RepresentationMode explicitRepresentationMode;
 
 	private boolean embeddedIdentifier;
 
 	public EntityMappingHierarchyImpl() {
-		this.entityMode = EntityMode.MAP;
 	}
 
 	@Override
@@ -122,12 +121,12 @@ public class EntityMappingHierarchyImpl implements EntityMappingHierarchyImpleme
 	}
 
 	@Override
-	public EntityMode getEntityMode() {
-		return entityMode;
+	public RepresentationMode getExplicitRepresentationMode() {
+		return explicitRepresentationMode;
 	}
 
 	@Override
-	public void setEntityMode(EntityMode entityMode) {
-		this.entityMode = entityMode;
+	public void setExplicitRepresentationMode(RepresentationMode explicitRepresentationMode) {
+		this.explicitRepresentationMode = explicitRepresentationMode;
 	}
 }

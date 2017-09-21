@@ -8,6 +8,8 @@ package org.hibernate.boot.model.domain;
 
 import java.util.Collection;
 
+import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
+
 /**
  * @author Steve Ebersole
  */
@@ -15,6 +17,9 @@ public interface IdentifiableTypeMapping extends ManagedTypeMapping {
 	EntityMappingHierarchy getEntityMappingHierarchy();
 
 	IdentifiableTypeMapping getSuperTypeMapping();
+
+	@Override
+	IdentifiableJavaDescriptor getJavaTypeDescriptor();
 
 	/**
 	 * @todo (6.0) Should we order these?

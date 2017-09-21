@@ -20,7 +20,7 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 
 /**
@@ -257,7 +257,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 			ResultSet rs,
 			PersistentCollectionDescriptor persister,
 			Object owner) throws HibernateException, SQLException {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
 //		if ( element != null ) {
 //			final Object index = persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );

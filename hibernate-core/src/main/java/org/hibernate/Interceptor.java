@@ -9,7 +9,7 @@ package org.hibernate;
 import java.io.Serializable;
 import java.util.Iterator;
 
-import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -232,7 +232,7 @@ public interface Interceptor {
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 *
-	 * @deprecated (since 6.0) Use {@link #instantiate(String, Representation, Serializable)} instead
+	 * @deprecated (since 6.0) Use {@link #instantiate(String, RepresentationMode, Serializable)} instead
 	 */
 	@Deprecated
 	Object instantiate(String entityName, EntityMode entityMode, Serializable id) throws CallbackException;
@@ -250,7 +250,7 @@ public interface Interceptor {
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	default Object instantiate(String entityName, Representation modelRepresentation, Serializable id) throws CallbackException {
+	default Object instantiate(String entityName, RepresentationMode modelRepresentation, Serializable id) throws CallbackException {
 		return instantiate( entityName, EntityMode.fromRepresentation( modelRepresentation ), id );
 	}
 

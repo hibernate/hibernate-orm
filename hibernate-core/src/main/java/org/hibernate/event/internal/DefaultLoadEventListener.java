@@ -46,7 +46,7 @@ import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities
@@ -170,7 +170,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			EntityDescriptor dependentPersister,
 			EntityIdentifierComposite dependentIdType,
 			EntityDescriptor parentPersister) {
-				throw new NotYetImplementedException(  );
+				throw new NotYetImplementedFor6Exception(  );
 //		final EntityKey parentEntityKey = event.getSession().generateEntityKey( event.getEntityId(), parentPersister );
 //		final Object parent = doLoad( event, parentPersister, parentEntityKey, options );
 //
@@ -714,7 +714,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			EntityDescriptor entityDescriptor,
 			LoadEvent event,
 			EntityKey entityKey) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //
 //		final EventSource session = event.getSession();
 //		final SessionFactoryImplementor factory = session.getFactory();
@@ -811,7 +811,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			final Serializable id,
 			final EntityDescriptor entityDescriptor,
 			final LoadEvent event) throws HibernateException {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //
 //		final Object optionalObject = event.getInstanceToLoad();
 //		final EventSource session = event.getSession();

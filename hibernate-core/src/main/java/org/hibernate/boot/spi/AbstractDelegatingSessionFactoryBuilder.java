@@ -20,8 +20,6 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.loader.BatchFetchStyle;
-import org.hibernate.metamodel.model.domain.Representation;
-import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
@@ -146,18 +144,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	public T applyLazyInitializationOutsideTransaction(boolean enabled) {
 		delegate.applyLazyInitializationOutsideTransaction( enabled );
 		return getThis();
-	}
-
-	@Override
-	public SessionFactoryBuilder applyDefaultRepresentation(Representation representation) {
-		delegate.applyDefaultRepresentation( representation );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyInstantiatorFactory(InstantiatorFactory instantiatorFactory) {
-		delegate.applyInstantiatorFactory( instantiatorFactory );
-		return this;
 	}
 
 	@Override

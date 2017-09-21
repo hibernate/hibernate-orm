@@ -19,7 +19,6 @@ import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
-import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -46,8 +45,6 @@ public interface BootstrapContext {
 	 * the assumed value.  We only need to call this to mark that as true.
 	 */
 	void markAsJpaBootstrap();
-
-	InstantiatorFactory getInstantiatorFactory();
 
 	PersistentCollectionTuplizerFactory getPersistentCollectionTuplizerFactory();
 

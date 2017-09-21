@@ -12,6 +12,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * A subclass in a table-per-subclass mapping
@@ -21,8 +22,11 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 	private MappedTable table;
 	private KeyValue key;
 
-	public JoinedSubclass(EntityMapping superclass, MetadataBuildingContext metadataBuildingContext) {
-		super( superclass, metadataBuildingContext );
+	public JoinedSubclass(
+			EntityMapping superclass,
+			EntityJavaDescriptor javaTypeDescriptor,
+			MetadataBuildingContext metadataBuildingContext) {
+		super( superclass, javaTypeDescriptor, metadataBuildingContext );
 	}
 
 	/**

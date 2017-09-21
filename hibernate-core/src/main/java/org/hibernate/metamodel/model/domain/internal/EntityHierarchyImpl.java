@@ -9,8 +9,8 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Collection;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.model.domain.BasicValueMapping;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cfg.NotYetImplementedException;
@@ -23,12 +23,11 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.InheritanceStrategy;
 import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
@@ -47,8 +46,8 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	private final EntityDescriptor rootEntityPersister;
 
 	private final InheritanceStrategy inheritanceStrategy;
-	private final EntityMode entityMode;
 	private final OptimisticLockStyle optimisticLockStyle;
+	private final RepresentationMode representationMode;
 
 	private final EntityIdentifier identifierDescriptor;
 	private final DiscriminatorDescriptor discriminatorDescriptor;
@@ -73,8 +72,8 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		this.rootEntityPersister = rootEntityPersister;
 
 		this.inheritanceStrategy = interpretInheritanceType( rootEntityBinding );
-		this.entityMode = rootEntityBinding.getEntityMappingHierarchy().getEntityMode();
 		this.optimisticLockStyle = rootEntityBinding.getEntityMappingHierarchy().getOptimisticLockStyle();
+		this.representationMode = determineRepresentationMode( rootEntityBinding, rootEntityPersister, creationContext );
 
 		this.identifierDescriptor = interpretIdentifierDescriptor( this, rootEntityBinding, rootEntityPersister, creationContext );
 		this.discriminatorDescriptor = interpretDiscriminatorDescriptor( this, rootEntityBinding, creationContext );
@@ -86,6 +85,27 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		this.whereFragment = rootEntityBinding.getWhere();
 		this.mutable = rootEntityBinding.isMutable();
 		this.implicitPolymorphismEnabled = !rootEntityBinding.isExplicitPolymorphism();
+	}
+
+	private RepresentationMode determineRepresentationMode(
+			RootClass rootEntityBinding,
+			EntityDescriptor rootEntityPersister,
+			RuntimeModelCreationContext creationContext) {
+		// see if a specific one was requested specific to this hierarchy
+		if ( rootEntityBinding.getExplicitRepresentationMode() != null ) {
+			return rootEntityBinding.getExplicitRepresentationMode();
+		}
+
+		// otherwise,
+		//
+		// if there is no corresponding Java type, assume MAP mode
+		if ( rootEntityPersister.getJavaTypeDescriptor().getJavaType() == null ) {
+			return RepresentationMode.MAP;
+		}
+
+
+		// assume POJO
+		return RepresentationMode.POJO;
 	}
 
 	private static InheritanceStrategy interpretInheritanceType(RootClass rootEntityBinding) {
@@ -119,7 +139,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 					hierarchy,
 					creationContext.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
 							(Component) rootEntityBinding.getIdentifier(),
-							resolveIdAttributeDeclarer( rootEntityBinding, rootEntityPersister ),
+							rootEntityPersister,
 							rootEntityBinding.getIdentifierProperty().getName(),
 							creationContext
 					),
@@ -130,10 +150,10 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			// indicates we have an aggregated composite identifier (should)
 			return  new EntityIdentifierCompositeAggregatedImpl(
 					hierarchy,
-					rootEntityBinding.getIdentifierProperty(),
+					rootEntityBinding,
 					creationContext.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
 							(Component) rootEntityBinding.getIdentifier(),
-							resolveIdAttributeDeclarer( rootEntityBinding, rootEntityPersister ),
+							rootEntityPersister,
 							rootEntityBinding.getIdentifierProperty().getName(),
 							creationContext
 					),
@@ -144,6 +164,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			// should indicate a simple identifier
 			return new EntityIdentifierSimpleImpl(
 					hierarchy,
+					hierarchy.getRootEntityType(),
 					resolveIdAttributeDeclarer( rootEntityBinding, rootEntityPersister ),
 					rootEntityBinding.getIdentifierProperty(),
 					(BasicValueMapping) rootEntityBinding.getIdentifier(),
@@ -152,11 +173,11 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		}
 	}
 
-	private static IdentifiableTypeDescriptor resolveIdAttributeDeclarer(
+	private static IdentifiableTypeMapping resolveIdAttributeDeclarer(
 			RootClass rootEntityBinding,
 			EntityDescriptor rootEntityPersister) {
 		// for now assume the root entity as the declarer
-		return rootEntityPersister;
+		return rootEntityBinding;
 	}
 
 	private static RowIdDescriptor interpretRowIdDescriptor(
@@ -262,13 +283,13 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	}
 
 	@Override
-	public InheritanceStrategy getInheritanceStrategy() {
-		return inheritanceStrategy;
+	public RepresentationMode getRepresentation() {
+		return representationMode;
 	}
 
 	@Override
-	public Representation getRepresentation() {
-		return entityMode.asRepresentation();
+	public InheritanceStrategy getInheritanceStrategy() {
+		return inheritanceStrategy;
 	}
 
 	@Override

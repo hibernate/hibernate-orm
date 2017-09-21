@@ -72,7 +72,6 @@ import javax.persistence.Version;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
@@ -118,8 +117,6 @@ import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Source;
-import org.hibernate.annotations.Tuplizer;
-import org.hibernate.annotations.Tuplizers;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.annotations.Where;
@@ -132,6 +129,8 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.source.internal.SourceHelper;
+import org.hibernate.boot.model.source.spi.EntityNamingSource;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -169,7 +168,10 @@ import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.internal.EntityJavaDescriptorImpl;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
+import static org.hibernate.boot.model.source.internal.SourceHelper.resolveJavaDescriptor;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
@@ -1196,20 +1198,82 @@ public final class AnnotationBinder {
 			MetadataBuildingContext metadataBuildingContext) {
 		//we now know what kind of persistent entity it is
 		if ( !inheritanceState.hasParents() ) {
-			return new RootClass( metadataBuildingContext );
+			return new RootClass(
+					metadataBuildingContext,
+					resolveJavaDescriptor( inheritanceState, null, metadataBuildingContext )
+			);
 		}
 		else if ( InheritanceType.SINGLE_TABLE.equals( inheritanceState.getType() ) ) {
-			return new SingleTableSubclass( superEntity, metadataBuildingContext );
+			return new SingleTableSubclass(
+					superEntity,
+					resolveJavaDescriptor( inheritanceState, superEntity, metadataBuildingContext ),
+					metadataBuildingContext
+			);
 		}
 		else if ( InheritanceType.JOINED.equals( inheritanceState.getType() ) ) {
-			return new JoinedSubclass( superEntity, metadataBuildingContext );
+			return new JoinedSubclass(
+					superEntity,
+					resolveJavaDescriptor( inheritanceState, superEntity, metadataBuildingContext ),
+					metadataBuildingContext
+			);
 		}
 		else if ( InheritanceType.TABLE_PER_CLASS.equals( inheritanceState.getType() ) ) {
-			return new UnionSubclass( superEntity, metadataBuildingContext );
+			return new UnionSubclass(
+					superEntity,
+					resolveJavaDescriptor( inheritanceState, superEntity, metadataBuildingContext ),
+					metadataBuildingContext
+			);
 		}
 		else {
 			throw new AssertionFailure( "Unknown inheritance type: " + inheritanceState.getType() );
 		}
+	}
+
+	private static EntityJavaDescriptor resolveJavaDescriptor(
+			InheritanceState inheritanceState,
+			PersistentClass superEntity,
+			MetadataBuildingContext metadataBuildingContext) {
+		EntityNamingSource namingSource = resolveEntityNamingSource( inheritanceState );
+		return SourceHelper.resolveJavaDescriptor(
+				inheritanceState.getClazz().getName(),
+				metadataBuildingContext.getBootstrapContext().getTypeConfiguration(),
+				() -> new EntityJavaDescriptorImpl(
+						namingSource.getTypeName(),
+						namingSource.getEntityName(),
+						SourceHelper.resolveJavaType( namingSource.getClassName(), metadataBuildingContext ),
+						superEntity == null ? null : superEntity.getJavaTypeDescriptor(),
+						null,
+						null
+				)
+		);
+	}
+
+	private static EntityNamingSource resolveEntityNamingSource(InheritanceState inheritanceState) {
+		final Entity jpaEntityAnn = inheritanceState.getClazz().getAnnotation( Entity.class );
+		final String jpaEntityName = jpaEntityAnn == null ? null : jpaEntityAnn.name();
+
+		return new EntityNamingSource() {
+			@Override
+			public String getTypeName() {
+				return inheritanceState.getClazz().getName();
+			}
+
+			@Override
+			public String getClassName() {
+				return inheritanceState.getClazz().getName();
+			}
+
+			@Override
+			public String getEntityName() {
+				return inheritanceState.getClazz().getName();
+			}
+
+			@Override
+			public String getJpaEntityName() {
+				return jpaEntityName;
+			}
+		};
+
 	}
 
 	private static Ejb3JoinColumn[] makeInheritanceJoinColumns(
@@ -2832,22 +2896,22 @@ public final class AnnotationBinder {
 	}
 
 	private static void setupComponentTuplizer(XProperty property, Component component) {
-		if ( property == null ) {
-			return;
-		}
-		if ( property.isAnnotationPresent( Tuplizers.class ) ) {
-			for ( Tuplizer tuplizer : property.getAnnotation( Tuplizers.class ).value() ) {
-				EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
-				//todo tuplizer.entityModeType
-				component.addTuplizer( mode, tuplizer.impl().getName() );
-			}
-		}
-		if ( property.isAnnotationPresent( Tuplizer.class ) ) {
-			Tuplizer tuplizer = property.getAnnotation( Tuplizer.class );
-			EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
-			//todo tuplizer.entityModeType
-			component.addTuplizer( mode, tuplizer.impl().getName() );
-		}
+//		if ( property == null ) {
+//			return;
+//		}
+//		if ( property.isAnnotationPresent( Tuplizers.class ) ) {
+//			for ( Tuplizer tuplizer : property.getAnnotation( Tuplizers.class ).value() ) {
+//				EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
+//				//todo tuplizer.entityModeType
+//				component.( mode, tuplizer.impl().getName() );
+//			}
+//		}
+//		if ( property.isAnnotationPresent( Tuplizer.class ) ) {
+//			Tuplizer tuplizer = property.getAnnotation( Tuplizer.class );
+//			EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
+//			//todo tuplizer.entityModeType
+//			component.addTuplizer( mode, tuplizer.impl().getName() );
+//		}
 	}
 
 	private static void bindManyToOne(

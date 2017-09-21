@@ -8,7 +8,7 @@ package org.hibernate.loader.internal;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.spi.NaturalIdLoader;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 import org.jboss.logging.Logger;
 
@@ -20,7 +20,7 @@ public class StandardNaturalIdLoaderImpl implements NaturalIdLoader {
 
 	@Override
 	public Object doLoad(Object[] naturalIdValues, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		if ( log.isTraceEnabled() ) {
 //			log.tracef(
 //					"Resolving natural-id [%s] to id : %s ",

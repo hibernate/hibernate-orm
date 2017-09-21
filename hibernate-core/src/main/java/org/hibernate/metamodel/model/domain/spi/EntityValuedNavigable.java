@@ -8,7 +8,7 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.TableReferenceContributor;
@@ -49,6 +49,6 @@ public interface EntityValuedNavigable<J>
 	default SqlSelectionGroup resolveSqlSelectionGroup(
 			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

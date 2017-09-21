@@ -6,14 +6,14 @@
  */
 package org.hibernate;
 
-import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 
 /**
  * Defines the representation modes available for entities.
  *
  * @author Steve Ebersole
  *
- * @deprecated Deprecated in favor of {@link Representation}.  Use
+ * @deprecated Deprecated in favor of {@link RepresentationMode}.  Use
  * {@link #asRepresentation()} for an appropriate conversion.
  */
 @Deprecated
@@ -22,20 +22,20 @@ public enum EntityMode {
 	 * The {@code pojo} entity mode describes an entity model made up of entity classes (loosely) following
 	 * the java bean convention.
 	 */
-	POJO( Representation.POJO ),
+	POJO( RepresentationMode.POJO ),
 
 	/**
 	 * The {@code dynamic-map} entity mode describes an entity model defined using {@link java.util.Map} references.
 	 */
-	MAP( Representation.MAP );
+	MAP( RepresentationMode.MAP );
 
-	private final Representation representation;
+	private final RepresentationMode representation;
 
-	EntityMode(Representation representation) {
+	EntityMode(RepresentationMode representation) {
 		this.representation = representation;
 	}
 
-	public Representation asRepresentation() {
+	public RepresentationMode asRepresentation() {
 		return representation;
 	}
 
@@ -57,10 +57,10 @@ public enum EntityMode {
 	 * {@link #POJO}.
 	 */
 	public static EntityMode parse(String entityMode) {
-		return fromRepresentation( Representation.fromExternalName( entityMode ) );
+		return fromRepresentation( RepresentationMode.fromExternalName( entityMode ) );
 	}
 
-	public static EntityMode fromRepresentation(Representation representation) {
+	public static EntityMode fromRepresentation(RepresentationMode representation) {
 		if ( MAP.asRepresentation() == representation ) {
 			return MAP;
 		}

@@ -11,6 +11,7 @@ import java.util.Iterator;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * A subclass in a table-per-concrete-class mapping
@@ -20,8 +21,11 @@ public class UnionSubclass extends Subclass implements TableOwner {
 	private MappedTable table;
 	private KeyValue key;
 
-	public UnionSubclass(PersistentClass superclass, MetadataBuildingContext metadataBuildingContext) {
-		super( superclass, metadataBuildingContext );
+	public UnionSubclass(
+			PersistentClass superclass,
+			EntityJavaDescriptor javaTypeDescriptor,
+			MetadataBuildingContext metadataBuildingContext) {
+		super( superclass, javaTypeDescriptor, metadataBuildingContext );
 	}
 
 	/**

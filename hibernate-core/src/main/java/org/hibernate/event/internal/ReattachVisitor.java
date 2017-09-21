@@ -17,7 +17,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 /**
  * Abstract superclass of visitors that reattach collections.
@@ -100,7 +100,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * @return The value from the owner that identifies the grouping into the collection
 	 */
 	final Serializable extractCollectionKeyFromOwner(PersistentCollectionDescriptor collectionDescriptor) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		if ( collectionDescriptor.getCollectionType().useLHSPrimaryKey() ) {
 //			return ownerIdentifier;
 //		}

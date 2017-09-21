@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.MappedSuperclassType;
 import javax.persistence.metamodel.SingularAttribute;
@@ -226,11 +227,11 @@ class MetadataContext {
 					}
 				}
 			}
-			else if ( MappedSuperclass.class.isAssignableFrom( mapping.getClass() ) ) {
+			else if ( MappedSuperclass.class.isInstance( mapping ) ) {
 				@SuppressWarnings("unchecked")
 				final MappedSuperclass safeMapping = (MappedSuperclass) mapping;
 				if ( traceEnabled ) {
-					LOG.trace( "Starting mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
+					LOG.trace( "Starting mapped superclass [" + safeMapping.getName() + ']' );
 				}
 				try {
 					final MappedSuperclassTypeImpl<?> jpa2Mapping = mappedSuperclassByMappedSuperclassMapping.get(
@@ -257,7 +258,7 @@ class MetadataContext {
 				}
 				finally {
 					if ( traceEnabled ) {
-						LOG.trace( "Completed mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
+						LOG.trace( "Completed mapped superclass [" + safeMapping.getName() + ']' );
 					}
 				}
 			}

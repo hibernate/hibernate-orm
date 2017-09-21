@@ -22,6 +22,7 @@ import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
@@ -70,7 +71,7 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 
 	@Override
 	public PropertyAccess getPropertyAccess() {
-		throw new org.hibernate.sql.NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override

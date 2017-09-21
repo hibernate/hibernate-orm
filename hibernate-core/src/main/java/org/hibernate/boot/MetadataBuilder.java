@@ -20,6 +20,7 @@ import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 
@@ -361,8 +362,6 @@ public interface MetadataBuilder {
 	 * @param attributeConverterClass The AttributeConverter class.
 	 *
 	 * @return {@code this} for method chaining
-	 *
-	 * @see org.hibernate.cfg.AttributeConverterDefinition#from(Class)
 	 */
 	<O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass);
 
@@ -374,8 +373,6 @@ public interface MetadataBuilder {
 	 * by its "entity attribute" parameterized type?
 	 *
 	 * @return {@code this} for method chaining
-	 *
-	 * @see org.hibernate.cfg.AttributeConverterDefinition#from(Class, boolean)
 	 */
 	<O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass, boolean autoApply);
 
@@ -385,8 +382,6 @@ public interface MetadataBuilder {
 	 * @param attributeConverter The AttributeConverter instance.
 	 *
 	 * @return {@code this} for method chaining
-	 *
-	 * @see org.hibernate.cfg.AttributeConverterDefinition#from(AttributeConverter)
 	 */
 	MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter);
 
@@ -398,13 +393,12 @@ public interface MetadataBuilder {
 	 * by its "entity attribute" parameterized type?
 	 *
 	 * @return {@code this} for method chaining
-	 *
-	 * @see org.hibernate.cfg.AttributeConverterDefinition#from(AttributeConverter, boolean)
 	 */
 	MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter, boolean autoApply);
 
 	MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter);
 
+	MetadataBuilder applyRepresentationStrategySelector(RepresentationStrategySelector strategySelector);
 
 //	/**
 //	 * Specify the resolve to be used in identifying the backing members of a

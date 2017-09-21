@@ -53,7 +53,7 @@ public interface IdentifiableTypeSource extends AttributeSourceContainer {
 	 *
 	 * @return Sub-type sources
 	 */
-	public Collection<IdentifiableTypeSource> getSubTypes();
+	public Collection<SubclassEntitySource> getSubTypes();
 
 	/**
 	 * Access to the sources describing JPA lifecycle callbacks.

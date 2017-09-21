@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.results.internal;
 
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.results.spi.DynamicInstantiationQueryResult;
 import org.hibernate.sql.results.spi.InitializerCollector;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
@@ -34,7 +34,7 @@ public class DynamicInstantiationQueryResultImpl implements DynamicInstantiation
 	public void registerInitializers(InitializerCollector collector) {
 		// none to register specifically - although we need to be able to register
 		// initializers from any of the arguments
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override

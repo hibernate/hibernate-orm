@@ -10,7 +10,7 @@ package org.hibernate.sql.ast.tree.spi.expression;
 import java.util.Locale;
 
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
@@ -95,6 +95,6 @@ public class ColumnReference implements Expression {
 		//			1) resolve corresponding TableReference, currently defined
 		//				on ColumnReferenceSource - a *subtype* of SqlExpressionQualifier -
 		//			2) use TableReference to render qualified SQL fragment
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

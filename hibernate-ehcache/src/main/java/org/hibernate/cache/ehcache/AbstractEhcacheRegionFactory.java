@@ -32,7 +32,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.service.spi.InjectService;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 import org.jboss.logging.Logger;
 
@@ -117,14 +117,14 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
 	public QueryResultsRegion buildQueryResultsRegion(
 			String regionName,
 			SessionFactoryImplementor sessionFactory) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public TimestampsRegion buildTimestampsRegion(
 			String regionName,
 			SessionFactoryImplementor sessionFactory) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@InjectService

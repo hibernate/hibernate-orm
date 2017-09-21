@@ -19,7 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 import org.jboss.logging.Logger;
 
@@ -115,7 +115,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 
 	@Override
 	public boolean equalsSnapshot(PersistentCollectionDescriptor persister) throws HibernateException {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		final Type elementType = getElementType( persister );
 //		final Serializable snapshot = getSnapshot();
 //		final int xlen = Array.getLength( snapshot );
@@ -153,7 +153,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	@Override
 	@SuppressWarnings("unchecked")
 	public Object readFrom(ResultSet rs, PersistentCollectionDescriptor persister, Object owner) throws SQLException {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		final Object element = persister.readElement( rs, owner, getSession() );
 //		final int index = (Integer) persister.readIndex( rs, getSession() );
 //		for ( int i = tempList.size(); i<=index; i++) {
@@ -254,7 +254,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 
 	@Override
 	public boolean needsUpdating(Object entry, int i) throws HibernateException {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		final Serializable sn = getSnapshot();
 //		return i < Array.getLength( sn )
 //				&& Array.get( sn, i ) != null

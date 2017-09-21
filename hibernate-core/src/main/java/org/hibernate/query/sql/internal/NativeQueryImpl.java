@@ -60,7 +60,7 @@ import org.hibernate.query.sql.spi.QueryResultBuilder;
 import org.hibernate.query.sql.spi.QueryResultBuilderRootEntity;
 import org.hibernate.query.sql.spi.QueryResultBuilderScalar;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
@@ -535,13 +535,13 @@ public class NativeQueryImpl<R>
 		// todo (6.0) - need to resolve SqlSelections as well as resolving ResultBuilders and FetchBuilders into QueryResult trees
 		// 		also need to account for the edge case where the user passed just the
 		//		query string and no mappings (see ResultSetMappingUndefinedImpl)
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	private RowTransformer resolveRowTransformer() {
 		// todo (6.0) - need to resolve the RowTransformer to use, if one.
 		// todo (6.0) - what about ResultListTransformer?
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	private SelectInterpretationsKey generateSelectInterpretationsKey(ResultSetMappingDescriptor resultSetMapping) {

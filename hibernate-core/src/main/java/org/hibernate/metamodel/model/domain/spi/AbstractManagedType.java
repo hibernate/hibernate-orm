@@ -18,48 +18,61 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.hibernate.boot.model.domain.ManagedTypeMapping;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.TypeConfigurationAware;
 
 import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractManagedType<T> implements ManagedTypeDescriptor<T>, TypeConfigurationAware,
-		InheritanceCapable<T> {
+public abstract class AbstractManagedType<T> implements ManagedTypeDescriptor<T>, InheritanceCapable<T> {
 	private static final Logger log = Logger.getLogger( AbstractManagedType.class );
 
 	// todo (6.0) : I think we can just drop the mutabilityPlan and comparator for managed types
 
 	private final ManagedJavaDescriptor<T> javaTypeDescriptor;
+	private final RepresentationStrategy representationStrategy;
+
 	private final MutabilityPlan<T> mutabilityPlan;
 	private final Comparator<T> comparator;
+
+	private final TypeConfiguration typeConfiguration;
 
 	private InheritanceCapable<? super T>  superTypeDescriptor;
 	private List<InheritanceCapable<? extends T>> subclassTypes;
 
 	private Map<String,PersistentAttribute> declaredAttributesByName;
 
-	private TypeConfiguration typeConfiguration;
-
-	public AbstractManagedType(ManagedJavaDescriptor<T> javaTypeDescriptor) {
+	public AbstractManagedType(
+			ManagedTypeMapping managedTypeMapping,
+			ManagedJavaDescriptor<T> javaTypeDescriptor,
+			RuntimeModelCreationContext creationContext) {
 		this(
+				managedTypeMapping,
 				javaTypeDescriptor,
 				javaTypeDescriptor.getMutabilityPlan(),
-				javaTypeDescriptor.getComparator()
+				javaTypeDescriptor.getComparator(),
+				creationContext
 		);
 	}
 
 	public AbstractManagedType(
+			ManagedTypeMapping managedTypeMapping,
 			ManagedJavaDescriptor<T> javaTypeDescriptor,
 			MutabilityPlan<T> mutabilityPlan,
-			Comparator<T> comparator) {
+			Comparator<T> comparator,
+			RuntimeModelCreationContext creationContext) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.mutabilityPlan = mutabilityPlan;
 		this.comparator = comparator;
+
+		this.representationStrategy = creationContext.getRepresentationStrategySelector()
+				.resolveRepresentationStrategy( managedTypeMapping, creationContext );
+		this.typeConfiguration = creationContext.getTypeConfiguration();
 	}
 
 
@@ -87,14 +100,13 @@ public abstract class AbstractManagedType<T> implements ManagedTypeDescriptor<T>
 	}
 
 	@Override
-	public TypeConfiguration getTypeConfiguration() {
-		return typeConfiguration;
+	public RepresentationStrategy getRepresentationStrategy() {
+		return representationStrategy;
 	}
 
 	@Override
-	public void setTypeConfiguration(TypeConfiguration typeConfiguration) {
-		this.typeConfiguration = typeConfiguration;
-
+	public TypeConfiguration getTypeConfiguration() {
+		return typeConfiguration;
 	}
 
 	public InheritanceCapable<? super T> getSuperclassType() {

@@ -15,7 +15,7 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.CompositeSqlSelectionMappings;
@@ -48,21 +48,21 @@ public class CompositeSqlSelectionMappingsBuilder implements NavigableVisitation
 
 	@Override
 	public void visitSingularAttributeBasic(BasicSingularPersistentAttribute attribute) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public void visitSingularAttributeEmbedded(SingularPersistentAttributeEmbedded attribute) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public void visitSingularAttributeEntity(SingularPersistentAttributeEntity attribute) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public void visitPluralAttribute(PluralPersistentAttribute attribute) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

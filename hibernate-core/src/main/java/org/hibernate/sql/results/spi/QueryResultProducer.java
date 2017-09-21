@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.results.spi;
 
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  */
 public interface QueryResultProducer {
 	default JavaTypeDescriptor getProducedJavaTypeDescriptor() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	QueryResult createQueryResult(

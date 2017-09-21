@@ -18,7 +18,7 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.loader.BatchFetchStyle;
-import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
 
@@ -72,7 +72,6 @@ public final class Settings {
 			LOG.debugf( "Statistics: %s", enabledDisabled( sessionFactoryOptions.isStatisticsEnabled() ) );
 
 			LOG.debugf( "Deleted entity synthetic identifier rollback: %s", enabledDisabled( sessionFactoryOptions.isIdentifierRollbackEnabled() ) );
-			LOG.debugf( "Default domain representation: %s", sessionFactoryOptions.getDefaultRepresentation() );
 			LOG.debugf( "Check Nullability in Core (should be disabled when Bean Validation is on): %s", enabledDisabled( sessionFactoryOptions.isCheckNullability() ) );
 			LOG.debugf( "Allow initialization of lazy state outside session : %s", enabledDisabled( sessionFactoryOptions.isInitializeLazyStateOutsideTransactionsEnabled() ) );
 
@@ -149,13 +148,6 @@ public final class Settings {
 
 	public boolean isIdentifierRollbackEnabled() {
 		return sessionFactoryOptions.isIdentifierRollbackEnabled();
-	}
-
-	public Representation getDefaultRepresentation() {
-		// todo (6.0) - move to MetamodelBuilder / options
-		// 		per discussion on SessionFactoryBuilder and options, this ought
-		// 		to be handled from there
-		return sessionFactoryOptions.getDefaultRepresentation();
 	}
 
 	public boolean isCheckNullability() {

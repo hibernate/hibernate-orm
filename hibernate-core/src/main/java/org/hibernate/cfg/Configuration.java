@@ -43,16 +43,16 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.exception.SerializationException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.xml.XmlDocument;
-import org.hibernate.metamodel.model.domain.internal.StandardInstantiatorFactory;
-import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
+import org.hibernate.metamodel.model.domain.internal.StandardRepresentationStrategySelector;
+import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.BasicType;
@@ -107,7 +107,7 @@ public class Configuration {
 	// used to build SF
 	private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
 	private EntityNotFoundDelegate entityNotFoundDelegate;
-	private InstantiatorFactory instantiatorFactory;
+	private RepresentationStrategySelector representationStrategySelector;
 	private Interceptor interceptor;
 	private SessionFactoryObserver sessionFactoryObserver;
 	private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
@@ -159,7 +159,8 @@ public class Configuration {
 
 		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
 
-		instantiatorFactory = StandardInstantiatorFactory.INSTANCE;
+		representationStrategySelector = StandardRepresentationStrategySelector.INSTANCE;
+
 		interceptor = EmptyInterceptor.INSTANCE;
 		properties = new Properties(  );
 		properties.putAll( standardServiceRegistryBuilder.getSettings());
@@ -598,8 +599,8 @@ public class Configuration {
 		return this;
 	}
 
-	public InstantiatorFactory getInstantiatorFactory() {
-		return instantiatorFactory;
+	public RepresentationStrategySelector getRepresentationStrategySelector() {
+		return representationStrategySelector;
 	}
 
 	/**
@@ -689,11 +690,11 @@ public class Configuration {
 			}
 		}
 
+		metadataBuilder.applyRepresentationStrategySelector( getRepresentationStrategySelector() );
 
 		final Metadata metadata = metadataBuilder.build();
 
 		final SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
-		sessionFactoryBuilder.applyInstantiatorFactory( getInstantiatorFactory() );
 		if ( interceptor != null && interceptor != EmptyInterceptor.INSTANCE ) {
 			sessionFactoryBuilder.applyInterceptor( interceptor );
 		}

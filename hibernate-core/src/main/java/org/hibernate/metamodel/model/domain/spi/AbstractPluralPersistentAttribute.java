@@ -12,9 +12,8 @@ import javax.persistence.metamodel.Type;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.PluralAttributeFetchImpl;
 import org.hibernate.sql.results.internal.PluralAttributeQueryResultImpl;
@@ -84,7 +83,7 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 				return PersistentAttributeType.MANY_TO_MANY;
 			}
 			case ANY: {
-				throw new NotYetImplementedException(  );
+				throw new NotYetImplementedFor6Exception(  );
 			}
 			default: {
 				throw new UnsupportedOperationException(
@@ -182,12 +181,12 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 
 	@Override
 	public FetchStrategy getMappedFetchStrategy() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public ManagedTypeDescriptor<C> getFetchedManagedType() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
@@ -199,6 +198,6 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 	public SqlSelectionGroup resolveSqlSelectionGroup(
 			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

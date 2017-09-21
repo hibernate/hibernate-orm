@@ -11,7 +11,7 @@ import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
@@ -55,7 +55,7 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 			boolean shouldUseJdbcNamedParameters,
 			SharedSessionContractImplementor session) {
 		if ( !BasicValuedExpressableType.class.isInstance( ormType ) ) {
-			throw new NotYetImplementedException(
+			throw new NotYetImplementedFor6Exception(
 					"Support for JDBC CallableStatement parameter extraction not yet supported for non-basic types"
 			);
 		}

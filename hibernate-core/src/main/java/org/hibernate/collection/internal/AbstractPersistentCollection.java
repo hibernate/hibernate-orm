@@ -33,6 +33,7 @@ import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 /**
  * Base class implementing {@link org.hibernate.collection.spi.PersistentCollection}
@@ -1148,7 +1149,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		public void replace(PersistentCollectionDescriptor persister, Map copyCache) {
-			throw new org.hibernate.sql.NotYetImplementedException(  );
+			throw new NotYetImplementedFor6Exception(  );
 //			if ( addedValue != null ) {
 //				addedValue = getReplacement( (Type) persister.getElementType(), addedValue, copyCache );
 //			}
@@ -1182,7 +1183,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			String entityName,
 			SharedSessionContractImplementor session) throws HibernateException {
 
-		throw new org.hibernate.sql.NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 
 //		// short-circuit(s)
 //		if ( currentElements.size() == 0 ) {
@@ -1256,7 +1257,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			Object entityInstance,
 			String entityName,
 			SharedSessionContractImplementor session) {
-		throw new org.hibernate.sql.NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		if ( entityInstance != null && ForeignKeys.isNotTransient( entityName, entityInstance, null, session ) ) {
 //			final EntityTypeImplementor entityPersister = session.getFactory().getEntityDescriptor( entityName );
 //			final Type idType = entityPersister.getIdentifierType();

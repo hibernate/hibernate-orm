@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.relational.spi;
 
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
@@ -38,11 +38,11 @@ public interface Column extends QualifiableSqlExpressable {
 	String render(String identificationVariable);
 
 	default String renderReadExpression(String identificationVariable) {
-		throw new NotYetImplementedException();
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	default String renderWriteExpression(String identificationVariable) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	SqlTypeDescriptor getSqlTypeDescriptor();

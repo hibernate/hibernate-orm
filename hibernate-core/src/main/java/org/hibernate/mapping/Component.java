@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -31,10 +31,9 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Instantiator;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
@@ -47,7 +46,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Component extends SimpleValue implements EmbeddedValueMapping, PropertyContainer, MetaAttributable {
+public class Component extends SimpleValue implements EmbeddedValueMappingImplementor, PropertyContainer, MetaAttributable {
 	private List<PersistentAttributeMapping> properties = new ArrayList<>();
 	private String componentClassName;
 	private boolean embedded;
@@ -58,9 +57,6 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Prop
 	private boolean isKey;
 	private String roleName;
 	private EmbeddableJavaDescriptor javaTypeDescriptor;
-
-	private Representation representation;
-	private Instantiator instantiator;
 
 	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
@@ -96,13 +92,13 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Prop
 	}
 
 	@Override
-	public Representation getExplicitRepresentation() {
-		return representation;
+	public RepresentationMode getExplicitRepresentationMode() {
+		return null;
 	}
 
 	@Override
-	public Instantiator getExplicitInstantiator() {
-		return instantiator;
+	public void setExplicitRepresentationMode(RepresentationMode mode) {
+		throw new UnsupportedOperationException( "Support for ManagedType-specific explicit RepresentationMode not yet implemented" );
 	}
 
 	public int getPropertySpan() {
@@ -419,6 +415,16 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Prop
 		catch ( Exception e ) {
 			return null;
 		}
+	}
+
+	@Override
+	public void addDeclaredPersistentAttribute(PersistentAttributeMapping attribute) {
+		properties.add( attribute );
+	}
+
+	@Override
+	public void setSuperManagedType(ManagedTypeMapping superTypeMapping) {
+		throw new UnsupportedOperationException( "Inheritance not yet supported for composite/embeddable values" );
 	}
 
 	public static class StandardGenerationContextLocator

@@ -17,25 +17,25 @@ public interface ReflectionOptimizer {
 	 *
 	 * @return The optimizer for instantiation
 	 */
-	public InstantiationOptimizer getInstantiationOptimizer();
+	<J> InstantiationOptimizer<J> getInstantiationOptimizer();
 
 	/**
 	 * Retrieve the optimizer for accessing the entity's persistent state.
 	 *
 	 * @return The optimizer for persistent state access
 	 */
-	public AccessOptimizer getAccessOptimizer();
+	AccessOptimizer getAccessOptimizer();
 
 	/**
 	 * Represents optimized entity instantiation.
 	 */
-	public static interface InstantiationOptimizer {
+	interface InstantiationOptimizer<J> {
 		/**
 		 * Perform instantiation of an instance of the underlying class.
 		 *
 		 * @return The new instance.
 		 */
-		public Object newInstance();
+		J newInstance();
 	}
 
 	/**

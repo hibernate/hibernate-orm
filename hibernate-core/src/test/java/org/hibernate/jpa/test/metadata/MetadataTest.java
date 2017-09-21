@@ -99,7 +99,7 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 				sfi,
 				mappingMetadata.getTypeConfiguration()
 		);
-		metamodel.initialize( mappingMetadata, JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED );
+		metamodel.initialize( mappingMetadata, bootstrapContext, JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED );
 		sfi.close();
 	}
 

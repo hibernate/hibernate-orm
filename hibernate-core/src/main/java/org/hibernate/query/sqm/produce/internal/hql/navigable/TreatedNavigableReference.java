@@ -16,7 +16,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmDowncast;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
@@ -59,12 +59,12 @@ public class TreatedNavigableReference
 
 	@Override
 	public String getUniqueIdentifier() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public String getIdentificationVariable() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override

@@ -21,5 +21,7 @@ public interface PersistentCollectionTuplizerFactory {
 
 	// todo (6.0) : relatedly ^^, anything else we should pass along?
 
+	// todo (6.0) : align naming with the idea of Representation(Mode|Strategy)?
+
 	PersistentCollectionTuplizer getImplicitTuplizer(Class collectionJavaType);
 }

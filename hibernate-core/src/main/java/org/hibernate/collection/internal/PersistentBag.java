@@ -18,7 +18,7 @@ import java.util.ListIterator;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 /**
  * An unordered, unkeyed collection that can contain the same element
@@ -88,7 +88,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	@Override
 	@SuppressWarnings("unchecked")
 	public Object readFrom(ResultSet rs, PersistentCollectionDescriptor persister, Object owner) throws SQLException {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 		// todo (6.0) : this is done so much differently in this redesign - I think these metods are not going to be needed
 //		// note that if we load this collection from a cartesian product
 //		// the multiplicity would be broken ... so use an idbag instead

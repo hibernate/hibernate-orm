@@ -22,6 +22,7 @@ import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.type.spi.BasicType;
 
@@ -221,6 +222,12 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Abs
 	@Override
 	public MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter) {
 		delegate.applyIdGenerationTypeInterpreter( interpreter );
+		return getThis();
+	}
+
+	@Override
+	public MetadataBuilder applyRepresentationStrategySelector(RepresentationStrategySelector strategySelector) {
+		delegate.applyRepresentationStrategySelector( strategySelector );
 		return getThis();
 	}
 }

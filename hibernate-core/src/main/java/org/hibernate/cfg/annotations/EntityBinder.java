@@ -87,6 +87,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.naming.Identifier;
 
 import org.jboss.logging.Logger;
@@ -381,21 +382,24 @@ public class EntityBinder {
 			this.subselect = subselect.value();
 		}
 
-		//tuplizers
-		if ( annotatedClass.isAnnotationPresent( Tuplizers.class ) ) {
-			for (Tuplizer tuplizer : annotatedClass.getAnnotation( Tuplizers.class ).value()) {
-				EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
-				//todo tuplizer.entityModeType
-				persistentClass.
-						addTuplizer( mode, tuplizer.impl().getName() );
-			}
-		}
-		if ( annotatedClass.isAnnotationPresent( Tuplizer.class ) ) {
-			Tuplizer tuplizer = annotatedClass.getAnnotation( Tuplizer.class );
-			EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
-			//todo tuplizer.entityModeType
-			persistentClass.addTuplizer( mode, tuplizer.impl().getName() );
-		}
+		// todo (7.0) : make this available via unified orm.xml
+//		persistentClass.setExplicitRepresentationMode( RepresentationMode.POJO );
+//
+//		//tuplizers
+//		if ( annotatedClass.isAnnotationPresent( Tuplizers.class ) ) {
+//			for (Tuplizer tuplizer : annotatedClass.getAnnotation( Tuplizers.class ).value()) {
+//				EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
+//				//todo tuplizer.entityModeType
+//				persistentClass.
+//						addTuplizer( mode, tuplizer.impl().getName() );
+//			}
+//		}
+//		if ( annotatedClass.isAnnotationPresent( Tuplizer.class ) ) {
+//			Tuplizer tuplizer = annotatedClass.getAnnotation( Tuplizer.class );
+//			EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
+//			//todo tuplizer.entityModeType
+//			persistentClass.addTuplizer( mode, tuplizer.impl().getName() );
+//		}
 
 		for ( Filter filter : filters ) {
 			String filterName = filter.name();

@@ -9,7 +9,7 @@ package org.hibernate.query.spi;
 import org.hibernate.Incubating;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 /**
  * Manages all the parameter bindings for a particular query.
@@ -67,6 +67,6 @@ public interface QueryParameterBindings {
 	 * in creating a {@link org.hibernate.cache.spi.QueryKey}
 	 */
 	default QueryKey.ParameterBindingsMemento generateQueryKeyMemento() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

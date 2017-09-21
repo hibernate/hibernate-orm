@@ -9,6 +9,7 @@ package org.hibernate.boot.model.domain;
 import org.hibernate.EntityMode;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 
 /**
  * @author Steve Ebersole
@@ -63,7 +64,7 @@ public interface EntityMappingHierarchy {
 	boolean hasVersionAttributeMapping();
 
 	/**
-	 * Get the entity-mode being used by this hierarchy.
+	 * Get the Representation-mode being used by this hierarchy.
 	 */
-	EntityMode getEntityMode();
+	RepresentationMode getExplicitRepresentationMode();
 }

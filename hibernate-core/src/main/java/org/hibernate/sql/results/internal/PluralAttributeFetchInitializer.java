@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.internal;
 
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.results.spi.PluralAttributeInitializer;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.spi.RowProcessingState;
@@ -47,6 +47,6 @@ public class PluralAttributeFetchInitializer implements PluralAttributeInitializ
 		// 		collection instance needs to be tied to a specific owner/container
 		//		instance.
 
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

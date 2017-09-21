@@ -6,11 +6,10 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 import org.hibernate.sql.ast.tree.spi.SqlAstNode;
-import org.hibernate.sql.results.spi.Selectable;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.SqlSelectionProducer;
 
@@ -45,7 +44,7 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 	ExpressableType getType();
 
 	default SqlExpressable getExpressable() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	/**

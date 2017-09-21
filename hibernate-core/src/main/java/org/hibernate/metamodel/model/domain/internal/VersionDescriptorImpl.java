@@ -12,10 +12,12 @@ import java.util.Optional;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.BasicValueMapping;
+import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.VersionSupport;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -33,8 +35,6 @@ import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.spi.BasicType;
 
-import static org.hibernate.metamodel.model.domain.internal.PersisterHelper.resolvePropertyAccess;
-
 /**
  * @author Steve Ebersole
  */
@@ -47,6 +47,7 @@ public class VersionDescriptorImpl<O,J>
 	private final Column column;
 	private final String unsavedValue;
 
+	@SuppressWarnings("unchecked")
 	public VersionDescriptorImpl(
 			EntityHierarchy hierarchy,
 			RootClass rootEntityBinding,
@@ -56,9 +57,14 @@ public class VersionDescriptorImpl<O,J>
 			String unsavedValue,
 			RuntimeModelCreationContext creationContext) {
 		super(
-				hierarchy.getRootEntityType(),
+				(ManagedTypeDescriptor<O>) hierarchy.getRootEntityType().getJavaTypeDescriptor(),
 				name,
-				resolvePropertyAccess( hierarchy.getRootEntityType(), rootEntityBinding.getVersion(), creationContext ),
+				hierarchy.getRootEntityType().getRepresentationStrategy().generatePropertyAccess(
+						rootEntityBinding,
+						rootEntityBinding.getVersion(),
+						(ManagedTypeDescriptor) hierarchy.getRootEntityType().getJavaTypeDescriptor(),
+						Environment.getBytecodeProvider()
+				),
 				Disposition.VERSION,
 				nullable,
 				bootMapping

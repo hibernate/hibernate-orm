@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
-import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityMapping;
@@ -36,11 +35,13 @@ import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Instantiator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Mapping for an entity.
@@ -86,8 +87,7 @@ public abstract class PersistentClass
 	private Boolean isAbstract;
 	private boolean hasSubselectLoadableCollections;
 	private EmbeddedValueMapping identifierEmbeddedValueMapping;
-	private Representation explicitRepresentation;
-	private Instantiator explicitInstantiator;
+	private RepresentationMode explicitRepresentation;
 
 
 
@@ -106,9 +106,17 @@ public abstract class PersistentClass
 	private EmbeddedValueMapping declaredIdentifierValueMapping;
 
 
-	public PersistentClass(MetadataBuildingContext metadataBuildingContext, EntityMappingHierarchy entityMappingHierarchy) {
-		super( entityMappingHierarchy );
+	public PersistentClass(
+			MetadataBuildingContext metadataBuildingContext,
+			EntityJavaDescriptor javaTypeDescriptor,
+			EntityMappingHierarchy entityMappingHierarchy) {
+		super( entityMappingHierarchy, javaTypeDescriptor );
 		this.metadataBuildingContext = metadataBuildingContext;
+	}
+
+	@Override
+	public EntityJavaDescriptor getJavaTypeDescriptor() {
+		return (EntityJavaDescriptor) super.getJavaTypeDescriptor();
 	}
 
 	public ServiceRegistry getServiceRegistry() {
@@ -122,9 +130,6 @@ public abstract class PersistentClass
 	public void setClassName(String className) {
 		this.className = className == null ? null : className.intern();
 		this.mappedClass = null;
-		if ( this.className != null ) {
-			getEntityMappingHierarchy().setEntityMode( EntityMode.POJO );
-		}
 	}
 
 	@Override
@@ -989,7 +994,7 @@ public abstract class PersistentClass
 	}
 
 	/**
-	 * @deprecated since 6.0, use {@link #getDeclaredIdentifierEmbeddedValueMapping()}.
+	 * @deprecated since 6.0, use {@link #getDeclaredEmbeddedIdentifierAttributeMapping()}
 	 */
 	@Deprecated
 	public Component getDeclaredIdentifierMapper() {
@@ -1002,7 +1007,7 @@ public abstract class PersistentClass
 	}
 
 	/**
-	 * @deprecated since 6.0, use {@link IdentifierMapping#hasEmbeddedValueMapping()}.
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#hasIdentifierMapper()}.
 	 */
 	@Deprecated
 	public boolean hasIdentifierMapper() {
@@ -1067,15 +1072,9 @@ public abstract class PersistentClass
 
 
 	@Override
-	public Representation getExplicitRepresentation() {
+	public RepresentationMode getExplicitRepresentationMode() {
 		return explicitRepresentation;
 	}
-
-	@Override
-	public Instantiator getExplicitInstantiator() {
-		return explicitInstantiator;
-	}
-
 	@Override
 	public <X> IdentifiableTypeDescriptor<X> makeRuntimeDescriptor(RuntimeModelCreationContext creationContext) {
 		return creationContext.getRuntimeModelDescriptorFactory().createEntityDescriptor(

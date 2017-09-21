@@ -10,7 +10,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
 
 /**
@@ -30,6 +30,6 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 			SharedSessionContractImplementor persistenceContext,
 			QueryOptions queryOptions,
 			ParameterBindingContext parameterBindingContext) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

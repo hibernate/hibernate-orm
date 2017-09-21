@@ -9,7 +9,7 @@ package org.hibernate.sql.results.internal;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
@@ -47,7 +47,7 @@ public class CompositeQueryResultAssembler implements QueryResultAssembler {
 			values[i] = rowProcessingState.getJdbcValue( sqlSelections.get( i ) );
 		}
 
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		try {
 //			final Object result = embeddedPersister.getReturnedClass().newInstance();
 //			embeddedPersister.setPropertyValues( result, values, EntityMode.POJO );

@@ -10,10 +10,9 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
@@ -67,7 +66,7 @@ public interface Navigable<T> extends DomainType<T> {
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
 			SqmReferenceCreationContext creationContext) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	interface SqmReferenceCreationContext {
@@ -81,7 +80,7 @@ public interface Navigable<T> extends DomainType<T> {
 			NavigableReference navigableReference,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	// todo (6.0) : Consider instead to resolve just the `List<SqlSelection>` and avoid the extra allocations here

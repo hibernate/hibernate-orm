@@ -29,7 +29,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerRefer
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEntity;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
@@ -216,7 +216,7 @@ public class SingularPersistentAttributeEntity<O,J>
 
 	@Override
 	public FetchStrategy getMappedFetchStrategy() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
@@ -263,7 +263,7 @@ public class SingularPersistentAttributeEntity<O,J>
 			SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector joinCollector,
 			TableGroupContext tableGroupContext) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		final TableReference joinTableReference = resolveJoinTableReference( sqlAliasBase );
 //		if ( joinTableReference == null ) {
 //			getEntityDescriptor().applyTableReferenceJoins(
@@ -280,7 +280,7 @@ public class SingularPersistentAttributeEntity<O,J>
 			TableGroupInfo tableGroupInfoSource,
 			JoinType joinType,
 			JoinedTableGroupContext tableGroupJoinContext) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		final SqlAliasBase sqlAliasBase = tableGroupJoinContext.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
 //
 //		final TableReferenceJoinCollectorImpl joinCollector = new TableReferenceJoinCollectorImpl( tableGroupJoinContext );
@@ -393,6 +393,6 @@ public class SingularPersistentAttributeEntity<O,J>
 	public SqlSelectionGroup resolveSqlSelectionGroup(
 			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

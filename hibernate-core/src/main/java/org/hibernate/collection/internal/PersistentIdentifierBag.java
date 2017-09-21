@@ -20,7 +20,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 /**
  * An <tt>IdentifierBag</tt> implements "bag" semantics more efficiently than
@@ -325,7 +325,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 			ResultSet rs,
 			PersistentCollectionDescriptor persister,
 			Object owner) throws SQLException {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
 //		final Object old = identifiers.put(
 //			values.size(),

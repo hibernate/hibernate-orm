@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.io.Serializable;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
@@ -24,6 +25,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Collection;
@@ -43,6 +45,7 @@ import org.hibernate.metamodel.model.domain.internal.CollectionIndexEmbeddedImpl
 import org.hibernate.metamodel.model.domain.internal.CollectionIndexEntityImpl;
 import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
 import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
@@ -274,10 +277,17 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 	}
 
 	@Override
+	public void initialize(
+			Serializable loadedKey,
+			SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
 	public TableGroup createRootTableGroup(
 			TableGroupInfo tableGroupInfo,
 			RootTableGroupContext tableGroupContext) {
-		throw new org.hibernate.sql.NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		final SqlAliasBase sqlAliasBase = tableGroupContext.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
 //		final RootTableGroupTableReferenceCollector collector = new RootTableGroupTableReferenceCollector( this, sqlAliasBase );
 //		applyTableReferenceJoins(
@@ -393,7 +403,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 			TableGroupInfo tableGroupInfoSource,
 			JoinType joinType,
 			JoinedTableGroupContext tableGroupJoinContext) {
-		throw new org.hibernate.sql.NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 }

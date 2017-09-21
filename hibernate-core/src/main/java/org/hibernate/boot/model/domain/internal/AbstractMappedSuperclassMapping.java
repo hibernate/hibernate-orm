@@ -14,6 +14,7 @@ import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.MappedSuperclassImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.MappedSuperclassJavaDescriptor;
 
 /**
  * @author Chris Cranford
@@ -22,8 +23,10 @@ public abstract class AbstractMappedSuperclassMapping
 		extends AbstractIdentifiableTypeMapping
 		implements MappedSuperclassImplementor {
 
-	public AbstractMappedSuperclassMapping(EntityMappingHierarchy entityMappingHierarchy) {
-		super( entityMappingHierarchy );
+	public AbstractMappedSuperclassMapping(
+			EntityMappingHierarchy entityMappingHierarchy,
+			MappedSuperclassJavaDescriptor javaTypeDescriptor) {
+		super( entityMappingHierarchy, javaTypeDescriptor );
 	}
 
 	@Override

@@ -29,7 +29,7 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
@@ -157,7 +157,7 @@ public class QueryResultBuilderRootEntity
 
 	@Override
 	public Expression qualify(QualifiableSqlExpressable sqlSelectable) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	public static class EntityQueryResultImpl extends AbstractFetchParent implements EntityQueryResult {
@@ -215,7 +215,7 @@ public class QueryResultBuilderRootEntity
 
 		@Override
 		public void registerInitializers(InitializerCollector collector) {
-			throw new NotYetImplementedException(  );
+			throw new NotYetImplementedFor6Exception(  );
 		}
 
 		@Override
@@ -299,12 +299,12 @@ public class QueryResultBuilderRootEntity
 
 		@Override
 		public void visitRowIdDescriptor(RowIdDescriptor rowIdDescriptor) {
-			throw new NotYetImplementedException(  );
+			throw new NotYetImplementedFor6Exception(  );
 		}
 
 		@Override
 		public void visitTenantTenantDiscrimination(TenantDiscrimination tenantDiscrimination) {
-			throw new NotYetImplementedException(  );
+			throw new NotYetImplementedFor6Exception(  );
 		}
 
 		@Override
@@ -351,22 +351,22 @@ public class QueryResultBuilderRootEntity
 
 		@Override
 		public void visitSingularAttributeBasic(BasicSingularPersistentAttribute attribute) {
-			throw new NotYetImplementedException(  );
+			throw new NotYetImplementedFor6Exception(  );
 		}
 
 		@Override
 		public void visitSingularAttributeEmbedded(SingularPersistentAttributeEmbedded attribute) {
-			throw new NotYetImplementedException(  );
+			throw new NotYetImplementedFor6Exception(  );
 		}
 
 		@Override
 		public void visitSingularAttributeEntity(SingularPersistentAttributeEntity attribute) {
-			throw new NotYetImplementedException(  );
+			throw new NotYetImplementedFor6Exception(  );
 		}
 
 		@Override
 		public void visitPluralAttribute(PluralPersistentAttribute attribute) {
-			throw new NotYetImplementedException(  );
+			throw new NotYetImplementedFor6Exception(  );
 		}
 	}
 }

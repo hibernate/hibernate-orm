@@ -10,6 +10,7 @@ import java.util.Set;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -17,15 +18,12 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Instantiator;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
-import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -33,8 +31,10 @@ import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 public class MappedSuperclassImpl<J>
 		extends AbstractIdentifiableType<J>
 		implements MappedSuperclassDescriptor<J> {
-	public MappedSuperclassImpl(IdentifiableJavaDescriptor<J> javaTypeDescriptor) {
-		super( javaTypeDescriptor );
+	public MappedSuperclassImpl(
+			IdentifiableTypeMapping bootMapping,
+			RuntimeModelCreationContext creationContext) {
+		super( bootMapping, bootMapping.getJavaTypeDescriptor(), creationContext );
 	}
 
 	@Override
@@ -48,7 +48,7 @@ public class MappedSuperclassImpl<J>
 			IdentifiableTypeDescriptor<? super J> superType,
 			IdentifiableTypeMapping bootMapping,
 			RuntimeModelCreationContext creationContext) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
@@ -57,73 +57,67 @@ public class MappedSuperclassImpl<J>
 			IdentifiableTypeDescriptor<? super J> superType,
 			IdentifiableTypeMappingImplementor bootMapping,
 			RuntimeModelCreationContext creationContext) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public <Y> SingularAttribute<? super J, Y> getId(Class<Y> type) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public <Y> SingularAttribute<J, Y> getDeclaredId(Class<Y> type) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public <Y> SingularAttribute<? super J, Y> getVersion(Class<Y> type) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public <Y> SingularAttribute<J, Y> getDeclaredVersion(Class<Y> type) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public boolean hasSingleIdAttribute() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public boolean hasVersionAttribute() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public Set<SingularAttribute<? super J, ?>> getIdClassAttributes() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public Type<?> getIdType() {
-		throw new NotYetImplementedException(  );
-	}
-
-	@Override
-	public Instantiator getInstantiator() {
-		// likely this should have no constructor
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public NavigableContainer getContainer() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public String asLoggableText() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public NavigableRole getNavigableRole() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public void visitNavigable(NavigableVisitationStrategy visitor) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
@@ -131,7 +125,7 @@ public class MappedSuperclassImpl<J>
 			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
 		// todo (6.0) : we'd have to know all subclasses to be able to generate selection-clause all columns we possibly need for all subtypes
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
@@ -141,6 +135,6 @@ public class MappedSuperclassImpl<J>
 
 	@Override
 	public IdentifiableTypeDescriptor<? super J> getSupertype() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

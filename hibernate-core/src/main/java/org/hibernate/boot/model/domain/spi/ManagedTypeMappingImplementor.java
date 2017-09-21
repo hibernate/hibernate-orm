@@ -8,6 +8,7 @@ package org.hibernate.boot.model.domain.spi;
 
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 
 /**
  * @author Steve Ebersole
@@ -16,4 +17,6 @@ public interface ManagedTypeMappingImplementor extends ManagedTypeMapping {
 	void addDeclaredPersistentAttribute(PersistentAttributeMapping attribute);
 
 	void setSuperManagedType(ManagedTypeMapping superTypeMapping);
+
+	void setExplicitRepresentationMode(RepresentationMode mode);
 }

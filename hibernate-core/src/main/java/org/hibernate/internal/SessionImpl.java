@@ -1425,7 +1425,7 @@ public final class SessionImpl
 		checkTransactionSynchStatus();
 		Object result = getInterceptor().instantiate(
 				persister.getEntityName(),
-				persister.getHierarchy().getRepresentation(),
+				persister.getRepresentationStrategy().getMode(),
 				id
 		);
 		if ( result == null ) {

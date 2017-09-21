@@ -20,7 +20,12 @@ import org.hibernate.service.ServiceRegistry;
  * Standard implementation of PropertyAccessStrategyResolver
  *
  * @author Steve Ebersole
+ *
+ * @deprecated See deprecation on {@link PropertyAccessStrategyResolver}
+ *
+ * todo (6.0) : remove this as well
  */
+@Deprecated
 public class PropertyAccessStrategyResolverStandardImpl implements PropertyAccessStrategyResolver {
 	private final ServiceRegistry serviceRegistry;
 

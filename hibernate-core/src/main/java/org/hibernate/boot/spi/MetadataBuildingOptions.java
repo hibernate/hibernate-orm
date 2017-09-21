@@ -15,6 +15,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 
 /**
@@ -41,6 +42,7 @@ public interface MetadataBuildingOptions {
 	MappingDefaults getMappingDefaults();
 
 	ImplicitNamingStrategy getImplicitNamingStrategy();
+
 	PhysicalNamingStrategy getPhysicalNamingStrategy();
 
 	/**
@@ -105,10 +107,10 @@ public interface MetadataBuildingOptions {
 	 * Should we use nationalized variants of character data (e.g. NVARCHAR rather than VARCHAR)
 	 * by default?
 	 *
+	 * @return {@code true} if nationalized character data should be used by default; {@code false} otherwise.
+	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableGlobalNationalizedCharacterDataSupport
 	 * @see org.hibernate.cfg.AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA
-	 *
-	 * @return {@code true} if nationalized character data should be used by default; {@code false} otherwise.
 	 */
 	boolean useNationalizedCharacterData();
 
@@ -121,4 +123,5 @@ public interface MetadataBuildingOptions {
 	 */
 	List<MetadataSourceType> getSourceProcessOrdering();
 
+	RepresentationStrategySelector getRepresentationStrategySelector();
 }

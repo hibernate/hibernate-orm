@@ -91,7 +91,7 @@ import org.hibernate.sql.ANSIJoinFragment;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -430,11 +430,11 @@ public abstract class Dialect implements ConversionContext {
 	// todo (6.0) : use one of these (pick) vv, rather than ^^
 
 	public String getTypeName(int code, Size size) throws HibernateException {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	public String getTypeName(SqlTypeDescriptor sqlTypeDescriptor, Size size) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	// todo (6.0) : related to above "SQL type name", also applies to cast target type names vv

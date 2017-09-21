@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
@@ -39,6 +38,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
+import org.hibernate.boot.model.source.internal.SourceHelper;
 import org.hibernate.boot.model.source.spi.AnyMappingSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.model.source.spi.AttributeRole;
@@ -81,6 +81,7 @@ import org.hibernate.boot.model.source.spi.SingularAttributeSourceEmbedded;
 import org.hibernate.boot.model.source.spi.SingularAttributeSourceManyToOne;
 import org.hibernate.boot.model.source.spi.SingularAttributeSourceOneToOne;
 import org.hibernate.boot.model.source.spi.Sortable;
+import org.hibernate.boot.model.source.spi.SubclassEntitySource;
 import org.hibernate.boot.model.source.spi.TableSource;
 import org.hibernate.boot.model.source.spi.TableSpecificationSource;
 import org.hibernate.boot.model.source.spi.VersionAttributeSource;
@@ -137,12 +138,14 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
-import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.tuple.GeneratedValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.descriptor.java.internal.EntityJavaDescriptorImpl;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -183,7 +186,21 @@ public class ModelBinder {
 	}
 
 	public void bindEntityHierarchy(EntityHierarchySourceImpl hierarchySource) {
-		final RootClass rootEntityDescriptor = new RootClass( metadataBuildingContext );
+		final RootClass rootEntityDescriptor = new RootClass(
+				metadataBuildingContext,
+				SourceHelper.resolveJavaDescriptor(
+						hierarchySource.getRoot().getEntityNamingSource().getTypeName(),
+						metadataBuildingContext.getBootstrapContext().getTypeConfiguration(),
+						() -> new EntityJavaDescriptorImpl(
+								hierarchySource.getRoot().getEntityNamingSource().getTypeName(),
+								hierarchySource.getRoot().getEntityNamingSource().getEntityName(),
+								SourceHelper.resolveJavaType( hierarchySource.getRoot().getEntityNamingSource().getClassName(), metadataBuildingContext ),
+								null,
+								null,
+								null
+						)
+				)
+		);
 		bindRootEntity( hierarchySource, rootEntityDescriptor );
 		final InFlightMetadataCollector metadataCollector = hierarchySource.getRoot()
 				.getLocalMetadataBuildingContext()
@@ -423,17 +440,21 @@ public class ModelBinder {
 			);
 		}
 
-		if ( entitySource.getTuplizerClassMap() != null ) {
-			if ( entitySource.getTuplizerClassMap().size() > 1 ) {
-				DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfMultipleEntityModeSupport();
-			}
-			for ( Map.Entry<EntityMode,String> tuplizerEntry : entitySource.getTuplizerClassMap().entrySet() ) {
-				entityDescriptor.addTuplizer(
-						tuplizerEntry.getKey(),
-						tuplizerEntry.getValue()
-				);
-			}
-		}
+		// todo (6.0) : allow setting the RepresentationMode directly through XML
+//		// 		Something like:
+//		entityDescriptor.setExplicitRepresentationMode( entitySource.getRepresentationMode() );
+//		//		replacing the older:
+//		if ( entitySource.getTuplizerClassMap() != null ) {
+//			if ( entitySource.getTuplizerClassMap().size() > 1 ) {
+//				DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfMultipleEntityModeSupport();
+//			}
+//			for ( Map.Entry<EntityMode,String> tuplizerEntry : entitySource.getTuplizerClassMap().entrySet() ) {
+//				entityDescriptor.addTuplizer(
+//						tuplizerEntry.getKey(),
+//						tuplizerEntry.getValue()
+//				);
+//			}
+//		}
 
 		if ( StringHelper.isNotEmpty( entitySource.getXmlNodeName() ) ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
@@ -512,13 +533,30 @@ public class ModelBinder {
 	}
 
 	private void bindDiscriminatorSubclassEntities(
-			AbstractEntitySourceImpl entitySource,
+			AbstractEntitySourceImpl superEntitySource,
 			PersistentClass superEntityDescriptor) {
-		for ( IdentifiableTypeSource subType : entitySource.getSubTypes() ) {
-			final SingleTableSubclass subEntityDescriptor = new SingleTableSubclass( superEntityDescriptor, metadataBuildingContext );
-			bindDiscriminatorSubclassEntity( (SubclassEntitySourceImpl) subType, subEntityDescriptor );
+		for ( IdentifiableTypeSource subTypeSource : superEntitySource.getSubTypes() ) {
+			final SubclassEntitySource subclassEntitySource = (SubclassEntitySource) subTypeSource;
+
+			final SingleTableSubclass subEntityDescriptor = new SingleTableSubclass(
+					superEntityDescriptor,
+					SourceHelper.resolveJavaDescriptor(
+							subclassEntitySource.getEntityNamingSource().getTypeName(),
+							metadataBuildingContext.getBootstrapContext().getTypeConfiguration(),
+							() -> new EntityJavaDescriptorImpl<>(
+									subclassEntitySource.getEntityNamingSource().getTypeName(),
+									subclassEntitySource.getEntityNamingSource().getEntityName(),
+									SourceHelper.resolveJavaType( subclassEntitySource.getEntityNamingSource().getClassName(), metadataBuildingContext ),
+									superEntityDescriptor.getJavaTypeDescriptor(),
+									null,
+									null
+							)
+					),
+					metadataBuildingContext
+			);
+			bindDiscriminatorSubclassEntity( (SubclassEntitySourceImpl) subTypeSource, subEntityDescriptor );
 			superEntityDescriptor.addSubclass( subEntityDescriptor );
-			entitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityBinding( subEntityDescriptor );
+			superEntitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityBinding( subEntityDescriptor );
 		}
 	}
 
@@ -566,19 +604,40 @@ public class ModelBinder {
 	}
 
 	private void bindJoinedSubclassEntities(
-			AbstractEntitySourceImpl entitySource,
+			AbstractEntitySourceImpl superEntitySource,
 			PersistentClass superEntityDescriptor) {
-		for ( IdentifiableTypeSource subType : entitySource.getSubTypes() ) {
-			final JoinedSubclass subEntityDescriptor = new JoinedSubclass( superEntityDescriptor, metadataBuildingContext );
-			bindJoinedSubclassEntity( (JoinedSubclassEntitySourceImpl) subType, subEntityDescriptor );
+		for ( IdentifiableTypeSource subTypeSource : superEntitySource.getSubTypes() ) {
+			final SubclassEntitySource subclassSource = (SubclassEntitySource) subTypeSource;
+			final JoinedSubclass subEntityDescriptor = new JoinedSubclass(
+					superEntityDescriptor,
+					SourceHelper.resolveJavaDescriptor(
+							subclassSource.getEntityNamingSource().getTypeName(),
+							metadataBuildingContext.getBootstrapContext().getTypeConfiguration(),
+							() -> new EntityJavaDescriptorImpl<>(
+									subclassSource.getEntityNamingSource().getTypeName(),
+									subclassSource.getEntityNamingSource().getEntityName(),
+									SourceHelper.resolveJavaType( subclassSource.getEntityNamingSource().getClassName(), metadataBuildingContext ),
+									superEntityDescriptor.getJavaTypeDescriptor(),
+									null,
+									null
+							)
+					),
+					metadataBuildingContext
+			);
+			bindJoinedSubclassEntity(
+					(JoinedSubclassEntitySourceImpl) subTypeSource,
+					subEntityDescriptor,
+					subEntityDescriptor.getJavaTypeDescriptor()
+			);
 			superEntityDescriptor.addSubclass( subEntityDescriptor );
-			entitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityBinding( subEntityDescriptor );
+			superEntitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityBinding( subEntityDescriptor );
 		}
 	}
 
 	private void bindJoinedSubclassEntity(
 			JoinedSubclassEntitySourceImpl entitySource,
-			JoinedSubclass entityDescriptor) {
+			JoinedSubclass entityDescriptor,
+			EntityJavaDescriptor superJavaTypeDescriptor) {
 		MappingDocument mappingDocument = entitySource.sourceMappingDocument();
 
 		bindBasicEntityValues(
@@ -642,13 +701,29 @@ public class ModelBinder {
 	}
 
 	private void bindUnionSubclassEntities(
-			EntitySource entitySource,
-			PersistentClass superEntityDescriptor) {
-		for ( IdentifiableTypeSource subType : entitySource.getSubTypes() ) {
-			final UnionSubclass subEntityDescriptor = new UnionSubclass( superEntityDescriptor, metadataBuildingContext );
-			bindUnionSubclassEntity( (SubclassEntitySourceImpl) subType, subEntityDescriptor );
-			superEntityDescriptor.addSubclass( subEntityDescriptor );
-			entitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityBinding( subEntityDescriptor );
+			EntitySource superEntitySource,
+			PersistentClass superEntityMapping) {
+		for ( IdentifiableTypeSource subTypeSource : superEntitySource.getSubTypes() ) {
+			final SubclassEntitySource subclassSource = (SubclassEntitySource) subTypeSource;
+			final UnionSubclass subEntityDescriptor = new UnionSubclass(
+					superEntityMapping,
+					SourceHelper.resolveJavaDescriptor(
+							subTypeSource.getTypeName(),
+							metadataBuildingContext.getBootstrapContext().getTypeConfiguration(),
+							() -> new EntityJavaDescriptorImpl<>(
+									subclassSource.getEntityNamingSource().getTypeName(),
+									subclassSource.getEntityNamingSource().getEntityName(),
+									SourceHelper.resolveJavaType( subclassSource.getEntityNamingSource().getClassName(), metadataBuildingContext ),
+									superEntityMapping.getJavaTypeDescriptor(),
+									null,
+									null
+							)
+					),
+					metadataBuildingContext
+			);
+			bindUnionSubclassEntity( (SubclassEntitySourceImpl) subTypeSource, subEntityDescriptor );
+			superEntityMapping.addSubclass( subEntityDescriptor );
+			superEntitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityBinding( subEntityDescriptor );
 		}
 	}
 
@@ -709,7 +784,7 @@ public class ModelBinder {
 		);
 
 		final String propertyName = idSource.getIdentifierAttributeSource().getName();
-		if ( propertyName == null || rootEntityDescriptor.getExplicitRepresentation() != Representation.POJO ) {
+		if ( propertyName == null || rootEntityDescriptor.getExplicitRepresentationMode() != RepresentationMode.POJO ) {
 			if ( !idValue.isTypeSpecified() ) {
 				throw new MappingException(
 						"must specify an identifier type: " + rootEntityDescriptor.getEntityName(),
@@ -957,7 +1032,7 @@ public class ModelBinder {
 			rootEntityDescriptor.setEmbeddedIdentifier( cid.isEmbedded() );
 			if ( cid.isEmbedded() ) {
 				// todo : what is the implication of this?
-				cid.setDynamic( rootEntityDescriptor.getExplicitRepresentation() != Representation.POJO );
+				cid.setDynamic( rootEntityDescriptor.getExplicitRepresentationMode() != RepresentationMode.POJO );
 				/*
 				 * Property prop = new Property(); prop.setName("id");
 				 * prop.setPropertyAccessorName("embedded"); prop.setValue(id);
@@ -2535,7 +2610,7 @@ public class ModelBinder {
 		else if ( isVirtual ) {
 			// virtual (what used to be called embedded) is just a conceptual composition...
 			// <properties/> for example
-			if ( componentBinding.getOwner().getExplicitRepresentation() == Representation.POJO ) {
+			if ( componentBinding.getOwner().getExplicitRepresentationMode() == RepresentationMode.POJO ) {
 				log.debugf( "Binding virtual component [%s] to owner class [%s]", role, componentBinding.getOwner().getClassName() );
 				componentBinding.setComponentClassName( componentBinding.getOwner().getClassName() );
 			}
@@ -2550,7 +2625,7 @@ public class ModelBinder {
 				log.debugf( "Binding component [%s] to explicitly specified class", role, explicitComponentClassName );
 				componentBinding.setComponentClassName( explicitComponentClassName );
 			}
-			else if ( componentBinding.getOwner().getExplicitRepresentation() == Representation.POJO ) {
+			else if ( componentBinding.getOwner().getExplicitRepresentationMode() == RepresentationMode.POJO ) {
 				log.tracef( "Attempting to determine component class by reflection %s", role );
 				final Class reflectedComponentClass;
 				if ( StringHelper.isNotEmpty( containingClassName ) && StringHelper.isNotEmpty( propertyName ) ) {
@@ -2611,17 +2686,21 @@ public class ModelBinder {
 			componentBinding.getOwner().getTable().createUniqueKey( cols );
 		}
 
-		if ( embeddableSource.getTuplizerClassMap() != null ) {
-			if ( embeddableSource.getTuplizerClassMap().size() > 1 ) {
-				DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfMultipleEntityModeSupport();
-			}
-			for ( Map.Entry<EntityMode,String> tuplizerEntry : embeddableSource.getTuplizerClassMap().entrySet() ) {
-				componentBinding.addTuplizer(
-						tuplizerEntry.getKey(),
-						tuplizerEntry.getValue()
-				);
-			}
-		}
+		// todo (6.0) : Like above, we need to expose setting an explicit RepresentationMode
+//		//		Something like:
+//		componentBinding.setExplicitRepresentationMode( embeddableSource.getRepresentationMode() );
+//		//		replacing:
+//		if ( embeddableSource.getTuplizerClassMap() != null ) {
+//			if ( embeddableSource.getTuplizerClassMap().size() > 1 ) {
+//				DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfMultipleEntityModeSupport();
+//			}
+//			for ( Map.Entry<EntityMode,String> tuplizerEntry : embeddableSource.getTuplizerClassMap().entrySet() ) {
+//				componentBinding.addTuplizer(
+//						tuplizerEntry.getKey(),
+//						tuplizerEntry.getValue()
+//				);
+//			}
+//		}
 	}
 
 	private void bindAllCompositeAttributes(

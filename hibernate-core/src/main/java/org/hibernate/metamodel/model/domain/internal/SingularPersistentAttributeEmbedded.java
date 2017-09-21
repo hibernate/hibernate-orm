@@ -22,7 +22,7 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.internal.CompositeFetchImpl;
@@ -151,7 +151,7 @@ public class SingularPersistentAttributeEmbedded<O,J>
 
 	@Override
 	public FetchStrategy getMappedFetchStrategy() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
@@ -161,6 +161,6 @@ public class SingularPersistentAttributeEmbedded<O,J>
 
 	@Override
 	public ForeignKey.ColumnMappings getJoinColumnMappings() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

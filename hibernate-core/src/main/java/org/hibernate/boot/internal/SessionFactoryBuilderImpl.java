@@ -36,8 +36,8 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
-import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -49,9 +49,6 @@ import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.BatchFetchStyle;
-import org.hibernate.metamodel.model.domain.Representation;
-import org.hibernate.metamodel.model.domain.internal.StandardInstantiatorFactory;
-import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
@@ -79,7 +76,6 @@ import static org.hibernate.cfg.AvailableSettings.COLLECTION_JOIN_SUBQUERY;
 import static org.hibernate.cfg.AvailableSettings.CONNECTION_HANDLING;
 import static org.hibernate.cfg.AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_ENTITY_MODE;
 import static org.hibernate.cfg.AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS;
 import static org.hibernate.cfg.AvailableSettings.FLUSH_BEFORE_COMPLETION;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
@@ -258,18 +254,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled) {
 		this.options.initializeLazyStateOutsideTransactions = enabled;
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyDefaultRepresentation(Representation representation) {
-		this.options.defaultRepresentation = representation;
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyInstantiatorFactory(InstantiatorFactory instantiatorFactory) {
-		this.options.instantiatorFactory = instantiatorFactory;
 		return this;
 	}
 
@@ -562,8 +546,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
 		private EntityNotFoundDelegate entityNotFoundDelegate;
 		private boolean identifierRollbackEnabled;
-		private Representation defaultRepresentation;
-		private InstantiatorFactory instantiatorFactory;
 		private boolean checkNullability;
 		private boolean initializeLazyStateOutsideTransactions;
 		private IdTableStrategy idTableStrategy;
@@ -685,8 +667,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 			this.entityNotFoundDelegate = StandardEntityNotFoundDelegate.INSTANCE;
 			this.identifierRollbackEnabled = cfgService.getSetting( USE_IDENTIFIER_ROLLBACK, BOOLEAN, false );
-			this.defaultRepresentation = Representation.fromExternalName( (String) configurationSettings.get( DEFAULT_ENTITY_MODE ) );
-			this.instantiatorFactory = StandardInstantiatorFactory.INSTANCE;
 			this.checkNullability = cfgService.getSetting( CHECK_NULLABILITY, BOOLEAN, true );
 			this.initializeLazyStateOutsideTransactions = cfgService.getSetting( ENABLE_LAZY_LOAD_NO_TRANS, BOOLEAN, false );
 
@@ -1039,15 +1019,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			return identifierRollbackEnabled;
 		}
 
-		@Override
-		public Representation getDefaultRepresentation() {
-			return defaultRepresentation;
-		}
-
-		@Override
-		public InstantiatorFactory getInstantiatorFactory() {
-			return instantiatorFactory;
-		}
 
 		@Override
 		public boolean isCheckNullability() {
@@ -1365,16 +1336,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public boolean isIdentifierRollbackEnabled() {
 		return options.isIdentifierRollbackEnabled();
-	}
-
-	@Override
-	public Representation getDefaultRepresentation() {
-		return options.getDefaultRepresentation();
-	}
-
-	@Override
-	public InstantiatorFactory getInstantiatorFactory() {
-		return options.getInstantiatorFactory();
 	}
 
 	@Override

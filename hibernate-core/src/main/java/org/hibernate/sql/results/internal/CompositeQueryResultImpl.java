@@ -9,7 +9,7 @@ package org.hibernate.sql.results.internal;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.results.spi.CompositeQueryResult;
 import org.hibernate.sql.results.spi.InitializerCollector;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
@@ -67,7 +67,7 @@ public class CompositeQueryResultImpl extends AbstractFetchParent implements Com
 	@Override
 	public void registerInitializers(InitializerCollector collector) {
 		// todo (6.0) : register the CompositeInitializer as well as the initializers for our fetches
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 //	@Override

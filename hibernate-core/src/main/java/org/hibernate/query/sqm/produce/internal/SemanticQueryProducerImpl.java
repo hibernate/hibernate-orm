@@ -23,7 +23,7 @@ import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 /**
  * Standard implementation of SemanticQueryInterpreter
@@ -61,16 +61,16 @@ public class SemanticQueryProducerImpl implements SemanticQueryProducer {
 
 	@Override
 	public SqmSelectStatement interpret(CriteriaQuery query) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public SqmDeleteStatement interpret(CriteriaDelete criteria) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public SqmUpdateStatement interpret(CriteriaUpdate criteria) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

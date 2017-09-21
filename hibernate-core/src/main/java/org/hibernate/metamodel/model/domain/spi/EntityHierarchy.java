@@ -10,7 +10,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 
 /**
  * Defines access to information across the entire entity hierarchy
@@ -21,7 +21,7 @@ public interface EntityHierarchy {
 	/**
 	 * What "entity mode" is in effect for this hierarchy?
 	 */
-	Representation getRepresentation();
+	RepresentationMode getRepresentation();
 
 	/**
 	 * What style of inheritance, if any, is defined for this hierarchy?

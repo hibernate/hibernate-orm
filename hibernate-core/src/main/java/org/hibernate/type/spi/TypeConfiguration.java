@@ -479,13 +479,13 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		}
 	}
 
-	public void scope(SessionFactoryImplementor factory) {
+	public void scope(SessionFactoryImplementor factory, BootstrapContext bootstrapContext) {
 		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactory [%s]", this, factory );
 
 		scope.setSessionFactory( factory );
 		factory.addObserver( this );
 
-		new RuntimeModelCreationProcess( factory, getMetadataBuildingContext() ).execute();
+		new RuntimeModelCreationProcess( factory, bootstrapContext, getMetadataBuildingContext() ).execute();
 	}
 
 	@Override

@@ -15,13 +15,11 @@ import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationProcess;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
-import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -40,28 +38,12 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	/**
 	 * Instantiate the MetamodelImpl.
-	 * <p/>
-	 * Note that building a fully-functional MetamodelImpl instance is a 2-step process.  The
-	 * create instance returned here must still be initialized via call to {@link #initialize}
 	 *
 	 * @param typeConfiguration The TypeConfiguration to use for this Metamodel
 	 */
 	public MetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
 		this.sessionFactory = sessionFactory;
 		this.typeConfiguration = typeConfiguration;
-	}
-
-	/**
-	 * Prepare the MetamodelImpl for use, using the information from the Hibernate mapping model.
-	 *
-	 * @param mappingMetadata The Hibernate mapping model
-	 * @param jpaMetaModelPopulationSetting Should the JPA Metamodel be built as well?
-	 */
-	public void initialize(
-			MetadataImplementor mappingMetadata,
-			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
-		assert typeConfiguration.getMetadataBuildingContext() != null;
-		new RuntimeModelCreationProcess( sessionFactory, typeConfiguration.getMetadataBuildingContext() ).execute();
 	}
 
 	@Override

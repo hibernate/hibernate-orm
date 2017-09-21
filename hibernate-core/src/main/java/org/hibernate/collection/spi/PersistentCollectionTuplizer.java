@@ -6,10 +6,14 @@
  */
 package org.hibernate.collection.spi;
 
+import java.io.Serializable;
+
+import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 
 /**
@@ -30,6 +34,11 @@ public interface PersistentCollectionTuplizer<T extends PersistentCollection> {
 	 * Create a new instance of the wrapped bare/raw/naked collection
 	 */
 	Object instantiate(int anticipatedSize);
+
+	PersistentCollection instantiate(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor,
+			Serializable key);
 
 	/**
 	 * Wrap the bare/raw/naked collection instance in a PersistentCollection wrapper.
@@ -63,7 +72,8 @@ public interface PersistentCollectionTuplizer<T extends PersistentCollection> {
 	boolean contains(Object collection, Object childObject);
 
 	<O, C, E> PluralPersistentAttribute<O, C, E> generatePluralPersistentAttribute(
-			ManagedTypeDescriptor container,
-			Property property,
+			ManagedTypeDescriptor runtimeContainer,
+			ManagedTypeMapping bootContainer,
+			Property bootProperty,
 			RuntimeModelCreationContext context);
 }

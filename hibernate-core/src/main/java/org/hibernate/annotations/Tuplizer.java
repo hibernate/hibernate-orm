@@ -20,10 +20,17 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Define a tuplizer for an entity or a component.
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated as of 6.0 with no replacement.  See
+ * {@link org.hibernate.metamodel.model.domain.RepresentationMode},
+ * {@link org.hibernate.metamodel.model.domain.spi.RepresentationStrategy} and
+ * {@link org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector}
+ * for further details
  */
 @java.lang.annotation.Target( {TYPE, FIELD, METHOD} )
 @Retention( RUNTIME )
 @Repeatable(Tuplizers.class)
+@Deprecated
 public @interface Tuplizer {
 	/**
 	 * Tuplizer implementation.

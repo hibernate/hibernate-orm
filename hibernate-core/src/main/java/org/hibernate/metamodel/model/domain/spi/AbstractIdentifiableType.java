@@ -18,8 +18,11 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 	private EntityHierarchy entityHierarchy;
 	private IdentifiableTypeDescriptor<? super T> superclassType;
 
-	public AbstractIdentifiableType(IdentifiableJavaDescriptor<T> javaTypeDescriptor) {
-		super( javaTypeDescriptor );
+	public AbstractIdentifiableType(
+			IdentifiableTypeMapping bootMapping,
+			IdentifiableJavaDescriptor<T> javaTypeDescriptor,
+			RuntimeModelCreationContext creationContext) {
+		super( bootMapping, javaTypeDescriptor, creationContext );
 	}
 
 	@Override
@@ -54,6 +57,7 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 		for ( PersistentAttributeMapping attributeMapping : mappingDescriptor.getDeclaredPersistentAttributes() ) {
 			final PersistentAttribute persistentAttribute = attributeMapping.makeRuntimeAttribute(
 					this,
+					mappingDescriptor,
 					SingularPersistentAttribute.Disposition.NORMAL,
 					creationContext
 			);

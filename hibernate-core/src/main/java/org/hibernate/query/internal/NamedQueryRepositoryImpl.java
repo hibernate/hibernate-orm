@@ -19,7 +19,7 @@ import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.ResultSetMappingDefinition;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 import org.jboss.logging.Logger;
 
@@ -184,7 +184,7 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 				//
 				// so for now, just throw an exception
 
-				throw new NotYetImplementedException(  );
+				throw new NotYetImplementedFor6Exception(  );
 //
 //				// resolve the named ResultSetMappingDefinition, if one
 //				final ResultSetMappingDefinition resultSetMapping = namedSQLQueryDefinition.getResultSetRef() == null

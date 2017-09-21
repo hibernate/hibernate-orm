@@ -26,7 +26,7 @@ import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 import org.jboss.logging.Logger;
@@ -76,7 +76,7 @@ public class BeanValidationEventListener
 
 	public boolean onPreInsert(PreInsertEvent event) {
 		validate(
-				event.getEntity(), event.getPersister().getHierarchy().getRepresentation(), event.getPersister(),
+				event.getEntity(), event.getPersister().getRepresentationStrategy().getMode(), event.getPersister(),
 				GroupsPerOperation.Operation.INSERT
 		);
 		return false;
@@ -84,7 +84,7 @@ public class BeanValidationEventListener
 
 	public boolean onPreUpdate(PreUpdateEvent event) {
 		validate(
-				event.getEntity(), event.getPersister().getHierarchy().getRepresentation(), event.getPersister(),
+				event.getEntity(), event.getPersister().getRepresentationStrategy().getMode(), event.getPersister(),
 				GroupsPerOperation.Operation.UPDATE
 		);
 		return false;
@@ -92,7 +92,9 @@ public class BeanValidationEventListener
 
 	public boolean onPreDelete(PreDeleteEvent event) {
 		validate(
-				event.getEntity(), event.getPersister().getHierarchy().getRepresentation(), event.getPersister(),
+				event.getEntity(),
+				event.getPersister().getRepresentationStrategy().getMode(),
+				event.getPersister(),
 				GroupsPerOperation.Operation.DELETE
 		);
 		return false;
@@ -100,10 +102,10 @@ public class BeanValidationEventListener
 
 	private <T> void validate(
 			T object,
-			Representation representation,
+			RepresentationMode representation,
 			EntityDescriptor entityDescriptor,
 			GroupsPerOperation.Operation operation) {
-		if ( object == null || representation != Representation.POJO ) {
+		if ( object == null || representation != RepresentationMode.POJO ) {
 			return;
 		}
 		final TraversableResolver tr = new HibernateTraversableResolver( entityDescriptor, associationsPerEntityPersister );

@@ -23,8 +23,8 @@ import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.DerivedColumn;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.results.spi.QueryResult;
@@ -67,7 +67,7 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 
 	@Override
 	public PropertyAccess getPropertyAccess() {
-		throw new org.hibernate.sql.NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override

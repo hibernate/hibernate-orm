@@ -18,7 +18,7 @@ import java.util.ListIterator;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 /**
  * A persistent wrapper for a <tt>java.util.List</tt>. Underlying
@@ -365,7 +365,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	@Override
 	@SuppressWarnings("unchecked")
 	public Object readFrom(ResultSet rs, PersistentCollectionDescriptor persister, Object owner) throws SQLException {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() ) ;
 //		final int index = (Integer) persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
 //

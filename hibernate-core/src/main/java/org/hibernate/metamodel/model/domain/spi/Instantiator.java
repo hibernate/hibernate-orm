@@ -13,11 +13,11 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
-public interface Instantiator {
+public interface Instantiator<J> {
 	/**
 	 * Create an instance of the managed embedded value structure.
 	 */
-	Object instantiate(SharedSessionContractImplementor session);
+	J instantiate(SharedSessionContractImplementor session);
 
 	/**
 	 * Performs and "instance of" check to see if the given object is an

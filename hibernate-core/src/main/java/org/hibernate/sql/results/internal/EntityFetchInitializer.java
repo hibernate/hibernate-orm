@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.results.internal;
 
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.results.spi.EntityFetch;
 import org.hibernate.sql.results.spi.FetchParentAccess;
 import org.hibernate.sql.results.spi.RowProcessingState;
@@ -47,6 +47,6 @@ public class EntityFetchInitializer extends AbstractEntityInitializer {
 
 		//return !getEntityReference().getFetchedAttributeDescriptor().isReferenceToNonPk();
 
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

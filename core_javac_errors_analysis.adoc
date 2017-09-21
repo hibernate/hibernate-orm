@@ -15,6 +15,13 @@ need to replace `Tuplizer`, which is the thing that `EntityMode` "pointed to".  
 	* how to inject/extract value(s) into/from these containers
 
 
+For inject/extract, considering mixed value arrays, a few options:
+
+	1. we could extract sub-arrays as needed
+	2. obtain injector/extractor objects based on an offset
+	3. incorporate offset into injector/extractor contracts
+
+
 This covers (from 5.x):
 
 	* capabilities previously defined on `Tuplizer`/`EntityTuplizer`/`ComponentTuplizer`
@@ -85,73 +92,8 @@ The errors:
 
 [code]
 ----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/loading/internal/CollectionLoadContext.java:122: error: cannot find symbol
-				collection = persister.getOrmType().instantiate(
-				                      ^
-  symbol:   method getOrmType()
-  location: variable persister of type PersistentCollectionDescriptor
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/domain/internal/PersisterHelper.java:72: error: cannot find symbol
-		if ( declarer.geEntityMode() == EntityMode.MAP ) {
-		             ^
-  symbol:   method geEntityMode()
-  location: variable declarer of type ManagedTypeDescriptor
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/domain/internal/PersisterHelper.java:88: error: cannot find symbol
-				declarer.getEntityMode()
-				        ^
-  symbol:   method getEntityMode()
-  location: variable declarer of type ManagedTypeDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:758: error: cannot find symbol
-							ownerPersister.getEntityMode(),
-							              ^
-  symbol:   method getEntityMode()
-  location: variable ownerPersister of type EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/AnnotationBinder.java:2843: error: cannot find symbol
-				component.addTuplizer( mode, tuplizer.impl().getName() );
-				         ^
-  symbol:   method addTuplizer(EntityMode,String)
-  location: variable component of type Component
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/AnnotationBinder.java:2850: error: cannot find symbol
-			component.addTuplizer( mode, tuplizer.impl().getName() );
-			         ^
-  symbol:   method addTuplizer(EntityMode,String)
-  location: variable component of type Component
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultInitializeCollectionEventListener.java:75: error: cannot find symbol
-				ce.getLoadedPersistentCollectionDescriptor().initialize( ce.getLoadedKey(), source );
-				                                            ^
-  symbol:   method initialize(Serializable,SessionImplementor)
-  location: interface PersistentCollectionDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ModelBinder.java:431: error: cannot find symbol
-				entityDescriptor.addTuplizer(
-				                ^
-  symbol:   method addTuplizer(EntityMode,String)
-  location: variable entityDescriptor of type PersistentClass
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ModelBinder.java:2619: error: cannot find symbol
-				componentBinding.addTuplizer(
-				                ^
-  symbol:   method addTuplizer(EntityMode,String)
-  location: variable componentBinding of type Component
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/EntityBinder.java:389: error: cannot find symbol
-				persistentClass.
-				               ^
-  symbol:   method addTuplizer(EntityMode,String)
-  location: variable persistentClass of type PersistentClass
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/EntityBinder.java:397: error: cannot find symbol
-			persistentClass.addTuplizer( mode, tuplizer.impl().getName() );
-			               ^
-  symbol:   method addTuplizer(EntityMode,String)
-  location: variable persistentClass of type PersistentClass
-
-----
 
 
 

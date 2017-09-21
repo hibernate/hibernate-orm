@@ -24,8 +24,7 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.loader.BatchFetchStyle;
-import org.hibernate.metamodel.model.domain.Representation;
-import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
@@ -76,8 +75,6 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final EntityNameResolver[] entityNameResolvers;
 	private final EntityNotFoundDelegate entityNotFoundDelegate;
 	private final boolean identifierRollbackEnabled;
-	private final Representation defaultRepresentation;
-	private final InstantiatorFactory instantiatorFactory;
 	private boolean checkNullability;
 	private final boolean initializeLazyStateOutsideTransactions;
 	private final IdTableStrategy idTableStrategy;
@@ -160,8 +157,6 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.entityNameResolvers = state.getEntityNameResolvers();
 		this.entityNotFoundDelegate = state.getEntityNotFoundDelegate();
 		this.identifierRollbackEnabled = state.isIdentifierRollbackEnabled();
-		this.defaultRepresentation = state.getDefaultRepresentation();
-		this.instantiatorFactory = state.getInstantiatorFactory();
 		this.checkNullability = state.isCheckNullability();
 		this.initializeLazyStateOutsideTransactions = state.isInitializeLazyStateOutsideTransactionsEnabled();
 		this.idTableStrategy = state.getIdTableStrategy();
@@ -290,16 +285,6 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public boolean isIdentifierRollbackEnabled() {
 		return identifierRollbackEnabled;
-	}
-
-	@Override
-	public Representation getDefaultRepresentation() {
-		return defaultRepresentation;
-	}
-
-	@Override
-	public InstantiatorFactory getInstantiatorFactory() {
-		return instantiatorFactory;
 	}
 
 	@Override

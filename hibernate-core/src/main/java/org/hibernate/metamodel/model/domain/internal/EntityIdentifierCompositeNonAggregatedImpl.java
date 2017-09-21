@@ -20,10 +20,9 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.property.access.internal.PropertyAccessStrategyEmbeddedImpl;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
@@ -168,11 +167,11 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 	public SqlSelectionGroup resolveSqlSelectionGroup(
 			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public IdentifierGenerator getIdentifierValueGenerator() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

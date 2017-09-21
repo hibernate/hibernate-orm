@@ -10,18 +10,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.EntityMode;
-import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IdentifierBag;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.collection.spi.CollectionClassification;
-import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
-import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.property.access.spi.PropertyAccessStrategy;
-import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 
 /**
  * For now mainly a helper for reflection into stuff not exposed on the entity/collection persister
@@ -63,32 +55,4 @@ public class PersisterHelper {
 
 		return CollectionClassification.BAG;
 	}
-
-	public static PropertyAccess resolvePropertyAccess(
-			ManagedTypeDescriptor declarer,
-			PersistentAttributeMapping attributeMapping,
-			RuntimeModelCreationContext persisterCreationContext) {
-		// todo (6.0) : atm access to the Representation is only available for IdentifiableTypes via EntityHierarchy.
-		if ( declarer.geEntityMode() == EntityMode.MAP ) {
-			return PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess( null, attributeMapping.getName() );
-		}
-
-		final PropertyAccessStrategyResolver accessStrategyResolver = persisterCreationContext.getSessionFactory()
-				.getServiceRegistry()
-				.getService( PropertyAccessStrategyResolver.class );
-
-		String propertyAccessorName = attributeMapping.getPropertyAccessorName();
-		if ( propertyAccessorName == null ) {
-			propertyAccessorName = "property";
-		}
-
-		final PropertyAccessStrategy propertyAccessStrategy = accessStrategyResolver.resolvePropertyAccessStrategy(
-				declarer.getJavaType(),
-				propertyAccessorName,
-				declarer.getEntityMode()
-		);
-
-		return  propertyAccessStrategy.buildPropertyAccess( declarer.getJavaType(), attributeMapping.getName() );
-	}
-
 }

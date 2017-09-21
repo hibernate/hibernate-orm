@@ -19,11 +19,10 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
@@ -118,7 +117,7 @@ public class CollectionElementEntityImpl<J>
 
 	@Override
 	public List<Column> getColumns() {
-		throw new NotYetImplementedException();
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override

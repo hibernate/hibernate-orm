@@ -13,6 +13,7 @@ import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 
 /**
  * @author Chris Cranford
@@ -32,5 +33,5 @@ public interface EntityMappingHierarchyImplementor extends EntityMappingHierarch
 
 	void setOptimisticLockStyle(OptimisticLockStyle optimisticLockStyle);
 
-	void setEntityMode(EntityMode entityMode);
+	void setExplicitRepresentationMode(RepresentationMode explicitRepresentationMode);
 }

@@ -177,6 +177,7 @@ import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -2294,7 +2295,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		//				c) (not huge fan of this...) a "pass-thru" value
 		//			2) an int signifying the SqlTypeDescriptor (JDBC type code)
 
-		throw new org.hibernate.sql.NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
@@ -2757,7 +2758,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	}
 
 	private static ExpressableType determineTypeDescriptor(SqmSelectClause selectClause) {
-		throw new org.hibernate.sql.NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 //		if ( selectClause.getSelections().size() != 1 ) {
 //			return null;
 //		}

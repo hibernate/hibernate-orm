@@ -20,6 +20,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * A sublass in a table-per-class-hierarchy mapping
@@ -30,8 +31,11 @@ public class Subclass extends PersistentClass {
 	private Class classPersisterClass;
 	private final int subclassId;
 	
-	public Subclass(IdentifiableTypeMapping superclass, MetadataBuildingContext metadataBuildingContext) {
-		super( metadataBuildingContext, superclass.getEntityMappingHierarchy() );
+	public Subclass(
+			IdentifiableTypeMapping superclass,
+			EntityJavaDescriptor javaTypeDescriptor,
+			MetadataBuildingContext metadataBuildingContext) {
+		super( metadataBuildingContext, javaTypeDescriptor, superclass.getEntityMappingHierarchy() );
 		this.superclass = superclass;
 		this.subclassId = ( (IdentifiableTypeMappingImplementor) superclass ).nextSubclassId();
 	}

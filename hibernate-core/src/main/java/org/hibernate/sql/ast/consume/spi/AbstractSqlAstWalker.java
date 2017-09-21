@@ -17,7 +17,7 @@ import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.sqm.QueryException;
 import org.hibernate.query.sqm.tree.order.SqmSortOrder;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.consume.SemanticException;
 import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
@@ -57,11 +57,6 @@ import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
 import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.spi.expression.UpperFunction;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeElementReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeIndexReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReference;
 import org.hibernate.sql.ast.tree.spi.from.FromClause;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
@@ -899,7 +894,7 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitFilterPredicate(FilterPredicate filterPredicate) {
-		throw new NotYetImplementedException();
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override

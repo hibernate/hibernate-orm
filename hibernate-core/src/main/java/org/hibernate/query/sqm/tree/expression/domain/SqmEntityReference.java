@@ -10,7 +10,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
 
@@ -90,7 +90,7 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 		// todo (6.0) : this needs to vary based on who/what exactly created this entity-reference
 		//		- one option, in keeping with visitation, would be to have specific subclasses of
 		//			SqmEntityReference with different SemanticQueryWalker target methods
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override

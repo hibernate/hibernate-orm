@@ -755,7 +755,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 							collectionType.getLHSPropertyName(),
 							key,
 							collectionPersister.getKeyType(),
-							ownerPersister.getEntityMode(),
+							ownerPersister.getRepresentationStrategy().getMode(),
 							session.getFactory()
 					)
 			);

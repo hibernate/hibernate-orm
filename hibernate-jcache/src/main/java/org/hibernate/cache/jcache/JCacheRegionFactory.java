@@ -35,7 +35,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 import org.jboss.logging.Logger;
 
@@ -92,14 +92,14 @@ public class JCacheRegionFactory implements RegionFactory, ServiceRegistryAwareS
 	public QueryResultsRegion buildQueryResultsRegion(
 			String regionName,
 			SessionFactoryImplementor sessionFactory) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public TimestampsRegion buildTimestampsRegion(
 			String regionName,
 			SessionFactoryImplementor sessionFactory) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	boolean isStarted() {

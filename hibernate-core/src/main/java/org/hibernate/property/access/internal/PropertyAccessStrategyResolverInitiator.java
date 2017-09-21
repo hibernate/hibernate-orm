@@ -14,7 +14,12 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated See deprecation on {@link PropertyAccessStrategyResolver}
+ *
+ * todo (6.0) : remove as well
  */
+@Deprecated
 public class PropertyAccessStrategyResolverInitiator implements StandardServiceInitiator<PropertyAccessStrategyResolver> {
 	/**
 	 * Singleton access

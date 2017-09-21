@@ -47,7 +47,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 /**
  * Responsible for maintaining the queue of actions related to events.
@@ -1142,7 +1142,7 @@ public class ActionQueue {
 			}
 
 			// todo (6.0) : relate PersistentAttribute with array indices used in state arrays and elsewhere
-			throw new NotYetImplementedException(  );
+			throw new NotYetImplementedFor6Exception(  );
 //
 //			for ( int i = 0; i < propertyValues.length; i++ ) {
 //				Object value = propertyValues[i];

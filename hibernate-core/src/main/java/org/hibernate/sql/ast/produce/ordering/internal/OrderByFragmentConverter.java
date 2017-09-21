@@ -15,7 +15,7 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
@@ -66,6 +66,6 @@ public class OrderByFragmentConverter extends BaseSqmToSqlAstConverter implement
 
 	@Override
 	public SqlSelection resolveSqlSelection(Expression expression) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

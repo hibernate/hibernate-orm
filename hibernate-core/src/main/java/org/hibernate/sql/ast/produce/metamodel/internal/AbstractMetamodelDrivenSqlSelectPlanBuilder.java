@@ -32,7 +32,7 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKey;
 import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKeyProducer;
@@ -361,17 +361,17 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	public Expression resolveSqlExpression(
 			ColumnReferenceQualifier qualifier,
 			QualifiableSqlExpressable sqlSelectable) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public Expression resolveSqlExpression(NonQualifiableSqlExpressable sqlSelectable) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public SqlSelection resolveSqlSelection(Expression expression) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 

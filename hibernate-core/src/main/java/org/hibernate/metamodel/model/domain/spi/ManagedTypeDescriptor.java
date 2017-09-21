@@ -14,6 +14,7 @@ import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Hibernate extension SPI for working with {@link ManagedType} implementations.  All
@@ -24,16 +25,18 @@ import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
  * NOTE : Hibernate additionally classifies plural attributes via a "persister" :
  * {@link PersistentCollectionDescriptor}.
  *
- * @todo describe what is available after each initialization phase (and therefore what is "undefined" in terms of access earlier).
+ * @todo (6.0) : describe what is available after each initialization phase (and therefore what is "undefined" in terms of access earlier).
  *
  * @author Steve Ebersole
  */
 public interface ManagedTypeDescriptor<T>
 		extends ManagedType<T>, NavigableContainer<T>, EmbeddedContainer<T>, ExpressableType<T> {
 
+	TypeConfiguration getTypeConfiguration();
+
 	ManagedJavaDescriptor<T> getJavaTypeDescriptor();
 
-	Instantiator getInstantiator();
+	RepresentationStrategy getRepresentationStrategy();
 
 	PersistentAttribute<? super T, ?> findAttribute(String name);
 	PersistentAttribute<? super T, ?> findDeclaredAttribute(String name);

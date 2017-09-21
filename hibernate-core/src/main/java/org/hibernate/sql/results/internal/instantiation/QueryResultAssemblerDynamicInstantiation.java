@@ -8,7 +8,7 @@ package org.hibernate.sql.results.internal.instantiation;
 
 import java.util.List;
 
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
@@ -32,6 +32,6 @@ public class QueryResultAssemblerDynamicInstantiation implements QueryResultAsse
 
 	@Override
 	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

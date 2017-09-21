@@ -16,7 +16,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractMapInstantiator implements Instantiator {
+public abstract class AbstractMapInstantiator<J> implements Instantiator<J> {
 	public static final String KEY = "$type$";
 
 	private final NavigableRole navigableRole;

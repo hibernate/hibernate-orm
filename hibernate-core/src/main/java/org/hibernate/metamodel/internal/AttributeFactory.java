@@ -36,7 +36,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
@@ -930,7 +930,7 @@ public class AttributeFactory {
 //				throw new IllegalArgumentException( "expecting IdClass mapping" );
 //			}
 
-			throw new NotYetImplementedException();
+			throw new NotYetImplementedFor6Exception();
 
 //			final EmbeddedComponentType componentType = (EmbeddedComponentType) type;
 //			final String attributeName = attributeContext.getPropertyMapping().getName();

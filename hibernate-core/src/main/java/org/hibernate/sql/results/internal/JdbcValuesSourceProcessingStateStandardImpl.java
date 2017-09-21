@@ -37,7 +37,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.results.internal.values.JdbcValuesSource;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
@@ -375,7 +375,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 		// todo (6.0) : need something like org.hibernate.engine.loading.internal.LoadingCollectionEntry
 
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	private void postLoad() {

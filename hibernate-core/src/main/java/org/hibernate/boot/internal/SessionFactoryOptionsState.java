@@ -24,8 +24,7 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.loader.BatchFetchStyle;
-import org.hibernate.metamodel.model.domain.Representation;
-import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
@@ -81,10 +80,6 @@ public interface SessionFactoryOptionsState {
 	BaselineSessionEventsListenerBuilder getBaselineSessionEventsListenerBuilder();
 
 	boolean isIdentifierRollbackEnabled();
-
-	Representation getDefaultRepresentation();
-
-	InstantiatorFactory getInstantiatorFactory();
 
 	boolean isCheckNullability();
 

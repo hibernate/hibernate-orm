@@ -38,7 +38,6 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.metamodel.model.domain.spi.InstantiatorFactory;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -58,8 +57,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private final StandardServiceRegistry serviceRegistry;
 
 	private final TypeConfiguration typeConfiguration;
-
-	private InstantiatorFactory instantiatorFactory;
 
 	private final ClassLoaderAccessImpl classLoaderAccess;
 
@@ -160,11 +157,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 	@Override
 	public MetadataBuildingOptions getMetadataBuildingOptions() {
 		return metadataBuildingOptions;
-	}
-
-	@Override
-	public InstantiatorFactory getInstantiatorFactory() {
-		return instantiatorFactory;
 	}
 
 	@Override

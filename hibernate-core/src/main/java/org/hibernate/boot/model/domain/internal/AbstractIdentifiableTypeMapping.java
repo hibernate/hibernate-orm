@@ -19,6 +19,7 @@ import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
+import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -40,7 +41,10 @@ public abstract class AbstractIdentifiableTypeMapping
 	private PersistentAttributeMapping declaredVersionAttributeMapping;
 	private EmbeddedValueMapping declaredIdentifierEmbeddedValueMapping;
 
-	public AbstractIdentifiableTypeMapping(EntityMappingHierarchy entityMappingHierarchy) {
+	public AbstractIdentifiableTypeMapping(
+			EntityMappingHierarchy entityMappingHierarchy,
+			IdentifiableJavaDescriptor javaDescriptor) {
+		super( javaDescriptor );
 		this.entityMappingHierarchy = entityMappingHierarchy;
 	}
 

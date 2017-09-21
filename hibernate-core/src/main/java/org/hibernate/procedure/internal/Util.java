@@ -6,31 +6,20 @@
  */
 package org.hibernate.procedure.internal;
 
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.procedure.UnknownSqlResultSetMappingException;
 import org.hibernate.query.spi.ResultSetMappingDefinition;
-import org.hibernate.query.sqm.tree.expression.Compatibility;
-import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.results.internal.instantiation.ArgumentReader;
-import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationConstructorAssemblerImpl;
-import org.hibernate.sql.results.internal.instantiation.DynamicInstantiationListAssemblerImpl;
-import org.hibernate.sql.results.spi.QueryResultAssembler;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
 
@@ -174,7 +163,7 @@ public class Util {
 //			);
 //		}
 
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	private static class QueryReturnResolver {
@@ -203,7 +192,7 @@ public class Util {
 			//		aliases here as a key to resolve SqlSelections
 			//	todo : implement ^^
 
-			throw new NotYetImplementedException(  );
+			throw new NotYetImplementedFor6Exception(  );
 //			for ( NativeSQLQueryReturn nativeQueryReturn : mapping.getQueryResultBuilders() ) {
 //				if ( nativeQueryReturn instanceof NativeSQLQueryScalarReturn ) {
 //					final NativeSQLQueryScalarReturn rtn = (NativeSQLQueryScalarReturn) nativeQueryReturn;

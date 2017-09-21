@@ -26,9 +26,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -119,8 +119,11 @@ public class CollectionLoadContext {
 				}
 				// create one
 				LOG.tracev( "Instantiating new collection [key={0}, rs={1}]", key, resultSet );
-				collection = persister.getOrmType().instantiate(
-						loadContexts.getPersistenceContext().getSession(), persister, key );
+				collection = persister.getTuplizer().instantiate(
+						loadContexts.getPersistenceContext().getSession(),
+						persister,
+						key
+				);
 			}
 			collection.beforeInitialize( persister, -1 );
 			collection.beginRead();

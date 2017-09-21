@@ -27,7 +27,7 @@ public class EntityJavaDescriptorImpl<J>
 	public EntityJavaDescriptorImpl(
 			String typeName,
 			String entityName,
-			Class javaType,
+			Class<? super J> javaType,
 			IdentifiableJavaDescriptor<? super J> superTypeDescriptor,
 			MutabilityPlan mutabilityPlan,
 			Comparator comparator) {

@@ -43,7 +43,7 @@ import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.loader.spi.SingleUniqueKeyEntityLoader;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.model.domain.Representation;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.internal.EntityIdentifierCompositeAggregatedImpl;
 import org.hibernate.metamodel.model.domain.internal.EntityIdentifierSimpleImpl;
 import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
@@ -53,7 +53,7 @@ import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
@@ -90,7 +90,6 @@ public abstract class AbstractEntityDescriptor<T>
 	private final Table rootTable;
 	private final List<JoinedTableBinding> secondaryTableBindings;
 
-	private final Instantiator instantiator;
 	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
 
 	private final String sqlAliasStem;
@@ -101,7 +100,7 @@ public abstract class AbstractEntityDescriptor<T>
 	public AbstractEntityDescriptor(
 			EntityMapping bootMapping,
 			RuntimeModelCreationContext creationContext) throws HibernateException {
-		super( resolveJavaTypeDescriptor( creationContext, bootMapping ) );
+		super( bootMapping,  resolveJavaTypeDescriptor( creationContext, bootMapping ), creationContext );
 
 		this.factory = creationContext.getSessionFactory();
 
@@ -110,15 +109,8 @@ public abstract class AbstractEntityDescriptor<T>
 		this.rootTable = resolveRootTable( bootMapping, creationContext );
 		this.secondaryTableBindings = resolveSecondaryTableBindings( bootMapping, creationContext );
 
-		Representation representation = bootMapping.getExplicitRepresentation();
-		if ( representation == null ) {
-			// todo (6.0) - if we move #defaultRepresentation into MetadataBuilder we can inject that into the entiyt mapping
-			representation = creationContext.getSessionFactory()
-					.getSessionFactoryOptions()
-					.getDefaultRepresentation();
-		}
-
-		if ( representation == Representation.POJO ) {
+		final RepresentationMode representation = getRepresentationStrategy().getMode();
+		if ( representation == RepresentationMode.POJO ) {
 			this.bytecodeEnhancementMetadata = BytecodeEnhancementMetadataPojoImpl.from( bootMapping );
 		}
 		else {
@@ -131,17 +123,6 @@ public abstract class AbstractEntityDescriptor<T>
 				getJavaTypeDescriptor().getEntityName(),
 				getJavaTypeDescriptor().getJpaEntityName()
 		);
-
-		if ( bootMapping.getExplicitInstantiator() != null ) {
-			this.instantiator = bootMapping.getExplicitInstantiator();
-		}
-		else {
-			// todo (6.0) - resolve ReflectionOptimizer to pass in to creating the instantiator
-			this.instantiator = creationContext.getSessionFactory()
-					.getSessionFactoryOptions()
-					.getInstantiatorFactory()
-					.createEntityInstantiator( bootMapping, this, null );
-		}
 
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( getEntityName() );
 		this.dialect = factory.getServiceRegistry().getService( JdbcServices.class ).getDialect();
@@ -222,11 +203,6 @@ public abstract class AbstractEntityDescriptor<T>
 	@Override
 	public EntityJavaDescriptor<T> getJavaTypeDescriptor() {
 		return (EntityJavaDescriptor<T>) super.getJavaTypeDescriptor();
-	}
-
-	@Override
-	public Instantiator getInstantiator() {
-		return instantiator;
 	}
 
 	@Override
@@ -312,7 +288,7 @@ public abstract class AbstractEntityDescriptor<T>
 
 	@Override
 	public Set<SingularAttribute<? super T, ?>> getIdClassAttributes() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
@@ -444,7 +420,7 @@ public abstract class AbstractEntityDescriptor<T>
 		}
 
 		if ( entityLocker == null ) {
-			throw new NotYetImplementedException(  );
+			throw new NotYetImplementedFor6Exception(  );
 //			entityLocker = new EntityLocker() {
 //				final LockingStrategy strategy = getFactory().getJdbcServices()
 //						.getJdbcEnvironment()

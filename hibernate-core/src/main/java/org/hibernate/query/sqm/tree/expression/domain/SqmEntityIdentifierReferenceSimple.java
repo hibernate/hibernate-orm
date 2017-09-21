@@ -10,7 +10,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -87,16 +87,16 @@ public class SqmEntityIdentifierReferenceSimple
 
 	@Override
 	public String getUniqueIdentifier() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public String getIdentificationVariable() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

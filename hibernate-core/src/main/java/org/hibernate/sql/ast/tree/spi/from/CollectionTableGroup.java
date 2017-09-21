@@ -17,7 +17,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.IndexColumnReferenceQualifier
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
@@ -69,7 +69,7 @@ public class CollectionTableGroup implements TableGroup {
 
 	@Override
 	public NavigableReference asExpression() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
@@ -92,7 +92,7 @@ public class CollectionTableGroup implements TableGroup {
 
 	@Override
 	public void render(SqlAppender sqlAppender, SqlAstWalker walker) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 
 //		renderTableReference( rootTableReference, sqlAppender, walker );
 //
@@ -146,6 +146,6 @@ public class CollectionTableGroup implements TableGroup {
 
 	@Override
 	public Expression qualify(QualifiableSqlExpressable sqlSelectable) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

@@ -15,8 +15,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.model.domain.BasicValueMapping;
+import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.ValueMapping;
+import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.collection.spi.PersistentCollectionTuplizer;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -32,13 +34,12 @@ import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute.SingularAttributeClassification;
 import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.ValueGeneration;
-
-import static org.hibernate.metamodel.model.domain.internal.PersisterHelper.resolvePropertyAccess;
 
 /**
  * Represents a property as part of an entity or a component.
@@ -384,7 +385,8 @@ public class Property implements Serializable, PersistentAttributeMapping {
 
 	@Override
 	public <O,T> PersistentAttribute<O,T> makeRuntimeAttribute(
-			ManagedTypeDescriptor<O> container,
+			ManagedTypeDescriptor<O> runtimeContainer,
+			ManagedTypeMapping bootContainer,
 			SingularPersistentAttribute.Disposition singularAttributeDisposition,
 			RuntimeModelCreationContext context) {
 		assert value != null;
@@ -397,22 +399,24 @@ public class Property implements Serializable, PersistentAttributeMapping {
 		assert !SyntheticProperty.class.isInstance( this );
 
 		if ( value instanceof Collection ) {
-			return buildCollectionAttribute( container, context );
+			return buildCollectionAttribute( runtimeContainer, bootContainer, context );
 		}
 		else {
-			return buildSingularAttribute( container, singularAttributeDisposition, context );
+			return buildSingularAttribute( runtimeContainer, bootContainer, singularAttributeDisposition, context );
 		}
 	}
 	@SuppressWarnings("unchecked")
 	private <O,T> PluralPersistentAttribute<O,T,?> buildCollectionAttribute(
-			ManagedTypeDescriptor container,
+			ManagedTypeDescriptor runtimeContainer,
+			ManagedTypeMapping bootContainer,
 			RuntimeModelCreationContext context) {
 		// todo (6.0) : allow to define a specific tuplizer on the collection mapping
 		//		for now use the default
 		final PersistentCollectionTuplizer tuplizer = context.getPersistentCollectionTuplizerFactory()
 				.getImplicitTuplizer( value.getJavaTypeDescriptor().getJavaType() );
 		return tuplizer.generatePluralPersistentAttribute(
-				container,
+				runtimeContainer,
+				bootContainer,
 				this,
 				context
 		);
@@ -420,14 +424,21 @@ public class Property implements Serializable, PersistentAttributeMapping {
 
 	@SuppressWarnings("unchecked")
 	private <O,T> SingularPersistentAttribute<O,T> buildSingularAttribute(
-			ManagedTypeDescriptor container,
+			ManagedTypeDescriptor runtimeContainer,
+			ManagedTypeMapping bootContainer,
 			SingularPersistentAttribute.Disposition singularAttributeDisposition,
 			RuntimeModelCreationContext context) {
+		final PropertyAccess propertyAccess = runtimeContainer.getRepresentationStrategy().generatePropertyAccess(
+				bootContainer,
+				this,
+				runtimeContainer,
+				Environment.getBytecodeProvider()
+		);
 		if ( value instanceof BasicValueMapping ) {
 			return new BasicSingularPersistentAttribute(
-					container,
+					runtimeContainer,
 					name,
-					resolvePropertyAccess( container, this, context ),
+					propertyAccess,
 					singularAttributeDisposition,
 					isNullable(),
 					(BasicValueMapping) value,
@@ -436,9 +447,9 @@ public class Property implements Serializable, PersistentAttributeMapping {
 		}
 		else if ( value instanceof ToOne ) {
 			return new SingularPersistentAttributeEntity(
-					container,
+					runtimeContainer,
 					name,
-					resolvePropertyAccess( container, this, context ),
+					propertyAccess,
 					isManyToOne( (ToOne) value )
 							? SingularAttributeClassification.MANY_TO_ONE
 							: SingularAttributeClassification.ONE_TO_ONE,
@@ -450,9 +461,9 @@ public class Property implements Serializable, PersistentAttributeMapping {
 		}
 		else if ( value instanceof Component ) {
 			return new SingularPersistentAttributeEmbedded(
-					container,
+					runtimeContainer,
 					name,
-					resolvePropertyAccess( container, this, context ),
+					propertyAccess,
 					singularAttributeDisposition,
 					(Component) value,
 					context

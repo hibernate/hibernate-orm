@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.MappingException;
@@ -21,8 +20,8 @@ import org.hibernate.boot.model.domain.MappedTableJoin;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.internal.AbstractMappedSuperclassMapping;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.metamodel.model.domain.Representation;
-import org.hibernate.metamodel.model.domain.spi.Instantiator;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
+import org.hibernate.type.descriptor.java.spi.MappedSuperclassJavaDescriptor;
 
 /**
  * Represents a @MappedSuperclass.
@@ -42,30 +41,18 @@ import org.hibernate.metamodel.model.domain.spi.Instantiator;
  * @author Emmanuel Bernard
  */
 public class MappedSuperclass extends AbstractMappedSuperclassMapping implements PropertyContainer {
-	private Class<?> mappedSuperclassClass;
-
 	public MappedSuperclass(
 			EntityMappingHierarchy entityMappingHierarchy,
 			IdentifiableTypeMapping superIdentifiableTypeMapping,
-			Class<?> mappedSuperclassClass) {
-		super( entityMappingHierarchy );
-		this.mappedSuperclassClass = mappedSuperclassClass;
+			MappedSuperclassJavaDescriptor javaTypeDescriptor) {
+		super( entityMappingHierarchy, javaTypeDescriptor );
 		setSuperManagedType( superIdentifiableTypeMapping );
 	}
 
-	@Override
-	public String getName() {
-		return mappedSuperclassClass.getName();
-	}
 
 	@Override
-	public Representation getExplicitRepresentation() {
-		return Representation.fromExternalName( getEntityMappingHierarchy().getEntityMode().getExternalName());
-	}
-
-	@Override
-	public Instantiator getExplicitInstantiator() {
-		return null;
+	public RepresentationMode getExplicitRepresentationMode() {
+		return getEntityMappingHierarchy().getExplicitRepresentationMode();
 	}
 
 	/**
@@ -120,22 +107,6 @@ public class MappedSuperclass extends AbstractMappedSuperclassMapping implements
 	@Deprecated
 	public void addDeclaredProperty(Property p) {
 		addDeclaredPersistentAttribute( p );
-	}
-
-	/**
-	 * @deprecated since 6.0, use {@link #getJavaType()}.
-	 */
-	@Deprecated
-	public Class getMappedClass() {
-		return mappedSuperclassClass;
-	}
-
-	/**
-	 * @deprecated since 6.0, pass via class consructor.
-	 */
-	@Deprecated
-	public void setMappedClass(Class mappedClass) {
-		this.mappedSuperclassClass = mappedClass;
 	}
 
 	/**

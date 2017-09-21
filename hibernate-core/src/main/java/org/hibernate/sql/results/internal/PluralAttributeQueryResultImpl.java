@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.internal;
 
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.results.spi.InitializerCollector;
 import org.hibernate.sql.results.spi.PluralAttributeQueryResult;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
@@ -33,11 +33,11 @@ public class PluralAttributeQueryResultImpl
 
 	@Override
 	public void registerInitializers(InitializerCollector collector) {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public QueryResultAssembler getResultAssembler() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

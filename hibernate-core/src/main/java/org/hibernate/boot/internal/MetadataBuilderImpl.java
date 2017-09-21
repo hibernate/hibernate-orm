@@ -31,7 +31,6 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
@@ -53,13 +52,16 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MetadataSourceType;
-import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.model.domain.internal.StandardRepresentationStrategySelector;
+import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
+import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -371,6 +373,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		return this;
 	}
 
+	@Override
+	public MetadataBuilder applyRepresentationStrategySelector(RepresentationStrategySelector strategySelector) {
+		this.options.representationStrategySelector = strategySelector;
+		return this;
+	}
+
 //	public MetadataBuilder with(PersistentAttributeMemberResolver resolver) {
 //		options.persistentAttributeMemberResolver = resolver;
 //		return this;
@@ -532,6 +540,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private ArrayList<MetadataSourceType> sourceProcessOrdering;
 
 		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
+		private RepresentationStrategySelector representationStrategySelector;
 
 		private boolean autoQuoteKeywords;
 
@@ -568,42 +577,36 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 			this.sharedCacheMode = configService.getSetting(
 					"javax.persistence.sharedCache.mode",
-					new ConfigurationService.Converter<SharedCacheMode>() {
-						@Override
-						public SharedCacheMode convert(Object value) {
-							if ( value == null ) {
-								return null;
-							}
-
-							if ( SharedCacheMode.class.isInstance( value ) ) {
-								return (SharedCacheMode) value;
-							}
-
-							return SharedCacheMode.valueOf( value.toString() );
+					value -> {
+						if ( value == null ) {
+							return null;
 						}
+
+						if ( SharedCacheMode.class.isInstance( value ) ) {
+							return (SharedCacheMode) value;
+						}
+
+						return SharedCacheMode.valueOf( value.toString() );
 					},
 					SharedCacheMode.UNSPECIFIED
 			);
 
 			this.defaultCacheAccessType = configService.getSetting(
 					AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY,
-					new ConfigurationService.Converter<AccessType>() {
-						@Override
-						public AccessType convert(Object value) {
-							if ( value == null ) {
-								return null;
-							}
-
-							if ( CacheConcurrencyStrategy.class.isInstance( value ) ) {
-								return ( (CacheConcurrencyStrategy) value ).toAccessType();
-							}
-
-							if ( AccessType.class.isInstance( value ) ) {
-								return (AccessType) value;
-							}
-
-							return AccessType.fromExternalName( value.toString() );
+					value -> {
+						if ( value == null ) {
+							return null;
 						}
+
+						if ( CacheConcurrencyStrategy.class.isInstance( value ) ) {
+							return ( (CacheConcurrencyStrategy) value ).toAccessType();
+						}
+
+						if ( AccessType.class.isInstance( value ) ) {
+							return (AccessType) value;
+						}
+
+						return AccessType.fromExternalName( value.toString() );
 					},
 					// by default, see if the defined RegionFactory (if one) defines a default
 					serviceRegistry.getService( RegionFactory.class ) == null
@@ -634,6 +637,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			);
 
 			this.sourceProcessOrdering = resolveInitialSourceProcessOrdering( configService );
+
+			this.representationStrategySelector = StandardRepresentationStrategySelector.INSTANCE;
 
 			final boolean useNewIdentifierGenerators = configService.getSetting(
 					AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS,
@@ -744,6 +749,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public List<MetadataSourceType> getSourceProcessOrdering() {
 			return sourceProcessOrdering;
+		}
+
+		@Override
+		public RepresentationStrategySelector getRepresentationStrategySelector() {
+			return representationStrategySelector;
 		}
 
 		/**

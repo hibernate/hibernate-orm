@@ -10,6 +10,7 @@ import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 
 /**
@@ -18,6 +19,11 @@ import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 public interface IdentifiableTypeMappingImplementor extends IdentifiableTypeMapping, ManagedTypeMappingImplementor {
 	@Override
 	EntityMappingHierarchyImplementor getEntityMappingHierarchy();
+
+	@Override
+	default RepresentationMode getExplicitRepresentationMode() {
+		return getEntityMappingHierarchy().getExplicitRepresentationMode();
+	}
 
 	void injectSuperclassMapping(IdentifiableTypeMappingImplementor superTypeMapping);
 

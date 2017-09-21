@@ -45,7 +45,8 @@ public interface PersistentAttributeMapping extends ValueMappingContainer, MetaA
 	ValueGeneration getValueGenerationStrategy();
 
 	<O,T> PersistentAttribute<O,T> makeRuntimeAttribute(
-			ManagedTypeDescriptor<O> container,
+			ManagedTypeDescriptor<O> runtimeContainer,
+			ManagedTypeMapping bootContainer,
 			SingularPersistentAttribute.Disposition singularAttributeDisposition,
 			RuntimeModelCreationContext context);
 }

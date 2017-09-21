@@ -95,7 +95,7 @@ import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
@@ -660,7 +660,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public Object visitQualifiedEntityJoinFromElement(SqmEntityJoin joinedFromElement) {
-		throw new NotYetImplementedException();
+		throw new NotYetImplementedFor6Exception();
 	}
 
 

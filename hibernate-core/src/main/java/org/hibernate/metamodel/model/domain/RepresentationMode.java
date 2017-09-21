@@ -9,23 +9,23 @@ package org.hibernate.metamodel.model.domain;
 import java.util.Locale;
 
 /**
- * Enumeration of the various ways that Hibernate can represent the
+ * Enumeration of the built-in ways that Hibernate can represent the
  * application's domain model.
  *
  * @author Steve Ebersole
  */
-public enum Representation {
+public enum RepresentationMode {
 	POJO( "pojo" ),
 	MAP( "map", "dynamic-map" );
 
 	private final String externalName;
 	private final String alternativeExternalName;
 
-	Representation(String externalName) {
+	RepresentationMode(String externalName) {
 		this ( externalName, null );
 	}
 
-	Representation(String externalName, String alternativeExternalName) {
+	RepresentationMode(String externalName, String alternativeExternalName) {
 		this.externalName = externalName;
 		this.alternativeExternalName = alternativeExternalName;
 	}
@@ -34,7 +34,7 @@ public enum Representation {
 		return externalName;
 	}
 
-	public static Representation fromExternalName(String externalName) {
+	public static RepresentationMode fromExternalName(String externalName) {
 		if ( externalName == null ) {
 			return POJO;
 		}

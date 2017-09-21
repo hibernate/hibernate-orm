@@ -10,7 +10,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.spi.EntityFetch;
 import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
@@ -69,7 +69,7 @@ public class EntityFetchImpl extends AbstractFetchParent implements EntityFetch 
 
 	@Override
 	public boolean isNullable() {
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override

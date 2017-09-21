@@ -291,6 +291,11 @@ public class Oracle9Dialect extends Dialect {
 	public String getSelectGUIDString() {
 		return "select rawtohex(sys_guid()) from dual";
 	}
+	
+	@Override
+	protected String getTimestampWithTimeZone() {
+		return "timestamp with time zone";
+	}
 
 	@Override
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {

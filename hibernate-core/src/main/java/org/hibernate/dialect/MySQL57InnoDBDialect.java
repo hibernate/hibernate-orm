@@ -75,4 +75,9 @@ public class MySQL57InnoDBDialect extends MySQL5InnoDBDialect {
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return true;
 	}
+
+	@Override
+	protected String getTimestampWithTimeZone() {
+		return "datetime(6)";
+	}
 }

@@ -60,7 +60,9 @@ public class BasicTypeRegistry implements Serializable {
 
 		register( DateType.INSTANCE );
 		register( TimeType.INSTANCE );
+		register( TimeWithTimeZoneType.INSTANCE );
 		register( TimestampType.INSTANCE );
+		register( TimestampWithTimeZoneType.INSTANCE );
 		register( DbTimestampType.INSTANCE );
 		register( CalendarType.INSTANCE );
 		register( CalendarDateType.INSTANCE );

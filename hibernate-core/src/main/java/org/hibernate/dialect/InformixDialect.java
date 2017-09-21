@@ -272,6 +272,16 @@ public class InformixDialect extends Dialect {
 	public String getCurrentTimestampSelectString() {
 		return "select distinct current timestamp from informix.systables";
 	}
+	
+	@Override
+	protected String getTimeWithTimeZone() {
+		return "datetime hour to second" ;
+	}
+	
+	@Override
+	protected String getTimestampWithTimeZone() {
+		return "datetime year to fraction(5)";
+	}
 
 	@Override
 	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {

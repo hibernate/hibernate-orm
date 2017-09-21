@@ -606,6 +606,18 @@ public class PostgreSQL81Dialect extends Dialect {
 	}
 
 	@Override
+	protected String getTimeWithTimeZone() {
+		// https://www.postgresql.org/docs/9.1/static/datatype-datetime.html
+		return "time with time zone";
+	}
+
+	@Override
+	protected String getTimestampWithTimeZone() {
+		// https://www.postgresql.org/docs/9.1/static/datatype-datetime.html
+		return "timestamp with time zone";
+	}
+
+	@Override
 	public ResultSet getResultSet(CallableStatement statement, int position) throws SQLException {
 		if ( position != 1 ) {
 			throw new UnsupportedOperationException( "PostgreSQL only supports REF_CURSOR parameters as the first parameter" );

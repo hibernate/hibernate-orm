@@ -11,7 +11,7 @@ ext {
 
     junitVersion = '4.12'
 //    h2Version = '1.2.145'
-    h2Version = '1.3.176'
+    h2Version = '1.4.196'
     bytemanVersion = '3.0.6'
     infinispanVersion = '8.2.5.Final'
     jnpVersion = '5.0.6.CR1'
@@ -97,7 +97,8 @@ ext {
             mysql:           'mysql:mysql-connector-java:6.0.5',
             mariadb:         'org.mariadb.jdbc:mariadb-java-client:1.5.7',
 
-            oracle:          'com.oracle.jdbc:ojdbc7:12.1.0.2',
+            oracle:          'com.oracle.jdbc:ojdbc8:12.2.0.1',
+            
             mssql:           'com.microsoft.sqlserver:mssql-jdbc:6.1.0.jre8',
             db2:             'com.ibm.db2:db2jcc:10.5',
 

@@ -219,6 +219,18 @@ public class IngresDialect extends Dialect {
 	public String getLowercaseFunction() {
 		return "lowercase";
 	}
+	
+	@Override
+	protected String getTimeWithTimeZone() {
+		// http://wiki.ispirer.com/sqlways/ingres/data-types/time
+		return "time with time zone";
+	}
+	
+	@Override
+	protected String getTimestampWithTimeZone() {
+		// http://wiki.ispirer.com/sqlways/ingres/data-types/timestamp
+		return "timestamp with time zone";
+	}
 
 	@Override
 	public LimitHandler getLimitHandler() {

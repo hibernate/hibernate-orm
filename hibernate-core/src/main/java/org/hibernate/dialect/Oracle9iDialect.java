@@ -163,6 +163,12 @@ public class Oracle9iDialect extends Oracle8iDialect {
 	public String getForUpdateString() {
 		return " for update";
 	}
+	
+	@Override
+	protected String getTimestampWithTimeZone() {
+		// https://docs.oracle.com/cd/A91202_01/901_doc/server.901/a90120/ch2_feat.htm
+		return "timestamp with time zone";
+	}
 
 	@Override
 	public String getWriteLockString(int timeout) {

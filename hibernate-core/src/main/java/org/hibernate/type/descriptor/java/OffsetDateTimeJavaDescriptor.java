@@ -6,6 +6,8 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -14,6 +16,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.OffsetDateTimeType;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -108,6 +111,19 @@ public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetD
 		if ( Calendar.class.isInstance( value ) ) {
 			final Calendar calendar = (Calendar) value;
 			return OffsetDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() );
+		}
+
+		if( "microsoft.sql.DateTimeOffset".equals( value.getClass().getName() ) ) {
+			try {
+				Class clazz = Class.forName( "microsoft.sql.DateTimeOffset" );
+				Method timestampGetter = ReflectHelper.findGetterMethod( clazz, "timestamp" );
+				Timestamp ts = (Timestamp) ReflectHelper.getMethod( clazz, timestampGetter ).invoke( value );
+				return OffsetDateTime.ofInstant( ts.toInstant(), ZoneId.systemDefault() );
+			}
+			catch (
+				ClassNotFoundException|IllegalAccessException|InvocationTargetException e) {
+				throw new IllegalArgumentException( e );
+			}
 		}
 
 		throw unknownWrap( value.getClass() );

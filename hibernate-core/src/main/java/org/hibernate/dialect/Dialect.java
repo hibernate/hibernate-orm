@@ -196,7 +196,9 @@ public abstract class Dialect implements ConversionContext {
 
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.TIME, "time" );
+		registerColumnType( Types.TIME_WITH_TIMEZONE, getTimeWithTimeZone() );
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, getTimestampWithTimeZone() );
 
 		registerColumnType( Types.VARBINARY, "bit varying($l)" );
 		registerColumnType( Types.LONGVARBINARY, "bit varying($l)" );
@@ -2728,6 +2730,40 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getNotExpression(String expression) {
 		return "not " + expression;
+	}
+	
+	/**
+	 * Gets the name of the {@code TIME WITH TIME ZONE} type for this
+	 * dialect.
+	 * <p>
+	 * If the dialect supports {@code TIME WITH TIME ZONE} this method
+	 * should return the name of that type. If the dialect does not
+	 * support {@code TIME WITH TIME ZONE} it should return the name of
+	 * the {@code TIME} type.
+	 * <p>
+	 * Defaults to {@code "time"}.
+	 * 
+	 * @return the type name
+	 */
+	protected String getTimeWithTimeZone() {
+		return "time";
+	}
+
+	/**
+	 * Gets the name of the {@code TIMESTAMP WITH TIME ZONE} type for this
+	 * dialect.
+	 * <p>
+	 * If the dialect supports {@code TIMESTAMP WITH TIME ZONE} this method
+	 * should return the name of that type. If the dialect does not
+	 * support {@code TIMESTAMP WITH TIME ZONE} it should return the name of
+	 * the {@code TIMESTAMP} type.
+	 * <p>
+	 * Defaults to {@code "timestamp"}.
+	 * 
+	 * @return the type name
+	 */
+	protected String getTimestampWithTimeZone() {
+		return "timestamp";
 	}
 
 	/**

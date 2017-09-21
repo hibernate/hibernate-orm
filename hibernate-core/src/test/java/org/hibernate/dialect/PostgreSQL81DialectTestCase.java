@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import java.sql.BatchUpdateException;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
@@ -25,6 +26,7 @@ import org.mockito.Mockito;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -97,5 +99,26 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 			assertTrue( e instanceof UnsupportedOperationException );
 			assertEquals( "PostgreSQL only supports accessing REF_CURSOR parameters by position", e.getMessage() );
 		}
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11773")
+	public void testGetTypeName() {
+		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
+		// time with time zone
+		String actual = dialect.getTypeName( Types.TIME_WITH_TIMEZONE );
+		assertEquals(
+				"Wrong type. Should be time with time zone",
+				"time with time zone",
+				actual
+		);
+
+		// time with time zone
+		actual = dialect.getTypeName( Types.TIMESTAMP_WITH_TIMEZONE );
+		assertEquals(
+				"Wrong type. Should be time with time zone",
+				"timestamp with time zone",
+				actual
+				);
 	}
 }

@@ -31,6 +31,7 @@ import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -223,6 +224,7 @@ public class ParentChildTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect( value = H2Dialect.class, comment = "Feature not supported: MVCC=TRUE && FOR UPDATE && JOIN")
 	public void testComplexCriteria() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

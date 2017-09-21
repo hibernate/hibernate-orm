@@ -61,4 +61,10 @@ public class SQLServer2008Dialect extends SQLServer2005Dialect {
 	public boolean supportsValuesList() {
 		return true;
 	}
+	
+	@Override
+	protected String getTimestampWithTimeZone() {
+		// https://docs.microsoft.com/en-us/sql/t-sql/data-types/datetimeoffset-transact-sql
+		return "datetimeoffset";
+	}
 }

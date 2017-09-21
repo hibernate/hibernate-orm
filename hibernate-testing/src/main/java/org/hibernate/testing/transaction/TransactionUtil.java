@@ -368,13 +368,17 @@ public class TransactionUtil {
 					.openSession();
 			txn = session.getTransaction();
 			txn.begin();
-			function.accept(session);
+			function.accept( session );
 			txn.commit();
-		} catch (Throwable e) {
-			if ( txn != null ) txn.rollback();
+		}
+		catch (Throwable e) {
+			if ( txn != null ) {
+				txn.rollback();
+			}
 			throw e;
-		} finally {
-			if (session != null) {
+		}
+		finally {
+			if ( session != null ) {
 				session.close();
 			}
 		}
@@ -391,8 +395,8 @@ public class TransactionUtil {
 	 */
 	public static <R> R doInHibernate(
 			Supplier<SessionFactory> factorySupplier,
-		 	String tenant,
-		 	Function<Session, R> function) {
+			String tenant,
+			Function<Session, R> function) {
 		Session session = null;
 		Transaction txn = null;
 		try {
@@ -402,14 +406,18 @@ public class TransactionUtil {
 					.openSession();
 			txn = session.getTransaction();
 			txn.begin();
-			R returnValue = function.apply(session);
+			R returnValue = function.apply( session );
 			txn.commit();
 			return returnValue;
-		} catch (Throwable e) {
-			if ( txn != null ) txn.rollback();
+		}
+		catch (Throwable e) {
+			if ( txn != null ) {
+				txn.rollback();
+			}
 			throw e;
-		} finally {
-			if (session != null) {
+		}
+		finally {
+			if ( session != null ) {
 				session.close();
 			}
 		}

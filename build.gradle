@@ -391,7 +391,7 @@ subprojects { subProject ->
 	}
 	// exclude generated java sources - by explicitly setting the base source dir
 	checkstyleMain.source = 'src/main/java'
-	
+
 	// define a second checkstyle task for checking non-fatal violations
 	task nonFatalCheckstyle(type:Checkstyle) {
 		source = subProject.sourceSets.main.java
@@ -400,31 +400,38 @@ subprojects { subProject ->
 		configFile = rootProject.file( 'shared/config/checkstyle/checkstyle-non-fatal.xml' )
 	}
 
-	findbugs {
-		sourceSets = [ subProject.sourceSets.main, subProject.sourceSets.test ]
-		ignoreFailures = true
-		toolVersion = '3.0.1'
-		// for now we need to set this to low so that FindBugs will actually report the DM_CONVERT_CASE warning we care about
-		reportLevel = 'low'
-		// remove all low level bug warnings except DM_CONVERT_CASE
-		excludeFilterConfig=resources.text.fromString(excludeAllLowLevelBugsExcept('DM_CONVERT_CASE'))
-	}
-
-	// exclude generated java sources and cfg package is a mess mainly from annotation stuff
-	findbugsMain.doFirst {
-		classes = classes.filter {
-			!it.path.contains( 'org/hibernate/hql/internal/antlr' ) &&
-					!it.path.contains( 'org/hibernate/boot/jaxb/cfg/spi' ) &&
-					!it.path.contains( 'org/hibernate/sql/ordering/antlr/Generated' ) &&
-					!it.path.contains( 'org/hibernate/sql/ordering/antlr/OrderByTemplateTokenTypes' ) &&
-					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/Jaxb' ) &&
-					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/Adapter' ) &&
-					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/ObjectFactory' ) &&
-					!it.path.contains( 'org/hibernate/cfg' ) &&
-					!it.path.contains( '_\$logger' )
+	if ( JavaVersion.current().isJava9Compatible() ) {
+		logger.warn( '[WARN] Disabling findbugs, it does not support JDK 9' )
+		findbugs {
+			sourceSets = []
 		}
 	}
+	else {
+		findbugs {
+			sourceSets = [subProject.sourceSets.main, subProject.sourceSets.test]
+			ignoreFailures = true
+			toolVersion = '3.0.1'
+			// for now we need to set this to low so that FindBugs will actually report the DM_CONVERT_CASE warning we care about
+			reportLevel = 'low'
+			// remove all low level bug warnings except DM_CONVERT_CASE
+			excludeFilterConfig = resources.text.fromString( excludeAllLowLevelBugsExcept( 'DM_CONVERT_CASE' ) )
+		}
 
+		// exclude generated java sources and cfg package is a mess mainly from annotation stuff
+		findbugsMain.doFirst {
+			classes = classes.filter {
+				!it.path.contains( 'org/hibernate/hql/internal/antlr' ) &&
+						!it.path.contains( 'org/hibernate/boot/jaxb/cfg/spi' ) &&
+						!it.path.contains( 'org/hibernate/sql/ordering/antlr/Generated' ) &&
+						!it.path.contains( 'org/hibernate/sql/ordering/antlr/OrderByTemplateTokenTypes' ) &&
+						!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/Jaxb' ) &&
+						!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/Adapter' ) &&
+						!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/ObjectFactory' ) &&
+						!it.path.contains( 'org/hibernate/cfg' ) &&
+						!it.path.contains( '_\$logger' )
+			}
+		}
+	}
 		// because cfg package is a mess mainly from annotation stuff
 	checkstyleMain.exclude '**/org/hibernate/cfg/**'
 	checkstyleMain.exclude '**/org/hibernate/cfg/*'

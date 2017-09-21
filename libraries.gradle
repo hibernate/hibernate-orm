@@ -12,7 +12,7 @@ ext {
     junitVersion = '4.12'
 //    h2Version = '1.2.145'
     h2Version = '1.3.176'
-    bytemanVersion = '3.0.6'
+    bytemanVersion = '3.0.10'
     infinispanVersion = '8.2.5.Final'
     jnpVersion = '5.0.6.CR1'
     elVersion = '2.2.4'
@@ -105,8 +105,8 @@ ext {
             informix:        'com.ibm.informix:jdbc:4.10.7.20160517',
             jboss_jta:       "org.jboss.jbossts:jbossjta:4.16.4.Final",
             xapool:          "com.experlog:xapool:1.5.0",
-            mockito:         'org.mockito:mockito-core:2.7.5',
-            mockito_inline:  'org.mockito:mockito-inline:2.7.5',
+            mockito:         'org.mockito:mockito-core:2.10.0',
+            mockito_inline:  'org.mockito:mockito-inline:2.10.0',
 
             validator:       'org.hibernate:hibernate-validator:5.2.4.Final',
             // EL required by Hibernate Validator at test runtime

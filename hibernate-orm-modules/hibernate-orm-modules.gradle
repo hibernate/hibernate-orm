@@ -72,6 +72,29 @@ dependencies {
     testCompile libraries.shrinkwrap_descriptors_api_javaee
     testCompile libraries.shrinkwrap_descriptors_impl_javaee
     testCompile libraries.wildfly_arquillian_container_managed
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Java 9 ftw!
+    if ( JavaVersion.current().isJava9Compatible() ) {
+        compile( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
+        compile( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
+        compile( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
+        compile( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
+        compile( 'javax:javaee-api:7.0' )
+
+        testCompile( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
+        testCompile( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
+        testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
+        testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
+        testCompile( 'javax:javaee-api:7.0' )
+
+        testRuntime( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
+        testRuntime( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
+        testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
+        testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
+        testRuntime( 'javax:javaee-api:7.0' )
+    }
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
 
@@ -153,12 +176,6 @@ build.dependsOn createModulesZip
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // tasks related to in-container (Arquillian + WF) testing
-
-if ( JavaVersion.current().isJava9Compatible() ) {
-    logger.lifecycle( "WARNING - Skipping hibernate-orm-modules tests for Java 9" )
-    // WildFly has problems booting in Java 9
-    test.enabled = false
-}
 
 task installWildFly(type: Copy) {
     description = 'Downloads the WildFly distribution and installs it into a local directory (if needed)'

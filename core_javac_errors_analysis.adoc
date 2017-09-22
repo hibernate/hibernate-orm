@@ -1067,19 +1067,3 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 					new QueryResultBuilderRootEntity( "alias1", queryAnn.resultClass().getName() );
 					                                                                          ^
 ----
-
-
-
-
-
-
-## Envers
-
-
-[code]
-----
-home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/strategy/ValidityAuditStrategy.java:611: error: incompatible types: Type cannot be converted to BasicType
-		updateContext.bind( id, entityDescriptor.getIdentifierType() );
-----
-
-

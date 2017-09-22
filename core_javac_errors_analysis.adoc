@@ -961,18 +961,12 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
   symbol:   method fromString(String)
   location: interface JavaTypeDescriptor
 
- /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/relational/spi/UnionSubclassTable.java:18: error: UnionSubclassTable is not abstract and does not override abstract method isExportable() in Table
-  public class UnionSubclassTable extends AbstractTable implements ExportableTable {
-         ^
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/UnsavedValueFactory.java:93: error: cannot find symbol
 						.fromString( unsavedValue ) );
 						^
   symbol:   method fromString(String)
   location: interface JavaTypeDescriptor
 
- /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/relational/spi/UnionSubclassTable.java:18: error: UnionSubclassTable is not abstract and does not override abstract method isExportable() in Table
-  public class UnionSubclassTable extends AbstractTable implements ExportableTable {
 
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/FilterConfiguration.java:81: error: cannot find symbol
 						Joinable.class.cast( factory.getEntityPersister( entry.getValue() ) ).getTableName()

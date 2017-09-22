@@ -21,6 +21,7 @@ import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.internal.AbstractMappedSuperclassMapping;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
+import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.MappedSuperclassJavaDescriptor;
 
 /**

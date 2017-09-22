@@ -120,11 +120,11 @@ public abstract class AbstractEntityDescriptor<T>
 		log.debugf(
 				"Instantiated persister [%s] for entity [%s (%s)]",
 				this,
-				getJavaTypeDescriptor().getEntityName(),
-				getJavaTypeDescriptor().getJpaEntityName()
+				bootMapping.getEntityName(),
+				bootMapping.getJpaEntityName()
 		);
 
-		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( getEntityName() );
+		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( bootMapping.getEntityName() );
 		this.dialect = factory.getServiceRegistry().getService( JdbcServices.class ).getDialect();
 	}
 

@@ -21,7 +21,6 @@ import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -58,7 +57,7 @@ public class EntityIdentifierSimpleImpl<O,J>
 			BasicValueMapping<J> basicValueMapping,
 			RuntimeModelCreationContext creationContext) {
 		super(
-				(ManagedTypeDescriptor<O>) hierarchy.getRootEntityType().getJavaTypeDescriptor(),
+				hierarchy.getRootEntityType(),
 				property.getName(),
 				declarer.getRepresentationStrategy().generatePropertyAccess(
 						bootDeclarer,

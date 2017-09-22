@@ -490,7 +490,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 
 	@Override
 	public void sessionFactoryClosed(SessionFactory factory) {
-		log.tracef( "Handling #sessionFactoryClosed from [%s] for TypeConfiguration" );
+		log.tracef( "Handling #sessionFactoryClosed from [%s] for TypeConfiguration", factory );
 		scope.unsetSessionFactory( factory );
 
 		// todo : come back and implement this...

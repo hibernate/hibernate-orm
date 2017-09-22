@@ -109,7 +109,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	}
 
 	private static InheritanceStrategy interpretInheritanceType(RootClass rootEntityBinding) {
-		if ( !rootEntityBinding.getSubTypeMappings().isEmpty() ) {
+		if ( rootEntityBinding.getSubTypeMappings().isEmpty() ) {
 			return InheritanceStrategy.NONE;
 		}
 		else {

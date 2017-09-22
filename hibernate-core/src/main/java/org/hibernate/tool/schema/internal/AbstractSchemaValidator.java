@@ -145,7 +145,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			ExecutionOptions options,
 			Dialect dialect) {
 		boolean typesMatch = column.getSqlTypeDescriptor().getJdbcTypeCode() == columnInformation.getTypeCode()
-				|| column.getSqlType( dialect ).toLowerCase(Locale.ROOT).startsWith( columnInformation.getTypeName().toLowerCase(Locale.ROOT) );
+				|| column.getSqlTypeName( dialect ).toLowerCase(Locale.ROOT).startsWith( columnInformation.getTypeName().toLowerCase(Locale.ROOT) );
 
 		if ( !typesMatch ) {
 			throw new SchemaManagementException(
@@ -156,7 +156,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 							table.getQualifiedTableName(),
 							columnInformation.getTypeName().toLowerCase( Locale.ROOT ),
 							JdbcTypeNameMapper.getTypeName( columnInformation.getTypeCode() ),
-							column.getSqlType( dialect ).toLowerCase( Locale.ROOT ),
+							column.getSqlTypeName( dialect ).toLowerCase( Locale.ROOT ),
 							JdbcTypeNameMapper.getTypeName( column.getSqlTypeDescriptor().getJdbcTypeCode() )
 					)
 			);

@@ -122,14 +122,9 @@ public class PhysicalColumn implements Column {
 		this.checkConstraint = checkConstraint;
 	}
 
-	public String getSqlType(Dialect dialect) {
+	public String getSqlTypeName(Dialect dialect) {
 		if ( sqlType == null ) {
-			sqlType = dialect.getTypeName(
-					getSqlTypeDescriptor().getJdbcTypeCode(),
-					getSize().getLength(),
-					getSize().getPrecision(),
-					getSize().getScale()
-			);
+			sqlType = dialect.getTypeName( getSqlTypeDescriptor().getJdbcTypeCode(), getSize() );
 		}
 		return sqlType;
 	}

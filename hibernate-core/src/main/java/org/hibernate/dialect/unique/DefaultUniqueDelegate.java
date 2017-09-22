@@ -40,7 +40,7 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 
 	@Override
 	public String getTableCreationUniqueConstraintsFragment(ExportableTable table) {
-		return null;
+		return "";
 	}
 
 	@Override

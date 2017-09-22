@@ -97,7 +97,7 @@ public interface EntityDescriptor<T>
 	 * </ol>
 	 */
 	Class[] STANDARD_CONSTRUCTOR_SIG = new Class[] {
-			PersistentClass.class,
+			EntityMapping.class,
 			RuntimeModelCreationContext.class
 	};
 

@@ -441,7 +441,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public java.util.Collection<Table> collectTableMappings() {
-		return collectTableMappings().stream().collect( Collectors.toList() );
+		return collectMappedTableMappings().stream().map( Table.class::cast ).collect( Collectors.toList() );
 	}
 
 	@Override

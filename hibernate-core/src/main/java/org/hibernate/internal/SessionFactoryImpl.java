@@ -129,8 +129,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
-
 
 /**
  * Concrete implementation of the <tt>SessionFactory</tt> interface. Has the following

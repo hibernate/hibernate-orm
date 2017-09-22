@@ -9,6 +9,7 @@ package org.hibernate.cfg;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
+import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.resource.cdi.spi.ExtendedBeanManager;
@@ -281,7 +282,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Setting that controls whether we seek out JPA "static metamodel" classes
-	 * and populate them.  Ultimately resolves to a {@link org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting}.
+	 * and populate them.  Ultimately resolves to a {@link JpaStaticMetaModelPopulationSetting}.
 	 * Recognized values include:<ul>
 	 *     <li>
 	 *         <b>enabled</b> -Do the population

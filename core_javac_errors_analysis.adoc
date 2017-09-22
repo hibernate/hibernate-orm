@@ -948,10 +948,6 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
   symbol:   method getQueryReturns()
   location: variable nativeSqlQuery of type NativeQuery
 
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/consume/spi/BaseSqmToSqlAstConverter.java:1016: error: incompatible types: Object cannot be converted to List<Expression>
-				.collect( Collectors.toList() );
-				        ^
 ----
 
 

@@ -568,11 +568,23 @@ A collection?  etc
   symbol:   method nullSafeSet(PreparedStatement,Object,int,SharedSessionContractImplementor)
   location: variable uniqueKeyType of type Type
 
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/SelectGenerator.java:139: error: cannot find symbol
+			return (Serializable) idType.nullSafeGet(
+			                            ^
+  symbol:   method nullSafeGet(ResultSet,String[],SharedSessionContractImplementor,Object)
+  location: variable idType of type Type
+
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/results/internal/JdbcValuesSourceProcessingStateStandardImpl.java:244: error: cannot find symbol
 				hydratedState[i] = types[i].resolve( value, session, entity );
 				                           ^
   symbol:   method resolve(Object,SharedSessionContractImplementor,Object)
   location: interface Type
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/TwoPhaseLoad.java:150: error: cannot find symbol
+  				hydratedState[i] = types[i].resolve( value, session, entity );
+  				                           ^
+    symbol:   method resolve(Object,SharedSessionContractImplementor,Object)
+    location: interface Type
 
 ----
 
@@ -639,27 +651,11 @@ A collection?  etc
   symbol:   method getOrmType()
   location: interface PersistentCollectionDescriptor
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/TwoPhaseLoad.java:150: error: cannot find symbol
-  				hydratedState[i] = types[i].resolve( value, session, entity );
-  				                           ^
-    symbol:   method resolve(Object,SharedSessionContractImplementor,Object)
-    location: interface Type
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/SelectGenerator.java:139: error: cannot find symbol
-			return (Serializable) idType.nullSafeGet(
-			                            ^
-  symbol:   method nullSafeGet(ResultSet,String[],SharedSessionContractImplementor,Object)
-  location: variable idType of type Type
-
-
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/AbstractSaveEventListener.java:291: error: cannot find symbol
 				types,
 				^
   symbol:   variable types
   location: class AbstractSaveEventListener
-
-
 ----
 
 

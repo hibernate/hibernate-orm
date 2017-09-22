@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
@@ -1011,9 +1010,9 @@ public abstract class BaseSqmToSqlAstConverter
 			return Collections.singletonList( (Expression) sqmExpressions.get( 0 ).accept( this ) );
 		}
 
-		return sqmExpressions.stream()
-				.map( sqmExpression -> (Expression) sqmExpression.accept( this ) )
-				.collect( Collectors.toList() );
+		final List<Expression> results = new ArrayList<>();
+		sqmExpressions.forEach( sqmExpression -> results.add( (Expression) sqmExpression.accept( this ) ) );
+		return results;
 	}
 
 	@Override

@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
@@ -221,9 +220,9 @@ public abstract class AbstractManagedType<T> implements ManagedTypeDescriptor<T>
 	@Override
 	@SuppressWarnings("unchecked")
 	public Set<javax.persistence.metamodel.Attribute<T,?>> getDeclaredAttributes() {
-		final HashSet<javax.persistence.metamodel.Attribute> attributes = new HashSet<>();
+		final HashSet<javax.persistence.metamodel.Attribute<T, ?>> attributes = new HashSet<>();
 		collectDeclaredAttributes( attributes::add );
-		return attributes.stream().map(attribute -> (javax.persistence.metamodel.Attribute<T,?>)attribute ).collect( Collectors.toSet() );
+		return attributes;
 	}
 
 	@Override

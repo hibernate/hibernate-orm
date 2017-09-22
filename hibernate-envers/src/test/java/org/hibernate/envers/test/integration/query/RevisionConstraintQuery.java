@@ -128,7 +128,7 @@ public class RevisionConstraintQuery extends BaseEnversJPAFunctionalTestCase {
 				.add( AuditEntity.property( "number" ).lt( 10 ) )
 				.getResultList();
 
-		Assert.assertEquals( Arrays.asList( 3, 4 ), result );
+		Assert.assertEquals( TestTools.makeSet( 3, 4 ), new HashSet<>( result ) );
 	}
 
 	@Test

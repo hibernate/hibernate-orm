@@ -935,42 +935,12 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 
  /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/relational/spi/UnionSubclassTable.java:18: error: UnionSubclassTable is not abstract and does not override abstract method isExportable() in Table
   public class UnionSubclassTable extends AbstractTable implements ExportableTable {
-         ^
-
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/domain/spi/AbstractManagedType.java:214: error: incompatible types: cannot infer type-variable(s) R,A,CAP#1,T#2
-		return attributes.stream().collect( Collectors.toSet() );
-		                                  ^
-    (argument mismatch; Collector<Attribute<T#3,?>,CAP#2,Set<Attribute<T#3,?>>> cannot be converted to Collector<? super Attribute,CAP#2,Set<Attribute<T#3,?>>>)
-  where R,A,T#1,T#2,T#3 are type-variables:
-    R extends Object declared in method <R,A>collect(Collector<? super T#1,A,R>)
-    A extends Object declared in method <R,A>collect(Collector<? super T#1,A,R>)
-    T#1 extends Object declared in interface Stream
-    T#2 extends Object declared in method <T#2>toSet()
-    T#3 extends Object declared in class AbstractManagedType
-  where CAP#1,CAP#2 are fresh type-variables:
-    CAP#1 extends Object from capture of ?
-    CAP#2 extends Object from capture of ?
 
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/FilterConfiguration.java:81: error: cannot find symbol
 						Joinable.class.cast( factory.getEntityPersister( entry.getValue() ) ).getTableName()
 						^
   symbol:   class Joinable
   location: class FilterConfiguration
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/procedure/internal/ProcedureCallImpl.java:966: error: incompatible types: cannot infer type-variable(s) R,A,CAP#1,T#2
-		return parameterManager.collectParameterRegistrations().stream().collect( Collectors.toSet() );
-		                                                                        ^
-    (argument mismatch; Collector<Parameter<?>,CAP#2,Set<Parameter<?>>> cannot be converted to Collector<? super ParameterRegistration,CAP#2,Set<Parameter<?>>>)
-  where R,A,T#1,T#2 are type-variables:
-    R extends Object declared in method <R,A>collect(Collector<? super T#1,A,R>)
-    A extends Object declared in method <R,A>collect(Collector<? super T#1,A,R>)
-    T#1 extends Object declared in interface Stream
-    T#2 extends Object declared in method <T#2>toSet()
-  where CAP#1,CAP#2 are fresh type-variables:
-    CAP#1 extends Object from capture of ?
-    CAP#2 extends Object from capture of ?
-
 
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/SessionFactoryImpl.java:820: error: cannot find symbol
 				.setQueryReturns( nativeSqlQuery.getQueryReturns() );

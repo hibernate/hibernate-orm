@@ -15,7 +15,7 @@ import org.hibernate.metamodel.model.relational.spi.Column;
  * Descriptor for an entity's identifier
  * @author Steve Ebersole
  */
-public interface EntityIdentifier<O,J> extends Navigable<J>, SingularPersistentAttribute<O,J> {
+public interface EntityIdentifier<O,J> extends Navigable<J>, SingularPersistentAttribute<O,J>, AllowableParameterType<J> {
 	String NAVIGABLE_ID = "{id}";
 	String LEGACY_NAVIGABLE_ID = "id";
 

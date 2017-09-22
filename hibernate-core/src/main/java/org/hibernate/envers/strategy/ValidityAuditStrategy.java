@@ -39,6 +39,7 @@ import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.metamodel.model.domain.internal.BasicSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeAggregated;
@@ -55,7 +56,6 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.sql.Update;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
-import org.hibernate.type.spi.BasicType;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
@@ -608,7 +608,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		//		identifier use case.  We need to determine how we're to deal with aggregate and non-aggregate
 		//		based identifier use cases.
 		updateContext.addPrimaryKeyColumns( getEntityDescriptorPrimaryKeyColumnNames( entityDescriptor ) );
-		updateContext.bind( id, entityDescriptor.getIdentifierType() );
+		updateContext.bind( id, (AllowableParameterType) entityDescriptor.getHierarchy().getIdentifierDescriptor() );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// AND REV <> ? (REV is on the auditedEntityDescriptor)
@@ -704,7 +704,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		 * @param value the value to be bound.
 		 * @param type the type to be bound.
 		 */
-		public void bind(Object value, BasicType type) {
+		public void bind(Object value, AllowableParameterType type) {
 			this.bindings.add( new QueryParameterBinding( value, type ) );
 		}
 	}
@@ -713,10 +713,10 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	 * Represents a query parameter binding.
 	 */
 	private class QueryParameterBinding {
-		private final BasicType type;
+		private final AllowableParameterType type;
 		private final Object value;
 
-		public QueryParameterBinding(Object value, BasicType type) {
+		public QueryParameterBinding(Object value, AllowableParameterType type) {
 			this.value = value;
 			this.type = type;
 		}

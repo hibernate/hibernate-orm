@@ -21,6 +21,7 @@ public abstract class AbstractPersistentAttribute<O,J> implements PersistentAttr
 	private final ManagedTypeDescriptor<O> container;
 	private final JavaTypeDescriptor<J> javaTypeDescriptor;
 	private final PropertyAccess access;
+	private final boolean includedInOptimisticLocking;
 
 	private final NavigableRole navigableRole;
 
@@ -28,10 +29,12 @@ public abstract class AbstractPersistentAttribute<O,J> implements PersistentAttr
 			ManagedTypeDescriptor<O> container,
 			String name,
 			JavaTypeDescriptor<J> javaTypeDescriptor,
-			PropertyAccess access) {
+			PropertyAccess access,
+			boolean includedInOptimisticLocking) {
 		this.container = container;
 		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.access = access;
+		this.includedInOptimisticLocking = includedInOptimisticLocking;
 
 		this.navigableRole = container.getNavigableRole().append( name );
 	}
@@ -64,5 +67,10 @@ public abstract class AbstractPersistentAttribute<O,J> implements PersistentAttr
 	@Override
 	public Member getJavaMember() {
 		return access.getGetter().getMember();
+	}
+
+	@Override
+	public boolean includeInOptimisticLocking() {
+		return includedInOptimisticLocking;
 	}
 }

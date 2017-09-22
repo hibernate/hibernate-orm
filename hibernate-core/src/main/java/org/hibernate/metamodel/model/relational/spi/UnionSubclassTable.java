@@ -11,6 +11,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.InitCommand;
+import org.hibernate.naming.Identifier;
+import org.hibernate.naming.QualifiedTableName;
 
 /**
  * @author Steve Ebersole
@@ -46,6 +49,11 @@ public class UnionSubclassTable extends AbstractTable implements ExportableTable
 	@Override
 	public String getTableExpression() {
 		return getUnionQuery();
+	}
+
+	@Override
+	public boolean isExportable() {
+		return true;
 	}
 
 	@Override
@@ -89,5 +97,70 @@ public class UnionSubclassTable extends AbstractTable implements ExportableTable
 		}
 
 		return false;
+	}
+
+	@Override
+	public String getExportIdentifier() {
+		return physicalTable.getExportIdentifier();
+	}
+
+	@Override
+	public Identifier getCatalogName() {
+		return physicalTable.getCatalogName();
+	}
+
+	@Override
+	public Identifier getSchemaName() {
+		return physicalTable.getSchemaName();
+	}
+
+	@Override
+	public Identifier getTableName() {
+		return physicalTable.getTableName();
+	}
+
+	@Override
+	public QualifiedTableName getQualifiedTableName() {
+		return physicalTable.getQualifiedTableName();
+	}
+
+	@Override
+	public Collection<PhysicalColumn> getPhysicalColumns() {
+		return physicalTable.getPhysicalColumns();
+	}
+
+	@Override
+	public boolean hasPrimaryKey() {
+		return physicalTable.hasPrimaryKey();
+	}
+
+	@Override
+	public String getComment() {
+		return physicalTable.getComment();
+	}
+
+	@Override
+	public Collection<UniqueKey> getUniqueKeys() {
+		return physicalTable.getUniqueKeys();
+	}
+
+	@Override
+	public List<String> getCheckConstraints() {
+		return physicalTable.getCheckConstraints();
+	}
+
+	@Override
+	public Collection<Index> getIndexes() {
+		return physicalTable.getIndexes();
+	}
+
+	@Override
+	public boolean isPrimaryKeyIdentity() {
+		return physicalTable.isPrimaryKeyIdentity();
+	}
+
+	@Override
+	public Collection<InitCommand> getInitCommands() {
+		return physicalTable.getInitCommands();
 	}
 }

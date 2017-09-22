@@ -75,6 +75,7 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testLoad() {
 		clearCounts();
 

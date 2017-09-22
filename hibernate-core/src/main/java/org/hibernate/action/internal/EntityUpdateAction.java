@@ -29,6 +29,8 @@ import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.type.internal.TypeHelper;
 
 /**
  * The action for performing entity updates.
@@ -164,13 +166,25 @@ public final class EntityUpdateAction extends EntityAction {
 			// get the updated snapshot of the entity state by cloning current state;
 			// it is safe to copy in place, since by this time no-one else (should have)2
 			// has a reference  to the array
-			TypeHelper.deepCopy(
-					state,
-					entityDescriptor.getPropertyTypes(),
-					entityDescriptor.getPropertyCheckability(),
-					state,
-					session
+			entityDescriptor.visitAttributes(
+					new TypeHelper.FilteredAttributeConsumer() {
+						int i = 0;
+
+						@Override
+						protected boolean shouldAccept(PersistentAttribute attribute) {
+							// "property checkability"
+							//		- org.hibernate.persister.entity.EntityPersister#getPropertyCheckability
+							return super.shouldAccept( attribute );
+						}
+
+						@Override
+						protected void acceptAttribute(PersistentAttribute attribute) {
+							state[i] = attribute.deepCopy( state[i], session );
+							i++;
+						}
+					}
 			);
+
 			if ( entityDescriptor.hasUpdateGeneratedProperties() ) {
 				// this entity defines proeprty generation, so process those generated
 				// values...
@@ -179,6 +193,7 @@ public final class EntityUpdateAction extends EntityAction {
 					nextVersion = Versioning.getVersion( state, entityDescriptor );
 				}
 			}
+
 			// have the entity entry doAfterTransactionCompletion post-update processing, passing it the
 			// update state and the new version (if one).
 			entry.postUpdate( instance, state, nextVersion );

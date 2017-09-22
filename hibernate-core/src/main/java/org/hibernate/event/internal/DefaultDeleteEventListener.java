@@ -39,6 +39,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
+import org.hibernate.type.internal.TypeHelper;
 
 /**
  * Defines the default delete event listener used by hibernate for deleting entities
@@ -335,7 +336,24 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 //		TypeFactory.deepCopy( currentState, propTypes, entityDescriptor.getPropertyUpdateability(), deletedState, session );
 		boolean[] copyability = new boolean[propTypes.length];
 		java.util.Arrays.fill( copyability, true );
-		TypeHelper.deepCopy( currentState, propTypes, copyability, deletedState, session );
+		entityDescriptor.visitAttributes(
+				new TypeHelper.FilteredAttributeConsumer() {
+					int i = 0;
+
+					@Override
+					protected boolean shouldAccept(PersistentAttribute attribute) {
+						// "property update-ability"
+						//		- org.hibernate.persister.entity.EntityPersister#getPropertyUpdateability
+						return super.shouldAccept( attribute );
+					}
+
+					@Override
+					protected void acceptAttribute(PersistentAttribute attribute) {
+						deletedState[i] = attribute.deepCopy( currentState[i], session );
+						i++;
+					}
+				}
+		);
 		return deletedState;
 	}
 

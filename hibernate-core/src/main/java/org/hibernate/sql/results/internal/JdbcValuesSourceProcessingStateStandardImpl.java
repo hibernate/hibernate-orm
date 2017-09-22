@@ -33,6 +33,7 @@ import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
@@ -43,6 +44,7 @@ import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.type.Type;
+import org.hibernate.type.internal.TypeHelper;
 
 import org.jboss.logging.Logger;
 
@@ -343,13 +345,23 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		}
 		else {
 			//take a snapshot
-			TypeHelper.deepCopy(
-					hydratedState,
-					persister.getPropertyTypes(),
-					persister.getPropertyUpdateability(),
-					//afterQuery setting values to object
-					hydratedState,
-					session
+			persister.visitAttributes(
+					new TypeHelper.FilteredAttributeConsumer() {
+						int i = 0;
+
+						@Override
+						protected boolean shouldAccept(PersistentAttribute attribute) {
+							// "property update-ability"
+							//		- org.hibernate.persister.entity.EntityPersister#getPropertyUpdateability
+							return super.shouldAccept( attribute );
+						}
+
+						@Override
+						protected void acceptAttribute(PersistentAttribute attribute) {
+							hydratedState[i] = attribute.deepCopy( hydratedState[i], session );
+							i++;
+						}
+					}
 			);
 			persistenceContext.setEntryStatus( entityEntry, Status.MANAGED );
 		}

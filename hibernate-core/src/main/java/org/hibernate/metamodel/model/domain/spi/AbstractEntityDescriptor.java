@@ -226,6 +226,16 @@ public abstract class AbstractEntityDescriptor<T>
 	}
 
 	@Override
+	public Table getPrimaryTable() {
+		return rootTable;
+	}
+
+	@Override
+	public List<JoinedTableBinding> getSecondaryTableBindings() {
+		return secondaryTableBindings;
+	}
+
+	@Override
 	public Class<T> getJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
 	}

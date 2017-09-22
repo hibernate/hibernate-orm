@@ -36,11 +36,10 @@ import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.internal.TypeHelper;
 
 /**
  * A convenience bas class for listeners responding to save events.
@@ -285,13 +284,23 @@ public abstract class AbstractSaveEventListener
 		if ( substitute ) {
 			entityDescriptor.setPropertyValues( entity, values );
 		}
+		entityDescriptor.visitAttributes(
+				new TypeHelper.FilteredAttributeConsumer() {
+					int i = 0;
 
-		TypeHelper.deepCopy(
-				values,
-				types,
-				entityDescriptor.getPropertyUpdateability(),
-				values,
-				source
+					@Override
+					protected boolean shouldAccept(PersistentAttribute attribute) {
+						// "property update-ability"
+						//		- org.hibernate.persister.entity.EntityPersister#getPropertyUpdateability
+						return super.shouldAccept( attribute );
+					}
+
+					@Override
+					protected void acceptAttribute(PersistentAttribute attribute) {
+						values[i] = attribute.deepCopy( values[i], source );
+						i++;
+					}
+				}
 		);
 
 		AbstractEntityInsertAction insert = addInsertAction(

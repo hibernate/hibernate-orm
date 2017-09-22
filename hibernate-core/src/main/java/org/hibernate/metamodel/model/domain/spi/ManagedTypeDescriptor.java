@@ -57,6 +57,8 @@ public interface ManagedTypeDescriptor<T>
 	Map<String, PersistentAttribute> getAttributesByName();
 	Map<String, PersistentAttribute> getDeclaredAttributesByName();
 
+	void visitAttributes(Consumer<? extends PersistentAttribute> consumer);
+
 	<A extends javax.persistence.metamodel.Attribute> void collectAttributes(Consumer<A> collector, Class<A> restrictionType);
 	<A extends javax.persistence.metamodel.Attribute> void collectDeclaredAttributes(Consumer<A> collector, Class<A> restrictionType);
 }

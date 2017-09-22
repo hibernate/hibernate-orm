@@ -12,6 +12,8 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.pretty.MessageHelper;
+import org.hibernate.type.internal.TypeHelper;
 
 /**
  * Structured CacheEntry format for entities.  Used to store the entry into the second-level cache
@@ -47,9 +49,10 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 		for ( int i = 0; i < names.length; i++ ) {
 			state[i] = (Serializable) map.get( names[i] );
 		}
+
 		return new StandardCacheEntryImpl(
 				state,
-				TypeHelper.toLoggableString( state, subclassPersister.getPropertyTypes(), factory ),
+				TypeHelper.toLoggableString( state, subclassPersister ),
 				subclass,
 				version
 		);

@@ -18,6 +18,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
+import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
@@ -230,7 +231,7 @@ public class CollectionLoadContext {
 		// warning: can cause a recursive calls! (proxy initialization)
 		final boolean hasNoQueuedAdds = lce.getCollection().endRead();
 
-		if ( persister.isArray() ) {
+		if ( persister.getCollectionClassification() == CollectionClassification.ARRAY ) {
 			getLoadContext().getPersistenceContext().addCollectionHolder( lce.getCollection() );
 		}
 
@@ -298,7 +299,7 @@ public class CollectionLoadContext {
 		}
 
 		final Object version;
-		if ( persister.isVersioned() ) {
+		if ( persister.getDescribedAttribute().includeInOptimisticLocking() ) {
 			Object collectionOwner = getLoadContext().getPersistenceContext().getCollectionOwner( lce.getKey(), persister );
 			if ( collectionOwner == null ) {
 				// generally speaking this would be caused by the collection key being defined by a property-ref, thus

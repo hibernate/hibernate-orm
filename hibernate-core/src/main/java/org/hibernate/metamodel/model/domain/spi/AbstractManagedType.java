@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -124,7 +125,8 @@ public abstract class AbstractManagedType<T> implements ManagedTypeDescriptor<T>
 
 	protected void addAttribute(PersistentAttribute persistentAttribute) {
 		if ( declaredAttributesByName == null ) {
-			declaredAttributesByName = new HashMap<>();
+			// NOTE : TreeMap so that we sort based on attribute name
+			declaredAttributesByName = new TreeMap<>();
 		}
 		declaredAttributesByName.put( persistentAttribute.getAttributeName(), persistentAttribute );
 	}

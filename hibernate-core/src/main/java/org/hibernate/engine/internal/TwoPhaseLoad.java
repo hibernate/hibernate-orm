@@ -31,10 +31,12 @@ import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.Type;
+import org.hibernate.type.internal.TypeHelper;
 
 import org.jboss.logging.Logger;
 
@@ -43,7 +45,11 @@ import org.jboss.logging.Logger;
  * that do not use the Loader framework
  *
  * @author Gavin King
+ *
+ * @deprecated to be removed in 6.0 (this was always considered an internal class); two-phase loading is
+ * handled via {@link org.hibernate.sql.results.spi.Initializer} and friends
  */
+@Deprecated
 public final class TwoPhaseLoad {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
@@ -253,13 +259,41 @@ public final class TwoPhaseLoad {
 		}
 		else {
 			//take a snapshot
-			TypeHelper.deepCopy(
-					hydratedState,
-					persister.getPropertyTypes(),
-					persister.getPropertyUpdateability(),
-					//afterQuery setting values to object
-					hydratedState,
-					session
+			persister.visitAttributes(
+					new TypeHelper.FilteredAttributeConsumer() {
+						int i = 0;
+
+						@Override
+						protected boolean shouldAccept(PersistentAttribute attribute) {
+							// "property update-ability"
+							//		- org.hibernate.persister.entity.EntityPersister#getPropertyUpdateability
+							return super.shouldAccept( attribute );
+						}
+
+						@Override
+						protected void acceptAttribute(PersistentAttribute attribute) {
+							hydratedState[i] = attribute.deepCopy( hydratedState[i], session );
+						}
+					}
+			);
+
+			persister.visitAttributes(
+					new TypeHelper.FilteredAttributeConsumer() {
+						private int i = 0;
+
+						@Override
+						protected boolean shouldAccept(PersistentAttribute attribute) {
+							// "property updatebility"
+							//		- org.hibernate.persister.entity.EntityPersister#getPropertyUpdateability
+							return super.shouldAccept( attribute );
+						}
+
+						@Override
+						protected void acceptAttribute(PersistentAttribute attribute) {
+							hydratedState[i] = attribute.deepCopy( hydratedState[i], session );
+							i++;
+						}
+					}
 			);
 			persistenceContext.setEntryStatus( entityEntry, Status.MANAGED );
 		}

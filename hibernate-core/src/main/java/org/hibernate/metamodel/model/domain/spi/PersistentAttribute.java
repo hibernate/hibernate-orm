@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.spi.PropertyAccess;
 
 /**
@@ -38,6 +40,13 @@ public interface PersistentAttribute<O,T> extends Navigable<T>, javax.persistenc
 	}
 
 	PropertyAccess getPropertyAccess();
+
+	boolean includeInOptimisticLocking();
+
+	default Object deepCopy(Object value, SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
 
 	// todo (6.0) : this method should accept the SqlExpressionQualifier/ColumnReferenceSource/TableGroup
 	//		e.g.,

@@ -91,7 +91,7 @@ public abstract class AbstractManagedType<X>
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public Set<Attribute<? super X, ?>> getAttributes() {
-		HashSet attributes = new HashSet<Attribute<X, ?>>( declaredAttributes.values() );
+		HashSet attributes = new HashSet<>( declaredAttributes.values() );
 		if ( getSupertype() != null ) {
 			attributes.addAll( getSupertype().getAttributes() );
 		}

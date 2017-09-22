@@ -963,6 +963,10 @@ public class ProcedureCallImpl<R>
 			return Collections.emptySet();
 		}
 
-		return parameterManager.collectParameterRegistrations().stream().collect( Collectors.toSet() );
+		return parameterManager
+				.collectParameterRegistrations()
+				.stream()
+				.map( parameter -> (Parameter<?>) parameter )
+				.collect( Collectors.toSet() );
 	}
 }

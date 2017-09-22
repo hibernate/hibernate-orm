@@ -223,7 +223,7 @@ public abstract class AbstractManagedType<T> implements ManagedTypeDescriptor<T>
 	public Set<javax.persistence.metamodel.Attribute<T,?>> getDeclaredAttributes() {
 		final HashSet<javax.persistence.metamodel.Attribute> attributes = new HashSet<>();
 		collectDeclaredAttributes( attributes::add );
-		return attributes.stream().collect( Collectors.toSet() );
+		return attributes.stream().map(attribute -> (javax.persistence.metamodel.Attribute<T,?>)attribute ).collect( Collectors.toSet() );
 	}
 
 	@Override

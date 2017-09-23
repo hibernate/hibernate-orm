@@ -273,7 +273,10 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 		if ( getDescriptor().getHierarchy().getVersionDescriptor() != null ) {
 			this.version = nextVersion;
-			getDescriptor().setPropertyValue( entity, getDescriptor().getVersionProperty(), nextVersion );
+			getDescriptor().getHierarchy().getVersionDescriptor()
+					.getPropertyAccess()
+					.getSetter()
+					.set( entity, nextVersion, getDescriptor().getFactory() );
 		}
 
 		if( entity instanceof SelfDirtinessTracker ) {
@@ -317,6 +320,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			return null;
 		}
 		else {
+			getDescriptor().findAttribute( propertyName ).
 			final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
 			return loadedState[propertyIndex];
 		}

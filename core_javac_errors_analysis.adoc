@@ -6,7 +6,136 @@ Failures related to Type and Navigable
 
 
 
+
 ### Attribute-specific
+
+The 2 main issues here are:
+
+	1. Attribute's Type - Type is no longer used for this purpose; need to adjust these to calls of
+		Navigable/PersistentAttribute and the Navigable/PersistentAttribute components (JavaTypeDescriptor,
+		PropertyAccess, etc)
+	2. An attribute's position as the means to access parts of the attribute, rather than the
+		Navigable/PersistentAttribute itself
+
+The first is actually pretty trivial to fix.  The second takes more thought, work and changes.  The main issue
+being accessing the individual parts of a "domain-values" array which is a multi-dimensional array which
+defines the state "between" the domain model and relational model view of the data.  It can be viewed as the
+decomposed state of a Navigable, each index representing a sub-Navigable.  It can also be viewed as the composed
+state of a JDBC-values array.  The concern is how each array element is mapped back to the proper sub-Navigable.
+
+E.g., consider a `Person` entity:
+
+[code]
+----
+@Entity
+class Person {
+	@Id
+	Integer id;
+	@Embedded
+	Name name;
+	@Convert( converter=SexConverter.class )
+	Sex sex;
+	....
+}
+----
+
+
+We'd end up with a domain-values array that looks like:
+
+[code]
+----
+[0] = {
+		[0] = "First-name",
+		[1] = "Last-name"
+	},
+[1] = Sex.MALE,
+...
+----
+
+although the JDBC-values array would have looked like:
+
+[code]
+----
+[0] = 1234, // the id value
+[1] = "First-name",
+[2] = "Last-name"
+[3] = "M",
+...
+----
+
+
+What would be awesome is a way to also keep the Navigable that each value came from, visually:
+
+[code]
+----
+[0] = Value {
+	Navigable = name,
+	value = {
+		[0] = Value {
+			Navigable = firstName,
+			value = "First-name"
+		},
+		[1] = Value {
+			Navigable = lastName,
+			value = "Last-name"
+		}
+	}
+}
+----
+
+although that would likely be inefficient in terms of allocations and memory space.
+
+
+`org.hibernate.sql.results.spi.EntitySqlSelectionMappings` and `CompositeSqlSelectionMappings`
+are intended to describe this transformation, based on the initial design of
+`org.hibernate.sql.results.spi.Initializer`
+
+
+My initial thought for a solution is to define a method like:
+
+[code]
+----
+interface NavigableContainer<J> ... {
+    ...
+    Object[] reduce(J instance, Session session);
+}
+
+// and
+
+interface PersistentAttribute<O,J> ... {
+    Object reduce(O containerInstance, Session session);
+}
+----
+
+
+(as well as their corollaries).  Possibly even a form accepting a "filter" (functional predicate)
+
+E.g.
+
+[code]
+----
+Object[] currentState = entityDescriptor.reduce( entity, session );
+
+EntityDescriptorJ> ... {
+    @Override
+    public Object[] reduce(J instance, Session session) {
+    	// todo (6.0) : ultimately hook in ReflectionOptimizer.AccessOptimizer
+
+    	// otherwise...
+    	List result = new ArrayList();
+    	// todo (6.0) : id, version, etc?
+    	visitAttributes(
+    			attribute -> results.add(
+    					attribute.getPropertyAccess().getGetter().get( instance )
+    			);
+    	);
+    }
+}
+----
+
+
+
+The errors:
 
 [code]
 ----

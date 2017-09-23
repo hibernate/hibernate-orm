@@ -18,6 +18,7 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.internal.BatchFetchQueueHelper;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -344,7 +345,13 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 
 			final int numberOfIds = ArrayHelper.countNonNull( batch );
 			if ( numberOfIds <= 1 ) {
-				return singleKeyLoader.load( id, optionalObject, session );
+				final Object result =  singleKeyLoader.load( id, optionalObject, session );
+				if ( result == null ) {
+					// There was no entity with the specified ID. Make sure the EntityKey does not remain
+					// in the batch to avoid including it in future batches that get executed.
+					BatchFetchQueueHelper.removeBatchLoadableEntityKey( id, persister(), session );
+				}
+				return result;
 			}
 
 			final Serializable[] idsToLoad = new Serializable[numberOfIds];
@@ -356,6 +363,12 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 
 			QueryParameters qp = buildQueryParameters( id, idsToLoad, optionalObject, lockOptions );
 			List results = dynamicLoader.doEntityBatchFetch( session, qp, idsToLoad );
+
+			// The EntityKey for any entity that is not found will remain in the batch.
+			// Explicitly remove the EntityKeys for entities that were not found to
+			// avoid including them in future batches that get executed.
+			BatchFetchQueueHelper.removeNotFoundBatchLoadableEntityKeys( idsToLoad, results, persister(), session );
+
 			return getObjectFromList( results, id, session );
 		}
 	}

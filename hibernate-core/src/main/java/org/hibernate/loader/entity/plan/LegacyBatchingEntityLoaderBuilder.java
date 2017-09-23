@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.engine.internal.BatchFetchQueueHelper;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -106,12 +107,27 @@ public class LegacyBatchingEntityLoaderBuilder extends AbstractBatchingEntityLoa
 							persister(),
 							lockOptions
 					);
+					// The EntityKey for any entity that is not found will remain in the batch.
+					// Explicitly remove the EntityKeys for entities that were not found to
+					// avoid including them in future batches that get executed.
+					BatchFetchQueueHelper.removeNotFoundBatchLoadableEntityKeys(
+							smallBatch,
+							results,
+							persister(),
+							session
+					);
+
 					//EARLY EXIT
 					return getObjectFromList( results, id, session );
 				}
 			}
-			return ( loaders[batchSizes.length-1] ).load( id, optionalObject, session, lockOptions );
+			final Object result = ( loaders[batchSizes.length-1] ).load( id, optionalObject, session, lockOptions );
+			if ( result == null ) {
+				// There was no entity with the specified ID. Make sure the EntityKey does not remain
+				// in the batch to avoid including it in future batches that get executed.
+				BatchFetchQueueHelper.removeBatchLoadableEntityKey( id, persister(), session );
+			}
+			return result;
 		}
 	}
-
 }

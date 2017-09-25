@@ -24,9 +24,9 @@ public class Ejb3DiscriminatorColumn extends Ejb3Column {
 
 	private String discriminatorTypeName;
 
-	public Ejb3DiscriminatorColumn() {
+	public Ejb3DiscriminatorColumn(MetadataBuildingContext buildingContext) {
 		//discriminator default value
-		super();
+		super( buildingContext );
 		setLogicalColumnName( DEFAULT_DISCRIMINATOR_COLUMN_NAME );
 		setNullable( false );
 		setDiscriminatorTypeName( DEFAULT_DISCRIMINATOR_TYPE );
@@ -45,8 +45,7 @@ public class Ejb3DiscriminatorColumn extends Ejb3Column {
 			DiscriminatorType type, DiscriminatorColumn discAnn,
 			DiscriminatorFormula discFormulaAnn,
 			MetadataBuildingContext context) {
-		Ejb3DiscriminatorColumn discriminatorColumn = new Ejb3DiscriminatorColumn();
-		discriminatorColumn.setBuildingContext( context );
+		Ejb3DiscriminatorColumn discriminatorColumn = new Ejb3DiscriminatorColumn( context );
 		discriminatorColumn.setImplicit( true );
 		if ( discFormulaAnn != null ) {
 			discriminatorColumn.setImplicit( false );

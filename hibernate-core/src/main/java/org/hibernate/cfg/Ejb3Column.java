@@ -139,10 +139,6 @@ public class Ejb3Column {
 		return context;
 	}
 
-	public void setBuildingContext(MetadataBuildingContext context) {
-		this.context = context;
-	}
-
 	public void setImplicit(boolean implicit) {
 		isImplicit = implicit;
 	}
@@ -195,7 +191,8 @@ public class Ejb3Column {
 		this.defaultValue = defaultValue;
 	}
 
-	public Ejb3Column() {
+	public Ejb3Column(MetadataBuildingContext buildingContext) {
+		this.context = buildingContext;
 	}
 
 	public void bind() {
@@ -460,10 +457,9 @@ public class Ejb3Column {
 			MetadataBuildingContext context) {
 		Ejb3Column[] columns;
 		if ( formulaAnn != null ) {
-			Ejb3Column formulaColumn = new Ejb3Column();
+			Ejb3Column formulaColumn = new Ejb3Column( context );
 			formulaColumn.setFormula( formulaAnn.value() );
 			formulaColumn.setImplicit( false );
-			formulaColumn.setBuildingContext( context );
 			formulaColumn.setPropertyHolder( propertyHolder );
 			formulaColumn.bind();
 			columns = new Ejb3Column[] { formulaColumn };
@@ -534,7 +530,7 @@ public class Ejb3Column {
 						columnName = buildLogicalName( database, col.name() );
 					}
 
-					Ejb3Column column = new Ejb3Column();
+					Ejb3Column column = new Ejb3Column( context );
 
 					if ( length == 1 ) {
 						applyColumnDefault( column, inferredData );
@@ -564,7 +560,6 @@ public class Ejb3Column {
 					column.setExplicitTableName( tableName );
 					column.setPropertyHolder( propertyHolder );
 					column.setJoins( secondaryTables );
-					column.setBuildingContext( context );
 					column.extractDataFromPropertyData(inferredData);
 					column.bind();
 					columns[index] = column;
@@ -693,7 +688,7 @@ public class Ejb3Column {
 			PropertyHolder propertyHolder,
 			Nullability nullability,
 			MetadataBuildingContext context) {
-		Ejb3Column column = new Ejb3Column();
+		Ejb3Column column = new Ejb3Column( context );
 		Ejb3Column[] columns = new Ejb3Column[1];
 		columns[0] = column;
 
@@ -709,7 +704,6 @@ public class Ejb3Column {
 		);
 		column.setPropertyHolder( propertyHolder );
 		column.setJoins( secondaryTables );
-		column.setBuildingContext( context );
 
 		// property name + suffix is an "explicit" column name
 		if ( !StringHelper.isEmpty( suffixForDefaultColumnName ) ) {

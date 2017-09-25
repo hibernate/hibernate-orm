@@ -263,14 +263,13 @@ public class MapBinder extends CollectionBinder {
 					Ejb3Column[] elementColumns = mapKeyColumns;
 					if ( elementColumns == null || elementColumns.length == 0 ) {
 						elementColumns = new Ejb3Column[1];
-						Ejb3Column column = new Ejb3Column();
+						Ejb3Column column = new Ejb3Column( buildingContext );
 						column.setImplicit( false );
 						column.setNullable( true );
 						column.setLength( Size.Builder.DEFAULT_LENGTH );
 						column.setLogicalColumnName( Collection.DEFAULT_KEY_COLUMN_NAME );
 						//TODO create an EMPTY_JOINS collection
 						column.setJoins( new HashMap<>() );
-						column.setBuildingContext( buildingContext );
 						column.bind();
 						elementColumns[0] = column;
 					}

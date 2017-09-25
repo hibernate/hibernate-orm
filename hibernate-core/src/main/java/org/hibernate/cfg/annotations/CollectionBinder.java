@@ -1516,7 +1516,7 @@ public abstract class CollectionBinder {
 				elementBinder.setReturnedClassName( collType.getName() );
 				if ( elementColumns == null || elementColumns.length == 0 ) {
 					elementColumns = new Ejb3Column[1];
-					Ejb3Column column = new Ejb3Column();
+					Ejb3Column column = new Ejb3Column( buildingContext );
 					column.setImplicit( false );
 					//not following the spec but more clean
 					column.setNullable( true );
@@ -1524,7 +1524,6 @@ public abstract class CollectionBinder {
 					column.setLogicalColumnName( Identifier.toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME ) );
 					//TODO create an EMPTY_JOINS collection
 					column.setJoins( new HashMap<>() );
-					column.setBuildingContext( buildingContext );
 					column.bind();
 					elementColumns[0] = column;
 				}

@@ -88,7 +88,8 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	}
 
 	//Due to @AnnotationOverride overriding rules, I don't want the constructor to be public
-	private Ejb3JoinColumn() {
+	private Ejb3JoinColumn(MetadataBuildingContext buildingContext) {
+		super( buildingContext );
 		setMappedBy( BinderHelper.ANNOTATION_STRING_DEFAULT );
 	}
 
@@ -109,7 +110,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			String mappedBy,
 			boolean isImplicit,
 			MetadataBuildingContext buildingContext) {
-		super();
+		super( buildingContext );
 		setImplicit( isImplicit );
 		setSqlType( sqlType );
 		setLogicalColumnName( name );
@@ -120,7 +121,6 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		setExplicitTableName( secondaryTable );
 		setPropertyHolder( propertyHolder );
 		setJoins( joins );
-		setBuildingContext( buildingContext );
 		setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
 		bind();
 		this.referencedColumn = referencedColumn;
@@ -167,10 +167,9 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			PropertyHolder propertyHolder,
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
-		Ejb3JoinColumn formulaColumn = new Ejb3JoinColumn();
+		Ejb3JoinColumn formulaColumn = new Ejb3JoinColumn( buildingContext );
 		formulaColumn.setFormula( ann.value() );
 		formulaColumn.setReferencedColumn(ann.referencedColumnName());
-		formulaColumn.setBuildingContext( buildingContext );
 		formulaColumn.setPropertyHolder( propertyHolder );
 		formulaColumn.setJoins( joins );
 		formulaColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
@@ -250,8 +249,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 								+ BinderHelper.getRelativePath( propertyHolder, propertyName )
 				);
 			}
-			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn();
-			joinColumn.setBuildingContext( buildingContext );
+			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn( buildingContext );
 			joinColumn.setJoinAnnotation( ann, null );
 			if ( StringHelper.isEmpty( joinColumn.getLogicalColumnName().getText() )
 				&& ! StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
@@ -265,7 +263,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			return joinColumn;
 		}
 		else {
-			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn();
+			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn( buildingContext );
 			joinColumn.setMappedBy( mappedBy );
 			joinColumn.setJoins( joins );
 			joinColumn.setPropertyHolder( propertyHolder );
@@ -280,7 +278,6 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			else {
 				joinColumn.setImplicit( true );
 			}
-			joinColumn.setBuildingContext( buildingContext );
 			joinColumn.bind();
 			return joinColumn;
 		}
@@ -858,12 +855,11 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			MetadataBuildingContext buildingContext) {
 		Ejb3JoinColumn[] joinColumns;
 		if ( annJoins == null ) {
-			Ejb3JoinColumn currentJoinColumn = new Ejb3JoinColumn();
+			Ejb3JoinColumn currentJoinColumn = new Ejb3JoinColumn( buildingContext );
 			currentJoinColumn.setImplicit( true );
 			currentJoinColumn.setNullable( false ); //I break the spec, but it's for good
 			currentJoinColumn.setPropertyHolder( propertyHolder );
 			currentJoinColumn.setJoins( secondaryTables );
-			currentJoinColumn.setBuildingContext( buildingContext );
 			currentJoinColumn.setPropertyName(
 					BinderHelper.getRelativePath( propertyHolder, propertyName )
 			);
@@ -881,11 +877,10 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			int length = annJoins.length;
 			for (int index = 0; index < length; index++) {
 				annJoin = annJoins[index];
-				Ejb3JoinColumn currentJoinColumn = new Ejb3JoinColumn();
+				Ejb3JoinColumn currentJoinColumn = new Ejb3JoinColumn( buildingContext );
 				currentJoinColumn.setImplicit( true );
 				currentJoinColumn.setPropertyHolder( propertyHolder );
 				currentJoinColumn.setJoins( secondaryTables );
-				currentJoinColumn.setBuildingContext( buildingContext );
 				currentJoinColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
 				currentJoinColumn.setMappedBy( mappedBy );
 				currentJoinColumn.setJoinAnnotation( annJoin, propertyName );

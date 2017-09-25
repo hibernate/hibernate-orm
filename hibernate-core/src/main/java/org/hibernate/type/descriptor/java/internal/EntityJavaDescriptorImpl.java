@@ -43,12 +43,12 @@ public class EntityJavaDescriptorImpl<J>
 
 	@Override
 	public String getEntityName() {
-		return getTypeConfiguration().findEntityDescriptor( entityName ).getEntityName();
+		return entityName;
 	}
 
 	@Override
 	public String getJpaEntityName() {
-		return getTypeConfiguration().findEntityDescriptor( entityName ).getJpaEntityName();
+		return entityName;
 	}
 
 	@Override

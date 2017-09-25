@@ -227,7 +227,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		final PhysicalColumn column = new PhysicalColumn(
 				runtimeTable,
 				physicalName,
-				sqlTypeDescriptor,
+				getSqlTypeDescriptor(),
 				getDefaultValue(),
 				getSqlType(),
 				isNullable(),

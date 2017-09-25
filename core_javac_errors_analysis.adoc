@@ -504,12 +504,6 @@ A collection?  etc
 		                ^
   symbol:   method getForeignKeyDirection()
   location: variable attribute of type PersistentAttribute
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/ForeignGenerator.java:90: error: cannot find symbol
-		final EntityType foreignValueSourceType;
-		      ^
-  symbol:   class EntityType
-  location: class ForeignGenerator
 ----
 
 
@@ -630,59 +624,17 @@ internally) as well?
 
 [code]
 ----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/action/internal/EntityUpdateAction.java:167: error: cannot find symbol
-			TypeHelper.deepCopy(
-			^
-  symbol:   variable TypeHelper
-  location: class EntityUpdateAction
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/TwoPhaseLoad.java:256: error: cannot find symbol
-			TypeHelper.deepCopy(
-			^
-  symbol:   variable TypeHelper
-  location: class TwoPhaseLoad
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/spi/entry/StructuredCacheEntry.java:52: error: cannot find symbol
-				TypeHelper.toLoggableString( state, subclassPersister.getPropertyTypes(), factory ),
-				^
-  symbol:   variable TypeHelper
-  location: class StructuredCacheEntry
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/spi/entry/StandardCacheEntryImpl.java:53: error: cannot find symbol
 		this.disassembledState = TypeHelper.disassemble(
 		                         ^
   symbol:   variable TypeHelper
   location: class StandardCacheEntryImpl
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/spi/entry/StandardCacheEntryImpl.java:60: error: cannot find symbol
-		this.disassembledStateText = TypeHelper.toLoggableString(
-		                             ^
-  symbol:   variable TypeHelper
-  location: class StandardCacheEntryImpl
+
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/spi/entry/StandardCacheEntryImpl.java:141: error: cannot find symbol
 		final Object[] assembledProps = TypeHelper.assemble(
 		                                ^
   symbol:   variable TypeHelper
   location: class StandardCacheEntryImpl
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/results/internal/JdbcValuesSourceProcessingStateStandardImpl.java:346: error: cannot find symbol
-			TypeHelper.deepCopy(
-			^
-  symbol:   variable TypeHelper
-  location: class JdbcValuesSourceProcessingStateStandardImpl
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/AbstractReassociateEventListener.java:64: error: cannot find symbol
-		TypeHelper.deepCopy(
-		^
-  symbol:   variable TypeHelper
-  location: class AbstractReassociateEventListener
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/AbstractSaveEventListener.java:289: error: cannot find symbol
-		TypeHelper.deepCopy(
-		^
-  symbol:   variable TypeHelper
-  location: class AbstractSaveEventListener
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultDeleteEventListener.java:338: error: cannot find symbol
-		TypeHelper.deepCopy( currentState, propTypes, copyability, deletedState, session );
-		^
-  symbol:   variable TypeHelper
-  location: class DefaultDeleteEventListener
 
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultMergeEventListener.java:404: error: cannot find symbol
 		final Object[] copiedValues = TypeHelper.replace(

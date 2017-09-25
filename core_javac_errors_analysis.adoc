@@ -135,63 +135,6 @@ EntityDescriptorJ> ... {
 
 
 
-The errors:
-
-[code]
-----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:906: error: cannot find symbol
-					.getGetter( embeddableType.getHibernateType().getPropertyIndex( attributeName ) );
-					                          ^
-  symbol:   method getHibernateType()
-  location: variable embeddableType of type EmbeddableTypeImpl
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:904: error: cannot find symbol
-			final Getter getter = embeddableType.getHibernateType()
-			                                    ^
-  symbol:   method getHibernateType()
-  location: variable embeddableType of type EmbeddableTypeImpl
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:908: error: cannot find symbol
-					? new MapMember( attributeName, attributeContext.getPropertyMapping().getType().getReturnedClass() )
-					                                                                     ^
-  symbol:   method getType()
-  location: class Property
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:965: error: cannot find symbol
-				final Integer index = entityDescriptor.getPropertyIndexOrNull( propertyName );
-				                                      ^
-  symbol:   method getPropertyIndexOrNull(String)
-  location: variable entityDescriptor of type EntityDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:971: error: cannot find symbol
-					final Getter getter = entityDescriptor.getTuplizer().getGetter( index );
-					                                      ^
-  symbol:   method getTuplizer()
-  location: variable entityDescriptor of type EntityDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:973: error: cannot find symbol
-							? new MapMember( propertyName, property.getType().getReturnedClass() )
-							                                       ^
-  symbol:   method getType()
-  location: variable property of type Property
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:987: error: cannot find symbol
-			final EntityMetamodel entityMetamodel = getDeclarerEntityDescriptor( identifiableType );
-			      ^
-  symbol: class EntityMetamodel
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:1016: error: cannot find symbol
-			if ( !versionPropertyName.equals( entityDescriptor.getVersionProperty().getName() ) ) {
-			                                                  ^
-  symbol:   method getVersionProperty()
-  location: variable entityDescriptor of type EntityDescriptor
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:1021: error: variable getter is already defined in method resolveMember(AttributeContext)
-			final Getter getter = entityDescriptor.getTuplizer().getVersionGetter();
-			             ^
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/internal/AttributeFactory.java:1021: error: cannot find symbol
-			final Getter getter = entityDescriptor.getTuplizer().getVersionGetter();
-			                                      ^
-  symbol:   method getTuplizer()
-  location: variable entityDescriptor of type EntityDescriptor
-
-
-----
-
-
-
 
 ### Entity metadata
 
@@ -854,12 +797,6 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 
 [code]
 ----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/UnsavedValueFactory.java:93: error: cannot find symbol
-						.fromString( unsavedValue ) );
-						^
-  symbol:   method fromString(String)
-  location: interface JavaTypeDescriptor
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/UnsavedValueFactory.java:93: error: cannot find symbol
 						.fromString( unsavedValue ) );
 						^

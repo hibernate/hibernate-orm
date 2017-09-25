@@ -344,7 +344,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		// check to see if the natural id is mutable/immutable
 		if ( !naturalIdDescriptor.isMutable() ) {
 			// an immutable natural-id is not retrieved during a normal database-snapshot operation...
-			final Object[] dbValue = persister.getNaturalIdentifierSnapshot( id, session );
+			final Object[] dbValue = persister.getHierarchy().getNaturalIdDescriptor().resolveSnapshot( id, session );
 			naturalIdHelper.cacheNaturalIdCrossReferenceFromLoad(
 					persister,
 					id,
@@ -1898,10 +1898,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			persister = locateProperPersister( persister );
 			final Object[] naturalIdValues = getNaturalIdValues( state, persister );
 
-			final Object[] localNaturalIdValues = naturalIdXrefDelegate.removeNaturalIdCrossReference( 
-					persister, 
-					id, 
-					naturalIdValues 
+			final Object[] localNaturalIdValues = naturalIdXrefDelegate.removeNaturalIdCrossReference(
+					persister,
+					id,
+					naturalIdValues
 			);
 
 			return localNaturalIdValues != null ? localNaturalIdValues : naturalIdValues;

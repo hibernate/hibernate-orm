@@ -45,7 +45,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 		try {
 			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure( StandardBasicTypes.LONG.getJavaTypeDescriptor(), props, serviceRegistry );
 
 			generator.registerExportables(
 					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
@@ -81,7 +81,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 		try {
 			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure( StandardBasicTypes.LONG.getJavaTypeDescriptor(), props, serviceRegistry );
 
 			generator.registerExportables(
 					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
@@ -113,7 +113,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure( StandardBasicTypes.LONG.getJavaTypeDescriptor(), props, serviceRegistry );
 
 			generator.registerExportables(
 					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
@@ -137,7 +137,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure( StandardBasicTypes.LONG.getJavaTypeDescriptor(), props, serviceRegistry );
 			generator.registerExportables(
 					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
 			);
@@ -167,7 +167,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure( StandardBasicTypes.LONG.getJavaTypeDescriptor(), props, serviceRegistry );
 			generator.registerExportables(
 					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
 			);
@@ -195,7 +195,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			props.setProperty( SequenceStyleGenerator.FORCE_TBL_PARAM, "true" );
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure( StandardBasicTypes.LONG.getJavaTypeDescriptor(), props, serviceRegistry );
 			generator.registerExportables(
 					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
 			);
@@ -224,7 +224,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.NONE.getExternalName() );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure( StandardBasicTypes.LONG.getJavaTypeDescriptor(), props, serviceRegistry );
 			generator.registerExportables(
 					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
 			);
@@ -239,7 +239,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.HILO.getExternalName() );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure( StandardBasicTypes.LONG.getJavaTypeDescriptor(), props, serviceRegistry );
 			generator.registerExportables(
 					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
 			);
@@ -253,7 +253,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.POOLED.getExternalName() );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure( StandardBasicTypes.LONG.getJavaTypeDescriptor(), props, serviceRegistry );
 			generator.registerExportables(
 					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
 			);
@@ -279,7 +279,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure( StandardBasicTypes.LONG.getJavaTypeDescriptor(), props, serviceRegistry );
 			generator.registerExportables(
 					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
 			);
@@ -288,7 +288,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 
 			props.setProperty( Environment.PREFER_POOLED_VALUES_LO, "true" );
 			generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure( StandardBasicTypes.LONG.getJavaTypeDescriptor(), props, serviceRegistry );
 			generator.registerExportables(
 					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
 			);
@@ -297,7 +297,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 
 			props.setProperty( Environment.PREFERRED_POOLED_OPTIMIZER, StandardOptimizerDescriptor.POOLED_LOTL.getExternalName() );
 			generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure( StandardBasicTypes.LONG.getJavaTypeDescriptor(), props, serviceRegistry );
 			generator.registerExportables(
 					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
 			);

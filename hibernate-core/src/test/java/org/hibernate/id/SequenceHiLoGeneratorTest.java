@@ -66,7 +66,7 @@ public class SequenceHiLoGeneratorTest extends BaseUnitTestCase {
 		);
 
 		generator = new SequenceHiLoGenerator();
-		generator.configure( StandardBasicTypes.LONG, properties, serviceRegistry );
+		generator.configure( StandardBasicTypes.LONG.getJavaTypeDescriptor(), properties, serviceRegistry );
 
 		Metadata metadata = new MetadataSources( serviceRegistry ).buildMetadata();
 		generator.registerExportables( metadata.getDatabase() );

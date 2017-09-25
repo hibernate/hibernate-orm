@@ -74,7 +74,7 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 					}
 				}
 		);
-		generator.configure( StandardBasicTypes.LONG, properties, serviceRegistry );
+		generator.configure( StandardBasicTypes.LONG.getJavaTypeDescriptor(), properties, serviceRegistry );
 
 		final Metadata metadata = new MetadataSources( serviceRegistry ).buildMetadata();
 		generator.registerExportables( metadata.getDatabase() );

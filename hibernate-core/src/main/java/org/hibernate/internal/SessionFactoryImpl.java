@@ -424,18 +424,18 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return new JdbcConnectionAccess() {
 			@Override
 			public Connection obtainConnection() throws SQLException {
-				return settings.getMultiTenancyStrategy() == MultiTenancyStrategy.NONE
-						? serviceRegistry.getService( ConnectionProvider.class ).getConnection()
-						: serviceRegistry.getService( MultiTenantConnectionProvider.class ).getAnyConnection();
+				return settings.getMultiTenancyStrategy().requiresMultiTenantConnectionProvider()
+						? serviceRegistry.getService(MultiTenantConnectionProvider.class).getAnyConnection()
+						: serviceRegistry.getService(ConnectionProvider.class).getConnection();
 			}
 
 			@Override
 			public void releaseConnection(Connection connection) throws SQLException {
-				if ( settings.getMultiTenancyStrategy() == MultiTenancyStrategy.NONE ) {
-					serviceRegistry.getService( ConnectionProvider.class ).closeConnection( connection );
+				if ( settings.getMultiTenancyStrategy().requiresMultiTenantConnectionProvider() ) {
+					serviceRegistry.getService( MultiTenantConnectionProvider.class ).releaseAnyConnection( connection );
 				}
 				else {
-					serviceRegistry.getService( MultiTenantConnectionProvider.class ).releaseAnyConnection( connection );
+					serviceRegistry.getService( ConnectionProvider.class ).closeConnection( connection );
 				}
 			}
 

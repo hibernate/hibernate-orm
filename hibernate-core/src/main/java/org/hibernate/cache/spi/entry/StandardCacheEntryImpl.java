@@ -20,6 +20,7 @@ import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.internal.TypeHelper;
 
 /**
  * Standard representation of entity cached data using the "disassembled state".
@@ -57,11 +58,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 				session,
 				owner
 		);
-		this.disassembledStateText = TypeHelper.toLoggableString(
-				state,
-				persister.getPropertyTypes(),
-				session.getFactory()
-		);
+		this.disassembledStateText = TypeHelper.toLoggableString( state, persister );
 		this.subclass = persister.getEntityName();
 		this.version = version;
 	}
@@ -72,8 +69,6 @@ public class StandardCacheEntryImpl implements CacheEntry {
 		this.subclass = subclass;
 		this.version = version;
 	}
-
-
 
 	@Override
 	public boolean isReferenceEntry() {

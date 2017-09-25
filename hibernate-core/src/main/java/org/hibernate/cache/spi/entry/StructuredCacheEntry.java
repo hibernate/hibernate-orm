@@ -12,7 +12,6 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.internal.TypeHelper;
 
 /**

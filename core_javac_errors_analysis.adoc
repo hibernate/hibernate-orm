@@ -201,24 +201,6 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
 
 [code]
 ----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/spi/ResolveNaturalIdEvent.java:57: error: cannot find symbol
-		if ( entityPersister.getNaturalIdentifierProperties().length != naturalIdValues.size() ) {
-		                    ^
-  symbol:   method getNaturalIdentifierProperties()
-  location: variable entityPersister of type EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/spi/ResolveNaturalIdEvent.java:62: error: cannot find symbol
-						entityPersister.getNaturalIdentifierProperties().length,
-						               ^
-  symbol:   method getNaturalIdentifierProperties()
-  location: variable entityPersister of type EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/spi/ResolveNaturalIdEvent.java:79: error: cannot find symbol
-		int[] naturalIdPropertyPositions = entityPersister.getNaturalIdentifierProperties();
-		                                                  ^
-  symbol:   method getNaturalIdentifierProperties()
-  location: variable entityPersister of type EntityDescriptor
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/AbstractEntityEntry.java:276: error: cannot find symbol
 			getDescriptor().setPropertyValue( entity, getDescriptor().getVersionProperty(), nextVersion );
 			                                                         ^
@@ -755,13 +737,6 @@ E.g., something like `EntityIdentifierDescriptor#getSnapshot`
 
 [code]
 ----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:347: error: cannot find symbol
-			final Object[] dbValue = persister.getNaturalIdentifierSnapshot( id, session );
-			                                  ^
-  symbol:   method getNaturalIdentifierSnapshot(Serializable,SharedSessionContractImplementor)
-  location: variable persister of type EntityDescriptor
-
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/AbstractEntityEntry.java:378: error: cannot find symbol
 		persister.setPropertyValue( entity, getDescriptor().getVersionProperty(), nextVersion );
 		                                                   ^

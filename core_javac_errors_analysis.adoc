@@ -896,10 +896,6 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
   symbol:   class NativeSQLQueryCollectionReturn
   location: class ResultSetMappingBinder
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/BasicValueBinder.java:145: error: cannot find symbol
-		this.timeStampVersionType = versionType;
-		    ^
-  symbol: variable timeStampVersionType
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:157: error: cannot find symbol
 			NativeSQLQueryRootReturn result = new NativeSQLQueryRootReturn(
 			^

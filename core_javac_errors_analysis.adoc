@@ -866,13 +866,6 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
   symbol:   method fromString(String)
   location: interface JavaTypeDescriptor
 
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/FilterConfiguration.java:81: error: cannot find symbol
-						Joinable.class.cast( factory.getEntityPersister( entry.getValue() ) ).getTableName()
-						^
-  symbol:   class Joinable
-  location: class FilterConfiguration
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/SessionFactoryImpl.java:820: error: cannot find symbol
 				.setQueryReturns( nativeSqlQuery.getQueryReturns() );
 				                                ^

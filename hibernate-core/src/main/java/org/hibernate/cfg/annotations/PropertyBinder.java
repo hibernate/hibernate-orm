@@ -190,7 +190,6 @@ public class PropertyBinder {
 				holder.resolveAttributeConverterDescriptor( property )
 		);
 		basicValueBinder.setReferencedEntityName( referencedEntityName );
-		basicValueBinder.setAccessType( accessType );
 		SimpleValue propertyValue = basicValueBinder.make();
 		setValue( propertyValue );
 		return makeProperty();

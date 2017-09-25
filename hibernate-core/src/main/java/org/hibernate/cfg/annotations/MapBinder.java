@@ -287,7 +287,6 @@ public class MapBinder extends CollectionBinder {
 							holder.mapKeyAttributeConverterDescriptor( property, keyXClass )
 					);
 					elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
-					elementBinder.setAccessType( accessType );
 					mapValue.setIndex( elementBinder.make() );
 				}
 			}

@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Lob;
@@ -20,6 +21,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.Version;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.Parameter;
@@ -30,7 +32,6 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.BasicTypeResolverConvertibleSupport;
 import org.hibernate.cfg.BasicTypeResolverSupport;
 import org.hibernate.cfg.Ejb3Column;
@@ -74,14 +75,6 @@ public class BasicValueBinder<T> {
 	private final MetadataBuildingContext buildingContext;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Property info
-	//		todo (6.0) : ? why is this stuff here?  it is irrelevant for building a SimpleValue
-
-	private XProperty xproperty;
-	private AccessType accessType;
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// BasicType info
 
 	private BasicJavaDescriptor<T> javaDescriptor;
@@ -94,17 +87,14 @@ public class BasicValueBinder<T> {
 	private BasicTypeResolver basicTypeResolver;
 	private BasicValue basicValue;
 
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// mapping (database) data
 
 	private Table table;
 	private Ejb3Column[] columns;
 
-
 	// todo (6.0) : investigate what this is used for.  it may not be needed
 	private String referencedEntityName;
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// pretty sure none of these are needed any longer
@@ -131,7 +121,8 @@ public class BasicValueBinder<T> {
 
 	public void setTimestampVersionType(String versionType) {
 		// todo (6.0) : change this to instead pass any indicated org.hibernate.tuple.ValueGenerator
-		this.timeStampVersionType = versionType;
+		// this.timeStampVersionType = versionType;
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	public void setPropertyName(String propertyName) {
@@ -193,7 +184,6 @@ public class BasicValueBinder<T> {
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( navigableJavaType );
 
-		this.xproperty = navigableXProperty;
 		Properties typeParameters = this.typeParameters;
 		typeParameters.clear();
 
@@ -245,7 +235,7 @@ public class BasicValueBinder<T> {
 					if ( isMap ) {
 						basicTypeResolver = new BasicTypeResolverMapKeyImpl(
 								buildingContext,
-								converterDescriptor,
+								this.converterDescriptor,
 								navigableXProperty,
 								isLob,
 								isNationalized
@@ -259,7 +249,7 @@ public class BasicValueBinder<T> {
 				case COLLECTION_ELEMENT: {
 					basicTypeResolver = new BasicTypeResolverCollectionElementImpl(
 							buildingContext,
-							converterDescriptor,
+							this.converterDescriptor,
 							navigableXProperty,
 							isLob,
 							isNationalized
@@ -270,7 +260,7 @@ public class BasicValueBinder<T> {
 					assert kind == Kind.ATTRIBUTE;
 					basicTypeResolver = new BasicTypeResolverAttributeImpl(
 							buildingContext,
-							converterDescriptor,
+							this.converterDescriptor,
 							navigableXProperty,
 							isLob,
 							isNationalized
@@ -508,23 +498,6 @@ public class BasicValueBinder<T> {
 //		}
 
 	}
-
-	public AccessType getAccessType() {
-		return accessType;
-	}
-
-	public void setAccessType(AccessType accessType) {
-		this.accessType = accessType;
-	}
-
-	private static class BasicTypeResolverImpl implements BasicTypeResolver{
-
-		@Override
-		public <T> BasicType<T> resolveBasicType() {
-			return null;
-		}
-	}
-
 
 	private static class BasicTypeResolverExplicitImpl implements BasicTypeResolver {
 		// todo (6.0) : ? shouldn't this be convertible as well?

@@ -70,7 +70,7 @@ public class FilterConfiguration {
 	}
 
 	private Map<String, String> mergeAliasMaps(SessionFactoryImplementor factory) {
-		Map<String, String> ret = new HashMap<String, String>();
+		Map<String, String> ret = new HashMap<>();
 		if ( aliasTableMap != null ) {
 			ret.putAll( aliasTableMap );
 		}
@@ -78,7 +78,10 @@ public class FilterConfiguration {
 			for ( Map.Entry<String, String> entry : aliasEntityMap.entrySet() ) {
 				ret.put(
 						entry.getKey(),
-						Joinable.class.cast( factory.getEntityPersister( entry.getValue() ) ).getTableName()
+						factory.getTypeConfiguration()
+								.resolveEntityDescriptor( entry.getValue() )
+								.getPrimaryTable()
+								.getTableExpression()
 				);
 			}
 		}

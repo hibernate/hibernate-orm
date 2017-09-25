@@ -36,20 +36,13 @@ import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.ReturningWork;
-import org.hibernate.metamodel.model.domain.internal.BasicSingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
-import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeAggregated;
-import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
-import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.InheritanceStrategy;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
-import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.property.access.spi.Getter;
@@ -485,7 +478,6 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final EntityDescriptor rootAuditedEntityDescriptor = auditedEntityDescriptor.getHierarchy().getRootEntityType();
 
 		final AuditServiceOptions options = auditService.getOptions();
-		int index = 1;
 
 		// The expected output from this method is an UPDATE statement that follows:
 		// UPDATE audit_ent
@@ -608,7 +600,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		//		identifier use case.  We need to determine how we're to deal with aggregate and non-aggregate
 		//		based identifier use cases.
 		updateContext.addPrimaryKeyColumns( getEntityDescriptorPrimaryKeyColumnNames( entityDescriptor ) );
-		updateContext.bind( id, (AllowableParameterType) entityDescriptor.getHierarchy().getIdentifierDescriptor() );
+		updateContext.bind( id, entityDescriptor.getHierarchy().getIdentifierDescriptor() );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// AND REV <> ? (REV is on the auditedEntityDescriptor)
@@ -682,11 +674,9 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	 */
 	private class UpdateContext extends Update {
 		private final List<QueryParameterBinding> bindings = new ArrayList<>();
-		private final SessionFactoryImplementor sessionFactory;
 
 		public UpdateContext(SessionFactoryImplementor sessionFactory) {
 			super( sessionFactory.getJdbcServices().getDialect() );
-			this.sessionFactory = sessionFactory;
 		}
 
 		/**
@@ -731,59 +721,8 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		 * @throws SQLException Thrown if a SQL exception occured.
 		 */
 		public int bind(int index, PreparedStatement ps, WrapperOptions options) throws SQLException {
-			this.type.getValueBinder().bind( ps, value, index, options );
-			return 1;
-		}
-	}
-
-	private class IdentifierStrategy implements NavigableVisitationStrategy {
-
-		private final PreparedStatement ps;
-		private final WrapperOptions options;
-		private final Object value;
-		private int index;
-		private final UpdateContext context;
-
-		IdentifierStrategy(PreparedStatement ps, WrapperOptions options, Object value, UpdateContext context) {
-			this.ps = ps;
-			this.options = options;
-			this.value = value;
-			this.context = context;
-		}
-
-		@Override
-		public void visitSimpleIdentifier(EntityIdentifierSimple identifier) {
-			// delegate to #visitSingularAttributeBasic?
-			identifier.visitNavigable( this );
-		}
-
-		@Override
-		public void visitAggregateCompositeIdentifier(EntityIdentifierCompositeAggregated identifier) {
-			// delegates to #visitsingularAttributeEmbedded?
-			identifier.visitNavigable( this );
-		}
-
-		@Override
-		public void visitNonAggregateCompositeIdentifier(EntityIdentifierCompositeNonAggregated identifier) {
-			// visit each of the composite identifier navigables
-			identifier.visitNavigables( this );
-		}
-
-		@Override
-		public void visitSingularAttributeBasic(BasicSingularPersistentAttribute attribute) {
-
-		}
-
-		@Override
-		public void visitSingularAttributeEmbedded(SingularPersistentAttributeEmbedded attribute) {
-			// delegate to the embedded-id attributes
-			attribute.visitNavigables( this );
-		}
-
-		@Override
-		public void visitSingularAttributeEntity(SingularPersistentAttributeEntity attribute) {
-			// delegate to the to-one association's identifier
-			attribute.getEntityDescriptor().getIdentifierDescriptor().visitNavigable( this );
+			type.getValueBinder().bind( ps, value, index, options );
+			return type.getNumberOfJdbcParametersToBind();
 		}
 	}
 }

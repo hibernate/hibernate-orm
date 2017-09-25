@@ -289,30 +289,6 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
   symbol:   method hasLazyProperties()
   location: interface EntityDescriptor
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/ForeignGenerator.java:92: error: cannot find symbol
-		if ( propertyType.getgetClassification().equals( Type.Classification.ENTITY ) ) {
-		                 ^
-  symbol:   method getgetClassification()
-  location: variable propertyType of type Type
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/ForeignGenerator.java:94: error: cannot find symbol
-			foreignValueSourceType = (EntityType) propertyType;
-			                          ^
-  symbol:   class EntityType
-  location: class ForeignGenerator
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/ForeignGenerator.java:98: error: cannot find symbol
-			foreignValueSourceType = (EntityType) persister.getPropertyType( PropertyPath.IDENTIFIER_MAPPER_PROPERTY + "." + propertyName );
-			                          ^
-  symbol:   class EntityType
-  location: class ForeignGenerator
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/ForeignGenerator.java:98: error: cannot find symbol
-			foreignValueSourceType = (EntityType) persister.getPropertyType( PropertyPath.IDENTIFIER_MAPPER_PROPERTY + "." + propertyName );
-			                                                                 ^
-  symbol:   variable PropertyPath
-  location: class ForeignGenerator
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/SelectGenerator.java:71: error: cannot find symbol
 		if ( persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
 		              ^

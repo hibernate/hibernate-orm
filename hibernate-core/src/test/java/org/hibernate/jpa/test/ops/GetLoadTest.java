@@ -8,12 +8,15 @@ package org.hibernate.jpa.test.ops;
 
 import java.util.Map;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -172,6 +175,108 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 
 		em.getTransaction().commit();
 		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12034")
+	@FailureExpected( jiraKey = "HHH-12034" )
+	public void testLoadIdNotFound_FieldBasedAccess() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Session s = ( Session ) em.getDelegate();
+
+		assertNull( s.get( Workload.class, 999 ) );
+
+		Workload proxy = s.load( Workload.class, 999 );
+		assertFalse( Hibernate.isInitialized( proxy ) );
+
+		try {
+			proxy.getId();
+			fail( "Should have failed because there is no Workload Entity with id == 999" );
+		}
+		catch (EntityNotFoundException ex) {
+			// expected
+			em.getTransaction().rollback();
+		}
+		finally {
+			em.close();
+		}
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12034")
+	@FailureExpected( jiraKey = "HHH-12034" )
+	public void testReferenceIdNotFound_FieldBasedAccess() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		assertNull( em.find( Workload.class, 999 ) );
+
+		Workload proxy = em.getReference( Workload.class, 999 );
+		assertFalse( Hibernate.isInitialized( proxy ) );
+
+		try {
+			proxy.getId();
+			fail( "Should have failed because there is no Workload Entity with id == 999" );
+		}
+		catch (EntityNotFoundException ex) {
+			// expected
+			em.getTransaction().rollback();
+		}
+		finally {
+			em.close();
+		}
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12034")
+	@FailureExpected( jiraKey = "HHH-12034" )
+	public void testLoadIdNotFound_PropertyBasedAccess() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Session s = ( Session ) em.getDelegate();
+
+		assertNull( s.get( Employee.class, 999 ) );
+
+		Employee proxy = s.load( Employee.class, 999 );
+		assertFalse( Hibernate.isInitialized( proxy ) );
+
+		try {
+			proxy.getId();
+			fail( "Should have failed because there is no Employee Entity with id == 999" );
+		}
+		catch (EntityNotFoundException ex) {
+			// expected
+			em.getTransaction().rollback();
+		}
+		finally {
+			em.close();
+		}
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12034")
+	@FailureExpected( jiraKey = "HHH-12034" )
+	public void testReferenceIdNotFound_PropertyBasedAccess() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		assertNull( em.find( Employee.class, 999 ) );
+
+		Employee proxy = em.getReference( Employee.class, 999 );
+		assertFalse( Hibernate.isInitialized( proxy ) );
+
+		try {
+			proxy.getId();
+			fail( "Should have failed because there is no Employee Entity with id == 999" );
+		}
+		catch (EntityNotFoundException ex) {
+			// expected
+			em.getTransaction().rollback();
+		}
+		finally {
+			em.close();
+		}
 	}
 
 	@Override

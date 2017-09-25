@@ -320,7 +320,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			return null;
 		}
 		else {
-			getDescriptor().findAttribute( propertyName ).
+			getDescriptor().findAttribute( propertyName );
 			final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
 			return loadedState[propertyIndex];
 		}

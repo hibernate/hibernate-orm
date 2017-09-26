@@ -166,6 +166,9 @@ public class CriteriaImpl implements Criteria, Serializable {
 	}
 	@Override
 	public Criteria setFetchMode(String associationPath, FetchMode mode) {
+		if (rootAlias != null && !associationPath.startsWith(rootAlias + ".")) {
+			associationPath = rootAlias + "." + associationPath;
+		}
 		fetchModes.put( associationPath, mode );
 		return this;
 	}

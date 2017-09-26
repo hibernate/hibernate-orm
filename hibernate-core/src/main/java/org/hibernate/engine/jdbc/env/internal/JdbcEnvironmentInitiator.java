@@ -141,26 +141,26 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		final MultiTenancyStrategy multiTenancyStrategy = MultiTenancyStrategy.determineMultiTenancyStrategy(
 				configValues
 		);
-		if ( MultiTenancyStrategy.NONE == multiTenancyStrategy ) {
-			ConnectionProvider connectionProvider = registry.getService( ConnectionProvider.class );
-			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
-		}
-		else {
+		if ( multiTenancyStrategy.requiresMultiTenantConnectionProvider() ) {
 			final MultiTenantConnectionProvider multiTenantConnectionProvider = registry.getService( MultiTenantConnectionProvider.class );
 			return new MultiTenantConnectionProviderJdbcConnectionAccess( multiTenantConnectionProvider );
+		}
+		else {
+			ConnectionProvider connectionProvider = registry.getService( ConnectionProvider.class );
+			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
 		}
 	}
 
 	public static JdbcConnectionAccess buildBootstrapJdbcConnectionAccess(
 			MultiTenancyStrategy multiTenancyStrategy,
 			ServiceRegistryImplementor registry) {
-		if ( MultiTenancyStrategy.NONE == multiTenancyStrategy ) {
-			ConnectionProvider connectionProvider = registry.getService( ConnectionProvider.class );
-			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
-		}
-		else {
+		if ( multiTenancyStrategy.requiresMultiTenantConnectionProvider() ) {
 			final MultiTenantConnectionProvider multiTenantConnectionProvider = registry.getService( MultiTenantConnectionProvider.class );
 			return new MultiTenantConnectionProviderJdbcConnectionAccess( multiTenantConnectionProvider );
+		}
+		else {
+			ConnectionProvider connectionProvider = registry.getService( ConnectionProvider.class );
+			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
 		}
 	}
 

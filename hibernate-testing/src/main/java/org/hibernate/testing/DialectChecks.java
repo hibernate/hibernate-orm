@@ -7,6 +7,7 @@
 package org.hibernate.testing;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.query.internal.QueryOptionsImpl;
 
 /**
  * Container class for different implementation of the {@link DialectCheck} interface.
@@ -192,7 +193,7 @@ abstract public class DialectChecks {
 
 	public static class DoesNotSupportFollowOnLocking implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return !dialect.useFollowOnLocking( null );
+			return !dialect.useFollowOnLocking( null, null );
 		}
 	}
 

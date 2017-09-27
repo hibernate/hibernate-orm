@@ -6,7 +6,6 @@
  */
 package org.hibernate.testing.schema;
 
-import java.io.FileWriter;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Map;
@@ -32,7 +31,7 @@ public class SchemaUpdateHelper {
 		final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
 		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.UPDATE );
 		SchemaManagementToolCoordinator.process(
-				metadata,
+				(MetadataImplementor) metadata,
 				serviceRegistry,
 				settings,
 				DelayedDropRegistryNotAvailableImpl.INSTANCE
@@ -50,7 +49,7 @@ public class SchemaUpdateHelper {
 		// atm we reuse the CREATE scripts setting
 		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, writer );
 		SchemaManagementToolCoordinator.process(
-				metadata,
+				(MetadataImplementor) metadata,
 				serviceRegistry,
 				settings,
 				DelayedDropRegistryNotAvailableImpl.INSTANCE

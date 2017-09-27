@@ -6,7 +6,6 @@
  */
 package org.hibernate.testing.schema;
 
-import java.io.FileWriter;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.sql.Connection;
@@ -37,7 +36,7 @@ public class SchemaCreateHelper {
 		final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
 		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE );
 		SchemaManagementToolCoordinator.process(
-				metadata,
+				(MetadataImplementor) metadata,
 				serviceRegistry,
 				settings,
 				DelayedDropRegistryNotAvailableImpl.INSTANCE
@@ -48,7 +47,7 @@ public class SchemaCreateHelper {
 		final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
 		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE_ONLY );
 		SchemaManagementToolCoordinator.process(
-				metadata,
+				(MetadataImplementor) metadata,
 				serviceRegistry,
 				settings,
 				DelayedDropRegistryNotAvailableImpl.INSTANCE
@@ -63,7 +62,7 @@ public class SchemaCreateHelper {
 		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE );
 		settings.put( AvailableSettings.HBM2DDL_CONNECTION, connection );
 		SchemaManagementToolCoordinator.process(
-				metadata,
+				(MetadataImplementor) metadata,
 				serviceRegistry,
 				settings,
 				DelayedDropRegistryNotAvailableImpl.INSTANCE
@@ -80,7 +79,7 @@ public class SchemaCreateHelper {
 		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, Action.CREATE );
 		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, writer );
 		SchemaManagementToolCoordinator.process(
-				metadata,
+				(MetadataImplementor) metadata,
 				serviceRegistry,
 				settings,
 				DelayedDropRegistryNotAvailableImpl.INSTANCE

@@ -34,7 +34,7 @@ public class SchemaDropHelper {
 		final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
 		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.DROP );
 		SchemaManagementToolCoordinator.process(
-				metadata,
+				(MetadataImplementor) metadata,
 				serviceRegistry,
 				settings,
 				DelayedDropRegistryNotAvailableImpl.INSTANCE

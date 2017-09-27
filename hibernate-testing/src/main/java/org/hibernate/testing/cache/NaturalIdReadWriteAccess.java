@@ -42,7 +42,7 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 			Object[] naturalIdValues,
 			EntityDescriptor persister,
 			SharedSessionContractImplementor session) {
-		return getRegion().getEffectiveKeysFactory().createNaturalIdKey( naturalIdValues, persister, session );
+		return getRegion().getEffectiveKeysFactory().createNaturalIdKey( naturalIdValues, persister.getHierarchy(), session );
 	}
 
 	@Override

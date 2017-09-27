@@ -6,7 +6,6 @@
  */
 package org.hibernate.jpa.test.query;
 
-import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.Entity;
@@ -17,7 +16,6 @@ import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.persistence.TypedQuery;
 
-import org.hibernate.Session;
 import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.annotations.NamedQuery;
 import org.hibernate.cfg.AvailableSettings;
@@ -140,7 +138,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 
 			assertNotNull(
 				connectionProvider.getPreparedStatement(
-					"/* + INDEX (game idx_game_title)  */ select * from Game g where title = ?"
+					"/* + INDEX (game idx_game_title)  */ select * from game g where title = ?"
 				)
 			);
 		} );
@@ -292,7 +290,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 	)
 	@NamedNativeQuery(
 		name = "SelectNamedNativeQuery",
-		query = "select * from Game g where title = :title",
+		query = "select * from game g where title = :title",
 		comment = "+ INDEX (game idx_game_title) ",
 		resultClass = Game.class
 	)

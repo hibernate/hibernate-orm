@@ -244,19 +244,19 @@ public class Column implements Selectable, Serializable, Cloneable {
 		return column;
 	}
 
-	public int getPrecision() {
+	public Integer getPrecision() {
 		return precision;
 	}
 
-	public void setPrecision(int scale) {
+	public void setPrecision(Integer scale) {
 		this.precision = scale;
 	}
 
-	public int getScale() {
+	public Integer getScale() {
 		return scale;
 	}
 
-	public void setScale(int scale) {
+	public void setScale(Integer scale) {
 		this.scale = scale;
 	}
 

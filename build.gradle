@@ -41,8 +41,8 @@ buildscript {
 
 ext {
     expectedGradleVersion = '1.9'
-    hibernateTargetVersion = '4.3.6.Final'
-    javaLanguageLevel = '1.6'
+    hibernateTargetVersion = '4.3.6.SEE1'
+    javaLanguageLevel = '1.7'
 
     osgiExportVersion = hibernateTargetVersion.replaceAll( "-SNAPSHOT", ".SNAPSHOT" )
 }
@@ -91,7 +91,7 @@ subprojects { subProject ->
 
     defaultTasks 'build'
 
-    group = 'org.hibernate'
+    group = 'com.seeburger.fork'
     version = rootProject.hibernateTargetVersion
     ext.exportPackageVersion = rootProject.osgiExportVersion
 

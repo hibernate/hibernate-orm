@@ -21,6 +21,7 @@ import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAudit
 import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.IdMappingData;
+import org.hibernate.envers.internal.entities.RevisionTypeType;
 import org.hibernate.envers.internal.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.MultiPropertyMapper;
@@ -164,7 +165,7 @@ public final class AuditMetadataGenerator {
 				true,
 				isKey
 		);
-		revTypeProperty.addAttribute( "type", "org.hibernate.envers.internal.entities.RevisionTypeType" );
+		revTypeProperty.addAttribute( "type", RevisionTypeType.INSTANCE.getJavaTypeDescriptor().getTypeName() );
 
 		// Adding the end revision, if appropriate
 		addEndRevision( anyMappingEnd );

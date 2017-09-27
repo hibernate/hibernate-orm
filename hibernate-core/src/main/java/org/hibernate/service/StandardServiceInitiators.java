@@ -30,6 +30,7 @@ import org.hibernate.jmx.internal.JmxServiceInitiator;
 import org.hibernate.metamodel.model.creation.internal.PersisterClassResolverInitiator;
 import org.hibernate.metamodel.model.creation.internal.RuntimeModelDescriptorFactoryServiceInitiator;
 import org.hibernate.property.access.internal.PropertyAccessStrategyResolverInitiator;
+import org.hibernate.resource.cdi.spi.ManagedBeanRegistryInitiator;
 import org.hibernate.resource.transaction.internal.TransactionCoordinatorBuilderInitiator;
 import org.hibernate.service.internal.SessionFactoryServiceRegistryFactoryInitiator;
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractorInitiator;
@@ -81,6 +82,8 @@ public final class StandardServiceInitiators {
 		serviceInitiators.add( RegionFactoryInitiator.INSTANCE );
 
 		serviceInitiators.add( TransactionCoordinatorBuilderInitiator.INSTANCE );
+
+		serviceInitiators.add( ManagedBeanRegistryInitiator.INSTANCE );
 
 		return Collections.unmodifiableList( serviceInitiators );
 	}

@@ -26,6 +26,8 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * @author Steve Ebersole
  */
 public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<ManagedBeanRegistry> {
+	public static final ManagedBeanRegistryInitiator INSTANCE = new ManagedBeanRegistryInitiator();
+
 	@Override
 	public Class<ManagedBeanRegistry> getServiceInitiated() {
 		return ManagedBeanRegistry.class;

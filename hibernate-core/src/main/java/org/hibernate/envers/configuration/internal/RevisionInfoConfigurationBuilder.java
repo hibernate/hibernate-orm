@@ -445,7 +445,7 @@ public class RevisionInfoConfigurationBuilder {
 		final Element idProperty = MetadataTools.addNativelyGeneratedId(
 				classMapping,
 				revisionInfoIdData.getName(),
-				getBasicTypeSqlType( revisionPropType ),
+				revisionPropType.getJavaTypeDescriptor().getTypeName(),
 				options.isUseRevisionEntityWithNativeIdEnabled()
 		);
 		MetadataTools.addColumn( idProperty, "REV", null, null, null, null, null, null, false );

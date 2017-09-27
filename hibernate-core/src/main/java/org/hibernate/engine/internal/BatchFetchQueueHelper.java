@@ -55,8 +55,8 @@ public class BatchFetchQueueHelper {
 		LOG.debug( "Not all entities were loaded." );
 		Set<Serializable> idSet = new HashSet<>( Arrays.asList( ids ) );
 		for ( Object result : results ) {
-			final Serializable id = session.getPersistenceContext().getEntry( result ).getId();
-			idSet.remove( id );
+			// All results should be in the PersistenceContext
+			idSet.remove( session.getContextEntityIdentifier( result ) );
 		}
 		assert idSet.size() == ids.length - results.size();
 		if ( LOG.isDebugEnabled() ) {

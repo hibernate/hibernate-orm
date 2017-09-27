@@ -12,6 +12,8 @@ import java.util.Map;
 import org.hibernate.sql.results.spi.FetchParent;
 
 /**
+ * todo (6.0) : isnt this really just a "from clause index"?
+ *
  * @author Steve Ebersole
  */
 public class BuilderExecutionState {

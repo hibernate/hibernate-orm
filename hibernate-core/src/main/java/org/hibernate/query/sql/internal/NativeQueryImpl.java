@@ -21,6 +21,7 @@ import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
+import javax.persistence.StoredProcedureQuery;
 import javax.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
@@ -36,6 +37,7 @@ import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.Limit;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
@@ -50,7 +52,7 @@ import org.hibernate.query.spi.NativeQueryInterpreter;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryInterpretations;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
+import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sql.spi.FetchBuilder;
@@ -66,7 +68,6 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
 import org.hibernate.sql.exec.spi.RowTransformer;
-import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -84,7 +85,6 @@ public class NativeQueryImpl<R>
 	private List<FetchBuilder> fetchBuilders;
 	private boolean resultSetMappingUsed;
 
-	private final boolean hasMainOutputParameter;
 	private final ParameterMetadataImpl parameterMetadata;
 	private final QueryParameterBindings parameterBindings;
 
@@ -93,7 +93,6 @@ public class NativeQueryImpl<R>
 	private Collection<String> querySpaces;
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
-	private final boolean callable;
 
 	private Serializable collectionKey;
 
@@ -112,25 +111,25 @@ public class NativeQueryImpl<R>
 				queryDef.getQueryString(),
 				queryDef.isCallable(),
 				queryDef.getQuerySpaces(),
-				collectQueryReturns( queryDef, session )
+				collectQueryResultBuilders( queryDef, session )
 		);
 	}
 
-	private static List<QueryResultBuilder> collectQueryReturns(
+	private static List<QueryResultBuilder> collectQueryResultBuilders(
 			NamedSQLQueryDefinition queryDef,
 			SharedSessionContractImplementor session) {
 		if ( queryDef.getResultSetRef() != null ) {
-			ResultSetMappingDefinition definition = session.getFactory()
+			ResultSetMappingDescriptor definition = session.getFactory()
 					.getQueryEngine()
 					.getNamedQueryRepository()
-					.getResultSetMappingDefinition( queryDef.getResultSetRef() );
+					.getResultSetMappingDescriptor( queryDef.getResultSetRef() );
 			if ( definition == null ) {
 				throw new MappingException(
 						"Unable to find resultset-ref definition: " +
 								queryDef.getResultSetRef()
 				);
 			}
-			return definition.getQueryReturns();
+			return definition.getResultBuilders();
 		}
 		else if ( queryDef.getQueryResultBuilders() != null && queryDef.getQueryResultBuilders().size() > 0 ) {
 			return queryDef.getQueryResultBuilders();
@@ -149,7 +148,6 @@ public class NativeQueryImpl<R>
 		super( session );
 
 		this.sqlString = queryString;
-		this.callable = callable;
 		this.querySpaces = querySpaces;
 
 		this.resultBuilders = resultBuilders;
@@ -159,8 +157,11 @@ public class NativeQueryImpl<R>
 				.getService( NativeQueryInterpreter.class )
 				.recognizeParameters( sqlString, parameterRecognizer );
 		parameterRecognizer.validate();
-		// todo : validate hasMainOutputParameter against callable?
-		this.hasMainOutputParameter = parameterRecognizer.hadMainOutputParameter();
+
+		if ( callable ) {
+			throwUnsupportedCallableQuery();
+		}
+
 		this.parameterMetadata = new ParameterMetadataImpl(
 				parameterRecognizer.getNamedQueryParameters(),
 				parameterRecognizer.getPositionalQueryParameters()
@@ -180,6 +181,14 @@ public class NativeQueryImpl<R>
 				callable,
 				new ArrayList<>(),
 				new ArrayList<>()
+		);
+	}
+
+	public static void throwUnsupportedCallableQuery() {
+		throw new QueryException(
+				"Calling database procedures/functions is no longer supported through the NativeQuery API; " +
+						"use Hibernate's " + ProcedureCall.class.getName() + " API or JPA's " +
+						StoredProcedureQuery.class.getName() + " API"
 		);
 	}
 
@@ -209,11 +218,6 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public boolean isCallable() {
-		return callable;
-	}
-
-	@Override
 	public Set<Parameter<?>> getParameters() {
 		final HashSet<Parameter<?>> parameters = new HashSet<>();
 		parameterMetadata.collectAllParameters( parameters::add );
@@ -237,20 +241,20 @@ public class NativeQueryImpl<R>
 	@Override
 	public NativeQuery<R> setResultSetMapping(String name) {
 		if ( resultSetMappingUsed ) {
-			throw new QueryException( "Cannot apply multiple ResultSet mappings to a single native query" );
+			throw new QueryException( "Cannot apply multiple SQL-ResultSet-mappings to a single native query" );
 		}
 
 		if ( resultBuilders != null && !resultBuilders.isEmpty() ) {
-			throw new QueryException( "Cannot mix ResultSet mappings and manually defined mappings in a single native query" );
+			throw new QueryException( "Cannot mix SQL-ResultSet-mappings and manually defined mappings in a single native query" );
 		}
 
 		// todo (6.0) : see the notes on ResultSetMappingDefinition.
 		//		really this should be something like:
 		//
-		final ResultSetMappingDefinition mappingDefinition = getSession().getFactory()
+		final ResultSetMappingDescriptor mappingDefinition = getSession().getFactory()
 				.getQueryEngine()
 				.getNamedQueryRepository()
-				.getResultSetMappingDefinition( name );
+				.getResultSetMappingDescriptor( name );
 		if ( mappingDefinition == null ) {
 			throw new MappingException( "Unknown SqlResultSetMapping [" + name + "]" );
 		}
@@ -261,7 +265,7 @@ public class NativeQueryImpl<R>
 			resultBuilders = new ArrayList<>();
 		}
 
-		for ( ResultSetMappingDefinition.QueryResultDefinition queryResultDefinition : mappingDefinition.getQueryResultDefinitions() ) {
+		for ( ResultSetMappingDescriptor.QueryResultDefinition queryResultDefinition : mappingDefinition.getQueryResultDefinitions() ) {
 			resultBuilders.add( queryResultDefinition.resolve() );
 		}
 
@@ -474,7 +478,7 @@ public class NativeQueryImpl<R>
 	private SelectQueryPlan<R> resolveSelectQueryPlan() {
 		SelectQueryPlan<R> queryPlan = null;
 
-		final ResultSetMappingDescriptor resultSetMapping = resolveResultMapping();
+		final org.hibernate.sql.results.spi.ResultSetMappingDescriptor resultSetMapping = resolveResultMapping();
 		final RowTransformer rowTransformer = resolveRowTransformer();
 
 		final QueryInterpretations.Key cacheKey = generateSelectInterpretationsKey( resultSetMapping );
@@ -520,7 +524,7 @@ public class NativeQueryImpl<R>
 			}
 
 			@Override
-			public ResultSetMappingDescriptor getResultSetMapping() {
+			public org.hibernate.sql.results.spi.ResultSetMappingDescriptor getResultSetMapping() {
 				return NativeQueryImpl.this.resolveResultMapping();
 			}
 
@@ -531,7 +535,7 @@ public class NativeQueryImpl<R>
 		};
 	}
 
-	private ResultSetMappingDescriptor resolveResultMapping() {
+	private org.hibernate.sql.results.spi.ResultSetMappingDescriptor resolveResultMapping() {
 		// todo (6.0) - need to resolve SqlSelections as well as resolving ResultBuilders and FetchBuilders into QueryResult trees
 		// 		also need to account for the edge case where the user passed just the
 		//		query string and no mappings (see ResultSetMappingUndefinedImpl)
@@ -544,7 +548,7 @@ public class NativeQueryImpl<R>
 		throw new NotYetImplementedFor6Exception(  );
 	}
 
-	private SelectInterpretationsKey generateSelectInterpretationsKey(ResultSetMappingDescriptor resultSetMapping) {
+	private SelectInterpretationsKey generateSelectInterpretationsKey(org.hibernate.sql.results.spi.ResultSetMappingDescriptor resultSetMapping) {
 		if ( !isCacheable( this ) ) {
 			return null;
 		}

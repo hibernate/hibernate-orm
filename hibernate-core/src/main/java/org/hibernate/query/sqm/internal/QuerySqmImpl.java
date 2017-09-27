@@ -31,6 +31,7 @@ import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.EntityGraphQueryHint;
+import org.hibernate.query.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
@@ -57,7 +58,10 @@ import org.hibernate.sql.exec.spi.ParameterBindingContext;
  *
  * @author Steve Ebersole
  */
-public class QuerySqmImpl<R> extends AbstractQuery<R> implements HandlerExecutionContext, ParameterBindingContext {
+public class QuerySqmImpl<R>
+		extends AbstractQuery<R>
+		implements HqlQueryImplementor<R>, HandlerExecutionContext, ParameterBindingContext {
+
 	private final String sourceQueryString;
 	private final SqmStatement sqmStatement;
 	private final Class resultType;

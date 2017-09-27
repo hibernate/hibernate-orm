@@ -13,7 +13,7 @@ import java.util.Set;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.procedure.UnknownSqlResultSetMappingException;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
+import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResult;
@@ -77,7 +77,7 @@ public class Util {
 		 *
 		 * @return The ResultSetMappingDefinition
 		 */
-		ResultSetMappingDefinition findResultSetMapping(String name);
+		ResultSetMappingDescriptor findResultSetMapping(String name);
 
 		/**
 		 * Callback to add query returns indicated by the result set mapping(s)
@@ -180,7 +180,7 @@ public class Util {
 		public void resolve(String resultSetMappingName) {
 			log.tracef( "Starting attempt to resolve named result-set-mapping : %s", resultSetMappingName );
 
-			final ResultSetMappingDefinition mapping = context.findResultSetMapping( resultSetMappingName );
+			final ResultSetMappingDescriptor mapping = context.findResultSetMapping( resultSetMappingName );
 			if ( mapping == null ) {
 				throw new UnknownSqlResultSetMappingException( "Unknown SqlResultSetMapping [" + resultSetMappingName + "]" );
 			}

@@ -34,6 +34,7 @@ import org.hibernate.query.TupleTransformer;
  */
 @Incubating
 public interface QueryImplementor<R> extends Query<R> {
+
 	void setOptionalId(Serializable id);
 
 	void setOptionalEntityName(String entityName);

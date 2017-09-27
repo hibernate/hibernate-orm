@@ -22,6 +22,9 @@ import org.hibernate.query.sql.spi.QueryResultBuilder;
  * @author Steve Ebersole
  */
 public class NamedSQLQueryDefinition extends NamedQueryDefinition {
+
+	// todo (6.0) : remove this (and friends) in favor of org.hibernate.query.named.spi.NamedQueryDescriptor (and friends)
+
 	private List<QueryResultBuilder> queryResultBuilders;
 	private final List<String> querySpaces;
 	private final boolean callable;

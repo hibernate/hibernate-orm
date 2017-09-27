@@ -23,7 +23,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmQueryParamType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.cfg.SecondPass;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
+import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
@@ -172,10 +172,10 @@ public class NamedQueryBinder {
 					new SecondPass() {
 						@Override
 						public void doSecondPass(Map persistentClasses) throws MappingException {
-							final ResultSetMappingDefinition resultSetMappingDefinition =
+							final ResultSetMappingDescriptor resultSetMappingDefinition =
 									ResultSetMappingBinder.bind( implicitResultSetMappingDefinition, context );
 							context.getMetadataCollector().addResultSetMapping( resultSetMappingDefinition );
-							List<QueryResultBuilder> newQueryReturns = resultSetMappingDefinition.getQueryReturns();
+							List<QueryResultBuilder> newQueryReturns = resultSetMappingDefinition.getResultBuilders();
 							final NamedSQLQueryDefinition queryDefinition =
 									context.getMetadataCollector().getNamedNativeQueryDefinition( queryName );
 							if ( queryDefinition != null ) {

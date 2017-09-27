@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.hibernate.HibernateException;
@@ -23,9 +24,12 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
+import org.hibernate.boot.model.query.spi.NamedHqlQueryDefinition;
+import org.hibernate.boot.model.query.spi.NamedNativeQueryDefinition;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.boot.model.resultset.spi.ResultSetMappingDefinition;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -33,11 +37,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
-import org.hibernate.query.internal.NamedQueryRepositoryImpl;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.boot.spi.AuditMetadataBuilderImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -47,7 +47,11 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.procedure.ProcedureCallMemento;
+import org.hibernate.query.internal.NamedQueryRepositoryImpl;
+import org.hibernate.query.named.spi.NamedHqlQueryDescriptor;
+import org.hibernate.query.named.spi.NamedNativeQueryDescriptor;
 import org.hibernate.query.spi.NamedQueryRepository;
+import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -72,8 +76,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, FetchProfile> fetchProfileMap;
 	private final Map<String, String> imports;
 	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap;
-	private final Map<String, NamedQueryDefinition> namedQueryMap;
-	private final Map<String, NamedSQLQueryDefinition> namedNativeQueryMap;
+	private final Map<String, NamedHqlQueryDefinition> namedHqlQueryMap;
+	private final Map<String, NamedNativeQueryDefinition> namedNativeQueryMap;
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
 	private final Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
@@ -94,8 +98,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, FetchProfile> fetchProfileMap,
 			Map<String, String> imports,
 			Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap,
-			Map<String, NamedQueryDefinition> namedQueryMap,
-			Map<String, NamedSQLQueryDefinition> namedNativeQueryMap,
+			Map<String, NamedHqlQueryDefinition> namedHqlQueryMap,
+			Map<String, NamedNativeQueryDefinition> namedNativeQueryMap,
 			Map<String, NamedProcedureCallDefinition> namedProcedureCallMap,
 			Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
@@ -114,7 +118,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.fetchProfileMap = fetchProfileMap;
 		this.imports = imports;
 		this.idGeneratorDefinitionMap = idGeneratorDefinitionMap;
-		this.namedQueryMap = namedQueryMap;
+		this.namedHqlQueryMap = namedHqlQueryMap;
 		this.namedNativeQueryMap = namedNativeQueryMap;
 		this.namedProcedureCallMap = namedProcedureCallMap;
 		this.sqlResultSetMappingMap = sqlResultSetMappingMap;
@@ -216,22 +220,22 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public NamedQueryDefinition getNamedQueryDefinition(String name) {
-		return namedQueryMap.get( name );
+	public NamedHqlQueryDefinition getNamedHqlQueryDefinition(String name) {
+		return namedHqlQueryMap.get( name );
 	}
 
 	@Override
-	public java.util.Collection<NamedQueryDefinition> getNamedQueryDefinitions() {
-		return namedQueryMap.values();
+	public java.util.Collection<NamedHqlQueryDefinition> getNamedHqlQueryDefinitions() {
+		return namedHqlQueryMap.values();
 	}
 
 	@Override
-	public NamedSQLQueryDefinition getNamedNativeQueryDefinition(String name) {
+	public NamedNativeQueryDefinition getNamedNativeQueryDefinition(String name) {
 		return namedNativeQueryMap.get( name );
 	}
 
 	@Override
-	public java.util.Collection<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions() {
+	public java.util.Collection<NamedNativeQueryDefinition> getNamedNativeQueryDefinitions() {
 		return namedNativeQueryMap.values();
 	}
 
@@ -306,22 +310,76 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
+		final Map<String, ResultSetMappingDescriptor> resolvedResultSetMappings = buildSqlResultSetMappings( sessionFactory );
 		return new NamedQueryRepositoryImpl(
-				namedQueryMap,
-				namedNativeQueryMap,
-				sqlResultSetMappingMap,
-				buildProcedureCallMementos( sessionFactory )
+				buildNamedHqlDescriptorMap( sessionFactory ),
+				buildNamedNativeDescriptorMap( sessionFactory ),
+				resolvedResultSetMappings,
+				buildProcedureCallMementos( sessionFactory, resolvedResultSetMappings )
 		);
 
 	}
 
-	public Map<String, ProcedureCallMemento> buildProcedureCallMementos(SessionFactoryImplementor sessionFactory) {
+	private Map<String, NamedHqlQueryDescriptor> buildNamedHqlDescriptorMap(SessionFactoryImplementor sessionFactory) {
+		if ( namedHqlQueryMap == null || namedHqlQueryMap.isEmpty() ) {
+			return Collections.emptyMap();
+		}
+
+		final ConcurrentHashMap<String,NamedHqlQueryDescriptor> descriptorMap = new ConcurrentHashMap<>();
+
+		for ( Map.Entry<String, NamedHqlQueryDefinition> entry : namedHqlQueryMap.entrySet() ) {
+			descriptorMap.put(
+					entry.getKey(),
+					entry.getValue().resolve( sessionFactory )
+			);
+		}
+
+		return descriptorMap;
+	}
+
+	private Map<String, NamedNativeQueryDescriptor> buildNamedNativeDescriptorMap(SessionFactoryImplementor sessionFactory) {
+		if ( namedNativeQueryMap == null || namedNativeQueryMap.isEmpty() ) {
+			return Collections.emptyMap();
+		}
+
+		final ConcurrentHashMap<String,NamedNativeQueryDescriptor> descriptorMap = new ConcurrentHashMap<>();
+
+		for ( Map.Entry<String, NamedNativeQueryDefinition> entry : namedNativeQueryMap.entrySet() ) {
+			descriptorMap.put(
+					entry.getKey(),
+					entry.getValue().resolve( sessionFactory )
+			);
+		}
+
+		return descriptorMap;
+	}
+
+	private Map<String, ResultSetMappingDescriptor> buildSqlResultSetMappings(SessionFactoryImplementor sessionFactory) {
+		if ( sqlResultSetMappingMap == null || sqlResultSetMappingMap.isEmpty() ) {
+			return Collections.emptyMap();
+		}
+
+		final ConcurrentHashMap<String,ResultSetMappingDescriptor> converted = new ConcurrentHashMap<>();
+
+		for ( Map.Entry<String, ResultSetMappingDefinition> bootEntry : sqlResultSetMappingMap.entrySet() ) {
+			converted.put(
+					bootEntry.getKey(),
+					bootEntry.getValue().resolve( sessionFactory )
+			);
+		}
+
+		return converted;
+	}
+
+	public Map<String, ProcedureCallMemento> buildProcedureCallMementos(
+			SessionFactoryImplementor sessionFactory,
+			Map<String, ResultSetMappingDescriptor> resolvedResultSetMappings) {
 		final Map<String, ProcedureCallMemento> rtn = new HashMap<>();
 		if ( namedProcedureCallMap != null ) {
 			for ( NamedProcedureCallDefinition procedureCallDefinition : namedProcedureCallMap.values() ) {
 				rtn.put(
 						procedureCallDefinition.getRegisteredName(),
-						procedureCallDefinition.toMemento( sessionFactory,sqlResultSetMappingMap )
+						procedureCallDefinition.toMemento( sessionFactory, resolvedResultSetMappings )
 				);
 			}
 		}

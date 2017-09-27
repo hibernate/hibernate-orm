@@ -17,6 +17,10 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface TypeContributions {
+	/**
+	 * Add the JavaTypeDescriptor to the
+	 * @param descriptor
+	 */
 	void contributeJavaTypeDescriptor(JavaTypeDescriptor descriptor);
 
 	void contributeSqlTypeDescriptor(SqlTypeDescriptor descriptor);

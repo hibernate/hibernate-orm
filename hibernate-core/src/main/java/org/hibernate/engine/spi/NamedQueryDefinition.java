@@ -21,6 +21,9 @@ import org.hibernate.LockOptions;
  * @author Steve Ebersole
  */
 public class NamedQueryDefinition implements Serializable {
+
+	// todo (6.0) : remove this (and friends) in favor of org.hibernate.query.named.spi.NamedQueryDescriptor (and friends)
+
 	private final String name;
 	private final String query;
 	private final boolean cacheable;

@@ -18,7 +18,7 @@ import javax.persistence.StoredProcedureParameter;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
+import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.procedure.ProcedureCallMemento;
@@ -78,7 +78,7 @@ public class NamedProcedureCallDefinition {
 
 	public ProcedureCallMemento toMemento(
 			final SessionFactoryImplementor sessionFactory,
-			final Map<String,ResultSetMappingDefinition> resultSetMappingDefinitions) {
+			final Map<String,ResultSetMappingDescriptor> resultSetMappingDefinitions) {
 		final List<QueryResult> collQueryResults = new ArrayList<>();
 		final Set<String> collectedQuerySpaces = new HashSet<>();
 
@@ -115,7 +115,7 @@ public class NamedProcedureCallDefinition {
 						}
 
 						@Override
-						public ResultSetMappingDefinition findResultSetMapping(String name) {
+						public ResultSetMappingDescriptor findResultSetMapping(String name) {
 							return resultSetMappingDefinitions.get( name );
 						}
 

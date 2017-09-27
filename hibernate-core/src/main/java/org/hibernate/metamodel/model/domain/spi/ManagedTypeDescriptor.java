@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import javax.persistence.metamodel.ManagedType;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -57,7 +58,9 @@ public interface ManagedTypeDescriptor<T>
 	Map<String, PersistentAttribute> getAttributesByName();
 	Map<String, PersistentAttribute> getDeclaredAttributesByName();
 
-	void visitAttributes(Consumer<? extends PersistentAttribute> consumer);
+	default void visitAttributes(Consumer<? extends PersistentAttribute> consumer) {
+		throw new NotYetImplementedFor6Exception();
+	}
 
 	<A extends javax.persistence.metamodel.Attribute> void collectAttributes(Consumer<A> collector, Class<A> restrictionType);
 	<A extends javax.persistence.metamodel.Attribute> void collectDeclaredAttributes(Consumer<A> collector, Class<A> restrictionType);

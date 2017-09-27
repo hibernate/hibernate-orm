@@ -13,23 +13,28 @@ import org.hibernate.Incubating;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.procedure.ProcedureCallMemento;
+import org.hibernate.query.named.spi.NamedHqlQueryDescriptor;
+import org.hibernate.query.named.spi.NamedNativeQueryDescriptor;
+import org.hibernate.query.named.spi.NamedQueryDescriptor;
 
 /**
+ * Repository for named query-related objects
+ *
  * @author Steve Ebersole
  */
 @Incubating
 public interface NamedQueryRepository {
-	NamedQueryDefinition getNamedQueryDefinition(String queryName);
+	NamedHqlQueryDescriptor getNamedHqlDescriptor(String queryName);
 
-	NamedSQLQueryDefinition getNamedSQLQueryDefinition(String queryName);
+	NamedNativeQueryDescriptor getNamedNativeDescriptor(String queryName);
 
 	ProcedureCallMemento getNamedProcedureCallMemento(String name);
 
-	ResultSetMappingDefinition getResultSetMappingDefinition(String mappingName);
+	ResultSetMappingDescriptor getResultSetMappingDescriptor(String mappingName);
 
-	void registerNamedQueryDefinition(String name, NamedQueryDefinition definition);
+	void registerNamedHqlQueryDescriptor(String name, NamedHqlQueryDescriptor descriptor);
 
-	void registerNamedSQLQueryDefinition(String name, NamedSQLQueryDefinition definition);
+	void registerNamedNativeQueryDescriptor(String name, NamedNativeQueryDescriptor descriptor);
 
 	void registerNamedProcedureCallMemento(String name, ProcedureCallMemento memento);
 

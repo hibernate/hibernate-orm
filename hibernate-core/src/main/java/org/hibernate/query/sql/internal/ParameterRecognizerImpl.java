@@ -12,8 +12,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.StoredProcedureQuery;
+
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.*;
 import org.hibernate.query.spi.ParameterRecognizer;
@@ -63,8 +66,8 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 	}
 
 	public void validate() {
-		if ( positionalQueryParameters == null ) {
-			return;
+		if ( hadMainOutputParameter ) {
+			NativeQueryImpl.throwUnsupportedCallableQuery();
 		}
 
 		// validate the positions.  JPA says that these should start with 1 and
@@ -87,10 +90,6 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			first = false;
 			previous = position;
 		}
-	}
-
-	public boolean hadMainOutputParameter() {
-		return hadMainOutputParameter;
 	}
 
 	public Map<String, QueryParameter> getNamedQueryParameters() {

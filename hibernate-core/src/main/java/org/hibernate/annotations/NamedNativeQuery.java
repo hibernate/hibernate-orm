@@ -19,7 +19,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Emmanuel Bernard
  *
- * @see org.hibernate.SQLQuery
+ * @see org.hibernate.boot.model.query.spi.NamedNativeQueryDefinition
+ * @see org.hibernate.query.NativeQuery
  */
 @Target({TYPE, PACKAGE})
 @Retention(RUNTIME)
@@ -71,8 +72,10 @@ public @interface NamedNativeQuery {
 	int timeout() default -1;
 
 	/**
-	 * Does the SQL ({@link #query()}) represent a call to a procedure/function?
+	 * @deprecated Use {@link org.hibernate.procedure.ProcedureCall} or
+	 * {@link javax.persistence.StoredProcedureQuery} instead.
 	 */
+	@Deprecated
 	boolean callable() default false;
 
 	/**

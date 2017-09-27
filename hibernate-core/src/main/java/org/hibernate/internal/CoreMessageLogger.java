@@ -33,6 +33,7 @@ import org.hibernate.engine.loading.internal.EntityLoadContext;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.spi.QueryMessageLogger;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.Type;
@@ -1745,7 +1746,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void startingDelayedSchemaDrop();
 
 	@LogMessage(level = ERROR)
-	@Message(value = "Unsuccessful: %s", id = 478)
+	@Message(value = "Unsuccessful attempt to execute schema management command: %s", id = 478)
 	void unsuccessfulSchemaManagementCommand(String command);
 
 	@Message(
@@ -1758,4 +1759,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "A ManagedEntity was associated with a stale PersistenceContext. A ManagedEntity may only be associated with one PersistenceContext at a time; %s", id = 480)
 	void stalePersistenceContextInEntityEntry(String msg);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 481,
+			value = "Attempt to use NativeQuery to perform execution of a CallableStatement which is no longer supported.  " +
+					"Use `org.hibernate.procedure.ProcedureCall` or `javax.persistence.StoredProcedureQuery` instead"
+	)
+	void warnNativeQueryAsCallable();
 }

@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.sql.hand.query;
 
-import javax.persistence.PersistenceException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -16,18 +15,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import javax.persistence.PersistenceException;
 
 import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.model.query.internal.NamedNativeQueryDefinitionImpl;
+import org.hibernate.boot.model.resultset.internal.ScalarResultDefinitionImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.transform.BasicTransformerAdapter;
@@ -149,14 +149,17 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Test
-	public void testRegisteredNamedSQLQueryWithScalar()
-	{
-		final NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder();
-		builder.setName("namedQuery");
-		builder.setQuery("select count(*) AS c from organization");
-		builder.setQueryReturns(new NativeSQLQueryReturn[1]);
+	public void testRegisteredNamedSQLQueryWithScalar() {
+		final String queryName = "namedQuery";
+		final String sqlString = "select count(*) AS c from organization";
+
+		final NamedNativeQueryDefinitionImpl.Builder builder = new NamedNativeQueryDefinitionImpl.Builder( queryName, sqlString )
+				.addResult( new ScalarResultDefinitionImpl( null, null ) );
 		
-		sessionFactory().registerNamedSQLQueryDefinition("namedQuery", builder.createNamedQueryDefinition());
+		sessionFactory().getQueryEngine().getNamedQueryRepository().registerNamedNativeQueryDescriptor(
+				queryName,
+				builder.build().resolve( sessionFactory() )
+		);
 
 		final Session s = openSession();
 		s.beginTransaction();

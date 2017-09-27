@@ -39,7 +39,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
+import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -217,44 +217,14 @@ public interface SessionFactoryImplementor
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// NamedQueryRepository
 
-	/**
-	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getNamedQueryDefinition(java.lang.String)} instead.
-	 */
-	@Deprecated
-	default NamedQueryDefinition getNamedQuery(String queryName) {
-		return getQueryEngine().getNamedQueryRepository().getNamedQueryDefinition( queryName );
-	}
+
 
 	/**
-	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#registerNamedQueryDefinition} instead.
+	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getResultSetMappingDescriptor} instead.
 	 */
 	@Deprecated
-	default void registerNamedQueryDefinition(String name, NamedQueryDefinition definition) {
-		getQueryEngine().getNamedQueryRepository().registerNamedQueryDefinition( name, definition );
-	}
-
-	/**
-	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getNamedSQLQueryDefinition} instead.
-	 */
-	@Deprecated
-	default NamedSQLQueryDefinition getNamedSQLQuery(String queryName) {
-		return getQueryEngine().getNamedQueryRepository().getNamedSQLQueryDefinition( queryName );
-	}
-
-	/**
-	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#registerNamedSQLQueryDefinition} instead.
-	 */
-	@Deprecated
-	default void registerNamedSQLQueryDefinition(String name, NamedSQLQueryDefinition definition) {
-		getQueryEngine().getNamedQueryRepository().registerNamedSQLQueryDefinition( name, definition );
-	}
-
-	/**
-	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getResultSetMappingDefinition} instead.
-	 */
-	@Deprecated
-	default ResultSetMappingDefinition getResultSetMapping(String name) {
-		return getQueryEngine().getNamedQueryRepository().getResultSetMappingDefinition( name );
+	default ResultSetMappingDescriptor getResultSetMapping(String name) {
+		return getQueryEngine().getNamedQueryRepository().getResultSetMappingDescriptor( name );
 	}
 
 	/**

@@ -46,7 +46,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
+import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -233,27 +233,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public NamedQueryDefinition getNamedQuery(String queryName) {
-		return delegate.getNamedQuery( queryName );
-	}
-
-	@Override
-	public void registerNamedQueryDefinition(String name, NamedQueryDefinition definition) {
-		delegate.registerNamedQueryDefinition( name, definition );
-	}
-
-	@Override
-	public NamedSQLQueryDefinition getNamedSQLQuery(String queryName) {
-		return delegate.getNamedSQLQuery( queryName );
-	}
-
-	@Override
-	public void registerNamedSQLQueryDefinition(String name, NamedSQLQueryDefinition definition) {
-		delegate.registerNamedSQLQueryDefinition( name, definition );
-	}
-
-	@Override
-	public ResultSetMappingDefinition getResultSetMapping(String name) {
+	public ResultSetMappingDescriptor getResultSetMapping(String name) {
 		return delegate.getResultSetMapping( name );
 	}
 

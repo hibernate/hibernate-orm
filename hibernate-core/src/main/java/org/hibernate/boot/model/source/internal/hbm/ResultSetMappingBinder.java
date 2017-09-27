@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryCollectionLoadReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryJoinReturnType;
@@ -25,8 +26,12 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.NativeQueryNonScalarRootReturn;
 import org.hibernate.boot.jaxb.hbm.spi.ResultSetMappingBindingDefinition;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
+import org.hibernate.boot.model.resultset.internal.EntityResultDefinitionImpl;
+import org.hibernate.boot.model.resultset.internal.FetchDefinitionImpl;
+import org.hibernate.boot.model.resultset.internal.PersistentCollectionResultDefinitionImpl;
+import org.hibernate.boot.model.resultset.internal.ResultSetMappingDefinitionImpl;
+import org.hibernate.boot.model.resultset.internal.ScalarResultDefinitionImpl;
+import org.hibernate.boot.model.resultset.spi.ResultSetMappingDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
@@ -34,10 +39,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.query.sql.spi.QueryResultBuilder;
-import org.hibernate.query.sql.spi.QueryResultBuilderRootEntity;
-import org.hibernate.query.sql.spi.QueryResultBuilderScalar;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -56,24 +57,24 @@ public abstract class ResultSetMappingBinder {
 	 * For {@code hbm.xml} this means at the root of the document.  For annotations, this means at
 	 * the package level.
 	 *
-	 * @param resultSetMappingSource The XML data as a JAXB binding
+	 * @param hbmResultSetMapping The XML data as a JAXB binding
 	 * @param context The mapping state
 	 *
 	 * @return The ResultSet mapping descriptor
 	 */
 	public static ResultSetMappingDefinition bind(
-			ResultSetMappingBindingDefinition resultSetMappingSource,
+			ResultSetMappingBindingDefinition hbmResultSetMapping,
 			HbmLocalMetadataBuildingContext context) {
-		if ( resultSetMappingSource.getName() == null ) {
+		if ( hbmResultSetMapping.getName() == null ) {
 			throw new MappingException(
 					"ResultSet mapping did not specify name",
 					context.getOrigin()
 			);
 		}
 
-		final ResultSetMappingDefinition binding = new ResultSetMappingDefinition( resultSetMappingSource.getName() );
-		bind( resultSetMappingSource, binding, context );
-		return binding;
+		final ResultSetMappingDefinitionImpl bootModel = new ResultSetMappingDefinitionImpl( hbmResultSetMapping.getName() );
+		bind( hbmResultSetMapping, bootModel, context );
+		return bootModel;
 	}
 
 	/**
@@ -96,36 +97,34 @@ public abstract class ResultSetMappingBinder {
 		}
 
 		final String resultSetName = prefix + '.' + resultSetMappingSource.getName();
-		final ResultSetMappingDefinition binding = new ResultSetMappingDefinition( resultSetName );
+		final ResultSetMappingDefinitionImpl binding = new ResultSetMappingDefinitionImpl( resultSetName );
 		bind( resultSetMappingSource, binding, context );
 		return binding;
 	}
 
 	private static void bind(
-			ResultSetMappingBindingDefinition resultSetMappingSource,
-			ResultSetMappingDefinition binding,
+			ResultSetMappingBindingDefinition hbmModel,
+			ResultSetMappingDefinitionImpl bootModel,
 			HbmLocalMetadataBuildingContext context) {
 
-		int cnt = 0;
-
-		for ( Object valueMappingSource : resultSetMappingSource.getValueMappingSources() ) {
+		for ( Object valueMappingSource : hbmModel.getValueMappingSources() ) {
 			if ( JaxbHbmNativeQueryReturnType.class.isInstance( valueMappingSource ) ) {
-				binding.addQueryReturn(
-						extractReturnDescription( (JaxbHbmNativeQueryReturnType) valueMappingSource, context, cnt++ )
+				bootModel.addResult(
+						extractReturnDescription( (JaxbHbmNativeQueryReturnType) valueMappingSource, context )
 				);
 			}
 			else if ( JaxbHbmNativeQueryCollectionLoadReturnType.class.isInstance( valueMappingSource ) ) {
-				binding.addQueryReturn(
-						extractReturnDescription( (JaxbHbmNativeQueryCollectionLoadReturnType) valueMappingSource, context, cnt++ )
+				bootModel.addResult(
+						extractReturnDescription( (JaxbHbmNativeQueryCollectionLoadReturnType) valueMappingSource, context )
 				);
 			}
 			else if ( JaxbHbmNativeQueryJoinReturnType.class.isInstance( valueMappingSource ) ) {
-				binding.addQueryReturn(
-						extractReturnDescription( (JaxbHbmNativeQueryJoinReturnType) valueMappingSource, context, cnt++ )
+				bootModel.addFetch(
+						extractReturnDescription( (JaxbHbmNativeQueryJoinReturnType) valueMappingSource, context )
 				);
 			}
 			else if ( JaxbHbmNativeQueryScalarReturnType.class.isInstance( valueMappingSource ) ) {
-				binding.addQueryReturn(
+				bootModel.addResult(
 						extractReturnDescription( (JaxbHbmNativeQueryScalarReturnType) valueMappingSource, context )
 				);
 			}
@@ -140,15 +139,18 @@ public abstract class ResultSetMappingBinder {
 	//
 	//		MappingException already carries origin, adding the query/resultset-mapping name pinpoints the location :)
 
-	public static QueryResultBuilderScalar extractReturnDescription(
+	public static ScalarResultDefinitionImpl extractReturnDescription(
 			JaxbHbmNativeQueryScalarReturnType rtnSource,
 			HbmLocalMetadataBuildingContext context) {
-		final String column = rtnSource.getColumn();
-		final String typeName = rtnSource.getType();
-		BasicValuedExpressableType type = null;
-		if ( typeName != null ) {
-			type = context.getMetadataCollector().getTypeConfiguration().getBasicTypeRegistry().getBasicType(  typeName );
-			if ( type == null ) {
+		return new ScalarResultDefinitionImpl(
+				rtnSource.getColumn(),
+				rtnSource.getType()
+		) {
+			@Override
+			protected HibernateException noTypeException(String typeName) {
+				// todo (7.0) : adjust this to just use `Origin` in `ResultSetMappingBootModel.Scalar`
+				//		That requires annotations binding to implement the "hierarchical context"
+				//		used in hbm-binding, which will not happen until 7
 				throw new MappingException(
 						String.format(
 								"Unable to resolve type [%s] specified for native query scalar return",
@@ -157,36 +159,24 @@ public abstract class ResultSetMappingBinder {
 						context.getOrigin()
 				);
 			}
-		}
-		return new QueryResultBuilderScalar( column, type );
+		};
 	}
 
 
-	public static QueryResultBuilder extractReturnDescription(
+	public static ResultSetMappingDefinition.EntityResult extractReturnDescription(
 			JaxbHbmNativeQueryReturnType rtnSource,
-			HbmLocalMetadataBuildingContext context,
-			int queryReturnPosition) {
-		String alias = rtnSource.getAlias();
-		if ( StringHelper.isEmpty( alias ) ) {
-			// hack-around as sqlquery impl depend on having a key.
-			alias = "alias_" + queryReturnPosition;
-		}
-		final String entityName = context.determineEntityName(
+			HbmLocalMetadataBuildingContext context) {
+		// todo (6.0) : handle attributes, discriminator, etc
+		return new EntityResultDefinitionImpl(
 				rtnSource.getEntityName(),
-				rtnSource.getClazz()
-		);
-		final EntityDescriptor entityDescriptor = context.getBootstrapContext().getTypeConfiguration().findEntityDescriptor( entityName );
-
-		return new QueryResultBuilderRootEntity(
-				alias,
-				entityDescriptor
+				rtnSource.getClazz(),
+				rtnSource.getAlias()
 		);
 	}
 
-	public static QueryResultBuilder extractReturnDescription(
+	public static FetchDefinitionImpl extractReturnDescription(
 			JaxbHbmNativeQueryJoinReturnType rtnSource,
-			HbmLocalMetadataBuildingContext context,
-			int queryReturnPosition) {
+			HbmLocalMetadataBuildingContext context) {
 		final int dot = rtnSource.getProperty().lastIndexOf( '.' );
 		if ( dot == -1 ) {
 			throw new MappingException(
@@ -202,20 +192,17 @@ public abstract class ResultSetMappingBinder {
 		String roleOwnerAlias = rtnSource.getProperty().substring( 0, dot );
 		String roleProperty = rtnSource.getProperty().substring( dot + 1 );
 
-		return new NativeSQLQueryJoinReturn(
+		return new FetchDefinitionImpl(
 				rtnSource.getAlias(),
 				roleOwnerAlias,
-				roleProperty,
-				//FIXME: get the PersistentClass
-				extractPropertyResults( rtnSource.getAlias(), rtnSource, null, context ),
+				roleProperty ,
 				rtnSource.getLockMode()
 		);
 	}
 
-	public static QueryResultBuilder extractReturnDescription(
+	public static PersistentCollectionResultDefinitionImpl extractReturnDescription(
 			JaxbHbmNativeQueryCollectionLoadReturnType rtnSource,
-			HbmLocalMetadataBuildingContext context,
-			int queryReturnPosition) {
+			HbmLocalMetadataBuildingContext context) {
 		final int dot = rtnSource.getRole().lastIndexOf( '.' );
 		if ( dot == -1 ) {
 			throw new MappingException(
@@ -228,18 +215,19 @@ public abstract class ResultSetMappingBinder {
 			);
 		}
 
-		String ownerClassName = context.findEntityBinding( null, rtnSource.getRole().substring( 0, dot ) )
-				.getClassName();
-		String ownerPropertyName = rtnSource.getRole().substring( dot + 1 );
-
-		return new NativeSQLQueryCollectionReturn(
-				rtnSource.getAlias(),
-				ownerClassName,
-				ownerPropertyName,
-				// FIXME: get the PersistentClass
-				extractPropertyResults( rtnSource.getAlias(), rtnSource, null, context ),
-				rtnSource.getLockMode()
-		);
+		return new PersistentCollectionResultDefinitionImpl();
+//		String ownerClassName = context.findEntityBinding( null, rtnSource.getRole().substring( 0, dot ) )
+//				.getClassName();
+//		String ownerPropertyName = rtnSource.getRole().substring( dot + 1 );
+//
+//		return new NativeSQLQueryCollectionReturn(
+//				rtnSource.getAlias(),
+//				ownerClassName,
+//				ownerPropertyName,
+//				// FIXME: get the PersistentClass
+//				extractPropertyResults( rtnSource.getAlias(), rtnSource, null, context ),
+//				rtnSource.getLockMode()
+//		);
 	}
 
 	/**

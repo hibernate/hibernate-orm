@@ -54,7 +54,7 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.MutableQueryOptions;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
+import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.exec.internal.JdbcCallImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterBinderImpl;
@@ -181,8 +181,8 @@ public class ProcedureCallImpl<R>
 					}
 
 					@Override
-					public ResultSetMappingDefinition findResultSetMapping(String name) {
-						return session.getFactory().getQueryEngine().getNamedQueryRepository().getResultSetMappingDefinition( name );
+					public ResultSetMappingDescriptor findResultSetMapping(String name) {
+						return session.getFactory().getQueryEngine().getNamedQueryRepository().getResultSetMappingDescriptor( name );
 					}
 
 					@Override

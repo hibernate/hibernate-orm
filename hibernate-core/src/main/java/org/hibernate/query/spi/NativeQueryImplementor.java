@@ -22,9 +22,11 @@ import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.named.spi.NamedNativeQueryDescriptor;
 import org.hibernate.type.Type;
 
 /**
@@ -32,6 +34,10 @@ import org.hibernate.type.Type;
  */
 @Incubating
 public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQuery<R> {
+	default NamedNativeQueryDescriptor toNamedDescriptor(String name) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
 	NativeQueryImplementor setCollectionKey(Serializable key);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

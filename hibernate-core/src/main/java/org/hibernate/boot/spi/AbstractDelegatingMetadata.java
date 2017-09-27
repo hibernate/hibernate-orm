@@ -15,13 +15,14 @@ import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.query.spi.NamedNativeQueryDefinition;
+import org.hibernate.boot.model.query.spi.NamedQueryDefinition;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.resultset.spi.ResultSetMappingDefinition;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
+import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
@@ -101,12 +102,12 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	public NamedSQLQueryDefinition getNamedNativeQueryDefinition(String name) {
+	public NamedNativeQueryDefinition getNamedNativeQueryDefinition(String name) {
 		return delegate.getNamedNativeQueryDefinition( name );
 	}
 
 	@Override
-	public Collection<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions() {
+	public Collection<NamedNativeQueryDefinition> getNamedNativeQueryDefinitions() {
 		return delegate.getNamedNativeQueryDefinitions();
 	}
 

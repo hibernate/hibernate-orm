@@ -231,7 +231,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 			return resolved;
 		}
 
-		throw new UnknownEntityTypeException( "Could not resolve EntityPersister by entity name [" + entityName + "]" );
+		throw new UnknownEntityTypeException( "Could not resolve EntityDescriptor by entity name [" + entityName + "]" );
 	}
 
 	public <T> EntityDescriptor<? extends T> findEntityDescriptor(Class<T> javaType) {
@@ -252,7 +252,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	public <T> EntityDescriptor<? extends T> resolveEntityDescriptor(Class<T> javaType) {
 		final EntityDescriptor<? extends T> entityPersister = findEntityDescriptor( javaType );
 		if ( entityPersister == null ) {
-			throw new UnknownEntityTypeException( "Could not resolve EntityPersister by Java type [" + javaType.getName() + "]" );
+			throw new UnknownEntityTypeException( "Could not resolve EntityDescriptor by Java type [" + javaType.getName() + "]" );
 		}
 		return entityPersister;
 	}

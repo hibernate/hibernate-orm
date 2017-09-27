@@ -39,11 +39,14 @@ import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
-import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
+import org.hibernate.boot.model.query.spi.NamedHqlQueryDefinition;
+import org.hibernate.boot.model.query.spi.NamedNativeQueryDefinition;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.boot.model.resultset.spi.ResultSetMappingDefinition;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.spi.AttributeConverterAutoApplyHandler;
@@ -69,11 +72,7 @@ import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.boot.internal.AuditMetadataBuilderImpl;
 import org.hibernate.envers.boot.spi.AuditMetadataBuilderImplementor;
@@ -88,9 +87,9 @@ import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.IdentifierCollection;
-import org.hibernate.mapping.MappedIndex;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.MappedIndex;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -100,6 +99,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.spi.NamedQueryRepository;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -132,8 +132,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	private Database database;
 
-	private final Map<String, NamedQueryDefinition> namedQueryMap = new HashMap<>();
-	private final Map<String, NamedSQLQueryDefinition> namedNativeQueryMap = new HashMap<>();
+	private final Map<String, NamedHqlQueryDefinition> namedHqlQueryMap = new HashMap<>();
+	private final Map<String, NamedNativeQueryDefinition> namedNativeQueryMap = new HashMap<>();
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap = new HashMap<>();
 	private final Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap = new HashMap<>();
 
@@ -503,20 +503,21 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named query handling
 
-	public NamedQueryDefinition getNamedQueryDefinition(String name) {
+	@Override
+	public NamedHqlQueryDefinition getNamedHqlQueryDefinition(String name) {
 		if ( name == null ) {
 			throw new IllegalArgumentException( "null is not a valid query name" );
 		}
-		return namedQueryMap.get( name );
+		return namedHqlQueryMap.get( name );
 	}
 
 	@Override
-	public java.util.Collection<NamedQueryDefinition> getNamedQueryDefinitions() {
-		return namedQueryMap.values();
+	public java.util.Collection<NamedHqlQueryDefinition> getNamedHqlQueryDefinitions() {
+		return namedHqlQueryMap.values();
 	}
 
 	@Override
-	public void addNamedQuery(NamedQueryDefinition def) {
+	public void addNamedHqlQuery(NamedHqlQueryDefinition def) {
 		if ( def == null ) {
 			throw new IllegalArgumentException( "Named query definition is null" );
 		}
@@ -528,23 +529,23 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return;
 		}
 
-		applyNamedQuery( def.getName(), def );
+		applyNamedHqlQuery( def.getName(), def );
 	}
 
-	private void applyNamedQuery(String name, NamedQueryDefinition query) {
+	private void applyNamedHqlQuery(String name, NamedHqlQueryDefinition query) {
 		checkQueryName( name );
-		namedQueryMap.put( name.intern(), query );
+		namedHqlQueryMap.put( name.intern(), query );
 	}
 
 	private void checkQueryName(String name) throws DuplicateMappingException {
-		if ( namedQueryMap.containsKey( name ) || namedNativeQueryMap.containsKey( name ) ) {
+		if ( namedHqlQueryMap.containsKey( name ) || namedNativeQueryMap.containsKey( name ) ) {
 			throw new DuplicateMappingException( DuplicateMappingException.Type.QUERY, name );
 		}
 	}
 
 	@Override
-	public void addDefaultQuery(NamedQueryDefinition queryDefinition) {
-		applyNamedQuery( queryDefinition.getName(), queryDefinition );
+	public void addDefaultNamedHqlQuery(NamedHqlQueryDefinition queryDefinition) {
+		applyNamedHqlQuery( queryDefinition.getName(), queryDefinition );
 		defaultNamedQueryNames.add( queryDefinition.getName() );
 	}
 
@@ -552,17 +553,17 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// Named native-query handling
 
 	@Override
-	public NamedSQLQueryDefinition getNamedNativeQueryDefinition(String name) {
+	public NamedNativeQueryDefinition getNamedNativeQueryDefinition(String name) {
 		return namedNativeQueryMap.get( name );
 	}
 
 	@Override
-	public java.util.Collection<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions() {
+	public java.util.Collection<NamedNativeQueryDefinition> getNamedNativeQueryDefinitions() {
 		return namedNativeQueryMap.values();
 	}
 
 	@Override
-	public void addNamedNativeQuery(NamedSQLQueryDefinition def) {
+	public void addNamedNativeQuery(NamedNativeQueryDefinition def) {
 		if ( def == null ) {
 			throw new IllegalArgumentException( "Named native query definition object is null" );
 		}
@@ -577,13 +578,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		applyNamedNativeQuery( def.getName(), def );
 	}
 
-	private void applyNamedNativeQuery(String name, NamedSQLQueryDefinition query) {
+	private void applyNamedNativeQuery(String name, NamedNativeQueryDefinition query) {
 		checkQueryName( name );
 		namedNativeQueryMap.put( name.intern(), query );
 	}
 
 	@Override
-	public void addDefaultNamedNativeQuery(NamedSQLQueryDefinition query) {
+	public void addDefaultNamedNativeQuery(NamedNativeQueryDefinition query) {
 		applyNamedNativeQuery( query.getName(), query );
 		defaultNamedNativeQueryNames.add( query.getName() );
 	}
@@ -636,21 +637,21 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public void addResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition) {
-		if ( resultSetMappingDefinition == null ) {
+	public void addResultSetMapping(ResultSetMappingDefinition resultSetMapping) {
+		if ( resultSetMapping == null ) {
 			throw new IllegalArgumentException( "Result-set mapping was null" );
 		}
 
-		final String name = resultSetMappingDefinition.getName();
+		final String name = resultSetMapping.getName();
 		if ( name == null ) {
-			throw new IllegalArgumentException( "Result-set mapping name is null: " + resultSetMappingDefinition );
+			throw new IllegalArgumentException( "Result-set mapping name is null: " + resultSetMapping );
 		}
 
 		if ( defaultSqlResultSetMappingNames.contains( name ) ) {
 			return;
 		}
 
-		applyResultSetMapping( resultSetMappingDefinition );
+		applyResultSetMapping( resultSetMapping );
 	}
 
 	public void applyResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition) {
@@ -1964,7 +1965,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 					fetchProfileMap,
 					imports,
 					idGeneratorDefinitionMap,
-					namedQueryMap,
+					namedHqlQueryMap,
 					namedNativeQueryMap,
 					namedProcedureCallMap,
 					sqlResultSetMappingMap,

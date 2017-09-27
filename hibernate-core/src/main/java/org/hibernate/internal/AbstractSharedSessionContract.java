@@ -57,9 +57,11 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.query.Query;
+import org.hibernate.query.named.spi.NamedHqlQueryDescriptor;
+import org.hibernate.query.named.spi.NamedNativeQueryDescriptor;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
+import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -607,17 +609,28 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		checkTransactionSynchStatus();
 		delayedAfterCompletion();
 
-		// todo : apply stored setting at the JPA Query level too
+		// this method can be called for either a named HQL query or a named native query
 
-		final NamedQueryDefinition namedQueryDefinition = getFactory().getQueryEngine().getNamedQueryRepository().getNamedQueryDefinition( queryName );
-		if ( namedQueryDefinition != null ) {
-			return buildNamedQuery( namedQueryDefinition, resultType );
+		// first see if it is a named HQL query
+		final NamedHqlQueryDescriptor namedHqlDescriptor = getFactory().getQueryEngine()
+				.getNamedQueryRepository()
+				.getNamedHqlDescriptor( queryName );
+
+		if ( namedHqlDescriptor != null ) {
+			return namedHqlDescriptor.toQuery( this );
 		}
 
-		final NamedSQLQueryDefinition nativeQueryDefinition = getFactory().getQueryEngine().getNamedQueryRepository().getNamedSQLQueryDefinition( queryName );
-		if ( nativeQueryDefinition != null ) {
-			return createNativeQuery( nativeQueryDefinition, resultType );
+		// otherwise, see if it is a named native query
+		final NamedNativeQueryDescriptor namedNativeDescriptor = getFactory().getQueryEngine()
+				.getNamedQueryRepository()
+				.getNamedNativeDescriptor( queryName );
+
+		if ( namedNativeDescriptor != null ) {
+			return namedNativeDescriptor.toQuery( this );
 		}
+
+		// todo (6.0) : allow this for named stored procedures as well?
+		//		ultimately they are treated as a Query
 
 		throw exceptionConverter.convert( new IllegalArgumentException( "No query defined for that name [" + queryName + "]" ) );
 	}
@@ -689,9 +702,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		checkTransactionSynchStatus();
 		delayedAfterCompletion();
 
-		final NamedSQLQueryDefinition nativeQueryDefinition = factory.getQueryEngine().getNamedQueryRepository().getNamedSQLQueryDefinition( name );
-		if ( nativeQueryDefinition != null ) {
-			return buildNamedNativeQuery( nativeQueryDefinition );
+		final NamedNativeQueryDescriptor namedQueryDescriptor = factory.getQueryEngine()
+				.getNamedQueryRepository()
+				.getNamedNativeDescriptor( name );
+		if ( namedQueryDescriptor != null ) {
+			return namedQueryDescriptor.toQuery( this );
 		}
 
 		throw exceptionConverter.convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
@@ -747,15 +762,15 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			definedResultType = namedQueryDefinition.getQueryResultBuilders().get( 0 ).getResultType();
 		}
 		else if ( namedQueryDefinition.getResultSetRef() != null ) {
-			final ResultSetMappingDefinition rsMapping = getFactory().getQueryEngine()
+			final ResultSetMappingDescriptor rsMapping = getFactory().getQueryEngine()
 					.getNamedQueryRepository()
-					.getResultSetMappingDefinition( namedQueryDefinition.getResultSetRef() );
+					.getResultSetMappingDescriptor( namedQueryDefinition.getResultSetRef() );
 
-			if ( rsMapping.getQueryReturns().size() > 1 ) {
+			if ( rsMapping.getResultBuilders().size() > 1 ) {
 				throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
 			}
 
-			definedResultType = rsMapping.getQueryReturns().get( 0 ).getResultType();
+			definedResultType = rsMapping.getResultBuilders().get( 0 ).getResultType();
 		}
 		else {
 			throw new AssertionFailure( "Unsupported named NativeQuery ResultSet-mapping" );

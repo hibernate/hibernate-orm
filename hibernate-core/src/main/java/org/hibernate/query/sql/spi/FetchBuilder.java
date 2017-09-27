@@ -25,23 +25,35 @@ import org.hibernate.sql.results.spi.FetchParent;
  */
 public class FetchBuilder implements NativeQuery.FetchReturn {
 	private final String tableAlias;
-	private final String fetchParentTableAlias;
+	private final String parentTableAlias;
 	private final String joinPropertyName;
 
 	private LockMode lockMode;
 
 	private Map<String, AttributeMapping> attributeMappingsByName;
 
-	public FetchBuilder(String tableAlias, String fetchParentTableAlias, String joinPropertyName) {
+	public FetchBuilder(String tableAlias, String parentTableAlias, String joinPropertyName) {
 		this.tableAlias = tableAlias;
-		this.fetchParentTableAlias = fetchParentTableAlias;
+		this.parentTableAlias = parentTableAlias;
 		this.joinPropertyName = joinPropertyName;
 	}
 
+	public FetchBuilder(
+			String tableAlias,
+			String parentTableAlias,
+			String joinPropertyName,
+			LockMode lockMode) {
+		this.tableAlias = tableAlias;
+		this.parentTableAlias = parentTableAlias;
+		this.joinPropertyName = joinPropertyName;
+
+		this.lockMode = lockMode;
+	}
+
 	public Fetch buildFetch(BuilderExecutionState builderExecutionState, NodeResolutionContext resolutionContext) {
-		final FetchParent fetchParent = builderExecutionState.getFetchParentByParentAlias( fetchParentTableAlias );
+		final FetchParent fetchParent = builderExecutionState.getFetchParentByParentAlias( parentTableAlias );
 		if ( fetchParent == null ) {
-			throw new HibernateException( "FetchParent for table-alias [" + fetchParentTableAlias + "] not yet resolved" );
+			throw new HibernateException( "FetchParent for table-alias [" + parentTableAlias + "] not yet resolved" );
 		}
 
 		// todo (6.0) : how to handle `SqlExpressableQualifier`?
@@ -63,7 +75,7 @@ public class FetchBuilder implements NativeQuery.FetchReturn {
 							"Could not locate attribute/navigable for given name join name [%s] relative to container [%s (%s)]",
 							joinPropertyName,
 							fetchParent.getFetchContainer().asLoggableText(),
-							fetchParentTableAlias
+							parentTableAlias
 					)
 
 			);
@@ -73,6 +85,8 @@ public class FetchBuilder implements NativeQuery.FetchReturn {
 
 		final ColumnReferenceQualifier qualifier = null;
 
+
+		// todo (6.0) : pass along LockMode.  Anything else?
 		final Fetch fetch = ( (Fetchable) joinedNavigable ).generateFetch(
 				fetchParent,
 				// assume its present in the results since it is explicitly defined

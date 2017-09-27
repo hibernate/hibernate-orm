@@ -25,7 +25,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.QuerySecondPass;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
+import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -55,7 +55,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		//TODO add parameters checkings
 		if ( ann == null ) return;
-		ResultSetMappingDefinition definition = new ResultSetMappingDefinition( ann.name() );
+		ResultSetMappingDescriptor definition = new ResultSetMappingDescriptor( ann.name() );
 		LOG.debugf( "Binding result set mapping: %s", definition.getName() );
 
 		int entityAliasIndex = 0;
@@ -160,11 +160,11 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 					propertyResults,
 					LockMode.READ
 			);
-			definition.addQueryReturn( result );
+			definition.addResultBuilder( result );
 		}
 
 		for ( ColumnResult column : ann.columns() ) {
-			definition.addQueryReturn(
+			definition.addResultBuilder(
 					new NativeSQLQueryScalarReturn(
 							normalizeColumnQuoting( column.name() ),
 							column.type() != null ? context.getMetadataCollector().heuristicType( column.type().getName() ) : null
@@ -182,7 +182,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 						)
 				);
 			}
-			definition.addQueryReturn(
+			definition.addResultBuilder(
 					new NativeSQLQueryConstructorReturn( constructorResult.targetClass(), columnReturns )
 			);
 		}

@@ -60,8 +60,15 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * Is this native-SQL query known to be callable?
 	 *
 	 * @return {@code true} if the query is known to be callable; {@code false} otherwise.
+	 *
+	 * @deprecated (since 6.0) Executing database procedures or functions via NativeQuery
+	 * is no longer supported : use {@link org.hibernate.procedure.ProcedureCall} or
+	 * {@link javax.persistence.StoredProcedureQuery} instead
 	 */
-	boolean isCallable();
+	@Deprecated
+	default boolean isCallable() {
+		return false;
+	}
 
 	/**
 	 * Use a predefined named result-set mapping.  This might be defined by a {@code <result-set/>} element in a

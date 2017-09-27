@@ -18,9 +18,13 @@ import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
-import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
+import org.hibernate.boot.model.query.spi.NamedHqlQueryDefinition;
+import org.hibernate.boot.model.query.spi.NamedNativeQueryDefinition;
+import org.hibernate.boot.model.query.spi.NamedQueryDefinition;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.boot.model.resultset.spi.ResultSetMappingDefinition;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AttributeConverterDefinition;
@@ -30,10 +34,7 @@ import org.hibernate.cfg.SecondPass;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.Join;
@@ -139,13 +140,26 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 			MappedTable includedTable) throws DuplicateMappingException;
 
 	/**
-	 * Adds metadata for a named query to this repository.
+	 * Adds metadata for a named query definition to this repository.
 	 *
-	 * @param query The metadata
+	 * @param queryDefinition The metadata
+	 *
+	 * @throws DuplicateMappingException If a queryDefinition already exists with that name.
+	 * @deprecated Use {@link #addNamedHqlQuery} instead
+	 */
+	@Deprecated
+	default void addNamedQuery(NamedQueryDefinition queryDefinition) throws DuplicateMappingException {
+		addNamedHqlQuery( (NamedHqlQueryDefinition) queryDefinition );
+	}
+
+	/**
+	 * Adds metadata for a named HQL query to this repository.
+	 *
+	 * @param queryDefinition The metadata
 	 *
 	 * @throws DuplicateMappingException If a query already exists with that name.
 	 */
-	void addNamedQuery(NamedQueryDefinition query) throws DuplicateMappingException;
+	void addNamedHqlQuery(NamedHqlQueryDefinition queryDefinition) throws DuplicateMappingException;
 
 	/**
 	 * Adds metadata for a named SQL query to this repository.
@@ -154,7 +168,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	 *
 	 * @throws DuplicateMappingException If a query already exists with that name.
 	 */
-	void addNamedNativeQuery(NamedSQLQueryDefinition query) throws DuplicateMappingException;
+	void addNamedNativeQuery(NamedNativeQueryDefinition query) throws DuplicateMappingException;
 
 	/**
 	 * Adds the metadata for a named SQL result set mapping to this repository.
@@ -228,11 +242,19 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 
 	void addDefaultIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
-	void addDefaultQuery(NamedQueryDefinition queryDefinition);
+	/**
+	 * @deprecated Use {@link #addDefaultNamedHqlQuery} instead
+	 */
+	@Deprecated
+	default void addDefaultQuery(NamedQueryDefinition queryDefinition) {
+		addDefaultNamedHqlQuery( (NamedHqlQueryDefinition) queryDefinition );
+	}
 
-	void addDefaultNamedNativeQuery(NamedSQLQueryDefinition query);
+	void addDefaultNamedHqlQuery(NamedHqlQueryDefinition queryDefinition);
 
-	void addDefaultResultSetMapping(ResultSetMappingDefinition definition);
+	void addDefaultNamedNativeQuery(NamedNativeQueryDefinition query);
+
+	void addDefaultResultSetMapping(ResultSetMappingDefinition resultSetMapping);
 
 	void addDefaultNamedProcedureCallDefinition(NamedProcedureCallDefinition procedureCallDefinition);
 

@@ -774,13 +774,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			if ( hibernateQuery != null ) {
 				// create and register the proper NamedQueryDefinition...
 				if ( org.hibernate.query.NativeQuery.class.isInstance( hibernateQuery ) ) {
-					getQueryEngine().getNamedQueryRepository().registerNamedSQLQueryDefinition(
+					getQueryEngine().getNamedQueryRepository().registerNamedNativeQueryDescriptor(
 							name,
 							extractSqlQueryDefinition( (org.hibernate.query.NativeQuery) hibernateQuery, name )
 					);
 				}
 				else {
-					getQueryEngine().getNamedQueryRepository().registerNamedQueryDefinition(
+					getQueryEngine().getNamedQueryRepository().registerNamedHqlQueryDescriptor(
 							name,
 							extractHqlQueryDefinition( hibernateQuery, name )
 					);

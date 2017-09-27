@@ -52,7 +52,7 @@ import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.metamodel.model.domain.internal.StandardRepresentationStrategySelector;
 import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.spi.ResultSetMappingDefinition;
+import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.BasicType;
@@ -97,7 +97,7 @@ public class Configuration {
 	private Map<String, NamedQueryDefinition> namedQueries;
 	private Map<String, NamedSQLQueryDefinition> namedSqlQueries;
 	private Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
-	private Map<String, ResultSetMappingDefinition> sqlResultSetMappings;
+	private Map<String, ResultSetMappingDescriptor> sqlResultSetMappings;
 	private Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 
 	private Map<String, SqmFunctionTemplate> sqlFunctions;

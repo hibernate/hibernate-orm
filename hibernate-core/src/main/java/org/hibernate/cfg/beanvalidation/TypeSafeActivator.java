@@ -358,7 +358,7 @@ class TypeSafeActivator {
 			int max = sizeConstraint.getAnnotation().max();
 			Column col = (Column) property.getColumnIterator().next();
 			if ( max < Integer.MAX_VALUE ) {
-				col.setLength( max );
+				col.setLength( (long) max );
 			}
 		}
 	}
@@ -372,7 +372,7 @@ class TypeSafeActivator {
 			int max = (Integer) descriptor.getAttributes().get( "max" );
 			Column col = (Column) property.getColumnIterator().next();
 			if ( max < Integer.MAX_VALUE ) {
-				col.setLength( max );
+				col.setLength( (long) max );
 			}
 		}
 	}

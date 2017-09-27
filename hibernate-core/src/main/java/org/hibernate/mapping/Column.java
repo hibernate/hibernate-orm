@@ -69,7 +69,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		return length;
 	}
 
-	public void setLength(long length) {
+	public void setLength(Long length) {
 		this.length = length;
 	}
 

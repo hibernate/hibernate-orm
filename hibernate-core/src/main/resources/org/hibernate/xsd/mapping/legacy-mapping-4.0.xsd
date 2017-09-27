@@ -611,7 +611,7 @@
                 </xs:sequence>
                 <xs:attribute name="access" type="xs:string"/>
                 <xs:attribute name="column" type="xs:string"/>
-                <xs:attribute name="length" type="xs:int"/>
+                <xs:attribute name="length" type="xs:long"/>
                 <xs:attribute name="name" type="xs:string"/>
                 <xs:attribute name="node" type="xs:string"/>
                 <xs:attribute name="type" type="xs:string"/>
@@ -769,7 +769,7 @@
                     <xs:element name="generator" type="GeneratorSpecificationType"/>
                 </xs:sequence>
                 <xs:attribute name="column" use="required" type="xs:string"/>
-                <xs:attribute name="length" type="xs:int"/>
+                <xs:attribute name="length" type="xs:long"/>
                 <xs:attribute name="type" use="required" type="xs:string"/>
             </xs:extension>
         </xs:complexContent>
@@ -1082,7 +1082,7 @@
         <xs:attribute name="force" default="false" type="xs:boolean"/>
         <xs:attribute name="formula" type="xs:string"/>
         <xs:attribute name="insert" default="true" type="xs:boolean"/>
-        <xs:attribute name="length" type="xs:int"/>
+        <xs:attribute name="length" type="xs:long"/>
         <xs:attribute name="not-null" default="true" type="xs:boolean"/>
         <xs:attribute name="type" default="string" type="xs:string"/>
     </xs:complexType>
@@ -1165,7 +1165,7 @@
         <xs:attribute name="default" type="xs:string"/>
         <!-- default: no default value -->
         <xs:attribute name="index" type="xs:string"/>
-        <xs:attribute name="length" type="xs:int"/>
+        <xs:attribute name="length" type="xs:long"/>
         <!-- default: 255 -->
         <xs:attribute name="name" use="required" type="xs:string"/>
         <xs:attribute name="not-null" type="xs:boolean"/>
@@ -1295,7 +1295,7 @@
         </xs:sequence>
         <xs:attribute name="column" type="xs:string"/>
         <xs:attribute name="formula" type="xs:string"/>
-        <xs:attribute name="length" type="xs:int"/>
+        <xs:attribute name="length" type="xs:long"/>
         <xs:attribute name="node" type="xs:string"/>
         <xs:attribute name="not-null" default="false" type="xs:boolean"/>
         <xs:attribute name="precision" type="xs:int"/>
@@ -1359,7 +1359,7 @@
             <xs:element name="column" minOccurs="0" maxOccurs="unbounded" type="ColumnType"/>
         </xs:sequence>
         <xs:attribute name="column" type="xs:string" />
-        <xs:attribute name="length" type="xs:int"/>
+        <xs:attribute name="length" type="xs:long"/>
         <xs:attribute name="type" type="xs:string"/>
     </xs:complexType>
 
@@ -1451,7 +1451,7 @@
                 </xs:sequence>
                 <xs:attribute name="access" type="xs:string"/>
                 <xs:attribute name="column" type="xs:string"/>
-                <xs:attribute name="length" type="xs:int"/>
+                <xs:attribute name="length" type="xs:long"/>
                 <xs:attribute name="name" use="required" type="xs:string"/>
                 <xs:attribute name="node" type="xs:string"/>
                 <xs:attribute name="type" type="xs:string"/>
@@ -1502,7 +1502,7 @@
         </xs:sequence>
         <xs:attribute name="column" type="xs:string"/>
         <xs:attribute name="formula" type="xs:string"/>
-        <xs:attribute name="length" type="xs:int"/>
+        <xs:attribute name="length" type="xs:long"/>
         <xs:attribute name="node" type="xs:string"/>
         <xs:attribute name="type" type="xs:string"/>
     </xs:complexType>
@@ -1703,7 +1703,7 @@
                 <!-- include the columns spanned by this property in an index -->
                 <xs:attribute name="insert" type="xs:boolean"/>
                 <xs:attribute name="lazy" default="false" type="xs:boolean"/>
-                <xs:attribute name="length" type="xs:int"/>
+                <xs:attribute name="length" type="xs:long"/>
                 <xs:attribute name="name" use="required" type="xs:string"/>
                 <xs:attribute name="node" type="xs:string"/>
                 <xs:attribute name="not-null" type="xs:boolean"/>

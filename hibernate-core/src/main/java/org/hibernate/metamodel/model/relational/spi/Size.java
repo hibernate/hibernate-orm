@@ -42,15 +42,15 @@ public class Size implements Serializable {
 		this.lobMultiplier = lobMultiplier;
 	}
 
-	public int getPrecision() {
+	public Integer getPrecision() {
 		return precision;
 	}
 
-	public int getScale() {
+	public Integer getScale() {
 		return scale;
 	}
 
-	public long getLength() {
+	public Long getLength() {
 		return length;
 	}
 

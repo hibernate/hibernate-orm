@@ -15,7 +15,7 @@ public interface SizeSource {
 	 *
 	 * @return The length, or {@code null} if not defined.
 	 */
-	Integer getLength();
+	Long getLength();
 
 	/**
 	 * The specified precision.  Will return {@code null} if none was specified.

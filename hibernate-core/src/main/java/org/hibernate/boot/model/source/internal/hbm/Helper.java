@@ -239,14 +239,14 @@ public class Helper {
 		}
 	}
 
-	public static SizeSource interpretSizeSource(Integer length, Integer scale, Integer precision) {
+	public static SizeSource interpretSizeSource(Long length, Integer scale, Integer precision) {
 		if ( length != null || precision != null || scale != null ) {
 			return new SizeSourceImpl( length, scale, precision );
 		}
 		return null;
 	}
 
-	public static SizeSource interpretSizeSource(Integer length, String scale, String precision) {
+	public static SizeSource interpretSizeSource(Long length, String scale, String precision) {
 		return interpretSizeSource(
 				length,
 				scale == null ? null : Integer.parseInt( scale ),

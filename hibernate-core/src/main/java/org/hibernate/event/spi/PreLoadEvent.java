@@ -20,7 +20,7 @@ public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntity
 	private Object entity;
 	private Object[] state;
 	private Serializable id;
-	private EntityDescriptor persister;
+	private EntityDescriptor descriptor;
 
 	public PreLoadEvent(EventSource session) {
 		super(session);
@@ -34,9 +34,17 @@ public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntity
 	public Serializable getId() {
 		return id;
 	}
-	
+
+	/**
+	 *
+	 * @deprecated use {@link #getDescriptor()}
+	 */
 	public EntityDescriptor getPersister() {
-		return persister;
+		return descriptor;
+	}
+
+	public EntityDescriptor getDescriptor() {
+		return descriptor;
 	}
 	
 	public Object[] getState() {
@@ -52,9 +60,19 @@ public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntity
 		this.id = id;
 		return this;
 	}
-	
-	public PreLoadEvent setPersister(EntityDescriptor persister) {
-		this.persister = persister;
+
+	/**
+	 *
+	 * @deprecated use {@link #setDescriptor(EntityDescriptor)}
+	 */
+	@Deprecated
+	public PreLoadEvent setPersister(EntityDescriptor descriptor) {
+		this.descriptor = descriptor;
+		return this;
+	}
+
+	public PreLoadEvent setDescriptor(EntityDescriptor descriptor) {
+		this.descriptor = descriptor;
 		return this;
 	}
 	
@@ -65,7 +83,7 @@ public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntity
 
 	@Override
 	public String getEntityName() {
-		return persister.getEntityName();
+		return descriptor.getEntityName();
 	}
 
 	@Override

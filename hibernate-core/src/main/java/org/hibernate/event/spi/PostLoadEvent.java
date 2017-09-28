@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 public class PostLoadEvent extends AbstractEvent {
 	private Object entity;
 	private Serializable id;
-	private EntityDescriptor persister;
+	private EntityDescriptor descriptor;
 
 	public PostLoadEvent(EventSource session) {
 		super(session);
@@ -27,9 +27,18 @@ public class PostLoadEvent extends AbstractEvent {
 	public Object getEntity() {
 		return entity;
 	}
-	
+
+	/**
+	 *
+	 * @deprecated use {@link #getDescriptor()}
+	 */
+	@Deprecated
 	public EntityDescriptor getPersister() {
-		return persister;
+		return descriptor;
+	}
+
+	public EntityDescriptor getDescriptor() {
+		return descriptor;
 	}
 	
 	public Serializable getId() {
@@ -46,8 +55,18 @@ public class PostLoadEvent extends AbstractEvent {
 		return this;
 	}
 
+	/**
+	 *
+	 * @deprecated use {@link #setDescriptor(EntityDescriptor)}
+	 */
+	@Deprecated
 	public PostLoadEvent setPersister(EntityDescriptor persister) {
-		this.persister = persister;
+		this.descriptor = persister;
+		return this;
+	}
+
+	public PostLoadEvent setDescriptor(EntityDescriptor descriptor){
+		this.descriptor = descriptor;
 		return this;
 	}
 	

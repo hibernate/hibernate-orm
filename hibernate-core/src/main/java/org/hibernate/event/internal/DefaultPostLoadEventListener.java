@@ -48,8 +48,8 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 
 		final LockMode lockMode = entry.getLockMode();
 		if ( LockMode.PESSIMISTIC_FORCE_INCREMENT.equals( lockMode ) ) {
-			final EntityDescriptor persister = entry.getPersister();
-			final Object nextVersion = persister.forceVersionIncrement(
+			final EntityDescriptor descriptor = entry.getDescriptor();
+			final Object nextVersion = descriptor.forceVersionIncrement(
 					entry.getId(),
 					entry.getVersion(),
 					event.getSession()
@@ -65,7 +65,7 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 			event.getSession().getActionQueue().registerProcess( verifyVersion );
 		}
 
-		if ( event.getPersister().implementsLifecycle() ) {
+		if ( event.getDescriptor().implementsLifecycle() ) {
 			//log.debug( "calling onLoad()" );
 			( (Lifecycle) event.getEntity() ).onLoad( event.getSession(), event.getId() );
 		}

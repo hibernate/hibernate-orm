@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.named.spi;
 
+import java.util.Collection;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 
@@ -13,6 +15,9 @@ import org.hibernate.procedure.spi.ProcedureCallImplementor;
  * @author Steve Ebersole
  */
 public interface NamedCallableQueryDescriptor extends NamedQueryDescriptor {
+	String getCallableName();
+	Collection<String> getQuerySpaces();
+
 	@Override
 	ProcedureCallImplementor toQuery(SharedSessionContractImplementor session);
 }

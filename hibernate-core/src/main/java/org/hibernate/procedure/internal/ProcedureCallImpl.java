@@ -27,6 +27,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -53,6 +54,7 @@ import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.internal.QueryOptionsImpl;
+import org.hibernate.query.named.spi.NamedCallableQueryDescriptor;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -968,5 +970,12 @@ public class ProcedureCallImpl<R>
 				.stream()
 				.map( parameter -> (Parameter<?>) parameter )
 				.collect( Collectors.toSet() );
+	}
+
+	@Override
+	public NamedCallableQueryDescriptor toNamedDescriptor(String name) {
+		// todo (6.0) : iiuc NamedCallableQueryDescriptor and ProcedureCallMemento serve the same purpose
+		//		replace ProcedureCallMemento (and friends) with NamedCallableQueryDescriptor
+		throw new NotYetImplementedFor6Exception();
 	}
 }

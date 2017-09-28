@@ -20,8 +20,6 @@ import org.hibernate.query.spi.QueryImplementor;
 public abstract class AbstractNamedQueryDescriptor implements NamedQueryDescriptor {
 	private final String name;
 
-	private final Collection<String> querySpaces;
-
 	private final Boolean cacheable;
 	private final String cacheRegion;
 	private final CacheMode cacheMode;
@@ -38,7 +36,6 @@ public abstract class AbstractNamedQueryDescriptor implements NamedQueryDescript
 
 	public AbstractNamedQueryDescriptor(
 			String name,
-			Collection<String> querySpaces,
 			Boolean cacheable,
 			String cacheRegion,
 			CacheMode cacheMode,
@@ -49,7 +46,6 @@ public abstract class AbstractNamedQueryDescriptor implements NamedQueryDescript
 			Integer fetchSize,
 			String comment) {
 		this.name = name;
-		this.querySpaces = querySpaces;
 		this.cacheable = cacheable;
 		this.cacheRegion = cacheRegion;
 		this.cacheMode = cacheMode;
@@ -64,11 +60,6 @@ public abstract class AbstractNamedQueryDescriptor implements NamedQueryDescript
 	@Override
 	public String getName() {
 		return name;
-	}
-
-	@Override
-	public Collection<String> getQuerySpaces() {
-		return querySpaces;
 	}
 
 	@Override

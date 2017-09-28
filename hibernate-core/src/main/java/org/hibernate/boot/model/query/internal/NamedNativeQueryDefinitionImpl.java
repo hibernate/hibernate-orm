@@ -22,6 +22,7 @@ import org.hibernate.query.named.spi.NamedNativeQueryDescriptor;
 public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition implements NamedNativeQueryDefinition {
 	private final String sqlString;
 	private final String resultSetMappingName;
+	private final Collection<String> querySpaces;
 
 	public NamedNativeQueryDefinitionImpl(
 			String name,
@@ -39,7 +40,6 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 			String comment) {
 		super(
 				name,
-				querySpaces,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -52,6 +52,7 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 		);
 		this.sqlString = sqlString;
 		this.resultSetMappingName = resultSetMappingName;
+		this.querySpaces = querySpaces;
 	}
 
 	@Override
@@ -70,7 +71,7 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 				getName(),
 				sqlString,
 				resultSetMappingName,
-				getQuerySpaces(),
+				querySpaces,
 				getCacheable(),
 				getCacheRegion(),
 				getCacheMode(),

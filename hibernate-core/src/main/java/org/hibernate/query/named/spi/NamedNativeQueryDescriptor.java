@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.named.spi;
 
+import java.util.Collection;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.NativeQueryImplementor;
 
@@ -17,6 +19,8 @@ import org.hibernate.query.spi.NativeQueryImplementor;
 public interface NamedNativeQueryDescriptor extends NamedQueryDescriptor {
 	String getSqlString();
 	String getResultSetMappingName();
+
+	Collection<String> getQuerySpaces();
 
 	@Override
 	NativeQueryImplementor toQuery(SharedSessionContractImplementor session);

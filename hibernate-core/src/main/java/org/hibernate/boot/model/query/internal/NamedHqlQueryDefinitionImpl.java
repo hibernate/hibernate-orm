@@ -6,8 +6,6 @@
  */
 package org.hibernate.boot.model.query.internal;
 
-import java.util.Collection;
-
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
@@ -29,7 +27,6 @@ public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition im
 			String hqlString,
 			Integer firstResult,
 			Integer maxResults,
-			Collection<String> querySpaces,
 			Boolean cacheable,
 			String cacheRegion,
 			CacheMode cacheMode,
@@ -41,7 +38,6 @@ public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition im
 			String comment) {
 		super(
 				name,
-				querySpaces,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -69,7 +65,6 @@ public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition im
 				hqlString,
 				firstResult,
 				maxResults,
-				getQuerySpaces(),
 				getCacheable(),
 				getCacheRegion(),
 				getCacheMode(),
@@ -114,7 +109,6 @@ public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition im
 					hqlString,
 					firstResult,
 					maxResults,
-					getQuerySpaces(),
 					getCacheable(),
 					getCacheRegion(),
 					getCacheMode(),

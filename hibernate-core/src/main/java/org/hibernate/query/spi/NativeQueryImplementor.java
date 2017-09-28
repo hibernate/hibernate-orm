@@ -34,9 +34,8 @@ import org.hibernate.type.Type;
  */
 @Incubating
 public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQuery<R> {
-	default NamedNativeQueryDescriptor toNamedDescriptor(String name) {
-		throw new NotYetImplementedFor6Exception();
-	}
+	@Override
+	NamedNativeQueryDescriptor toNamedDescriptor(String name);
 
 	NativeQueryImplementor setCollectionKey(Serializable key);
 

@@ -22,6 +22,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.ResultSetMappingBindingDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.resultset.spi.ResultSetMappingDefinition;
 import org.hibernate.boot.model.source.internal.OverriddenMappingDefaults;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
@@ -239,8 +240,8 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	@Override
 	public void processResultSetMappings() {
 		for ( ResultSetMappingBindingDefinition resultSetMappingBinding : documentRoot.getResultset() ) {
-			final ResultSetMappingDescriptor binding = ResultSetMappingBinder.bind( resultSetMappingBinding, this );
-			getMetadataCollector().addResultSetMapping( binding );
+			final ResultSetMappingDefinition mappingDefinition = ResultSetMappingBinder.bind( resultSetMappingBinding, this );
+			getMetadataCollector().addResultSetMapping( mappingDefinition );
 		}
 	}
 

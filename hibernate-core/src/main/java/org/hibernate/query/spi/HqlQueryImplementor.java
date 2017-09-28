@@ -6,14 +6,12 @@
  */
 package org.hibernate.query.spi;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.named.spi.NamedHqlQueryDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public interface HqlQueryImplementor<R> extends QueryImplementor<R> {
-	default NamedHqlQueryDescriptor toNamedDescriptor(String name) {
-		throw new NotYetImplementedFor6Exception();
-	}
+	@Override
+	NamedHqlQueryDescriptor toNamedDescriptor(String name);
 }

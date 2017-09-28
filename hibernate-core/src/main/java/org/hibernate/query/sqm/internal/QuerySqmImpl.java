@@ -30,6 +30,8 @@ import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
+import org.hibernate.query.named.internal.NamedHqlQueryDescriptorImpl;
+import org.hibernate.query.named.spi.NamedHqlQueryDescriptor;
 import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.query.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.MutableQueryOptions;
@@ -442,5 +444,24 @@ public class QuerySqmImpl<R>
 	@Override
 	public <T> Collection<T> getLoadIdentifiers() {
 		return null;
+	}
+
+	@Override
+	public NamedHqlQueryDescriptor toNamedDescriptor(String name) {
+		return new NamedHqlQueryDescriptorImpl(
+				name,
+				sourceQueryString,
+				getFirstResult(),
+				getMaxResults(),
+				isCacheable(),
+				getCacheRegion(),
+				getCacheMode(),
+				getHibernateFlushMode(),
+				isReadOnly(),
+				getLockOptions(),
+				getTimeout(),
+				getFetchSize(),
+				getComment()
+		);
 	}
 }

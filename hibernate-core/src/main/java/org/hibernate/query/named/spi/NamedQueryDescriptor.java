@@ -21,8 +21,6 @@ public interface NamedQueryDescriptor {
 	String getName();
 	String getQueryString();
 
-	Collection<String> getQuerySpaces();
-
 	Boolean getCacheable();
 
 	String getCacheRegion();

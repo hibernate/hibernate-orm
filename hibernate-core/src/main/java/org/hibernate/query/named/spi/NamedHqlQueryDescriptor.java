@@ -7,7 +7,7 @@
 package org.hibernate.query.named.spi;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.spi.HqlQueryImplementor;
 
 /**
  * @author Steve Ebersole
@@ -20,8 +20,8 @@ public interface NamedHqlQueryDescriptor extends NamedQueryDescriptor {
 		return getHqlString();
 	}
 
-	// todo (6.0) : args?
-	QueryImplementor toQuery(SharedSessionContractImplementor session);
+	@Override
+	HqlQueryImplementor toQuery(SharedSessionContractImplementor session);
 
 	NamedHqlQueryDescriptor makeCopy(String name);
 }

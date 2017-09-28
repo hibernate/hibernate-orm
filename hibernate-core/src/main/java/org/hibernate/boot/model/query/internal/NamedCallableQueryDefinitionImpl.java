@@ -22,7 +22,8 @@ import org.hibernate.query.named.spi.NamedCallableQueryDescriptor;
 public class NamedCallableQueryDefinitionImpl
 		extends AbstractNamedQueryDefinition
 		implements NamedCallableQueryDefinition {
-	private String callableName;
+	private final String callableName;
+	private final Collection<String> querySpaces;
 
 	public NamedCallableQueryDefinitionImpl(
 			String name,
@@ -39,7 +40,6 @@ public class NamedCallableQueryDefinitionImpl
 			String comment) {
 		super(
 				name,
-				querySpaces,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -51,6 +51,7 @@ public class NamedCallableQueryDefinitionImpl
 				comment
 		);
 		this.callableName = callableName;
+		this.querySpaces = querySpaces;
 	}
 
 	@Override
@@ -58,7 +59,7 @@ public class NamedCallableQueryDefinitionImpl
 		return new NamedCallableQueryDescriptorImpl(
 				getName(),
 				callableName,
-				getQuerySpaces(),
+				querySpaces,
 				getCacheable(),
 				getCacheRegion(),
 				getCacheMode(),

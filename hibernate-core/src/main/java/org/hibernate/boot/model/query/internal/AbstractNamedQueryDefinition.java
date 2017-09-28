@@ -20,8 +20,6 @@ import org.hibernate.boot.model.query.spi.NamedQueryDefinition;
 public abstract class AbstractNamedQueryDefinition implements NamedQueryDefinition {
 	private final String name;
 
-	private final Collection<String> querySpaces;
-
 	private final Boolean cacheable;
 	private final String cacheRegion;
 	private final CacheMode cacheMode;
@@ -38,15 +36,16 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 
 	public AbstractNamedQueryDefinition(
 			String name,
-			Collection<String> querySpaces,
 			Boolean cacheable,
 			String cacheRegion,
 			CacheMode cacheMode,
 			FlushMode flushMode,
 			Boolean readOnly,
-			LockOptions lockOptions, Integer timeout, Integer fetchSize, String comment) {
+			LockOptions lockOptions,
+			Integer timeout,
+			Integer fetchSize,
+			String comment) {
 		this.name = name;
-		this.querySpaces = querySpaces;
 		this.cacheable = cacheable;
 		this.cacheRegion = cacheRegion;
 		this.cacheMode = cacheMode;
@@ -61,10 +60,6 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 	@Override
 	public String getName() {
 		return name;
-	}
-
-	public Collection<String> getQuerySpaces() {
-		return querySpaces;
 	}
 
 	public Boolean getCacheable() {

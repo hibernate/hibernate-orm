@@ -14,6 +14,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.named.spi.AbstractNamedQueryDescriptor;
 import org.hibernate.query.named.spi.NamedHqlQueryDescriptor;
+import org.hibernate.query.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 
@@ -30,7 +31,6 @@ public class NamedHqlQueryDescriptorImpl extends AbstractNamedQueryDescriptor im
 			String hqlString,
 			Integer firstResult,
 			Integer maxResults,
-			Collection<String> querySpaces,
 			Boolean cacheable,
 			String cacheRegion,
 			CacheMode cacheMode,
@@ -42,7 +42,6 @@ public class NamedHqlQueryDescriptorImpl extends AbstractNamedQueryDescriptor im
 			String comment) {
 		super(
 				name,
-				querySpaces,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -64,7 +63,7 @@ public class NamedHqlQueryDescriptorImpl extends AbstractNamedQueryDescriptor im
 	}
 
 	@Override
-	public QueryImplementor toQuery(SharedSessionContractImplementor session) {
+	public HqlQueryImplementor toQuery(SharedSessionContractImplementor session) {
 		final QuerySqmImpl query = new QuerySqmImpl(
 				hqlString,
 				session.getFactory().getQueryEngine().getSemanticQueryProducer().interpret( hqlString ),
@@ -91,7 +90,6 @@ public class NamedHqlQueryDescriptorImpl extends AbstractNamedQueryDescriptor im
 				getHqlString(),
 				firstResult,
 				maxResults,
-				getQuerySpaces(),
 				getCacheable(),
 				getCacheRegion(),
 				getCacheMode(),

@@ -13,7 +13,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.query.named.spi.AbstractNamedQueryDescriptor;
 import org.hibernate.query.named.spi.NamedCallableQueryDescriptor;
@@ -25,6 +24,7 @@ public class NamedCallableQueryDescriptorImpl
 		extends AbstractNamedQueryDescriptor
 		implements NamedCallableQueryDescriptor {
 	private final String callableName;
+	private final Collection<String> querySpaces;
 
 	public NamedCallableQueryDescriptorImpl(
 			String name,
@@ -41,7 +41,6 @@ public class NamedCallableQueryDescriptorImpl
 			String comment) {
 		super(
 				name,
-				querySpaces,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -53,6 +52,18 @@ public class NamedCallableQueryDescriptorImpl
 				comment
 		);
 		this.callableName = callableName;
+		this.querySpaces = querySpaces;
+
+	}
+
+	@Override
+	public String getCallableName() {
+		return callableName;
+	}
+
+	@Override
+	public Collection<String> getQuerySpaces() {
+		return querySpaces;
 	}
 
 	@Override

@@ -44,6 +44,7 @@ import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
+import org.hibernate.query.named.internal.NamedNativeQueryDescriptorImpl;
 import org.hibernate.query.named.spi.NamedNativeQueryDescriptor;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NativeQueryImplementor;
@@ -952,4 +953,9 @@ public class NativeQueryImpl<R>
 		return parameterBindings;
 	}
 
+	@Override
+	public NamedNativeQueryDescriptor toNamedDescriptor(String name) {
+		// todo (6.0) : need to account for creating and registering a result mapping
+		throw new NotYetImplementedFor6Exception();
+	}
 }

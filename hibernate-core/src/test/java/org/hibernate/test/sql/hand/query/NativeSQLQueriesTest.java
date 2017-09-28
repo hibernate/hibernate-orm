@@ -153,8 +153,8 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		final String queryName = "namedQuery";
 		final String sqlString = "select count(*) AS c from organization";
 
-		final NamedNativeQueryDefinitionImpl.Builder builder = new NamedNativeQueryDefinitionImpl.Builder( queryName, sqlString )
-				.addResult( new ScalarResultDefinitionImpl( null, null ) );
+		final NamedNativeQueryDefinitionImpl.Builder builder = new NamedNativeQueryDefinitionImpl.Builder( queryName )
+				.setSqlString( sqlString );
 		
 		sessionFactory().getQueryEngine().getNamedQueryRepository().registerNamedNativeQueryDescriptor(
 				queryName,

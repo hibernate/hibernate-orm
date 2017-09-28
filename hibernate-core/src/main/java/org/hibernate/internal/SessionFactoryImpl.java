@@ -55,6 +55,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
@@ -63,7 +64,6 @@ import org.hibernate.context.internal.ManagedSessionContext;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -73,12 +73,7 @@ import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.engine.profile.Association;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
-import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
@@ -101,12 +96,16 @@ import org.hibernate.jpa.internal.ManagedFlushCheckerLegacyJpaImpl;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.internal.MetamodelImpl;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.spi.HqlQueryImplementor;
+import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
@@ -120,7 +119,6 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
-import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
@@ -760,7 +758,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		try {
 			final ProcedureCall unwrapped = query.unwrap( ProcedureCall.class );
 			if ( unwrapped != null ) {
-				addNamedStoredProcedureQuery( name, unwrapped );
+				getQueryEngine().getNamedQueryRepository().registerNamedProcedureCallMemento(
+						name,
+						unwrapped.extractMemento( unwrapped.getHints() )
+				);
 				return;
 			}
 		}
@@ -768,28 +769,36 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			// this means 'query' is not a StoredProcedureQueryImpl
 		}
 
-		// then try as a native-SQL or JPQL query
+		// next handle HqlQueryImplementor
 		try {
-			org.hibernate.query.Query hibernateQuery = query.unwrap( org.hibernate.query.Query.class );
-			if ( hibernateQuery != null ) {
-				// create and register the proper NamedQueryDefinition...
-				if ( org.hibernate.query.NativeQuery.class.isInstance( hibernateQuery ) ) {
-					getQueryEngine().getNamedQueryRepository().registerNamedNativeQueryDescriptor(
-							name,
-							extractSqlQueryDefinition( (org.hibernate.query.NativeQuery) hibernateQuery, name )
-					);
-				}
-				else {
-					getQueryEngine().getNamedQueryRepository().registerNamedHqlQueryDescriptor(
-							name,
-							extractHqlQueryDefinition( hibernateQuery, name )
-					);
-				}
+			final HqlQueryImplementor hqlQuery = query.unwrap( HqlQueryImplementor.class );
+			if ( hqlQuery != null ) {
+				getQueryEngine().getNamedQueryRepository().registerNamedHqlQueryDescriptor(
+						name,
+						hqlQuery.toNamedDescriptor( name )
+				);
+
 				return;
 			}
 		}
 		catch ( PersistenceException ignore ) {
-			// this means 'query' is not a native-SQL or JPQL query
+			// this means 'query' is not a HQL/JPQL query
+		}
+
+		// lastly, try as a native query
+		try {
+			final NativeQueryImplementor nativeQuery = query.unwrap( NativeQueryImplementor.class );
+			if ( nativeQuery != null ) {
+				getQueryEngine().getNamedQueryRepository().registerNamedNativeQueryDescriptor(
+						name,
+						nativeQuery.toNamedDescriptor( name )
+				);
+
+				return;
+			}
+		}
+		catch ( PersistenceException ignore ) {
+			// this means 'query' is not a native query
 		}
 
 		// if we get here, we are unsure how to properly unwrap the incoming query to extract the needed information
@@ -799,56 +808,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 						query
 				)
 		);
-	}
-
-	private void addNamedStoredProcedureQuery(String name, ProcedureCall procedureCall) {
-		getQueryEngine().getNamedQueryRepository().registerNamedProcedureCallMemento(
-				name,
-				procedureCall.extractMemento( procedureCall.getHints() )
-		);
-	}
-
-	private NamedSQLQueryDefinition extractSqlQueryDefinition(org.hibernate.query.NativeQuery nativeSqlQuery, String name) {
-		final NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder( name );
-		fillInNamedQueryBuilder( builder, nativeSqlQuery );
-		builder.setCallable( nativeSqlQuery.isCallable() )
-				.setQuerySpaces( nativeSqlQuery.getSynchronizedQuerySpaces() )
-				.setQueryReturns( nativeSqlQuery.getQueryReturns() );
-		return builder.createNamedQueryDefinition();
-	}
-
-	private NamedQueryDefinition extractHqlQueryDefinition(org.hibernate.query.Query hqlQuery, String name) {
-		final NamedQueryDefinitionBuilder builder = new NamedQueryDefinitionBuilder( name );
-		fillInNamedQueryBuilder( builder, hqlQuery );
-		// LockOptions only valid for HQL/JPQL queries...
-		builder.setLockOptions( hqlQuery.getLockOptions().makeCopy() );
-		return builder.createNamedQueryDefinition();
-	}
-
-	private void fillInNamedQueryBuilder(NamedQueryDefinitionBuilder builder, org.hibernate.query.Query query) {
-		builder.setQuery( query.getQueryString() )
-				.setComment( query.getComment() )
-				.setCacheable( query.isCacheable() )
-				.setCacheRegion( query.getCacheRegion() )
-				.setCacheMode( query.getCacheMode() )
-				.setReadOnly( query.isReadOnly() )
-				.setFlushMode( query.getHibernateFlushMode() );
-
-		if ( query.getQueryOptions().getLimit().getFirstRow() != null ) {
-			builder.setFirstResult( query.getQueryOptions().getLimit().getFirstRow() );
-		}
-
-		if ( query.getQueryOptions().getLimit().getMaxRows() != null ) {
-			builder.setMaxResults( query.getQueryOptions().getLimit().getMaxRows() );
-		}
-
-		if ( query.getQueryOptions().getTimeout() != null ) {
-			builder.setTimeout( query.getQueryOptions().getTimeout() );
-		}
-
-		if ( query.getQueryOptions().getFetchSize() != null ) {
-			builder.setFetchSize( query.getQueryOptions().getFetchSize() );
-		}
 	}
 
 	@Override

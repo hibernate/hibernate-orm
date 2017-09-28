@@ -35,6 +35,8 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
+import org.hibernate.boot.model.query.spi.NamedHqlQueryDefinition;
+import org.hibernate.boot.model.query.spi.NamedNativeQueryDefinition;
 import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -43,8 +45,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.exception.SerializationException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -92,10 +92,10 @@ public class Configuration {
 	// used during processing mappings
 	private ImplicitNamingStrategy implicitNamingStrategy;
 	private PhysicalNamingStrategy physicalNamingStrategy;
-	private List<BasicType> basicTypes = new ArrayList<BasicType>();
-	private List<TypeContributor> typeContributorRegistrations = new ArrayList<TypeContributor>();
-	private Map<String, NamedQueryDefinition> namedQueries;
-	private Map<String, NamedSQLQueryDefinition> namedSqlQueries;
+	private List<BasicType> basicTypes = new ArrayList<>();
+	private List<TypeContributor> typeContributorRegistrations = new ArrayList<>();
+	private Map<String, NamedHqlQueryDefinition> namedHqlQueries;
+	private Map<String, NamedNativeQueryDefinition> namedNativeQueries;
 	private Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
 	private Map<String, ResultSetMappingDescriptor> sqlResultSetMappings;
 	private Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
@@ -151,8 +151,8 @@ public class Configuration {
 	protected void reset() {
 		implicitNamingStrategy = ImplicitNamingStrategyJpaCompliantImpl.INSTANCE;
 		physicalNamingStrategy = PhysicalNamingStrategyStandardImpl.INSTANCE;
-		namedQueries = new HashMap<>();
-		namedSqlQueries = new HashMap<>();
+		namedHqlQueries = new HashMap<>();
+		namedNativeQueries = new HashMap<>();
 		sqlResultSetMappings = new HashMap<>();
 		namedEntityGraphMap = new HashMap<>();
 		namedProcedureCallMap = new HashMap<>(  );
@@ -815,7 +815,7 @@ public class Configuration {
 	// todo : decide about these
 
 	public Map getNamedSQLQueries() {
-		return namedSqlQueries;
+		return namedNativeQueries;
 	}
 
 	public Map getSqlResultSetMappings() {
@@ -829,8 +829,8 @@ public class Configuration {
 	}
 
 
-	public Map<String, NamedQueryDefinition> getNamedQueries() {
-		return namedQueries;
+	public Map<String, NamedHqlQueryDefinition> getNamedQueries() {
+		return namedHqlQueries;
 	}
 
 	public Map<String, NamedProcedureCallDefinition> getNamedProcedureCallMap() {

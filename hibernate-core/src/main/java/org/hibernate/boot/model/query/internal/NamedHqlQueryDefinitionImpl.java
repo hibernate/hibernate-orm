@@ -6,19 +6,55 @@
  */
 package org.hibernate.boot.model.query.internal;
 
+import java.util.Collection;
+
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
+import org.hibernate.LockOptions;
 import org.hibernate.boot.model.query.spi.NamedHqlQueryDefinition;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.named.internal.NamedHqlQueryDescriptorImpl;
+import org.hibernate.query.named.spi.NamedHqlQueryDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition implements NamedHqlQueryDefinition {
 	private final String hqlString;
-	// todo (6.0) : lockMode, etc
-	// todo (6.0) : ^^ to an abstract class
+	private final Integer firstResult;
+	private final Integer maxResults;
 
-	private NamedHqlQueryDefinitionImpl(String name, String hqlString) {
-		super( name );
+	public NamedHqlQueryDefinitionImpl(
+			String name,
+			String hqlString,
+			Integer firstResult,
+			Integer maxResults,
+			Collection<String> querySpaces,
+			Boolean cacheable,
+			String cacheRegion,
+			CacheMode cacheMode,
+			FlushMode flushMode,
+			Boolean readOnly,
+			LockOptions lockOptions,
+			Integer timeout,
+			Integer fetchSize,
+			String comment) {
+		super(
+				name,
+				querySpaces,
+				cacheable,
+				cacheRegion,
+				cacheMode,
+				flushMode,
+				readOnly,
+				lockOptions,
+				timeout,
+				fetchSize,
+				comment
+		);
 		this.hqlString = hqlString;
+		this.firstResult = firstResult;
+		this.maxResults = maxResults;
 	}
 
 	@Override
@@ -26,8 +62,31 @@ public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition im
 		return hqlString;
 	}
 
+	@Override
+	public NamedHqlQueryDescriptor resolve(SessionFactoryImplementor factory) {
+		return new NamedHqlQueryDescriptorImpl(
+				getName(),
+				hqlString,
+				firstResult,
+				maxResults,
+				getQuerySpaces(),
+				getCacheable(),
+				getCacheRegion(),
+				getCacheMode(),
+				getFlushMode(),
+				getReadOnly(),
+				getLockOptions(),
+				getTimeout(),
+				getFetchSize(),
+				getComment()
+		);
+	}
+
 	public  static class Builder extends AbstractBuilder<Builder> {
 		private final String hqlString;
+
+		private Integer firstResult;
+		private Integer maxResults;
 
 		public Builder(String name, String hqlString) {
 			super( name );
@@ -39,8 +98,33 @@ public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition im
 			return this;
 		}
 
+		public Builder setFirstResult(Integer firstResult) {
+			this.firstResult = firstResult;
+			return getThis();
+		}
+
+		public Builder setMaxResults(Integer maxResults) {
+			this.maxResults = maxResults;
+			return getThis();
+		}
+
 		public NamedHqlQueryDefinitionImpl build() {
-			return new NamedHqlQueryDefinitionImpl( getName(), hqlString );
+			return new NamedHqlQueryDefinitionImpl(
+					getName(),
+					hqlString,
+					firstResult,
+					maxResults,
+					getQuerySpaces(),
+					getCacheable(),
+					getCacheRegion(),
+					getCacheMode(),
+					getFlushMode(),
+					getReadOnly(),
+					getLockOptions(),
+					getTimeout(),
+					getFetchSize(),
+					getComment()
+			);
 		}
 	}
 }

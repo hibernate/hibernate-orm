@@ -11,6 +11,8 @@ import java.util.Collection;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.spi.QueryImplementor;
 
 /**
  * @author Steve Ebersole
@@ -38,4 +40,6 @@ public interface NamedQueryDescriptor {
 	Integer getFetchSize();
 
 	String getComment();
+
+	QueryImplementor toQuery(SharedSessionContractImplementor session);
 }

@@ -110,8 +110,8 @@ public abstract class QueryBinder {
 			LOG.warnNativeQueryAsCallable();
 		}
 
-		NamedNativeQueryDefinitionImpl.Builder builder = new NamedNativeQueryDefinitionImpl.Builder( queryName, sqlString )
-				.setQuerySpaces( null )
+		NamedNativeQueryDefinitionImpl.Builder builder = new NamedNativeQueryDefinitionImpl.Builder( queryName )
+				.setSqlString( sqlString )
 				.setCacheable( hints.getBoolean( sqlString, QueryHints.CACHEABLE ) )
 				.setCacheRegion( hints.getString( sqlString, QueryHints.CACHE_REGION ) )
 				.setTimeout( hints.getTimeout( sqlString ) )
@@ -126,15 +126,21 @@ public abstract class QueryBinder {
 			builder.setResultSetMapping( resultSetMappingName );
 		}
 		else if ( !void.class.equals( queryAnn.resultClass() ) ) {
-			//class mapping usage
-			//FIXME should be done in a second pass due to entity name?
+			final ResultSetMappingDefinitionImpl inLineResultMapping = new ResultSetMappingDefinitionImpl(
+					"inline-result-mapping:" + ++inlineResultMappingCount
+			);
+
 			final EntityResultDefinitionImpl entityResultDefinition = new EntityResultDefinitionImpl (
 					null,
 					queryAnn.resultClass().getName(),
 					"alias1"
 			);
 			entityResultDefinition.setLockMode( LockMode.READ );
-			builder.addResult( entityResultDefinition );
+
+			inLineResultMapping.addResult( entityResultDefinition );
+
+			context.getMetadataCollector().addResultSetMapping( inLineResultMapping );
+			builder.setResultSetMapping( inLineResultMapping.getName() );
 		}
 
 		final NamedNativeQueryDefinitionImpl queryDefinition = builder.build();
@@ -151,6 +157,8 @@ public abstract class QueryBinder {
 		}
 	}
 
+	private static int inlineResultMappingCount = 0;
+
 	public static void bindNativeQuery(
 			org.hibernate.annotations.NamedNativeQuery queryAnn,
 			MetadataBuildingContext context) {
@@ -165,13 +173,13 @@ public abstract class QueryBinder {
 		final String queryName = queryAnn.name();
 		final String sqlString = queryAnn.query();
 
-		final NamedNativeQueryDefinitionImpl.Builder builder = new NamedNativeQueryDefinitionImpl.Builder( queryName, sqlString )
-				.setQuerySpaces( null )
+		final NamedNativeQueryDefinitionImpl.Builder builder = new NamedNativeQueryDefinitionImpl.Builder( queryName )
+				.setSqlString( sqlString )
 				.setCacheable( queryAnn.cacheable() )
 				.setCacheRegion(
-						BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() ) ?
-								null :
-								queryAnn.cacheRegion()
+						BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() )
+								? null
+								: queryAnn.cacheRegion()
 				)
 				.setTimeout( queryAnn.timeout() < 0 ? null : queryAnn.timeout() )
 				.setFetchSize( queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize() )
@@ -186,10 +194,15 @@ public abstract class QueryBinder {
 			builder.setResultSetMapping( resultSetMappingName );
 		}
 		else if ( !void.class.equals( queryAnn.resultClass() ) ) {
-			final String entityClassName = queryAnn.resultClass().getName();
-			builder.addResult(
-					new EntityResultDefinitionImpl( null, entityClassName, "alias1" )
+			final ResultSetMappingDefinitionImpl resultSetMappingDefinition = new ResultSetMappingDefinitionImpl(
+					"inline-result-mapping:" + ++inlineResultMappingCount
 			);
+
+			final String entityClassName = queryAnn.resultClass().getName();
+			resultSetMappingDefinition.addResult( new EntityResultDefinitionImpl( null, entityClassName, "alias1" ) );
+
+			context.getMetadataCollector().addResultSetMapping( resultSetMappingDefinition );
+			builder.setResultSetMapping( resultSetMappingDefinition.getName() );
 		}
 		else {
 			throw new NotYetImplementedException( "Pure native scalar queries are not yet supported" );

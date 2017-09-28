@@ -67,7 +67,11 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 
 	public void validate() {
 		if ( hadMainOutputParameter ) {
-			NativeQueryImpl.throwUnsupportedCallableQuery();
+			throw new QueryException(
+					"Calling database procedures/functions is no longer supported through the NativeQuery API; " +
+							"use Hibernate's " + ProcedureCall.class.getName() + " API or JPA's " +
+							StoredProcedureQuery.class.getName() + " API"
+			);
 		}
 
 		// validate the positions.  JPA says that these should start with 1 and

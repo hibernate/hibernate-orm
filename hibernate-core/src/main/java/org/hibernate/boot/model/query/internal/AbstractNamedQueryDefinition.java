@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.query.internal;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.hibernate.CacheMode;
@@ -19,13 +20,87 @@ import org.hibernate.boot.model.query.spi.NamedQueryDefinition;
 public abstract class AbstractNamedQueryDefinition implements NamedQueryDefinition {
 	private final String name;
 
-	public AbstractNamedQueryDefinition(String name) {
+	private final Collection<String> querySpaces;
+
+	private final Boolean cacheable;
+	private final String cacheRegion;
+	private final CacheMode cacheMode;
+
+	private final FlushMode flushMode;
+	private final Boolean readOnly;
+
+	private final LockOptions lockOptions;
+
+	private final Integer timeout;
+	private final Integer fetchSize;
+
+	private final String comment;
+
+	public AbstractNamedQueryDefinition(
+			String name,
+			Collection<String> querySpaces,
+			Boolean cacheable,
+			String cacheRegion,
+			CacheMode cacheMode,
+			FlushMode flushMode,
+			Boolean readOnly,
+			LockOptions lockOptions, Integer timeout, Integer fetchSize, String comment) {
 		this.name = name;
+		this.querySpaces = querySpaces;
+		this.cacheable = cacheable;
+		this.cacheRegion = cacheRegion;
+		this.cacheMode = cacheMode;
+		this.flushMode = flushMode;
+		this.readOnly = readOnly;
+		this.lockOptions = lockOptions;
+		this.timeout = timeout;
+		this.fetchSize = fetchSize;
+		this.comment = comment;
 	}
 
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	public Collection<String> getQuerySpaces() {
+		return querySpaces;
+	}
+
+	public Boolean getCacheable() {
+		return cacheable;
+	}
+
+	public String getCacheRegion() {
+		return cacheRegion;
+	}
+
+	public CacheMode getCacheMode() {
+		return cacheMode;
+	}
+
+	public FlushMode getFlushMode() {
+		return flushMode;
+	}
+
+	public Boolean getReadOnly() {
+		return readOnly;
+	}
+
+	public LockOptions getLockOptions() {
+		return lockOptions;
+	}
+
+	public Integer getTimeout() {
+		return timeout;
+	}
+
+	public Integer getFetchSize() {
+		return fetchSize;
+	}
+
+	public String getComment() {
+		return comment;
 	}
 
 	protected static abstract class AbstractBuilder<T extends AbstractBuilder> {
@@ -56,8 +131,23 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 
 		protected abstract T getThis();
 
-		public T setQuerySpaces(Collection<String> querySpaces) {
-			this.querySpaces = querySpaces;
+		public T addQuerySpaces(Collection<String> querySpaces) {
+			if ( querySpaces == null || querySpaces.isEmpty() ) {
+				return getThis();
+			}
+
+			if ( this.querySpaces == null ) {
+				this.querySpaces = new ArrayList<>();
+			}
+			this.querySpaces.addAll( querySpaces );
+			return getThis();
+		}
+
+		public T addQuerySpace(String space) {
+			if ( this.querySpaces == null ) {
+				this.querySpaces = new ArrayList<>();
+			}
+			this.querySpaces.add( space );
 			return getThis();
 		}
 
@@ -104,6 +194,47 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 		public T setComment(String comment) {
 			this.comment = comment;
 			return getThis();
+		}
+
+
+		public Collection<String> getQuerySpaces() {
+			return querySpaces;
+		}
+
+		public Boolean getCacheable() {
+			return cacheable;
+		}
+
+		public String getCacheRegion() {
+			return cacheRegion;
+		}
+
+		public CacheMode getCacheMode() {
+			return cacheMode;
+		}
+
+		public FlushMode getFlushMode() {
+			return flushMode;
+		}
+
+		public Boolean getReadOnly() {
+			return readOnly;
+		}
+
+		public LockOptions getLockOptions() {
+			return lockOptions;
+		}
+
+		public Integer getTimeout() {
+			return timeout;
+		}
+
+		public Integer getFetchSize() {
+			return fetchSize;
+		}
+
+		public String getComment() {
+			return comment;
 		}
 	}
 }

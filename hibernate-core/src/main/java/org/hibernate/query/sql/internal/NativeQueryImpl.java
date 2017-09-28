@@ -21,7 +21,6 @@ import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
-import javax.persistence.StoredProcedureQuery;
 import javax.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
@@ -29,15 +28,14 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.Limit;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
@@ -46,6 +44,7 @@ import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
+import org.hibernate.query.named.spi.NamedNativeQueryDescriptor;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.NativeQueryInterpreter;
@@ -62,7 +61,6 @@ import org.hibernate.query.sql.spi.QueryResultBuilder;
 import org.hibernate.query.sql.spi.QueryResultBuilderRootEntity;
 import org.hibernate.query.sql.spi.QueryResultBuilderScalar;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
@@ -90,77 +88,41 @@ public class NativeQueryImpl<R>
 
 	private final List<JdbcParameterBinder> parameterBinders;
 
-	private Collection<String> querySpaces;
-
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
+
+	private Collection<String> querySpaces;
 
 	private Serializable collectionKey;
 
-
 	/**
-	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
-	 *
-	 * @param queryDef The representation of the defined <sql-query/>.
-	 * @param session The session to which this NativeQuery belongs.
+	 * Form used to create a native query from query + ResultSetMapping
 	 */
 	public NativeQueryImpl(
-			NamedSQLQueryDefinition queryDef,
+			String sqlString,
+			ResultSetMappingDescriptor resultSetMappingDescriptor,
 			SharedSessionContractImplementor session) {
-		this(
-				session,
-				queryDef.getQueryString(),
-				queryDef.isCallable(),
-				queryDef.getQuerySpaces(),
-				collectQueryResultBuilders( queryDef, session )
-		);
+		this( sqlString, session );
+
+		applyResultSetMapping( resultSetMappingDescriptor );
 	}
 
-	private static List<QueryResultBuilder> collectQueryResultBuilders(
-			NamedSQLQueryDefinition queryDef,
-			SharedSessionContractImplementor session) {
-		if ( queryDef.getResultSetRef() != null ) {
-			ResultSetMappingDescriptor definition = session.getFactory()
-					.getQueryEngine()
-					.getNamedQueryRepository()
-					.getResultSetMappingDescriptor( queryDef.getResultSetRef() );
-			if ( definition == null ) {
-				throw new MappingException(
-						"Unable to find resultset-ref definition: " +
-								queryDef.getResultSetRef()
-				);
-			}
-			return definition.getResultBuilders();
-		}
-		else if ( queryDef.getQueryResultBuilders() != null && queryDef.getQueryResultBuilders().size() > 0 ) {
-			return queryDef.getQueryResultBuilders();
-		}
-		else {
-			return new ArrayList<>();
-		}
+	private void applyResultSetMapping(ResultSetMappingDescriptor resultSetMappingDescriptor) {
+		resultSetMappingUsed = true;
+		resultBuilders = new ArrayList<>( resultSetMappingDescriptor.getResultBuilders() );
+		fetchBuilders = new ArrayList<>( resultSetMappingDescriptor.getFetchBuilders() );
 	}
 
-	private NativeQueryImpl(
-			SharedSessionContractImplementor session,
-			String queryString,
-			boolean callable,
-			List<String> querySpaces,
-			List<QueryResultBuilder> resultBuilders) {
+	public NativeQueryImpl(
+			String sqlString,
+			SharedSessionContractImplementor session) {
 		super( session );
-
-		this.sqlString = queryString;
-		this.querySpaces = querySpaces;
-
-		this.resultBuilders = resultBuilders;
+		this.sqlString = sqlString;
 
 		final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl( session.getFactory() );
 		session.getFactory().getServiceRegistry()
 				.getService( NativeQueryInterpreter.class )
 				.recognizeParameters( sqlString, parameterRecognizer );
 		parameterRecognizer.validate();
-
-		if ( callable ) {
-			throwUnsupportedCallableQuery();
-		}
 
 		this.parameterMetadata = new ParameterMetadataImpl(
 				parameterRecognizer.getNamedQueryParameters(),
@@ -171,25 +133,43 @@ public class NativeQueryImpl<R>
 		this.parameterBinders = parameterRecognizer.getParameterBinders();
 	}
 
+	/**
+	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
+	 *
+	 * @param namedQueryDescriptor The representation of the defined <sql-query/>.
+	 * @param session The session to which this NativeQuery belongs.
+	 */
 	public NativeQueryImpl(
-			String sqlString,
-			boolean callable,
+			NamedNativeQueryDescriptor namedQueryDescriptor,
 			SharedSessionContractImplementor session) {
-		this(
-				session,
-				sqlString,
-				callable,
-				new ArrayList<>(),
-				new ArrayList<>()
-		);
+		this( namedQueryDescriptor.getQueryString(), session );
+
+		namedQueryDescriptor.getQuerySpaces().forEach( this::addSynchronizedQuerySpace );
+
+		applyResultSetMapping( namedQueryDescriptor );
 	}
 
-	public static void throwUnsupportedCallableQuery() {
-		throw new QueryException(
-				"Calling database procedures/functions is no longer supported through the NativeQuery API; " +
-						"use Hibernate's " + ProcedureCall.class.getName() + " API or JPA's " +
-						StoredProcedureQuery.class.getName() + " API"
-		);
+	private void applyResultSetMapping(NamedNativeQueryDescriptor namedQueryDescriptor) {
+		if ( namedQueryDescriptor.getResultSetMappingName() == null ) {
+			return;
+		}
+
+		ResultSetMappingDescriptor resultSetMappingDescriptor = getSession().getFactory()
+				.getQueryEngine()
+				.getNamedQueryRepository()
+				.getResultSetMappingDescriptor( namedQueryDescriptor.getResultSetMappingName() );
+		if ( resultSetMappingDescriptor == null ) {
+			throw new MappingException(
+					String.format(
+							Locale.ROOT,
+							"Unable to find ResultSetMappingDescriptor [%s] specified for named native query [%s]",
+							namedQueryDescriptor.getResultSetMappingName(),
+							namedQueryDescriptor.getName()
+					)
+			);
+		}
+
+		applyResultSetMapping( resultSetMappingDescriptor );
 	}
 
 	@Override

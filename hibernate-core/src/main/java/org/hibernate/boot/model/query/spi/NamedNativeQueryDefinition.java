@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.model.query.spi;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.spi.NamedNativeQueryDescriptor;
 
@@ -15,9 +14,8 @@ import org.hibernate.query.named.spi.NamedNativeQueryDescriptor;
  */
 public interface NamedNativeQueryDefinition extends NamedQueryDefinition {
 	String getQueryString();
+	String getResultSetMappingName();
 
 	@Override
-	default NamedNativeQueryDescriptor resolve(SessionFactoryImplementor factory) {
-		throw new NotYetImplementedFor6Exception();
-	}
+	NamedNativeQueryDescriptor resolve(SessionFactoryImplementor factory);
 }

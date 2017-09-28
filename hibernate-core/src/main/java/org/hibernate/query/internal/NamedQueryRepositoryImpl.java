@@ -13,7 +13,6 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.query.named.spi.NamedHqlQueryDescriptor;
@@ -93,10 +92,6 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 	}
 
 	@Override public synchronized void registerNamedHqlQueryDescriptor(String name, NamedHqlQueryDescriptor descriptor) {
-		if ( NamedSQLQueryDefinition.class.isInstance( descriptor ) ) {
-			throw new IllegalArgumentException( "NamedSQLQueryDefinition instance incorrectly passed to registerNamedHqlQueryDescriptor" );
-		}
-
 		// todo (6.0) : shouldn't we make the copy anyway?
 		if ( ! name.equals( descriptor.getName() ) ) {
 			descriptor = descriptor.makeCopy( name );

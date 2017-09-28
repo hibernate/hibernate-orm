@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.model.query.spi;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.spi.NamedHqlQueryDescriptor;
 
@@ -17,7 +16,5 @@ public interface NamedHqlQueryDefinition extends NamedQueryDefinition {
 	String getQueryString();
 
 	@Override
-	default NamedHqlQueryDescriptor resolve(SessionFactoryImplementor factory) {
-		throw new NotYetImplementedFor6Exception();
-	}
+	NamedHqlQueryDescriptor resolve(SessionFactoryImplementor factory);
 }

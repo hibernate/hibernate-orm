@@ -7,19 +7,12 @@
 package org.hibernate.query.named.spi;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.spi.NativeQueryImplementor;
+import org.hibernate.procedure.spi.ProcedureCallImplementor;
 
 /**
- * Descriptor for a named native query in the run-time environment
- *
  * @author Steve Ebersole
  */
-public interface NamedNativeQueryDescriptor extends NamedQueryDescriptor {
-	String getSqlString();
-	String getResultSetMappingName();
-
+public interface NamedCallableQueryDescriptor extends NamedQueryDescriptor {
 	@Override
-	NativeQueryImplementor toQuery(SharedSessionContractImplementor session);
-
-	NamedNativeQueryDescriptor makeCopy(String name);
+	ProcedureCallImplementor toQuery(SharedSessionContractImplementor session);
 }

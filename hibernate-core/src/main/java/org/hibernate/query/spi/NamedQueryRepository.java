@@ -10,12 +10,9 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.query.named.spi.NamedHqlQueryDescriptor;
 import org.hibernate.query.named.spi.NamedNativeQueryDescriptor;
-import org.hibernate.query.named.spi.NamedQueryDescriptor;
 
 /**
  * Repository for named query-related objects

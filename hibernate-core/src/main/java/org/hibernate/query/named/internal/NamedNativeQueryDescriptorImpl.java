@@ -4,26 +4,27 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.boot.model.query.internal;
+package org.hibernate.query.named.internal;
 
 import java.util.Collection;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
-import org.hibernate.boot.model.query.spi.NamedNativeQueryDefinition;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.named.internal.NamedNativeQueryDescriptorImpl;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.named.spi.AbstractNamedQueryDescriptor;
 import org.hibernate.query.named.spi.NamedNativeQueryDescriptor;
+import org.hibernate.query.spi.NativeQueryImplementor;
+import org.hibernate.query.sql.internal.NativeQueryImpl;
 
 /**
  * @author Steve Ebersole
  */
-public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition implements NamedNativeQueryDefinition {
+public class NamedNativeQueryDescriptorImpl extends AbstractNamedQueryDescriptor implements NamedNativeQueryDescriptor {
 	private final String sqlString;
 	private final String resultSetMappingName;
 
-	public NamedNativeQueryDefinitionImpl(
+	public NamedNativeQueryDescriptorImpl(
 			String name,
 			String sqlString,
 			String resultSetMappingName,
@@ -55,6 +56,11 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 	}
 
 	@Override
+	public String getSqlString() {
+		return sqlString;
+	}
+
+	@Override
 	public String getQueryString() {
 		return sqlString;
 	}
@@ -65,9 +71,18 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 	}
 
 	@Override
-	public NamedNativeQueryDescriptor resolve(SessionFactoryImplementor factory) {
+	public NativeQueryImplementor toQuery(SharedSessionContractImplementor session) {
+		final NativeQueryImpl query = new NativeQueryImpl( this, session );
+
+		applyBaseOptions( query, session );
+
+		return query;
+	}
+
+	@Override
+	public NamedNativeQueryDescriptor makeCopy(String name) {
 		return new NamedNativeQueryDescriptorImpl(
-				getName(),
+				name,
 				sqlString,
 				resultSetMappingName,
 				getQuerySpaces(),
@@ -81,49 +96,5 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 				getFetchSize(),
 				getComment()
 		);
-	}
-
-	public static class Builder extends AbstractBuilder<Builder> {
-		private String sqlString;
-
-		private String resultSetMapping;
-
-		public Builder(String name) {
-			super( name );
-		}
-
-		public Builder setSqlString(String sqlString) {
-			this.sqlString = sqlString;
-			return this;
-		}
-
-		public NamedNativeQueryDefinitionImpl build() {
-			return new NamedNativeQueryDefinitionImpl(
-					getName(),
-					sqlString,
-					resultSetMapping,
-					getQuerySpaces(),
-					getCacheable(),
-					getCacheRegion(),
-					getCacheMode(),
-					getFlushMode(),
-					getReadOnly(),
-					getLockOptions(),
-					getTimeout(),
-					getFetchSize(),
-					getComment()
-					// todo (6.0) : information about parameters
-			);
-		}
-
-		@Override
-		protected Builder getThis() {
-			return this;
-		}
-
-		public Builder setResultSetMapping(String resultSetMapping) {
-			this.resultSetMapping = resultSetMapping;
-			return this;
-		}
 	}
 }

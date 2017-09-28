@@ -12,7 +12,6 @@ import java.util.List;
 
 import org.hibernate.boot.model.resultset.spi.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.ResultSetMappingDescriptor;
 
 /**

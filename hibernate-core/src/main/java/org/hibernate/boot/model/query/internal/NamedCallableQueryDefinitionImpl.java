@@ -6,28 +6,103 @@
  */
 package org.hibernate.boot.model.query.internal;
 
+import java.util.Collection;
+
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
+import org.hibernate.LockOptions;
 import org.hibernate.boot.model.query.spi.NamedCallableQueryDefinition;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.named.internal.NamedCallableQueryDescriptorImpl;
+import org.hibernate.query.named.spi.NamedCallableQueryDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class NamedCallableQueryDefinitionImpl implements NamedCallableQueryDefinition {
-	private final String name;
-	// todo (6.0) : lockMode, etc
+public class NamedCallableQueryDefinitionImpl
+		extends AbstractNamedQueryDefinition
+		implements NamedCallableQueryDefinition {
+	private String callableName;
 
-	private NamedCallableQueryDefinitionImpl(String name) {
-		this.name = name;
+	public NamedCallableQueryDefinitionImpl(
+			String name,
+			String callableName,
+			Collection<String> querySpaces,
+			Boolean cacheable,
+			String cacheRegion,
+			CacheMode cacheMode,
+			FlushMode flushMode,
+			Boolean readOnly,
+			LockOptions lockOptions,
+			Integer timeout,
+			Integer fetchSize,
+			String comment) {
+		super(
+				name,
+				querySpaces,
+				cacheable,
+				cacheRegion,
+				cacheMode,
+				flushMode,
+				readOnly,
+				lockOptions,
+				timeout,
+				fetchSize,
+				comment
+		);
+		this.callableName = callableName;
 	}
 
-	public  static class Builder {
-		private final String name;
+	@Override
+	public NamedCallableQueryDescriptor resolve(SessionFactoryImplementor factory) {
+		return new NamedCallableQueryDescriptorImpl(
+				getName(),
+				callableName,
+				getQuerySpaces(),
+				getCacheable(),
+				getCacheRegion(),
+				getCacheMode(),
+				getFlushMode(),
+				getReadOnly(),
+				getLockOptions(),
+				getTimeout(),
+				getFetchSize(),
+				getComment()
+		);
+	}
+
+	public  static class Builder extends AbstractBuilder<Builder> {
+		private String callableName;
 
 		public Builder(String name) {
-			this.name = name;
+			super( name );
+		}
+
+		@Override
+		protected Builder getThis() {
+			return this;
 		}
 
 		public NamedCallableQueryDefinition build() {
-			return new NamedCallableQueryDefinitionImpl( name );
+			return new NamedCallableQueryDefinitionImpl(
+					getName(),
+					callableName,
+					getQuerySpaces(),
+					getCacheable(),
+					getCacheRegion(),
+					getCacheMode(),
+					getFlushMode(),
+					getReadOnly(),
+					getLockOptions(),
+					getTimeout(),
+					getFetchSize(),
+					getComment()
+			);
+		}
+
+		public Builder setCallableName(String callableName) {
+			this.callableName = callableName;
+			return this;
 		}
 	}
 }

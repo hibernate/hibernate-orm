@@ -6,9 +6,13 @@
  */
 package org.hibernate.boot.model.query.spi;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.named.spi.NamedCallableQueryDescriptor;
+
 /**
  * @author Steve Ebersole
  */
 public interface NamedCallableQueryDefinition extends NamedQueryDefinition {
-
+	@Override
+	NamedCallableQueryDescriptor resolve(SessionFactoryImplementor factory);
 }

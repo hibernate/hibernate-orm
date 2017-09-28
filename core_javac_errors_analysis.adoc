@@ -567,12 +567,6 @@ internally) as well?
 
 [code]
 ----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/spi/entry/StandardCacheEntryImpl.java:53: error: cannot find symbol
-		this.disassembledState = TypeHelper.disassemble(
-		                         ^
-  symbol:   variable TypeHelper
-  location: class StandardCacheEntryImpl
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/spi/entry/StandardCacheEntryImpl.java:141: error: cannot find symbol
 		final Object[] assembledProps = TypeHelper.assemble(
 		                                ^

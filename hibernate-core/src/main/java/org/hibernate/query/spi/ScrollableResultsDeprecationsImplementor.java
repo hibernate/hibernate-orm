@@ -6,15 +6,11 @@
  */
 package org.hibernate.query.spi;
 
-import org.hibernate.Incubating;
-import org.hibernate.ScrollableResults;
+import org.hibernate.query.ScrollableResultsDeprecations;
 
 /**
  * @author Steve Ebersole
- *
- * @since 5.2
  */
-@Incubating
-public interface ScrollableResultsImplementor<R> extends ScrollableResults<R>, ScrollableResultsDeprecationsImplementor {
-	boolean isClosed();
+public interface ScrollableResultsDeprecationsImplementor extends ScrollableResultsDeprecations {
+	int getNumberOfTypes();
 }

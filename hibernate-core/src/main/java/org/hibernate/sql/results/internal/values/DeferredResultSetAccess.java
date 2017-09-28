@@ -26,6 +26,8 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class DeferredResultSetAccess extends AbstractResultSetAccess {
+	private static final Logger log = CoreLogging.logger( DeferredResultSetAccess.class );
+
 	private final JdbcSelect jdbcSelect;
 	private final ExecutionContext executionContext;
 	private final PreparedStatementCreator statementCreator;
@@ -55,8 +57,6 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 	public SessionFactoryImplementor getFactory() {
 		return executionContext.getSession().getFactory();
 	}
-
-	private static final Logger log = CoreLogging.logger( DeferredResultSetAccess.class );
 
 	private void executeQuery() {
 		final LogicalConnectionImplementor logicalConnection = getPersistenceContext().getJdbcCoordinator().getLogicalConnection();
@@ -114,6 +114,16 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 	@Override
 	public void release() {
 		if ( resultSet != null ) {
+			try {
+				getPersistenceContext().getPersistenceContext().getLoadContexts().cleanup( resultSet );
+			}
+			catch (Throwable ignore) {
+				// just log the problem
+				if ( log.isTraceEnabled() ) {
+					log.tracef( "Exception trying to cleanup ResultSet from Session LoadContext : {0}", ignore.getMessage() );
+				}
+			}
+
 			getPersistenceContext().getJdbcCoordinator()
 					.getLogicalConnection()
 					.getResourceRegistry()

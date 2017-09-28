@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.query.internal;
 
 import org.hibernate.Incubating;
@@ -37,11 +36,6 @@ public class ScrollableResultsIterator<T> implements CloseableIterator {
 	@Override
 	@SuppressWarnings("unchecked")
 	public T next() {
-		if ( scrollableResults.getNumberOfTypes() == 1 ) {
-			return (T) scrollableResults.get()[0];
-		}
-		else {
-			return (T) scrollableResults.get();
-		}
+		return (T) scrollableResults.get();
 	}
 }

@@ -77,4 +77,11 @@ public interface JavaTypeDescriptor<T> extends org.hibernate.type.descriptor.jav
 		return wrap( value, NoWrapperOptions.INSTANCE );
 	}
 
+	default boolean isInstance(Object value) {
+		return getJavaType().isInstance( value );
+	}
+
+	default boolean isAssignableFrom(Class checkType) {
+		return getJavaType().isAssignableFrom( checkType );
+	}
 }

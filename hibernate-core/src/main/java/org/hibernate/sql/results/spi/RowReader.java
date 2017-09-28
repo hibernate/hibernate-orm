@@ -12,6 +12,8 @@ import java.sql.SQLException;
  * @author Steve Ebersole
  */
 public interface RowReader<R> {
+	int getNumberOfResults();
+
 	R readRow(RowProcessingState processingState, JdbcValuesSourceProcessingOptions options) throws SQLException;
 
 	void finishUp(JdbcValuesSourceProcessingState context);

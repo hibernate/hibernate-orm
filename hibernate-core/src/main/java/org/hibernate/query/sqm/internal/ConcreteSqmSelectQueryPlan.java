@@ -179,7 +179,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	public ScrollableResultsImplementor performScroll(ScrollMode scrollMode, ExecutionContext executionContext) {
 		final JdbcSelect jdbcSelect = buildJdbcSelect( executionContext );
 
-		return new JdbcSelectExecutorStandardImpl().scroll(
+		return JdbcSelectExecutorStandardImpl.INSTANCE.scroll(
 				jdbcSelect,
 				scrollMode,
 				executionContext,

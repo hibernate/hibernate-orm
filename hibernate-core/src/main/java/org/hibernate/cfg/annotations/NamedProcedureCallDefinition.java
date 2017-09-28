@@ -76,6 +76,11 @@ public class NamedProcedureCallDefinition {
 		return procedureName;
 	}
 
+	// todo (6.0) : (reminder) - I believe both ProcedureCallMemento and NamedProcedureCallDefinition are replaced and should be removed
+	//		replaced by:
+	//			* NamedCallableQueryDefinition
+	//			* NamedCallableQueryDescriptor
+
 	public ProcedureCallMemento toMemento(
 			final SessionFactoryImplementor sessionFactory,
 			final Map<String,ResultSetMappingDescriptor> resultSetMappingDefinitions) {

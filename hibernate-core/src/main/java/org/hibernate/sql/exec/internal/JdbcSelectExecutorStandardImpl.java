@@ -19,9 +19,11 @@ import java.util.stream.StreamSupport;
 
 import org.hibernate.CacheMode;
 import org.hibernate.ScrollMode;
-import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryKey;
+import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.FetchingScrollableResultsImpl;
+import org.hibernate.internal.ScrollableResultsImpl;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -125,7 +127,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 	private static class ScrollableResultsConsumer<R> implements ResultsConsumer<ScrollableResultsImplementor<R>,R> {
 		/**
-		 * Singleton access
+		 * Singleton access to the standard scrollable-results consumer instance
 		 */
 		public static final ScrollableResultsConsumer INSTANCE = new ScrollableResultsConsumer();
 
@@ -142,7 +144,30 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
 				RowProcessingStateStandardImpl rowProcessingState,
 				RowReader<R> rowReader) {
-			return null;
+			if ( containsCollectionFetches( jdbcValuesSource.getResultSetMapping() ) ) {
+				return new FetchingScrollableResultsImpl<>(
+						jdbcValuesSource,
+						processingOptions,
+						jdbcValuesSourceProcessingState,
+						rowProcessingState,
+						rowReader,
+						persistenceContext
+				);
+			}
+			else {
+				return new ScrollableResultsImpl<>(
+						jdbcValuesSource,
+						processingOptions,
+						jdbcValuesSourceProcessingState,
+						rowProcessingState,
+						rowReader,
+						persistenceContext
+				);
+			}
+		}
+
+		private boolean containsCollectionFetches(ResultSetMapping resultSetMapping) {
+			return false;
 		}
 	}
 

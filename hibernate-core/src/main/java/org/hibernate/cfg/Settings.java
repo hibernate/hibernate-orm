@@ -18,7 +18,6 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.loader.BatchFetchStyle;
-import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.sqm.consume.multitable.spi.IdTableStrategy;
 
@@ -92,7 +91,7 @@ public final class Settings {
 
 			LOG.debugf( "Second-level cache: %s", enabledDisabled( sessionFactoryOptions.isSecondLevelCacheEnabled() ) );
 			LOG.debugf( "Second-level query cache: %s", enabledDisabled( sessionFactoryOptions.isQueryCacheEnabled() ) );
-			LOG.debugf( "Second-level query cache factory: %s", sessionFactoryOptions.getQuerySpaceStalenessStrategyFactory() );
+			LOG.debugf( "Second-level query cache factory: %s", sessionFactoryOptions.getTimestampsCacheFactory() );
 			LOG.debugf( "Second-level cache region prefix: %s", sessionFactoryOptions.getCacheRegionPrefix() );
 			LOG.debugf( "Optimize second-level cache for minimal puts: %s", enabledDisabled( sessionFactoryOptions.isMinimalPutsEnabled() ) );
 			LOG.debugf( "Structured second-level cache entries: %s", enabledDisabled( sessionFactoryOptions.isStructuredCacheEntriesEnabled() ) );
@@ -214,7 +213,7 @@ public final class Settings {
 	}
 
 	public TimestampsCacheFactory getQueryCacheFactory() {
-		return sessionFactoryOptions.getQuerySpaceStalenessStrategyFactory();
+		return sessionFactoryOptions.getTimestampsCacheFactory();
 	}
 
 	public String getCacheRegionPrefix() {

@@ -250,8 +250,8 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	}
 
 	@Override
-	public T applyQuerySpaceStalenessStrategyFactory(TimestampsCacheFactory factory) {
-		delegate.applyQuerySpaceStalenessStrategyFactory( factory );
+	public T applyTimestampsCacheFactory(TimestampsCacheFactory factory) {
+		delegate.applyTimestampsCacheFactory( factory );
 		return getThis();
 	}
 

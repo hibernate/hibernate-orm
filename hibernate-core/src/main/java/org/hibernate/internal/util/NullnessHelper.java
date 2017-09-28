@@ -16,10 +16,40 @@ public class NullnessHelper {
 	}
 
 	public static <T> T nullif(T test, T fallback) {
-		return test == null ? fallback : test;
+		return coalesce( test, fallback );
 	}
 
 	public static <T> T nullif(T test, Supplier<T> fallbackSupplier) {
 		return test != null ? test : fallbackSupplier.get();
+	}
+
+	/**
+	 * Operates like SQL coalesce expression, returning the first non-empty value
+	 *
+	 * @implNote This impl treats empty strings (`""`) as null.
+	 *
+	 * @param values The list of values.
+	 * @param <T> Generic type of values to coalesce
+	 *
+	 * @return The first non-empty value, or null if all values were empty
+	 */
+	@SafeVarargs
+	public static <T> T coalesce(T... values) {
+		if ( values == null ) {
+			return null;
+		}
+		for ( T value : values ) {
+			if ( value != null ) {
+				if ( String.class.isInstance( value ) ) {
+					if ( StringHelper.isNotEmpty( (String) value ) ) {
+						return value;
+					}
+				}
+				else {
+					return value;
+				}
+			}
+		}
+		return null;
 	}
 }

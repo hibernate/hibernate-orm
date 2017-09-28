@@ -114,6 +114,7 @@ import static org.hibernate.cfg.AvailableSettings.USE_SQL_COMMENTS;
 import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
 import static org.hibernate.cfg.AvailableSettings.WRAP_RESULT_SETS;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
+import static org.hibernate.internal.util.NullnessHelper.coalesce;
 import static org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE;
 
 /**
@@ -361,8 +362,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyQuerySpaceStalenessStrategyFactory(TimestampsCacheFactory factory) {
-		this.options.querySpaceStalenessStrategyFactory = factory;
+	public SessionFactoryBuilder applyTimestampsCacheFactory(TimestampsCacheFactory factory) {
+		this.options.timestampsCacheFactory = factory;
 		return this;
 	}
 
@@ -575,7 +576,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		// Caching
 		private boolean secondLevelCacheEnabled;
 		private boolean queryCacheEnabled;
-		private TimestampsCacheFactory querySpaceStalenessStrategyFactory;
+		private TimestampsCacheFactory timestampsCacheFactory;
 		private String cacheRegionPrefix;
 		private boolean minimalPutsEnabled;
 		private boolean structuredCacheEntriesEnabled;
@@ -676,15 +677,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 					configurationSettings.get( MULTI_TENANT_IDENTIFIER_RESOLVER )
 			);
 
-			// check the legacy setting for id table strategy and warn if set
-			if ( configurationSettings.containsKey( HQL_BULK_ID_STRATEGY ) ) {
-				DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting( HQL_BULK_ID_STRATEGY, ID_TABLE_STRATEGY );
-			}
-			this.idTableStrategy = strategySelector.resolveDefaultableStrategy(
-					IdTableStrategy.class,
-					configurationSettings.get( ID_TABLE_STRATEGY ),
-					(Supplier<IdTableStrategy>) () -> jdbcServices.getJdbcEnvironment().getDialect().getDefaultIdTableStrategy()
-			);
+			this.idTableStrategy = resolveIdTableStrategy( configurationSettings, jdbcServices, strategySelector );
 
 			this.batchFetchStyle = BatchFetchStyle.interpret( configurationSettings.get( BATCH_FETCH_STYLE ) );
 			this.defaultBatchFetchSize = ConfigurationHelper.getInt( DEFAULT_BATCH_FETCH_SIZE, configurationSettings, -1 );
@@ -710,7 +703,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 			this.secondLevelCacheEnabled = cfgService.getSetting( USE_SECOND_LEVEL_CACHE, BOOLEAN, true );
 			this.queryCacheEnabled = cfgService.getSetting( USE_QUERY_CACHE, BOOLEAN, false );
-			this.querySpaceStalenessStrategyFactory = strategySelector.resolveDefaultableStrategy(
+			this.timestampsCacheFactory = strategySelector.resolveDefaultableStrategy(
 					TimestampsCacheFactory.class,
 					configurationSettings.get( QUERY_CACHE_FACTORY ),
 					StandardTimestampsCacheFactory.INSTANCE
@@ -804,6 +797,25 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			else if ( jdbcTimeZoneValue != null ) {
 				throw new IllegalArgumentException( "Configuration property " + JDBC_TIME_ZONE + " value [" + jdbcTimeZoneValue + "] is not supported!" );
 			}
+		}
+
+		private IdTableStrategy resolveIdTableStrategy(
+				Map configurationSettings,
+				JdbcServices jdbcServices,
+				StrategySelector strategySelector) {
+			final Object idTableStrategy = configurationSettings.get( ID_TABLE_STRATEGY );
+
+			// check the legacy (deprecated) setting for id table strategy and warn if set
+			final Object legacyIdTableStrategy = configurationSettings.get( ID_TABLE_STRATEGY );
+			if ( legacyIdTableStrategy != null ) {
+				DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting( HQL_BULK_ID_STRATEGY, ID_TABLE_STRATEGY );
+			}
+
+			return strategySelector.resolveDefaultableStrategy(
+					IdTableStrategy.class,
+					coalesce( idTableStrategy, legacyIdTableStrategy),
+					(Supplier<IdTableStrategy>) () -> jdbcServices.getJdbcEnvironment().getDialect().getDefaultIdTableStrategy()
+			);
 		}
 
 		private static Interceptor determineInterceptor(Map configurationSettings, StrategySelector strategySelector) {
@@ -1130,8 +1142,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 
 		@Override
-		public TimestampsCacheFactory getQuerySpaceStalenessStrategyFactory() {
-			return querySpaceStalenessStrategyFactory;
+		public TimestampsCacheFactory getTimestampsCacheFactory() {
+			return timestampsCacheFactory;
 		}
 
 		@Override
@@ -1448,8 +1460,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public TimestampsCacheFactory getQuerySpaceStalenessStrategyFactory() {
-		return options.getQuerySpaceStalenessStrategyFactory();
+	public TimestampsCacheFactory getTimestampsCacheFactory() {
+		return options.getTimestampsCacheFactory();
 	}
 
 	@Override

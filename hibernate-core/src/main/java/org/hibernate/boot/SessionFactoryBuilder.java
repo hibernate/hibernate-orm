@@ -438,7 +438,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#QUERY_CACHE_FACTORY
 	 */
-	SessionFactoryBuilder applyQuerySpaceStalenessStrategyFactory(TimestampsCacheFactory factory);
+	SessionFactoryBuilder applyTimestampsCacheFactory(TimestampsCacheFactory factory);
 
 	/**
 	 * Apply a prefix to prepended to all cache region names for this SessionFactory.

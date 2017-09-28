@@ -145,7 +145,7 @@ public interface SessionFactoryOptions {
 
 	boolean isQueryCacheEnabled();
 
-	TimestampsCacheFactory getQuerySpaceStalenessStrategyFactory();
+	TimestampsCacheFactory getTimestampsCacheFactory();
 
 	String getCacheRegionPrefix();
 

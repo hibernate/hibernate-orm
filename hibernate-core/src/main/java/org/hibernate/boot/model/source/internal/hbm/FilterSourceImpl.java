@@ -14,6 +14,7 @@ import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterAliasMappingType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterType;
 import org.hibernate.boot.model.source.spi.FilterSource;
+import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -63,7 +64,7 @@ public class FilterSourceImpl
 			}
 		}
 
-		this.condition = Helper.coalesce( conditionContent, conditionAttribute );
+		this.condition = NullnessHelper.coalesce( conditionContent, conditionAttribute );
 		this.autoAliasInjection = StringHelper.isNotEmpty( explicitAutoAliasInjectionSetting )
 				? Boolean.valueOf( explicitAutoAliasInjectionSetting )
 				: true;

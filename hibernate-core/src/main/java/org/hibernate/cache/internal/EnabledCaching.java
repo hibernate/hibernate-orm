@@ -83,7 +83,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 					sessionFactory
 			);
 			timestampsRegionAccess = sessionFactory.getSessionFactoryOptions()
-					.getQuerySpaceStalenessStrategyFactory()
+					.getTimestampsCacheFactory()
 					.buildTimestampsCache( this, timestampsRegion );
 
 			defaultQueryResultsRegionAccess = new QueryResultsCacheImpl(

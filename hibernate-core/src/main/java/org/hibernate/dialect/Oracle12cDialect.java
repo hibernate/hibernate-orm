@@ -40,11 +40,11 @@ public class Oracle12cDialect extends Oracle10gDialect {
 				StandardConverters.BOOLEAN,
 				false
 		);
-
-		if ( !preferLong ) {
-			typeContributions.contributeType( MaterializedBlobType.INSTANCE, "byte[]", byte[].class.getName() );
-			typeContributions.contributeType( WrappedMaterializedBlobType.INSTANCE, "Byte[]", Byte[].class.getName() );
-		}
+//
+//		if ( !preferLong ) {
+//			typeContributions.contributeType( MaterializedBlobType.INSTANCE, "byte[]", byte[].class.getName() );
+//			typeContributions.contributeType( WrappedMaterializedBlobType.INSTANCE, "Byte[]", Byte[].class.getName() );
+//		}
 	}
 
 	@Override

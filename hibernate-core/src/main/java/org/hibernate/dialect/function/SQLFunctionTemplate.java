@@ -6,7 +6,12 @@
  */
 package org.hibernate.dialect.function;
 
+import java.util.List;
+
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.Type;
 
 /**
@@ -74,4 +79,14 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 		return renderer.getTemplate();
 	}
 
+	@Override
+	public SqmExpression makeSqmFunctionExpression(
+			List<SqmExpression> arguments,
+			AllowableFunctionReturnType impliedResultType) {
+		return new SelfRenderingSqmFunction(
+				renderer::render,
+				arguments,
+				impliedResultType
+		);
+	}
 }

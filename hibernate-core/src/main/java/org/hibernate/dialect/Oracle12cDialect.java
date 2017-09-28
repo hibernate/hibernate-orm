@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.LobHelper;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -15,6 +16,7 @@ import org.hibernate.dialect.pagination.SQL2008StandardLimitHandler;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
 
 /**
  * An SQL dialect for Oracle 12c.
@@ -40,11 +42,13 @@ public class Oracle12cDialect extends Oracle10gDialect {
 				StandardConverters.BOOLEAN,
 				false
 		);
-//
-//		if ( !preferLong ) {
-//			typeContributions.contributeType( MaterializedBlobType.INSTANCE, "byte[]", byte[].class.getName() );
-//			typeContributions.contributeType( WrappedMaterializedBlobType.INSTANCE, "Byte[]", Byte[].class.getName() );
-//		}
+
+		if ( preferLong ) {
+			typeContributions.contributeSqlTypeDescriptor( BlobSqlDescriptor.PRIMITIVE_ARRAY_BINDING );
+		}
+		else {
+			typeContributions.contributeSqlTypeDescriptor( BlobSqlDescriptor.DEFAULT );
+		}
 	}
 
 	@Override

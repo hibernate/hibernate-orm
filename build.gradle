@@ -386,9 +386,9 @@ subprojects { subProject ->
 							url 'https://hibernate.atlassian.net/browse/HHH'
 						}
 						scm {
-							url 'http://github.com/hibernate/hibernate-orm'
-							connection 'scm:git:http://github.com/hibernate/hibernate-orm.git'
-							developerConnection 'scm:git:git@github.com:hibernate/hibernate-orm.git'
+							url 'https://github.com/seeburger-ag/hibernate-orm'
+							connection 'scm:git:https://github.com/seeburger-ag/hibernate-orm.git'
+							developerConnection 'scm:git:git@github.com/seeburger-ag/hibernate-orm.git'
 						}
 						licenses {
 							license {
@@ -421,11 +421,11 @@ subprojects { subProject ->
 			maven {
 				if ( subProject.version.endsWith( 'SNAPSHOT' ) ) {
 					name 'jboss-snapshots-repository'
-					url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
+					url 'https://repo.seeburger.de/archiva/repository/snapshot/'
 				}
 				else {
 					name 'jboss-releases-repository'
-					url 'https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/'
+					url 'https://repo.seeburger.de/archiva/repository/release/'
 				}
 			}
 		}

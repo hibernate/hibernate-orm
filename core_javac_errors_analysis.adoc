@@ -558,7 +558,7 @@ A collection?  etc
 
 
 
-### TypeHelper (4)
+### TypeHelper (3)
 
 Specialized category because we have to decide best way to handle these TypeHelper calls, mainly
 in regards to visiting multiple Navigables - easily handled by `org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy`
@@ -572,11 +572,13 @@ internally) as well?
 		                              ^
   symbol:   variable TypeHelper
   location: class DefaultMergeEventListener
+
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultMergeEventListener.java:430: error: cannot find symbol
 			copiedValues = TypeHelper.replaceAssociations(
 			               ^
   symbol:   variable TypeHelper
   location: class DefaultMergeEventListener
+
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultMergeEventListener.java:441: error: cannot find symbol
 			copiedValues = TypeHelper.replace(
 			               ^

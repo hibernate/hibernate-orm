@@ -79,6 +79,10 @@ public interface NavigableContainer<J> extends Navigable<J> {
 	 * 			the value passed as `swapValue`
 	 * 		* otherwise the sub-Navigable's reduced state (see {@link Navigable#reduce})
 	 *
+	 * In more specific terms, this method is responsible for extracting the domain
+	 * object's value state array - which is the form we use in many places such
+	 * EntityEntry#loadedState, L2 cache entry, etc.
+	 *
 	 * @param instance An instance of the described type (this)
 	 * @param includeCondition Predicate to see if the given sub-Navigable should create
 	 * 		an index in the array being built.
@@ -94,7 +98,4 @@ public interface NavigableContainer<J> extends Navigable<J> {
 			Predicate swapCondition,
 			Object swapValue,
 			SharedSessionContractImplementor session);
-
-	// todo (6.0) : possibly add an `#unflatten` method for "consuming" a JDBC values array into the domain-values array
-	// 		- the legacy `Type#hydrate` / `#semi-resolve` methods
 }

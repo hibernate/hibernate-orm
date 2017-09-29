@@ -15,9 +15,10 @@ into
     REVINFO
     (REV, REVTSTMP)
 values
-    (null, ?)
+    (?, ?)
 
--- binding parameter [1] as [BIGINT]    - [1500906092803]
+-- binding parameter [1] as [BIGINT]    - [1]
+-- binding parameter [2] as [BIGINT]    - [1500906092803]
 
 insert
 into

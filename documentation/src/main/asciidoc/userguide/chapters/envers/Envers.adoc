@@ -103,7 +103,7 @@ The `REVTYPE` column value is taken from the https://docs.jboss.org/hibernate/or
 |Database column value |Associated `RevisionType` Enum value |Description
 |0 | `ADD` |A database table row was inserted.
 |1 | `MOD` |A database table row was updated.
-|1 | `DEL` |A database table row was deleted.
+|2 | `DEL` |A database table row was deleted.
 |=================================
 
 The audit (history) of an entity can be accessed using the `AuditReader` interface, which can be obtained having an open `EntityManager` or `Session` via the `AuditReaderFactory`.
@@ -168,7 +168,7 @@ include::{sourcedir}/DefaultAuditTest.java[tags=envers-audited-rev3-example]
 ====
 
 You can use the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReader.html#find-java.lang.Class-java.lang.String-java.lang.Object-java.lang.Number-boolean-[`find(Class<T> cls, String entityName, Object primaryKey, Number revision, boolean includeDeletions)`]
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/query/AuditQueryCreator.html#forEntitiesAtRevision-java.lang.Class-java.lang.String-java.lang.Number-boolean-[`forEntitiesAtRevision(Class<T> cls, String entityName, Number revision, boolean includeDeletions)`]
 method to get the deleted entity revision so that, instead of a `NoResultException`,
 all attributes, except for the entity identifier, are going to be `null`.
 

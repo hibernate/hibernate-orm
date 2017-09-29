@@ -6,10 +6,13 @@
  */
 package org.hibernate.type.internal;
 
+import java.io.Serializable;
 import java.util.function.Consumer;
 
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 
 /**
  * @author Steve Ebersole
@@ -58,5 +61,50 @@ public class TypeHelper {
 				}
 		);
 		return buffer.toString();
+	}
+
+	public static Serializable[] disassemble(final Object[] state, final  boolean[] nonCacheable, ManagedTypeDescriptor descriptor) {
+		Serializable[] disassembledState = new Serializable[state.length];
+		descriptor.visitAttributes( new Consumer<PersistentAttribute>() {
+			int position = 0;
+
+			@Override
+			public void accept(PersistentAttribute attribute) {
+				if ( nonCacheable != null && nonCacheable[position] ) {
+					disassembledState[position] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+				}
+				else if ( state[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY || state[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+					disassembledState[position] = (Serializable) state[position];
+				}
+				else {
+					disassembledState[position] = attribute.getJavaTypeDescriptor()
+							.getMutabilityPlan()
+							.disassemble( state[position] );
+				}
+				position++;
+			}
+		} );
+		return disassembledState;
+	}
+
+	public static Object[] assemble(final Serializable[] disassembledState, ManagedTypeDescriptor descriptor) {
+		Object[] assembledProps = new Object[disassembledState.length];
+		descriptor.visitAttributes( new Consumer<PersistentAttribute>() {
+			int position = 0;
+
+			@Override
+			public void accept(PersistentAttribute attribute) {
+				if ( disassembledState[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY || disassembledState[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+					assembledProps[position] = disassembledState[position];
+				}
+				else {
+					assembledProps[position] = attribute.getJavaTypeDescriptor().getMutabilityPlan().assemble(
+							disassembledState[position] );
+				}
+				position++;
+			}
+		} );
+
+		return assembledProps;
 	}
 }

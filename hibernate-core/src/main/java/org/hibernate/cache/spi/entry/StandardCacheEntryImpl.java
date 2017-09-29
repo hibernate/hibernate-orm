@@ -7,12 +7,10 @@
 package org.hibernate.cache.spi.entry;
 
 import java.io.Serializable;
-import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -21,8 +19,6 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.internal.TypeHelper;
 
@@ -55,7 +51,10 @@ public class StandardCacheEntryImpl implements CacheEntry {
 			final SharedSessionContractImplementor session,
 			final Object owner) throws HibernateException {
 		// disassembled state gets put in a new array (we write to cache by value!)
-		this.disassembledState = descriptor.disassemble( state );
+		final boolean[] nonCacheable = descriptor.isLazyPropertiesCacheable() ?
+				null :
+				descriptor.getPropertyLaziness();
+		this.disassembledState = TypeHelper.disassemble( state, nonCacheable, descriptor );
 
 		this.disassembledStateText = TypeHelper.toLoggableString( state, descriptor );
 		this.subclass = descriptor.getEntityName();
@@ -132,7 +131,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 		}
 
 		//assembled state gets put in a new array (we read from cache by value!)
-		Object[] assembledProps = descriptor.assemble( disassembledState );
+		Object[] assembledProps = TypeHelper.assemble( disassembledState, descriptor );
 
 		//descriptor.setIdentifier(instance, id); //beforeQuery calling interceptor, for consistency with normal load
 

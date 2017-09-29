@@ -55,29 +55,8 @@ public class StandardCacheEntryImpl implements CacheEntry {
 			final SharedSessionContractImplementor session,
 			final Object owner) throws HibernateException {
 		// disassembled state gets put in a new array (we write to cache by value!)
-		this.disassembledState = new Serializable[state.length];
-		descriptor.visitAttributes( new Consumer<PersistentAttribute>() {
-			final boolean[] nonCacheable = descriptor.isLazyPropertiesCacheable() ?
-					null :
-					descriptor.getPropertyLaziness();
-			int position = 0;
+		this.disassembledState = descriptor.disassemble( state );
 
-			@Override
-			public void accept(PersistentAttribute attribute) {
-				if ( nonCacheable != null && nonCacheable[position] ) {
-					StandardCacheEntryImpl.this.disassembledState[position] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
-				}
-				else if ( state[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY || state[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-					StandardCacheEntryImpl.this.disassembledState[position] = (Serializable) state[position];
-				}
-				else {
-					StandardCacheEntryImpl.this.disassembledState[position] = attribute.getJavaTypeDescriptor()
-							.getMutabilityPlan()
-							.disassemble( state[position] );
-				}
-				position++;
-			}
-		} );
 		this.disassembledStateText = TypeHelper.toLoggableString( state, descriptor );
 		this.subclass = descriptor.getEntityName();
 		this.version = version;
@@ -153,22 +132,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 		}
 
 		//assembled state gets put in a new array (we read from cache by value!)
-		Object[] assembledProps = new Object[disassembledState.length];
-		descriptor.visitAttributes( new Consumer<PersistentAttribute>() {
-			int position = 0;
-
-			@Override
-			public void accept(PersistentAttribute attribute) {
-				if ( disassembledState[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY || disassembledState[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-					assembledProps[position] = disassembledState[position];
-				}
-				else {
-					assembledProps[position] = attribute.getJavaTypeDescriptor().getMutabilityPlan().assemble(
-							disassembledState[position] );
-				}
-				position++;
-			}
-		} );
+		Object[] assembledProps = descriptor.assemble( disassembledState );
 
 		//descriptor.setIdentifier(instance, id); //beforeQuery calling interceptor, for consistency with normal load
 

@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain.spi;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.EntityNameResolver;
@@ -17,11 +18,13 @@ import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.domain.EntityMapping;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
+import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -41,6 +44,7 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorClassRes
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorFactory;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
@@ -740,4 +744,52 @@ public interface EntityDescriptor<T>
 	boolean hasNaturalIdentifier();
 
 	boolean hasCollections();
+
+	default Serializable[] disassemble(final Object[] state) {
+		Serializable[] disassembledState = new Serializable[state.length];
+		visitAttributes( new Consumer<PersistentAttribute>() {
+			final boolean[] nonCacheable = isLazyPropertiesCacheable() ?
+					null :
+					getPropertyLaziness();
+			int position = 0;
+
+			@Override
+			public void accept(PersistentAttribute attribute) {
+				if ( nonCacheable != null && nonCacheable[position] ) {
+					disassembledState[position] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+				}
+				else if ( state[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY || state[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+					disassembledState[position] = (Serializable) state[position];
+				}
+				else {
+					disassembledState[position] = attribute.getJavaTypeDescriptor()
+							.getMutabilityPlan()
+							.disassemble( state[position] );
+				}
+				position++;
+			}
+		} );
+		return disassembledState;
+	}
+
+	default Object[] assemble(final Serializable[] disassembledState) {
+		Object[] assembledProps = new Object[disassembledState.length];
+		visitAttributes( new Consumer<PersistentAttribute>() {
+			int position = 0;
+
+			@Override
+			public void accept(PersistentAttribute attribute) {
+				if ( disassembledState[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY || disassembledState[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+					assembledProps[position] = disassembledState[position];
+				}
+				else {
+					assembledProps[position] = attribute.getJavaTypeDescriptor().getMutabilityPlan().assemble(
+							disassembledState[position] );
+				}
+				position++;
+			}
+		} );
+
+		return assembledProps;
+	}
 }

@@ -32,6 +32,11 @@ public class RowReaderNoResultsExpectedImpl implements RowReader {
 	}
 
 	@Override
+	public int getNumberOfResults() {
+		return 0;
+	}
+
+	@Override
 	public Object readRow(RowProcessingState processingState, JdbcValuesSourceProcessingOptions options) throws SQLException {
 		throw new HibernateException( "Not expecting results" );
 	}

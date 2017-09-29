@@ -44,6 +44,11 @@ public class RowReaderStandardImpl<T> implements RowReader<T> {
 	}
 
 	@Override
+	public int getNumberOfResults() {
+		return returnsCount;
+	}
+
+	@Override
 	public T readRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) throws SQLException {
 		coordinateInitializers( rowProcessingState, options );
 

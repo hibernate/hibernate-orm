@@ -7,6 +7,7 @@
 package org.hibernate.cache.spi.entry;
 
 import java.io.Serializable;
+import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -55,14 +56,14 @@ public class StandardCacheEntryImpl implements CacheEntry {
 			final Object owner) throws HibernateException {
 		// disassembled state gets put in a new array (we write to cache by value!)
 		this.disassembledState = new Serializable[state.length];
-		descriptor.visitAttributes( new TypeHelper.FilteredAttributeConsumer() {
+		descriptor.visitAttributes( new Consumer<PersistentAttribute>() {
 			final boolean[] nonCacheable = descriptor.isLazyPropertiesCacheable() ?
 					null :
 					descriptor.getPropertyLaziness();
 			int position = 0;
 
 			@Override
-			protected void acceptAttribute(PersistentAttribute attribute) {
+			public void accept(PersistentAttribute attribute) {
 				if ( nonCacheable != null && nonCacheable[position] ) {
 					StandardCacheEntryImpl.this.disassembledState[position] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 				}
@@ -152,11 +153,22 @@ public class StandardCacheEntryImpl implements CacheEntry {
 		}
 
 		//assembled state gets put in a new array (we read from cache by value!)
-		final Object[] assembledProps = TypeHelper.assemble(
-				disassembledState,
-				descriptor.getPropertyTypes(),
-				session, instance
-		);
+		Object[] assembledProps = new Object[disassembledState.length];
+		descriptor.visitAttributes( new Consumer<PersistentAttribute>() {
+			int position = 0;
+
+			@Override
+			public void accept(PersistentAttribute attribute) {
+				if ( disassembledState[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY || disassembledState[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+					assembledProps[position] = disassembledState[position];
+				}
+				else {
+					assembledProps[position] = attribute.getJavaTypeDescriptor().getMutabilityPlan().assemble(
+							disassembledState[position] );
+				}
+				position++;
+			}
+		} );
 
 		//descriptor.setIdentifier(instance, id); //beforeQuery calling interceptor, for consistency with normal load
 

@@ -30,4 +30,8 @@ public class RowTransformerJpaTupleImpl implements RowTransformer<Tuple> {
 		return new TupleImpl( tupleElements, row );
 	}
 
+	@Override
+	public int determineNumberOfResultElements(int rawElementCount) {
+		return 1;
+	}
 }

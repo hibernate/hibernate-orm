@@ -64,7 +64,7 @@ public class TypeHelper {
 	}
 
 	public static Serializable[] disassemble(final Object[] state, final  boolean[] nonCacheable, ManagedTypeDescriptor descriptor) {
-		Serializable[] disassembledState = new Serializable[state.length];
+		final Serializable[] disassembledState = new Serializable[state.length];
 		descriptor.visitAttributes( new Consumer<PersistentAttribute>() {
 			int position = 0;
 
@@ -88,7 +88,7 @@ public class TypeHelper {
 	}
 
 	public static Object[] assemble(final Serializable[] disassembledState, ManagedTypeDescriptor descriptor) {
-		Object[] assembledProps = new Object[disassembledState.length];
+		final Object[] assembledProps = new Object[disassembledState.length];
 		descriptor.visitAttributes( new Consumer<PersistentAttribute>() {
 			int position = 0;
 

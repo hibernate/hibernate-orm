@@ -12,7 +12,6 @@ import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
@@ -72,29 +71,6 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	 * serialized or deserialized and thus is not affected should ordinal values change.
 	 */
 	private transient int compressedState;
-
-	/**
-	 * @deprecated the tenantId and entityMode parameters where removed: this constructor accepts but ignores them.
-	 * Use the other constructor!
-	 */
-	@Deprecated
-	public AbstractEntityEntry(
-			final Status status,
-			final Object[] loadedState,
-			final Object rowId,
-			final Serializable id,
-			final Object version,
-			final LockMode lockMode,
-			final boolean existsInDatabase,
-			final EntityDescriptor entityDescriptor,
-			final EntityMode entityMode,
-			final String tenantId,
-			final boolean disableVersionIncrement,
-			final PersistenceContext persistenceContext) {
-		this( status, loadedState, rowId, id, version, lockMode, existsInDatabase,
-				entityDescriptor,disableVersionIncrement, persistenceContext
-		);
-	}
 
 	public AbstractEntityEntry(
 			final Status status,

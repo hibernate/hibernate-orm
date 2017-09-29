@@ -7,11 +7,14 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.List;
+import java.util.function.Predicate;
+
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * @author Steve Ebersole
  */
-public interface NavigableContainer<T> extends Navigable<T> {
+public interface NavigableContainer<J> extends Navigable<J> {
 	/**
 	 * Find a Navigable by name.  Returns {@code null} if a Navigable of the given
 	 * name cannot be found.
@@ -48,4 +51,50 @@ public interface NavigableContainer<T> extends Navigable<T> {
 	 * Navigable visitation across all declared, contained Navigables
 	 */
 	void visitDeclaredNavigables(NavigableVisitationStrategy visitor);
+
+	/**
+	 * Reduce an instance of the described type into an array of it's
+	 * sub-Navigable state
+	 *
+	 * @apiNote The returned array is of length equal to the number of
+	 * sub-Navigables.  Each element in that array represents the
+	 * corresponding sub-Navigable's reduced state (see {@link Navigable#reduce}).
+	 */
+	default Object[] reduceNavigables(J instance, SharedSessionContractImplementor session) {
+		return reduceNavigables(
+				instance,
+				o -> true,
+				o -> false,
+				null,
+				session
+		);
+	}
+
+	/**
+	 * Reduce an instance of the described type into an array whose length
+	 * is equal to the number of sub-Navigables where the `includeCondition`
+	 * tests {@code true}.  Each element corresponds to either:
+	 *
+	 * 		* if the passed `swapCondition` tests {@code true}, then
+	 * 			the value passed as `swapValue`
+	 * 		* otherwise the sub-Navigable's reduced state (see {@link Navigable#reduce})
+	 *
+	 * @param instance An instance of the described type (this)
+	 * @param includeCondition Predicate to see if the given sub-Navigable should create
+	 * 		an index in the array being built.
+	 * @param swapCondition Predicate to see if the sub-Navigable's reduced state or
+	 * 		the passed `swapValue` should be used for that sub-Navigable's value as its
+	 *		element in the array being built
+	 * @param swapValue The value to use if the passed `swapCondition` tests {@code true}
+	 * @param session The session :)
+	 */
+	Object[] reduceNavigables(
+			J instance,
+			Predicate includeCondition,
+			Predicate swapCondition,
+			Object swapValue,
+			SharedSessionContractImplementor session);
+
+	// todo (6.0) : possibly add an `#unflatten` method for "consuming" a JDBC values array into the domain-values array
+	// 		- the legacy `Type#hydrate` / `#semi-resolve` methods
 }

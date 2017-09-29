@@ -285,6 +285,15 @@ public final class Cascade {
 							// useful for @OneToOne defined as FetchType.LAZY
 							loadedValue = eventSource.getPersistenceContext().unproxyAndReassociate( loadedValue );
 							valueEntry = eventSource.getPersistenceContext().getEntry( loadedValue );
+
+							// HHH-11965
+							// Should the unwrapped proxy value be equal via reference to the entity's property value
+							// provided by the 'child' variable, we should not trigger the orphan removal of the
+							// associated one-to-one.
+							if ( child == loadedValue ) {
+								// do nothing
+								return;
+							}
 						}
 
 						if ( valueEntry != null ) {

@@ -14,12 +14,14 @@ import javax.persistence.TupleElement;
 import org.hibernate.sql.exec.spi.RowTransformer;
 
 /**
+ * RowTransformer generating a JPA {@link Tuple}
+ *
  * @author Steve Ebersole
  */
-public class RowTransformerTupleImpl implements RowTransformer<Tuple> {
+public class RowTransformerJpaTupleImpl implements RowTransformer<Tuple> {
 	private final List<TupleElement<?>> tupleElements;
 
-	public RowTransformerTupleImpl(List<TupleElement<?>> tupleElements) {
+	public RowTransformerJpaTupleImpl(List<TupleElement<?>> tupleElements) {
 		this.tupleElements = tupleElements;
 	}
 

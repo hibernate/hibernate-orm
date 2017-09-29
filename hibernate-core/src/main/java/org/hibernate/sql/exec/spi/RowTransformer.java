@@ -9,21 +9,25 @@ package org.hibernate.sql.exec.spi;
 import org.hibernate.Incubating;
 
 /**
- * This is the tuple-transformer that is applied at the execution level.
- * <p/>
- * As a design question, should this encapsulate just dynamic-instantiation and
- * {@link javax.persistence.Tuple} transformations?  Or, should this also
- * cover {@link org.hibernate.query.TupleTransformer}?  If we decide to handle
- * TupleTransformer here, we need to pass along the aliases; we may also
- * need to allow for nestable RowTransformers.  Currently this is only used
- * to encapsulate dynamic-instantiation and {@link javax.persistence.Tuple}
- * transformations
+ * Defines transformation of a raw row in the domain query result row.
  *
- * @todo Answer the design question above
+ * E.g. a query might select multiple
+ *
+ * @see org.hibernate.query.TupleTransformer
  *
  * @author Steve Ebersole
  */
 @Incubating
 public interface RowTransformer<T> {
+	/**
+	 * Transform the "raw" row values into the ultimate query result (for a row)
+	 */
 	T transformRow(Object[] row);
+
+	/**
+	 * How many result elements will this transformation produce?
+	 */
+	default int determineNumberOfResultElements(int rawElementCount) {
+		return rawElementCount;
+	}
 }

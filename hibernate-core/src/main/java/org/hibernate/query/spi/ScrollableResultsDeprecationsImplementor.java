@@ -10,7 +10,10 @@ import org.hibernate.query.ScrollableResultsDeprecations;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated See deprecation notice on {@link #get(int)}
  */
+@Deprecated
 public interface ScrollableResultsDeprecationsImplementor extends ScrollableResultsDeprecations {
 	int getNumberOfTypes();
 }

@@ -15,13 +15,11 @@ import org.hibernate.query.TupleTransformer;
  * Implementors define a strategy for transforming query results into the
  * actual application-visible query result list.
  *
- * @see org.hibernate.Criteria#setResultTransformer(ResultTransformer)
- * @see org.hibernate.query.Query#setResultTransformer(ResultTransformer)
- *
  * @author Gavin King
  *
  * @deprecated ResultTransformer is no longer supported.  It has been split
- * into {@link TupleTransformer} and {@link ResultListTransformer}
+ * into {@link TupleTransformer} and {@link ResultListTransformer} to define
+ * functional interfaces.
  */
 @Deprecated
 public interface ResultTransformer extends TupleTransformer, ResultListTransformer, Serializable {

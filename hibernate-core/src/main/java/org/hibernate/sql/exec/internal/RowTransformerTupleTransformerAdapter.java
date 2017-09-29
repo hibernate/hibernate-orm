@@ -11,6 +11,8 @@ import org.hibernate.query.TupleTransformer;
 import org.hibernate.sql.exec.spi.RowTransformer;
 
 /**
+ * An adapter for treating a {@link TupleTransformer} as a {@link RowTransformer}
+ *
  * @author Steve Ebersole
  */
 public class RowTransformerTupleTransformerAdapter<T> implements RowTransformer<T> {
@@ -26,5 +28,10 @@ public class RowTransformerTupleTransformerAdapter<T> implements RowTransformer<
 	public T transformRow(Object[] row) {
 		assert aliases == null || row.length == aliases.length;
 		return tupleTransformer.transformTuple( row, aliases );
+	}
+
+	@Override
+	public int determineNumberOfResultElements(int rawElementCount) {
+		return tupleTransformer.determineNumberOfResultElements( rawElementCount );
 	}
 }

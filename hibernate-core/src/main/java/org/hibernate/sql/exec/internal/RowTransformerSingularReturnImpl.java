@@ -28,4 +28,9 @@ public class RowTransformerSingularReturnImpl<R> implements RowTransformer<R> {
 	public R transformRow(Object[] row) {
 		return (R) row[0];
 	}
+
+	@Override
+	public int determineNumberOfResultElements(int rawElementCount) {
+		return 1;
+	}
 }

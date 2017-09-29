@@ -7,10 +7,20 @@
 package org.hibernate.query;
 
 /**
- * Defines a strategy for free-form transformations of the query result
- * tuples (the result "row").
- * <p/>
- * To be determined : the effect between TupleTransformer, result-type and dynamic-instantiations
+ * User hook for applying transformations of the query result tuples (the result "row").
+ *
+ * Ultimately, gets wrapped in a
+ * {@link org.hibernate.sql.exec.internal.RowTransformerTupleTransformerAdapter}
+ * to adapt the TupleTransformer to the {@link org.hibernate.sql.exec.spi.RowTransformer}
+ * contract, which is the thing actually used to process the results internally.
+ *
+ * Note that {@link JpaTupleTransformer} is a special sub-type applications may use
+ * to transform the row into a JPA {@link javax.persistence.Tuple}.  JpaTupleTransformer is
+ * deprecated as it is much more appropriate (and simpler) to simply specify the Query
+ * return type as Tuple
+ *
+ * @see org.hibernate.transform.ResultTransformer
+ * @see org.hibernate.sql.exec.spi.RowTransformer
  *
  * @author Steve Ebersole
  * @author Gavin King
@@ -27,4 +37,11 @@ public interface TupleTransformer<T> {
 	 * @return The transformed row.
 	 */
 	T transformTuple(Object[] tuple, String[] aliases);
+
+	/**
+	 * How many result elements will this transformation produce?
+	 */
+	default int determineNumberOfResultElements(int rawElementCount) {
+		return rawElementCount;
+	}
 }

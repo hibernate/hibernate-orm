@@ -16,7 +16,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.streams.StingArrayCollector;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.JpaTupleBuilder;
+import org.hibernate.query.JpaTupleTransformer;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
@@ -30,7 +30,7 @@ import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.exec.internal.RowTransformerSingularReturnImpl;
-import org.hibernate.sql.exec.internal.RowTransformerTupleImpl;
+import org.hibernate.sql.exec.internal.RowTransformerJpaTupleImpl;
 import org.hibernate.sql.exec.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.exec.internal.TupleElementImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -82,7 +82,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 							)
 					);
 				}
-				return (RowTransformer<R>) new RowTransformerTupleImpl( tupleElementList );
+				return (RowTransformer<R>) new RowTransformerJpaTupleImpl( tupleElementList );
 //				return (RowTransformer<R>) new RowTransformerTupleImpl(
 //						sqm.getQuerySpec().getSelectClause().getSelections()
 //								.stream()
@@ -96,7 +96,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 			// there can be a TupleTransformer IF it is a JpaTupleBuilder,
 			// otherwise this is considered an error
-			if ( queryOptions.getTupleTransformer() instanceof JpaTupleBuilder ) {
+			if ( queryOptions.getTupleTransformer() instanceof JpaTupleTransformer ) {
 				return makeRowTransformerTupleTransformerAdapter( sqm, queryOptions );
 			}
 

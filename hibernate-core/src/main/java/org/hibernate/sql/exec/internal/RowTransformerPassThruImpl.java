@@ -10,6 +10,8 @@ import org.hibernate.Incubating;
 import org.hibernate.sql.exec.spi.RowTransformer;
 
 /**
+ * Essentially a no-op transformer - simply passes the result through
+ *
  * @author Steve Ebersole
  */
 @Incubating
@@ -22,6 +24,9 @@ public class RowTransformerPassThruImpl<T> implements RowTransformer<T> {
 	@SuppressWarnings("unchecked")
 	public static <T> RowTransformerPassThruImpl<T> instance() {
 		return INSTANCE;
+	}
+
+	private RowTransformerPassThruImpl() {
 	}
 
 	@Override

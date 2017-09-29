@@ -23,29 +23,29 @@ import org.hibernate.sql.exec.spi.RowTransformer;
  * @author Steve Ebersole
  */
 public class RowReaderStandardImpl<T> implements RowReader<T> {
-	private final List<QueryResultAssembler> returnAssemblers;
+	private final List<QueryResultAssembler> resultAssemblers;
 	private final List<Initializer> initializers;
 	private final RowTransformer<T> rowTransformer;
 
-	private final int returnsCount;
+	private final int assemblerCount;
 	private final Callback callback;
 
 	public RowReaderStandardImpl(
-			List<QueryResultAssembler> returnAssemblers,
+			List<QueryResultAssembler> resultAssemblers,
 			List<Initializer> initializers,
 			RowTransformer<T> rowTransformer,
 			Callback callback) {
-		this.returnAssemblers = returnAssemblers;
+		this.resultAssemblers = resultAssemblers;
 		this.initializers = initializers;
 		this.rowTransformer = rowTransformer;
 
-		this.returnsCount = returnAssemblers.size();
+		this.assemblerCount = resultAssemblers.size();
 		this.callback = callback;
 	}
 
 	@Override
 	public int getNumberOfResults() {
-		return returnsCount;
+		return rowTransformer.determineNumberOfResultElements( assemblerCount );
 	}
 
 	@Override
@@ -54,9 +54,9 @@ public class RowReaderStandardImpl<T> implements RowReader<T> {
 
 		// finally assemble the results
 
-		final Object[] result = new Object[returnsCount];
-		for ( int i = 0; i < returnsCount; i++ ) {
-			result[i] = returnAssemblers.get( i ).assemble( rowProcessingState, options );
+		final Object[] result = new Object[assemblerCount];
+		for ( int i = 0; i < assemblerCount; i++ ) {
+			result[i] = resultAssemblers.get( i ).assemble( rowProcessingState, options );
 		}
 
 		// todo : add AfterLoadActions handling here via Callback

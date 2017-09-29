@@ -136,7 +136,7 @@ EntityDescriptorJ> ... {
 
 
 
-### Entity metadata
+### Entity metadata (22)
 
 
 Various errors dealing with entity metadata including versioning, natural-ids, attribute "position", etc
@@ -279,7 +279,7 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
 
 
 
-### PersistentCollection metadata
+### PersistentCollection metadata (17)
 
 
 [code]
@@ -392,7 +392,7 @@ hhome/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-
 
 
 
-### Composite/embedded metadata
+### Composite/embedded metadata (2)
 
 [code]
 ----
@@ -415,7 +415,7 @@ hhome/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-
 
 
 
-### Type "categorization"
+### Type "categorization" (4)
 
 
 What "kind of thing" does the Type represent?  An association?  A one-to-one?  A logical one-to-one?
@@ -453,7 +453,7 @@ A collection?  etc
 
 
 
-### Type read/write
+### Type read/write (4)
 
 [code]
 ----
@@ -486,7 +486,7 @@ A collection?  etc
 
 
 
-### insert/update/delete calls for entity and collection
+### insert/update/delete calls for entity and collection (3)
 
 [code]
 ----
@@ -518,7 +518,7 @@ A collection?  etc
 
 
 
-### Yet-uncategorized Type methods/usages
+### Yet-uncategorized Type methods/usages (5)
 
 [code]
 ----
@@ -558,7 +558,7 @@ A collection?  etc
 
 
 
-### TypeHelper
+### TypeHelper (4)
 
 Specialized category because we have to decide best way to handle these TypeHelper calls, mainly
 in regards to visiting multiple Navigables - easily handled by `org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy`
@@ -595,7 +595,7 @@ internally) as well?
 
 
 
-### Access to Navigable value from an instance of its container
+### Access to Navigable value from an instance of its container (2)
 
 E.g., something like `EntityIdentifierDescriptor#getSnapshot`
 
@@ -625,7 +625,7 @@ E.g., something like `EntityIdentifierDescriptor#getSnapshot`
 
 
 
-## Loader/Loadable
+## Loader/Loadable (2)
 
 
 [code]
@@ -646,7 +646,7 @@ E.g., something like `EntityIdentifierDescriptor#getSnapshot`
 
 
 
-## Cascade
+## Cascade (2)
 
 
 [code]
@@ -657,6 +657,7 @@ E.g., something like `EntityIdentifierDescriptor#getSnapshot`
 		                                                                            ^
   symbol:   variable CollectionType
   location: class Cascade
+
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:440: error: cannot find symbol
 						isCascadeDeleteEnabled
 						^
@@ -667,32 +668,11 @@ E.g., something like `EntityIdentifierDescriptor#getSnapshot`
 
 
 
-## Dialects / functions
+## Dialects / functions (1)
 
 [code]
 ----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/VarArgsSQLFunction.java:22: error: VarArgsSQLFunction is not abstract and does not override abstract method makeSqmFunctionExpression(List<SqmExpression>,AllowableFunctionReturnType) in SqmFunctionTemplate
-public class VarArgsSQLFunction implements SqmFunctionTemplate {
        ^
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/SQLFunctionTemplate.java:24: error: SQLFunctionTemplate is not abstract and does not override abstract method makeSqmFunctionExpression(List<SqmExpression>,AllowableFunctionReturnType) in SqmFunctionTemplate
-public class SQLFunctionTemplate implements SqmFunctionTemplate {
-       ^
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/PostgreSQL82Dialect.java:32: error: cannot find symbol
-		typeContributions.contributeType( PostgresUUIDType.INSTANCE );
-		                                  ^
-  symbol:   variable PostgresUUIDType
-  location: class PostgreSQL82Dialect
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/Oracle12cDialect.java:45: error: cannot find symbol
-			typeContributions.contributeType( MaterializedBlobType.INSTANCE, "byte[]", byte[].class.getName() );
-			                                  ^
-  symbol:   variable MaterializedBlobType
-  location: class Oracle12cDialect
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/Oracle12cDialect.java:46: error: cannot find symbol
-			typeContributions.contributeType( WrappedMaterializedBlobType.INSTANCE, "Byte[]", Byte[].class.getName() );
-			                                  ^
-  symbol:   variable WrappedMaterializedBlobType
-  location: class Oracle12cDialect
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/Template.java:744: error: cannot find symbol
 		return ! function.hasParenthesesIfNoArguments();
 		                 ^
@@ -707,7 +687,7 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 
 
 
-## ScrollableResults
+## ScrollableResults (1)
 
 [code]
 ----
@@ -724,7 +704,7 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 
 
 
-## Misc
+## Misc (2)
 
 
 [code]
@@ -741,80 +721,4 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
   symbol:   method getQueryReturns()
   location: variable nativeSqlQuery of type NativeQuery
 
-----
-
-
-
-
-
-
-
-## Boot model
-
-[code]
-----
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ResultSetMappingBinder.java:205: error: cannot find symbol
-		return new NativeSQLQueryJoinReturn(
-		           ^
-  symbol:   class NativeSQLQueryJoinReturn
-  location: class ResultSetMappingBinder
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/source/internal/hbm/ResultSetMappingBinder.java:235: error: cannot find symbol
-		return new NativeSQLQueryCollectionReturn(
-		           ^
-  symbol:   class NativeSQLQueryCollectionReturn
-  location: class ResultSetMappingBinder
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:157: error: cannot find symbol
-			NativeSQLQueryRootReturn result = new NativeSQLQueryRootReturn(
-			^
-  symbol:   class NativeSQLQueryRootReturn
-  location: class ResultsetMappingSecondPass
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:157: error: cannot find symbol
-			NativeSQLQueryRootReturn result = new NativeSQLQueryRootReturn(
-			                                      ^
-  symbol:   class NativeSQLQueryRootReturn
-  location: class ResultsetMappingSecondPass
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:168: error: cannot find symbol
-					new NativeSQLQueryScalarReturn(
-					    ^
-  symbol:   class NativeSQLQueryScalarReturn
-  location: class ResultsetMappingSecondPass
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:170: error: cannot find symbol
-							column.type() != null ? context.getMetadataCollector().heuristicType( column.type().getName() ) : null
-							                                                      ^
-  symbol:   method heuristicType(String)
-  location: interface InFlightMetadataCollector
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:176: error: cannot find symbol
-			List<NativeSQLQueryScalarReturn> columnReturns = new ArrayList<NativeSQLQueryScalarReturn>();
-			     ^
-  symbol:   class NativeSQLQueryScalarReturn
-  location: class ResultsetMappingSecondPass
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:176: error: cannot find symbol
-			List<NativeSQLQueryScalarReturn> columnReturns = new ArrayList<NativeSQLQueryScalarReturn>();
-			                                                               ^
-  symbol:   class NativeSQLQueryScalarReturn
-  location: class ResultsetMappingSecondPass
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:179: error: cannot find symbol
-						new NativeSQLQueryScalarReturn(
-						    ^
-  symbol:   class NativeSQLQueryScalarReturn
-  location: class ResultsetMappingSecondPass
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:181: error: cannot find symbol
-								columnResult.type() != null ? context.getMetadataCollector().heuristicType( columnResult.type().getName() ) : null
-								                                                            ^
-  symbol:   method heuristicType(String)
-  location: interface InFlightMetadataCollector
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/ResultsetMappingSecondPass.java:186: error: cannot find symbol
-					new NativeSQLQueryConstructorReturn( constructorResult.targetClass(), columnReturns )
-					    ^
-  symbol:   class NativeSQLQueryConstructorReturn
-  location: class ResultsetMappingSecondPass
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/QueryBinder.java:124: error: incompatible types: String cannot be converted to EntityDescriptor
-					new QueryResultBuilderRootEntity( "alias1", queryAnn.resultClass().getName() );
-					                                                                          ^
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/QueryBinder.java:187: error: incompatible types: String cannot be converted to EntityDescriptor
-					new QueryResultBuilderRootEntity( "alias1", queryAnn.resultClass().getName() );
-					                                                                          ^
 ----

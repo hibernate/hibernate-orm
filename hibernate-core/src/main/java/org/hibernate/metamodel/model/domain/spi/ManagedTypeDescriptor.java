@@ -10,9 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -64,4 +66,51 @@ public interface ManagedTypeDescriptor<T>
 
 	<A extends javax.persistence.metamodel.Attribute> void collectAttributes(Consumer<A> collector, Class<A> restrictionType);
 	<A extends javax.persistence.metamodel.Attribute> void collectDeclaredAttributes(Consumer<A> collector, Class<A> restrictionType);
+
+	/**
+	 * Reduce an instance of the described type into an array of it's
+	 * sub-Navigable state
+	 *
+	 * @apiNote The returned array is of length equal to the number of
+	 * sub-Navigables.  Each element in that array represents the
+	 * corresponding sub-Navigable's reduced state (see {@link Navigable#reduce}).
+	 */
+	default Object[] reduceToValuesArray(T instance, SharedSessionContractImplementor session) {
+		return reduceToValuesArray(
+				instance,
+				o -> true,
+				o -> false,
+				null,
+				session
+		);
+	}
+
+	/**
+	 * Reduce an instance of the described entity into its "values array" - whose
+	 * length is equal to the number of attributes where the `includeCondition`
+	 * tests {@code true}.  Each element corresponds to either:
+	 *
+	 * 		* if the passed `swapCondition` tests {@code true}, then
+	 * 			the value passed as `swapValue`
+	 * 		* otherwise the attribute's extracted - (see {@link PersistentAttribute#reduce})
+	 *
+	 * In more specific terms, this method is responsible for extracting the domain
+	 * object's value state array - which is the form we use in many places such
+	 * EntityEntry#loadedState, L2 cache entry, etc.
+	 *
+	 * @param instance An instance of the described type (this)
+	 * @param includeCondition Predicate to see if the given sub-Navigable should create
+	 * 		an index in the array being built.
+	 * @param swapCondition Predicate to see if the sub-Navigable's reduced state or
+	 * 		the passed `swapValue` should be used for that sub-Navigable's value as its
+	 *		element in the array being built
+	 * @param swapValue The value to use if the passed `swapCondition` tests {@code true}
+	 * @param session The session :)
+	 */
+	Object[] reduceToValuesArray(
+			T instance,
+			Predicate includeCondition,
+			Predicate swapCondition,
+			Object swapValue,
+			SharedSessionContractImplementor session);
 }

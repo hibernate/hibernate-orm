@@ -712,73 +712,11 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 [code]
 ----
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractScrollableResults.java:141: error: cannot find symbol
-		if ( holderInstantiator != null ) {
-		     ^
-  symbol:   variable holderInstantiator
-  location: class AbstractScrollableResults
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractScrollableResults.java:145: error: cannot find symbol
-		if ( returnType.getJavaTypeDescriptor().getJavaType() == types[col].getJavaTypeDescriptor().getJavaType() ) {
-		                                                         ^
-  symbol:   variable types
-  location: class AbstractScrollableResults
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractScrollableResults.java:149: error: cannot find symbol
-			return throwInvalidColumnTypeException( col, types[col], returnType );
-			                                             ^
-  symbol:   variable types
-  location: class AbstractScrollableResults
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractScrollableResults.java:166: error: cannot find symbol
-		if ( holderInstantiator != null ) {
-		     ^
-  symbol:   variable holderInstantiator
-  location: class AbstractScrollableResults
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractScrollableResults.java:170: error: cannot find symbol
-		if ( returnType.getJavaTypeDescriptor().getJavaType().isAssignableFrom( types[col].getJavaTypeDescriptor().getJavaType() ) ) {
-		                                                                        ^
-  symbol:   variable types
-  location: class AbstractScrollableResults
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractScrollableResults.java:174: error: cannot find symbol
-			return throwInvalidColumnTypeException( col, types[col], returnType );
-			                                             ^
-  symbol:   variable types
-  location: class AbstractScrollableResults
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/AbstractScrollableResults.java:275: error: cannot find symbol
-		return types[i];
-		       ^
-  symbol:   variable types
-  location: class AbstractScrollableResults
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/ScrollableResultsImpl.java:186: error: cannot find symbol
-				getQueryParameters(),
-				^
-  symbol:   method getQueryParameters()
-  location: class ScrollableResultsImpl
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/ScrollableResultsImpl.java:196: error: cannot find symbol
-		if ( getHolderInstantiator() != null ) {
-		     ^
-  symbol:   method getHolderInstantiator()
-  location: class ScrollableResultsImpl
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/ScrollableResultsImpl.java:197: error: cannot find symbol
-			currentRow = new Object[] {getHolderInstantiator().instantiate( currentRow )};
-			                           ^
-  symbol:   method getHolderInstantiator()
-  location: class ScrollableResultsImpl
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/DynamicFilterAliasGenerator.java:32: error: cannot find symbol
 					AbstractEntityPersister.getTableId( table, tables )
 					^
   symbol:   variable AbstractEntityPersister
   location: class DynamicFilterAliasGenerator
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/FetchingScrollableResultsImpl.java:71: error: cannot find symbol
-				getQueryParameters(),
-				^
-  symbol:   method getQueryParameters()
-  location: class FetchingScrollableResultsImpl
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/FetchingScrollableResultsImpl.java:113: error: cannot find symbol
-				getQueryParameters(),
-				^
-  symbol:   method getQueryParameters()
-  location: class FetchingScrollableResultsImpl
-
-
 ----
 
 

@@ -1136,7 +1136,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public Serializable getOwnerId(String entityName, String propertyName, Object childEntity, Map mergeMap) {
 		final String collectionRole = entityName + '.' + propertyName;
 		final EntityDescriptor persister = session.getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
-		final PersistentCollectionDescriptor collectionPersister = session.getFactory().getTypeConfiguration().findCollectionPersister( collectionRole );
+		final PersistentCollectionDescriptor collectionPersister = session.getFactory().getTypeConfiguration().findCollectionDescriptor( collectionRole );
 
 	    // try cache lookup first
 		final Object parent = parentsByChild.get( childEntity );
@@ -1255,7 +1255,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Object getIndexInOwner(String entity, String property, Object childEntity, Map mergeMap) {
 		final EntityDescriptor persister = session.getFactory().getTypeConfiguration().findEntityDescriptor( entity );
-		final PersistentCollectionDescriptor cp = session.getFactory().getTypeConfiguration().findCollectionPersister( entity + '.' + property );
+		final PersistentCollectionDescriptor cp = session.getFactory().getTypeConfiguration().findCollectionDescriptor( entity + '.' + property );
 
 	    // try cache lookup first
 		final Object parent = parentsByChild.get( childEntity );

@@ -15,6 +15,7 @@ import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -193,5 +194,10 @@ public class EmbeddedTypeDescriptorImpl<T>
 	@Override
 	public boolean[] getPropertyNullability() {
 		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public CascadeStyle getCascadeStyle(int i) {
+		throw new NotYetImplementedFor6Exception( );
 	}
 }

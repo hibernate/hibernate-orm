@@ -38,30 +38,30 @@ public interface MetamodelImplementor extends Metamodel {
 	 *
 	 * @return The (unmodifiable) map of all entity persisters
 	 *
-	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#getEntityPersisterMap()}
+	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#getEntityDescriptorMap()}
 	 * instead
 	 */
 	@Deprecated
 	default Map<String,EntityDescriptor<?>> getEntityPersisterMap() {
-		return getTypeConfiguration().getEntityPersisterMap();
+		return getTypeConfiguration().getEntityDescriptorMap();
 	}
 
 	/**
-	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#getEntityPersisterMap()}
+	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#getEntityDescriptorMap()}
 	 * instead
 	 */
 	@Deprecated
 	default Map<String,EntityDescriptor<?>> entityPersisters() {
-		return getTypeConfiguration().getEntityPersisterMap();
+		return getTypeConfiguration().getEntityDescriptorMap();
 	}
 
 	/**
-	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#getEntityPersisterMap()}
+	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#getEntityDescriptorMap()}
 	 * instead to access the keys
 	 */
 	@Deprecated
 	default String[] getAllEntityNames() {
-		return getTypeConfiguration().getEntityPersisterMap().keySet().stream().collect( StreamUtils.toStringArray() );
+		return getTypeConfiguration().getEntityDescriptorMap().keySet().stream().collect( StreamUtils.toStringArray() );
 	}
 
 
@@ -98,11 +98,11 @@ public interface MetamodelImplementor extends Metamodel {
 	}
 
 	/**
-	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#getCollectionPersisterMap}
+	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#getCollectionDescriptorMap}
 	 */
 	@Deprecated
 	default Map<String,PersistentCollectionDescriptor<?,?,?>> collectionPersisters() {
-		return getTypeConfiguration().getCollectionPersisterMap();
+		return getTypeConfiguration().getCollectionDescriptorMap();
 	}
 
 	/**
@@ -114,20 +114,20 @@ public interface MetamodelImplementor extends Metamodel {
 	}
 
 	/**
-	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#findCollectionPersister}
+	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#findCollectionDescriptor}
 	 */
 	@Deprecated
 	default PersistentCollectionDescriptor<?,?,?> collectionPersister(String role) {
-		return getTypeConfiguration().findCollectionPersister( role );
+		return getTypeConfiguration().findCollectionDescriptor( role );
 	}
 
 	/**
-	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#getCollectionPersisterMap()}
+	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#getCollectionDescriptorMap()}
 	 * and collect the Map keys whcih are the entity names
 	 */
 	@Deprecated
 	default String[] getAllCollectionRoles() {
-		return getTypeConfiguration().getCollectionPersisterMap().keySet().stream().collect( StreamUtils.toStringArray() );
+		return getTypeConfiguration().getCollectionDescriptorMap().keySet().stream().collect( StreamUtils.toStringArray() );
 	}
 
 }

@@ -37,7 +37,7 @@ public abstract class AbstractTableBasedStrategy implements IdTableStrategy {
 			Metamodel runtimeMetadata,
 			SessionFactoryOptions sessionFactoryOptions,
 			JdbcConnectionAccess connectionAccess) {
-		runtimeMetadata.getTypeConfiguration().getEntityPersisterMap().values().forEach(
+		runtimeMetadata.getTypeConfiguration().getEntityDescriptorMap().values().forEach(
 				entityDescriptor -> generateIdTableDefinition(
 						entityDescriptor,
 						sessionFactoryOptions,

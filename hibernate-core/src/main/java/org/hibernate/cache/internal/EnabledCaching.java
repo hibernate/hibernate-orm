@@ -246,7 +246,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public void evictEntityRegions() {
-		sessionFactory.getMetamodel().getTypeConfiguration().getEntityPersisterMap().values().forEach( this::evictEntityRegion );
+		sessionFactory.getMetamodel().getTypeConfiguration().getEntityDescriptorMap().values().forEach( this::evictEntityRegion );
 	}
 
 	@Override
@@ -286,7 +286,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	public boolean containsCollection(String role, Serializable ownerIdentifier) {
 		final PersistentCollectionDescriptor collectionDescriptor = sessionFactory.getMetamodel()
 				.getTypeConfiguration()
-				.findCollectionPersister( role );
+				.findCollectionDescriptor( role );
 
 		final CollectionDataAccess cacheAccess = collectionDescriptor.getCacheAccess();
 		if ( cacheAccess == null ) {
@@ -301,7 +301,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	public void evictCollection(String role, Serializable ownerIdentifier) {
 		final PersistentCollectionDescriptor collectionDescriptor = sessionFactory.getMetamodel()
 				.getTypeConfiguration()
-				.findCollectionPersister( role );
+				.findCollectionDescriptor( role );
 
 		final CollectionDataAccess cacheAccess = collectionDescriptor.getCacheAccess();
 		if ( cacheAccess == null ) {
@@ -323,7 +323,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	public void evictCollectionRegion(String role) {
 		final PersistentCollectionDescriptor collectionDescriptor = sessionFactory.getMetamodel()
 				.getTypeConfiguration()
-				.findCollectionPersister( role );
+				.findCollectionDescriptor( role );
 
 		evictCollectionRegion( collectionDescriptor );
 	}
@@ -342,7 +342,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public void evictCollectionRegions() {
-		sessionFactory.getMetamodel().getTypeConfiguration().getCollectionPersisterMap()
+		sessionFactory.getMetamodel().getTypeConfiguration().getCollectionDescriptorMap()
 				.values()
 				.forEach( this::evictCollectionRegion );
 	}

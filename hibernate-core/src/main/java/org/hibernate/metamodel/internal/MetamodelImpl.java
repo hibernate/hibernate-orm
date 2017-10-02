@@ -69,7 +69,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			return entityPersister;
 		}
 
-		final EmbeddedTypeDescriptor embeddablePersister = getTypeConfiguration().findEmbeddablePersister( cls );
+		final EmbeddedTypeDescriptor embeddablePersister = getTypeConfiguration().findEmbeddableDescriptor( cls );
 		if ( embeddablePersister != null ) {
 			return embeddablePersister;
 		}
@@ -85,7 +85,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public <X> EmbeddableType<X> embeddable(Class<X> cls) {
-		final EmbeddedTypeDescriptor embeddablePersister = getTypeConfiguration().findEmbeddablePersister( cls );
+		final EmbeddedTypeDescriptor embeddablePersister = getTypeConfiguration().findEmbeddableDescriptor( cls );
 		if ( embeddablePersister != null ) {
 			return embeddablePersister;
 		}
@@ -97,7 +97,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	public Set<ManagedType<?>> getManagedTypes() {
 		final Set<ManagedType<?>> managedTypes = new HashSet<>();
 		managedTypes.addAll( getTypeConfiguration().getEntityDescriptors() );
-		managedTypes.addAll( getTypeConfiguration().getEmbeddablePersisters() );
+		managedTypes.addAll( getTypeConfiguration().getEmbeddableDescriptors() );
 		managedTypes.addAll( jpaMappedSuperclassTypeMap.values() );
 		return managedTypes;
 	}
@@ -109,7 +109,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	@Override
 	public Set<EmbeddableType<?>> getEmbeddables() {
-		return new HashSet<>( getTypeConfiguration().getEmbeddablePersisters() );
+		return new HashSet<>( getTypeConfiguration().getEmbeddableDescriptors() );
 	}
 
 	@Override

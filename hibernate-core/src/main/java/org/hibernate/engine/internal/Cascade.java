@@ -27,6 +27,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
@@ -53,41 +54,41 @@ public final class Cascade {
 	/**
 	 * Cascade an action from the parent entity instance to all its children.
 	 *
-	 * @param persister The parent's entity persister
+	 * @param descriptor The parent's entity descriptor
 	 * @param parent The parent reference.
 	 * @throws HibernateException
 	 */
 	public static void cascade(
 			final CascadingAction action, final CascadePoint cascadePoint,
-			final EventSource eventSource, final EntityDescriptor persister, final Object parent)
+			final EventSource eventSource, final EntityDescriptor descriptor, final Object parent)
 			throws HibernateException {
-		cascade( action, cascadePoint, eventSource, persister, parent, null );
+		cascade( action, cascadePoint, eventSource, descriptor, parent, null );
 	}
 
 	/**
 	 * Cascade an action from the parent entity instance to all its children.  This
 	 * form is typically called from within cascade actions.
 	 *
-	 * @param persister The parent's entity persister
+	 * @param descriptor The parent's entity descriptor
 	 * @param parent The parent reference.
 	 * @param anything Anything ;)   Typically some form of cascade-local cache
 	 * which is specific to each CascadingAction type
 	 */
 	public static void cascade(
 			final CascadingAction action, final CascadePoint cascadePoint,
-			final EventSource eventSource, final EntityDescriptor persister, final Object parent, final Object anything)
+			final EventSource eventSource, final EntityDescriptor descriptor, final Object parent, final Object anything)
 			throws HibernateException {
 
-		if ( persister.hasCascades() || action.requiresNoCascadeChecking() ) { // performance opt
+		if ( descriptor.hasCascades() || action.requiresNoCascadeChecking() ) { // performance opt
 			final boolean traceEnabled = LOG.isTraceEnabled();
 			if ( traceEnabled ) {
-				LOG.tracev( "Processing cascade {0} for: {1}", action, persister.getEntityName() );
+				LOG.tracev( "Processing cascade {0} for: {1}", action, descriptor.getEntityName() );
 			}
 
-			final List<PersistentAttribute> persistentAttributes = persister.getPersistentAttributes();
-			final String[] propertyNames = persister.getPropertyNames();
-			final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
-			final boolean hasUninitializedLazyProperties = persister.hasUninitializedLazyProperties( parent );
+			final List<PersistentAttribute> persistentAttributes = descriptor.getPersistentAttributes();
+			final String[] propertyNames = descriptor.getPropertyNames();
+			final CascadeStyle[] cascadeStyles = descriptor.getPropertyCascadeStyles();
+			final boolean hasUninitializedLazyProperties = descriptor.hasUninitializedLazyProperties( parent );
 			final int componentPathStackDepth = 0;
 			for ( int i = 0; i < persistentAttributes.size(); i++) {
 				final CascadeStyle style = cascadeStyles[i];
@@ -97,12 +98,12 @@ public final class Cascade {
 					Object child;
 
 					// For bytecode enhanced entities, need to fetch the attribute
-					if ( hasUninitializedLazyProperties && persister.getPropertyLaziness()[i] && action.performOnLazyProperty() ) {
-						LazyAttributeLoadingInterceptor interceptor = persister.getBytecodeEnhancementMetadata().extractInterceptor( parent );
+					if ( hasUninitializedLazyProperties && descriptor.getPropertyLaziness()[i] && action.performOnLazyProperty() ) {
+						LazyAttributeLoadingInterceptor interceptor = descriptor.getBytecodeEnhancementMetadata().extractInterceptor( parent );
 						child = interceptor.fetchAttribute( parent, propertyName );
 					}
 					else {
-						child = persister.getPropertyValue( parent, i );
+						child = descriptor.getPropertyValue( parent, i );
 					}
 
 					cascadeProperty(
@@ -123,7 +124,7 @@ public final class Cascade {
 					action.noCascade(
 							eventSource,
 							parent,
-							persister,
+							descriptor,
 							persistentAttributes.get( i ),
 							i
 					);
@@ -131,7 +132,7 @@ public final class Cascade {
 			}
 
 			if ( traceEnabled ) {
-				LOG.tracev( "Done processing cascade {0} for: {1}", action, persister.getEntityName() );
+				LOG.tracev( "Done processing cascade {0} for: {1}", action, descriptor.getEntityName() );
 			}
 		}
 	}
@@ -223,9 +224,9 @@ public final class Cascade {
 						// Need to check this in case the context has
 						// already been flushed.  See HHH-7829.
 						if ( valueEntry != null ) {
-							final String entityName = valueEntry.getPersister().getEntityName();
+							final String entityName = valueEntry.getDescriptor().getEntityName();
 							if ( LOG.isTraceEnabled() ) {
-								final Serializable id = valueEntry.getPersister().getIdentifier( loadedValue, eventSource );
+								final Serializable id = valueEntry.getDescriptor().getIdentifier( loadedValue, eventSource );
 								final String description = MessageHelper.infoString( entityName, id );
 								LOG.tracev( "Deleting orphaned entity instance: {0}", description );
 							}
@@ -276,15 +277,16 @@ public final class Cascade {
 			final Object anything) {
 
 		Object[] children = null;
-		final List<PersistentAttribute> attributes = attribute.getContainer().getNavigables();
+		EmbeddedTypeDescriptor embeddedDescriptor = attribute.getEmbeddedDescriptor();
+		final List<PersistentAttribute> attributes = embeddedDescriptor.getPersistentAttributes();
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final PersistentAttribute subattribute = attributes.get( i );
-			final CascadeStyle componentPropertyStyle = subattribute.getCascadeStyle( i );
+			final CascadeStyle componentPropertyStyle = embeddedDescriptor.getCascadeStyle( i );
 			final String subPropertyName = subattribute.getName();
 			if ( componentPropertyStyle.doCascade( action ) ) {
 				if ( children == null ) {
 					// Get children on demand.
-					children = subattribute.getPropertyValues( child, eventSource );
+					children = embeddedDescriptor.getPropertyValues( child );
 				}
 				cascadeProperty(
 						action,
@@ -347,9 +349,9 @@ public final class Cascade {
 			final Object anything,
 			final PluralPersistentAttribute attribute) {
 		final CollectionElement collectionElement = attribute.getPersistentCollectionMetadata().getElementDescriptor();
-		final PersistentCollectionDescriptor persister = eventSource.getFactory()
+		final PersistentCollectionDescriptor descriptor = eventSource.getFactory()
 				.getTypeConfiguration()
-				.findCollectionPersister( attribute.getNavigableName() );
+				.findCollectionDescriptor( attribute.getNavigableName() );
 
 		CascadePoint elementsCascadePoint = cascadePoint;
 		if ( cascadePoint == CascadePoint.AFTER_INSERT_BEFORE_DELETE ) {
@@ -369,7 +371,7 @@ public final class Cascade {
 				style,
 				collectionElement,
 				anything,
-				persister
+				descriptor
 			);
 		}
 	}
@@ -415,8 +417,8 @@ public final class Cascade {
 			final CascadeStyle style,
 			final CollectionElement collectionElement,
 			final Object anything,
-			final PersistentCollectionDescriptor persister) throws HibernateException {
-		final boolean reallyDoCascade = style.reallyDoCascade( action ) && child != CollectionType.UNFETCHED_COLLECTION;
+			final PersistentCollectionDescriptor descriptor) throws HibernateException {
+		final boolean reallyDoCascade = style.reallyDoCascade( action ) && child != PersistentCollectionDescriptor.UNFETCHED_COLLECTION;
 
 		if ( reallyDoCascade ) {
 			final boolean traceEnabled = LOG.isTraceEnabled();
@@ -424,7 +426,7 @@ public final class Cascade {
 				LOG.tracev( "Cascade {0} for collection: {1}", action, attribute.getNavigableName() );
 			}
 
-			final Iterator itr = action.getCascadableChildrenIterator( eventSource, persister, child );
+			final Iterator itr = action.getCascadableChildrenIterator( eventSource, descriptor, child );
 			while ( itr.hasNext() ) {
 				cascadeProperty(
 						action,
@@ -437,7 +439,7 @@ public final class Cascade {
 						style,
 						null,
 						anything,
-						isCascadeDeleteEnabled
+						descriptor.isCascadeDeleteEnabled
 				);
 			}
 

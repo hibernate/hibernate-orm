@@ -40,7 +40,7 @@ public class OnUpdateVisitor extends ReattachVisitor {
 		final EventSource session = getSession();
 		final PersistentCollectionDescriptor descriptor = session.getFactory()
 				.getTypeConfiguration()
-				.findCollectionPersister( attributeCollection.getNavigableName() );
+				.findCollectionDescriptor( attributeCollection.getNavigableName() );
 
 		final Serializable collectionKey = extractCollectionKeyFromOwner( descriptor );
 		if ( collection != null && ( collection instanceof PersistentCollection ) ) {

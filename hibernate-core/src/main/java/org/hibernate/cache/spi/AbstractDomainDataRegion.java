@@ -93,7 +93,7 @@ public abstract class AbstractDomainDataRegion implements DomainDataRegion {
 	@Override
 	public CollectionDataAccess getCollectionDataAccess(NavigableRole collectionRole) {
 		final PersistentCollectionDescriptor collectionDescriptor = sessionFactory.getTypeConfiguration()
-				.findCollectionPersister( collectionRole.getFullPath() );
+				.findCollectionDescriptor( collectionRole.getFullPath() );
 
 		final CollectionDataAccess access = collectionDataAccessMap.get( collectionDescriptor );
 		if ( access == null ) {

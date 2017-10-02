@@ -44,7 +44,7 @@ public class OnReplicateVisitor extends ReattachVisitor {
 
 		final PersistentCollectionDescriptor descriptor = session.getFactory()
 				.getTypeConfiguration()
-				.findCollectionPersister( attributeCollection.getNavigableName() );
+				.findCollectionDescriptor( attributeCollection.getNavigableName() );
 
 		if ( isUpdate ) {
 			removeCollection( descriptor, extractCollectionKeyFromOwner( descriptor ), session );

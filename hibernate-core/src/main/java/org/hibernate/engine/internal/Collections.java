@@ -161,7 +161,7 @@ public final class Collections {
 		}
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		final PersistentCollectionDescriptor descriptor = factory.getTypeConfiguration().findCollectionPersister(
+		final PersistentCollectionDescriptor descriptor = factory.getTypeConfiguration().findCollectionDescriptor(
 				attributeCollection.getNavigableName() );
 		ce.setCurrentPersister( descriptor );
 

@@ -216,7 +216,7 @@ public class Util {
 //				else if ( nativeQueryReturn instanceof NativeSQLQueryCollectionReturn ) {
 //					final NativeSQLQueryCollectionReturn rtn = (NativeSQLQueryCollectionReturn) nativeQueryReturn;
 //					final String role = rtn.getOwnerEntityName() + '.' + rtn.getOwnerProperty();
-//					final PersistentCollectionDescriptor persister = context.getSessionFactory().getTypeConfiguration().findCollectionPersister( role );
+//					final PersistentCollectionDescriptor persister = context.getSessionFactory().getTypeConfiguration().findCollectionDescriptor( role );
 //					//context.addQueryReturns( ... );
 //					throw new NotYetImplementedException( "Collection Returns not yet implemented" );
 //				}

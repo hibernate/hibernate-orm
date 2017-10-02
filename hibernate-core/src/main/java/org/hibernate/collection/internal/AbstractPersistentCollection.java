@@ -227,7 +227,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			}
 
 			session.getPersistenceContext().addUninitializedDetachedCollection(
-					session.getFactory().getTypeConfiguration().findCollectionPersister( getRole() ),
+					session.getFactory().getTypeConfiguration().findCollectionDescriptor( getRole() ),
 					this
 			);
 		}
@@ -636,7 +636,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				else {
 					LOG.logUnexpectedSessionInCollectionNotConnected( msg );
 					this.session = session;
-					this.collectionMetadata = session.getFactory().getTypeConfiguration().findCollectionPersister( getRole() );
+					this.collectionMetadata = session.getFactory().getTypeConfiguration().findCollectionDescriptor( getRole() );
 					return true;
 				}
 			}

@@ -7,7 +7,6 @@
 package org.hibernate.event.internal;
 
 import java.util.List;
-import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.CollectionClassification;
@@ -58,7 +57,7 @@ public class WrapVisitor extends ProxyVisitor {
 		else {
 			final PersistentCollectionDescriptor descriptor = getSession().getFactory()
 					.getTypeConfiguration()
-					.findCollectionPersister( attributeCollection.getNavigableName() );
+					.findCollectionDescriptor( attributeCollection.getNavigableName() );
 			return processArrayOrNewCollection( collection, descriptor );
 		}
 

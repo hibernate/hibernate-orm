@@ -83,7 +83,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 					rootEntityDescriptor.getEntityName() );
 			for ( String role : roles ) {
 				final PersistentCollectionDescriptor descriptor = factory.getTypeConfiguration()
-						.findCollectionPersister( role );
+						.findCollectionDescriptor( role );
 				final CollectionDataAccess access = rootEntityDescriptor.getFactory()
 						.getCache()
 						.getCollectionRegionAccess( descriptor );
@@ -139,7 +139,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 
 				final Set<String> roles = factory.getTypeConfiguration().getCollectionRolesByEntityParticipant( rootEntityDescriptor.getEntityName() );
 				for ( String role : roles ) {
-					final PersistentCollectionDescriptor descriptor = factory.getTypeConfiguration().findCollectionPersister( role );
+					final PersistentCollectionDescriptor descriptor = factory.getTypeConfiguration().findCollectionDescriptor( role );
 					final CollectionDataAccess access = rootEntityDescriptor.getFactory()
 							.getCache()
 							.getCollectionRegionAccess( descriptor );

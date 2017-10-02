@@ -11,6 +11,7 @@ import javax.persistence.metamodel.EmbeddableType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.mapping.Component;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -130,4 +131,9 @@ public interface EmbeddedTypeDescriptor<T>
 	 * Get the nullability of the properties of this class
 	 */
 	boolean[] getPropertyNullability();
+
+	/**
+	 * Get the cascade style of a particular property
+	 */
+	CascadeStyle getCascadeStyle(int i);
 }

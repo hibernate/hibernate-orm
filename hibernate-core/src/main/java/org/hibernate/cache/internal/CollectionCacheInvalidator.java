@@ -106,7 +106,7 @@ public class CollectionCacheInvalidator
 				return;
 			}
 			for ( String role : collectionRoles ) {
-				final PersistentCollectionDescriptor collectionDescriptor = factory.getTypeConfiguration().findCollectionPersister( role );
+				final PersistentCollectionDescriptor collectionDescriptor = factory.getTypeConfiguration().findCollectionDescriptor( role );
 				final CollectionDataAccess cacheAccess = collectionDescriptor.getCacheAccess();
 				if ( cacheAccess == null ) {
 					// ignore collection if no caching is used

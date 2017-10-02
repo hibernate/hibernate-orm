@@ -307,22 +307,22 @@ public interface SessionFactoryImplementor
 
 	/**
 	 * @deprecated (since 5.2) Use
-	 * {@link #getTypeConfiguration()}} -> {@link TypeConfiguration#getEntityPersisterMap}
+	 * {@link #getTypeConfiguration()}} -> {@link TypeConfiguration#getEntityDescriptorMap}
 	 * instead
 	 */
 	@Deprecated
 	default Map<String,EntityDescriptor<?>> getEntityPersisters() {
-		return getTypeConfiguration().getEntityPersisterMap();
+		return getTypeConfiguration().getEntityDescriptorMap();
 	}
 
 	/**
 	 * @deprecated (since 5.2) Use
-	 * {@link #getTypeConfiguration()}} -> {@link TypeConfiguration#findCollectionPersister}
+	 * {@link #getTypeConfiguration()}} -> {@link TypeConfiguration#findCollectionDescriptor}
 	 * instead
 	 */
 	@Deprecated
 	default PersistentCollectionDescriptor getCollectionPersister(String role) throws MappingException {
-		final PersistentCollectionDescriptor<?,?,?> collectionPersister = getTypeConfiguration().findCollectionPersister( role );
+		final PersistentCollectionDescriptor<?,?,?> collectionPersister = getTypeConfiguration().findCollectionDescriptor( role );
 		if ( collectionPersister == null ) {
 			throw new MappingException( "Could not locate CollectionPersister for given role [" + role + "]" );
 		}
@@ -331,12 +331,12 @@ public interface SessionFactoryImplementor
 
 	/**
 	 * @deprecated (since 5.2) Use
-	 * {@link #getTypeConfiguration()}} -> {@link TypeConfiguration#getCollectionPersisterMap}
+	 * {@link #getTypeConfiguration()}} -> {@link TypeConfiguration#getCollectionDescriptorMap}
 	 * instead
 	 */
 	@Deprecated
 	default Map<String, PersistentCollectionDescriptor<?,?,?>> getCollectionPersisters() {
-		return getTypeConfiguration().getCollectionPersisterMap();
+		return getTypeConfiguration().getCollectionDescriptorMap();
 	}
 
 	/**

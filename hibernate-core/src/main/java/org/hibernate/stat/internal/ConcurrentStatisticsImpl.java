@@ -761,7 +761,7 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 			return ArrayHelper.toStringArray( entityStatistics.keySet() );
 		}
 		else {
-			return sessionFactory.getTypeConfiguration().getEntityPersisterMap().keySet().stream().collect( StreamUtils.toStringArray() );
+			return sessionFactory.getTypeConfiguration().getEntityDescriptorMap().keySet().stream().collect( StreamUtils.toStringArray() );
 		}
 	}
 
@@ -774,7 +774,7 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 			return ArrayHelper.toStringArray( collectionStatistics.keySet() );
 		}
 		else {
-			return sessionFactory.getTypeConfiguration().getCollectionPersisterMap().keySet().stream().collect( StreamUtils.toStringArray() );
+			return sessionFactory.getTypeConfiguration().getCollectionDescriptorMap().keySet().stream().collect( StreamUtils.toStringArray() );
 		}
 	}
 

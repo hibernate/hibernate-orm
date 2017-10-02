@@ -88,10 +88,10 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	private final SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry;
 	private final BasicTypeRegistry basicTypeRegistry;
 
-	private final Map<String,EntityDescriptor<?>> entityPersisterMap = new ConcurrentHashMap<>();
+	private final Map<String,EntityDescriptor<?>> entityDescriptorMap = new ConcurrentHashMap<>();
 	private final Set<EntityHierarchy> entityHierarchies = ConcurrentHashMap.newKeySet();
-	private final Map<String,PersistentCollectionDescriptor<?,?,?>> collectionPersisterMap = new ConcurrentHashMap<>();
-	private final Map<String,EmbeddedTypeDescriptor<?>> embeddablePersisterMap = new ConcurrentHashMap<>();
+	private final Map<String,PersistentCollectionDescriptor<?,?,?>> collectionDescriptorMap = new ConcurrentHashMap<>();
+	private final Map<String,EmbeddedTypeDescriptor<?>> embeddableDescriptorMap = new ConcurrentHashMap<>();
 
 	private final Map<String,String> importMap = new ConcurrentHashMap<>();
 	private final Set<EntityNameResolver> entityNameResolvers = ConcurrentHashMap.newKeySet();
@@ -173,8 +173,8 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	}
 
 	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
-		final EntityDescriptor<? extends T> entityPersister = findEntityDescriptor( entityClass );
-		if ( entityPersister == null ) {
+		final EntityDescriptor<? extends T> entityDescriptor = findEntityDescriptor( entityClass );
+		if ( entityDescriptor == null ) {
 			throw new IllegalArgumentException( "Given class is not an entity : " + entityClass.getName() );
 		}
 
@@ -186,7 +186,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 			}
 
 			final EntityGraphImplementor egi = (EntityGraphImplementor) entityGraph;
-			if ( egi.appliesTo( entityPersister ) ) {
+			if ( egi.appliesTo( entityDescriptor ) ) {
 				results.add( egi );
 			}
 		}
@@ -195,35 +195,35 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// EntityPersister access
+	// EntityDescriptor access
 
 	/**
-	 * Retrieve all EntityPersisters, keyed by entity-name
+	 * Retrieve all EntityDescriptors, keyed by entity-name
 	 */
-	public Map<String,EntityDescriptor<?>> getEntityPersisterMap() {
-		return Collections.unmodifiableMap( entityPersisterMap );
+	public Map<String,EntityDescriptor<?>> getEntityDescriptorMap() {
+		return Collections.unmodifiableMap( entityDescriptorMap );
 	}
 
 	/**
-	 * Retrieve all EntityPersisters
+	 * Retrieve all EntityDescriptors
 	 */
 	public Collection<EntityDescriptor<?>> getEntityDescriptors() {
-		return entityPersisterMap.values();
+		return entityDescriptorMap.values();
 	}
 
 	/**
-	 * Retrieve an EntityPersister by entity-name.  Returns {@code null} if not known.
+	 * Retrieve an EntityDEscriptor by entity-name.  Returns {@code null} if not known.
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> EntityDescriptor<T> findEntityDescriptor(String entityName) {
 		if ( importMap.containsKey( entityName ) ) {
 			entityName = importMap.get( entityName );
 		}
-		return (EntityDescriptor<T>) entityPersisterMap.get( entityName );
+		return (EntityDescriptor<T>) entityDescriptorMap.get( entityName );
 	}
 
 	/**
-	 * Retrieve an EntityPersister by entity-name.  Throws exception if not known.
+	 * Retrieve an EntityDescriptor by entity-name.  Throws exception if not known.
 	 */
 	public <T> EntityDescriptor<T> resolveEntityDescriptor(String entityName) throws UnknownEntityTypeException {
 		final EntityDescriptor<T> resolved = findEntityDescriptor( entityName );
@@ -235,52 +235,52 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	}
 
 	public <T> EntityDescriptor<? extends T> findEntityDescriptor(Class<T> javaType) {
-		EntityDescriptor<? extends T> entityPersister = findEntityDescriptor( javaType.getName() );
-		if ( entityPersister == null ) {
+		EntityDescriptor<? extends T> entityDescriptor = findEntityDescriptor( javaType.getName() );
+		if ( entityDescriptor == null ) {
 			JavaTypeDescriptor javaTypeDescriptor = getJavaTypeDescriptorRegistry().getDescriptor( javaType );
 			if ( javaTypeDescriptor != null && javaTypeDescriptor instanceof MappedSuperclassJavaDescriptor ) {
 				String mappedEntityName = entityProxyInterfaceMap.get( javaTypeDescriptor );
 				if ( mappedEntityName != null ) {
-					entityPersister = findEntityDescriptor( mappedEntityName );
+					entityDescriptor = findEntityDescriptor( mappedEntityName );
 				}
 			}
 		}
 
-		return entityPersister;
+		return entityDescriptor;
 	}
 
 	public <T> EntityDescriptor<? extends T> resolveEntityDescriptor(Class<T> javaType) {
-		final EntityDescriptor<? extends T> entityPersister = findEntityDescriptor( javaType );
-		if ( entityPersister == null ) {
+		final EntityDescriptor<? extends T> entityDescriptor = findEntityDescriptor( javaType );
+		if ( entityDescriptor == null ) {
 			throw new UnknownEntityTypeException( "Could not resolve EntityDescriptor by Java type [" + javaType.getName() + "]" );
 		}
-		return entityPersister;
+		return entityDescriptor;
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// CollectionPersister access
+	// CollectionDesriptor access
 
 	/**
-	 * Retrieve all CollectionPersisters, keyed by role (path)
+	 * Retrieve all CollectionDesriptors, keyed by role (path)
 	 */
-	public Map<String,PersistentCollectionDescriptor<?,?,?>> getCollectionPersisterMap() {
-		return Collections.unmodifiableMap( collectionPersisterMap );
+	public Map<String,PersistentCollectionDescriptor<?,?,?>> getCollectionDescriptorMap() {
+		return Collections.unmodifiableMap( collectionDescriptorMap );
 	}
 
 	/**
-	 * Retrieve all CollectionPersisters
+	 * Retrieve all CollectionDesriptors
 	 */
-	public Collection<PersistentCollectionDescriptor<?,?,?>> getCollectionPersisters() {
-		return collectionPersisterMap.values();
+	public Collection<PersistentCollectionDescriptor<?,?,?>> getCollectionDescriptors() {
+		return collectionDescriptorMap.values();
 	}
 
 	/**
-	 * Locate a CollectionPersister by role (path).  Returns {@code null} if not known
+	 * Locate a CollectionDesriptor by role (path).  Returns {@code null} if not known
 	 */
 	@SuppressWarnings("unchecked")
-	public <O,C,E> PersistentCollectionDescriptor<O,C,E> findCollectionPersister(String roleName) {
-		return (PersistentCollectionDescriptor<O, C, E>) collectionPersisterMap.get( roleName );
+	public <O,C,E> PersistentCollectionDescriptor<O,C,E> findCollectionDescriptor(String roleName) {
+		return (PersistentCollectionDescriptor<O, C, E>) collectionDescriptorMap.get( roleName );
 	}
 
 	public Set<String> getCollectionRolesByEntityParticipant(String entityName) {
@@ -290,18 +290,18 @@ public class TypeConfiguration implements SessionFactoryObserver {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// EmbeddablePersister access
+	// EmbeddableDescriptor access
 
-	public Collection<EmbeddedTypeDescriptor<?>> getEmbeddablePersisters() {
-		return embeddablePersisterMap.values();
+	public Collection<EmbeddedTypeDescriptor<?>> getEmbeddableDescriptors() {
+		return embeddableDescriptorMap.values();
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> EmbeddedTypeDescriptor<T> findEmbeddablePersister(String roleName) {
-		return (EmbeddedTypeDescriptor<T>) embeddablePersisterMap.get( roleName );
+	public <T> EmbeddedTypeDescriptor<T> findEmbeddableDescriptor(String roleName) {
+		return (EmbeddedTypeDescriptor<T>) embeddableDescriptorMap.get( roleName );
 	}
 
-	public <T> EmbeddedTypeDescriptor<T> findEmbeddablePersister(Class<T> javaType) {
+	public <T> EmbeddedTypeDescriptor<T> findEmbeddableDescriptor(Class<T> javaType) {
 		final JavaTypeDescriptor javaTypeDescriptor = getJavaTypeDescriptorRegistry().getDescriptor( javaType );
 		if ( javaType == null || !EmbeddableJavaDescriptor.class.isInstance( javaTypeDescriptor ) ) {
 			return null;
@@ -312,7 +312,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 			return null;
 		}
 
-		return findEmbeddablePersister( roles.iterator().next() );
+		return findEmbeddableDescriptor( roles.iterator().next() );
 	}
 
 
@@ -328,9 +328,9 @@ public class TypeConfiguration implements SessionFactoryObserver {
 			entityName = importMap.get( entityName );
 		}
 
-		final EntityDescriptor namedPersister = findEntityDescriptor( entityName );
-		if ( namedPersister != null ) {
-			return namedPersister;
+		final EntityDescriptor descriptor = findEntityDescriptor( entityName );
+		if ( descriptor != null ) {
+			return descriptor;
 		}
 
 		final Class requestedClass = resolveRequestedClass( entityName );
@@ -352,10 +352,10 @@ public class TypeConfiguration implements SessionFactoryObserver {
 
 	@SuppressWarnings("unchecked")
 	public <T> EntityValuedExpressableType<T> resolveEntityReference(Class<T> javaType) {
-		// see if we know of this Class by name as an EntityPersister key
-		if ( getEntityPersisterMap().containsKey( javaType.getName() ) ) {
-			// and if so, return that persister
-			return (EntityValuedExpressableType<T>) getEntityPersisterMap().get( javaType.getName() );
+		// see if we know of this Class by name as an EntityDescriptor key
+		if ( getEntityDescriptorMap().containsKey( javaType.getName() ) ) {
+			// and if so, return that descriptor
+			return (EntityValuedExpressableType<T>) getEntityDescriptorMap().get( javaType.getName() );
 		}
 
 		final JavaTypeDescriptor<T> jtd = getJavaTypeDescriptorRegistry().getDescriptor( javaType );
@@ -366,7 +366,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		// next check entityProxyInterfaceMap
 		final String proxyEntityName = entityProxyInterfaceMap.get( jtd );
 		if ( proxyEntityName != null ) {
-			return (EntityValuedExpressableType<T>) getEntityPersisterMap().get( proxyEntityName );
+			return (EntityValuedExpressableType<T>) getEntityDescriptorMap().get( proxyEntityName );
 		}
 
 		// otherwise, trye to handle it as a polymorphic reference
@@ -389,29 +389,29 @@ public class TypeConfiguration implements SessionFactoryObserver {
 
 	@SuppressWarnings("unchecked")
 	public Set<EntityDescriptor<?>> getImplementors(Class javaType) {
-		// if the javaType refers directly to an EntityPersister by Class name, return just it.
-		final EntityDescriptor<?> exactMatch = getEntityPersisterMap().get( javaType.getName() );
+		// if the javaType refers directly to an EntityDescriptor by Class name, return just it.
+		final EntityDescriptor<?> exactMatch = getEntityDescriptorMap().get( javaType.getName() );
 		if ( exactMatch != null ) {
 			return Collections.singleton( exactMatch );
 		}
 
-		final HashSet<EntityDescriptor<?>> matchingPersisters = new HashSet<>();
+		final HashSet<EntityDescriptor<?>> matchingDescriptors = new HashSet<>();
 
-		for ( EntityDescriptor entityPersister : getEntityPersisterMap().values() ) {
-			if ( entityPersister.getJavaType() == null ) {
+		for ( EntityDescriptor entityDescriptor : getEntityDescriptorMap().values() ) {
+			if ( entityDescriptor.getJavaType() == null ) {
 				continue;
 			}
 
 			// todo : explicit/implicit polymorphism...
 			// todo : handle "duplicates" within a hierarchy
-			// todo : in fact we may want to cycle through persisters via entityHierarchies and walking the subclass graph rather than walking each persister linearly (in random order)
+			// todo : in fact we may want to cycle through descriptors via entityHierarchies and walking the subclass graph rather than walking each descriptor linearly (in random order)
 
-			if ( javaType.isAssignableFrom( entityPersister.getJavaType() ) ) {
-				matchingPersisters.add( entityPersister );
+			if ( javaType.isAssignableFrom( entityDescriptor.getJavaType() ) ) {
+				matchingDescriptors.add( entityDescriptor );
 			}
 		}
 
-		return matchingPersisters;
+		return matchingDescriptors;
 	}
 
 
@@ -494,7 +494,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		scope.unsetSessionFactory( factory );
 
 		// todo : come back and implement this...
-		//		release Database, persister Maps, etc... things that are only
+		//		release Database, descriptor Maps, etc... things that are only
 		// 		valid while the TypeConfiguration is scoped to SessionFactory
 		throw new NotYetImplementedException(  );
 	}
@@ -754,82 +754,82 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SF-based initialization
 
-	public void register(EntityDescriptor entityPersister) {
-		entityPersisterMap.put( entityPersister.getEntityName(), entityPersister );
-		entityHierarchies.add( entityPersister.getHierarchy() );
+	public void register(EntityDescriptor entityentityDescriptor) {
+		entityDescriptorMap.put( entityentityDescriptor.getEntityName(), entityentityDescriptor );
+		entityHierarchies.add( entityentityDescriptor.getHierarchy() );
 
-		if ( entityPersister.getConcreteProxyClass() != null
-				&& entityPersister.getConcreteProxyClass().isInterface()
-				&& !Map.class.isAssignableFrom( entityPersister.getConcreteProxyClass() )
-				&& entityPersister.getMappedClass() != entityPersister.getConcreteProxyClass() ) {
+		if ( entityentityDescriptor.getConcreteProxyClass() != null
+				&& entityentityDescriptor.getConcreteProxyClass().isInterface()
+				&& !Map.class.isAssignableFrom( entityentityDescriptor.getConcreteProxyClass() )
+				&& entityentityDescriptor.getMappedClass() != entityentityDescriptor.getConcreteProxyClass() ) {
 			// IMPL NOTE : we exclude Map based proxy interfaces here because that should
 			//		indicate MAP entity mode.0
 
-			if ( entityPersister.getMappedClass().equals( entityPersister.getConcreteProxyClass() ) ) {
+			if ( entityentityDescriptor.getMappedClass().equals( entityentityDescriptor.getConcreteProxyClass() ) ) {
 				// this part handles an odd case in the Hibernate test suite where we map an interface
 				// as the class and the proxy.  I cannot think of a real life use case for that
 				// specific test, but..
 				log.debugf(
 						"Entity [%s] mapped same interface [%s] as class and proxy",
-						entityPersister.getEntityName(),
-						entityPersister.getMappedClass()
+						entityentityDescriptor.getEntityName(),
+						entityentityDescriptor.getMappedClass()
 				);
 			}
 			else {
-				final JavaTypeDescriptor proxyInterfaceJavaDescriptor = getJavaTypeDescriptorRegistry().getDescriptor( entityPersister.getConcreteProxyClass() );
-				final String old = entityProxyInterfaceMap.put( proxyInterfaceJavaDescriptor, entityPersister.getEntityName() );
+				final JavaTypeDescriptor proxyInterfaceJavaDescriptor = getJavaTypeDescriptorRegistry().getDescriptor( entityentityDescriptor.getConcreteProxyClass() );
+				final String old = entityProxyInterfaceMap.put( proxyInterfaceJavaDescriptor, entityentityDescriptor.getEntityName() );
 				if ( old != null ) {
 					throw new HibernateException(
 							String.format(
 									Locale.ENGLISH,
 									"Multiple entities [%s, %s] named the same interface [%s] as their proxy which is not supported",
 									old,
-									entityPersister.getEntityName(),
-									entityPersister.getConcreteProxyClass().getName()
+									entityentityDescriptor.getEntityName(),
+									entityentityDescriptor.getConcreteProxyClass().getName()
 							)
 					);
 				}
 			}
 		}
 
-		registerEntityNameResolvers( entityPersister );
+		registerEntityNameResolvers( entityentityDescriptor );
 	}
 
-	public void register(PersistentCollectionDescriptor collectionPersister) {
-		collectionPersisterMap.put( collectionPersister.getNavigableRole().getFullPath(), collectionPersister );
+	public void register(PersistentCollectionDescriptor collectionDescriptor) {
+		collectionDescriptorMap.put( collectionDescriptor.getNavigableRole().getFullPath(), collectionDescriptor );
 
-		if ( collectionPersister.getIndexDescriptor() != null
-				&& collectionPersister.getIndexDescriptor() instanceof EntityValuedExpressableType ) {
-			final String entityName = ( (EntityValuedExpressableType) collectionPersister.getIndexDescriptor() ).getEntityName();
+		if ( collectionDescriptor.getIndexDescriptor() != null
+				&& collectionDescriptor.getIndexDescriptor() instanceof EntityValuedExpressableType ) {
+			final String entityName = ( (EntityValuedExpressableType) collectionDescriptor.getIndexDescriptor() ).getEntityName();
 			final Set<String> roles = collectionRolesByEntityParticipant.computeIfAbsent(
 					entityName,
 					k -> new HashSet<>()
 			);
-			roles.add( collectionPersister.getNavigableRole().getFullPath() );
+			roles.add( collectionDescriptor.getNavigableRole().getFullPath() );
 		}
 
-		if ( collectionPersister.getElementDescriptor() instanceof EntityValuedExpressableType ) {
-			final String entityName = ( (EntityValuedExpressableType) collectionPersister.getElementDescriptor() ).getEntityName();
+		if ( collectionDescriptor.getElementDescriptor() instanceof EntityValuedExpressableType ) {
+			final String entityName = ( (EntityValuedExpressableType) collectionDescriptor.getElementDescriptor() ).getEntityName();
 			final Set<String> roles = collectionRolesByEntityParticipant.computeIfAbsent(
 					entityName,
 					k -> new HashSet<>()
 			);
-			roles.add( collectionPersister.getNavigableRole().getFullPath() );
+			roles.add( collectionDescriptor.getNavigableRole().getFullPath() );
 		}
 	}
 
-	public void register(EmbeddedTypeDescriptor embeddablePersister) {
-		embeddablePersisterMap.put( embeddablePersister.getRoleName(), embeddablePersister );
+	public void register(EmbeddedTypeDescriptor embeddedTypeDescriptor) {
+		embeddableDescriptorMap.put( embeddedTypeDescriptor.getRoleName(), embeddedTypeDescriptor );
 
 		final Set<String> roles = embeddedRolesByEmbeddableType.computeIfAbsent(
-				embeddablePersister.getJavaTypeDescriptor(),
+				embeddedTypeDescriptor.getJavaTypeDescriptor(),
 				k -> ConcurrentHashMap.newKeySet()
 		);
-		roles.add( embeddablePersister.getNavigableRole().getNavigableName() );
+		roles.add( embeddedTypeDescriptor.getNavigableRole().getNavigableName() );
 	}
 
-	private void registerEntityNameResolvers(EntityDescriptor persister) {
-		this.entityNameResolvers.addAll( persister.getEntityNameResolvers() );
+	private void registerEntityNameResolvers(EntityDescriptor descriptor) {
+		this.entityNameResolvers.addAll( descriptor.getEntityNameResolvers() );
 	}
 
 	public Set<EntityHierarchy> getEntityHierarchies() {

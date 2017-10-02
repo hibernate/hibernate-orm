@@ -29,6 +29,9 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class CompositeIdDerivedIdWithIdClassTest extends BaseCoreFunctionalTestCase {
 	@Override
@@ -94,7 +97,7 @@ public class CompositeIdDerivedIdWithIdClassTest extends BaseCoreFunctionalTestC
 		// merge lineItem with an ID with detached many-to-one
 		s = openSession();
 		s.getTransaction().begin();
-		s.merge(lineItem);
+		s.merge( lineItem );
 		s.getTransaction().commit();
 		s.close();
 
@@ -107,8 +110,116 @@ public class CompositeIdDerivedIdWithIdClassTest extends BaseCoreFunctionalTestC
 		s.close();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-12007")
+	public void testBindTransientEntityWithTransientKeyManyToOne() {
+
+		ShoppingCart cart = new ShoppingCart( "cart" );
+		LineItem item = new LineItem( 0, "desc", cart );
+
+		Session s = openSession();
+		s.getTransaction().begin();
+
+		String cartId =  s.createQuery(
+				"select c.id from Cart c left join c.lineItems i where i = :item",
+				String.class
+		).setParameter( "item", item ).uniqueResult();
+
+		assertNull( cartId );
+
+		assertFalse( s.contains( item ) );
+		assertFalse( s.contains( cart ) );
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12007")
+	public void testBindTransientEntityWithPersistentKeyManyToOne() {
+		ShoppingCart cart = new ShoppingCart( "cart" );
+		LineItem item = new LineItem( 0, "desc", cart );
+
+		Session s = openSession();
+		s.getTransaction().begin();
+
+		session.persist( cart );
+		String cartId =  s.createQuery(
+				"select c.id from Cart c left join c.lineItems i where i = :item",
+				String.class
+		).setParameter( "item", item ).uniqueResult();
+
+		assertNull( cartId );
+
+		assertFalse( s.contains( item ) );
+		assertTrue( s.contains( cart ) );
+
+		s.getTransaction().commit();
+		s.close();
+
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12007")
+	public void testBindTransientEntityWithDetachedKeyManyToOne() {
+		Session s = openSession();
+		s.getTransaction().begin();
+
+		ShoppingCart cart = new ShoppingCart( "cart" );
+
+		s.getTransaction().commit();
+		s.close();
+
+		LineItem item = new LineItem( 0, "desc", cart );
+
+		s = openSession();
+		s.getTransaction().begin();
+
+		String cartId =  s.createQuery(
+				"select c.id from Cart c left join c.lineItems i where i = :item",
+				String.class
+		).setParameter( "item", item ).uniqueResult();
+
+		assertNull( cartId );
+
+		assertFalse( s.contains( item ) );
+		assertFalse( s.contains( cart ) );
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12007")
+	public void testBindTransientEntityWithCopiedKeyManyToOne() {
+		Session s = openSession();
+		s.getTransaction().begin();
+
+		ShoppingCart cart = new ShoppingCart( "cart" );
+		s.getTransaction().commit();
+		s.close();
+
+		LineItem item = new LineItem( 0, "desc", new ShoppingCart( "cart" ) );
+
+		s = openSession();
+		s.getTransaction().begin();
+
+		String cartId =  s.createQuery(
+				"select c.id from Cart c left join c.lineItems i where i = :item",
+				String.class
+		).setParameter( "item", item ).uniqueResult();
+
+		assertNull( cartId );
+
+		assertFalse( s.contains( item ) );
+		assertFalse( s.contains( cart ) );
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
 	@Entity(name = "Cart")
-	public static class ShoppingCart {
+	public static class ShoppingCart implements Serializable{
 		@Id
 		@Column(name = "id", nullable = false)
 		private String id;
@@ -147,7 +258,7 @@ public class CompositeIdDerivedIdWithIdClassTest extends BaseCoreFunctionalTestC
 
 	@Entity(name = "LineItem")
 	@IdClass(LineItem.Pk.class)
-	public static class LineItem {
+	public static class LineItem implements Serializable {
 
 		@Id
 		@Column(name = "item_seq_number", nullable = false)

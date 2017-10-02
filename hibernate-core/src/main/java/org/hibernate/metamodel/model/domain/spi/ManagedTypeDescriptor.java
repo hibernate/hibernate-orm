@@ -21,9 +21,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Hibernate extension SPI for working with {@link ManagedType} implementations.  All
- * "concrete ManagedType" implementations (entity and embedded) are modelled as a
- * "persister" (see {@link EntityDescriptor} and
- * {@link EmbeddedTypeDescriptor}
+ * concrete ManagedType implementations (entity and embedded) are modelled as a
+ * "descriptor" (see {@link EntityDescriptor} and {@link EmbeddedTypeDescriptor}
  *
  * NOTE : Hibernate additionally classifies plural attributes via a "persister" :
  * {@link PersistentCollectionDescriptor}.
@@ -68,31 +67,13 @@ public interface ManagedTypeDescriptor<T>
 	<A extends javax.persistence.metamodel.Attribute> void collectDeclaredAttributes(Consumer<A> collector, Class<A> restrictionType);
 
 	/**
-	 * Reduce an instance of the described type into an array of it's
-	 * sub-Navigable state
-	 *
-	 * @apiNote The returned array is of length equal to the number of
-	 * sub-Navigables.  Each element in that array represents the
-	 * corresponding sub-Navigable's reduced state (see {@link Navigable#reduce}).
-	 */
-	default Object[] reduceToValuesArray(T instance, SharedSessionContractImplementor session) {
-		return reduceToValuesArray(
-				instance,
-				o -> true,
-				o -> false,
-				null,
-				session
-		);
-	}
-
-	/**
-	 * Reduce an instance of the described entity into its "values array" - whose
-	 * length is equal to the number of attributes where the `includeCondition`
-	 * tests {@code true}.  Each element corresponds to either:
+	 * Reduce an instance of the described entity into its "values array" -
+	 * an array whose length is equal to the number of attributes where the
+	 * `includeCondition` tests {@code true}.  Each element corresponds to either:
 	 *
 	 * 		* if the passed `swapCondition` tests {@code true}, then
 	 * 			the value passed as `swapValue`
-	 * 		* otherwise the attribute's extracted - (see {@link PersistentAttribute#reduce})
+	 * 		* otherwise the attribute's extracted value
 	 *
 	 * In more specific terms, this method is responsible for extracting the domain
 	 * object's value state array - which is the form we use in many places such
@@ -100,17 +81,58 @@ public interface ManagedTypeDescriptor<T>
 	 *
 	 * @param instance An instance of the described type (this)
 	 * @param includeCondition Predicate to see if the given sub-Navigable should create
-	 * 		an index in the array being built.
+	 * an index in the array being built.
 	 * @param swapCondition Predicate to see if the sub-Navigable's reduced state or
-	 * 		the passed `swapValue` should be used for that sub-Navigable's value as its
-	 *		element in the array being built
+	 * the passed `swapValue` should be used for that sub-Navigable's value as its
+	 * element in the array being built
 	 * @param swapValue The value to use if the passed `swapCondition` tests {@code true}
 	 * @param session The session :)
 	 */
-	Object[] reduceToValuesArray(
+	default Object[] reduceToValuesArray(
 			T instance,
-			Predicate includeCondition,
-			Predicate swapCondition,
+			Predicate<PersistentAttribute> includeCondition,
+			Predicate<PersistentAttribute> swapCondition,
 			Object swapValue,
-			SharedSessionContractImplementor session);
+			SharedSessionContractImplementor session) {
+		final ArrayList<Object> values = new ArrayList<>();
+
+		// todo (6.0) : the real trick here is deciding which values to put in the array.
+		//		specifically how to handle values like version, discriminator, etc
+		//
+		//		do we put that onus on the `includeCondition` completely (external)?
+		//		or is this something that the descriptor should handle? maybe a method
+		//
+		//		generally speaking callers only care about the `swapCondition` which is
+		//		where the "insertability", "laziness", etc comes into play
+
+		// todo (6.0) : one option for this (^^) is to define `includeCondition` and `swapCondition` as `Predicate<Navigable` instead
+		//		ManagedTypeDescriptor's implementation of that would walk these Navigables[1]
+		//
+		// [1] whichever Navigables we decide needs to be there in whatever order we decide.. it just needs to be consistent in usage[2]
+		// [2] possibly (hopefully!)this (^^) can hold true for our enhancement needs as well.  A possible solution for would be
+		// 		to just "reserve" the first few elements of this array for root-entity state such as id, version, discriminator, etc
+
+		// todo (7.0) : bytecode enhancement should use some facilities to build a `org.hibernate.boot.Metadata` reference to determine its strategy for enhancement.
+		//		this is related to the 2 6.0 todo comments above
+		//
+		//		drawback to this approach is that it would miss any provided XML overrides/additions.  - is that reasonable?
+		//		maybe a comprise is to say that we can enhance anything for which there are XML *overrides*, but not additions
+		// 		such as adding new entity definitions (the new ones would not be hooked
+
+		visitAttributes(
+				attribute -> {
+					if ( includeCondition.test( attribute ) ) {
+						values.add(
+								swapCondition.test( attribute )
+										? swapValue
+										: attribute.getPropertyAccess().getGetter().get( instance )
+						);
+					}
+				}
+		);
+		return values.toArray();
+	}
+
+	Object extractAttributeValue(T instance, PersistentAttribute attribute);
+	void injectAttributeValue(T instance, PersistentAttribute attribute, Object value);
 }

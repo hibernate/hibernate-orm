@@ -729,26 +729,30 @@ public final class Template {
 	}
 
 	private static boolean isFunction(String lcToken, String nextToken, SqmFunctionRegistry functionRegistry) {
-		// checking for "(" is currently redundant because it is checked beforeQuery getting here;
-		// doing the check anyhow, in case that earlier check goes away;
+		// If the token following the token we are checking is an open parenthesis
+		// 		we assume the token is a function
 		if ( "(".equals( nextToken ) ) {
 			return true;
 		}
-		SqmFunctionTemplate function = functionRegistry.findFunctionTemplate( lcToken);
-		if ( function == null ) {
-			// lcToken does not refer to a function
+
+		// Otherwise, the token is considered a function if:
+		//		1) the token matches a registered function-template
+		final SqmFunctionTemplate functionTemplate = functionRegistry.findFunctionTemplate( lcToken);
+		if ( functionTemplate == null ) {
+			// no template registered under that name - token is not a function
 			return false;
 		}
-		// if function.hasParenthesesIfNoArguments() is true, then assume
-		// lcToken is not a function (since it is not followed by '(')
-		return ! function.hasParenthesesIfNoArguments();
+
+		// 		2) the registered template reports that the function can occur
+		// 			without parentheses
+		return !functionTemplate.alwaysIncludesParentheses();
 	}
 
 	private static boolean isIdentifier(String token) {
 		if ( isBoolean( token ) ) {
 			return false;
 		}
-		return token.charAt( 0 ) == '`' || ( //allow any identifier quoted with backtick
+		return token.charAt( 0 ) == '`' || ( //allow any identifier quoted with back-tick
 				Character.isLetter( token.charAt( 0 ) ) && //only recognizes identifiers beginning with a letter
 						token.indexOf( '.' ) < 0
 		);

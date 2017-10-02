@@ -44,6 +44,7 @@ public interface PersistentAttribute<O,T> extends Navigable<T>, javax.persistenc
 	boolean includeInOptimisticLocking();
 
 	default Object deepCopy(Object value, SharedSessionContractImplementor session) {
+		// todo (6.0) : from where do we access the MutabilityPlan?
 		throw new NotYetImplementedFor6Exception();
 	}
 

@@ -6,16 +6,14 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
@@ -96,9 +94,4 @@ public interface Navigable<T> extends DomainType<T> {
 	 * @return The loggable representation of this reference
 	 */
 	String asLoggableText();
-
-	/**
-	 * Get the reduced representation of the Navigable.
-	 */
-	Object reduce(Object containerInstance, SharedSessionContractImplementor session);
 }

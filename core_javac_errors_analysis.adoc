@@ -314,7 +314,6 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
   symbol:   method processQueuedOps(PersistentCollection,Serializable,SharedSessionContractImplementor)
   location: interface PersistentCollectionDescriptor
 
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/loading/internal/CollectionLoadContext.java:309: error: cannot find symbol
 						final Serializable ownerKey = persister.getOwnerEntityPersister().getIdentifier( linkedOwner, session );
 						                                       ^
@@ -325,7 +324,6 @@ hhome/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-
 		this.keyType = keyType.getSemiResolvedType( factory );
 		                      ^
   symbol:   method getSemiResolvedType(SessionFactoryImplementor)
-
   location: variable keyType of type Type
 
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/spi/AbstractCollectionEvent.java:75: error: cannot find symbol
@@ -358,7 +356,6 @@ hhome/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-
   symbol:   method getOwnerEntityPersister()
   location: variable collectionPersister of type PersistentCollectionDescriptor
 
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Collections.java:169: error: cannot find symbol
 		ce.setCurrentKey( descriptor.getKeyOfOwner( entity, session ) );
 		                            ^
@@ -370,11 +367,13 @@ hhome/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-
 				                                      ^
   symbol:   method getMappedByProperty()
   location: variable collectionDescriptor of type PersistentCollectionDescriptor
+
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/internal/CollectionCacheInvalidator.java:117: error: cannot find symbol
 				if ( !collectionDescriptor.isManyToMany() &&
 				                          ^
   symbol:   method isManyToMany()
   location: variable collectionDescriptor of type PersistentCollectionDescriptor
+
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cache/internal/CollectionCacheInvalidator.java:119: error: cannot find symbol
 					int i = entityDescriptor.getEntityMetamodel().getPropertyIndex( mappedBy );
 					                        ^
@@ -392,17 +391,11 @@ hhome/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-
 
 
 
-### Composite/embedded metadata (2)
+### Composite/embedded metadata (1)
 
 [code]
 ----
 		                                            ^
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:282: error: cannot find symbol
-			final CascadeStyle componentPropertyStyle = componentType.getCascadeStyle( i );
-			                                                         ^
-  symbol:   method getCascadeStyle(int)
-  location: variable componentType of type PersistentAttribute
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/BasicLazyInitializer.java:84: error: cannot find symbol
 		if ( componentIdType != null && componentIdType.isMethodOf( method ) ) {
 		                                               ^
@@ -591,7 +584,7 @@ internally) as well?
 
 
 
-### Access to Navigable value from an instance of its container (2)
+### Access to Navigable value from an instance of its container (1)
 
 E.g., something like `EntityIdentifierDescriptor#getSnapshot`
 
@@ -603,13 +596,6 @@ E.g., something like `EntityIdentifierDescriptor#getSnapshot`
 		                                                   ^
   symbol:   method getVersionProperty()
   location: interface EntityDescriptor
-
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:287: error: cannot find symbol
-					children = componentType.getPropertyValues( child, eventSource );
-					                        ^
-  symbol:   method getPropertyValues(Object,EventSource)
-  location: variable componentType of type PersistentAttribute
 
 ----
 
@@ -642,20 +628,14 @@ E.g., something like `EntityIdentifierDescriptor#getSnapshot`
 
 
 
-## Cascade (2)
+## Cascade (1)
 
 
 [code]
 ----
 
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:419: error: cannot find symbol
-		final boolean reallyDoCascade = style.reallyDoCascade( action ) && child != CollectionType.UNFETCHED_COLLECTION;
-		                                                                            ^
-  symbol:   variable CollectionType
-  location: class Cascade
-
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:440: error: cannot find symbol
-						isCascadeDeleteEnabled
+/home/sebersole/projects/hibernate/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:442: error: cannot find symbol
+						descriptor.isCascadeDeleteEnabled
 						^
   symbol:   variable isCascadeDeleteEnabled
   location: class Cascade

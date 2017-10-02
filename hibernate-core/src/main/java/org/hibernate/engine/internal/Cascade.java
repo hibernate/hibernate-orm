@@ -277,7 +277,7 @@ public final class Cascade {
 			final Object anything) {
 
 		Object[] children = null;
-		EmbeddedTypeDescriptor embeddedDescriptor = attribute.getEmbeddedDescriptor();
+		final EmbeddedTypeDescriptor embeddedDescriptor = attribute.getEmbeddedDescriptor();
 		final List<PersistentAttribute> attributes = embeddedDescriptor.getPersistentAttributes();
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final PersistentAttribute subattribute = attributes.get( i );

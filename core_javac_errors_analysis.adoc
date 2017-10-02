@@ -644,24 +644,6 @@ E.g., something like `EntityIdentifierDescriptor#getSnapshot`
 
 
 
-## Dialects / functions (1)
-
-[code]
-----
-       ^
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/Template.java:744: error: cannot find symbol
-		return ! function.hasParenthesesIfNoArguments();
-		                 ^
-  symbol:   method hasParenthesesIfNoArguments()
-  location: variable function of type SqmFunctionTemplate
-
-----
-
-
-
-
-
-
 
 ## ScrollableResults (1)
 

@@ -67,7 +67,8 @@ public class EntityIdentifierSimpleImpl<O,J>
 				),
 				Disposition.ID,
 				false,
-				basicValueMapping
+				basicValueMapping,
+				property.isIncludedInOptimisticLocking()
 		);
 		this.name = property.getName();
 		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( basicValueMapping.getMappedColumn() );

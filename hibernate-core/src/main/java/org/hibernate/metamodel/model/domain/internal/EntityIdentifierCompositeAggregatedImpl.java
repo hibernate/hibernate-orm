@@ -56,7 +56,8 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 				),
 				Disposition.ID,
 				false,
-				bootModelRoot.getIdentifierProperty().getValue()
+				bootModelRoot.getIdentifierProperty().getValue(),
+				false
 		);
 		this.embeddedMetadata = embeddedMetadata;
 	}

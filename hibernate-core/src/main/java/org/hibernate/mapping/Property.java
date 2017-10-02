@@ -442,6 +442,7 @@ public class Property implements Serializable, PersistentAttributeMapping {
 					singularAttributeDisposition,
 					isNullable(),
 					(BasicValueMapping) value,
+					optimisticLocked,
 					context
 			);
 		}
@@ -456,6 +457,7 @@ public class Property implements Serializable, PersistentAttributeMapping {
 					singularAttributeDisposition,
 					isNullable(),
 					(ToOne) value,
+					optimisticLocked,
 					context
 			);
 		}
@@ -466,6 +468,7 @@ public class Property implements Serializable, PersistentAttributeMapping {
 					propertyAccess,
 					singularAttributeDisposition,
 					(Component) value,
+					optimisticLocked,
 					context
 			);
 

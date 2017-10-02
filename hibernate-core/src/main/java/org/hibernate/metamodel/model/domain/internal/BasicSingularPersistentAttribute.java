@@ -47,8 +47,17 @@ public class BasicSingularPersistentAttribute<O,J>
 			Disposition disposition,
 			boolean nullable,
 			BasicValueMapping<J> basicValueMapping,
+			boolean includedInOptimisticLocking,
 			RuntimeModelCreationContext context) {
-		super( declaringType, name, propertyAccess, disposition, nullable, basicValueMapping );
+		super(
+				declaringType,
+				name,
+				propertyAccess,
+				disposition,
+				nullable,
+				basicValueMapping,
+				includedInOptimisticLocking
+		);
 
 		this.boundColumn = context.getDatabaseObjectResolver().resolveColumn( basicValueMapping.getMappedColumn() );
 		this.basicType = basicValueMapping.resolveType();

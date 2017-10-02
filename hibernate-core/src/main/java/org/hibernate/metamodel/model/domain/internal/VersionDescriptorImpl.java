@@ -67,7 +67,8 @@ public class VersionDescriptorImpl<O,J>
 				),
 				Disposition.VERSION,
 				nullable,
-				bootMapping
+				bootMapping,
+				false
 		);
 		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( bootMapping.getMappedColumn() );
 		this.unsavedValue = unsavedValue;

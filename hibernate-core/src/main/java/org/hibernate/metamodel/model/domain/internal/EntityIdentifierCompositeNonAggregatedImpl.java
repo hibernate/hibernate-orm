@@ -52,7 +52,8 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 				PropertyAccessStrategyEmbeddedImpl.INSTANCE.buildPropertyAccess( null, NAVIGABLE_NAME ),
 				Disposition.ID,
 				false,
-				bootMapping
+				bootMapping,
+				false
 		);
 		this.embeddedDescriptor = embeddedDescriptor;
 	}

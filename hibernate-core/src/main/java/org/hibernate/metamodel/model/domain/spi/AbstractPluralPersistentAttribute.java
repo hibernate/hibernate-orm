@@ -39,8 +39,9 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 			String name,
 			JavaTypeDescriptor<C> javaTypeDescriptor,
 			PropertyAccess access,
+			boolean includedInOptimisticLocking,
 			PersistentCollectionDescriptor<O, C, E> collectionMetadata) {
-		super( container, name, javaTypeDescriptor, access );
+		super( container, name, javaTypeDescriptor, access, includedInOptimisticLocking );
 		this.collectionMetadata = collectionMetadata;
 	}
 

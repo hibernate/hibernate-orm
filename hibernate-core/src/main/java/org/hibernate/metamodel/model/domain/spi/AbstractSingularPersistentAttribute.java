@@ -24,8 +24,15 @@ public abstract class AbstractSingularPersistentAttribute<O,J>
 			PropertyAccess propertyAccess,
 			Disposition disposition,
 			boolean nullable,
-			ValueMapping<J> valueMapping) {
-		super( attributeContainer, name, valueMapping.getJavaTypeDescriptor(), propertyAccess );
+			ValueMapping<J> valueMapping,
+			boolean includedInOptimisticLocking) {
+		super(
+				attributeContainer,
+				name,
+				valueMapping.getJavaTypeDescriptor(),
+				propertyAccess,
+				includedInOptimisticLocking
+		);
 		this.disposition = disposition;
 		this.nullable = nullable;
 	}

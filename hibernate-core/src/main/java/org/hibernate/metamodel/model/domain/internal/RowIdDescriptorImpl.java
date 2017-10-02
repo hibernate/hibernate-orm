@@ -71,6 +71,11 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 	}
 
 	@Override
+	public boolean includeInOptimisticLocking() {
+		new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
 	public String getAttributeName() {
 		return NAVIGABLE_NAME;
 	}

@@ -46,8 +46,17 @@ public class SingularPersistentAttributeEmbedded<O,J>
 			PropertyAccess propertyAccess,
 			Disposition disposition,
 			Component embeddedMapping,
+			boolean includedInOptimisticLocking,
 			RuntimeModelCreationContext context) {
-		super( declaringType, attributeName, propertyAccess, disposition, true, embeddedMapping );
+		super(
+				declaringType,
+				attributeName,
+				propertyAccess,
+				disposition,
+				true,
+				embeddedMapping,
+				includedInOptimisticLocking
+		);
 
 		this.embeddedDescriptor = embeddedMapping.makeRuntimeDescriptor(
 				declaringType,

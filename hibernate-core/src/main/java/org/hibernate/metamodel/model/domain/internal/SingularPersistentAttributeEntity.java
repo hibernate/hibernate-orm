@@ -78,8 +78,9 @@ public class SingularPersistentAttributeEntity<O,J>
 			Disposition disposition,
 			boolean nullable,
 			ToOne valueMapping,
+			boolean includedInOptimisticLocking,
 			RuntimeModelCreationContext context) {
-		super( declaringType, name, propertyAccess, disposition, nullable, valueMapping );
+		super( declaringType, name, propertyAccess, disposition, nullable, valueMapping, includedInOptimisticLocking );
 		this.classification = classification;
 
 		if ( valueMapping.getReferencedEntityName() == null ) {

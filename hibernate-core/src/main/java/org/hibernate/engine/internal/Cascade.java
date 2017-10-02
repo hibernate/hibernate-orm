@@ -439,7 +439,7 @@ public final class Cascade {
 						style,
 						null,
 						anything,
-						descriptor.isCascadeDeleteEnabled
+						descriptor.isCascadeDeleteEnabled()
 				);
 			}
 

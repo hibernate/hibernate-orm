@@ -6,10 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.util.List;
-
-import org.hibernate.metamodel.model.relational.spi.Column;
-
 /**
  * @author Steve Ebersole
  */

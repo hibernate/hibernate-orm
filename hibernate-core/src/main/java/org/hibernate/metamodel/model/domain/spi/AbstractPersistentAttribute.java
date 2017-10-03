@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -20,18 +21,22 @@ public abstract class AbstractPersistentAttribute<O,J> implements PersistentAttr
 	private final JavaTypeDescriptor<J> javaTypeDescriptor;
 	private final PropertyAccess access;
 
+	private final boolean includedInOptimisticLocking;
+
 	private final NavigableRole navigableRole;
 
+	@SuppressWarnings("unchecked")
 	public AbstractPersistentAttribute(
 			ManagedTypeDescriptor<O> container,
-			String name,
-			JavaTypeDescriptor<J> javaTypeDescriptor,
-			PropertyAccess access) {
+			PersistentAttributeMapping bootModelAttribute,
+			PropertyAccess propertyAccess) {
 		this.container = container;
-		this.javaTypeDescriptor = javaTypeDescriptor;
-		this.access = access;
+		this.javaTypeDescriptor = bootModelAttribute.getValueMapping().getJavaTypeDescriptor();
+		this.access = propertyAccess;
 
-		this.navigableRole = container.getNavigableRole().append( name );
+		this.includedInOptimisticLocking = bootModelAttribute.isIncludedInOptimisticLocking();
+
+		this.navigableRole = container.getNavigableRole().append( bootModelAttribute.getName() );
 	}
 
 	@Override
@@ -57,5 +62,10 @@ public abstract class AbstractPersistentAttribute<O,J> implements PersistentAttr
 	@Override
 	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
+	}
+
+	@Override
+	public boolean isIncludedInOptimisticLocking() {
+		return includedInOptimisticLocking;
 	}
 }

@@ -263,13 +263,13 @@ public abstract class AbstractEntityDescriptor<T>
 	@Override
 	@SuppressWarnings("unchecked")
 	public <Y> SingularAttribute<? super T, Y> getId(Class<Y> type) {
-		return (SingularAttribute<? super T, Y>) getHierarchy().getIdentifierDescriptor().asAttribute();
+		return (SingularAttribute<? super T, Y>) getHierarchy().getIdentifierDescriptor().asAttribute( type );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <Y> SingularAttribute<T, Y> getDeclaredId(Class<Y> type) {
-		return (SingularAttribute<T, Y>) getHierarchy().getIdentifierDescriptor().asAttribute();
+		return (SingularAttribute<T, Y>) getHierarchy().getIdentifierDescriptor().asAttribute( type );
 	}
 
 	@Override
@@ -300,8 +300,7 @@ public abstract class AbstractEntityDescriptor<T>
 
 	@Override
 	public Type<?> getIdType() {
-		// todo (6.0) : is there a better way instead of through `#asAttribute`?
-		return getHierarchy().getIdentifierDescriptor().asAttribute().getType();
+		return getHierarchy().getIdentifierDescriptor();
 	}
 
 	@Override

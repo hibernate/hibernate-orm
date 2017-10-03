@@ -9,10 +9,11 @@ package org.hibernate.metamodel.model.domain.spi;
 import java.util.List;
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.PluralAttributeFetchImpl;
@@ -23,7 +24,6 @@ import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -36,12 +36,10 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 
 	public AbstractPluralPersistentAttribute(
 			ManagedTypeDescriptor<O> container,
-			String name,
-			JavaTypeDescriptor<C> javaTypeDescriptor,
+			PersistentAttributeMapping bootModelAttribute,
 			PropertyAccess access,
-			boolean includedInOptimisticLocking,
 			PersistentCollectionDescriptor<O, C, E> collectionMetadata) {
-		super( container, name, javaTypeDescriptor, access, includedInOptimisticLocking );
+		super( container, bootModelAttribute, access );
 		this.collectionMetadata = collectionMetadata;
 	}
 

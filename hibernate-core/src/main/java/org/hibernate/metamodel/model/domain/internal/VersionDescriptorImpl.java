@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import org.hibernate.HibernateException;
@@ -48,6 +46,7 @@ public class VersionDescriptorImpl<O,J>
 	private final String unsavedValue;
 
 
+	@SuppressWarnings("unchecked")
 	public VersionDescriptorImpl(
 			EntityHierarchyImpl runtimeModelHierarchy,
 			RootClass bootModelRootEntity,
@@ -97,12 +96,6 @@ public class VersionDescriptorImpl<O,J>
 	@Override
 	public VersionSupport getVersionSupport() {
 		return versionSupport;
-	}
-
-
-	@Override
-	public List<Column> getColumns() {
-		return Collections.singletonList( column );
 	}
 
 	@Override

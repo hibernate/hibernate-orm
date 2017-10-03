@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
@@ -18,7 +19,9 @@ import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.spi.ValueBinder;
+import org.hibernate.type.descriptor.spi.ValueExtractor;
+import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
@@ -67,15 +70,10 @@ public class TenantDiscriminationImpl implements TenantDiscrimination {
 				resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
 						resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
 								qualifier,
-								getColumn()
+								getBoundColumn()
 						)
 				)
 		);
-	}
-
-	@Override
-	public JavaTypeDescriptor<String> getJavaTypeDescriptor() {
-		return javaDescriptor;
 	}
 
 	@Override
@@ -84,8 +82,13 @@ public class TenantDiscriminationImpl implements TenantDiscrimination {
 	}
 
 	@Override
-	public Column getColumn() {
+	public Column getBoundColumn() {
 		return column;
+	}
+
+	@Override
+	public BasicType<String> getBasicType() {
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
@@ -128,5 +131,15 @@ public class TenantDiscriminationImpl implements TenantDiscrimination {
 	@Override
 	public MutabilityPlan<String> getMutabilityPlan() {
 		return ImmutableMutabilityPlan.INSTANCE;
+	}
+
+	@Override
+	public ValueBinder getValueBinder() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public ValueExtractor getValueExtractor() {
+		throw new NotYetImplementedFor6Exception();
 	}
 }

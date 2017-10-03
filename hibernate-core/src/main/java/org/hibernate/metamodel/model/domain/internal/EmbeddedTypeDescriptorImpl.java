@@ -178,23 +178,13 @@ public class EmbeddedTypeDescriptorImpl<T>
 
 
 	@Override
-	public Object extractAttributeValue(T instance, PersistentAttribute attribute) {
-		throw new NotYetImplementedFor6Exception(  );
-	}
-
-	@Override
-	public void injectAttributeValue(T instance, PersistentAttribute attribute, Object value) {
-		throw new NotYetImplementedFor6Exception(  );
-	}
-
-	@Override
 	public void setPropertyValues(Object object, Object[] values) {
 		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public void setPropertyValue(Object object, int i, Object value) {
-		throw new NotYetImplementedFor6Exception(  );
+		getPersistentAttributes().get( i ).getPropertyAccess().getSetter().set( object, value, getTypeConfiguration().getSessionFactory() );
 	}
 
 	@Override

@@ -103,6 +103,14 @@ public interface EmbeddedTypeDescriptor<T>
 		return getEmbeddedDescriptor().getNumberOfJdbcParametersForRestriction();
 	}
 
+
+
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo (6.0) : everything below relates to the "attribute position" discussion
+
 	/**
 	 * Set the given values to the mapped properties of the given object
 	 */

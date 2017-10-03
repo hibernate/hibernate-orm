@@ -21,6 +21,7 @@ import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
@@ -136,5 +137,10 @@ public class MappedSuperclassImpl<J>
 	@Override
 	public IdentifiableTypeDescriptor<? super J> getSupertype() {
 		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public void injectAttributeValue(J instance, PersistentAttribute attribute, Object value) {
+		throw new NotYetImplementedFor6Exception();
 	}
 }

@@ -76,7 +76,6 @@ public class SingularPersistentAttributeEntity<O,J>
 			PropertyAccess propertyAccess,
 			Disposition disposition,
 			SingularAttributeClassification classification,
-			boolean includedInOptimisticLocking,
 			RuntimeModelCreationContext context) {
 		super( runtimeModelContainer, bootModelAttribute, propertyAccess, disposition );
 		this.classification = classification;

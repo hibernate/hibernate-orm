@@ -24,7 +24,6 @@ public abstract class AbstractSingularPersistentAttribute<O,J>
 	private final boolean insertable;
 	private final boolean updatable;
 	private final boolean includedInDirtyChecking;
-	private final boolean includedInOptimisticLocking;
 
 	public AbstractSingularPersistentAttribute(
 			ManagedTypeDescriptor<O> runtimeContainer,
@@ -33,8 +32,7 @@ public abstract class AbstractSingularPersistentAttribute<O,J>
 			Disposition disposition) {
 		super(
 				runtimeContainer,
-				bootAttribute.getName(),
-				bootAttribute.getValueMapping().getJavaTypeDescriptor(),
+				bootAttribute,
 				propertyAccess
 		);
 
@@ -48,7 +46,6 @@ public abstract class AbstractSingularPersistentAttribute<O,J>
 		this.insertable = bootAttribute.isInsertable();
 		this.updatable = bootAttribute.isUpdateable();
 		this.includedInDirtyChecking = bootAttribute.isIncludedInDirtyChecking();
-		this.includedInOptimisticLocking = bootAttribute.isIncludedInOptimisticLocking();
 	}
 
 	@Override
@@ -114,11 +111,6 @@ public abstract class AbstractSingularPersistentAttribute<O,J>
 	@Override
 	public boolean isIncludedInDirtyChecking() {
 		return includedInDirtyChecking;
-	}
-
-	@Override
-	public boolean isIncludedInOptimisticLocking() {
-		return includedInOptimisticLocking;
 	}
 
 	@Override

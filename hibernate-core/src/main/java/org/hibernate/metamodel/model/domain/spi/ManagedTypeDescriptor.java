@@ -136,6 +136,11 @@ public interface ManagedTypeDescriptor<T>
 		return values.toArray();
 	}
 
-	Object extractAttributeValue(T instance, PersistentAttribute attribute);
-	void injectAttributeValue(T instance, PersistentAttribute attribute, Object value);
+	default Object extractAttributeValue(T instance, PersistentAttribute attribute) {
+		return attribute.getPropertyAccess().getGetter().get( instance );
+	}
+
+	default void injectAttributeValue(T instance, PersistentAttribute attribute, Object value) {
+		attribute.getPropertyAccess().getSetter().set( instance, value, getTypeConfiguration().getSessionFactory() );
+	}
 }

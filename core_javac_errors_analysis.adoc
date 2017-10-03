@@ -136,7 +136,7 @@ EntityDescriptorJ> ... {
 
 
 
-### Entity metadata (22)
+### Entity metadata (21)
 
 
 Various errors dealing with entity metadata including versioning, natural-ids, attribute "position", etc
@@ -144,11 +144,6 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
 
 [code]
 ----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/AbstractEntityEntry.java:276: error: cannot find symbol
-			getDescriptor().setPropertyValue( entity, getDescriptor().getVersionProperty(), nextVersion );
-			                                                         ^
-  symbol:   method getVersionProperty()
-  location: interface EntityDescriptor
 
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/AbstractEntityEntry.java:355: error: cannot find symbol
 		if ( getDescriptor().hasMutableProperties() ) {
@@ -279,7 +274,7 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
 
 
 
-### PersistentCollection metadata (17)
+### PersistentCollection metadata (18)
 
 
 [code]
@@ -386,6 +381,11 @@ hhome/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-
   symbol:   method getgetBatchSize()
   location: interface PersistentCollectionDescriptor
 
+/home/sebersole/projects/hibernate/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:442: error: cannot find symbol
+						descriptor.isCascadeDeleteEnabled
+  						^
+  symbol:   variable isCascadeDeleteEnabled
+  location: class Cascade
 ----
 
 
@@ -401,7 +401,6 @@ hhome/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-
 		                                               ^
   symbol:   method isMethodOf(Method)
   location: variable componentIdType of type EmbeddedTypeDescriptor
-
 ----
 
 
@@ -507,10 +506,6 @@ A collection?  etc
 
 
 
-
-
-
-
 ### Yet-uncategorized Type methods/usages (5)
 
 [code]
@@ -584,64 +579,23 @@ internally) as well?
 
 
 
-### Access to Navigable value from an instance of its container (1)
-
-E.g., something like `EntityIdentifierDescriptor#getSnapshot`
-
-
-[code]
-----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/AbstractEntityEntry.java:378: error: cannot find symbol
-		persister.setPropertyValue( entity, getDescriptor().getVersionProperty(), nextVersion );
-		                                                   ^
-  symbol:   method getVersionProperty()
-  location: interface EntityDescriptor
-
-----
-
-
-
-
-
-
-
-
-
 ## Loader/Loadable (2)
 
 
 [code]
 ----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/AbstractEntityEntry.java:320: error: cannot find symbol
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/AbstractEntityEntry.java:299: error: cannot find symbol
 			final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
 			                             ^
   symbol:   class UniqueKeyLoadable
   location: class AbstractEntityEntry
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/AbstractEntityEntry.java:332: error: cannot find symbol
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/AbstractEntityEntry.java:311: error: cannot find symbol
 			final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
 			                             ^
   symbol:   class UniqueKeyLoadable
   location: class AbstractEntityEntry
 ----
-
-
-
-
-## Cascade (1)
-
-
-[code]
-----
-
-/home/sebersole/projects/hibernate/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:442: error: cannot find symbol
-						descriptor.isCascadeDeleteEnabled
-						^
-  symbol:   variable isCascadeDeleteEnabled
-  location: class Cascade
-
-----
-
 
 
 

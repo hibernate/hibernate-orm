@@ -24,7 +24,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * concrete ManagedType implementations (entity and embedded) are modelled as a
  * "descriptor" (see {@link EntityDescriptor} and {@link EmbeddedTypeDescriptor}
  *
- * NOTE : Hibernate additionally classifies plural attributes via a "persister" :
+ * NOTE : Hibernate additionally classifies plural attributes via a "descriptor" :
  * {@link PersistentCollectionDescriptor}.
  *
  * @todo (6.0) : describe what is available after each initialization phase (and therefore what is "undefined" in terms of access earlier).

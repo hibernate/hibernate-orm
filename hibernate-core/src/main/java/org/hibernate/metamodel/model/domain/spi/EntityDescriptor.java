@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.domain.spi;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.EntityNameResolver;
@@ -18,13 +17,11 @@ import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.domain.EntityMapping;
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
-import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -38,13 +35,11 @@ import org.hibernate.loader.spi.MultiLoadOptions;
 import org.hibernate.loader.spi.NaturalIdLoader;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.loader.spi.SingleUniqueKeyEntityLoader;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorClassResolver;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorFactory;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
@@ -55,7 +50,7 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * Contract describing mapping information and persistence logic for a particular strategy of entity mapping.  A given
- * persister instance corresponds to a given mapped entity class.
+ * descriptor instance corresponds to a given mapped entity class.
  * <p/>
  * Implementations must be thread-safe (preferably immutable).
  * <p/>
@@ -82,10 +77,10 @@ public interface EntityDescriptor<T>
 
 	/**
 	 * Unless a custom {@link RuntimeModelDescriptorFactory} is used, it is expected
-	 * that implementations of EntityPersister define a constructor accepting the following arguments:<ol>
+	 * that implementations of EntityDescriptor define a constructor accepting the following arguments:<ol>
 	 *     <li>
 	 *         {@link org.hibernate.mapping.PersistentClass} - describes the metadata about the entity
-	 *         to be handled by the persister
+	 *         to be handled by the descriptor
 	 *     </li>
 	 *     <li>
 	 *         {@link EntityDataAccess} - the second level caching strategy for this entity
@@ -96,7 +91,7 @@ public interface EntityDescriptor<T>
 	 *     </li>
 	 *     <li>
 	 *         {@link RuntimeModelCreationContext} - access to additional
-	 *         information useful while constructing the persister.
+	 *         information useful while constructing the descriptor.
 	 *     </li>
 	 * </ol>
 	 */
@@ -110,9 +105,9 @@ public interface EntityDescriptor<T>
 	// Redesigned contract
 
 	/**
-	 * Called after all EntityPersister instance for the persistence unit have been created;
+	 * Called after all EntityDescriptor instance for the persistence unit have been created;
 	 *
-	 * @param superType The entity's super's EntityPersister
+	 * @param superType The entity's super's EntityDescriptor
 	 * @param mappingDescriptor Should be  the same reference (instance) originally passed to the
 	 * 		ctor, but we want to not have to store that reference as instance state -
 	 * 		so we pass it in again
@@ -125,19 +120,19 @@ public interface EntityDescriptor<T>
 			RuntimeModelCreationContext creationContext);
 
 	/**
-	 * Called after {@link #finishInitialization} has been called on all persisters.
+	 * Called after {@link #finishInitialization} has been called on all descriptors.
 	 */
 	void postInstantiate();
 
 	/**
-	 * The entity name which this persister maps.
+	 * The entity name which this descriptor maps.
 	 */
 	String getEntityName();
 
 	EntityJavaDescriptor<T> getJavaTypeDescriptor();
 
 	/**
-	 * Return the SessionFactory to which this persister "belongs".
+	 * Return the SessionFactory to which this descriptor "belongs".
 	 */
 	SessionFactoryImplementor getFactory();
 
@@ -171,7 +166,7 @@ public interface EntityDescriptor<T>
 	}
 
 	/**
-	 * Get the EntityEntryFactory indicated for the entity mapped by this persister.
+	 * Get the EntityEntryFactory indicated for the entity mapped by this descriptor.
 	 */
 	EntityEntryFactory getEntityEntryFactory();
 
@@ -702,13 +697,13 @@ public interface EntityDescriptor<T>
 	void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SharedSessionContractImplementor session);
 
 	/**
-	 * A request has already identified the entity-name of this persister as the mapping for the given instance.
+	 * A request has already identified the entity-name of this descriptor as the mapping for the given instance.
 	 * However, we still need to account for possible subclassing and potentially re-route to the more appropriate
-	 * persister.
+	 * descriptor.
 	 * <p/>
-	 * For example, a request names <tt>Animal</tt> as the entity-name which gets resolved to this persister.  But the
+	 * For example, a request names <tt>Animal</tt> as the entity-name which gets resolved to this descriptor.  But the
 	 * actual instance is really an instance of <tt>Cat</tt> which is a subclass of <tt>Animal</tt>.  So, here the
-	 * <tt>Animal</tt> persister is being asked to return the persister specific to <tt>Cat</tt>.
+	 * <tt>Animal</tt> descriptor is being asked to return the descriptor specific to <tt>Cat</tt>.
 	 * <p/>
 	 * It is also possible that the instance is actually an <tt>Animal</tt> instance in the above example in which
 	 * case we would return <tt>this</tt> from this method.
@@ -716,12 +711,19 @@ public interface EntityDescriptor<T>
 	 * @param instance The entity instance
 	 * @param factory Reference to the SessionFactory
 	 *
-	 * @return The appropriate persister
+	 * @return The appropriate descriptor
 	 *
 	 * @throws HibernateException Indicates that instance was deemed to not be a subclass of the entity mapped by
-	 * this persister.
+	 * this descriptor.
+	 *
+	 * @deprecated use {@link #getSubclassEntityDescriptor(Object, SessionFactoryImplementor)} instead
 	 */
+	@Deprecated
 	EntityDescriptor getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory);
+
+	default EntityDescriptor getSubclassEntityDescriptor(Object instance, SessionFactoryImplementor factory){
+		return getSubclassEntityPersister( instance, factory );
+	}
 
 	FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 
@@ -744,52 +746,4 @@ public interface EntityDescriptor<T>
 	boolean hasNaturalIdentifier();
 
 	boolean hasCollections();
-
-	default Serializable[] disassemble(final Object[] state) {
-		Serializable[] disassembledState = new Serializable[state.length];
-		visitAttributes( new Consumer<PersistentAttribute>() {
-			final boolean[] nonCacheable = isLazyPropertiesCacheable() ?
-					null :
-					getPropertyLaziness();
-			int position = 0;
-
-			@Override
-			public void accept(PersistentAttribute attribute) {
-				if ( nonCacheable != null && nonCacheable[position] ) {
-					disassembledState[position] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
-				}
-				else if ( state[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY || state[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-					disassembledState[position] = (Serializable) state[position];
-				}
-				else {
-					disassembledState[position] = attribute.getJavaTypeDescriptor()
-							.getMutabilityPlan()
-							.disassemble( state[position] );
-				}
-				position++;
-			}
-		} );
-		return disassembledState;
-	}
-
-	default Object[] assemble(final Serializable[] disassembledState) {
-		Object[] assembledProps = new Object[disassembledState.length];
-		visitAttributes( new Consumer<PersistentAttribute>() {
-			int position = 0;
-
-			@Override
-			public void accept(PersistentAttribute attribute) {
-				if ( disassembledState[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY || disassembledState[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-					assembledProps[position] = disassembledState[position];
-				}
-				else {
-					assembledProps[position] = attribute.getJavaTypeDescriptor().getMutabilityPlan().assemble(
-							disassembledState[position] );
-				}
-				position++;
-			}
-		} );
-
-		return assembledProps;
-	}
 }

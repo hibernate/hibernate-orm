@@ -40,7 +40,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	protected final Serializable id;
 	protected Object[] loadedState;
 	protected Object version;
-	protected final EntityDescriptor persister; // permanent but we only need the entityName state in a non transient way
+	protected final EntityDescriptor descriptor; // permanent but we only need the entityName state in a non transient way
 	protected transient EntityKey cachedEntityKey; // cached EntityKey (lazy-initialized)
 	protected final transient Object rowId;
 	protected final transient PersistenceContext persistenceContext;
@@ -90,13 +90,13 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 		if ( status != Status.READ_ONLY ) {
 			this.loadedState = loadedState;
 		}
-		this.id=id;
-		this.rowId=rowId;
+		this.id = id;
+		this.rowId = rowId;
 		setCompressedValue( BooleanState.EXISTS_IN_DATABASE, existsInDatabase );
-		this.version=version;
+		this.version = version;
 		setCompressedValue( EnumState.LOCK_MODE, lockMode );
 		setCompressedValue( BooleanState.IS_BEING_REPLICATED, disableVersionIncrement );
-		this.persister=entityDescriptor;
+		this.descriptor = entityDescriptor;
 		this.persistenceContext = persistenceContext;
 	}
 
@@ -117,7 +117,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			final boolean existsInDatabase,
 			final boolean isBeingReplicated,
 			final PersistenceContext persistenceContext) {
-		this.persister = ( factory == null ?
+		this.descriptor = ( factory == null ?
 				null :
 				factory.getTypeConfiguration().resolveEntityDescriptor( entityName ) );
 		this.id = id;
@@ -212,7 +212,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 	@Override
 	public EntityDescriptor getPersister() {
-		return persister;
+		return descriptor;
 	}
 
 	@Override
@@ -228,7 +228,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 	@Override
 	public String getEntityName() {
-		return persister == null ? null : persister.getEntityName();
+		return descriptor == null ? null : descriptor.getEntityName();
 
 	}
 
@@ -296,7 +296,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			return null;
 		}
 		else {
-			final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
+			final int propertyIndex = ( (UniqueKeyLoadable) descriptor ).getPropertyIndex( propertyName );
 			return loadedState[propertyIndex];
 		}
 	}
@@ -308,7 +308,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			assert propertyName != null;
 			assert loadedState != null;
 
-			final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
+			final int propertyIndex = ( (UniqueKeyLoadable) descriptor ).getPropertyIndex( propertyName );
 			loadedState[propertyIndex] = collection;
 		}
 	}
@@ -350,11 +350,18 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	@Override
 	public void forceLocked(Object entity, Object nextVersion) {
 		version = nextVersion;
-		loadedState[ persister.getVersionProperty() ] = version;
+		loadedState[ descriptor.getVersionProperty() ] = version;
 		// TODO:  use LockMode.PESSIMISTIC_FORCE_INCREMENT
 		//noinspection deprecation
 		setLockMode( LockMode.FORCE );
-		persister.setPropertyValue( entity, getDescriptor().getVersionProperty(), nextVersion );
+		descriptor.getHierarchy().getVersionDescriptor()
+				.getPropertyAccess()
+				.getSetter()
+				.set(
+						entity,
+						nextVersion,
+						getDescriptor().getFactory()
+				);
 	}
 
 	@Override
@@ -377,13 +384,13 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			loadedState = null;
 		}
 		else {
-			if ( ! persister.getJavaTypeDescriptor().getMutabilityPlan().isMutable() ) {
+			if ( ! descriptor.getJavaTypeDescriptor().getMutabilityPlan().isMutable() ) {
 				throw new IllegalStateException( "Cannot make an immutable entity modifiable." );
 			}
 			setStatus( Status.MANAGED );
 			loadedState = getDescriptor().getPropertyValues( entity );
 			getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
-					persister,
+					descriptor,
 					id,
 					loadedState,
 					null,

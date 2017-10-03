@@ -13,13 +13,13 @@ import java.util.StringTokenizer;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.collection.spi.PersistentCollectionTuplizer;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
@@ -179,6 +179,17 @@ public class Property implements Serializable, PersistentAttributeMapping {
 		// if the property mapping consists of all formulas,
 		// make it non-updateable
 		return updateable && !ArrayHelper.isAllFalse( value.getColumnUpdateability() );
+	}
+
+	@Override
+	public boolean isIncludedInDirtyChecking() {
+		return isUpdateable() || shouldAlwaysDirtyCheck();
+	}
+
+	private boolean shouldAlwaysDirtyCheck() {
+		// todo (6.0) : verify this is correct
+		//		it matches what 5.2 does for sure
+		return value instanceof Collection || value instanceof ManyToOne;
 	}
 
 	public boolean isInsertable() {
@@ -437,44 +448,35 @@ public class Property implements Serializable, PersistentAttributeMapping {
 		if ( value instanceof BasicValueMapping ) {
 			return new BasicSingularPersistentAttribute(
 					runtimeContainer,
-					name,
+					this,
 					propertyAccess,
 					singularAttributeDisposition,
-					isNullable(),
-					(BasicValueMapping) value,
-					optimisticLocked,
 					context
 			);
 		}
 		else if ( value instanceof ToOne ) {
 			return new SingularPersistentAttributeEntity(
 					runtimeContainer,
-					name,
+					this,
 					propertyAccess,
+					singularAttributeDisposition,
 					isManyToOne( (ToOne) value )
 							? SingularAttributeClassification.MANY_TO_ONE
 							: SingularAttributeClassification.ONE_TO_ONE,
-					singularAttributeDisposition,
-					isNullable(),
-					(ToOne) value,
-					optimisticLocked,
 					context
 			);
 		}
 		else if ( value instanceof Component ) {
 			return new SingularPersistentAttributeEmbedded(
 					runtimeContainer,
-					name,
+					this,
 					propertyAccess,
 					singularAttributeDisposition,
-					(Component) value,
-					optimisticLocked,
 					context
 			);
-
 		}
 		else if ( value instanceof Any ) {
-			throw new NotYetImplementedException(  );
+			throw new NotYetImplementedFor6Exception();
 		}
 
 		throw new MappingException( "Unrecognized ValueMapping type for conversion to runtime model : " + value );

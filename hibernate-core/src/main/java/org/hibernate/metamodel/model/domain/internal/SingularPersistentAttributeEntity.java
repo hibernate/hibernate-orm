@@ -9,6 +9,8 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.ToOne;
@@ -29,7 +31,6 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerRefer
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEntity;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
@@ -69,19 +70,18 @@ public class SingularPersistentAttributeEntity<O,J>
 
 	private final PersistentAttributeType persistentAttributeType;
 
-
 	public SingularPersistentAttributeEntity(
-			ManagedTypeDescriptor<O> declaringType,
-			String name,
+			ManagedTypeDescriptor<O> runtimeModelContainer,
+			PersistentAttributeMapping bootModelAttribute,
 			PropertyAccess propertyAccess,
-			SingularAttributeClassification classification,
 			Disposition disposition,
-			boolean nullable,
-			ToOne valueMapping,
+			SingularAttributeClassification classification,
 			boolean includedInOptimisticLocking,
 			RuntimeModelCreationContext context) {
-		super( declaringType, name, propertyAccess, disposition, nullable, valueMapping, includedInOptimisticLocking );
+		super( runtimeModelContainer, bootModelAttribute, propertyAccess, disposition );
 		this.classification = classification;
+
+		final ToOne valueMapping = (ToOne) bootModelAttribute.getValueMapping();
 
 		if ( valueMapping.getReferencedEntityName() == null ) {
 			throw new MappingException(
@@ -89,7 +89,7 @@ public class SingularPersistentAttributeEntity<O,J>
 			);
 		}
 		this.entityDescriptor = context.getTypeConfiguration().findEntityDescriptor( valueMapping.getReferencedEntityName() );
-		this.navigableRole = declaringType.getNavigableRole().append( name );
+		this.navigableRole = runtimeModelContainer.getNavigableRole().append( bootModelAttribute.getName() );
 
 		valueMapping.createForeignKey();
 		joinColumnMappings = context.getDatabaseObjectResolver().resolveColumnMappings(
@@ -104,7 +104,7 @@ public class SingularPersistentAttributeEntity<O,J>
 			persistentAttributeType = PersistentAttributeType.ONE_TO_ONE;
 		}
 
-		this.sqlAliasStem =  SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
+		this.sqlAliasStem =  SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( bootModelAttribute.getName() );
 	}
 
 	@Override

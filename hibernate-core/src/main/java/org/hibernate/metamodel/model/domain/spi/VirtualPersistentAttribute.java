@@ -12,5 +12,5 @@ package org.hibernate.metamodel.model.domain.spi;
  *
  * @author Steve Ebersole
  */
-public interface VirtualPersistentAttribute<O,J> extends PersistentAttribute<O,J> {
+public interface VirtualPersistentAttribute<O,J> extends PersistentAttribute<O,J>, VirtualNavigable<J> {
 }

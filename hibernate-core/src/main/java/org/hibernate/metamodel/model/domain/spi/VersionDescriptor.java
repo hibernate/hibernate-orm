@@ -6,6 +6,11 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.lang.reflect.Member;
+import javax.persistence.metamodel.Type;
+
+import org.hibernate.type.descriptor.java.MutabilityPlan;
+
 /**
  * Information about the entity (hierarchy wide) version
  *
@@ -25,4 +30,68 @@ public interface VersionDescriptor<O,J> extends SingularPersistentAttribute<O,J>
 	}
 
 	VersionSupport getVersionSupport();
+
+	@Override
+	default Disposition getDisposition() {
+		return Disposition.VERSION;
+	}
+
+	@Override
+	default boolean isOptional() {
+		return false;
+	}
+
+	@Override
+	default boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	default boolean isInsertable() {
+		// todo (6.0) : need to look at whether there is a value generator
+		return true;
+	}
+
+	@Override
+	default boolean isUpdatable() {
+		// todo (6.0) : need to look at whether there is a value generator
+		return false;
+	}
+
+	@Override
+	default boolean isIncludedInDirtyChecking() {
+		return false;
+	}
+
+	@Override
+	default boolean isIncludedInOptimisticLocking() {
+		return false;
+	}
+
+	@Override
+	default MutabilityPlan<J> getMutabilityPlan() {
+		return getJavaTypeDescriptor().getMutabilityPlan();
+	}
+
+	@Override
+	default PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
+	@Override
+	default Type<J> getType() {
+		return getBasicType();
+	}
+
+	@Override
+	default Class<J> getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
+
+	@Override
+	default Member getJavaMember() {
+		return getPropertyAccess().getGetter().getMember();
+	}
+
+
 }

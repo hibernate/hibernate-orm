@@ -34,6 +34,7 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
@@ -206,11 +207,13 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 	public <X> EmbeddedTypeDescriptor<X> makeRuntimeDescriptor(
 			EmbeddedContainer embeddedContainer,
 			String localName,
+			SingularPersistentAttribute.Disposition disposition,
 			RuntimeModelCreationContext context) {
 		return context.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
 				this,
 				embeddedContainer,
 				localName,
+				disposition,
 				context
 		);
 	}

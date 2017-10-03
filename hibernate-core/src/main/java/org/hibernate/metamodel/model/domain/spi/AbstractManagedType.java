@@ -183,6 +183,18 @@ public abstract class AbstractManagedType<T> implements ManagedTypeDescriptor<T>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// get groups of attributes
 
+
+	@Override
+	public void visitStateArrayNavigables(Consumer<StateArrayValuedNavigable<?>> consumer) {
+		visitAttributes(
+				attribute -> {
+					if ( attribute instanceof StateArrayValuedNavigable) {
+						consumer.accept( (StateArrayValuedNavigable<?>) attribute );
+					}
+				}
+		);
+	}
+
 	public void collectDeclaredAttributes(Consumer<javax.persistence.metamodel.Attribute> collector) {
 		collectDeclaredAttributes( collector, null );
 	}

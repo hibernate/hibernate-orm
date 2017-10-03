@@ -31,11 +31,6 @@ public abstract class AbstractCollectionElement<J> implements CollectionElement<
 	}
 
 	@Override
-	public Class<J> getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
-	}
-
-	@Override
 	public String asLoggableText() {
 		return NAVIGABLE_NAME;
 	}

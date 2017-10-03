@@ -17,7 +17,7 @@ import org.hibernate.event.spi.AbstractEvent;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.StateArrayValuedNavigable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.internal.TypeHelper;
 
@@ -63,23 +63,12 @@ public abstract class AbstractReassociateEventListener implements Serializable {
 
 		//get a snapshot
 		Object[] values = entityDescriptor.getPropertyValues( object );
-		entityDescriptor.visitAttributes(
-				new TypeHelper.FilteredAttributeConsumer() {
-					int i = 0;
 
-					@Override
-					protected boolean shouldAccept(PersistentAttribute attribute) {
-						// "property update-ability"
-						//		- org.hibernate.persister.entity.EntityPersister#getPropertyUpdateability
-						return super.shouldAccept( attribute );
-					}
-
-					@Override
-					protected void acceptAttribute(PersistentAttribute attribute) {
-						values[i] = attribute.deepCopy( values[i], source );
-						i++;
-					}
-				}
+		TypeHelper.deepCopy(
+				entityDescriptor,
+				values,
+				values,
+				StateArrayValuedNavigable::isUpdatable
 		);
 
 		Object version = Versioning.getVersion( values, entityDescriptor );

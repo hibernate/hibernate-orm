@@ -6,14 +6,36 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.HibernateException;
+import org.hibernate.metamodel.model.relational.spi.DerivedColumn;
+import org.hibernate.type.descriptor.spi.ValueBinder;
+
 /**
  * @author Steve Ebersole
  */
-public interface RowIdDescriptor<O,J> extends VirtualPersistentAttribute<O,J>, SingularPersistentAttribute<O,J> {
+public interface RowIdDescriptor<J> extends VirtualNavigable<J>, BasicValuedNavigable<J> {
 	String NAVIGABLE_NAME = "{rowId}";
+
+	@Override
+	DerivedColumn getBoundColumn();
 
 	@Override
 	default void visitNavigable(NavigableVisitationStrategy visitor) {
 		visitor.visitRowIdDescriptor( this );
+	}
+
+	@Override
+	default Class<J> getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
+
+	@Override
+	default PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
+	@Override
+	default ValueBinder getValueBinder() {
+		throw new HibernateException( "Illegal attempt to bind ROW_ID value" );
 	}
 }

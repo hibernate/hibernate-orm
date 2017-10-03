@@ -10,7 +10,7 @@ package org.hibernate.metamodel.model.domain.spi;
  * @author Steve Ebersole
  */
 public interface EntityIdentifierCompositeAggregated<O,J>
-		extends EntityIdentifierComposite<O,J> {
+		extends EntityIdentifierComposite<O,J>, SingularPersistentAttribute<O,J> {
 	@Override
 	default void visitNavigable(NavigableVisitationStrategy visitor) {
 		visitor.visitAggregateCompositeIdentifier( this );

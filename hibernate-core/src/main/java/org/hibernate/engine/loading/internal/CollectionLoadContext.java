@@ -299,7 +299,7 @@ public class CollectionLoadContext {
 		}
 
 		final Object version;
-		if ( persister.getDescribedAttribute().includeInOptimisticLocking() ) {
+		if ( persister.getDescribedAttribute().isIncludedInOptimisticLocking() ) {
 			Object collectionOwner = getLoadContext().getPersistenceContext().getCollectionOwner( lce.getKey(), persister );
 			if ( collectionOwner == null ) {
 				// generally speaking this would be caused by the collection key being defined by a property-ref, thus

@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.lang.reflect.Member;
-
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -21,7 +19,6 @@ public abstract class AbstractPersistentAttribute<O,J> implements PersistentAttr
 	private final ManagedTypeDescriptor<O> container;
 	private final JavaTypeDescriptor<J> javaTypeDescriptor;
 	private final PropertyAccess access;
-	private final boolean includedInOptimisticLocking;
 
 	private final NavigableRole navigableRole;
 
@@ -29,12 +26,10 @@ public abstract class AbstractPersistentAttribute<O,J> implements PersistentAttr
 			ManagedTypeDescriptor<O> container,
 			String name,
 			JavaTypeDescriptor<J> javaTypeDescriptor,
-			PropertyAccess access,
-			boolean includedInOptimisticLocking) {
+			PropertyAccess access) {
 		this.container = container;
 		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.access = access;
-		this.includedInOptimisticLocking = includedInOptimisticLocking;
 
 		this.navigableRole = container.getNavigableRole().append( name );
 	}
@@ -62,15 +57,5 @@ public abstract class AbstractPersistentAttribute<O,J> implements PersistentAttr
 	@Override
 	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
-	}
-
-	@Override
-	public Member getJavaMember() {
-		return access.getGetter().getMember();
-	}
-
-	@Override
-	public boolean includeInOptimisticLocking() {
-		return includedInOptimisticLocking;
 	}
 }

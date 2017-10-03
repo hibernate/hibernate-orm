@@ -6,8 +6,9 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.boot.model.domain.ValueMapping;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
  * @author Steve Ebersole
@@ -15,29 +16,40 @@ import org.hibernate.property.access.spi.PropertyAccess;
 public abstract class AbstractSingularPersistentAttribute<O,J>
 		extends AbstractPersistentAttribute<O,J>
 		implements SingularPersistentAttribute<O,J> {
-	private final boolean nullable;
 	private final Disposition disposition;
 
+	private final MutabilityPlan<J> mutabilityPlan;
+
+	private final boolean nullable;
+	private final boolean insertable;
+	private final boolean updatable;
+	private final boolean includedInDirtyChecking;
+	private final boolean includedInOptimisticLocking;
+
 	public AbstractSingularPersistentAttribute(
-			ManagedTypeDescriptor<O> attributeContainer,
-			String name,
+			ManagedTypeDescriptor<O> runtimeContainer,
+			PersistentAttributeMapping bootAttribute,
 			PropertyAccess propertyAccess,
-			Disposition disposition,
-			boolean nullable,
-			ValueMapping<J> valueMapping,
-			boolean includedInOptimisticLocking) {
+			Disposition disposition) {
 		super(
-				attributeContainer,
-				name,
-				valueMapping.getJavaTypeDescriptor(),
-				propertyAccess,
-				includedInOptimisticLocking
+				runtimeContainer,
+				bootAttribute.getName(),
+				bootAttribute.getValueMapping().getJavaTypeDescriptor(),
+				propertyAccess
 		);
+
 		this.disposition = disposition;
-		this.nullable = nullable;
+
+		// todo (6.0) : determine mutability plan based on JTD & @Immutable
+		//		for now just use the JTD MP
+		this.mutabilityPlan = getJavaTypeDescriptor().getMutabilityPlan();
+
+		this.nullable = bootAttribute.isOptional();
+		this.insertable = bootAttribute.isInsertable();
+		this.updatable = bootAttribute.isUpdateable();
+		this.includedInDirtyChecking = bootAttribute.isIncludedInDirtyChecking();
+		this.includedInOptimisticLocking = bootAttribute.isIncludedInOptimisticLocking();
 	}
-
-
 
 	@Override
 	public Disposition getDisposition() {
@@ -87,5 +99,30 @@ public abstract class AbstractSingularPersistentAttribute<O,J>
 	@Override
 	public Class<J> getBindableJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return insertable;
+	}
+
+	@Override
+	public boolean isUpdatable() {
+		return updatable;
+	}
+
+	@Override
+	public boolean isIncludedInDirtyChecking() {
+		return includedInDirtyChecking;
+	}
+
+	@Override
+	public boolean isIncludedInOptimisticLocking() {
+		return includedInOptimisticLocking;
+	}
+
+	@Override
+	public MutabilityPlan<J> getMutabilityPlan() {
+		return mutabilityPlan;
 	}
 }

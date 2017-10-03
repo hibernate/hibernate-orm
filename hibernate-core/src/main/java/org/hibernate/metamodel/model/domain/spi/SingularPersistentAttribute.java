@@ -13,8 +13,13 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 /**
  * @author Steve Ebersole
  */
-public interface SingularPersistentAttribute<O,T>
-		extends PersistentAttribute<O,T>, javax.persistence.metamodel.SingularAttribute<O,T> {
+public interface SingularPersistentAttribute<O, J>
+		extends PersistentAttribute<O, J>, StateArrayValuedNavigable<J>, javax.persistence.metamodel.SingularAttribute<O, J> {
+
+	@Override
+	default Class<J> getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
 
 	/**
 	 * Classifications of the singularity
@@ -54,15 +59,4 @@ public interface SingularPersistentAttribute<O,T>
 	 * </ul>
 	 */
 	Disposition getDisposition();
-
-	/**
-	 * todo (6.0) : Again, consider removing this.
-	 * 		It is never used by Hibernate code - since we now encapsulate the usage of these
-	 * 		as we build TableGroups and Selections/QueryResults/etc.
-	 */
-	default List<Column> getColumns() {
-		return null;
-	}
-
-	boolean isNullable();
 }

@@ -33,10 +33,18 @@ public interface PersistentAttributeMapping extends ValueMappingContainer, MetaA
 	boolean isLob();
 
 	String getCascade();
+
+	boolean isSelectable();
+
+	/**
+	 * @todo (6.0) : different from `#isNullable`
+	 * 		1) how?
+	 * 		2) expose `#isNullable` here too?
+	 */
 	boolean isOptional();
 	boolean isUpdateable();
 	boolean isInsertable();
-	boolean isSelectable();
+	boolean isIncludedInDirtyChecking();
 	boolean isIncludedInOptimisticLocking();
 
 	boolean isLazy();
@@ -44,9 +52,15 @@ public interface PersistentAttributeMapping extends ValueMappingContainer, MetaA
 
 	ValueGeneration getValueGenerationStrategy();
 
+	// todo (6.0) : `#makeRuntimeAttribute` should not be exposed on API
+
+	// todo (6.0) relatedly (^^), we ought to pass the PersistentAttributeMapping into the runtime ctor as we build it
+	// 		- the alternative is to pass many values to its ctor (which we have now)
+
 	<O,T> PersistentAttribute<O,T> makeRuntimeAttribute(
 			ManagedTypeDescriptor<O> runtimeContainer,
 			ManagedTypeMapping bootContainer,
 			SingularPersistentAttribute.Disposition singularAttributeDisposition,
 			RuntimeModelCreationContext context);
+
 }

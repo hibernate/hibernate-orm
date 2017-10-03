@@ -13,10 +13,10 @@ import java.util.Optional;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.cfg.Environment;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.VersionSupport;
@@ -47,39 +47,35 @@ public class VersionDescriptorImpl<O,J>
 	private final Column column;
 	private final String unsavedValue;
 
-	@SuppressWarnings("unchecked")
+
 	public VersionDescriptorImpl(
-			EntityHierarchy hierarchy,
-			RootClass rootEntityBinding,
-			String name,
-			boolean nullable,
-			BasicValueMapping<J> bootMapping,
-			String unsavedValue,
+			EntityHierarchyImpl runtimeModelHierarchy,
+			RootClass bootModelRootEntity,
 			RuntimeModelCreationContext creationContext) {
 		super(
-				(ManagedTypeDescriptor<O>) hierarchy.getRootEntityType().getJavaTypeDescriptor(),
-				name,
-				hierarchy.getRootEntityType().getRepresentationStrategy().generatePropertyAccess(
-						rootEntityBinding,
-						rootEntityBinding.getVersion(),
-						(ManagedTypeDescriptor) hierarchy.getRootEntityType().getJavaTypeDescriptor(),
+				(ManagedTypeDescriptor<O>) runtimeModelHierarchy.getRootEntityType().getJavaTypeDescriptor(),
+				bootModelRootEntity.getVersion(),
+				runtimeModelHierarchy.getRootEntityType().getRepresentationStrategy().generatePropertyAccess(
+						bootModelRootEntity,
+						bootModelRootEntity.getVersion(),
+						(ManagedTypeDescriptor) runtimeModelHierarchy.getRootEntityType().getJavaTypeDescriptor(),
 						Environment.getBytecodeProvider()
 				),
-				Disposition.VERSION,
-				nullable,
-				bootMapping,
-				false
+				Disposition.VERSION
 		);
-		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( bootMapping.getMappedColumn() );
-		this.unsavedValue = unsavedValue;
 
-		this.basicType = bootMapping.resolveType();
+		final BasicValueMapping<J> basicValueMapping = (BasicValueMapping<J>) bootModelRootEntity.getVersion().getValue();
+
+		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( basicValueMapping.getMappedColumn() );
+		this.unsavedValue =( (KeyValue) basicValueMapping ).getNullValue();
+
+		this.basicType = basicValueMapping.resolveType();
 
 		final Optional<VersionSupport<J>> versionSupportOptional = getBasicType().getVersionSupport();
 		if ( ! versionSupportOptional.isPresent() ) {
 			throw new HibernateException(
 					"BasicType [" + basicType + "] associated with VersionDescriptor [" +
-							hierarchy.getRootEntityType().getEntityName() +
+							runtimeModelHierarchy.getRootEntityType().getEntityName() +
 							"] did not define VersionSupport"
 			);
 		}

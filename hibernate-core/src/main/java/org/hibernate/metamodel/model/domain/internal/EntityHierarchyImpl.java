@@ -10,7 +10,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Collection;
 
 import org.hibernate.boot.model.domain.BasicValueMapping;
-import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cfg.NotYetImplementedException;
@@ -18,7 +18,6 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.JoinedSubclass;
-import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.UnionSubclass;
@@ -32,6 +31,7 @@ import org.hibernate.metamodel.model.domain.spi.InheritanceStrategy;
 import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 
@@ -128,33 +128,36 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 
 	@SuppressWarnings("unchecked")
 	private static EntityIdentifier interpretIdentifierDescriptor(
-			EntityHierarchyImpl hierarchy,
-			RootClass rootEntityBinding,
-			EntityDescriptor rootEntityPersister,
+			EntityHierarchyImpl runtimeModelHierarchy,
+			RootClass bootModelRootEntity,
+			EntityDescriptor runtimeModelRootEntity,
 			RuntimeModelCreationContext creationContext) {
-		if ( rootEntityBinding.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping() != null ) {
+		if ( bootModelRootEntity.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping() != null ) {
+
 			// should mean we have a "non-aggregated composite-id" (what we
 			// 		historically called an "embedded composite id")
 			return new EntityIdentifierCompositeNonAggregatedImpl(
-					hierarchy,
-					creationContext.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
-							(Component) rootEntityBinding.getIdentifier(),
-							rootEntityPersister,
-							rootEntityBinding.getIdentifierProperty().getName(),
+					runtimeModelHierarchy,
+					( (EmbeddedValueMappingImplementor) bootModelRootEntity.getIdentifier() ).makeRuntimeDescriptor(
+							runtimeModelRootEntity,
+							bootModelRootEntity.getIdentifierProperty().getName(),
+							SingularPersistentAttribute.Disposition.ID,
 							creationContext
 					),
-					rootEntityBinding.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping()
+					bootModelRootEntity.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping()
 			);
 		}
-		else if ( rootEntityBinding.getIdentifier() instanceof Component ) {
+		else if ( bootModelRootEntity.getIdentifier() instanceof EmbeddedValueMappingImplementor ) {
 			// indicates we have an aggregated composite identifier (should)
+			assert !bootModelRootEntity.getIdentifierProperty().isOptional();
+
 			return  new EntityIdentifierCompositeAggregatedImpl(
-					hierarchy,
-					rootEntityBinding,
-					creationContext.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
-							(Component) rootEntityBinding.getIdentifier(),
-							rootEntityPersister,
-							rootEntityBinding.getIdentifierProperty().getName(),
+					runtimeModelHierarchy,
+					bootModelRootEntity,
+					( (EmbeddedValueMappingImplementor) bootModelRootEntity.getIdentifier() ).makeRuntimeDescriptor(
+							runtimeModelHierarchy.getRootEntityType(),
+							bootModelRootEntity.getIdentifierProperty().getName(),
+							SingularPersistentAttribute.Disposition.ID,
 							creationContext
 					),
 					creationContext
@@ -162,22 +165,14 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		}
 		else {
 			// should indicate a simple identifier
+			assert !bootModelRootEntity.getIdentifierProperty().isOptional();
+
 			return new EntityIdentifierSimpleImpl(
-					hierarchy,
-					hierarchy.getRootEntityType(),
-					resolveIdAttributeDeclarer( rootEntityBinding, rootEntityPersister ),
-					rootEntityBinding.getIdentifierProperty(),
-					(BasicValueMapping) rootEntityBinding.getIdentifier(),
+					runtimeModelHierarchy,
+					bootModelRootEntity,
 					creationContext
 			);
 		}
-	}
-
-	private static IdentifiableTypeMapping resolveIdAttributeDeclarer(
-			RootClass rootEntityBinding,
-			EntityDescriptor rootEntityPersister) {
-		// for now assume the root entity as the declarer
-		return rootEntityBinding;
 	}
 
 	private static RowIdDescriptor interpretRowIdDescriptor(
@@ -221,10 +216,6 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		return new VersionDescriptorImpl(
 				hierarchy,
 				rootEntityBinding,
-				rootEntityBinding.getVersion().getName(),
-				false,
-				(BasicValueMapping) rootEntityBinding.getVersion().getValue(),
-				( (KeyValue) rootEntityBinding.getVersion().getValue() ).getNullValue(),
 				creationContext
 		);
 	}
@@ -245,6 +236,9 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		}
 
 		return new NaturalIdDescriptor() {
+
+			// todo (6.0) : create NaturalIdDescriptorImpl
+
 			private NaturalIdDataAccess cacheAccess;
 
 			@Override

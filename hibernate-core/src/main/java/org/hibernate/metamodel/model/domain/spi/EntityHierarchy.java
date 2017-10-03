@@ -49,7 +49,7 @@ public interface EntityHierarchy {
 	 * Retrieve the descriptor for the hierarchy's discriminator, if one.  May
 	 * return {@code null}.
 	 */
-	<O,J> DiscriminatorDescriptor<O,J>  getDiscriminatorDescriptor();
+	<J> DiscriminatorDescriptor<J>  getDiscriminatorDescriptor();
 
 	/**
 	 * Retrieve the descriptor for the hierarchy's version (optimistic locking),
@@ -68,7 +68,7 @@ public interface EntityHierarchy {
 	 * Retrieve the descriptor for the hierarchy's ROW_ID, if defined.  May
 	 * return {@code null}.
 	 */
-	<O,J> RowIdDescriptor<O,J>  getRowIdDescriptor();
+	<J> RowIdDescriptor<J>  getRowIdDescriptor();
 
 	/**
 	 * If the entity is defined as multi-tenant, retrieve the descriptor

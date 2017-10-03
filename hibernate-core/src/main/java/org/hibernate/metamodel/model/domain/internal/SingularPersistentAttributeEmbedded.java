@@ -9,6 +9,8 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.mapping.Component;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -19,10 +21,8 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.internal.CompositeFetchImpl;
@@ -41,26 +41,18 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	private final EmbeddedTypeDescriptor<J> embeddedDescriptor;
 
 	public SingularPersistentAttributeEmbedded(
-			ManagedTypeDescriptor<O> declaringType,
-			String attributeName,
+			ManagedTypeDescriptor<O> runtimeModelContainer,
+			PersistentAttributeMapping bootModelAttribute,
 			PropertyAccess propertyAccess,
 			Disposition disposition,
-			Component embeddedMapping,
-			boolean includedInOptimisticLocking,
 			RuntimeModelCreationContext context) {
-		super(
-				declaringType,
-				attributeName,
-				propertyAccess,
-				disposition,
-				true,
-				embeddedMapping,
-				includedInOptimisticLocking
-		);
+		super( runtimeModelContainer, bootModelAttribute, propertyAccess, disposition );
 
+		final Component embeddedMapping = (Component) bootModelAttribute.getValueMapping();
 		this.embeddedDescriptor = embeddedMapping.makeRuntimeDescriptor(
-				declaringType,
-				attributeName,
+				runtimeModelContainer,
+				bootModelAttribute.getName(),
+				disposition,
 				context
 		);
 	}
@@ -83,11 +75,6 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	@Override
 	public SingularAttributeClassification getAttributeTypeClassification() {
 		return SingularAttributeClassification.EMBEDDED;
-	}
-
-	@Override
-	public List<Column> getColumns() {
-		return embeddedDescriptor.collectColumns();
 	}
 
 	@Override

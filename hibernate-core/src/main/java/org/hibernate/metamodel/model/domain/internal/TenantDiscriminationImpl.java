@@ -15,7 +15,9 @@ import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -25,7 +27,7 @@ public class TenantDiscriminationImpl implements TenantDiscrimination {
 	private static final String NAVIGABLE_NAME = "{tenantId}";
 
 	private final IdentifiableTypeDescriptor container;
-	private final BasicJavaDescriptor javaDescriptor;
+	private final BasicJavaDescriptor<String> javaDescriptor;
 	private final Column column;
 	private final boolean isShared;
 	private final boolean useParameterBinding;
@@ -34,7 +36,7 @@ public class TenantDiscriminationImpl implements TenantDiscrimination {
 
 	public TenantDiscriminationImpl(
 			IdentifiableTypeDescriptor container,
-			BasicJavaDescriptor javaDescriptor,
+			BasicJavaDescriptor<String> javaDescriptor,
 			Column column,
 			boolean isShared,
 			boolean useParameterBinding) {
@@ -72,23 +74,13 @@ public class TenantDiscriminationImpl implements TenantDiscrimination {
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<String> getJavaTypeDescriptor() {
 		return javaDescriptor;
 	}
 
 	@Override
 	public String asLoggableText() {
 		return getNavigableRole().getFullPath();
-	}
-
-	@Override
-	public PersistenceType getPersistenceType() {
-		return null;
-	}
-
-	@Override
-	public Class getJavaType() {
-		return null;
 	}
 
 	@Override
@@ -104,5 +96,37 @@ public class TenantDiscriminationImpl implements TenantDiscrimination {
 	@Override
 	public boolean isUseParameterBinding() {
 		return useParameterBinding;
+	}
+
+	@Override
+	public boolean isNullable() {
+		// if there is a tenant discriminator mapped, its values cannot be null
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return true;
+	}
+
+	@Override
+	public boolean isUpdatable() {
+		// false - do we want to allow "moving tenants"?
+		return false;
+	}
+
+	@Override
+	public boolean isIncludedInDirtyChecking() {
+		return false;
+	}
+
+	@Override
+	public boolean isIncludedInOptimisticLocking() {
+		return false;
+	}
+
+	@Override
+	public MutabilityPlan<String> getMutabilityPlan() {
+		return ImmutableMutabilityPlan.INSTANCE;
 	}
 }

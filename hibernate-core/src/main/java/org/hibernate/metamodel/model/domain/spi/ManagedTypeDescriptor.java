@@ -66,6 +66,9 @@ public interface ManagedTypeDescriptor<T>
 	<A extends javax.persistence.metamodel.Attribute> void collectAttributes(Consumer<A> collector, Class<A> restrictionType);
 	<A extends javax.persistence.metamodel.Attribute> void collectDeclaredAttributes(Consumer<A> collector, Class<A> restrictionType);
 
+	void visitStateArrayNavigables(Consumer<StateArrayValuedNavigable<?>> consumer);
+
+
 	/**
 	 * Reduce an instance of the described entity into its "values array" -
 	 * an array whose length is equal to the number of attributes where the

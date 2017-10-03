@@ -6,8 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import java.lang.reflect.Member;
+
 import org.hibernate.property.access.spi.PropertyAccess;
 
 /**
@@ -15,7 +15,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
  *
  * @author Steve Ebersole
  */
-public interface PersistentAttribute<O,T> extends Navigable<T>, javax.persistence.metamodel.Attribute<O,T> {
+public interface PersistentAttribute<O, J> extends Navigable<J>, javax.persistence.metamodel.Attribute<O, J> {
 	@Override
 	ManagedTypeDescriptor<O> getContainer();
 
@@ -35,19 +35,20 @@ public interface PersistentAttribute<O,T> extends Navigable<T>, javax.persistenc
 
 	@Override
 	@SuppressWarnings("unchecked")
-	default Class<T> getJavaType() {
+	default Class<J> getJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
 	}
 
 	PropertyAccess getPropertyAccess();
 
-	boolean includeInOptimisticLocking();
+	boolean isIncludedInOptimisticLocking();
 
-	default Object deepCopy(Object value, SharedSessionContractImplementor session) {
-		// todo (6.0) : from where do we access the MutabilityPlan?
-		throw new NotYetImplementedFor6Exception();
+
+
+	@Override
+	default Member getJavaMember() {
+		return getPropertyAccess().getGetter().getMember();
 	}
-
 
 	// todo (6.0) : this method should accept the SqlExpressionQualifier/ColumnReferenceSource/TableGroup
 	//		e.g.,

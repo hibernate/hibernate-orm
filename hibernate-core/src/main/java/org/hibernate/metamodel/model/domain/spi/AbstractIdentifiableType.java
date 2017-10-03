@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.util.function.Consumer;
+
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -63,5 +65,28 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 			);
 			addAttribute( persistentAttribute );
 		}
+	}
+
+	@Override
+	public void visitStateArrayNavigables(Consumer<StateArrayValuedNavigable<?>> consumer) {
+		consumer.accept( getHierarchy().getIdentifierDescriptor() );
+
+		if ( getHierarchy().getDiscriminatorDescriptor() != null ) {
+			consumer.accept( getHierarchy().getDiscriminatorDescriptor() );
+		}
+
+		if ( getHierarchy().getVersionDescriptor() != null ) {
+			consumer.accept( getHierarchy().getVersionDescriptor() );
+		}
+
+		if ( getHierarchy().getTenantDiscrimination() != null ) {
+			consumer.accept( getHierarchy().getTenantDiscrimination() );
+		}
+
+		if ( getHierarchy().getRowIdDescriptor() != null ) {
+			consumer.accept( getHierarchy().getRowIdDescriptor() );
+		}
+
+		super.visitStateArrayNavigables( consumer );
 	}
 }

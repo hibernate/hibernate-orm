@@ -9,6 +9,7 @@ package org.hibernate.event.internal;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
@@ -16,6 +17,7 @@ import org.hibernate.LockMode;
 import org.hibernate.TransientObjectException;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
@@ -37,8 +39,9 @@ import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.StateArrayValuedNavigable;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.Type;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.type.internal.TypeHelper;
 
 /**
@@ -330,30 +333,17 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 		//persistenceContext.removeDatabaseSnapshot(key);
 	}
 
+	@SuppressWarnings("unchecked")
 	private Object[] createDeletedState(EntityDescriptor entityDescriptor, Object[] currentState, EventSource session) {
-		Type[] propTypes = entityDescriptor.getPropertyTypes();
-		final Object[] deletedState = new Object[propTypes.length];
-//		TypeFactory.deepCopy( currentState, propTypes, entityDescriptor.getPropertyUpdateability(), deletedState, session );
-		boolean[] copyability = new boolean[propTypes.length];
-		java.util.Arrays.fill( copyability, true );
-		entityDescriptor.visitAttributes(
-				new TypeHelper.FilteredAttributeConsumer() {
-					int i = 0;
+		final Object[] deletedState = new Object[ currentState.length ];
 
-					@Override
-					protected boolean shouldAccept(PersistentAttribute attribute) {
-						// "property update-ability"
-						//		- org.hibernate.persister.entity.EntityPersister#getPropertyUpdateability
-						return super.shouldAccept( attribute );
-					}
-
-					@Override
-					protected void acceptAttribute(PersistentAttribute attribute) {
-						deletedState[i] = attribute.deepCopy( currentState[i], session );
-						i++;
-					}
-				}
+		TypeHelper.deepCopy(
+				entityDescriptor,
+				currentState,
+				deletedState,
+				(navigable) -> true
 		);
+
 		return deletedState;
 	}
 

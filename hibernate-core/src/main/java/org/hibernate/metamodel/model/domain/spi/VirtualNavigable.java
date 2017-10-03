@@ -7,13 +7,14 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 /**
+ * Marker interface indicating that a particular Navigable
+ * represents a value not modeled as part of the application's
+ * domain model.
+ *
+ * This is generally values like discriminator, ROW_ID, Hibernate
+ * "back-refs", etc.
+ *
  * @author Steve Ebersole
  */
-public interface EntityIdentifierCompositeNonAggregated<O,J>
-		extends EntityIdentifierComposite<O,J>, NavigableContainer<J>, VirtualNavigable<J> {
-
-	@Override
-	default void visitNavigable(NavigableVisitationStrategy visitor) {
-		visitor.visitNonAggregateCompositeIdentifier( this );
-	}
+public interface VirtualNavigable<J> extends Navigable<J> {
 }

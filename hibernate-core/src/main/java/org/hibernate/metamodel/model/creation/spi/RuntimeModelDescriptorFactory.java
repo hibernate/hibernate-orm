@@ -19,6 +19,7 @@ import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.service.Service;
 
 /**
@@ -75,7 +76,11 @@ public interface RuntimeModelDescriptorFactory extends Service {
 	/**
 	 * Create an embeddable persister instance.
 	 *
-	 * @param embeddedValueMapping The mapping information describing the composition
+	 * @param bootModelEmbeddedDescriptor The boot-model representation of the composition
+	 * @param runtimeModelContainer The runtime-model container for the embedded to tbe created
+	 * @param localName The composite name
+	 * @param singularAttributeDisposition The disposition to use for any singular attributes
+	 * 		that are part of this composition
 	 * @param creationContext Access to additional information needed to create a persister
 	 *
 	 * @return An appropriate collection persister instance.
@@ -83,9 +88,10 @@ public interface RuntimeModelDescriptorFactory extends Service {
 	 * @throws HibernateException Indicates a problem building the persister.
 	 */
 	<J> EmbeddedTypeDescriptor<J> createEmbeddedTypeDescriptor(
-			EmbeddedValueMapping embeddedValueMapping,
-			EmbeddedContainer source,
+			EmbeddedValueMapping bootModelEmbeddedDescriptor,
+			EmbeddedContainer runtimeModelContainer,
 			String localName,
+			SingularPersistentAttribute.Disposition singularAttributeDisposition,
 			RuntimeModelCreationContext creationContext);
 
 	/**

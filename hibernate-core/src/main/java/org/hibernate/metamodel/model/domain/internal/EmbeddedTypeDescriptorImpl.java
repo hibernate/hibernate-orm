@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.EmbeddedMapping;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
@@ -28,7 +29,6 @@ import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.RepresentationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
@@ -42,12 +42,15 @@ public class EmbeddedTypeDescriptorImpl<T>
 	private final EmbeddedContainer container;
 	private final NavigableRole navigableRole;
 
+	private final SingularPersistentAttribute.Disposition compositeDisposition;
+
 	private final RepresentationStrategy representationStrategy;
 
 	public EmbeddedTypeDescriptorImpl(
 			EmbeddedMapping embeddedMapping,
 			EmbeddedContainer container,
 			String localName,
+			SingularPersistentAttribute.Disposition compositeDisposition,
 			RuntimeModelCreationContext creationContext) {
 		super(
 				embeddedMapping,
@@ -58,6 +61,7 @@ public class EmbeddedTypeDescriptorImpl<T>
 		// todo (6.0) : support for specific MutalibilityPlan and Comparator
 
 		this.container = container;
+		this.compositeDisposition = compositeDisposition;
 		this.navigableRole = container.getNavigableRole().append( localName );
 
 		this.representationStrategy = creationContext.getMetadata().getMetadataBuildingOptions()
@@ -105,7 +109,7 @@ public class EmbeddedTypeDescriptorImpl<T>
 			final PersistentAttribute persistentAttribute = attributeMapping.makeRuntimeAttribute(
 					this,
 					embeddedValueMapping,
-					SingularPersistentAttribute.Disposition.NORMAL,
+					compositeDisposition,
 					creationContext
 			);
 
@@ -164,6 +168,23 @@ public class EmbeddedTypeDescriptorImpl<T>
 	@Override
 	public void addSubclassType(InheritanceCapable<? extends T> subclassType) {
 		throw new UnsupportedOperationException( "Embeddable inheritance is not yet implemented" );
+	}
+
+
+
+
+
+
+
+
+	@Override
+	public Object extractAttributeValue(T instance, PersistentAttribute attribute) {
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public void injectAttributeValue(T instance, PersistentAttribute attribute, Object value) {
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override

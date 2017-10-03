@@ -9,6 +9,7 @@ package org.hibernate.boot.model.domain;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 
 /**
  * Models an embeddable-valued mapping such as an {@link javax.persistence.Embedded} or
@@ -20,5 +21,6 @@ public interface EmbeddedValueMapping extends ValueMapping, ManagedTypeMapping {
 	<X> EmbeddedTypeDescriptor<X> makeRuntimeDescriptor(
 			EmbeddedContainer embeddedContainer,
 			String localName,
+			SingularPersistentAttribute.Disposition disposition,
 			RuntimeModelCreationContext context);
 }

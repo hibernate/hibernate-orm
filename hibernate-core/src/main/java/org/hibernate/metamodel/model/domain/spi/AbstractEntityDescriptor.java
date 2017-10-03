@@ -236,11 +236,6 @@ public abstract class AbstractEntityDescriptor<T>
 	}
 
 	@Override
-	public Class<T> getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
-	}
-
-	@Override
 	public Class<T> getBindableJavaType() {
 		return getJavaType();
 	}
@@ -266,13 +261,15 @@ public abstract class AbstractEntityDescriptor<T>
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <Y> SingularAttribute<? super T, Y> getId(Class<Y> type) {
-		return getHierarchy().getIdentifierDescriptor();
+		return (SingularAttribute<? super T, Y>) getHierarchy().getIdentifierDescriptor().asAttribute();
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <Y> SingularAttribute<T, Y> getDeclaredId(Class<Y> type) {
-		return getHierarchy().getIdentifierDescriptor();
+		return (SingularAttribute<T, Y>) getHierarchy().getIdentifierDescriptor().asAttribute();
 	}
 
 	@Override
@@ -303,7 +300,8 @@ public abstract class AbstractEntityDescriptor<T>
 
 	@Override
 	public Type<?> getIdType() {
-		return getHierarchy().getIdentifierDescriptor().getType();
+		// todo (6.0) : is there a better way instead of through `#asAttribute`?
+		return getHierarchy().getIdentifierDescriptor().asAttribute().getType();
 	}
 
 	@Override
@@ -584,7 +582,7 @@ public abstract class AbstractEntityDescriptor<T>
 				resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
 						resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
 								selectedExpression.getSqlExpressionQualifier(),
-								getHierarchy().getRowIdDescriptor().getColumns().get( 0 )
+								getHierarchy().getRowIdDescriptor().getBoundColumn()
 						)
 				)
 		);
@@ -593,7 +591,7 @@ public abstract class AbstractEntityDescriptor<T>
 				resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
 						resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
 								selectedExpression.getSqlExpressionQualifier(),
-								getHierarchy().getDiscriminatorDescriptor().getColumns().get( 0 )
+								getHierarchy().getDiscriminatorDescriptor().getBoundColumn()
 						)
 				)
 		);
@@ -602,7 +600,7 @@ public abstract class AbstractEntityDescriptor<T>
 				resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
 						resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
 								selectedExpression.getSqlExpressionQualifier(),
-								getHierarchy().getTenantDiscrimination().getColumn()
+								getHierarchy().getTenantDiscrimination().getBoundColumn()
 						)
 				)
 		);
@@ -648,7 +646,7 @@ public abstract class AbstractEntityDescriptor<T>
 
 	@Override
 	public String getVersionColumnName() {
-		return ( (PhysicalColumn) getHierarchy().getVersionDescriptor().getColumns().get( 0 ) )
+		return ( (PhysicalColumn) getHierarchy().getVersionDescriptor().getBoundColumn() )
 				.getName()
 				.render( dialect );
 	}

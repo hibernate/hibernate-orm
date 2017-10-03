@@ -37,6 +37,7 @@ import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.StateArrayValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.internal.TypeHelper;
@@ -284,23 +285,12 @@ public abstract class AbstractSaveEventListener
 		if ( substitute ) {
 			entityDescriptor.setPropertyValues( entity, values );
 		}
-		entityDescriptor.visitAttributes(
-				new TypeHelper.FilteredAttributeConsumer() {
-					int i = 0;
 
-					@Override
-					protected boolean shouldAccept(PersistentAttribute attribute) {
-						// "property update-ability"
-						//		- org.hibernate.persister.entity.EntityPersister#getPropertyUpdateability
-						return super.shouldAccept( attribute );
-					}
-
-					@Override
-					protected void acceptAttribute(PersistentAttribute attribute) {
-						values[i] = attribute.deepCopy( values[i], source );
-						i++;
-					}
-				}
+		TypeHelper.deepCopy(
+				entityDescriptor,
+				values,
+				values,
+				StateArrayValuedNavigable::isUpdatable
 		);
 
 		AbstractEntityInsertAction insert = addInsertAction(

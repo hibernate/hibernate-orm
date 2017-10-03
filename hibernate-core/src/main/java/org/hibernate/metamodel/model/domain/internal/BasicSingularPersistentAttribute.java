@@ -6,10 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.boot.model.domain.BasicValueMapping;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
@@ -41,24 +39,19 @@ public class BasicSingularPersistentAttribute<O,J>
 	private final AttributeConverterDefinition converterDefinition;
 
 	public BasicSingularPersistentAttribute(
-			ManagedTypeDescriptor<O> declaringType,
-			String name,
+			ManagedTypeDescriptor<O> runtimeContainer,
+			PersistentAttributeMapping bootAttribute,
 			PropertyAccess propertyAccess,
 			Disposition disposition,
-			boolean nullable,
-			BasicValueMapping<J> basicValueMapping,
-			boolean includedInOptimisticLocking,
 			RuntimeModelCreationContext context) {
 		super(
-				declaringType,
-				name,
+				runtimeContainer,
+				bootAttribute,
 				propertyAccess,
-				disposition,
-				nullable,
-				basicValueMapping,
-				includedInOptimisticLocking
+				disposition
 		);
 
+		final BasicValueMapping<J> basicValueMapping = (BasicValueMapping<J>) bootAttribute.getValueMapping();
 		this.boundColumn = context.getDatabaseObjectResolver().resolveColumn( basicValueMapping.getMappedColumn() );
 		this.basicType = basicValueMapping.resolveType();
 		this.converterDefinition = basicValueMapping.getAttributeConverterDefinition();
@@ -102,11 +95,6 @@ public class BasicSingularPersistentAttribute<O,J>
 	}
 
 	@Override
-	public List<Column> getColumns() {
-		return Collections.singletonList( getBoundColumn() );
-	}
-
-	@Override
 	public String asLoggableText() {
 		return "SingularAttributeBasic(" + getContainer().asLoggableText() + '.' + getAttributeName() + ')';
 	}
@@ -140,4 +128,5 @@ public class BasicSingularPersistentAttribute<O,J>
 	public ValueExtractor getValueExtractor() {
 		return basicType.getValueExtractor();
 	}
+
 }

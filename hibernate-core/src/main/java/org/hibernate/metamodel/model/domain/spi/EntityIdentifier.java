@@ -13,9 +13,19 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 
 /**
  * Descriptor for an entity's identifier
+ *
+ * @todo (6.0) : drop SingularPersistentAttribute from extends list
+ * 		only 2 out of the 3 identifier forms is a SingularPersistentAttribute, the 3rd is the
+ * 		"non-aggregated cid" form.  Granted we could model the 3rd as a
+ * 		{@link VirtualPersistentAttribute} (or a {@link VirtualNavigable}) but the underlying issue
+ * 		is the abstract base class ({@link AbstractSingularPersistentAttribute}) and what we can pass
+ * 		to its ctor - ideally we'd pass the boot-model form
+ * 		({@link org.hibernate.boot.model.domain.PersistentAttributeMapping}) which does not exist
+ * 		for this 3rd ide form.
+ *
  * @author Steve Ebersole
  */
-public interface EntityIdentifier<O,J> extends Navigable<J>, SingularPersistentAttribute<O,J>, AllowableParameterType<J> {
+public interface EntityIdentifier<O,J> extends Navigable<J>, AllowableParameterType<J> {
 	String NAVIGABLE_ID = "{id}";
 	String LEGACY_NAVIGABLE_ID = "id";
 
@@ -26,15 +36,23 @@ public interface EntityIdentifier<O,J> extends Navigable<J>, SingularPersistentA
 	 *
 	 * @return {@code false} indicates we have a non-aggregated composite identifier.
 	 */
-	boolean hasSingleIdAttribute();
+	default boolean hasSingleIdAttribute() {
+		return this instanceof SingularPersistentAttribute;
+	}
 
 	/**
 	 * Get a SingularPersistentAttribute representation of the identifier.
 	 * <p/>
 	 * Note that for the case of a non-aggregated composite identifier this returns a
 	 * "virtual" attribute mapping ({@link VirtualPersistentAttribute})
+	 *
+	 * @todo (6.0) : decide on what we want to do here.
+	 * 		ultimately this is used to implement {@link javax.persistence.metamodel.IdentifiableType#getId}
+	 * 		and {@link javax.persistence.metamodel.IdentifiableType#getDeclaredId}.  However, the
+	 * 		"tricky" case here (non-aggregate cid) is one that JPA says should throw an
+	 * 		exception
 	 */
-	SingularPersistentAttribute<O,J> getIdAttribute();
+	<T> SingularPersistentAttribute<O,T> asAttribute(Class<T> javaType);
 
 	IdentifierGenerator getIdentifierValueGenerator();
 

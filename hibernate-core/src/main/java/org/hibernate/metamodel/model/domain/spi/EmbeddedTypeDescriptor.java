@@ -35,6 +35,7 @@ public interface EmbeddedTypeDescriptor<T>
 			Component.class,
 			EmbeddedContainer.class,
 			String.class,
+			SingularPersistentAttribute.Disposition.class,
 			RuntimeModelCreationContext.class
 	};
 

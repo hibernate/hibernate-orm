@@ -34,11 +34,6 @@ public abstract class AbstractCollectionIndex<J> implements CollectionIndex<J> {
 	}
 
 	@Override
-	public Class<J> getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
-	}
-
-	@Override
 	public String getNavigableName() {
 		return NAVIGABLE_NAME;
 	}

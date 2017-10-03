@@ -7,11 +7,14 @@
 package org.hibernate.type.internal;
 
 import java.io.Serializable;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.StateArrayValuedNavigable;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 
 /**
@@ -19,32 +22,59 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
  */
 public class TypeHelper {
 
-	// todo (6.0) : rename this as `org.hibernate.metamodel.model.domain.spi.NavigableHelper`
-	//		Keep as TypeHelper until all compile errors addressed.  Renaming (moving package)
-	// 		will change all usages as well.
+	@SuppressWarnings("unchecked")
+	public static void deepCopy(
+			ManagedTypeDescriptor containerDescriptor,
+			Object[] source,
+			Object[] target,
+			Predicate<StateArrayValuedNavigable> skipCondition) {
+		deepCopy(
+				containerDescriptor,
+				source,
+				target,
+				skipCondition,
+				(navigable, sourceValue) -> {
+					if ( sourceValue == LazyPropertyInitializer.UNFETCHED_PROPERTY
+							|| sourceValue == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+						return sourceValue;
+					}
+					else {
+						return navigable.getMutabilityPlan().deepCopy( sourceValue );
+					}
+				}
+		);
+	}
 
-	/**
-	 * {@link Consumer} of {@link PersistentAttribute}, allowing them to be filtered
-	 * via {@link #shouldAccept}
-	 */
-	public static class FilteredAttributeConsumer implements Consumer<PersistentAttribute> {
-		@Override
-		public final void accept(PersistentAttribute attribute) {
-			if ( shouldAccept( attribute ) ) {
-				acceptAttribute( attribute );
-			}
-		}
+	@SuppressWarnings("unchecked")
+	public static void deepCopy(
+			ManagedTypeDescriptor containerDescriptor,
+			Object[] source,
+			Object[] target,
+			Predicate<StateArrayValuedNavigable> skipCondition,
+			BiFunction<StateArrayValuedNavigable,Object,Object> targetValueProducer) {
+		containerDescriptor.visitStateArrayNavigables(
+				new Consumer<StateArrayValuedNavigable>() {
+					private int i = -1;
 
-		protected boolean shouldAccept(PersistentAttribute attribute) {
-			return true;
-		}
+					@Override
+					public void accept(StateArrayValuedNavigable navigable) {
+						i++;
 
-		protected void acceptAttribute(PersistentAttribute attribute) {
-		}
+						if ( skipCondition.test( navigable ) ) {
+							return;
+						}
+
+						target[i] = targetValueProducer.apply( navigable, source[i] );
+					}
+				}
+		);
 	}
 
 	public static String toLoggableString(Object[] state, ManagedTypeDescriptor<?> managedTypeDescriptor) {
 		final StringBuilder buffer = new StringBuilder();
+		buffer.append( managedTypeDescriptor.getNavigableName() )
+				.append( '[' );
+
 		managedTypeDescriptor.visitAttributes(
 				new Consumer<PersistentAttribute>() {
 					int i = 0;
@@ -60,7 +90,8 @@ public class TypeHelper {
 					}
 				}
 		);
-		return buffer.toString();
+
+		return buffer.append( ']' ).toString();
 	}
 
 	public static Serializable[] disassemble(final Object[] state, final  boolean[] nonCacheable, ManagedTypeDescriptor descriptor) {

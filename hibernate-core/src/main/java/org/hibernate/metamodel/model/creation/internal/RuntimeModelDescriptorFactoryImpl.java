@@ -25,6 +25,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -36,14 +37,11 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  */
 public final class RuntimeModelDescriptorFactoryImpl
 		implements RuntimeModelDescriptorFactory, ServiceRegistryAwareService {
-	private ServiceRegistryImplementor serviceRegistry;
-
 	private RuntimeModelDescriptorClassResolver descriptorClassResolver;
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		this.serviceRegistry = serviceRegistry;
-		descriptorClassResolver = serviceRegistry.getService( RuntimeModelDescriptorClassResolver.class );
+		this.descriptorClassResolver = serviceRegistry.getService( RuntimeModelDescriptorClassResolver.class );
 	}
 
 	@Override
@@ -238,10 +236,12 @@ public final class RuntimeModelDescriptorFactoryImpl
 	}
 
 	@Override
+	@SuppressWarnings( {"unchecked"})
 	public EmbeddedTypeDescriptor createEmbeddedTypeDescriptor(
 			EmbeddedValueMapping embeddedValueMapping,
 			EmbeddedContainer source,
 			String localName,
+			SingularPersistentAttribute.Disposition disposition,
 			RuntimeModelCreationContext creationContext) {
 		final Class<? extends EmbeddedTypeDescriptor> persisterClass = descriptorClassResolver.getEmbeddedTypeDescriptorClass( embeddedValueMapping );
 
@@ -252,6 +252,7 @@ public final class RuntimeModelDescriptorFactoryImpl
 						embeddedValueMapping,
 						source,
 						localName,
+						disposition,
 						creationContext
 				);
 			}
@@ -287,7 +288,7 @@ public final class RuntimeModelDescriptorFactoryImpl
 	// Deprecations
 
 	/**
-	 * @deprecated Use {@link RuntimeModelDescriptorFactoryImpl#ENTITY_PERSISTER_CONSTRUCTOR_ARGS} instead.
+	 * @deprecated Use {@link EntityDescriptor#STANDARD_CONSTRUCTOR_SIG} instead.
 	 */
 	@Deprecated
 	public static final Class[] ENTITY_PERSISTER_CONSTRUCTOR_ARGS = EntityDescriptor.STANDARD_CONSTRUCTOR_SIG;

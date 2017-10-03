@@ -17,6 +17,7 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
@@ -40,6 +41,7 @@ public class CollectionElementEmbeddedImpl<J>
 				(EmbeddedValueMapping) mapping.getElement(),
 				persister,
 				NAVIGABLE_NAME,
+				SingularPersistentAttribute.Disposition.NORMAL,
 				creationContext
 		);
 		this.columnList = embeddedPersister.collectColumns();

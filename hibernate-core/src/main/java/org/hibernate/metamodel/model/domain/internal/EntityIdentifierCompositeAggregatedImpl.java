@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.RootClass;
@@ -15,14 +16,12 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeAggregated;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.spi.QueryResult;
@@ -39,26 +38,23 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 		implements EntityIdentifierCompositeAggregated<O,J> {
 	private final EmbeddedTypeDescriptor<J> embeddedMetadata;
 
-	@SuppressWarnings("unchecked")
 	public EntityIdentifierCompositeAggregatedImpl(
-			EntityHierarchy entityHierarchy,
-			RootClass bootModelRoot,
+			EntityHierarchyImpl runtimeModelHierarchy,
+			RootClass bootModelRootEntity,
 			EmbeddedTypeDescriptor embeddedMetadata,
 			RuntimeModelCreationContext creationContext) {
 		super(
-				(ManagedTypeDescriptor<O>) entityHierarchy.getRootEntityType().getJavaTypeDescriptor(),
-				bootModelRoot.getIdentifierProperty().getName(),
+				(ManagedTypeDescriptor<O>) runtimeModelHierarchy.getRootEntityType().getJavaTypeDescriptor(),
+				bootModelRootEntity.getIdentifierProperty(),
 				embeddedMetadata.getRepresentationStrategy().generatePropertyAccess(
-						bootModelRoot,
-						bootModelRoot.getIdentifierProperty(),
+						bootModelRootEntity,
+						bootModelRootEntity.getIdentifierProperty(),
 						embeddedMetadata,
 						Environment.getBytecodeProvider()
 				),
-				Disposition.ID,
-				false,
-				bootModelRoot.getIdentifierProperty().getValue(),
-				false
+				Disposition.ID
 		);
+
 		this.embeddedMetadata = embeddedMetadata;
 	}
 
@@ -112,11 +108,6 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 	}
 
 	@Override
-	public void visitNavigable(NavigableVisitationStrategy visitor) {
-
-	}
-
-	@Override
 	public QueryResult createQueryResult(
 			NavigableReference expression,
 			String resultVariable,
@@ -134,7 +125,8 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 	}
 
 	@Override
-	public SingularPersistentAttribute<O,J> getIdAttribute() {
+	@SuppressWarnings("unchecked")
+	public SingularPersistentAttribute asAttribute(Class javaType) {
 		return this;
 	}
 

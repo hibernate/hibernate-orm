@@ -6,14 +6,10 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.metamodel.model.relational.spi.Column;
-
 /**
  * @author Steve Ebersole
  */
-public interface TenantDiscrimination extends Navigable {
-	Column getColumn();
-
+public interface TenantDiscrimination extends StateArrayValuedNavigable<String>, VirtualNavigable<String>, BasicValuedNavigable<String> {
 	boolean isShared();
 
 	boolean isUseParameterBinding();
@@ -24,5 +20,15 @@ public interface TenantDiscrimination extends Navigable {
 	@Override
 	default void visitNavigable(NavigableVisitationStrategy visitor) {
 		visitor.visitTenantTenantDiscrimination( this );
+	}
+
+	@Override
+	default PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
+	@Override
+	default Class<String> getJavaType() {
+		return String.class;
 	}
 }

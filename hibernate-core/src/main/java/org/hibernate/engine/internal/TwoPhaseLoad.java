@@ -32,6 +32,7 @@ import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.StateArrayValuedNavigable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
@@ -259,41 +260,11 @@ public final class TwoPhaseLoad {
 		}
 		else {
 			//take a snapshot
-			entityDescriptor.visitAttributes(
-					new TypeHelper.FilteredAttributeConsumer() {
-						int i = 0;
-
-						@Override
-						protected boolean shouldAccept(PersistentAttribute attribute) {
-							// "property update-ability"
-							//		- org.hibernate.entityDescriptor.entity.EntityPersister#getPropertyUpdateability
-							return super.shouldAccept( attribute );
-						}
-
-						@Override
-						protected void acceptAttribute(PersistentAttribute attribute) {
-							hydratedState[i] = attribute.deepCopy( hydratedState[i], session );
-						}
-					}
-			);
-
-			entityDescriptor.visitAttributes(
-					new TypeHelper.FilteredAttributeConsumer() {
-						private int i = 0;
-
-						@Override
-						protected boolean shouldAccept(PersistentAttribute attribute) {
-							// "property updatebility"
-							//		- org.hibernate.entityDescriptor.entity.EntityPersister#getPropertyUpdateability
-							return super.shouldAccept( attribute );
-						}
-
-						@Override
-						protected void acceptAttribute(PersistentAttribute attribute) {
-							hydratedState[i] = attribute.deepCopy( hydratedState[i], session );
-							i++;
-						}
-					}
+			TypeHelper.deepCopy(
+					entityDescriptor,
+					hydratedState,
+					hydratedState,
+					StateArrayValuedNavigable::isUpdatable
 			);
 			persistenceContext.setEntryStatus( entityEntry, Status.MANAGED );
 		}

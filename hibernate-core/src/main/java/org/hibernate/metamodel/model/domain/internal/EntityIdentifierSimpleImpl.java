@@ -9,22 +9,19 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.BasicValueMapping;
-import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
-import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
@@ -50,27 +47,24 @@ public class EntityIdentifierSimpleImpl<O,J>
 
 	@SuppressWarnings("unchecked")
 	public EntityIdentifierSimpleImpl(
-			EntityHierarchy hierarchy,
-			IdentifiableTypeDescriptor declarer,
-			IdentifiableTypeMapping bootDeclarer,
-			Property property,
-			BasicValueMapping<J> basicValueMapping,
+			EntityHierarchyImpl runtimeModelHierarchy,
+			RootClass bootModelRootEntity,
 			RuntimeModelCreationContext creationContext) {
 		super(
-				hierarchy.getRootEntityType(),
-				property.getName(),
-				declarer.getRepresentationStrategy().generatePropertyAccess(
-						bootDeclarer,
-						property,
-						declarer,
+				runtimeModelHierarchy.getRootEntityType(),
+				bootModelRootEntity.getIdentifierAttributeMapping(),
+				runtimeModelHierarchy.getRootEntityType().getRepresentationStrategy().generatePropertyAccess(
+						bootModelRootEntity,
+						bootModelRootEntity.getIdentifierAttributeMapping(),
+						runtimeModelHierarchy.getRootEntityType(),
 						Environment.getBytecodeProvider()
 				),
-				Disposition.ID,
-				false,
-				basicValueMapping,
-				property.isIncludedInOptimisticLocking()
+				Disposition.ID
 		);
-		this.name = property.getName();
+
+		this.name = bootModelRootEntity.getIdentifierAttributeMapping().getName();
+
+		final BasicValueMapping<J> basicValueMapping = (BasicValueMapping<J>) bootModelRootEntity.getIdentifierAttributeMapping().getValueMapping();
 		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( basicValueMapping.getMappedColumn() );
 		this.basicType = basicValueMapping.resolveType();
 	}
@@ -86,7 +80,8 @@ public class EntityIdentifierSimpleImpl<O,J>
 	}
 
 	@Override
-	public SingularPersistentAttribute<O,J> getIdAttribute() {
+	@SuppressWarnings("unchecked")
+	public SingularPersistentAttribute asAttribute(Class javaType) {
 		return this;
 	}
 

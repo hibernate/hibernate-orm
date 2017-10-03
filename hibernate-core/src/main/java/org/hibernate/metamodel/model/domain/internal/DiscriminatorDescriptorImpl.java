@@ -75,6 +75,11 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 	}
 
 	@Override
+	public boolean includeInOptimisticLocking() {
+		return false;
+	}
+
+	@Override
 	public String getNavigableName() {
 		return NAVIGABLE_NAME;
 	}

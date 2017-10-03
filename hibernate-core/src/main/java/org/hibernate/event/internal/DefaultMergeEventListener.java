@@ -35,6 +35,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
@@ -216,7 +217,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		final String entityName = event.getEntityName();
 		final EntityDescriptor entityDescriptor = source.getEntityPersister( entityName, entity );
 
-		final Serializable id = entityDescriptor.hasIdentifierProperty() ?
+		final Serializable id = EntityIdentifierSimple.class.isInstance( entityDescriptor.getHierarchy().getIdentifierDescriptor() ) ?
 				entityDescriptor.getIdentifier( entity, source ) :
 				null;
 		if ( copyCache.containsKey( entity ) ) {

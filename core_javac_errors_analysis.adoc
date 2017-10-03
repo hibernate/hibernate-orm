@@ -506,7 +506,7 @@ A collection?  etc
 
 
 
-### Yet-uncategorized Type methods/usages (5)
+### Yet-uncategorized Type methods/usages (4)
 
 [code]
 ----
@@ -533,12 +533,6 @@ A collection?  etc
 		                                                   ^
   symbol:   method getOrmType()
   location: interface PersistentCollectionDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/AbstractSaveEventListener.java:291: error: cannot find symbol
-				types,
-				^
-  symbol:   variable types
-  location: class AbstractSaveEventListener
 ----
 
 
@@ -577,8 +571,6 @@ internally) as well?
 
 
 
-
-
 ## Loader/Loadable (2)
 
 
@@ -613,10 +605,7 @@ internally) as well?
 
 
 
-
-
-
-## Misc (2)
+## Misc (1)
 
 
 [code]
@@ -626,11 +615,5 @@ internally) as well?
 						^
   symbol:   method fromString(String)
   location: interface JavaTypeDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/SessionFactoryImpl.java:820: error: cannot find symbol
-				.setQueryReturns( nativeSqlQuery.getQueryReturns() );
-				                                ^
-  symbol:   method getQueryReturns()
-  location: variable nativeSqlQuery of type NativeQuery
 
 ----

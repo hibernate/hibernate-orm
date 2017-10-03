@@ -43,11 +43,6 @@ public interface BasicType<T>
 	SqlSelectionReader<T> getSqlSelectionReader();
 
 	@Override
-	default Classification getClassification() {
-		return Classification.BASIC;
-	}
-
-	@Override
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;
 	}

@@ -43,11 +43,11 @@ import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.InheritanceStrategy;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
+import org.hibernate.metamodel.model.domain.spi.PluralAttributeCollection;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.sql.Update;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
@@ -199,27 +199,32 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final SessionFactoryImplementor sessionFactory = ( (SessionImplementor) session ).getFactory();
 		final EntityDescriptor<Object> entityDescriptor = sessionFactory.getTypeConfiguration().findEntityDescriptor(
 				entityName );
-		final Type propertyType = entityDescriptor.getPropertyType( propertyName );
-		if ( propertyType.getClassification() ==  Type.Classification.COLLECTION ) {
-			final PluralPersistentAttribute attribute = (PluralPersistentAttribute) entityDescriptor.getAttribute(
-					propertyName );
-			// Handling collection of components.
-			if ( attribute.getElementType() instanceof javax.persistence.metamodel.EmbeddableType ) {
-				// Adding restrictions to compare data outside of primary key.
-				// todo: is it necessary that non-primary key attributes be compared?
-				for ( Map.Entry<String, Object> dataEntry : persistentCollectionChangeData.getData().entrySet() ) {
-					if ( !originalIdPropName.equals( dataEntry.getKey() ) ) {
-						if ( dataEntry.getValue() != null ) {
-							qb.getRootParameters().addWhereWithParam( dataEntry.getKey(), true, "=", dataEntry.getValue() );
-						}
-						else {
-							qb.getRootParameters().addNullRestriction( dataEntry.getKey(), true );
-						}
-					}
-				}
-			}
-		}
-
+		entityDescriptor.visitAttributes( attribute -> {
+											  if ( attribute.getName().equals( propertyName )
+													  && PluralAttributeCollection.class.isInstance( attribute ) ) {
+												  // Handling collection of components.
+												  if ( ( (PluralPersistentAttribute) attribute ).getElementType() instanceof javax.persistence.metamodel.EmbeddableType ) {
+													  // Adding restrictions to compare data outside of primary key.
+													  // todo: is it necessary that non-primary key attributes be compared?
+													  for ( Map.Entry<String, Object> dataEntry : persistentCollectionChangeData.getData().entrySet() ) {
+														  if ( !originalIdPropName.equals( dataEntry.getKey() ) ) {
+															  if ( dataEntry.getValue() != null ) {
+																  qb.getRootParameters().addWhereWithParam(
+																		  dataEntry.getKey(),
+																		  true,
+																		  "=",
+																		  dataEntry.getValue()
+																  );
+															  }
+															  else {
+																  qb.getRootParameters().addNullRestriction( dataEntry.getKey(), true );
+															  }
+														  }
+													  }
+												  }
+											  }
+										  }
+		);
 		addEndRevisionNullRestriction( options, qb.getRootParameters() );
 
 		final List<Object> l = qb.toQuery( session ).setLockOptions( LockOptions.UPGRADE ).list();

@@ -136,7 +136,7 @@ EntityDescriptorJ> ... {
 
 
 
-### Entity metadata (21)
+### Entity metadata (20)
 
 
 Various errors dealing with entity metadata including versioning, natural-ids, attribute "position", etc
@@ -262,12 +262,6 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
 			              ^
   symbol:   method isSubclassEntityName(String)
   location: variable persister of type EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultMergeEventListener.java:219: error: cannot find symbol
-		final Serializable id = entityDescriptor.hasIdentifierProperty() ?
-		                                        ^
-  symbol:   method hasIdentifierProperty()
-  location: variable entityDescriptor of type EntityDescriptor
 
 ----
 

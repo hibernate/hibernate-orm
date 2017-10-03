@@ -14,7 +14,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.AbstractNonIdSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.VersionSupport;
@@ -37,7 +37,7 @@ import org.hibernate.type.spi.BasicType;
  * @author Steve Ebersole
  */
 public class VersionDescriptorImpl<O,J>
-		extends AbstractSingularPersistentAttribute<O,J>
+		extends AbstractNonIdSingularPersistentAttribute<O,J>
 		implements VersionDescriptor<O,J>, BasicValuedExpressableType<J> {
 	private final BasicType<J> basicType;
 	private final VersionSupport<J> versionSupport;

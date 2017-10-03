@@ -38,6 +38,7 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 		implements EntityIdentifierCompositeAggregated<O,J> {
 	private final EmbeddedTypeDescriptor<J> embeddedMetadata;
 
+	@SuppressWarnings("unchecked")
 	public EntityIdentifierCompositeAggregatedImpl(
 			EntityHierarchyImpl runtimeModelHierarchy,
 			RootClass bootModelRootEntity,
@@ -175,5 +176,10 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 	@Override
 	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
 		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public boolean isOptional() {
+		return false;
 	}
 }

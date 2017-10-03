@@ -9,11 +9,12 @@ package org.hibernate.metamodel.model.domain.internal;
 import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.AbstractNonIdSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
+import org.hibernate.metamodel.model.domain.spi.StateArrayValuedNavigable;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
@@ -31,8 +32,8 @@ import org.hibernate.type.spi.BasicType;
  * @author Steve Ebersole
  */
 public class BasicSingularPersistentAttribute<O,J>
-		extends AbstractSingularPersistentAttribute<O, J>
-		implements BasicValuedNavigable<J>, ConvertibleNavigable<J> {
+		extends AbstractNonIdSingularPersistentAttribute<O, J>
+		implements BasicValuedNavigable<J>, ConvertibleNavigable<J>, StateArrayValuedNavigable<J> {
 
 	private final Column boundColumn;
 	private final BasicType<J> basicType;

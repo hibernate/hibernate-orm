@@ -10,7 +10,7 @@ package org.hibernate.metamodel.model.domain.spi;
  * @author Steve Ebersole
  */
 public interface SingularPersistentAttribute<O, J>
-		extends PersistentAttribute<O, J>, StateArrayValuedNavigable<J>, javax.persistence.metamodel.SingularAttribute<O, J> {
+		extends PersistentAttribute<O, J>, javax.persistence.metamodel.SingularAttribute<O, J> {
 
 	@Override
 	default Class<J> getJavaType() {

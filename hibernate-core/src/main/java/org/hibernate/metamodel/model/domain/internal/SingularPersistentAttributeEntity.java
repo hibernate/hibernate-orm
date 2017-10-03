@@ -16,7 +16,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.AbstractNonIdSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.JoinablePersistentAttribute;
@@ -57,7 +57,7 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
  * @author Steve Ebersole
  */
 public class SingularPersistentAttributeEntity<O,J>
-		extends AbstractSingularPersistentAttribute<O,J>
+		extends AbstractNonIdSingularPersistentAttribute<O,J>
 		implements JoinablePersistentAttribute<O,J>, EntityValuedNavigable<J>, Fetchable<J>, TableGroupJoinProducer {
 
 	private final SingularAttributeClassification classification;

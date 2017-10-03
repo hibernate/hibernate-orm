@@ -168,4 +168,9 @@ public class EntityIdentifierSimpleImpl<O,J>
 	public ValueExtractor getValueExtractor() {
 		return basicType.getValueExtractor();
 	}
+
+	@Override
+	public boolean isOptional() {
+		return false;
+	}
 }

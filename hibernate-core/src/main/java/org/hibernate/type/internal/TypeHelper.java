@@ -96,11 +96,11 @@ public class TypeHelper {
 
 	public static Serializable[] disassemble(final Object[] state, final  boolean[] nonCacheable, ManagedTypeDescriptor descriptor) {
 		final Serializable[] disassembledState = new Serializable[state.length];
-		descriptor.visitAttributes( new Consumer<PersistentAttribute>() {
+		descriptor.visitStateArrayNavigables( new Consumer<StateArrayValuedNavigable>() {
 			int position = 0;
 
 			@Override
-			public void accept(PersistentAttribute attribute) {
+			public void accept(StateArrayValuedNavigable attribute) {
 				if ( nonCacheable != null && nonCacheable[position] ) {
 					disassembledState[position] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 				}
@@ -120,11 +120,11 @@ public class TypeHelper {
 
 	public static Object[] assemble(final Serializable[] disassembledState, ManagedTypeDescriptor descriptor) {
 		final Object[] assembledProps = new Object[disassembledState.length];
-		descriptor.visitAttributes( new Consumer<PersistentAttribute>() {
+		descriptor.visitStateArrayNavigables( new Consumer<StateArrayValuedNavigable>() {
 			int position = 0;
 
 			@Override
-			public void accept(PersistentAttribute attribute) {
+			public void accept(StateArrayValuedNavigable attribute) {
 				if ( disassembledState[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY || disassembledState[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 					assembledProps[position] = disassembledState[position];
 				}

@@ -12,10 +12,11 @@ import org.hibernate.envers.test.entities.StrTestNoProxyEntity;
 import org.hibernate.envers.test.entities.collection.EmbeddableListEntity3;
 import org.hibernate.envers.test.entities.components.relations.ManyToOneEagerComponent;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
 import java.util.Arrays;
+
+import javax.persistence.EntityManager;
 
 import static org.junit.Assert.assertEquals;
 
@@ -34,12 +35,16 @@ public class EmbeddableList3 extends BaseEnversJPAFunctionalTestCase {
 	@Test
 	@Priority(10)
 	public void initData() {
-		ele3_id = TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		EntityManager entityManager = getEntityManager();
+		entityManager.getTransaction().begin();
+		{
 			EmbeddableListEntity3 ele3 = new EmbeddableListEntity3();
 			ele3.getComponentList().add( new ManyToOneEagerComponent( null, "data" ) );
 			entityManager.persist( ele3 );
-			return ele3.getId();
-		} );
+			ele3_id = ele3.getId();
+		}
+		entityManager.getTransaction().commit();
+		entityManager.close();
 	}
 
 	@Test

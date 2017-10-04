@@ -136,7 +136,7 @@ EntityDescriptorJ> ... {
 
 
 
-### Entity metadata (20)
+### Entity metadata (19)
 
 
 Various errors dealing with entity metadata including versioning, natural-ids, attribute "position", etc
@@ -211,10 +211,6 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
   symbol:   method getVersionProperty()
   location: variable persister of type EntityDescriptor
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Versioning.java:126: error: incompatible types: missing return value
-			return;
-			^
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Versioning.java:129: error: cannot find symbol
 		return fields[ persister.getVersionProperty() ];
 		                        ^
@@ -273,18 +269,6 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
 
 [code]
 ----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/loading/internal/CollectionLoadContext.java:230: error: cannot find symbol
-		if ( persister.isArray() ) {
-		              ^
-  symbol:   method isArray()
-  location: variable persister of type PersistentCollectionDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/loading/internal/CollectionLoadContext.java:298: error: cannot find symbol
-		if ( persister.isVersioned() ) {
-		              ^
-  symbol:   method isVersioned()
-  location: variable persister of type PersistentCollectionDescriptor
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/CollectionEntry.java:204: error: cannot find symbol
 		if ( getLoadedPersistentCollectionDescriptor().getBatchSize() > 1 ) {
 		                                              ^
@@ -309,7 +293,7 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
   symbol:   method getOwnerEntityPersister()
   location: variable persister of type PersistentCollectionDescriptor
 
-hhome/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/EntityUniqueKey.java:46: error: cannot find symbol
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/EntityUniqueKey.java:46: error: cannot find symbol
 		this.keyType = keyType.getSemiResolvedType( factory );
 		                      ^
   symbol:   method getSemiResolvedType(SessionFactoryImplementor)
@@ -380,6 +364,15 @@ hhome/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-
   						^
   symbol:   variable isCascadeDeleteEnabled
   location: class Cascade
+
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/CascadingActions.java:493: error: cannot find symbol
+		return collectionDescriptor.getElementsIterator( collection, session );
+		                           ^
+  symbol:   method getElementsIterator(Object,EventSource)
+  location: variable collectionDescriptor of type PersistentCollectionDescriptor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/CascadingActions.java:506: error: cannot find symbol
+			return collectionDescriptor.getElementsIterator( collection, session );
+			                           ^
 ----
 
 

@@ -27,6 +27,13 @@ public interface EntityInitializer extends Initializer, FetchParentAccess {
 		return entityInstance;
 	}
 
+	/**
+	 * @todo (6.0) : should this hydrate all "hierarchy state"?
+	 * 		- identifier
+	 * 		- rowId
+	 * 		- discriminator
+	 * 		- etc
+	 */
 	void hydrateIdentifier(RowProcessingState rowProcessingState);
 
 	void resolveEntityKey(RowProcessingState rowProcessingState);

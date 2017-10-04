@@ -29,8 +29,7 @@ import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.StateArrayValuedNavigable;
+import org.hibernate.metamodel.model.domain.spi.StateArrayElementContributor;
 import org.hibernate.type.internal.TypeHelper;
 
 /**
@@ -171,7 +170,7 @@ public final class EntityUpdateAction extends EntityAction {
 					entityDescriptor,
 					state,
 					previousState,
-					StateArrayValuedNavigable::isIncludedInDirtyChecking
+					StateArrayElementContributor::isIncludedInDirtyChecking
 			);
 
 			if ( entityDescriptor.hasUpdateGeneratedProperties() ) {

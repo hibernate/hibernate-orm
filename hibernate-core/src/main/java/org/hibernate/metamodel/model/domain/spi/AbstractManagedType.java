@@ -14,12 +14,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Spliterator;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.internal.NavigableSpliterator;
+import org.hibernate.metamodel.model.domain.internal.PersistentAttributeSpliterator;
+import org.hibernate.metamodel.model.domain.internal.StateArrayContributorSpliterator;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -29,7 +33,8 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractManagedType<T> implements ManagedTypeDescriptor<T>, InheritanceCapable<T> {
+public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
+
 	private static final Logger log = Logger.getLogger( AbstractManagedType.class );
 
 	// todo (6.0) : I think we can just drop the mutabilityPlan and comparator for managed types
@@ -138,7 +143,8 @@ public abstract class AbstractManagedType<T> implements ManagedTypeDescriptor<T>
 	}
 
 	@Override
-	public List<Navigable> getNavigables() {
+	@SuppressWarnings("unchecked")
+	public List getNavigables() {
 		final ArrayList<Navigable> navigables = new ArrayList<>();
 		navigables.addAll( declaredAttributesByName.values() );
 		if ( getSuperclassType() != null ) {
@@ -148,8 +154,39 @@ public abstract class AbstractManagedType<T> implements ManagedTypeDescriptor<T>
 	}
 
 	@Override
-	public List<Navigable> getDeclaredNavigables() {
+	@SuppressWarnings("unchecked")
+	public List getDeclaredNavigables() {
 		return new ArrayList<>( declaredAttributesByName.values() );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Spliterator navigableSource() {
+		return new NavigableSpliterator( this, true );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Spliterator declaredNavigableSource() {
+		return new NavigableSpliterator( this, true );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Spliterator persistentAttributeSource() {
+		return new PersistentAttributeSpliterator( this, true );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Spliterator declaredPersistentAttributeSource() {
+		return declaredAttributesByName.values().spliterator();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Spliterator stateArrayContributorSource() {
+		return new StateArrayContributorSpliterator( this );
 	}
 
 	@Override
@@ -185,11 +222,11 @@ public abstract class AbstractManagedType<T> implements ManagedTypeDescriptor<T>
 
 
 	@Override
-	public void visitStateArrayNavigables(Consumer<StateArrayValuedNavigable<?>> consumer) {
+	public void visitStateArrayNavigables(Consumer<StateArrayElementContributor<?>> consumer) {
 		visitAttributes(
 				attribute -> {
-					if ( attribute instanceof StateArrayValuedNavigable) {
-						consumer.accept( (StateArrayValuedNavigable<?>) attribute );
+					if ( attribute instanceof StateArrayElementContributor ) {
+						consumer.accept( (StateArrayElementContributor<?>) attribute );
 					}
 				}
 		);

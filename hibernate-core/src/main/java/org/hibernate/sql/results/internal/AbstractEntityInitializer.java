@@ -148,6 +148,10 @@ public abstract class AbstractEntityInitializer implements EntityInitializer {
 
 	@Override
 	public void hydrateEntityState(RowProcessingState rowProcessingState) {
+		// todo (6.0) : atm we do not handle sequential selects
+		// 		- see AbstractEntityPersister#hasSequentialSelect and
+		//			AbstractEntityPersister#getSequentialSelect in 5.2
+
 		if ( entityInstance != null ) {
 			return;
 		}
@@ -239,19 +243,8 @@ public abstract class AbstractEntityInitializer implements EntityInitializer {
 				entityKey,
 				concretePersister,
 				entityInstance,
+				rowId,
 				hydratedState
-		);
-
-		TwoPhaseLoad.postHydrate(
-				concretePersister.getEntityDescriptor(),
-				entityKey.getIdentifier(),
-				hydratedState,
-				// ROW_ID
-				null,
-				entityInstance,
-				// LockMode
-				isEntityReturn() ? LockMode.READ : LockMode.NONE,
-				persistenceContext
 		);
 	}
 
@@ -263,9 +256,9 @@ public abstract class AbstractEntityInitializer implements EntityInitializer {
 			return persister;
 		}
 
-		final SqlSelection sqlSelection = sqlSelectionMappings.getDiscriminatorSqlSelection();
-
-		final Object discriminatorValue = rowProcessingState.getJdbcValue( sqlSelection );
+		final Object discriminatorValue = rowProcessingState.getJdbcValue(
+				sqlSelectionMappings.getDiscriminatorSqlSelection()
+		);
 
 		final EntityDescriptor legacyLoadable = persister.getEntityDescriptor();
 		final String result = legacyLoadable.getHierarchy()

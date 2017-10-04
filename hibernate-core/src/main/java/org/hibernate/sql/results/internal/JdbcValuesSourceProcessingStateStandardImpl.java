@@ -14,10 +14,8 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
-import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -31,19 +29,19 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
+import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.StateArrayValuedNavigable;
+import org.hibernate.metamodel.model.domain.spi.StateArrayElementContributor;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.internal.values.JdbcValuesSource;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
-import org.hibernate.type.Type;
+import org.hibernate.sql.results.spi.LoadingEntity;
 import org.hibernate.type.internal.TypeHelper;
 
 import org.jboss.logging.Logger;
@@ -88,7 +86,12 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	}
 
 	@Override
-	public void registerLoadingEntity(EntityKey entityKey, EntityDescriptor persister, Object entityInstance, Object[] hydratedState) {
+	public void registerLoadingEntity(
+			EntityKey entityKey,
+			EntityDescriptor persister,
+			Object entityInstance,
+			Object rowId,
+			Object[] hydratedState) {
 		if ( loadingEntityMap == null ) {
 			loadingEntityMap = new HashMap<>();
 		}
@@ -99,11 +102,11 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 						entityKey,
 						persister,
 						entityInstance,
-						null,
+						rowId,
 						hydratedState
 				)
 		);
-		if ( old != null && old.entityInstance != entityInstance ) {
+		if ( old != null && old.getEntityInstance() != entityInstance ) {
 			log.debugf( "Encountered duplicate hydrating entity registration for same EntityKey [%s]", entityKey );
 		}
 
@@ -194,41 +197,45 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 			final SharedSessionContractImplementor session,
 			final PreLoadEvent preLoadEvent) {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		EntityEntry entityEntry = persistenceContext.getEntry( loadingEntity.entityInstance );
+		EntityEntry entityEntry = persistenceContext.getEntry( loadingEntity.getEntityInstance() );
 		if ( entityEntry == null ) {
-			final EntityKey entityKey = hydratedEntityKeys.get( loadingEntity.entityInstance );
+			final EntityKey entityKey = hydratedEntityKeys.get( loadingEntity.getEntityInstance() );
 			if ( entityKey == null ) {
-				throw new AssertionFailure( "possible non-threadsafe access to the session - could not locate EntityEntry for entity instance : " + loadingEntity.entityInstance  );
+				throw new AssertionFailure( "possible non-threadsafe access to the session - could not locate EntityEntry for entity instance : " + loadingEntity
+						.getEntityInstance() );
 			}
+
+			// todo (6.0) : shouldn't we wait until hydratedState is "resolved" before adding the entry?
+			//		that depends on having access to loading entities from "other ResultSets"
+			//		as we have when force loading non-lazy associations
 
 			entityEntry = persistenceContext.addEntity(
 					entityKey,
 					Status.LOADING,
-					loadingEntity.hydratedEntityState,
-					loadingEntity.entityKey,
+					loadingEntity.getHydratedEntityState(),
+					loadingEntity.getEntityKey(),
 					// todo : we need to handle version
 					null,
 					// todo : handle LockMode
 					LockMode.NONE,
 					true,
-					loadingEntity.persister.getEntityDescriptor(),
+					loadingEntity.getDescriptor(),
 					// disableVersionIncrement?
 					false
 			);
 		}
-		doInitializeEntity( loadingEntity.entityInstance, entityEntry, readOnly, session, preLoadEvent );
+		doInitializeEntity( loadingEntity, entityEntry, readOnly, session, preLoadEvent );
 	}
 
 	@SuppressWarnings("unchecked")
 	private void doInitializeEntity(
-			final Object entity,
+			final LoadingEntity loadingEntity,
 			final EntityEntry entityEntry,
 			final boolean readOnly,
 			final SharedSessionContractImplementor session,
 			final PreLoadEvent preLoadEvent) throws HibernateException {
-		// see if there is a hydrating entity for this
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		final EntityDescriptor entityDescriptor = entityEntry.getDescriptor();
+		final EntityDescriptor<?> entityDescriptor = entityEntry.getDescriptor();
 		final Serializable id = entityEntry.getId();
 		final Object[] hydratedState = entityEntry.getLoadedState();
 
@@ -240,17 +247,29 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 			);
 		}
 
-		final Type[] types = entityDescriptor.getPropertyTypes();
-		for ( int i = 0; i < hydratedState.length; i++ ) {
-			final Object value = hydratedState[i];
-			if ( value!= LazyPropertyInitializer.UNFETCHED_PROPERTY && value!= PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				hydratedState[i] = types[i].resolve( value, session, entity );
-			}
-		}
+		final Object entityInstance = loadingEntity.getEntityInstance();
 
-		//Must occur afterQuery resolving identifiers!
+		entityDescriptor.stateArrayContributorStream().forEach(
+				contributor -> {
+					final int position = contributor.getStateArrayPosition();
+					final Object value = hydratedState[position];
+					// todo (6.0) : need a way to perform "resolve" for a particular StateArrayElementContributor's hydrated state
+					//		this `#resolveHydratedState` is a proposal which is why I have not defined it on
+					//
+					hydratedState[ contributor.getStateArrayPosition() ] = contributor.resolveHydratedState(
+							value,
+							session,
+							// the container ("owner")... for now just pass null.
+							// ultimately we need to account for fetch parent if the
+							// current sub-contributor is a fetch
+							null
+					);
+				}
+		);
+
+		// Must occur after resolving identifiers!
 		if ( session.isEventSource() ) {
-			preLoadEvent.setEntity( entity ).setState( hydratedState ).setId( id ).setPersister( entityDescriptor );
+			preLoadEvent.setEntity( entityInstance ).setState( hydratedState ).setId( id ).setPersister( entityDescriptor );
 
 			final EventListenerGroup<PreLoadEventListener> listenerGroup = session
 					.getFactory()
@@ -262,7 +281,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 			}
 		}
 
-		entityDescriptor.setPropertyValues( entity, hydratedState );
+		entityDescriptor.setPropertyValues( entityInstance, hydratedState );
 
 		final SessionFactoryImplementor factory = session.getFactory();
 		final EntityDataAccess cacheAccess = factory.getCache().getEntityRegionAccess( entityDescriptor.getHierarchy() );
@@ -270,13 +289,13 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 			if ( debugEnabled ) {
 				log.debugf(
-						"Adding entity to second-level cache: %s",
+						"Adding entityInstance to second-level cache: %s",
 						MessageHelper.infoString( entityDescriptor, id, session.getFactory() )
 				);
 			}
 
 			final Object version = Versioning.getVersion( hydratedState, entityDescriptor );
-			final CacheEntry entry = entityDescriptor.buildCacheEntry( entity, hydratedState, version, session );
+			final CacheEntry entry = entityDescriptor.buildCacheEntry( entityInstance, hydratedState, version, session );
 			final Object cacheKey = cacheAccess.generateCacheKey( id, entityDescriptor.getHierarchy(), factory, session.getTenantIdentifier() );
 
 			// explicit handling of caching for rows just inserted and then somehow forced to be read
@@ -350,16 +369,16 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 					entityDescriptor,
 					hydratedState,
 					hydratedState,
-					StateArrayValuedNavigable::isUpdatable
+					StateArrayElementContributor::isUpdatable
 			);
 			persistenceContext.setEntryStatus( entityEntry, Status.MANAGED );
 		}
 
-		entityDescriptor.afterInitialize( entity, session );
+		entityDescriptor.afterInitialize( entityInstance, session );
 
 		if ( debugEnabled ) {
 			log.debugf(
-					"Done materializing entity %s",
+					"Done materializing entityInstance %s",
 					MessageHelper.infoString( entityDescriptor, id, session.getFactory() )
 			);
 		}
@@ -393,29 +412,26 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 			postLoadEvent = null;
 		}
 
+		if ( !getPersistenceContext().isEventSource() ) {
+			return;
+		}
+
 		for ( LoadingEntity loadingEntity : loadingEntityMap.values() ) {
-			TwoPhaseLoad.postLoad( loadingEntity.entityInstance, executionContext.getSession(), postLoadEvent );
+			final PersistenceContext persistenceContext = getPersistenceContext().getPersistenceContext();
+			final EntityEntry entityEntry = persistenceContext.getEntry( loadingEntity.getEntityInstance() );
+
+			postLoadEvent.setEntity( loadingEntity.getEntityInstance() )
+					.setId( entityEntry.getId() )
+					.setDescriptor( entityEntry.getDescriptor() );
+
+			final EventListenerGroup<PostLoadEventListener> listenerGroup = getPersistenceContext().getFactory()
+					.getServiceRegistry()
+					.getService( EventListenerRegistry.class )
+					.getEventListenerGroup( EventType.POST_LOAD );
+			for ( PostLoadEventListener listener : listenerGroup.listeners() ) {
+				listener.onPostLoad( postLoadEvent );
+			}
 		}
 	}
 
-	private static class LoadingEntity {
-		private final EntityKey entityKey;
-		private final EntityDescriptor persister;
-		private final Object entityInstance;
-		private final Object rowId;
-		private final Object[] hydratedEntityState;
-
-		public LoadingEntity(
-				EntityKey entityKey,
-				EntityDescriptor persister,
-				Object entityInstance,
-				Object rowId,
-				Object[] hydratedEntityState) {
-			this.entityKey = entityKey;
-			this.persister = persister;
-			this.entityInstance = entityInstance;
-			this.rowId = rowId;
-			this.hydratedEntityState = hydratedEntityState;
-		}
-	}
 }

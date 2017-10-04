@@ -8,6 +8,7 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
+import java.util.Spliterator;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
@@ -158,5 +159,15 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	@Override
 	public ForeignKey.ColumnMappings getJoinColumnMappings() {
 		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public Spliterator<Navigable> navigableSource() {
+		return getEmbeddedDescriptor().navigableSource();
+	}
+
+	@Override
+	public Spliterator<Navigable> declaredNavigableSource() {
+		return getEmbeddedDescriptor().declaredNavigableSource();
 	}
 }

@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
  * @author Steve Ebersole
  */
 public interface VersionDescriptor<O,J>
-		extends SingularPersistentAttribute<O,J>, BasicValuedNavigable<J>, StateArrayValuedNavigable<J> {
+		extends SingularPersistentAttribute<O,J>, BasicValuedNavigable<J>, StateArrayElementContributor<J> {
 	/**
 	 * Access to the value that indicates an unsaved (transient) entity
 	 *

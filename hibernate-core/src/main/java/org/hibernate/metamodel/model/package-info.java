@@ -8,10 +8,16 @@
 /**
  * Defines the parts of Hibernate's run-time view of the application model,
  * both the domain aspect as well as the relational view.
- * <p/>
+ *
  * Also see {@link org.hibernate.boot.model} for it's boot-time model, which
  * is used to incrementally collect all the "metadata source" (XML, annotations, etc).
  * This run-time model is built from the boot-time model; see
  * {@link org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationProcess}
+ *
+ * @apiNote This package and its sub-packages should be considered incubating
+ * (see {@link org.hibernate.Incubating}).
  */
+@Incubating
 package org.hibernate.metamodel.model;
+
+import org.hibernate.Incubating;

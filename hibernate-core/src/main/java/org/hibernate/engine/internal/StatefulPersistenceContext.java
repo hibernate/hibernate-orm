@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
@@ -56,9 +57,11 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ConcurrentReferenceHashMap;
 import org.hibernate.internal.util.collections.IdentityMap;
+import org.hibernate.internal.util.collections.streams.GenericArrayCollector;
 import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.StateArrayElementContributor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -325,18 +328,19 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public Object[] getNaturalIdSnapshot(Serializable id, EntityDescriptor persister) throws HibernateException {
-		final NaturalIdDescriptor naturalIdDescriptor = persister.getHierarchy()
-				.getNaturalIdDescriptor();
+	public Object[] getNaturalIdSnapshot(Serializable id, EntityDescriptor entityDescriptor) throws HibernateException {
+		final NaturalIdDescriptor naturalIdDescriptor = entityDescriptor.getHierarchy().getNaturalIdDescriptor();
+
 		if ( naturalIdDescriptor == null ) {
 			return null;
 		}
 
-		persister = locateProperPersister( persister );
+		entityDescriptor = locateProperPersister( entityDescriptor );
 
 		// let's first see if it is part of the natural id cache...
-		final Object[] cachedValue = naturalIdHelper.findCachedNaturalId( persister, id );
+		final Object[] cachedValue = naturalIdHelper.findCachedNaturalId( entityDescriptor, id );
 		if ( cachedValue != null ) {
 			return cachedValue;
 		}
@@ -344,9 +348,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		// check to see if the natural id is mutable/immutable
 		if ( !naturalIdDescriptor.isMutable() ) {
 			// an immutable natural-id is not retrieved during a normal database-snapshot operation...
-			final Object[] dbValue = persister.getHierarchy().getNaturalIdDescriptor().resolveSnapshot( id, session );
+			final Object[] dbValue = entityDescriptor.getHierarchy().getNaturalIdDescriptor().resolveSnapshot( id, session );
 			naturalIdHelper.cacheNaturalIdCrossReferenceFromLoad(
-					persister,
+					entityDescriptor,
 					id,
 					dbValue
 			);
@@ -355,26 +359,39 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		else {
 			// for a mutable natural there is a likelihood that the the information will already be
 			// snapshot-cached.
-			final int[] props = persister.getNaturalIdentifierProperties();
-			final Object[] entitySnapshot = getDatabaseSnapshot( id, persister );
+			final Object[] entitySnapshot = getDatabaseSnapshot( id, entityDescriptor );
 			if ( entitySnapshot == NO_ROW || entitySnapshot == null ) {
 				return null;
 			}
 
-			final Object[] naturalIdSnapshotSubSet = new Object[ props.length ];
-			for ( int i = 0; i < props.length; i++ ) {
-				naturalIdSnapshotSubSet[i] = entitySnapshot[ props[i] ];
-			}
+			final Object[] naturalIdSnapshotSubSet = new Object[ naturalIdDescriptor.getPersistentAttributes().size() ];
+
+			( (EntityDescriptor<?>) entityDescriptor ).stateArrayContributorStream().forEach(
+					new Consumer<StateArrayElementContributor<?>>() {
+						int i = 0;
+
+						@Override
+						@SuppressWarnings("SuspiciousMethodCalls")
+						public void accept(StateArrayElementContributor<?> contributor) {
+							if ( naturalIdDescriptor.getPersistentAttributes().contains( contributor ) ) {
+								naturalIdSnapshotSubSet[i++] = entitySnapshot[contributor.getStateArrayPosition()];
+							}
+						}
+					}
+			);
+
 			naturalIdHelper.cacheNaturalIdCrossReferenceFromLoad(
-					persister,
+					entityDescriptor,
 					id,
 					naturalIdSnapshotSubSet
 			);
+
 			return naturalIdSnapshotSubSet;
 		}
 	}
 
 	private EntityDescriptor locateProperPersister(EntityDescriptor persister) {
+		// tod0 (6.0) : avoid the lookup if the passed descriptor is the root.
 		return session.getFactory().getTypeConfiguration().findEntityDescriptor( persister.getHierarchy().getRootEntityType().getEntityName() );
 	}
 

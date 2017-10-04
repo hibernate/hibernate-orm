@@ -17,7 +17,7 @@ import org.hibernate.event.spi.AbstractEvent;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.StateArrayValuedNavigable;
+import org.hibernate.metamodel.model.domain.spi.StateArrayElementContributor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.internal.TypeHelper;
 
@@ -68,7 +68,7 @@ public abstract class AbstractReassociateEventListener implements Serializable {
 				entityDescriptor,
 				values,
 				values,
-				StateArrayValuedNavigable::isUpdatable
+				StateArrayElementContributor::isUpdatable
 		);
 
 		Object version = Versioning.getVersion( values, entityDescriptor );

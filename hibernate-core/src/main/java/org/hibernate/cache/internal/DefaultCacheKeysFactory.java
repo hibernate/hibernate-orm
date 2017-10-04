@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * This was done as the default key implementation is very generic and is quite
  * a large object to allocate in large quantities at runtime.
  * In some extreme cases, for example when the hit ratio is very low, this was making the efficiency
- * penalty vs its benefits tradeoff questionable.
+ * penalty vs its benefits trade-off questionable.
  * <p/>
  * Depending on configuration settings there might be opportunities to
  * use simpler key implementations, for example when multi-tenancy is not being used to

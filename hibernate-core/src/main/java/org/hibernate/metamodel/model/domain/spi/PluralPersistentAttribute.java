@@ -15,8 +15,12 @@ import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
  */
 public interface PluralPersistentAttribute<O,C,E>
 		extends PersistentAttribute<O,C>, NavigableContainer<C>, javax.persistence.metamodel.PluralAttribute<O,C,E>,
-		Fetchable<C> {
+		Fetchable<C>, StateArrayElementContributor<C> {
 	PersistentCollectionDescriptor<O,C,E> getPersistentCollectionMetadata();
+
+
+	@Override
+	Class<C> getJavaType();
 
 	@Override
 	default void visitNavigable(NavigableVisitationStrategy visitor) {

@@ -9,8 +9,12 @@ package org.hibernate.metamodel.model.domain.spi;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -40,7 +44,32 @@ public interface ManagedTypeDescriptor<T>
 
 	RepresentationStrategy getRepresentationStrategy();
 
-	PersistentAttribute<? super T, ?> findAttribute(String name);
+	Spliterator<PersistentAttribute> persistentAttributeSource();
+	Spliterator<PersistentAttribute> declaredPersistentAttributeSource();
+
+	default Stream<PersistentAttribute> persistentAttributeStream() {
+		return StreamSupport.stream( persistentAttributeSource(), false );
+	}
+
+	default Stream<PersistentAttribute> declaredPersistentAttributeStream() {
+		return StreamSupport.stream( declaredPersistentAttributeSource(), false );
+	}
+
+	Spliterator<StateArrayElementContributor<?>> stateArrayContributorSource();
+
+	default Stream<StateArrayElementContributor<?>> stateArrayContributorStream() {
+		return StreamSupport.stream( stateArrayContributorSource(), false );
+	}
+
+	@SuppressWarnings("unchecked")
+	default PersistentAttribute<? super T, ?> findAttribute(String name) {
+		final Optional<PersistentAttribute> found = persistentAttributeStream()
+				.filter( attribute -> name.equals( attribute.getName() ) )
+				.findFirst();
+
+		return found.orElse( null );
+	}
+
 	PersistentAttribute<? super T, ?> findDeclaredAttribute(String name);
 	PersistentAttribute<? super T, ?> findDeclaredAttribute(String name, Class resultType);
 
@@ -66,7 +95,7 @@ public interface ManagedTypeDescriptor<T>
 	<A extends javax.persistence.metamodel.Attribute> void collectAttributes(Consumer<A> collector, Class<A> restrictionType);
 	<A extends javax.persistence.metamodel.Attribute> void collectDeclaredAttributes(Consumer<A> collector, Class<A> restrictionType);
 
-	void visitStateArrayNavigables(Consumer<StateArrayValuedNavigable<?>> consumer);
+	void visitStateArrayNavigables(Consumer<StateArrayElementContributor<?>> consumer);
 
 
 	/**

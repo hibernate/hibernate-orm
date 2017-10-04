@@ -68,7 +68,7 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 	}
 
 	@Override
-	public void visitStateArrayNavigables(Consumer<StateArrayValuedNavigable<?>> consumer) {
+	public void visitStateArrayNavigables(Consumer<StateArrayElementContributor<?>> consumer) {
 
 		// todo (6.0) : determine which "root entity" navigables need to be written to the state array.
 		//		- also, make sure this only happens for the root

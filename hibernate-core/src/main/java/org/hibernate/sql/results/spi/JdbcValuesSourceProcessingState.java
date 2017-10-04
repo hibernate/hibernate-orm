@@ -43,6 +43,7 @@ public interface JdbcValuesSourceProcessingState {
 			EntityKey entityKey,
 			EntityDescriptor persister,
 			Object entityInstance,
+			Object rowId,
 			Object[] hydratedState);
 
 	void finishUp();

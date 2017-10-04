@@ -1,8 +1,22 @@
+## TwoPhaseLoad
+
+These errors can be ignored.  TwoPhaseLoad is effectively replaced by
+`JdbcValuesSourceProcessingState`, `QueryResultAssembler` and `Initializer`.
+This class can really just be removed, although we do need to make sure that
+all of the functionality in TwoPhaseLoad makes it into the new design.
+
+
+However we could look back to 5.2 to have view of TwoPhaseLoad
+rather than keeping it on 6.0 branch.  We decided to keep TwoPhaseLoad
+around until it is the only remaining compile errors and then we will
+remove it and handle the compile errors that creates from code that
+references TwoPhaseLoad.
+
+
+
 ## Type/Navigable
 
 Failures related to Type and Navigable
-
-
 
 
 

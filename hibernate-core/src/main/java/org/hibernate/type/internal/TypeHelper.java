@@ -14,34 +14,38 @@ import java.util.function.Predicate;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.StateArrayValuedNavigable;
+import org.hibernate.metamodel.model.domain.spi.StateArrayElementContributor;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 
 /**
  * @author Steve Ebersole
  */
 public class TypeHelper {
+	public static final BiFunction<StateArrayElementContributor,Object,Object> DEEP_COPY_VALUE_PRODUCER = new BiFunction<StateArrayElementContributor, Object, Object>() {
+		@Override
+		public Object apply(StateArrayElementContributor navigable, Object sourceValue) {
+			if ( sourceValue == LazyPropertyInitializer.UNFETCHED_PROPERTY
+					|| sourceValue == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+				return sourceValue;
+			}
+			else {
+				return navigable.getMutabilityPlan().deepCopy( sourceValue );
+			}
+		}
+	};
 
 	@SuppressWarnings("unchecked")
 	public static void deepCopy(
 			ManagedTypeDescriptor containerDescriptor,
 			Object[] source,
 			Object[] target,
-			Predicate<StateArrayValuedNavigable> skipCondition) {
+			Predicate<StateArrayElementContributor> skipCondition) {
 		deepCopy(
 				containerDescriptor,
 				source,
 				target,
 				skipCondition,
-				(navigable, sourceValue) -> {
-					if ( sourceValue == LazyPropertyInitializer.UNFETCHED_PROPERTY
-							|| sourceValue == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-						return sourceValue;
-					}
-					else {
-						return navigable.getMutabilityPlan().deepCopy( sourceValue );
-					}
-				}
+				DEEP_COPY_VALUE_PRODUCER
 		);
 	}
 
@@ -50,14 +54,14 @@ public class TypeHelper {
 			ManagedTypeDescriptor containerDescriptor,
 			Object[] source,
 			Object[] target,
-			Predicate<StateArrayValuedNavigable> skipCondition,
-			BiFunction<StateArrayValuedNavigable,Object,Object> targetValueProducer) {
+			Predicate<StateArrayElementContributor> skipCondition,
+			BiFunction<StateArrayElementContributor,Object,Object> targetValueProducer) {
 		containerDescriptor.visitStateArrayNavigables(
-				new Consumer<StateArrayValuedNavigable>() {
+				new Consumer<StateArrayElementContributor>() {
 					private int i = -1;
 
 					@Override
-					public void accept(StateArrayValuedNavigable navigable) {
+					public void accept(StateArrayElementContributor navigable) {
 						i++;
 
 						if ( skipCondition.test( navigable ) ) {

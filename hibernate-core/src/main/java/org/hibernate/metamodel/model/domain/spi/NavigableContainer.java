@@ -7,11 +7,32 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.List;
+import java.util.Spliterator;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+import org.hibernate.NotYetImplementedFor6Exception;
 
 /**
  * @author Steve Ebersole
  */
 public interface NavigableContainer<J> extends Navigable<J> {
+	default Spliterator<Navigable> navigableSource() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	default Spliterator<Navigable> declaredNavigableSource() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	default Stream<Navigable> navigableStream() {
+		return StreamSupport.stream( navigableSource(), false );
+	}
+
+	default Stream<Navigable> declaredNavigableStream() {
+		return StreamSupport.stream( declaredNavigableSource(), false );
+	}
+
 	/**
 	 * Find a Navigable by name.  Returns {@code null} if a Navigable of the given
 	 * name cannot be found.
@@ -35,7 +56,7 @@ public interface NavigableContainer<J> extends Navigable<J> {
 	List<Navigable> getNavigables();
 
 	/**
-	 * Get all declared Navigabled
+	 * Get all declared Navigables
 	 */
 	List<Navigable> getDeclaredNavigables();
 

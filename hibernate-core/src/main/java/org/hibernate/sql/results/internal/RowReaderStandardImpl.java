@@ -30,6 +30,9 @@ public class RowReaderStandardImpl<T> implements RowReader<T> {
 	private final int assemblerCount;
 	private final Callback callback;
 
+	// todo (6.0) : partition the incoming `initializers` into separate Lists based on type
+	//		e.g. `List<EntityInitializer>` versus `List<CollectionInitializer>` versus `List<ComponentInitializer>`
+
 	public RowReaderStandardImpl(
 			List<QueryResultAssembler> resultAssemblers,
 			List<Initializer> initializers,
@@ -85,6 +88,13 @@ public class RowReaderStandardImpl<T> implements RowReader<T> {
 		for ( Initializer initializer : initializers ) {
 			if ( initializer instanceof EntityInitializer ) {
 				( (EntityInitializer) initializer ).hydrateEntityState( rowProcessingState );
+			}
+		}
+
+		// todo (6.0) : properly account for
+		for ( Initializer initializer : initializers ) {
+			if ( initializer instanceof EntityInitializer ) {
+				( (EntityInitializer) initializer ).resolveEntityState( rowProcessingState );
 			}
 		}
 

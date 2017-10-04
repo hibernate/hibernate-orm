@@ -123,7 +123,7 @@ public final class Versioning {
 	public static Object getVersion(Object[] fields, EntityDescriptor persister) {
 		final VersionDescriptor<Object, Object> versionDescriptor = persister.getHierarchy().getVersionDescriptor();
 		if ( versionDescriptor == null ) {
-			return;
+			return null;
 		}
 
 		return fields[ persister.getVersionProperty() ];

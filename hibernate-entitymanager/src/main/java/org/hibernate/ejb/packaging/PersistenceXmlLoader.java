@@ -148,7 +148,7 @@ public final class PersistenceXmlLoader {
 	}
 
 	private static InputStream getStreamFromClasspath(String fileName) {
-		String path = "org/hibernate/ejb/" + fileName;
+		String path = "org/hibernate/jpa/" + fileName;
 		InputStream dtdStream = PersistenceXmlLoader.class.getClassLoader().getResourceAsStream( path );
 		return dtdStream;
 	}

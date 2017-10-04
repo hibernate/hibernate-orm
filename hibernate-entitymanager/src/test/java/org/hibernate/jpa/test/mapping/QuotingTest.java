@@ -41,7 +41,7 @@ public class QuotingTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	public String[] getEjb3DD() {
 		return new String[] {
-				"org/hibernate/ejb/test/mapping/orm.xml"
+				"org/hibernate/jpa/test/mapping/orm.xml"
 		};
 	}
 

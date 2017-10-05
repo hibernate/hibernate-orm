@@ -19,7 +19,6 @@ import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
@@ -109,31 +108,12 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements Polymorphi
 	}
 
 	@Override
-	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
-		// todo (6.0) : what is the proper response here?
-		//		for now, just return all navigables.  this particular
-		//		feature is beyond the JPA spec, so adherence to the spec
-		//		here is not important.
-		return findNavigable( navigableName );
-	}
-
-	@Override
-	public List<Navigable> getNavigables() {
-		return null;
-	}
-
-	@Override
-	public List<Navigable> getDeclaredNavigables() {
+	public List<Navigable<?>> getNavigables() {
 		return null;
 	}
 
 	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
-		throw new NotYetImplementedException(  );
-	}
-
-	@Override
-	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
 		throw new NotYetImplementedException(  );
 	}
 

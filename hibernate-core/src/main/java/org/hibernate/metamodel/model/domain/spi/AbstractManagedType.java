@@ -21,9 +21,6 @@ import java.util.stream.Stream;
 
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.domain.internal.NavigableSpliterator;
-import org.hibernate.metamodel.model.domain.internal.PersistentAttributeSpliterator;
-import org.hibernate.metamodel.model.domain.internal.StateArrayContributorSpliterator;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -155,26 +152,14 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public List getDeclaredNavigables() {
-		return new ArrayList<>( declaredAttributesByName.values() );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Spliterator navigableSource() {
-		return new NavigableSpliterator( this, true );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Spliterator declaredNavigableSource() {
-		return new NavigableSpliterator( this, true );
+	public List<Navigable<?>> getDeclaredNavigables() {
+		return new ArrayList( declaredAttributesByName.values() );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public Spliterator persistentAttributeSource() {
-		return new PersistentAttributeSpliterator( this, true );
+		return navigableSource( PersistentAttribute.class );
 	}
 
 	@Override
@@ -186,7 +171,7 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public Spliterator stateArrayContributorSource() {
-		return new StateArrayContributorSpliterator( this );
+		return navigableSource( StateArrayElementContributor.class );
 	}
 
 	@Override

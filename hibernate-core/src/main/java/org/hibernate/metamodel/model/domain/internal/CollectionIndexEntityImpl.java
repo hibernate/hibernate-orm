@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -19,7 +20,6 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
@@ -82,28 +82,13 @@ public class CollectionIndexEntityImpl<J>
 	}
 
 	@Override
-	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
-		return getEntityDescriptor().findDeclaredNavigable( navigableName );
-	}
-
-	@Override
-	public List<Navigable> getNavigables() {
+	public List<Navigable<?>> getNavigables() {
 		return getEntityDescriptor().getNavigables();
-	}
-
-	@Override
-	public List<Navigable> getDeclaredNavigables() {
-		return getEntityDescriptor().getDeclaredNavigables();
 	}
 
 	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
 		getEntityDescriptor().visitNavigables( visitor );
-	}
-
-	@Override
-	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
-		getEntityDescriptor().visitDeclaredNavigables( visitor );
 	}
 
 	@Override

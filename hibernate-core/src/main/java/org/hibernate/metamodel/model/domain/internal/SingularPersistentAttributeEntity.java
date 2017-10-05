@@ -138,17 +138,7 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
-	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
-		return entityDescriptor.findDeclaredNavigable( navigableName );
-	}
-
-	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
-		entityDescriptor.visitNavigables( visitor );
-	}
-
-	@Override
-	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
 		entityDescriptor.visitNavigables( visitor );
 	}
 
@@ -381,13 +371,8 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
-	public List<Navigable> getNavigables() {
+	public List<Navigable<?>> getNavigables() {
 		return entityDescriptor.getNavigables();
-	}
-
-	@Override
-	public List<Navigable> getDeclaredNavigables() {
-		return entityDescriptor.getDeclaredNavigables();
 	}
 
 	@Override
@@ -398,12 +383,7 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
-	public Spliterator<Navigable> navigableSource() {
-		return getEntityDescriptor().navigableSource();
-	}
-
-	@Override
-	public Spliterator<Navigable> declaredNavigableSource() {
-		return getEntityDescriptor().declaredNavigableSource();
+	public <T extends Navigable<?>> Spliterator<T> navigableSource(Class<T> filterType) {
+		return getEntityDescriptor().navigableSource( filterType );
 	}
 }

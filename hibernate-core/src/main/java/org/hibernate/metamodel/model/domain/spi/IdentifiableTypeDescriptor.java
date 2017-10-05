@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.util.List;
 import javax.persistence.metamodel.IdentifiableType;
 
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;

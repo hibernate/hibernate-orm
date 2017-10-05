@@ -154,27 +154,12 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 	}
 
 	@Override
-	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
-		throw new NotYetImplementedFor6Exception(  );
-	}
-
-	@Override
-	public List<Navigable> getNavigables() {
-		throw new NotYetImplementedFor6Exception(  );
-	}
-
-	@Override
-	public List<Navigable> getDeclaredNavigables() {
+	public List<Navigable<?>> getNavigables() {
 		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
-		throw new NotYetImplementedFor6Exception(  );
-	}
-
-	@Override
-	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
 		throw new NotYetImplementedFor6Exception(  );
 	}
 

@@ -17,20 +17,12 @@ import org.hibernate.NotYetImplementedFor6Exception;
  * @author Steve Ebersole
  */
 public interface NavigableContainer<J> extends Navigable<J> {
-	default Spliterator<Navigable> navigableSource() {
+	default <T extends Navigable<?>> Spliterator<T> navigableSource(Class<T> filterType) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
-	default Spliterator<Navigable> declaredNavigableSource() {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	default Stream<Navigable> navigableStream() {
-		return StreamSupport.stream( navigableSource(), false );
-	}
-
-	default Stream<Navigable> declaredNavigableStream() {
-		return StreamSupport.stream( declaredNavigableSource(), false );
+	default <T extends Navigable<?>> Stream<T> navigableStream(Class<T> filterType) {
+		return StreamSupport.stream( navigableSource( filterType ), false );
 	}
 
 	/**
@@ -43,30 +35,12 @@ public interface NavigableContainer<J> extends Navigable<J> {
 	<N> Navigable<N> findNavigable(String navigableName);
 
 	/**
-	 * Find a Navigable by name.  Returns {@code null} if a Navigable of the given
-	 * name cannot be found.
-	 * <p/>
-	 * This form limits the returned Navigables to just those declared on this container.
-	 */
-	<N> Navigable<N> findDeclaredNavigable(String navigableName);
-
-	/**
 	 * Get all (declared+super) Navigables
 	 */
-	List<Navigable> getNavigables();
-
-	/**
-	 * Get all declared Navigables
-	 */
-	List<Navigable> getDeclaredNavigables();
+	List<Navigable<?>> getNavigables();
 
 	/**
 	 * Navigable visitation across all (declared+super) contained Navigables
 	 */
 	void visitNavigables(NavigableVisitationStrategy visitor);
-
-	/**
-	 * Navigable visitation across all declared, contained Navigables
-	 */
-	void visitDeclaredNavigables(NavigableVisitationStrategy visitor);
 }

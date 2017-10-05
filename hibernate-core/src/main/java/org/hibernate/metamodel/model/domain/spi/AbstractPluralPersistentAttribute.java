@@ -24,6 +24,7 @@ import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
  * @author Steve Ebersole
@@ -114,28 +115,13 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 	}
 
 	@Override
-	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
-		return getPersistentCollectionMetadata().findDeclaredNavigable( navigableName );
-	}
-
-	@Override
-	public List<Navigable> getNavigables() {
+	public List<Navigable<?>> getNavigables() {
 		return getPersistentCollectionMetadata().getNavigables();
-	}
-
-	@Override
-	public List<Navigable> getDeclaredNavigables() {
-		return getPersistentCollectionMetadata().getDeclaredNavigables();
 	}
 
 	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
 		getPersistentCollectionMetadata().visitNavigables( visitor );
-	}
-
-	@Override
-	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
-		getPersistentCollectionMetadata().visitDeclaredNavigables( visitor );
 	}
 
 	@Override
@@ -198,5 +184,35 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
 		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public Class<C> getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
+
+	@Override
+	public boolean isNullable() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public boolean isInsertable() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public boolean isUpdatable() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public boolean isIncludedInDirtyChecking() {
+		return false;
+	}
+
+	@Override
+	public MutabilityPlan<C> getMutabilityPlan() {
+		return null;
 	}
 }

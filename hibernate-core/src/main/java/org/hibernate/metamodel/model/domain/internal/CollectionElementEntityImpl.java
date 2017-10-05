@@ -76,28 +76,13 @@ public class CollectionElementEntityImpl<J>
 	}
 
 	@Override
-	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
-		return getEntityDescriptor().findDeclaredNavigable( navigableName );
-	}
-
-	@Override
-	public List<Navigable> getNavigables() {
+	public List<Navigable<?>> getNavigables() {
 		return getEntityDescriptor().getNavigables();
-	}
-
-	@Override
-	public List<Navigable> getDeclaredNavigables() {
-		return getEntityDescriptor().getDeclaredNavigables();
 	}
 
 	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
 		getEntityDescriptor().visitNavigables( visitor );
-	}
-
-	@Override
-	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
-		getEntityDescriptor().visitDeclaredNavigables( visitor );
 	}
 
 	@Override

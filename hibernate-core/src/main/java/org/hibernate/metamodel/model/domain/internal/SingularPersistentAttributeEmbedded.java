@@ -105,28 +105,13 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	}
 
 	@Override
-	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
-		return embeddedDescriptor.findDeclaredNavigable( navigableName );
-	}
-
-	@Override
-	public List<Navigable> getNavigables() {
+	public List<Navigable<?>> getNavigables() {
 		return embeddedDescriptor.getNavigables();
-	}
-
-	@Override
-	public List<Navigable> getDeclaredNavigables() {
-		return embeddedDescriptor.getDeclaredNavigables();
 	}
 
 	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
 		embeddedDescriptor.visitNavigables( visitor );
-	}
-
-	@Override
-	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
-		embeddedDescriptor.visitDeclaredNavigables( visitor );
 	}
 
 	@Override
@@ -162,12 +147,7 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	}
 
 	@Override
-	public Spliterator<Navigable> navigableSource() {
-		return getEmbeddedDescriptor().navigableSource();
-	}
-
-	@Override
-	public Spliterator<Navigable> declaredNavigableSource() {
-		return getEmbeddedDescriptor().declaredNavigableSource();
+	public <T extends Navigable<?>> Spliterator<T> navigableSource(Class<T> filterType) {
+		return getEmbeddedDescriptor().navigableSource( filterType );
 	}
 }

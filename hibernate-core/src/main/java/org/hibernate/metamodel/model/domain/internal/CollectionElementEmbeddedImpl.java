@@ -63,30 +63,14 @@ public class CollectionElementEmbeddedImpl<J>
 	}
 
 	@Override
-	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
-		return getEmbeddedDescriptor().findDeclaredNavigable( navigableName );
-	}
-
-	@Override
-	public List<Navigable> getNavigables() {
+	public List<Navigable<?>> getNavigables() {
 		return getEmbeddedDescriptor().getNavigables();
-	}
-
-	@Override
-	public List<Navigable> getDeclaredNavigables() {
-		return embeddedPersister.getDeclaredNavigables();
 	}
 
 	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
 		// visit our sub-navigables
 		getEmbeddedDescriptor().visitNavigables( visitor );
-	}
-
-	@Override
-	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
-		// visit our declared sub-navigables
-		getEmbeddedDescriptor().visitDeclaredNavigables( visitor );
 	}
 
 	@Override

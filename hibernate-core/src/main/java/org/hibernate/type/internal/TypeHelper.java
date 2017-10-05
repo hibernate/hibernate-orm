@@ -58,11 +58,7 @@ public class TypeHelper {
 			BiFunction<StateArrayElementContributor,Object,Object> targetValueProducer) {
 
 		// get a stream of all Navigables
-		containerDescriptor.navigableStream()
-				// filter to include just StateArrayElementContributor impls
-				.filter( StateArrayElementContributor.class::isInstance )
-				// cast as StateArrayElementContributor for further stream operations
-				.map( StateArrayElementContributor.class::cast )
+		containerDescriptor.navigableStream( StateArrayElementContributor.class )
 				.forEach(
 						attribute -> {
 							if ( skipCondition.test( attribute ) ) {
@@ -77,9 +73,7 @@ public class TypeHelper {
 
 	@SuppressWarnings("unchecked")
 	public static String toLoggableString(Object[] state, ManagedTypeDescriptor<?> managedTypeDescriptor) {
-		return managedTypeDescriptor.navigableStream()
-				.filter( StateArrayElementContributor.class::isInstance )
-				.map( StateArrayElementContributor.class::cast )
+		return managedTypeDescriptor.navigableStream( StateArrayElementContributor.class )
 				.map( attribute -> attribute.getJavaTypeDescriptor().toString( state[attribute.getStateArrayPosition()] ) )
 				.collect( joining( ", ", managedTypeDescriptor.getNavigableName() + '[', "]" ) );
 	}
@@ -88,9 +82,7 @@ public class TypeHelper {
 	public static Serializable[] disassemble(final Object[] state, final  boolean[] nonCacheable, ManagedTypeDescriptor<?> descriptor) {
 		final Serializable[] disassembledState = new Serializable[state.length];
 
-		descriptor.navigableStream()
-				.filter( StateArrayElementContributor.class::isInstance )
-				.map( StateArrayElementContributor.class::cast )
+		descriptor.navigableStream( StateArrayElementContributor.class )
 				.forEach(
 						attribute -> {
 							final int position = attribute.getStateArrayPosition();
@@ -113,9 +105,7 @@ public class TypeHelper {
 	public static Object[] assemble(final Serializable[] disassembledState, ManagedTypeDescriptor<?> descriptor) {
 		final Object[] assembledProps = new Object[disassembledState.length];
 
-		descriptor.navigableStream()
-				.filter( StateArrayElementContributor.class::isInstance )
-				.map( StateArrayElementContributor.class::cast )
+		descriptor.navigableStream( StateArrayElementContributor.class )
 				.forEach(
 						attribute -> {
 							final int position = attribute.getStateArrayPosition();

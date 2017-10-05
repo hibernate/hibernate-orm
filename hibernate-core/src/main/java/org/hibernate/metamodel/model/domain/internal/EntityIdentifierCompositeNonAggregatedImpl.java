@@ -75,13 +75,8 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 	}
 
 	@Override
-	public List<Navigable> getNavigables() {
+	public List<Navigable<?>> getNavigables() {
 		return getEmbeddedDescriptor().getNavigables();
-	}
-
-	@Override
-	public List<Navigable> getDeclaredNavigables() {
-		return getEmbeddedDescriptor() .getDeclaredNavigables();
 	}
 
 	@Override
@@ -105,18 +100,8 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 	}
 
 	@Override
-	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
-		return getEmbeddedDescriptor().findDeclaredNavigable( navigableName );
-	}
-
-	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
 		getEmbeddedDescriptor().visitNavigables( visitor );
-	}
-
-	@Override
-	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
-		getEmbeddedDescriptor().visitDeclaredNavigables( visitor );
 	}
 
 	@Override

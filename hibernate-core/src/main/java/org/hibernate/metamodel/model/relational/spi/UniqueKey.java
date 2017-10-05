@@ -47,8 +47,10 @@ public class UniqueKey implements Exportable {
 	}
 
 	public void addColumn(PhysicalColumn column, String order){
-			columns.add( column );
+		columns.add( column );
+		if ( order != null && !"".equals( order ) ) {
 			columnOrderMap.put( column, order );
+		}
 	}
 
 	@Override

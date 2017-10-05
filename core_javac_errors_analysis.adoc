@@ -150,6 +150,74 @@ EntityDescriptorJ> ... {
 
 
 
+A related consideration is "hydrated state" versus "resolved state".  Currently (6.0 as well
+as >= 5.2) what happens is the following:
+
+	1. create the hydrated state array
+	2. create a deep-copy (`TypeHelper#deepCopy`) of that hydrated state array to use in EntityEntry#loadedState, etc
+	3. resolved the hydrated state "in place" (same array instance)
+
+E.g., simplified, this looks like:
+
+[code]
+----
+// Step 1 - create the hydrated state array
+Object[] hydratedState = ...;
+
+// Step 2 - create a deep copy of the array and "saves" that copy
+// somewhere (EntityEntry, etc)
+saveStateArray( deepCopy( hydratedState ) );
+
+// Step 3 - resolve the individual values of this `hydratedState` array
+// but do so in place
+Object[] resolvedState = new Object[hydratedState.length];
+entityDescriptor.stateArrayContributorStream().forEach(
+    attribute -> attribute.resolveHydratedState(
+    		hydratedState[ attribute.getStateArrayPosition() ],
+    		session,
+    		entityInstance
+    )
+);
+
+// a more "stream-y" solution might be:
+Object[] resolvedState = entityDescriptor.stateArrayContributorStream()
+		.map( attribute -> attribute.resolveHydratedState(
+				hydratedState[ attribute.getStateArrayPosition() ],
+				session,
+				entityInstance
+		)
+		.collect( StreamUtils.toArray( Object.class ) );
+----
+
+NOTE: for step 3 above, consider an array Collector similar to
+
+This algorithm works specifically because of the copy in (2).  But the important thing
+to note is that we still have 2 separate arrays: `hydratedState` and the deep-copied
+array.  In my opinion though, this algorithm hides this important fact and thus
+I personally think it makes things confusing.
+
+A potential alternative that is functionally the same is:
+
+	1. create the hydrated state array
+	2. use that hydrated state array in EntityEntry#loadedState, etc
+	3. create a new array that is the resolved copy of the hydrated state
+
+This would look something like:
+
+[code]
+----
+----
+
+  Personally I think this is confusing
+
+	//
+	// 		the above works because of the copy (2).  however, it would conceptually be the same to:
+	//			1) create the hydrated state array
+	//			2) use that hydrated state array in EntityEntry#loadedState, etc
+	//			3) create a new array that is the resolved copy of the hydrated state
+	//
+	//		decide which is more understandable
+
 ### Entity metadata (19)
 
 

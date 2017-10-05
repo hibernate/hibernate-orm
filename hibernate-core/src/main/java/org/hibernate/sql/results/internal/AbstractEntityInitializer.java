@@ -10,10 +10,8 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
 import org.hibernate.WrongClassException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MarkerObject;
@@ -24,6 +22,7 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.results.spi.EntityInitializer;
 import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
+import org.hibernate.sql.results.spi.LoadingEntityEntry;
 import org.hibernate.sql.results.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.SqlSelection;
 
@@ -241,10 +240,7 @@ public abstract class AbstractEntityInitializer implements EntityInitializer {
 
 		rowProcessingState.getJdbcValuesSourceProcessingState().registerLoadingEntity(
 				entityKey,
-				concretePersister,
-				entityInstance,
-				rowId,
-				hydratedState
+				entityKey1 -> new LoadingEntityEntry( entityKey, concretePersister, entityInstance, rowId, hydratedState )
 		);
 	}
 

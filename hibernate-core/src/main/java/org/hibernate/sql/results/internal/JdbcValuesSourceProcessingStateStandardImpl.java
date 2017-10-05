@@ -9,6 +9,7 @@ package org.hibernate.sql.results.internal;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -38,10 +39,9 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.results.internal.values.JdbcValuesSource;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
-import org.hibernate.sql.results.spi.LoadingEntity;
+import org.hibernate.sql.results.spi.LoadingEntityEntry;
 import org.hibernate.type.internal.TypeHelper;
 
 import org.jboss.logging.Logger;
@@ -52,20 +52,17 @@ import org.jboss.logging.Logger;
 public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSourceProcessingState {
 	private static final Logger log = Logger.getLogger( JdbcValuesSourceProcessingStateStandardImpl.class );
 
-	private final JdbcValuesSource jdbcValuesSource;
 	private final ExecutionContext executionContext;
 	private final JdbcValuesSourceProcessingOptions processingOptions;
 
-	private Map<EntityKey,LoadingEntity> loadingEntityMap;
+	private Map<EntityKey,LoadingEntityEntry> loadingEntityMap;
 	private Map<Object,EntityKey> hydratedEntityKeys;
 
 	// todo (6.0) : "loading collections" as well?
 
 	public JdbcValuesSourceProcessingStateStandardImpl(
-			JdbcValuesSource jdbcValuesSource,
 			ExecutionContext executionContext,
 			JdbcValuesSourceProcessingOptions processingOptions) {
-		this.jdbcValuesSource = jdbcValuesSource;
 		this.executionContext = executionContext;
 		this.processingOptions = processingOptions;
 	}
@@ -81,40 +78,39 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	}
 
 	@Override
-	public JdbcValuesSource getJdbcValuesSource() {
-		return jdbcValuesSource;
-	}
-
-	@Override
 	public void registerLoadingEntity(
 			EntityKey entityKey,
-			EntityDescriptor persister,
-			Object entityInstance,
-			Object rowId,
-			Object[] hydratedState) {
+			Function<EntityKey,LoadingEntityEntry> entryProducer) {
 		if ( loadingEntityMap == null ) {
 			loadingEntityMap = new HashMap<>();
 		}
 
-		final LoadingEntity old = loadingEntityMap.computeIfAbsent(
+		final LoadingEntityEntry loadingEntity = loadingEntityMap.compute(
 				entityKey,
-				key -> new LoadingEntity(
-						entityKey,
-						persister,
-						entityInstance,
-						rowId,
-						hydratedState
-				)
+				(key, existingValue) -> {
+					if ( existingValue == null ) {
+						log.debugf(
+								"Generating LoadingEntity registration : %s[id=%s]",
+								entityKey.getEntityName(),
+								entityKey.getIdentifier()
+						);
+						return entryProducer.apply( key );
+					}
+					else {
+						log.debugf(
+								"Attempt to add duplicate LoadingEntity registration for same EntityKey [%s]",
+								entityKey
+						);
+						return existingValue;
+					}
+				}
 		);
-		if ( old != null && old.getEntityInstance() != entityInstance ) {
-			log.debugf( "Encountered duplicate hydrating entity registration for same EntityKey [%s]", entityKey );
-		}
 
 		if ( hydratedEntityKeys == null ) {
 			hydratedEntityKeys = new HashMap<>();
 		}
 
-		hydratedEntityKeys.put( entityInstance, entityKey );
+		hydratedEntityKeys.put( loadingEntity.getEntityInstance(), entityKey );
 	}
 
 	@Override
@@ -164,7 +160,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		// 		e.g. Employee#1 should be resolved before Employee#2 when Employee#1 is Employee#2's manager
 		//		this could happen inside #registerHydratedEntity
 
-		for ( LoadingEntity loadingEntity : loadingEntityMap.values() ) {
+		for ( LoadingEntityEntry loadingEntity : loadingEntityMap.values() ) {
 			//TwoPhaseLoad.initializeEntity(
 			initializeEntity(
 					loadingEntity,
@@ -192,7 +188,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	 * Copy of TwoPhaseLoad#initializeEntity until that can be adapted to this SQL-AST approach
 	 */
 	public void initializeEntity(
-			final LoadingEntity loadingEntity,
+			final LoadingEntityEntry loadingEntity,
 			final boolean readOnly,
 			final SharedSessionContractImplementor session,
 			final PreLoadEvent preLoadEvent) {
@@ -229,7 +225,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 	@SuppressWarnings("unchecked")
 	private void doInitializeEntity(
-			final LoadingEntity loadingEntity,
+			final LoadingEntityEntry loadingEntity,
 			final EntityEntry entityEntry,
 			final boolean readOnly,
 			final SharedSessionContractImplementor session,
@@ -416,7 +412,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 			return;
 		}
 
-		for ( LoadingEntity loadingEntity : loadingEntityMap.values() ) {
+		for ( LoadingEntityEntry loadingEntity : loadingEntityMap.values() ) {
 			final PersistenceContext persistenceContext = getPersistenceContext().getPersistenceContext();
 			final EntityEntry entityEntry = persistenceContext.getEntry( loadingEntity.getEntityInstance() );
 

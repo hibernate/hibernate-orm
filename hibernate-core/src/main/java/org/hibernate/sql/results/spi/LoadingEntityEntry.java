@@ -14,14 +14,14 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
  *
  * @author Steve Ebersole
  */
-public class LoadingEntity {
+public class LoadingEntityEntry {
 	private final EntityKey entityKey;
 	private final EntityDescriptor descriptor;
 	private final Object entityInstance;
 	private final Object rowId;
 	private final Object[] hydratedEntityState;
 
-	public LoadingEntity(
+	public LoadingEntityEntry(
 			EntityKey entityKey,
 			EntityDescriptor descriptor,
 			Object entityInstance,

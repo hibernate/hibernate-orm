@@ -6,11 +6,11 @@
  */
 package org.hibernate.sql.results.spi;
 
+import java.util.function.Function;
+
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.results.internal.values.JdbcValuesSource;
 
 /**
  * Provides a context for processing the processing of the complete
@@ -37,14 +37,9 @@ public interface JdbcValuesSourceProcessingState {
 
 	JdbcValuesSourceProcessingOptions getProcessingOptions();
 
-	JdbcValuesSource getJdbcValuesSource();
-
 	void registerLoadingEntity(
 			EntityKey entityKey,
-			EntityDescriptor persister,
-			Object entityInstance,
-			Object rowId,
-			Object[] hydratedState);
+			Function<EntityKey,LoadingEntityEntry> entryProducer);
 
 	void finishUp();
 }

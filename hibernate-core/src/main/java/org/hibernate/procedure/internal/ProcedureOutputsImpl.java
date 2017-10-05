@@ -349,11 +349,8 @@ public class ProcedureOutputsImpl
 			}
 		};
 
-		final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState = new JdbcValuesSourceProcessingStateStandardImpl(
-				jdbcValuesSource,
-				this,
-				processingOptions
-		);
+		final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState =
+				new JdbcValuesSourceProcessingStateStandardImpl( this, processingOptions );
 
 		final RowProcessingStateStandardImpl rowProcessingState = new RowProcessingStateStandardImpl(
 				jdbcValuesSourceProcessingState,

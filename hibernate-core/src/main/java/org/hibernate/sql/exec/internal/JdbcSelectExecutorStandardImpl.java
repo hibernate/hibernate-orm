@@ -265,11 +265,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 		};
 
-		final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState = new JdbcValuesSourceProcessingStateStandardImpl(
-				jdbcValuesSource,
-				executionContext,
-				processingOptions
-		);
+		final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState =
+				new JdbcValuesSourceProcessingStateStandardImpl( executionContext, processingOptions );
 
 		final List<QueryResultAssembler> returnAssemblers = new ArrayList<>();
 		final List<Initializer> initializers = new ArrayList<>();

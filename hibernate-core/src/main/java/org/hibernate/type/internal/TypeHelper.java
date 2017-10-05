@@ -8,14 +8,14 @@ package org.hibernate.type.internal;
 
 import java.io.Serializable;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.StateArrayElementContributor;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  * @author Steve Ebersole
@@ -51,94 +51,84 @@ public class TypeHelper {
 
 	@SuppressWarnings("unchecked")
 	public static void deepCopy(
-			ManagedTypeDescriptor containerDescriptor,
+			ManagedTypeDescriptor<?> containerDescriptor,
 			Object[] source,
 			Object[] target,
 			Predicate<StateArrayElementContributor> skipCondition,
 			BiFunction<StateArrayElementContributor,Object,Object> targetValueProducer) {
-		containerDescriptor.visitStateArrayNavigables(
-				new Consumer<StateArrayElementContributor>() {
-					private int i = -1;
 
-					@Override
-					public void accept(StateArrayElementContributor navigable) {
-						i++;
+		// get a stream of all Navigables
+		containerDescriptor.navigableStream()
+				// filter to include just StateArrayElementContributor impls
+				.filter( StateArrayElementContributor.class::isInstance )
+				// cast as StateArrayElementContributor for further stream operations
+				.map( StateArrayElementContributor.class::cast )
+				.forEach(
+						attribute -> {
+							if ( skipCondition.test( attribute ) ) {
+								return;
+							}
 
-						if ( skipCondition.test( navigable ) ) {
-							return;
+							final int position = attribute.getStateArrayPosition();
+							target[position] = targetValueProducer.apply( attribute, source[position] );
 						}
-
-						target[i] = targetValueProducer.apply( navigable, source[i] );
-					}
-				}
-		);
+				);
 	}
 
+	@SuppressWarnings("unchecked")
 	public static String toLoggableString(Object[] state, ManagedTypeDescriptor<?> managedTypeDescriptor) {
-		final StringBuilder buffer = new StringBuilder();
-		buffer.append( managedTypeDescriptor.getNavigableName() )
-				.append( '[' );
-
-		managedTypeDescriptor.visitAttributes(
-				new Consumer<PersistentAttribute>() {
-					int i = 0;
-
-					@Override
-					public void accept(PersistentAttribute attribute) {
-						if ( i > 0 ) {
-							buffer.append( ", " );
-						}
-
-						buffer.append( attribute.getJavaTypeDescriptor().toString( state[i] ) );
-						i++;
-					}
-				}
-		);
-
-		return buffer.append( ']' ).toString();
+		return managedTypeDescriptor.navigableStream()
+				.filter( StateArrayElementContributor.class::isInstance )
+				.map( StateArrayElementContributor.class::cast )
+				.map( attribute -> attribute.getJavaTypeDescriptor().toString( state[attribute.getStateArrayPosition()] ) )
+				.collect( joining( ", ", managedTypeDescriptor.getNavigableName() + '[', "]" ) );
 	}
 
-	public static Serializable[] disassemble(final Object[] state, final  boolean[] nonCacheable, ManagedTypeDescriptor descriptor) {
+	@SuppressWarnings("unchecked")
+	public static Serializable[] disassemble(final Object[] state, final  boolean[] nonCacheable, ManagedTypeDescriptor<?> descriptor) {
 		final Serializable[] disassembledState = new Serializable[state.length];
-		descriptor.visitStateArrayNavigables( new Consumer<StateArrayValuedNavigable>() {
-			int position = 0;
 
-			@Override
-			public void accept(StateArrayValuedNavigable attribute) {
-				if ( nonCacheable != null && nonCacheable[position] ) {
-					disassembledState[position] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
-				}
-				else if ( state[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY || state[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-					disassembledState[position] = (Serializable) state[position];
-				}
-				else {
-					disassembledState[position] = attribute.getJavaTypeDescriptor()
-							.getMutabilityPlan()
-							.disassemble( state[position] );
-				}
-				position++;
-			}
-		} );
+		descriptor.navigableStream()
+				.filter( StateArrayElementContributor.class::isInstance )
+				.map( StateArrayElementContributor.class::cast )
+				.forEach(
+						attribute -> {
+							final int position = attribute.getStateArrayPosition();
+							if ( nonCacheable != null && nonCacheable[position] ) {
+								disassembledState[position] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+							}
+							else if ( state[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+									|| state[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+								disassembledState[position] = (Serializable) state[position];
+							}
+							else {
+								disassembledState[position] = attribute.getMutabilityPlan().disassemble( state[position] );
+							}
+						}
+				);
+
 		return disassembledState;
 	}
 
-	public static Object[] assemble(final Serializable[] disassembledState, ManagedTypeDescriptor descriptor) {
+	public static Object[] assemble(final Serializable[] disassembledState, ManagedTypeDescriptor<?> descriptor) {
 		final Object[] assembledProps = new Object[disassembledState.length];
-		descriptor.visitStateArrayNavigables( new Consumer<StateArrayValuedNavigable>() {
-			int position = 0;
 
-			@Override
-			public void accept(StateArrayValuedNavigable attribute) {
-				if ( disassembledState[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY || disassembledState[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-					assembledProps[position] = disassembledState[position];
-				}
-				else {
-					assembledProps[position] = attribute.getJavaTypeDescriptor().getMutabilityPlan().assemble(
-							disassembledState[position] );
-				}
-				position++;
-			}
-		} );
+		descriptor.navigableStream()
+				.filter( StateArrayElementContributor.class::isInstance )
+				.map( StateArrayElementContributor.class::cast )
+				.forEach(
+						attribute -> {
+							final int position = attribute.getStateArrayPosition();
+							if ( disassembledState[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+									|| disassembledState[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+								assembledProps[position] = disassembledState[position];
+							}
+							else {
+								assembledProps[position] = attribute.getJavaTypeDescriptor().getMutabilityPlan().assemble(
+										disassembledState[position] );
+							}
+						}
+				);
 
 		return assembledProps;
 	}

@@ -18,11 +18,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
 import javax.persistence.EntityGraph;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.UnknownEntityTypeException;
@@ -212,7 +214,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	}
 
 	/**
-	 * Retrieve an EntityDEscriptor by entity-name.  Returns {@code null} if not known.
+	 * Retrieve an EntityDescriptor by entity-name.  Returns {@code null} if not known.
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> EntityDescriptor<T> findEntityDescriptor(String entityName) {
@@ -489,6 +491,15 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	}
 
 	@Override
+	public void sessionFactoryCreated(SessionFactory factory) {
+		// Instead of allowing scope#setSessionFactory to influence this, we use the SessionFactoryObserver callback
+		// to handle this, allowing any SessionFactory constructor code to be able to continue to have access to the
+		// MetadataBuildingContext through TypeConfiguration until this callback is fired.
+		log.tracef( "Handling #sessionFactoryCreated from [%s] for TypeConfiguration", factory );
+		scope.setMetadataBuildingContext( null );
+	}
+
+	@Override
 	public void sessionFactoryClosed(SessionFactory factory) {
 		log.tracef( "Handling #sessionFactoryClosed from [%s] for TypeConfiguration", factory );
 		scope.unsetSessionFactory( factory );
@@ -496,7 +507,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		// todo : come back and implement this...
 		//		release Database, descriptor Maps, etc... things that are only
 		// 		valid while the TypeConfiguration is scoped to SessionFactory
-		throw new NotYetImplementedException(  );
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	// todo (6.0) - have this algorithm be extendable by users.
@@ -829,7 +840,11 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	}
 
 	private void registerEntityNameResolvers(EntityDescriptor descriptor) {
-		this.entityNameResolvers.addAll( descriptor.getEntityNameResolvers() );
+		@SuppressWarnings("unchecked")
+		final List<EntityNameResolver> resolvers = descriptor.getEntityNameResolvers();
+		if ( resolvers != null ) {
+			this.entityNameResolvers.addAll( resolvers );
+		}
 	}
 
 	public Set<EntityHierarchy> getEntityHierarchies() {

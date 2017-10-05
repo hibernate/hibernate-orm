@@ -339,7 +339,9 @@ public final class AnnotationBinder {
 	private static void bindQueries(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
 		{
 			SqlResultSetMapping ann = annotatedElement.getAnnotation( SqlResultSetMapping.class );
-			QueryBinder.bindSqlResultSetMapping( ann, context, false );
+			if ( ann != null ) {
+				QueryBinder.bindSqlResultSetMapping( ann, context, false );
+			}
 		}
 		{
 			SqlResultSetMappings ann = annotatedElement.getAnnotation( SqlResultSetMappings.class );

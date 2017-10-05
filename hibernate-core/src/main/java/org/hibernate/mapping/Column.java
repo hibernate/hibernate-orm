@@ -79,7 +79,9 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	public void setName(Identifier columnName) {
 		this.name = columnName;
-		this.quoted = columnName.isQuoted();
+		if ( columnName != null ) {
+			this.quoted = columnName.isQuoted();
+		}
 	}
 
 	public String getQuotedName() {

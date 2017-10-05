@@ -58,7 +58,7 @@ public abstract class AbstractTableBasedStrategy implements IdTableStrategy {
 				entityDescriptor,
 				determineIdTableName( entityDescriptor, sessionFactoryOptions )
 		);
-		if ( getSessionUidSupport().needsSessionUidColumn() ) {
+		if ( getSessionUidSupport() != null && getSessionUidSupport().needsSessionUidColumn() ) {
 			getSessionUidSupport().addColumn( idTable );
 		}
 		idTableInfoMap.put( entityDescriptor, idTable );

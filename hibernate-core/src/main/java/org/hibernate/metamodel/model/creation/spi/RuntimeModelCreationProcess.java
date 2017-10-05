@@ -206,7 +206,7 @@ public class RuntimeModelCreationProcess {
 			EntityHierarchyImpl runtimeHierarchy) {
 		runtimeType.finishInstantiation(
 				runtimeHierarchy,
-				runtimeType,
+				runtimeType.getSuperclassType(),
 				bootType,
 				creationContext
 		);

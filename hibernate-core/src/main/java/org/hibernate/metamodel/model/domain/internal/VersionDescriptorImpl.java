@@ -15,7 +15,6 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractNonIdSingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.VersionSupport;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -52,12 +51,12 @@ public class VersionDescriptorImpl<O,J>
 			RootClass bootModelRootEntity,
 			RuntimeModelCreationContext creationContext) {
 		super(
-				(ManagedTypeDescriptor<O>) runtimeModelHierarchy.getRootEntityType().getJavaTypeDescriptor(),
+				runtimeModelHierarchy.getRootEntityType(),
 				bootModelRootEntity.getVersion(),
 				runtimeModelHierarchy.getRootEntityType().getRepresentationStrategy().generatePropertyAccess(
 						bootModelRootEntity,
 						bootModelRootEntity.getVersion(),
-						(ManagedTypeDescriptor) runtimeModelHierarchy.getRootEntityType().getJavaTypeDescriptor(),
+						runtimeModelHierarchy.getRootEntityType(),
 						Environment.getBytecodeProvider()
 				),
 				Disposition.VERSION

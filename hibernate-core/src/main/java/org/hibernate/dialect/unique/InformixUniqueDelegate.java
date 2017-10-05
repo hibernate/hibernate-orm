@@ -9,6 +9,7 @@ package org.hibernate.dialect.unique;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 
 /**
@@ -31,7 +32,7 @@ public class InformixUniqueDelegate extends DefaultUniqueDelegate {
 		// Do this here, rather than allowing UniqueKey/Constraint to do it.
 		// We need full, simplified control over whether or not it happens.
 		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				uniqueKey.getTable().getQualifiedTableName(),
+				( (ExportableTable) uniqueKey.getTable() ).getQualifiedTableName(),
 				jdbcEnvironment.getDialect()
 		);
 		final String constraintName = uniqueKey.getName().render( dialect );

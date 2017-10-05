@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.relational.internal;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 
 /**
  * @author Steve Ebersole
@@ -23,4 +24,6 @@ public interface InflightTable extends Table {
 			boolean cascadeDeleteEnabled,
 			Table targetTable,
 			ForeignKey.ColumnMappings columnMappings);
+
+	UniqueKey createUniqueKey(String name);
 }

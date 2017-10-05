@@ -49,7 +49,7 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 		final String tableName = jdbcServices
 				.getJdbcEnvironment()
 				.getQualifiedObjectNameFormatter()
-				.format( uniqueKey.getTable().getQualifiedTableName(), dialect );
+				.format( ( ( ExportableTable) uniqueKey.getTable() ).getQualifiedTableName(), dialect );
 
 		final String constraintName = uniqueKey.getName().render( dialect );
 		return "alter table " + tableName + " add constraint " + constraintName + " " + uniqueConstraintSql( uniqueKey );
@@ -62,7 +62,7 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 		final String tableName = jdbcServices
 				.getJdbcEnvironment()
 				.getQualifiedObjectNameFormatter()
-				.format( uniqueKey.getTable().getQualifiedTableName(), dialect );
+				.format( ( ( ExportableTable) uniqueKey.getTable() ).getQualifiedTableName(), dialect );
 
 		final StringBuilder buf = new StringBuilder( "alter table " );
 		buf.append( tableName );

@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.hibernate.metamodel.model.relational.internal.InflightTable;
+import org.hibernate.naming.Identifier;
 
 /**
  * @author Steve Ebersole
@@ -20,6 +21,7 @@ import org.hibernate.metamodel.model.relational.internal.InflightTable;
 public abstract class AbstractTable implements InflightTable {
 	private final PrimaryKey primaryKey = new PrimaryKey( this );
 	private List<ForeignKey> foreignKeys = new ArrayList<>();
+	private List<UniqueKey> uniqueKeys = new ArrayList<>();
 	private final Map<String,Column> columnMap = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
 	private final boolean isAbstract;
 
@@ -57,6 +59,12 @@ public abstract class AbstractTable implements InflightTable {
 		return foreignKeys;
 	}
 
+	@Override
+	public Collection<UniqueKey> getUniqueKeys() {
+		return uniqueKeys;
+	}
+
+	@Override
 	public ForeignKey createForeignKey(
 			String name,
 			boolean export,
@@ -75,5 +83,12 @@ public abstract class AbstractTable implements InflightTable {
 		);
 		foreignKeys.add( foreignKey );
 		return foreignKey;
+	}
+
+	@Override
+	public UniqueKey createUniqueKey(String name) {
+		final UniqueKey uniqueKey = new UniqueKey( Identifier.toIdentifier( name ), this );
+		uniqueKeys.add( uniqueKey );
+		return uniqueKey;
 	}
 }

@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.relational.spi;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -145,16 +146,30 @@ public class RuntimeDatabaseModelProducer {
 				}
 
 				final MappedPrimaryKey bootPk = mappedTable.getPrimaryKey();
-				for ( org.hibernate.mapping.Column mappedColumn : bootPk.getColumns() ) {
-					final Column column = tableColumnXref.get( mappedColumn );
-					if ( !PhysicalColumn.class.isInstance( column ) ) {
-						throw new MappingException( "FK column must be a physical column" );
+				if ( bootPk != null ) {
+					for ( org.hibernate.mapping.Column mappedColumn : bootPk.getColumns() ) {
+						final Column column = tableColumnXref.get( mappedColumn );
+						if ( !PhysicalColumn.class.isInstance( column ) ) {
+							throw new MappingException( "FK column must be a physical column" );
+						}
+						runtimeTable.getPrimaryKey().addColumn( (PhysicalColumn) column );
 					}
-					runtimeTable.getPrimaryKey().addColumn( (PhysicalColumn) column );
+					callback.primaryKeyBuilt( bootPk, runtimeTable.getPrimaryKey() );
 				}
-				callback.primaryKeyBuilt( bootPk, runtimeTable.getPrimaryKey() );
 
-				// todo - uk
+				final Iterator<org.hibernate.mapping.UniqueKey> bootUkIterator = mappedTable.getUniqueKeyIterator();
+				while ( bootUkIterator.hasNext() ) {
+					final org.hibernate.mapping.UniqueKey bootUk = bootUkIterator.next();
+					final UniqueKey runtimeUk = runtimeTable.createUniqueKey( bootUk.getName() );
+					for ( org.hibernate.mapping.Column mappedColumn : bootUk.getColumns() ) {
+						final Column column = tableColumnXref.get( mappedColumn );
+						if ( !PhysicalColumn.class.isInstance( column ) ) {
+							throw new MappingException( "UK column must be a physical column" );
+						}
+						runtimeUk.addColumn( (PhysicalColumn) column, bootUk.getColumnOrderMap().get( column ) );
+					}
+					callback.uniqueKeyBuilt( bootUk, runtimeUk );
+				}
 
 				callback.tableBuilt( mappedTable, runtimeTable );
 			}
@@ -336,6 +351,9 @@ public class RuntimeDatabaseModelProducer {
 		}
 
 		default void foreignKeyBuilt(org.hibernate.mapping.ForeignKey mappedFk, ForeignKey runtimeFk) {
+		}
+
+		default void uniqueKeyBuilt(org.hibernate.mapping.UniqueKey mappedUk, UniqueKey runtimeUk) {
 		}
 
 		default void sequenceBuilt(Sequence sequence) {

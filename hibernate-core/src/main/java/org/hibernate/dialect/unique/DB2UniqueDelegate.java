@@ -12,6 +12,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 
@@ -39,7 +40,7 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 					dialect,
 					uniqueKey.getName().getText(),
 					jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-							uniqueKey.getTable().getQualifiedTableName(),
+							( ( ExportableTable) uniqueKey.getTable() ).getQualifiedTableName(),
 							jdbcEnvironment.getDialect()
 					),
 					uniqueKey.getColumns(),
@@ -59,7 +60,7 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 			return buildSqlDropIndexString(
 					uniqueKey.getName().getText(),
 					jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-							uniqueKey.getTable().getQualifiedTableName(),
+							( ( ExportableTable) uniqueKey.getTable() ).getQualifiedTableName(),
 							jdbcEnvironment.getDialect()
 					)
 			);

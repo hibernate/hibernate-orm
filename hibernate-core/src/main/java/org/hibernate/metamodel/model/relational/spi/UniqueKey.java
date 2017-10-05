@@ -19,16 +19,21 @@ import org.hibernate.naming.Identifier;
  * @author Andrea Boriero
  */
 public class UniqueKey implements Exportable {
-	private PhysicalTable table;
+	private Table table;
 	private Identifier name;
 	private List<PhysicalColumn> columns = new ArrayList<>(  );
 	private java.util.Map<PhysicalColumn, String> columnOrderMap = new HashMap<>();
+
+	public UniqueKey(Identifier name, Table table) {
+		this.name = name;
+		this.table = table;
+	}
 
 	public Identifier getName() {
 		return name;
 	}
 
-	public PhysicalTable getTable() {
+	public Table getTable() {
 		return table;
 	}
 
@@ -48,6 +53,6 @@ public class UniqueKey implements Exportable {
 
 	@Override
 	public String getExportIdentifier() {
-		return StringHelper.qualify( getTable().getTableName().getText(), "IDX-" + getName().getText() );
+		return StringHelper.qualify( ( (ExportableTable) getTable() ).getTableName().getText(), "IDX-" + getName().getText() );
 	}
 }

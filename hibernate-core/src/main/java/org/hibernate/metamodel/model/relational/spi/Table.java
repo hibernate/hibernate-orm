@@ -30,4 +30,6 @@ public interface Table {
 	Column getColumn(String name);
 
 	Collection<ForeignKey> getForeignKeys();
+
+	Collection<UniqueKey> getUniqueKeys();
 }

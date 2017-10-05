@@ -173,6 +173,8 @@ If for some reason it is not able to determine the proper one or you want to use
 |Firebird |Support for the Firebird database
 |FrontBase |Support for the Frontbase database
 |H2 |Support for the H2 database
+|HANAColumnStore |Support for the SAP HANA database column store. This is the recommended dialect for the SAP HANA database.
+|HANARowStore |Support for the SAP HANA database row store
 |HSQL |Support for the HSQL (HyperSQL) database
 |Informix |Support for the Informix database
 |Ingres |Support for the Ingres database, version 9.2

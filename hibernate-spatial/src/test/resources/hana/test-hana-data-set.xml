@@ -18,76 +18,75 @@
     <Element>
         <id>2</id>
         <type>POINT</type>
-        <wkt>SRID=4326;POINT(52.25 2.53)</wkt>
+        <wkt>POINT(52.25 2.75)</wkt>
     </Element>
 
     <Element>
         <id>3</id>
         <type>POINT</type>
-<!--         <wkt>SRID=4326;POINT(150000 200000)</wkt> -->
-        <wkt>SRID=4326;POINT(15 20)</wkt>
+        <wkt>POINT(150000 200000)</wkt>
     </Element>
 
     <Element>
         <id>4</id>
         <type>POINT</type>
-        <wkt>SRID=4326;POINT ZM(10.0 2.0 1.0 3.0)</wkt>
+        <wkt>POINT ZM(10.0 2.0 1.0 3.0)</wkt>
     </Element>
 
     <Element>
         <id>5</id>
         <type>LINESTRING</type>
-        <wkt>SRID=4326;LINESTRING(10.0 5.0, 20.0 15.0)</wkt>
+        <wkt>LINESTRING(10.0 5.0, 20.0 15.0)</wkt>
     </Element>
 
     <Element>
         <id>6</id>
         <type>LINESTRING</type>
-        <wkt>SRID=4326;LINESTRING(10.0 5.0, 20.0 15.0, 30.3 22.4, 10 30.0)</wkt>
+        <wkt>LINESTRING(10.0 5.0, 20.0 15.0, 30.25 22.375, 10 30.0)</wkt>
     </Element>
 
  
     <Element>
         <id>7</id>
         <type>LINESTRING</type>
-        <wkt>SRID=4326;LINESTRING M(10.0 5.0 0.0, 20.0 15.0 3.0)</wkt>
+        <wkt>LINESTRING M(10.0 5.0 0.0, 20.0 15.0 3.0)</wkt>
     </Element>
 
     <Element>
         <id>8</id>
         <type>LINESTRING</type>
-        <wkt>SRID=4326;LINESTRING ZM(10.0 5.0 0.0 0.0, 20.0 15.0 3.0 1.0)</wkt>
+        <wkt>LINESTRING ZM(10.0 5.0 0.0 0.0, 20.0 15.0 3.0 1.0)</wkt>
     </Element>
 
     <Element>
         <id>9</id>
         <type>LINESTRING</type>
-        <wkt>SRID=4326;LINESTRING M(10.0 5.0 1, 20.0 15.0 2, 30.3 22.4 5, 10 30.0 2)</wkt>
+        <wkt>LINESTRING M(10.0 5.0 1, 20.0 15.0 2, 30.25 22.375 5, 10 30.0 2)</wkt>
     </Element>
 
     <Element>
         <id>10</id>
         <type>LINESTRING</type>
-        <wkt>SRID=4326;LINESTRING ZM(10.0 5.0 1 1, 20.0 15.0 2 3, 30.3 22.4 5 10, 10 30.0 2 12)</wkt>
+        <wkt>LINESTRING ZM(10.0 5.0 1 1, 20.0 15.0 2 3, 30.25 22.375 5 10, 10 30.0 2 12)</wkt>
     </Element>
 
     <Element>
         <id>11</id>
         <type>MULTILINESTRING</type>
-        <wkt>SRID=4326;MULTILINESTRING((10.0 5.0, 20.0 15.0),( 25.0 30.0, 30.0 20.0))</wkt>
+        <wkt>MULTILINESTRING((10.0 5.0, 20.0 15.0),( 25.0 30.0, 30.0 20.0))</wkt>
     </Element>
 
     <Element>
         <id>12</id>
         <type>MULTILINESTRING</type>
-        <wkt>SRID=4326;MULTILINESTRING((10.0 5.0, 20.0 15.0, 30.3 22.4, 10 30.0), (40.0 20.0, 42.0 18.0, 43.0 16.0, 40 14.0))
+        <wkt>MULTILINESTRING((10.0 5.0, 20.0 15.0, 30.25 22.375, 10 30.0), (40.0 20.0, 42.0 18.0, 43.0 16.0, 40 14.0))
         </wkt>
     </Element>
 
     <Element>
         <id>13</id>
         <type>MULTILINESTRING</type>
-        <wkt>SRID=4326;MULTILINESTRING M((10.0 5.0 1.0, 20.0 15.0 2.0, 30.3 22.4 1.0, 10 30.0 1.0),(40.0 20.0 0.0, 42.0 18.0 1.0,
+        <wkt>MULTILINESTRING M((10.0 5.0 1.0, 20.0 15.0 2.0, 30.25 22.375 1.0, 10 30.0 1.0),(40.0 20.0 0.0, 42.0 18.0 1.0,
             43.0 16.0 2.0, 40 14.0 3.0))
         </wkt>
     </Element>
@@ -95,7 +94,7 @@
     <Element>
         <id>14</id>
         <type>MULTILINESTRING</type>
-        <wkt>SRID=4326;MULTILINESTRING ZM((10.0 5.0 1.0 0.0, 20.0 15.0 2.0 0.0, 30.3 22.4 1.0 1.0, 10 30.0 1.0 2.0),(40.0 20.0 0.0
+        <wkt>MULTILINESTRING ZM((10.0 5.0 1.0 0.0, 20.0 15.0 2.0 0.0, 30.25 22.375 1.0 1.0, 10 30.0 1.0 2.0),(40.0 20.0 0.0
             3.0, 42.0 18.0 1.0 4.0, 43.0 16.0 2.0 5.0, 40 14.0 3.0 6.0))
         </wkt>
     </Element>
@@ -103,137 +102,128 @@
     <Element>
         <id>15</id>
         <type>MULTILINESTRING</type>
-        <wkt>SRID=4326;MULTILINESTRING ZM((10.0 5.0 1.0 0.0, 20.0 15.0 2.0 0.0, 30.3 22.4 1.0 1.0, 10 30.0 1.0 2.0))</wkt>
+        <wkt>MULTILINESTRING ZM((10.0 5.0 1.0 0.0, 20.0 15.0 2.0 0.0, 30.25 22.375 1.0 1.0, 10 30.0 1.0 2.0))</wkt>
     </Element>
 
     <Element>
         <id>16</id>
         <type>POLYGON</type>
-        <wkt>SRID=4326;POLYGON( (0 0, 0 10, 10 10, 10 0, 0 0) )</wkt>
+        <wkt>POLYGON( (0 0, 10 0, 10 10, 0 10, 0 0) )</wkt>
     </Element>
     <Element>
         <id>17</id>
         <type>POLYGON</type>
-        <wkt>SRID=4326;POLYGON M( (0 0 0, 0 10 1, 10 10 1, 10 0 1, 0 0 0) )</wkt>
+        <wkt>POLYGON M( (0 0 0, 10 0 1, 10 10 1, 0 10 1, 0 0 0) )</wkt>
     </Element>
     <Element>
         <id>18</id>
         <type>POLYGON</type>
-        <wkt>SRID=4326;POLYGON( (0 0, 0 10, 10 10, 10 0, 0 0), (2 2, 2 5, 5 5,5 2, 2 2))</wkt>
+        <wkt>POLYGON( (0 0, 10 0, 10 10, 0 10, 0 0), (2 2, 2 5, 5 5,5 2, 2 2))</wkt>
     </Element>
     <Element>
         <id>19</id>
         <type>POLYGON</type>
-<!--         <wkt>SRID=4326;POLYGON( (110 110, 110 120, 120 120, 120 110, 110 110) )</wkt> -->
-        <wkt>SRID=4326;POLYGON( (11 11, 11 12, 12 12, 12 11, 11 11) )</wkt>
+        <wkt>POLYGON( (110 110, 120 110, 120 120, 110 120, 110 110) )</wkt>
     </Element>
 
     <Element>
         <id>20</id>
         <type>MULTIPOLYGON</type>
-<!--         <wkt>SRID=4326;MULTIPOLYGON( ((10 20, 30 40, 44 50, 10 20)), ((105 100, 120 140, 130 134, 105 100)) )</wkt> -->
-        <wkt>SRID=4326;MULTIPOLYGON( ((10 20, 30 40, 44 50, 10 20)), ((105 10, 120 14, 130 13.4, 105 10)) )</wkt>
+        <wkt>MULTIPOLYGON( ((10 20, 44 50, 30 40, 10 20)), ((105 100, 130 134, 120 140, 105 100)) )</wkt>
     </Element>
     <Element>
         <id>21</id>
         <type>MULTIPOLYGON</type>
-<!--         <wkt>SRID=4326;MULTIPOLYGON M( ((10 20 1, 30 40 2, 44 50 2, 10 20 1)), ((105 100 0, 120 140 10, 130 134 20, 105 100 0)) ) -->
-        <wkt>SRID=4326;MULTIPOLYGON M( ((10 20 1, 30 40 2, 44 50 2, 10 20 1)), ((105 10 0, 120 14 10, 130 13.4 20, 105 10 0)) )
+        <wkt>MULTIPOLYGON M( ((10 20 1, 44 50 2, 30 40 2, 10 20 1)), ((105 100 0, 130 134 20, 120 140 10, 105 100 0)) )
         </wkt>
     </Element>
     <Element>
         <id>22</id>
         <type>MULTIPOLYGON</type>
-<!--         <wkt>SRID=4326;MULTIPOLYGON(( (0 0, 0 50, 50 50, 50 0, 0 0), (10 10, 10 20, 20 20, 20 10, 10 10) ),((105 100, 120 140, 130 -->
-<!--             134, 105 100)) ) -->
-<!--         </wkt> -->
-        <wkt>SRID=4326;MULTIPOLYGON(( (0 0, 0 50, 50 50, 50 0, 0 0), (10 10, 10 20, 20 20, 20 10, 10 10) ),((105 10, 120 14, 130
-            13.4, 105 10)) )
+        <wkt>MULTIPOLYGON(( (0 0, 50 0, 50 50, 0 50, 0 0), (10 10, 10 20, 20 20, 20 10, 10 10) ),((105 100, 130 134, 120
+            140, 105 100)) )
         </wkt>
     </Element>
 
     <Element>
         <id>25</id>
         <type>MULTIPOINT</type>
-        <wkt>SRID=4326;MULTIPOINT(21 2, 25 5, 30 3)</wkt>
+        <wkt>MULTIPOINT(21 2, 25 5, 30 3)</wkt>
     </Element>
     <Element>
         <id>26</id>
         <type>MULTIPOINT</type>
-        <wkt>SRID=4326;MULTIPOINT(21 2)</wkt>
+        <wkt>MULTIPOINT(21 2)</wkt>
     </Element>
     <Element>
         <id>27</id>
         <type>MULTIPOINT</type>
-        <wkt>SRID=4326;MULTIPOINT M(21 2 1, 25 5 2, 30 3 5)</wkt>
+        <wkt>MULTIPOINT M(21 2 1, 25 5 2, 30 3 5)</wkt>
     </Element>
     <Element>
         <id>28</id>
         <type>MULTIPOINT</type>
-        <wkt>SRID=4326;MULTIPOINT ZM(21 2 1 0, 25 5 2 4, 30 3 5 2)</wkt>
+        <wkt>MULTIPOINT ZM(21 2 1 0, 25 5 2 4, 30 3 5 2)</wkt>
     </Element>
 
     <Element>
         <id>30</id>
         <type>GEOMETRYCOLLECTION</type>
-        <wkt>SRID=4326;GEOMETRYCOLLECTION(POINT(4 0), LINESTRING(4 2, 5 3))</wkt>
+        <wkt>GEOMETRYCOLLECTION(POINT(4 0), LINESTRING(4 2, 5 3))</wkt>
     </Element>
     <Element>
         <id>31</id>
         <type>GEOMETRYCOLLECTION</type>
-        <wkt>SRID=4326;GEOMETRYCOLLECTION(POINT(4 0), LINESTRING(4 2, 5 3), POLYGON((0 0, 3 0, 3 3,0 3, 0 0)))</wkt>
+        <wkt>GEOMETRYCOLLECTION(POINT(4 0), LINESTRING(4 2, 5 3), POLYGON((0 0, 3 0, 3 3,0 3, 0 0)))</wkt>
     </Element>
     <Element>
         <id>32</id>
         <type>GEOMETRYCOLLECTION</type>
-        <wkt>SRID=4326;GEOMETRYCOLLECTION(POINT(4 0), LINESTRING(4 2, 5 3), POLYGON((0 0, 3 0, 3 3,0 3, 0 0),(1 1, 2 1, 2 2, 1 2,
+        <wkt>GEOMETRYCOLLECTION(POINT(4 0), LINESTRING(4 2, 5 3), POLYGON((0 0, 3 0, 3 3,0 3, 0 0),(1 1, 1 2, 2 2, 2 1,
             1 1)))
         </wkt>
     </Element>
     <Element>
         <id>33</id>
         <type>GEOMETRYCOLLECTION</type>
-<!--         <wkt>SRID=4326;GEOMETRYCOLLECTION( MULTIPOINT(21 2, 25 5, 30 3), MULTIPOLYGON( ((10 20, 30 40, 44 50, 10 20)), ((105 100, -->
-<!--             120 140, 130 134, 105 100)) ), MULTILINESTRING((10.0 5.0, 20.0 15.0),( 25.0 30.0, 30.0 20.0))) -->
-<!--         </wkt> -->
-        <wkt>SRID=4326;GEOMETRYCOLLECTION( MULTIPOINT(21 2, 25 5, 30 3), MULTIPOLYGON( ((10 20, 30 40, 44 50, 10 20)), ((105 10,
-            120 14, 130 13.4, 105 10)) ), MULTILINESTRING((10.0 5.0, 20.0 15.0),( 25.0 30.0, 30.0 20.0)))
+        <wkt>GEOMETRYCOLLECTION( MULTIPOINT(21 2, 25 5, 30 3), MULTIPOLYGON( ((10 20, 44 50, 30 40, 10 20)), ((105 100,
+            130 134, 120 140, 105 100)) ), MULTILINESTRING((10.0 5.0, 20.0 15.0),( 25.0 30.0, 30.0 20.0)))
         </wkt>
     </Element>
     <Element>
         <id>34</id>
         <type>GEOMETRYCOLLECTION</type>
-        <wkt>SRID=4326;GEOMETRYCOLLECTION(POINT(4 0), POINT EMPTY, LINESTRING(4 2, 5 3))</wkt>
+        <wkt>GEOMETRYCOLLECTION(POINT(4 0), POINT EMPTY, LINESTRING(4 2, 5 3))</wkt>
     </Element>
     <Element>
         <id>35</id>
         <type>GEOMETRYCOLLECTION</type>
-        <wkt>SRID=4326;GEOMETRYCOLLECTION(POINT(4 0), LINESTRING EMPTY, LINESTRING(4 2, 5 3))</wkt>
+        <wkt>GEOMETRYCOLLECTION(POINT(4 0), LINESTRING EMPTY, LINESTRING(4 2, 5 3))</wkt>
     </Element>
     <Element>
         <id>36</id>
         <type>GEOMETRYCOLLECTION</type>
-        <wkt>SRID=4326;GEOMETRYCOLLECTION(POINT(4 0), GEOMETRYCOLLECTION EMPTY, LINESTRING(4 2, 5 3))</wkt>
+        <wkt>GEOMETRYCOLLECTION(POINT(4 0), GEOMETRYCOLLECTION EMPTY, LINESTRING(4 2, 5 3))</wkt>
     </Element>
     <Element>
         <id>37</id>
         <type>GEOMETRYCOLLECTION</type>
-        <wkt>SRID=4326;GEOMETRYCOLLECTION(POINT(4 0), POLYGON EMPTY, LINESTRING(4 2, 5 3))</wkt>
+        <wkt>GEOMETRYCOLLECTION(POINT(4 0), POLYGON EMPTY, LINESTRING(4 2, 5 3))</wkt>
     </Element>
     <Element>
         <id>38</id>
         <type>GEOMETRYCOLLECTION</type>
-        <wkt>SRID=4326;GEOMETRYCOLLECTION(POINT(4 0), MULTILINESTRING EMPTY, LINESTRING(4 2, 5 3))</wkt>
+        <wkt>GEOMETRYCOLLECTION(POINT(4 0), MULTILINESTRING EMPTY, LINESTRING(4 2, 5 3))</wkt>
     </Element>
     <Element>
         <id>39</id>
         <type>GEOMETRYCOLLECTION</type>
-        <wkt>SRID=4326;GEOMETRYCOLLECTION(POINT(4 0), MULTIPOINT EMPTY, LINESTRING(4 2, 5 3))</wkt>
+        <wkt>GEOMETRYCOLLECTION(POINT(4 0), MULTIPOINT EMPTY, LINESTRING(4 2, 5 3))</wkt>
     </Element>
     <Element>
         <id>40</id>
         <type>GEOMETRYCOLLECTION</type>
-        <wkt>SRID=4326;GEOMETRYCOLLECTION(POINT(4 0), MULTIPOLYGON EMPTY, LINESTRING(4 2, 5 3))</wkt>
+        <wkt>GEOMETRYCOLLECTION(POINT(4 0), MULTIPOLYGON EMPTY, LINESTRING(4 2, 5 3))</wkt>
     </Element>
 
     <Element>

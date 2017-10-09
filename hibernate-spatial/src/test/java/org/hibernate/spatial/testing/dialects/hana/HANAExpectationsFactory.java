@@ -33,42 +33,42 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	@Override
 	protected NativeSQLStatement createNativeBufferStatement(Double distance) {
 		return createNativeSQLStatement(
-				"select t.id, t.geom.ST_Buffer(?) from GeomTest t where t.geom.ST_SRID() = 0",
+				"select t.id, t.geom.ST_Buffer(?) from GeomTest t where t.geom.ST_SRID() = " + getTestSrid(),
 				new Object[] { distance });
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeConvexHullStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
-				"select t.id, t.geom.ST_Union(ST_GeomFromText(?, 0)).ST_ConvexHull().ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = 0",
+				"select t.id, t.geom.ST_Union(ST_GeomFromText(?, " + getTestSrid() + ")).ST_ConvexHull().ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText());
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeIntersectionStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
-				"select t.id, t.geom.ST_Intersection(ST_GeomFromText(?, 0)).ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = 0",
+				"select t.id, t.geom.ST_Intersection(ST_GeomFromText(?, " + getTestSrid() + ")).ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText());
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeDifferenceStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
-				"select t.id, t.geom.ST_Difference(ST_GeomFromText(?, 0)).ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = 0",
+				"select t.id, t.geom.ST_Difference(ST_GeomFromText(?, " + getTestSrid() + ")).ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText());
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeSymDifferenceStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
-				"select t.id, t.geom.ST_SymDifference(ST_GeomFromText(?, 0)).ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = 0",
+				"select t.id, t.geom.ST_SymDifference(ST_GeomFromText(?, " + getTestSrid() + ")).ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText());
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeGeomUnionStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
-				"select t.id, t.geom.ST_Union(ST_GeomFromText(?, 0)).ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = 0",
+				"select t.id, t.geom.ST_Union(ST_GeomFromText(?, " + getTestSrid() + ")).ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText());
 	}
 
@@ -128,42 +128,42 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	@Override
 	protected NativeSQLStatement createNativeWithinStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
-				"select t.id, t.geom.ST_Within(ST_GeomFromText(?, 0)) from GeomTest t where t.geom.ST_Within(ST_GeomFromText(?, 0)) = 1 and t.geom.ST_SRID() = 0",
+				"select t.id, t.geom.ST_Within(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Within(ST_GeomFromText(?, " + getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText());
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeEqualsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
-				"select t.id, t.geom.ST_Equals(ST_GeomFromText(?, 0)) from GeomTest t where t.geom.ST_Equals(ST_GeomFromText(?, 0)) = 1 and t.geom.ST_SRID() = 0",
+				"select t.id, t.geom.ST_Equals(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Equals(ST_GeomFromText(?, " + getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText());
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeCrossesStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
-				"select t.id, t.geom.ST_Crosses(ST_GeomFromText(?, 0)) from GeomTest t where t.geom.ST_Crosses(ST_GeomFromText(?, 0)) = 1 and t.geom.ST_SRID() = 0",
+				"select t.id, t.geom.ST_Crosses(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Crosses(ST_GeomFromText(?, " + getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText());
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeContainsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
-				"select t.id, t.geom.ST_Contains(ST_GeomFromText(?, 0)) from GeomTest t where t.geom.ST_Contains(ST_GeomFromText(?, 0)) = 1 and t.geom.ST_SRID() = 0",
+				"select t.id, t.geom.ST_Contains(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Contains(ST_GeomFromText(?, " + getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText());
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeDisjointStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
-				"select t.id, t.geom.ST_Disjoint(ST_GeomFromText(?, 0)) from GeomTest t where t.geom.ST_Disjoint(ST_GeomFromText(?, 0)) = 1 and t.geom.ST_SRID() = 0",
+				"select t.id, t.geom.ST_Disjoint(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Disjoint(ST_GeomFromText(?, " + getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText());
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeTransformStatement(int epsg) {
 		return createNativeSQLStatement(
-				"select t.id, t.geom.ST_Transform(" + epsg + ") from GeomTest t where t.geom.ST_SRID() = 0");
+				"select t.id, t.geom.ST_Transform(" + epsg + ") from GeomTest t where t.geom.ST_SRID() = " + getTestSrid());
 	}
 
 	@Override
@@ -174,63 +174,58 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	@Override
 	protected NativeSQLStatement createNativeIntersectsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
-				"select t.id, t.geom.ST_Intersects(ST_GeomFromText(?, 0)) from GeomTest t where t.geom.ST_Intersects(ST_GeomFromText(?, 0)) = 1 and t.geom.ST_SRID() = 0",
+				"select t.id, t.geom.ST_Intersects(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Intersects(ST_GeomFromText(?, " + getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText());
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeFilterStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
-				"select t.id, t.geom.ST_IntersectsFilter(ST_GeomFromText(?, 0)) from GeomTest t where t.geom.ST_IntersectsFilter(ST_GeomFromText(?, 0)) = 1 and t.geom.ST_SRID() = 0",
+				"select t.id, t.geom.ST_IntersectsFilter(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_IntersectsFilter(ST_GeomFromText(?, " + getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText());
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeTouchesStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
-				"select t.id, t.geom.ST_Touches(ST_GeomFromText(?, 0)) from GeomTest t where t.geom.ST_Touches(ST_GeomFromText(?, 0)) = 1 and t.geom.ST_SRID() = 0",
+				"select t.id, t.geom.ST_Touches(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Touches(ST_GeomFromText(?, " + getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText());
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeOverlapsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
-				"select t.id, t.geom.ST_Overlaps(ST_GeomFromText(?, 0)) from GeomTest t where t.geom.ST_Overlaps(ST_GeomFromText(?, 0)) = 1 and t.geom.ST_SRID() = 0",
+				"select t.id, t.geom.ST_Overlaps(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Overlaps(ST_GeomFromText(?, " + getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText());
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeRelateStatement(Geometry geom, String matrix) {
-		String sql = "select t.id, t.geom.ST_Relate(ST_GeomFromText(?, 0), '" + matrix
-				+ "' ) from GeomTest t where t.geom.ST_Relate(ST_GeomFromText(?, 0), '" + matrix
-				+ "') = 1 and t.geom.ST_SRID() = 0";
+		String sql = "select t.id, t.geom.ST_Relate(ST_GeomFromText(?, " + getTestSrid() + "), '" + matrix
+				+ "' ) from GeomTest t where t.geom.ST_Relate(ST_GeomFromText(?, " + getTestSrid() + "), '" + matrix
+				+ "') = 1 and t.geom.ST_SRID() = " + getTestSrid();
 		return createNativeSQLStatementAllWKTParams(sql, geom.toText());
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeDwithinStatement(Point geom, double distance) {
-		return createNativeSQLStatementAllWKTParams("select t.id, t.geom.ST_WithinDistance(ST_GeomFromText(?, 0), "
-				+ distance + ") from GeomTest t where t.geom.ST_WithinDistance(ST_GeomFromText(?, 0), " + distance
-				+ ") = 1 and t.geom.ST_SRID() = 0", geom.toText());
+		return createNativeSQLStatementAllWKTParams("select t.id, t.geom.ST_WithinDistance(ST_GeomFromText(?, " + getTestSrid() + "), "
+				+ distance + ") from GeomTest t where t.geom.ST_WithinDistance(ST_GeomFromText(?, " + getTestSrid() + "), " + distance
+				+ ") = 1 and t.geom.ST_SRID() = " + getTestSrid(), geom.toText());
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeDistanceStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
-				"select t.id, t.geom.ST_Distance(ST_GeomFromText(?, 0)) from GeomTest t where t.geom.ST_SRID() = 0",
+				"select t.id, t.geom.ST_Distance(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText());
-	}
-	
-	@Override
-	public int getTestSrid() {
-		return 0;
 	}
 	
 	@Override
 	public Polygon getTestPolygon() {
 		WKTReader reader = new WKTReader();
 		try {
-			Polygon polygon = (Polygon) reader.read( "POLYGON((0 0, 50 0, 90 90, 0 100, 0 0))" );
+			Polygon polygon = (Polygon) reader.read( "POLYGON((0 0, 50 0, 90 90, 100 0, 0 0))" );
 			polygon.setSRID( getTestSrid() );
 			return polygon;
 		}
@@ -238,5 +233,10 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 			throw new RuntimeException( e );
 		}
 	}
-
+	
+	@Override
+	public int getTestSrid() {
+		return 0;
+	}
+	
 }

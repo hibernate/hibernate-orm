@@ -8,6 +8,8 @@ package org.hibernate.spatial.dialect.hana;
 
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.HANAColumnStoreDialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.ConfigurationService.Converter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.JTSGeometryType;
@@ -20,6 +22,8 @@ import org.hibernate.type.StandardBasicTypes;
 public class HANASpatialDialect extends HANAColumnStoreDialect implements SpatialDialect {
 
 	private static final long serialVersionUID = -432631517465714911L;
+
+	private static final String DETERMINE_CRS_ID_FROM_DATABASE_PARAMETER_NAME = "hibernate.spatial.dialect.hana.determine_crs_id_from_database";
 
 	public HANASpatialDialect() {
 		registerColumnType( HANAGeometryTypeDescriptor.INSTANCE.getSqlType(), "ST_GEOMETRY" );
@@ -62,7 +66,7 @@ public class HANASpatialDialect extends HANAColumnStoreDialect implements Spatia
 		registerFunction( SpatialFunction.overlaps.name(),
 				new HANASpatialFunction( "ST_Overlaps", StandardBasicTypes.NUMERIC_BOOLEAN, true ) );
 		registerFunction( SpatialFunction.relate.name(),
-				new HANASpatialFunction( "ST_Relate", StandardBasicTypes.INTEGER, true ) );
+				new HANASpatialFunction( "ST_Relate", StandardBasicTypes.NUMERIC_BOOLEAN, true ) );
 		registerFunction( SpatialFunction.srid.name(),
 				new HANASpatialFunction( "ST_SRID", StandardBasicTypes.INTEGER, false ) );
 		registerFunction( SpatialFunction.symdifference.name(), new HANASpatialFunction( "ST_SymDifference", true ) );
@@ -102,8 +106,29 @@ public class HANASpatialDialect extends HANAColumnStoreDialect implements Spatia
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
-		typeContributions.contributeType( new GeolatteGeometryType( HANAGeometryTypeDescriptor.INSTANCE ) );
-		typeContributions.contributeType( new JTSGeometryType( HANAGeometryTypeDescriptor.INSTANCE ) );
+
+		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+		boolean determineCrsIdFromDatabase = configurationService.getSetting(
+				DETERMINE_CRS_ID_FROM_DATABASE_PARAMETER_NAME,
+				new Converter<Boolean>() {
+
+					@Override
+					public Boolean convert(Object value) {
+						return Boolean.valueOf( value.toString() );
+					}
+
+				},
+				Boolean.FALSE ).booleanValue();
+
+		if ( determineCrsIdFromDatabase ) {
+			typeContributions.contributeType( new GeolatteGeometryType( HANAGeometryTypeDescriptor.CRS_LOADING_INSTANCE ) );
+			typeContributions.contributeType( new JTSGeometryType( HANAGeometryTypeDescriptor.CRS_LOADING_INSTANCE ) );
+		}
+		else {
+			typeContributions.contributeType( new GeolatteGeometryType( HANAGeometryTypeDescriptor.INSTANCE ) );
+			typeContributions.contributeType( new JTSGeometryType( HANAGeometryTypeDescriptor.INSTANCE ) );
+		}
+
 	}
 
 	@Override
@@ -203,5 +228,4 @@ public class HANASpatialDialect extends HANAColumnStoreDialect implements Spatia
 		}
 		return false;
 	}
-
 }

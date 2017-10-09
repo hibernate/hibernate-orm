@@ -25,14 +25,18 @@ public class HANAGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 	private static final long serialVersionUID = -6978798264716544804L;
 
-	/**
-	 * An instance of the descrtiptor
-	 */
-	public static final HANAGeometryTypeDescriptor INSTANCE = new HANAGeometryTypeDescriptor();
+	public static final HANAGeometryTypeDescriptor CRS_LOADING_INSTANCE = new HANAGeometryTypeDescriptor( true );
+	public static final HANAGeometryTypeDescriptor INSTANCE = new HANAGeometryTypeDescriptor( false );
+
+	final boolean determineCrsIdFromDatabase;
+
+	public HANAGeometryTypeDescriptor(boolean determineCrsIdFromDatabase) {
+		this.determineCrsIdFromDatabase = determineCrsIdFromDatabase;
+	}
 
 	@Override
 	public int getSqlType() {
-		return Types.ARRAY;
+		return Types.OTHER;
 	}
 
 	@Override
@@ -67,7 +71,12 @@ public class HANAGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return getJavaDescriptor().wrap( HANASpatialUtils.toGeometry( rs.getObject( name ) ), options );
+				if ( HANAGeometryTypeDescriptor.this.determineCrsIdFromDatabase ) {
+					return getJavaDescriptor().wrap( HANASpatialUtils.toGeometry( rs, name ), options );
+				}
+				else {
+					return getJavaDescriptor().wrap( HANASpatialUtils.toGeometry( rs.getObject( name ) ), options );
+				}
 			}
 
 			@Override

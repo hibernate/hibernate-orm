@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
@@ -115,12 +116,14 @@ public class TestStoreRetrieveUsingGeolatte extends SpatialFunctionalTestCase {
 		int id = -1;
 		try {
 			session = openSession();
+			Dialect dialect = sessionFactory().getSessionFactory().getJdbcServices().getDialect();
 			// Every testsuite-suite instance is committed seperately
 			// to improve feedback in case of failure
 			for ( TestDataElement element : testData ) {
 				id = element.id;
 				tx = session.beginTransaction();
-				GeomEntity entity = GeomEntity.createFrom( element );
+				;
+				GeomEntity entity = GeomEntity.createFrom( element, dialect );
 				stored.put( entity.getId(), entity );
 				session.save( entity );
 				tx.commit();

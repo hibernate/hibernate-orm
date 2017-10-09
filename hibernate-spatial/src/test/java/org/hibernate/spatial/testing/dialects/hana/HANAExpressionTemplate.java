@@ -16,7 +16,7 @@ import org.hibernate.spatial.testing.WktUtility;
  */
 public class HANAExpressionTemplate implements SQLExpressionTemplate {
 
-	static final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', ST_GeomFromText('%s', %d).ST_SRID(4326))";
+	static final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', ST_GeomFromText('%s', %d))";
 
 	@Override
 	public String toInsertSql(TestDataElement testDataElement) {

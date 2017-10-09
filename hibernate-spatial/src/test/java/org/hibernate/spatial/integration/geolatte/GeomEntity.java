@@ -11,6 +11,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.spatial.testing.TestDataElement;
 
 import org.geolatte.geom.Geometry;
@@ -60,8 +62,14 @@ public class GeomEntity {
 		this.geom = geom;
 	}
 
-	public static GeomEntity createFrom(TestDataElement element) throws WktDecodeException {
-		WktDecoder decoder = Wkt.newDecoder( Wkt.Dialect.POSTGIS_EWKT_1 );
+	public static GeomEntity createFrom(TestDataElement element, Dialect dialect) throws WktDecodeException {
+		WktDecoder decoder = null;
+		if (dialect instanceof AbstractHANADialect) {
+			decoder = Wkt.newDecoder( Wkt.Dialect.HANA_EWKT );
+		}
+		else {
+			decoder = Wkt.newDecoder( Wkt.Dialect.POSTGIS_EWKT_1 );
+		}
 		Geometry geom = decoder.decode( element.wkt );
 		GeomEntity result = new GeomEntity();
 		result.setId( element.id );

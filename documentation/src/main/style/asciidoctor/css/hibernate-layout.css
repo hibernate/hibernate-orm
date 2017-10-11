@@ -40,6 +40,9 @@ body:before {
     font-weight: bold !important;
     font-size: 1.3em !important;
 }
+#toc>#tocsearch {
+    font-family: "FontAwesome";
+}
 .subheader .title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{
     color:darkslategray;
 }

@@ -14,7 +14,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Collection sort (in-memory sorting).  Different that ordering, which is applied during the SQL select.
+ * Collection sort (in-memory sorting).  Different than ordering, which is applied during the SQL select.
  *
  * @author Emmanuel Bernard
  *

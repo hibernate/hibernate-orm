@@ -37,7 +37,7 @@ import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.StateArrayElementContributor;
+import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.internal.TypeHelper;
@@ -290,7 +290,7 @@ public abstract class AbstractSaveEventListener
 				entityDescriptor,
 				values,
 				values,
-				StateArrayElementContributor::isUpdatable
+				StateArrayContributor::isUpdatable
 		);
 
 		AbstractEntityInsertAction insert = addInsertAction(

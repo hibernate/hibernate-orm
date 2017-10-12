@@ -7,19 +7,19 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Spliterator;
 import java.util.TreeMap;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
@@ -47,6 +47,19 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 	private InheritanceCapable<? super T>  superTypeDescriptor;
 	private List<InheritanceCapable<? extends T>> subclassTypes;
 
+	// todo (6.0) : we need some kind of callback after all Navigables have been added to all containers
+	//		use that callback to build these 2 lists - they are cached resolutions
+	//		for performance rather that "recalculating" each time
+	//
+	//		see `#getNavigables` and `#getDeclaredNavigables` below.
+
+
+	private List<PersistentAttribute<T,?>> declaredAttributes;
+	private List<PersistentAttribute<T,?>> attributes;
+
+	private List<StateArrayContributor<?>> stateArrayContributors;
+
+	// a cache to more easily find the PersistentAttribute by name
 	private Map<String,PersistentAttribute> declaredAttributesByName;
 
 	public AbstractManagedType(
@@ -124,15 +137,6 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 		return true;
 	}
 
-
-	protected void addAttribute(PersistentAttribute persistentAttribute) {
-		if ( declaredAttributesByName == null ) {
-			// NOTE : TreeMap so that we sort based on attribute name
-			declaredAttributesByName = new TreeMap<>();
-		}
-		declaredAttributesByName.put( persistentAttribute.getAttributeName(), persistentAttribute );
-	}
-
 	@Override
 	@SuppressWarnings("unchecked")
 	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
@@ -140,49 +144,14 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public List getNavigables() {
-		final ArrayList<Navigable> navigables = new ArrayList<>();
-		navigables.addAll( declaredAttributesByName.values() );
-		if ( getSuperclassType() != null ) {
-			navigables.addAll( getSuperclassType().getNavigables() );
-		}
-		return navigables;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public List<Navigable<?>> getDeclaredNavigables() {
-		return new ArrayList( declaredAttributesByName.values() );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Spliterator persistentAttributeSource() {
-		return navigableSource( PersistentAttribute.class );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Spliterator declaredPersistentAttributeSource() {
-		return declaredAttributesByName.values().spliterator();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Spliterator stateArrayContributorSource() {
-		return navigableSource( StateArrayElementContributor.class );
-	}
-
-	@Override
-	public PersistentAttribute<? super T, ?> findAttribute(String name) {
-		final PersistentAttribute<? super T, ?> declaredPersistentAttribute = findDeclaredAttribute( name );
+	public PersistentAttribute<? super T, ?> findPersistentAttribute(String name) {
+		final PersistentAttribute<? super T, ?> declaredPersistentAttribute = findDeclaredPersistentAttribute( name );
 		if ( declaredPersistentAttribute != null ) {
 			return declaredPersistentAttribute;
 		}
 
 		if ( getSuperclassType() != null ) {
-			final PersistentAttribute<? super T, ?> superPersistentAttribute = getSuperclassType().findAttribute( name );
+			final PersistentAttribute<? super T, ?> superPersistentAttribute = getSuperclassType().findPersistentAttribute( name );
 			if ( superPersistentAttribute != null ) {
 				return superPersistentAttribute;
 			}
@@ -193,7 +162,7 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public PersistentAttribute<? super T, ?> findDeclaredAttribute(String name) {
+	public PersistentAttribute<? super T, ?> findDeclaredPersistentAttribute(String name) {
 		if ( declaredAttributesByName == null ) {
 			return null;
 		}
@@ -207,74 +176,60 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 
 
 	@Override
-	public void visitStateArrayNavigables(Consumer<StateArrayElementContributor<?>> consumer) {
+	public void visitStateArrayNavigables(Consumer<StateArrayContributor<?>> consumer) {
 		visitAttributes(
 				attribute -> {
-					if ( attribute instanceof StateArrayElementContributor ) {
-						consumer.accept( (StateArrayElementContributor<?>) attribute );
+					if ( attribute instanceof StateArrayContributor ) {
+						consumer.accept( (StateArrayContributor<?>) attribute );
 					}
 				}
 		);
 	}
 
-	public void collectDeclaredAttributes(Consumer<javax.persistence.metamodel.Attribute> collector) {
-		collectDeclaredAttributes( collector, null );
+	@SuppressWarnings({"unchecked", "WeakerAccess"})
+	protected <R extends PersistentAttribute> void collectDeclaredAttributes(Collection<R> collection, Class<R> restrictionType) {
+		for ( PersistentAttribute<T, ?> declaredAttribute : declaredAttributes ) {
+			if ( restrictionType.isInstance( declaredAttribute ) ) {
+				collection.add( (R) declaredAttribute );
+			}
+		}
+	}
+
+	@SuppressWarnings({"unchecked", "WeakerAccess"})
+	protected <R extends PersistentAttribute> void collectAttributes(Collection<R> collection, Class<R> restrictionType) {
+		for ( PersistentAttribute<T, ?> attribute : attributes ) {
+			if ( restrictionType == null || restrictionType.isInstance( attribute ) ) {
+				collection.add( (R) attribute );
+			}
+		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void collectDeclaredAttributes(Consumer collector, Class restrictionType) {
-		if ( declaredAttributesByName != null ) {
-			Stream stream = declaredAttributesByName.values().stream();
-			if ( restrictionType != null ) {
-				stream = stream.filter( restrictionType::isInstance );
-			}
-			stream.forEach( ormAttribute -> collector.accept( ormAttribute ) );
-		}
-	}
-
-	private void collectAttributes(Consumer<javax.persistence.metamodel.Attribute> collector) {
-		collectAttributes( collector, null );
-	}
-
-	@Override
-	public void collectAttributes(Consumer collector, Class restrictionType) {
-		collectDeclaredAttributes( collector, restrictionType );
-
-		if ( getSuperclassType() != null  ) {
-			getSuperclassType().collectAttributes( collector, restrictionType );
-		}
-	}
-
-	@Override
 	public Set<javax.persistence.metamodel.Attribute<? super T, ?>> getAttributes() {
-		final HashSet<javax.persistence.metamodel.Attribute<? super T, ?>> attributes = new HashSet<>();
-		collectAttributes( attributes::add );
-		return attributes;
+		return new HashSet( this.attributes );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public Set<javax.persistence.metamodel.Attribute<T,?>> getDeclaredAttributes() {
-		final HashSet<javax.persistence.metamodel.Attribute<T, ?>> attributes = new HashSet<>();
-		collectDeclaredAttributes( attributes::add );
-		return attributes;
+		return new HashSet( this.declaredAttributes );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public Set<javax.persistence.metamodel.SingularAttribute<? super T,?>> getSingularAttributes() {
-		final HashSet attributes = new HashSet();
-		collectAttributes( attributes::add, javax.persistence.metamodel.SingularAttribute.class );
-		return attributes;
+		final HashSet jpaAttributes = new HashSet();
+		collectAttributes( jpaAttributes, SingularPersistentAttribute.class );
+		return jpaAttributes;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public Set<javax.persistence.metamodel.SingularAttribute<T,?>> getDeclaredSingularAttributes() {
-		final HashSet attributes = new HashSet<>();
-		collectDeclaredAttributes( attributes::add, javax.persistence.metamodel.SingularAttribute.class );
-		return attributes;
+		final HashSet jpaAttributes = new HashSet();
+		collectDeclaredAttributes( jpaAttributes, SingularPersistentAttribute.class );
+		return jpaAttributes;
 	}
 
 
@@ -282,7 +237,7 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 	@SuppressWarnings("unchecked")
 	public Set<javax.persistence.metamodel.PluralAttribute<? super T, ?, ?>> getPluralAttributes() {
 		final HashSet attributes = new HashSet<>();
-		collectAttributes( attributes::add, PluralPersistentAttribute.class );
+		collectAttributes( attributes, PluralPersistentAttribute.class );
 		return attributes;
 	}
 
@@ -290,27 +245,8 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 	@SuppressWarnings("unchecked")
 	public Set<javax.persistence.metamodel.PluralAttribute<T, ?, ?>> getDeclaredPluralAttributes() {
 		final HashSet attributes = new HashSet<>();
-		collectDeclaredAttributes( attributes::add, PluralPersistentAttribute.class );
+		collectDeclaredAttributes( attributes, PluralPersistentAttribute.class );
 		return attributes;
-	}
-
-	@Override
-	public Map<String, PersistentAttribute> getAttributesByName() {
-		final Map<String, PersistentAttribute> attributeMap = new HashMap<>();
-		collectAttributes( attributeMap );
-		return attributeMap;
-	}
-
-	protected void collectAttributes(Map<String, PersistentAttribute> attributeMap) {
-		attributeMap.putAll( getDeclaredAttributesByName() );
-		if ( superTypeDescriptor != null && superTypeDescriptor instanceof AbstractManagedType ) {
-			( (AbstractManagedType) superTypeDescriptor ).collectAttributes( attributeMap );
-		}
-	}
-
-	@Override
-	public Map<String, PersistentAttribute> getDeclaredAttributesByName() {
-		return declaredAttributesByName == null ? Collections.emptyMap() : declaredAttributesByName;
 	}
 
 
@@ -319,7 +255,7 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 
 	@Override
 	public Navigable findNavigable(String navigableName) {
-		Navigable attribute = findDeclaredAttribute( navigableName );
+		Navigable attribute = findDeclaredPersistentAttribute( navigableName );
 		if ( attribute == null && getSuperclassType() != null ) {
 			attribute = getSuperclassType().findNavigable( navigableName );
 		}
@@ -347,9 +283,9 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 	}
 
 	protected PersistentAttribute<? super T, ?> getAttribute(String name, Class resultType) {
-		PersistentAttribute<? super T, ?> persistentAttribute = findDeclaredAttribute( name, resultType );
+		PersistentAttribute<? super T, ?> persistentAttribute = findDeclaredPersistentAttribute( name, resultType );
 		if ( persistentAttribute == null && getSuperclassType() != null ) {
-			persistentAttribute = getSuperclassType().findDeclaredAttribute( name, resultType );
+			persistentAttribute = getSuperclassType().findDeclaredPersistentAttribute( name, resultType );
 		}
 
 		if ( persistentAttribute == null ) {
@@ -360,7 +296,7 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 	}
 
 	@Override
-	public PersistentAttribute<? super T, ?> findDeclaredAttribute(String name, Class resultType) {
+	public PersistentAttribute<? super T, ?> findDeclaredPersistentAttribute(String name, Class resultType) {
 		final PersistentAttribute ormPersistentAttribute = declaredAttributesByName.get( name );
 		if ( ormPersistentAttribute == null ) {
 			return null;
@@ -403,7 +339,7 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 	}
 
 	public PersistentAttribute getDeclaredAttribute(String name, Class javaType) {
-		final PersistentAttribute persistentAttribute = findDeclaredAttribute( name, javaType );
+		final PersistentAttribute persistentAttribute = findDeclaredPersistentAttribute( name, javaType );
 		if ( persistentAttribute == null ) {
 			throw new IllegalArgumentException( "Could not resolve attribute named [" + name + "] relative to [" + this.asLoggableText() + "]" );
 		}
@@ -527,5 +463,43 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 	@Override
 	public PluralAttributeSet getDeclaredSet(String name, Class elementType) {
 		return (PluralAttributeSet) getDeclaredAttribute( name, elementType );
+	}
+
+	@SuppressWarnings("unchecked")
+	public void finishInitialization(
+			InheritanceCapable superType,
+			ManagedTypeMappingImplementor mappingDescriptor,
+			RuntimeModelCreationContext creationContext) {
+		if ( superType != null ) {
+			attributes.addAll( superType.getPersistentAttributes() );
+			stateArrayContributors.addAll( superType.getStateArrayContributors() );
+		}
+
+		final List<PersistentAttributeMapping> sortedAttributeMappings = new ArrayList<>( mappingDescriptor.getDeclaredPersistentAttributes() );
+		sortedAttributeMappings.sort( Comparator.comparing( PersistentAttributeMapping::getName ) );
+
+		for ( PersistentAttributeMapping attributeMapping : sortedAttributeMappings ) {
+			final PersistentAttribute persistentAttribute = attributeMapping.makeRuntimeAttribute(
+					this,
+					mappingDescriptor,
+					SingularPersistentAttribute.Disposition.NORMAL,
+					creationContext
+			);
+
+			attributes.add( persistentAttribute );
+			declaredAttributes.add( persistentAttribute );
+			declaredAttributesByName.put( persistentAttribute.getAttributeName(), persistentAttribute );
+
+			if ( persistentAttribute instanceof StateArrayContributor ) {
+				final StateArrayContributor contributor = (StateArrayContributor) persistentAttribute;
+				contributor.setStateArrayPosition( stateArrayContributors.size() );
+				stateArrayContributors.add( contributor );
+			}
+		}
+	}
+
+	@Override
+	public List<StateArrayContributor<?>> getStateArrayContributors() {
+		return stateArrayContributors;
 	}
 }

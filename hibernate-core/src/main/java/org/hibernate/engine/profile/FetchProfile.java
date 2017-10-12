@@ -71,7 +71,7 @@ public class FetchProfile {
 	 */
 	public void addFetch(final Fetch fetch) {
 		final String fetchAssociactionRole = fetch.getAssociation().getRole();
-		final PersistentAttribute attribute = fetch.getAssociation().getOwner().findAttribute( fetchAssociactionRole );
+		final PersistentAttribute attribute = fetch.getAssociation().getOwner().findPersistentAttribute( fetchAssociactionRole );
 		if ( PluralPersistentAttribute.class.isInstance( attribute ) ) {
 			LOG.tracev( "Handling request to add collection fetch [{0}]", fetchAssociactionRole );
 			final CollectionClassification collectionClassification = ( (PluralPersistentAttribute) attribute ).getPersistentCollectionMetadata()

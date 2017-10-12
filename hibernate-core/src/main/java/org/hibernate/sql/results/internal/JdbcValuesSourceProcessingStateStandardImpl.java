@@ -34,7 +34,8 @@ import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.StateArrayElementContributor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.spi.QueryOptions;
@@ -245,23 +246,25 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 		final Object entityInstance = loadingEntity.getEntityInstance();
 
-		entityDescriptor.stateArrayContributorStream().forEach(
-				contributor -> {
-					final int position = contributor.getStateArrayPosition();
-					final Object value = hydratedState[position];
-					// todo (6.0) : need a way to perform "resolve" for a particular StateArrayElementContributor's hydrated state
-					//		this `#resolveHydratedState` is a proposal which is why I have not defined it on
-					//
-					hydratedState[ contributor.getStateArrayPosition() ] = contributor.resolveHydratedState(
-							value,
-							session,
-							// the container ("owner")... for now just pass null.
-							// ultimately we need to account for fetch parent if the
-							// current sub-contributor is a fetch
-							null
-					);
-				}
-		);
+		for ( Navigable<?> navigable : entityDescriptor.getNavigables() ) {
+			if ( !StateArrayContributor.class.isInstance( navigable ) ) {
+				continue;
+			}
+
+			final StateArrayContributor contributor = (StateArrayContributor) navigable;
+
+			final int position = contributor.getStateArrayPosition();
+			final Object value = hydratedState[position];
+
+			hydratedState[ contributor.getStateArrayPosition() ] = contributor.resolveHydratedState(
+					value,
+					session,
+					// the container ("owner")... for now just pass null.
+					// ultimately we need to account for fetch parent if the
+					// current sub-contributor is a fetch
+					null
+			);
+		}
 
 		// Must occur after resolving identifiers!
 		if ( session.isEventSource() ) {
@@ -365,7 +368,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 					entityDescriptor,
 					hydratedState,
 					hydratedState,
-					StateArrayElementContributor::isUpdatable
+					StateArrayContributor::isUpdatable
 			);
 			persistenceContext.setEntryStatus( entityEntry, Status.MANAGED );
 		}

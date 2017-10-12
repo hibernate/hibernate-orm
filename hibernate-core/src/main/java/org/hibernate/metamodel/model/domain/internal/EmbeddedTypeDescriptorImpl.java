@@ -14,6 +14,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.EmbeddedMapping;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -98,28 +99,14 @@ public class EmbeddedTypeDescriptorImpl<T>
 
 	@Override
 	public void finishInstantiation(
-			EmbeddedValueMapping embeddedValueMapping,
+			EmbeddedValueMappingImplementor embeddedValueMapping,
 			RuntimeModelCreationContext creationContext) {
-		bindAttributes( embeddedValueMapping, creationContext );
-	}
-
-	@SuppressWarnings("AccessStaticViaInstance")
-	private void bindAttributes(EmbeddedValueMapping embeddedValueMapping, RuntimeModelCreationContext creationContext) {
-		for ( PersistentAttributeMapping attributeMapping : embeddedValueMapping.getDeclaredPersistentAttributes() ) {
-			final PersistentAttribute persistentAttribute = attributeMapping.makeRuntimeAttribute(
-					this,
-					embeddedValueMapping,
-					compositeDisposition,
-					creationContext
-			);
-
-			addAttribute( persistentAttribute );
-		}
+		finishInitialization( null, embeddedValueMapping, creationContext );
 	}
 
 	@Override
 	public void completeInitialization(
-			EmbeddedValueMapping embeddedValueMapping,
+			EmbeddedValueMappingImplementor embeddedValueMapping,
 			RuntimeModelCreationContext creationContext) {
 		// todo (6.0) : I think we will want some form of "after all mappings have been 'initialized' (see #finishInstantiation)"
 	}

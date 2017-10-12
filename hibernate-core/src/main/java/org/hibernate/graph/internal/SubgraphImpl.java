@@ -109,7 +109,7 @@ public class SubgraphImpl<T> extends AbstractAttributeNodeContainer<T> implement
 	@Override
 	@SuppressWarnings("unchecked")
 	protected PersistentAttribute<T,?> resolveAttribute(String attributeName) {
-		final PersistentAttribute<T,?> attribute = managedType.findAttribute( attributeName );
+		final PersistentAttribute<T,?> attribute = managedType.findPersistentAttribute( attributeName );
 		if ( attribute == null ) {
 			throw new IllegalArgumentException(
 					String.format(

@@ -8,7 +8,6 @@ package org.hibernate.cfg.beanvalidation;
 
 import java.lang.annotation.ElementType;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.validation.Path;
@@ -17,12 +16,11 @@ import javax.validation.TraversableResolver;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
-import org.hibernate.type.descriptor.java.internal.AnyTypeJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 
 /**
  * Use Hibernate metadata to ignore cascade on entities.
@@ -41,26 +39,24 @@ public class HibernateTraversableResolver implements TraversableResolver {
 		this.associations = associationsPerEntityPersister.get( entityDescriptor );
 		if (this.associations == null) {
 			this.associations = new HashSet<>();
-			addAssociationsToTheSetForAllProperties( entityDescriptor.getAttributesByName() );
+			addAssociationsToTheSetForAllProperties( entityDescriptor );
 			associationsPerEntityPersister.put( entityDescriptor, associations );
 		}
 	}
 
-	private void addAssociationsToTheSetForAllProperties(Map<String,PersistentAttribute> attributesByName) {
-		for(String attributeName : attributesByName.keySet()){
-			addAssociationsToTheSetForOneProperty(attributeName, attributesByName.get( attributeName ));
+	private void addAssociationsToTheSetForAllProperties(ManagedTypeDescriptor<?> managedTypeDescriptor) {
+		for ( PersistentAttribute<?, ?> attribute : managedTypeDescriptor.getPersistentAttributes() ) {
+			addAssociationsToTheSetForOneProperty( attribute );
 		}
 	}
 
-	private void addAssociationsToTheSetForOneProperty(String name, PersistentAttribute attribute) {
-		final org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor javaTypeDescriptor = attribute.getJavaTypeDescriptor();
-		if ( javaTypeDescriptor instanceof CollectionJavaDescriptor || javaTypeDescriptor instanceof EntityJavaDescriptor || javaTypeDescriptor instanceof AnyTypeJavaDescriptor ) {
+	private void addAssociationsToTheSetForOneProperty(PersistentAttribute attribute) {
+		if ( attribute instanceof PluralPersistentAttribute
+				|| attribute instanceof SingularPersistentAttributeEntity ) {
 			associations.add( attribute.getNavigableRole().getFullPath() );
 		}
-		else if ( javaTypeDescriptor instanceof EmbeddableJavaDescriptor ) {
-			final Map attributesByName = ( (SingularPersistentAttributeEmbedded) attribute ).getEmbeddedDescriptor()
-					.getAttributesByName();
-			addAssociationsToTheSetForAllProperties( attributesByName );
+		else if ( attribute instanceof SingularPersistentAttributeEmbedded ) {
+			addAssociationsToTheSetForAllProperties( ( (SingularPersistentAttributeEmbedded) attribute ).getEmbeddedDescriptor() );
 		}
 	}
 

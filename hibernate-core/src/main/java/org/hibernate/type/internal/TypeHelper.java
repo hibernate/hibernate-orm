@@ -12,7 +12,7 @@ import java.util.function.Predicate;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.StateArrayElementContributor;
+import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 
 import static java.util.stream.Collectors.joining;
@@ -21,9 +21,9 @@ import static java.util.stream.Collectors.joining;
  * @author Steve Ebersole
  */
 public class TypeHelper {
-	public static final BiFunction<StateArrayElementContributor,Object,Object> DEEP_COPY_VALUE_PRODUCER = new BiFunction<StateArrayElementContributor, Object, Object>() {
+	public static final BiFunction<StateArrayContributor,Object,Object> DEEP_COPY_VALUE_PRODUCER = new BiFunction<StateArrayContributor, Object, Object>() {
 		@Override
-		public Object apply(StateArrayElementContributor navigable, Object sourceValue) {
+		public Object apply(StateArrayContributor navigable, Object sourceValue) {
 			if ( sourceValue == LazyPropertyInitializer.UNFETCHED_PROPERTY
 					|| sourceValue == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				return sourceValue;
@@ -39,7 +39,7 @@ public class TypeHelper {
 			ManagedTypeDescriptor containerDescriptor,
 			Object[] source,
 			Object[] target,
-			Predicate<StateArrayElementContributor> skipCondition) {
+			Predicate<StateArrayContributor> skipCondition) {
 		deepCopy(
 				containerDescriptor,
 				source,
@@ -54,11 +54,11 @@ public class TypeHelper {
 			ManagedTypeDescriptor<?> containerDescriptor,
 			Object[] source,
 			Object[] target,
-			Predicate<StateArrayElementContributor> skipCondition,
-			BiFunction<StateArrayElementContributor,Object,Object> targetValueProducer) {
+			Predicate<StateArrayContributor> skipCondition,
+			BiFunction<StateArrayContributor,Object,Object> targetValueProducer) {
 
 		// get a stream of all Navigables
-		containerDescriptor.navigableStream( StateArrayElementContributor.class )
+		containerDescriptor.navigableStream( StateArrayContributor.class )
 				.forEach(
 						attribute -> {
 							if ( skipCondition.test( attribute ) ) {
@@ -73,7 +73,7 @@ public class TypeHelper {
 
 	@SuppressWarnings("unchecked")
 	public static String toLoggableString(Object[] state, ManagedTypeDescriptor<?> managedTypeDescriptor) {
-		return managedTypeDescriptor.navigableStream( StateArrayElementContributor.class )
+		return managedTypeDescriptor.navigableStream( StateArrayContributor.class )
 				.map( attribute -> attribute.getJavaTypeDescriptor().toString( state[attribute.getStateArrayPosition()] ) )
 				.collect( joining( ", ", managedTypeDescriptor.getNavigableName() + '[', "]" ) );
 	}
@@ -82,7 +82,7 @@ public class TypeHelper {
 	public static Serializable[] disassemble(final Object[] state, final  boolean[] nonCacheable, ManagedTypeDescriptor<?> descriptor) {
 		final Serializable[] disassembledState = new Serializable[state.length];
 
-		descriptor.navigableStream( StateArrayElementContributor.class )
+		descriptor.navigableStream( StateArrayContributor.class )
 				.forEach(
 						attribute -> {
 							final int position = attribute.getStateArrayPosition();
@@ -105,7 +105,7 @@ public class TypeHelper {
 	public static Object[] assemble(final Serializable[] disassembledState, ManagedTypeDescriptor<?> descriptor) {
 		final Object[] assembledProps = new Object[disassembledState.length];
 
-		descriptor.navigableStream( StateArrayElementContributor.class )
+		descriptor.navigableStream( StateArrayContributor.class )
 				.forEach(
 						attribute -> {
 							final int position = attribute.getStateArrayPosition();

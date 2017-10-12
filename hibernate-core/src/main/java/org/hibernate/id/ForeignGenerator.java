@@ -112,14 +112,14 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 
 	private String retrieveEntityName(EntityDescriptor persister) {
 		String entityName;
-		final PersistentAttribute attribute = persister.findAttribute( propertyName );
+		final PersistentAttribute attribute = persister.findPersistentAttribute( propertyName );
 		if ( attribute.getPersistenceType() == javax.persistence.metamodel.Type.PersistenceType.ENTITY ) {
 			// the normal case
 			entityName = attribute.getContainer().getNavigableName();
 		}
 		else {
 			// try identifier mapper
-			entityName = persister.findAttribute( NavigablePath.IDENTIFIER_MAPPER_PROPERTY + "." + propertyName ).getContainer().getNavigableName();
+			entityName = persister.findPersistentAttribute( NavigablePath.IDENTIFIER_MAPPER_PROPERTY + "." + propertyName ).getContainer().getNavigableName();
 		}
 		return entityName;
 	}

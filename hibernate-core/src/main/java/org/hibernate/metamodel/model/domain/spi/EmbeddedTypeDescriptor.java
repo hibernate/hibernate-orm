@@ -11,6 +11,7 @@ import javax.persistence.metamodel.EmbeddableType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.mapping.Component;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -50,7 +51,7 @@ public interface EmbeddedTypeDescriptor<T>
 	 * @param creationContext Access to services needed while finishing the instantiation
 	 */
 	void finishInstantiation(
-			EmbeddedValueMapping embeddedValueMapping,
+			EmbeddedValueMappingImplementor embeddedValueMapping,
 			RuntimeModelCreationContext creationContext);
 
 	/**
@@ -67,7 +68,7 @@ public interface EmbeddedTypeDescriptor<T>
 	 * @param creationContext Access to services needed while finishing the instantiation
 	 */
 	void completeInitialization(
-			EmbeddedValueMapping embeddedValueMapping,
+			EmbeddedValueMappingImplementor embeddedValueMapping,
 			RuntimeModelCreationContext creationContext);
 
 	default String getRoleName() {

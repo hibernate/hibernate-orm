@@ -127,7 +127,7 @@ public class EntityGraphImpl<T> extends AbstractAttributeNodeContainer<T> implem
 	@Override
 	@SuppressWarnings("unchecked")
 	protected PersistentAttribute<T,?> resolveAttribute(String attributeName) {
-		final PersistentAttribute attribute = getEntityDescriptor().findAttribute( attributeName );
+		final PersistentAttribute attribute = getEntityDescriptor().findPersistentAttribute( attributeName );
 		if ( attribute == null ) {
 			throw new IllegalArgumentException(
 					String.format(

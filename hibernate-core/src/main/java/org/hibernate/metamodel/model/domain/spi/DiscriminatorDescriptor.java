@@ -16,7 +16,7 @@ import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
  * @author Hardy Ferentschik
  */
 public interface DiscriminatorDescriptor<J>
-		extends VirtualNavigable<J>, BasicValuedNavigable<J>, StateArrayElementContributor<J>, DomainTypeExposer<J> {
+		extends VirtualNavigable<J>, BasicValuedNavigable<J>, StateArrayContributor<J>, DomainTypeExposer<J> {
 
 	// todo (6.0) : why does this implement PersistentAttribute?
 	//		we do not support a model exposing the discriminator as a real attribute

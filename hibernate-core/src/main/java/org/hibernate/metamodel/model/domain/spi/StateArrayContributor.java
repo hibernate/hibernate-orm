@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
  *
  * @author Steve Ebersole
  */
-public interface StateArrayElementContributor<J> extends Navigable<J>, ExpressableType<J> {
+public interface StateArrayContributor<J> extends Navigable<J>, ExpressableType<J> {
 	/**
 	 * Defines this contributor's position within the state array.
 	 *
@@ -29,6 +29,10 @@ public interface StateArrayElementContributor<J> extends Navigable<J>, Expressab
 	 * actions, cache entries, etc
 	 */
 	default int getStateArrayPosition() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	default void setStateArrayPosition(int position) {
 		throw new NotYetImplementedFor6Exception();
 	}
 

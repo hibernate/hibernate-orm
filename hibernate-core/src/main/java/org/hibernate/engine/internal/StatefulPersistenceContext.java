@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
@@ -57,11 +56,12 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ConcurrentReferenceHashMap;
 import org.hibernate.internal.util.collections.IdentityMap;
-import org.hibernate.internal.util.collections.streams.GenericArrayCollector;
 import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.StateArrayElementContributor;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -366,19 +366,25 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			final Object[] naturalIdSnapshotSubSet = new Object[ naturalIdDescriptor.getPersistentAttributes().size() ];
 
-			( (EntityDescriptor<?>) entityDescriptor ).stateArrayContributorStream().forEach(
-					new Consumer<StateArrayElementContributor<?>>() {
-						int i = 0;
+			int i = 0;
 
-						@Override
-						@SuppressWarnings("SuspiciousMethodCalls")
-						public void accept(StateArrayElementContributor<?> contributor) {
-							if ( naturalIdDescriptor.getPersistentAttributes().contains( contributor ) ) {
-								naturalIdSnapshotSubSet[i++] = entitySnapshot[contributor.getStateArrayPosition()];
-							}
-						}
-					}
-			);
+			for ( Navigable<?> navigable : ( (EntityDescriptor<?>) entityDescriptor ).getNavigables() ) {
+				if ( !SingularPersistentAttribute.class.isInstance( navigable ) ) {
+					continue;
+				}
+
+				final SingularPersistentAttribute attribute = (SingularPersistentAttribute) navigable;
+				// Must be a better way to indicate this.  Maybe an extended `PersistentAttribute.Nature`
+				//		for NATURAL_ID in addition to NORMAL, ID, VERSION.  IN terms of JPA's ENUM
+				//		we'd just translate NATURAL_ID as its NORMAL.
+				if ( naturalIdDescriptor.getPersistentAttributes().contains( attribute ) ) {
+					assert StateArrayContributor.class.isInstance( attribute );
+					final StateArrayContributor contributor = (StateArrayContributor) attribute;
+					naturalIdSnapshotSubSet[i++] = entitySnapshot[contributor.getStateArrayPosition()];
+				}
+
+				i++;
+			}
 
 			naturalIdHelper.cacheNaturalIdCrossReferenceFromLoad(
 					entityDescriptor,

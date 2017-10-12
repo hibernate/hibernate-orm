@@ -86,7 +86,8 @@ public final class ForeignKeys<T> {
 			if ( value == null ) {
 				return null;
 			}
-			else if ( attribute instanceof SingularPersistentAttribute ) {
+
+			if ( attribute instanceof SingularPersistentAttribute ) {
 				final SingularAttributeClassification attributeClassification =
 						( (SingularPersistentAttribute) attribute ).getAttributeTypeClassification();
 				if ( attributeClassification == SingularAttributeClassification.ONE_TO_ONE ) {
@@ -102,32 +103,19 @@ public final class ForeignKeys<T> {
 				}
 				else if ( attributeClassification == SingularAttributeClassification.EMBEDDED ) {
 					final SingularPersistentAttributeEmbedded embedded = (SingularPersistentAttributeEmbedded) attribute;
-					final EmbeddedTypeDescriptor embeddedDescriptor = embedded.getEmbeddedDescriptor();
-					final Map<String, PersistentAttribute> embeddedAttributes = embeddedDescriptor.getDeclaredAttributesByName();
+					final EmbeddedTypeDescriptor<?> embeddedDescriptor = embedded.getEmbeddedDescriptor();
 
 					final Map<String, Object> embeddedValues = new LinkedHashMap<>();
-					for ( String propertyName : embeddedAttributes.keySet() ) {
-						embeddedValues.put( propertyName, embeddedDescriptor.getPropertyValue( value, propertyName ) );
-					}
-
 					boolean substitute = false;
-					for ( Map.Entry<String, PersistentAttribute> attributeEntry : embeddedAttributes.entrySet() ) {
-						final Object attributeValue = embeddedDescriptor.getPropertyValue(
-								value,
-								attributeEntry.getKey()
-						);
-						final Object replacement = nullifyTransientReferences(
-								attributeValue,
-								attributeEntry.getValue()
-						);
-						if ( replacement != attributeValue ) {
-							substitute = true;
-							embeddedValues.put( attributeEntry.getKey(), replacement );
+
+					for ( PersistentAttribute<?, ?> subAttribute : embeddedDescriptor.getDeclaredPersistentAttributes() ) {
+						final Object subAttributeValue = subAttribute.getPropertyAccess().getGetter().get( value );
+						final Object replacement = nullifyTransientReferences( subAttributeValue, subAttribute );
+						if ( replacement != subAttributeValue ) {
+							// todo (6.0) : grrr.. this is another place we should not have to pass in SessionFactory
+							//		the attribute AND the property-access are both scoped to the SF
+							subAttribute.getPropertyAccess().getSetter().set( value, replacement, null );
 						}
-					}
-					if ( substitute ) {
-						// todo : need to account for entity mode on the CompositeType interface :(
-						embeddedDescriptor.setPropertyValues( value, embeddedValues.values().toArray() );
 					}
 					return value;
 				}
@@ -387,18 +375,18 @@ public final class ForeignKeys<T> {
 			}
 			else if ( attributeClassification == SingularAttributeClassification.EMBEDDED ) {
 				final SingularPersistentAttributeEmbedded embedded = (SingularPersistentAttributeEmbedded) attribute;
-				final EmbeddedTypeDescriptor embeddedDescriptor = embedded.getEmbeddedDescriptor();
+				final EmbeddedTypeDescriptor<?> embeddedDescriptor = embedded.getEmbeddedDescriptor();
 				final boolean[] subValueNullability = embeddedDescriptor.getPropertyNullability();
 				if ( subValueNullability != null ) {
-					final Map<String, PersistentAttribute> embeddedAttributes = embeddedDescriptor.getDeclaredAttributesByName();
-					final Object[] subvalues = embeddedDescriptor.getPropertyValues( value );
+					final Object[] subValues = embeddedDescriptor.getPropertyValues( value );
+
 					int j = 0;
-					for (String subPropertyNames : embeddedAttributes.keySet()){
+					for ( PersistentAttribute<?, ?> subAttribute : embeddedDescriptor.getDeclaredPersistentAttributes() ) {
 						collectNonNullableTransientEntities(
 								nullifier,
-								subvalues[j],
-								subPropertyNames,
-								embeddedAttributes.get( subPropertyNames ),
+								subValues[j],
+								subAttribute.getName(),
+								subAttribute,
 								subValueNullability[j],
 								session,
 								nonNullableTransientEntities

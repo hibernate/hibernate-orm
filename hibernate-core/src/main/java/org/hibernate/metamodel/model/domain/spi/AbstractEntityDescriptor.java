@@ -654,22 +654,4 @@ public abstract class AbstractEntityDescriptor<T>
 	public boolean hasNaturalIdentifier() {
 		return getHierarchy().getNaturalIdDescriptor() != null;
 	}
-
-
-	@Override
-	public List<Navigable<?>> getDeclaredNavigables() {
-		if ( getHierarchy().getRootEntityType().equals( this ) ) {
-			// the root.. we need to add in id and version.  Others?
-			final ArrayList<Navigable<?>> navigables = new ArrayList<>();
-			navigables.add( getHierarchy().getIdentifierDescriptor() );
-			if ( getHierarchy().getVersionDescriptor() != null ) {
-				navigables.add( getHierarchy().getIdentifierDescriptor() );
-			}
-			navigables.addAll( super.getDeclaredNavigables() );
-			return navigables;
-		}
-		else {
-			return super.getDeclaredNavigables();
-		}
-	}
 }

@@ -31,7 +31,7 @@ import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.StateArrayElementContributor;
+import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
@@ -263,7 +263,7 @@ public final class TwoPhaseLoad {
 					entityDescriptor,
 					hydratedState,
 					hydratedState,
-					StateArrayElementContributor::isUpdatable
+					StateArrayContributor::isUpdatable
 			);
 			persistenceContext.setEntryStatus( entityEntry, Status.MANAGED );
 		}

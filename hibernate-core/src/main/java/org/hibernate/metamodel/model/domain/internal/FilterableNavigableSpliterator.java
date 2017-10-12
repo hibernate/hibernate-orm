@@ -6,143 +6,88 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Spliterator;
-import java.util.Stack;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
-import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 
 /**
  * @author Steve Ebersole
  */
 public class FilterableNavigableSpliterator<N extends Navigable<?>> implements Spliterator<N> {
-	private final Stack<List<N>> topDownNavListStack;
-	private final int size;
+	public static final int CHARACTERISTICS = DISTINCT & NONNULL & IMMUTABLE;
 
-	private Spliterator<N> currentSubSpliterator;
+	private final List<Navigable<?>> listOfNavigables;
+	private final Class<N> filterType;
+
+	private Iterator iterator;
 	private boolean reachedEnd;
 
 	public FilterableNavigableSpliterator(
-			InheritanceCapable container,
-			Class<N> filterType,
-			boolean includeSuperNavigables) {
-		this.topDownNavListStack = new Stack<>();
-
-		this.size = addToStack( container, filterType, includeSuperNavigables );
-	}
-
-	private int addToStack(
-			InheritanceCapable<?> container,
-			Class<N> filterType,
-			boolean includeSuperNavigables) {
-		final List<N> filteredNavigables = filterNavigables( container, filterType );
-		int count = filteredNavigables.size();
-
-		topDownNavListStack.push( filteredNavigables );
-
-		final InheritanceCapable<?> superType = container.getSuperclassType();
-		if ( includeSuperNavigables && superType != null ) {
-			count+= addToStack( superType, filterType, true );
-		}
-
-		return count;
-	}
-
-	/**
-	 * Protected-access to allow sub-types to potentially define better
-	 * filtering algorithm
-	 */
-	@SuppressWarnings({"WeakerAccess", "unchecked"})
-	protected List<N> filterNavigables(InheritanceCapable<?> container, Class<N> filterType) {
-		final List<N> unfiltered = (List<N>) container.getDeclaredNavigables();
-		if ( filterType == null || Navigable.class.equals( filterType ) ) {
-			return unfiltered;
-		}
-
-		return unfiltered.stream()
-				.filter( filterType::isInstance )
-				.map( filterType::cast )
-				.collect( Collectors.toList() );
+			List<Navigable<?>> listOfNavigables,
+			Class<N> filterType) {
+		this.listOfNavigables = listOfNavigables;
+		this.filterType = filterType;
 	}
 
 	@Override
 	public boolean tryAdvance(Consumer<? super N> action) {
-		System.out.println("try advance");
+//		System.out.println("try advance");
 		if ( reachedEnd ) {
 			// should indicate we are past the end of all sub-spliterators
 			return false;
 		}
 
-		if ( currentSubSpliterator == null ) {
-			// should indicate the first pass
-			currentSubSpliterator = nextSubSpliterator();
-
-			if ( currentSubSpliterator == null ) {
-				return false;
-			}
+		if ( iterator == null ) {
+			iterator = listOfNavigables.iterator();
 		}
 
 		return internalTryAdvance( action );
 	}
 
-	private Spliterator<N> nextSubSpliterator() {
-		if ( topDownNavListStack.isEmpty() ) {
-			reachedEnd = true;
-			return null;
-		}
-
-		System.out.println( "Popping Stack element for next Spliterator" );
-
-		return topDownNavListStack.pop().spliterator();
-	}
-
 	@SuppressWarnings("PointlessBooleanExpression")
 	private boolean internalTryAdvance(Consumer<? super N> action) {
-		boolean reply = currentSubSpliterator.tryAdvance( action );
+		final N nextMatch = findNextMatch();
 
-		if ( reply == false ) {
-			while ( !reachedEnd && reply == false ) {
-				// see if there is another Spliterator left
-				currentSubSpliterator = nextSubSpliterator();
-				if ( currentSubSpliterator == null ) {
-					assert reachedEnd;
-					return false;
-				}
-				reply = currentSubSpliterator.tryAdvance( action );
+		if ( reachedEnd ) {
+			assert nextMatch == null;
+			return false;
+		}
+
+		action.accept( nextMatch );
+
+		return true;
+	}
+
+	@SuppressWarnings("unchecked")
+	private N findNextMatch() {
+		assert iterator != null;
+
+		while ( iterator.hasNext() ) {
+			final N next = (N) iterator.next();
+			if ( filterType == null || filterType.isInstance( next ) ) {
+				return next;
 			}
 		}
 
-		return reply;
+		// if we get here, the iterator is finished - `! hasNext()`
+		reachedEnd = true;
+		iterator = null;
+
+		return null;
 	}
 
 	@Override
 	public Spliterator<N> trySplit() {
-		System.out.println("try split");
-		if ( topDownNavListStack.isEmpty() ) {
-			return null;
-		}
-
-		return nextSubSpliterator();
+		return null;
 	}
 
 	@Override
 	public long estimateSize() {
-		return size;
+		return listOfNavigables.size();
 	}
-
-	@Override
-	public long getExactSizeIfKnown() {
-		return size;
-	}
-
-	public static final int CHARACTERISTICS = SIZED
-			& SORTED
-			& DISTINCT
-			& NONNULL
-			& IMMUTABLE;
 
 	@Override
 	public int characteristics() {

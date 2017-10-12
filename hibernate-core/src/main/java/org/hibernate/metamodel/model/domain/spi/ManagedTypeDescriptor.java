@@ -8,13 +8,8 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -44,58 +39,34 @@ public interface ManagedTypeDescriptor<T>
 
 	RepresentationStrategy getRepresentationStrategy();
 
-	Spliterator<PersistentAttribute> persistentAttributeSource();
-	Spliterator<PersistentAttribute> declaredPersistentAttributeSource();
+	List<StateArrayContributor<?>> getStateArrayContributors();
 
-	default Stream<PersistentAttribute> persistentAttributeStream() {
-		return StreamSupport.stream( persistentAttributeSource(), false );
-	}
+	PersistentAttribute<? super T, ?> findPersistentAttribute(String name);
 
-	default Stream<PersistentAttribute> declaredPersistentAttributeStream() {
-		return StreamSupport.stream( declaredPersistentAttributeSource(), false );
-	}
-
-	Spliterator<StateArrayElementContributor<?>> stateArrayContributorSource();
-
-	default Stream<StateArrayElementContributor<?>> stateArrayContributorStream() {
-		return StreamSupport.stream( stateArrayContributorSource(), false );
-	}
+	PersistentAttribute<? super T, ?> findDeclaredPersistentAttribute(String name);
 
 	@SuppressWarnings("unchecked")
-	default PersistentAttribute<? super T, ?> findAttribute(String name) {
-		final Optional<PersistentAttribute> found = persistentAttributeStream()
-				.filter( attribute -> name.equals( attribute.getName() ) )
-				.findFirst();
-
-		return found.orElse( null );
+	default <R> PersistentAttribute<? super T, R> findDeclaredPersistentAttribute(String name, Class<R> resultType) {
+		return (PersistentAttribute<? super T, R>) findDeclaredPersistentAttribute( name );
 	}
 
-	PersistentAttribute<? super T, ?> findDeclaredAttribute(String name);
-	PersistentAttribute<? super T, ?> findDeclaredAttribute(String name, Class resultType);
-
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo (6.0) : both would be pre-built during the process of creating the runtime model
+	//		this proved to be the best solution by far based on JMH testing
 	default List<PersistentAttribute<? super T,?>> getPersistentAttributes() {
-		final List<PersistentAttribute<? super T,?>> attributes = new ArrayList<>();
-		collectAttributes( attributes::add, PersistentAttribute.class );
-		return attributes;
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	default List<PersistentAttribute<? super T, ?>> getDeclaredPersistentAttributes() {
-		final List<PersistentAttribute<? super T,?>> attributes = new ArrayList<>();
-		collectDeclaredAttributes( attributes::add, PersistentAttribute.class );
-		return attributes;
+		throw new NotYetImplementedFor6Exception();
 	}
-
-	Map<String, PersistentAttribute> getAttributesByName();
-	Map<String, PersistentAttribute> getDeclaredAttributesByName();
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	default void visitAttributes(Consumer<? extends PersistentAttribute> consumer) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
-	<A extends javax.persistence.metamodel.Attribute> void collectAttributes(Consumer<A> collector, Class<A> restrictionType);
-	<A extends javax.persistence.metamodel.Attribute> void collectDeclaredAttributes(Consumer<A> collector, Class<A> restrictionType);
-
-	void visitStateArrayNavigables(Consumer<StateArrayElementContributor<?>> consumer);
+	void visitStateArrayNavigables(Consumer<StateArrayContributor<?>> consumer);
 
 
 	/**

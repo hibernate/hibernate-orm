@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.domain.spi;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
-import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 
@@ -56,19 +55,11 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 		this.entityHierarchy = entityHierarchy;
 		this.superclassType = superType;
 
-		for ( PersistentAttributeMapping attributeMapping : mappingDescriptor.getDeclaredPersistentAttributes() ) {
-			final PersistentAttribute persistentAttribute = attributeMapping.makeRuntimeAttribute(
-					this,
-					mappingDescriptor,
-					SingularPersistentAttribute.Disposition.NORMAL,
-					creationContext
-			);
-			addAttribute( persistentAttribute );
-		}
+		super.finishInitialization( superType, mappingDescriptor, creationContext );
 	}
 
 	@Override
-	public void visitStateArrayNavigables(Consumer<StateArrayElementContributor<?>> consumer) {
+	public void visitStateArrayNavigables(Consumer<StateArrayContributor<?>> consumer) {
 
 		// todo (6.0) : determine which "root entity" navigables need to be written to the state array.
 		//		- also, make sure this only happens for the root

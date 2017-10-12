@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
  */
 public abstract class AbstractNonIdSingularPersistentAttribute<O,J>
 		extends AbstractSingularPersistentAttribute<O,J>
-		implements StateArrayElementContributor<J> {
+		implements NonIdPersistentAttribute<O,J> {
 
 	private final MutabilityPlan<J> mutabilityPlan;
 

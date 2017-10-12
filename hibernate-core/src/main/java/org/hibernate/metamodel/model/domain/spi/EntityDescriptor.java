@@ -17,6 +17,7 @@ import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.domain.EntityMapping;
+import org.hibernate.boot.model.domain.spi.EntityMappingImplementor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
@@ -108,7 +109,7 @@ public interface EntityDescriptor<T>
 	 * Called after all EntityDescriptor instance for the persistence unit have been created;
 	 *
 	 * @param superType The entity's super's EntityDescriptor
-	 * @param mappingDescriptor Should be  the same reference (instance) originally passed to the
+	 * @param bootDescriptor Should be  the same reference (instance) originally passed to the
 	 * 		ctor, but we want to not have to store that reference as instance state -
 	 * 		so we pass it in again
 	 * @param creationContext Access to the database model, etc
@@ -116,7 +117,7 @@ public interface EntityDescriptor<T>
 	void finishInitialization(
 			EntityHierarchy entityHierarchy,
 			IdentifiableTypeDescriptor<? super T> superType,
-			EntityMapping mappingDescriptor,
+			EntityMappingImplementor bootDescriptor,
 			RuntimeModelCreationContext creationContext);
 
 	/**

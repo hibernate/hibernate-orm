@@ -24,6 +24,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.MappedTableJoin;
+import org.hibernate.boot.model.domain.spi.EntityMappingImplementor;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
@@ -183,12 +184,12 @@ public abstract class AbstractEntityDescriptor<T>
 	public void finishInitialization(
 			EntityHierarchy entityHierarchy,
 			IdentifiableTypeDescriptor<? super T> superType,
-			EntityMapping mappingDescriptor,
+			EntityMappingImplementor bootDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		super.finishInitialization( entityHierarchy, superType, mappingDescriptor, creationContext );
+		super.finishInitialization( entityHierarchy, superType, bootDescriptor, creationContext );
 
 		log.debugf(
-				"Completed initialization of persister [%s] for entity [%s (%s)]",
+				"Completed initialization of descriptor [%s] for entity [%s (%s)]",
 				this,
 				getJavaTypeDescriptor().getEntityName(),
 				getJavaTypeDescriptor().getJpaEntityName()

@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain.spi;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 
@@ -50,7 +51,7 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 	public void finishInitialization(
 			EntityHierarchy entityHierarchy,
 			IdentifiableTypeDescriptor<? super T> superType,
-			IdentifiableTypeMapping mappingDescriptor,
+			IdentifiableTypeMappingImplementor mappingDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		this.entityHierarchy = entityHierarchy;
 		this.superclassType = superType;

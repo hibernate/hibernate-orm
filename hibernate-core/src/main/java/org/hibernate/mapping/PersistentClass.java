@@ -18,12 +18,12 @@ import java.util.stream.Collectors;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
-import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.MappedTableJoin;
 import org.hibernate.boot.model.domain.internal.AbstractIdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
+import org.hibernate.boot.model.domain.spi.EntityMappingImplementor;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -37,11 +37,9 @@ import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Instantiator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Mapping for an entity.
@@ -50,7 +48,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  */
 public abstract class PersistentClass
 		extends AbstractIdentifiableTypeMapping
-		implements EntityMapping, AttributeContainer, Serializable, Filterable, MetaAttributable, PropertyContainer {
+		implements EntityMappingImplementor, AttributeContainer, Serializable, Filterable, MetaAttributable, PropertyContainer {
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
 	public static final String NULL_DISCRIMINATOR_MAPPING = "null";

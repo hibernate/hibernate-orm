@@ -82,11 +82,6 @@ public class CollectionIndexEntityImpl<J>
 	}
 
 	@Override
-	public List<Navigable<?>> getNavigables() {
-		return getEntityDescriptor().getNavigables();
-	}
-
-	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
 		getEntityDescriptor().visitNavigables( visitor );
 	}

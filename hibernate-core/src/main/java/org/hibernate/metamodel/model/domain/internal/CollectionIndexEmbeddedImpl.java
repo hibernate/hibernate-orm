@@ -59,11 +59,6 @@ public class CollectionIndexEmbeddedImpl<J>
 	}
 
 	@Override
-	public List<Navigable<?>> getNavigables() {
-		return getEmbeddedDescriptor().getNavigables();
-	}
-
-	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
 		getEmbeddedDescriptor().visitNavigables( visitor );
 	}

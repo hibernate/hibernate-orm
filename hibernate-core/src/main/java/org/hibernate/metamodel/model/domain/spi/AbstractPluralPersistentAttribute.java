@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.util.List;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -112,11 +111,6 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 	@Override
 	public <N> Navigable<N> findNavigable(String navigableName) {
 		return getPersistentCollectionMetadata().findNavigable( navigableName );
-	}
-
-	@Override
-	public List<Navigable<?>> getNavigables() {
-		return getPersistentCollectionMetadata().getNavigables();
 	}
 
 	@Override

@@ -75,11 +75,6 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 	}
 
 	@Override
-	public List<Navigable<?>> getNavigables() {
-		return getEmbeddedDescriptor().getNavigables();
-	}
-
-	@Override
 	public List<Column> getColumns() {
 		return getEmbeddedDescriptor().collectColumns();
 	}

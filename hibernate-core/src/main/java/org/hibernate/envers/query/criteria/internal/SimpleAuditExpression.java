@@ -7,7 +7,6 @@
 package org.hibernate.envers.query.criteria.internal;
 
 import java.util.Collection;
-import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.exception.AuditException;
@@ -103,9 +102,14 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 	 *
 	 * @return the persistent attribute or {@code null} if the attribute isn't found.
 	 */
-	private PersistentAttribute getPersistentAttribute(SessionImplementor session, String entityName, String attributeName) {
-		final EntityDescriptor entityDescriptor = session.getSessionFactory().getTypeConfiguration().findEntityDescriptor( entityName );
-		final Map<String, PersistentAttribute> attributes = (Map<String, PersistentAttribute>) entityDescriptor.getAttributesByName();
-		return attributes.getOrDefault( attributeName, null );
+	private PersistentAttribute getPersistentAttribute(
+			SessionImplementor session,
+			String entityName,
+			String attributeName) {
+		final EntityDescriptor entityDescriptor = session
+				.getSessionFactory()
+				.getTypeConfiguration()
+				.findEntityDescriptor( entityName );
+		return entityDescriptor.findPersistentAttribute( attributeName );
 	}
 }

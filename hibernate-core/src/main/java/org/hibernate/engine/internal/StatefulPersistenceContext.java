@@ -58,6 +58,7 @@ import org.hibernate.internal.util.collections.ConcurrentReferenceHashMap;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
@@ -368,18 +369,18 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			int i = 0;
 
-			for ( Navigable<?> navigable : ( (EntityDescriptor<?>) entityDescriptor ).getNavigables() ) {
-				if ( !SingularPersistentAttribute.class.isInstance( navigable ) ) {
+			for ( PersistentAttribute attribute : ( (EntityDescriptor<?>) entityDescriptor ).getPersistentAttributes() ) {
+				if ( !SingularPersistentAttribute.class.isInstance( attribute ) ) {
 					continue;
 				}
 
-				final SingularPersistentAttribute attribute = (SingularPersistentAttribute) navigable;
+				final SingularPersistentAttribute singularAttribute = (SingularPersistentAttribute) attribute;
 				// Must be a better way to indicate this.  Maybe an extended `PersistentAttribute.Nature`
 				//		for NATURAL_ID in addition to NORMAL, ID, VERSION.  IN terms of JPA's ENUM
 				//		we'd just translate NATURAL_ID as its NORMAL.
-				if ( naturalIdDescriptor.getPersistentAttributes().contains( attribute ) ) {
-					assert StateArrayContributor.class.isInstance( attribute );
-					final StateArrayContributor contributor = (StateArrayContributor) attribute;
+				if ( naturalIdDescriptor.getPersistentAttributes().contains( singularAttribute ) ) {
+					assert StateArrayContributor.class.isInstance( singularAttribute );
+					final StateArrayContributor contributor = (StateArrayContributor) singularAttribute;
 					naturalIdSnapshotSubSet[i++] = entitySnapshot[contributor.getStateArrayPosition()];
 				}
 

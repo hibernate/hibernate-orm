@@ -7,9 +7,6 @@
 
 package org.hibernate.metamodel.model.domain.internal;
 
-import java.util.List;
-import java.util.Spliterator;
-
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.engine.FetchStrategy;
@@ -105,11 +102,6 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	}
 
 	@Override
-	public List<Navigable<?>> getNavigables() {
-		return embeddedDescriptor.getNavigables();
-	}
-
-	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
 		embeddedDescriptor.visitNavigables( visitor );
 	}
@@ -144,10 +136,5 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	@Override
 	public ForeignKey.ColumnMappings getJoinColumnMappings() {
 		throw new NotYetImplementedFor6Exception(  );
-	}
-
-	@Override
-	public <T extends Navigable<?>> Spliterator<T> navigableSource(Class<T> filterType) {
-		return getEmbeddedDescriptor().navigableSource( filterType );
 	}
 }

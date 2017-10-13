@@ -7,7 +7,6 @@
 package org.hibernate.sql.ast.produce.sqm.internal;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -105,11 +104,6 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements Polymorphi
 		}
 
 		return navigable;
-	}
-
-	@Override
-	public List<Navigable<?>> getNavigables() {
-		return null;
 	}
 
 	@Override

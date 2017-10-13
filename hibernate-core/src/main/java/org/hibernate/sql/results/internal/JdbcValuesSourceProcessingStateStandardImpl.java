@@ -34,7 +34,6 @@ import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
@@ -246,13 +245,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 		final Object entityInstance = loadingEntity.getEntityInstance();
 
-		for ( Navigable<?> navigable : entityDescriptor.getNavigables() ) {
-			if ( !StateArrayContributor.class.isInstance( navigable ) ) {
-				continue;
-			}
-
-			final StateArrayContributor contributor = (StateArrayContributor) navigable;
-
+		for ( StateArrayContributor<?> contributor : entityDescriptor.getStateArrayContributors() ) {
 			final int position = contributor.getStateArrayPosition();
 			final Object value = hydratedState[position];
 

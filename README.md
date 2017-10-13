@@ -14,12 +14,12 @@ Resources
 
 The build requires a Java 8 JDK as JAVA_HOME.
 
-You will need http://git-scm.com/[git] to obtain the http://github.com/hibernate/hibernate-orm/[source].
+You will need [git](https://git-scm.com/) to obtain the [source](https://github.com/hibernate/hibernate-orm/).
 
-Hibernate uses [Gradle](http://gradle.org) as its build tool.  See the _Gradle Primer_ section below if you are new to
+Hibernate uses [Gradle](https://gradle.org) as its build tool.  See the _Gradle Primer_ section below if you are new to
 Gradle.
 
-Contributors should read the [Contributing Guide](CONTRIBUTING.md)
+Contributors should read the [Contributing Guide](CONTRIBUTING.md).
 
 See the guides for setting up [IntelliJ](https://developer.jboss.org/wiki/ContributingToHibernateUsingIntelliJ) or
 [Eclipse](https://developer.jboss.org/wiki/ContributingToHibernateUsingEclipse) as your development environment.

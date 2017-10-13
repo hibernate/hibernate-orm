@@ -218,7 +218,7 @@ This would look something like:
 	//
 	//		decide which is more understandable
 
-### Entity metadata (19)
+### Entity metadata (14)
 
 
 Various errors dealing with entity metadata including versioning, natural-ids, attribute "position", etc
@@ -310,36 +310,6 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
 		              ^
   symbol:   method getEntityMetamodel()
   location: variable persister of type PostInsertIdentityPersister
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:1146: error: cannot find symbol
-			if ( persister.isSubclassEntityName( entityEntry.getEntityName() )
-			              ^
-  symbol:   method isSubclassEntityName(String)
-  location: variable persister of type EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:1161: error: cannot find symbol
-			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
-			              ^
-  symbol:   method isSubclassEntityName(String)
-  location: variable persister of type EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:1207: error: cannot find symbol
-					if ( persister.isSubclassEntityName( proxy.getHibernateLazyInitializer().getEntityName() ) ) {
-					              ^
-  symbol:   method isSubclassEntityName(String)
-  location: variable persister of type EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:1265: error: cannot find symbol
-			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
-			              ^
-  symbol:   method isSubclassEntityName(String)
-  location: variable persister of type EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:1292: error: cannot find symbol
-			if ( persister.isSubclassEntityName( ee.getEntityName() ) ) {
-			              ^
-  symbol:   method isSubclassEntityName(String)
-  location: variable persister of type EntityDescriptor
 
 ----
 

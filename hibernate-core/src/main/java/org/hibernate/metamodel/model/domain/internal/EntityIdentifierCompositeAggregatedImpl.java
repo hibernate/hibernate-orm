@@ -154,11 +154,6 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 	}
 
 	@Override
-	public List<Navigable<?>> getNavigables() {
-		throw new NotYetImplementedFor6Exception(  );
-	}
-
-	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
 		throw new NotYetImplementedFor6Exception(  );
 	}

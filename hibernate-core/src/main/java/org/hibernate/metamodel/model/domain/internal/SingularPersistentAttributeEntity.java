@@ -6,9 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import java.util.List;
-import java.util.Spliterator;
-
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
@@ -371,19 +368,9 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
-	public List<Navigable<?>> getNavigables() {
-		return entityDescriptor.getNavigables();
-	}
-
-	@Override
 	public SqlSelectionGroup resolveSqlSelectionGroup(
 			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
 		throw new NotYetImplementedFor6Exception(  );
-	}
-
-	@Override
-	public <T extends Navigable<?>> Spliterator<T> navigableSource(Class<T> filterType) {
-		return getEntityDescriptor().navigableSource( filterType );
 	}
 }

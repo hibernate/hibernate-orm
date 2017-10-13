@@ -390,6 +390,7 @@ public interface PersistentCollectionDescriptor<O,C,E>
 
 	void initialize(Serializable loadedKey, SharedSessionContractImplementor session);
 
+	// todo (6.0) : re-eval the whole timing + style + batch-size
 	int getBatchSize();
 //
 //	CollectionMetadata getCollectionDescriptor();

@@ -57,7 +57,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ConcurrentReferenceHashMap;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
@@ -316,14 +315,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Object[] getDatabaseSnapshot(Serializable id, EntityDescriptor persister) throws HibernateException {
-		final EntityKey key = session.generateEntityKey( id, persister );
+	public Object[] getDatabaseSnapshot(Serializable id, EntityDescriptor descriptor) throws HibernateException {
+		final EntityKey key = session.generateEntityKey( id, descriptor );
 		final Object cached = entitySnapshotsByKey.get( key );
 		if ( cached != null ) {
 			return cached == NO_ROW ? null : (Object[]) cached;
 		}
 		else {
-			final Object[] snapshot = persister.getDatabaseSnapshot( id, session );
+			final Object[] snapshot = descriptor.getDatabaseSnapshot( id, session );
 			entitySnapshotsByKey.put( key, snapshot == null ? NO_ROW : snapshot );
 			return snapshot;
 		}
@@ -331,17 +330,17 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Object[] getNaturalIdSnapshot(Serializable id, EntityDescriptor entityDescriptor) throws HibernateException {
-		final NaturalIdDescriptor naturalIdDescriptor = entityDescriptor.getHierarchy().getNaturalIdDescriptor();
+	public Object[] getNaturalIdSnapshot(Serializable id, EntityDescriptor descriptor) throws HibernateException {
+		final NaturalIdDescriptor naturalIdDescriptor = descriptor.getHierarchy().getNaturalIdDescriptor();
 
 		if ( naturalIdDescriptor == null ) {
 			return null;
 		}
 
-		entityDescriptor = locateProperPersister( entityDescriptor );
+		descriptor = locateProperDescriptor( descriptor );
 
 		// let's first see if it is part of the natural id cache...
-		final Object[] cachedValue = naturalIdHelper.findCachedNaturalId( entityDescriptor, id );
+		final Object[] cachedValue = naturalIdHelper.findCachedNaturalId( descriptor, id );
 		if ( cachedValue != null ) {
 			return cachedValue;
 		}
@@ -349,9 +348,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		// check to see if the natural id is mutable/immutable
 		if ( !naturalIdDescriptor.isMutable() ) {
 			// an immutable natural-id is not retrieved during a normal database-snapshot operation...
-			final Object[] dbValue = entityDescriptor.getHierarchy().getNaturalIdDescriptor().resolveSnapshot( id, session );
+			final Object[] dbValue = descriptor.getHierarchy().getNaturalIdDescriptor().resolveSnapshot( id, session );
 			naturalIdHelper.cacheNaturalIdCrossReferenceFromLoad(
-					entityDescriptor,
+					descriptor,
 					id,
 					dbValue
 			);
@@ -360,7 +359,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		else {
 			// for a mutable natural there is a likelihood that the the information will already be
 			// snapshot-cached.
-			final Object[] entitySnapshot = getDatabaseSnapshot( id, entityDescriptor );
+			final Object[] entitySnapshot = getDatabaseSnapshot( id, descriptor );
 			if ( entitySnapshot == NO_ROW || entitySnapshot == null ) {
 				return null;
 			}
@@ -369,7 +368,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			int i = 0;
 
-			for ( PersistentAttribute attribute : ( (EntityDescriptor<?>) entityDescriptor ).getPersistentAttributes() ) {
+			for ( PersistentAttribute attribute : ( (EntityDescriptor<?>) descriptor ).getPersistentAttributes() ) {
 				if ( !SingularPersistentAttribute.class.isInstance( attribute ) ) {
 					continue;
 				}
@@ -388,7 +387,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			naturalIdHelper.cacheNaturalIdCrossReferenceFromLoad(
-					entityDescriptor,
+					descriptor,
 					id,
 					naturalIdSnapshotSubSet
 			);
@@ -397,9 +396,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 	}
 
-	private EntityDescriptor locateProperPersister(EntityDescriptor persister) {
+	private EntityDescriptor locateProperDescriptor(EntityDescriptor descriptor) {
 		// tod0 (6.0) : avoid the lookup if the passed descriptor is the root.
-		return session.getFactory().getTypeConfiguration().findEntityDescriptor( persister.getHierarchy().getRootEntityType().getEntityName() );
+		return session.getFactory().getTypeConfiguration().findEntityDescriptor( descriptor.getHierarchy().getRootEntityType().getEntityName() );
 	}
 
 	@Override
@@ -491,7 +490,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityDescriptor persister,
+			final EntityDescriptor descriptor,
 			final boolean disableVersionIncrement) {
 		addEntity( entityKey, entity );
 		return addEntry(
@@ -503,7 +502,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				version,
 				lockMode,
 				existsInDatabase,
-				persister,
+				descriptor,
 				disableVersionIncrement
 		);
 	}
@@ -518,7 +517,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityDescriptor persister,
+			final EntityDescriptor descriptor,
 			final boolean disableVersionIncrement) {
 		final EntityEntry e;
 
@@ -536,9 +535,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			removes the virtual call, and allows the methods to be in-lined.  In this critical code path, it has a very
 			large impact on performance to make virtual method calls.
 		*/
-		if (persister.getEntityEntryFactory() instanceof MutableEntityEntryFactory) {
+		if ( descriptor.getEntityEntryFactory() instanceof MutableEntityEntryFactory) {
 			//noinspection RedundantCast
-			e = ( (MutableEntityEntryFactory) persister.getEntityEntryFactory() ).createEntityEntry(
+			e = ( (MutableEntityEntryFactory) descriptor.getEntityEntryFactory() ).createEntityEntry(
 					status,
 					loadedState,
 					rowId,
@@ -546,14 +545,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					version,
 					lockMode,
 					existsInDatabase,
-					persister,
+					descriptor,
 					disableVersionIncrement,
 					this
 			);
 		}
 		else {
 			//noinspection RedundantCast
-			e = ( (ImmutableEntityEntryFactory) persister.getEntityEntryFactory() ).createEntityEntry(
+			e = ( (ImmutableEntityEntryFactory) descriptor.getEntityEntryFactory() ).createEntityEntry(
 					status,
 					loadedState,
 					rowId,
@@ -561,7 +560,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					version,
 					lockMode,
 					existsInDatabase,
-					persister,
+					descriptor,
 					disableVersionIncrement,
 					this
 			);
@@ -626,8 +625,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	private void reassociateProxy(LazyInitializer li, HibernateProxy proxy) {
 		if ( li.getSession() != this.getSession() ) {
-			final EntityDescriptor persister = session.getFactory().getTypeConfiguration().findEntityDescriptor( li.getEntityName() );
-			final EntityKey key = session.generateEntityKey( li.getIdentifier(), persister );
+			final EntityDescriptor entityDescriptor = session.getFactory().getTypeConfiguration().findEntityDescriptor( li.getEntityName() );
+			final EntityKey key = session.generateEntityKey( li.getIdentifier(), entityDescriptor );
 		  	// any earlier proxy takes precedence
 			proxiesByKey.putIfAbsent( key, proxy );
 			proxy.getHibernateLazyInitializer().setSession( session );
@@ -679,10 +678,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object narrowProxy(Object proxy, EntityDescriptor persister, EntityKey key, Object object)
+	public Object narrowProxy(Object proxy, EntityDescriptor descriptor, EntityKey key, Object object)
 			throws HibernateException {
 
-		final Class concreteProxyClass = persister.getConcreteProxyClass();
+		final Class concreteProxyClass = descriptor.getConcreteProxyClass();
 		final boolean alreadyNarrow = concreteProxyClass.isInstance( proxy );
 
 		if ( !alreadyNarrow ) {
@@ -709,7 +708,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 
 			// Otherwise, create the narrowed proxy
-			final HibernateProxy narrowedProxy = (HibernateProxy) persister.createProxy( key.getIdentifier(), session );
+			final HibernateProxy narrowedProxy = (HibernateProxy) descriptor.createProxy( key.getIdentifier(), session );
 
 			// set the read-only/modifiable mode in the new proxy to what it was in the original proxy
 			final boolean readOnlyOrig = originalHibernateProxy.getHibernateLazyInitializer().isReadOnly();
@@ -728,12 +727,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Object proxyFor(EntityDescriptor persister, EntityKey key, Object impl) throws HibernateException {
-		if ( !persister.hasProxy() ) {
+	public Object proxyFor(EntityDescriptor descriptor, EntityKey key, Object impl) throws HibernateException {
+		if ( !descriptor.hasProxy() ) {
 			return impl;
 		}
 		final Object proxy = proxiesByKey.get( key );
-		return ( proxy != null ) ? narrowProxy( proxy, persister, key, impl ) : impl;
+		return ( proxy != null ) ? narrowProxy( proxy, descriptor, key, impl ) : impl;
 	}
 
 	@Override
@@ -742,32 +741,32 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( e == null ) {
 			return impl;
 		}
-		return proxyFor( e.getPersister(), e.getEntityKey(), impl );
+		return proxyFor( e.getDescriptor(), e.getEntityKey(), impl );
 	}
 
 	@Override
-	public Object getCollectionOwner(Serializable key, PersistentCollectionDescriptor collectionPersister) throws MappingException {
+	public Object getCollectionOwner(Serializable key, PersistentCollectionDescriptor descriptor) throws MappingException {
 		// todo : we really just need to add a split in the notions of:
 		//		1) collection key
 		//		2) collection owner key
 		// these 2 are not always the same.  Same is true in the case of ToOne associations with property-ref...
-		final EntityDescriptor ownerPersister = collectionPersister.getOwnerEntityPersister();
-		if ( ownerPersister.getIdentifierType().getJavaTypeDescriptor().getJavaType().isInstance( key ) ) {
-			return getEntity( session.generateEntityKey( key, collectionPersister.getOwnerEntityPersister() ) );
+		final EntityDescriptor ownerDescriptor = descriptor.getOwnerEntityPersister();
+		if ( ownerDescriptor.getIdentifierType().getJavaTypeDescriptor().getJavaType().isInstance( key ) ) {
+			return getEntity( session.generateEntityKey( key, descriptor.getOwnerEntityPersister() ) );
 		}
 
 		// we have a property-ref type mapping for the collection key.  But that could show up a few ways here...
 		//
 		//		1) The incoming key could be the entity itself...
-		if ( ownerPersister.isInstance( key ) ) {
-			final Serializable owenerId = ownerPersister.getIdentifier( key, session );
+		if ( ownerDescriptor.isInstance( key ) ) {
+			final Serializable owenerId = ownerDescriptor.getIdentifier( key, session );
 			if ( owenerId == null ) {
 				return null;
 			}
-			return getEntity( session.generateEntityKey( owenerId, ownerPersister ) );
+			return getEntity( session.generateEntityKey( owenerId, ownerDescriptor ) );
 		}
 
-		final CollectionType collectionType = collectionPersister.getOrmType();
+		final CollectionType collectionType = descriptor.getOrmType();
 
 		//		2) The incoming key is most likely the collection key which we need to resolve to the owner key
 		//			find the corresponding owner instance
@@ -775,11 +774,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( collectionType.getLHSPropertyName() != null ) {
 			final Object owner = getEntity(
 					new EntityUniqueKey(
-							ownerPersister.getEntityName(),
+							ownerDescriptor.getEntityName(),
 							collectionType.getLHSPropertyName(),
 							key,
-							collectionPersister.getKeyType(),
-							ownerPersister.getRepresentationStrategy().getMode(),
+							descriptor.getKeyType(),
+							ownerDescriptor.getRepresentationStrategy().getMode(),
 							session.getFactory()
 					)
 			);
@@ -800,12 +799,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			//			We could also possibly see if the referenced property is a natural id since we already have caching
 			//			in place of natural id snapshots.  BUt really its better to just do it the right way ^^ if we start
 			// 			going that route
-			final Serializable ownerId = ownerPersister.getIdByUniqueKey( key, collectionType.getLHSPropertyName(), session );
-			return getEntity( session.generateEntityKey( ownerId, ownerPersister ) );
+			final Serializable ownerId = ownerDescriptor.getIdByUniqueKey( key, collectionType.getLHSPropertyName(), session );
+			return getEntity( session.generateEntityKey( ownerId, ownerDescriptor ) );
 		}
 
 		// as a last resort this is what the old code did...
-		return getEntity( session.generateEntityKey( key, collectionPersister.getOwnerEntityPersister() ) );
+		return getEntity( session.generateEntityKey( key, descriptor.getOwnerEntityPersister() ) );
 	}
 
 	@Override
@@ -846,27 +845,27 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public void addUninitializedCollection(PersistentCollectionDescriptor persister, PersistentCollection collection, Serializable id) {
-		final CollectionEntry ce = new CollectionEntry( collection, persister, id, flushing );
+	public void addUninitializedCollection(PersistentCollectionDescriptor descriptor, PersistentCollection collection, Serializable id) {
+		final CollectionEntry ce = new CollectionEntry( collection, descriptor, id, flushing );
 		addCollection( collection, ce, id );
-		if ( persister.getBatchSize() > 1 ) {
+		if ( descriptor.getBatchSize() > 1 ) {
 			getBatchFetchQueue().addBatchLoadableCollection( collection, ce );
 		}
 	}
 
 	@Override
-	public void addUninitializedDetachedCollection(PersistentCollectionDescriptor persister, PersistentCollection collection) {
-		final CollectionEntry ce = new CollectionEntry( persister, collection.getKey() );
+	public void addUninitializedDetachedCollection(PersistentCollectionDescriptor descriptor, PersistentCollection collection) {
+		final CollectionEntry ce = new CollectionEntry( descriptor, collection.getKey() );
 		addCollection( collection, ce, collection.getKey() );
-		if ( persister.getBatchSize() > 1 ) {
+		if ( descriptor.getBatchSize() > 1 ) {
 			getBatchFetchQueue().addBatchLoadableCollection( collection, ce );
 		}
 	}
 
 	@Override
-	public void addNewCollection(PersistentCollectionDescriptor persister, PersistentCollection collection)
+	public void addNewCollection(PersistentCollectionDescriptor descriptor, PersistentCollection collection)
 			throws HibernateException {
-		addCollection( collection, persister );
+		addCollection( collection, descriptor );
 	}
 
 	/**
@@ -896,19 +895,19 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 * Add a collection to the cache, creating a new collection entry for it
 	 *
 	 * @param collection The collection for which we are adding an entry.
-	 * @param persister The collection persister
+	 * @param descriptor The collection descriptor
 	 */
-	private void addCollection(PersistentCollection collection, PersistentCollectionDescriptor persister) {
-		final CollectionEntry ce = new CollectionEntry( persister, collection );
+	private void addCollection(PersistentCollection collection, PersistentCollectionDescriptor descriptor) {
+		final CollectionEntry ce = new CollectionEntry( descriptor, collection );
 		collectionEntries.put( collection, ce );
 	}
 
 	@Override
-	public void addInitializedDetachedCollection(PersistentCollectionDescriptor collectionPersister, PersistentCollection collection)
+	public void addInitializedDetachedCollection(PersistentCollectionDescriptor descriptor, PersistentCollection collection)
 			throws HibernateException {
 		if ( collection.isUnreferenced() ) {
 			//treat it just like a new collection
-			addCollection( collection, collectionPersister );
+			addCollection( collection, descriptor );
 		}
 		else {
 			final CollectionEntry ce = new CollectionEntry( collection, session.getFactory() );
@@ -917,9 +916,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public CollectionEntry addInitializedCollection(PersistentCollectionDescriptor persister, PersistentCollection collection, Serializable id)
+	public CollectionEntry addInitializedCollection(PersistentCollectionDescriptor descriptor, PersistentCollection collection, Serializable id)
 			throws HibernateException {
-		final CollectionEntry ce = new CollectionEntry( collection, persister, id, flushing );
+		final CollectionEntry ce = new CollectionEntry( collection, descriptor, id, flushing );
 		ce.postInitialize( collection );
 		addCollection( collection, ce, id );
 		return ce;
@@ -1159,16 +1158,16 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Serializable getOwnerId(String entityName, String propertyName, Object childEntity, Map mergeMap) {
 		final String collectionRole = entityName + '.' + propertyName;
-		final EntityDescriptor persister = session.getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
-		final PersistentCollectionDescriptor collectionPersister = session.getFactory().getTypeConfiguration().findCollectionDescriptor( collectionRole );
+		final EntityDescriptor entityDescriptor = session.getFactory().getTypeConfiguration().findEntityDescriptor( entityName );
+		final PersistentCollectionDescriptor collectionDescriptor = session.getFactory().getTypeConfiguration().findCollectionDescriptor( collectionRole );
 
 	    // try cache lookup first
 		final Object parent = parentsByChild.get( childEntity );
 		if ( parent != null ) {
 			final EntityEntry entityEntry = entityEntryContext.getEntityEntry( parent );
 			//there maybe more than one parent, filter by type
-			if ( persister.isSubclassEntityName( entityEntry.getEntityName() )
-					&& isFoundInParent( propertyName, childEntity, persister, collectionPersister, parent ) ) {
+			if ( entityDescriptor.isSubclassEntityName( entityEntry.getEntityName() )
+					&& isFoundInParent( propertyName, childEntity, entityDescriptor, collectionDescriptor, parent ) ) {
 				return getEntry( parent ).getId();
 			}
 			else {
@@ -1181,16 +1180,16 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		// iterate all the entities currently associated with the persistence context.
 		for ( Entry<Object,EntityEntry> me : reentrantSafeEntityEntries() ) {
 			final EntityEntry entityEntry = me.getValue();
-			// does this entity entry pertain to the entity persister in which we are interested (owner)?
-			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
+			// does this entity entry pertain to the entity descriptor in which we are interested (owner)?
+			if ( entityDescriptor.isSubclassEntityName( entityEntry.getEntityName() ) ) {
 				final Object entityEntryInstance = me.getKey();
 
 				//check if the managed object is the parent
 				boolean found = isFoundInParent(
 						propertyName,
 						childEntity,
-						persister,
-						collectionPersister,
+						entityDescriptor,
+						collectionDescriptor,
 						entityEntryInstance
 				);
 
@@ -1202,8 +1201,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 						found = isFoundInParent(
 								propertyName,
 								unmergedChild,
-								persister,
-								collectionPersister,
+								entityDescriptor,
+								collectionDescriptor,
 								unmergedInstance
 						);
 						LOG.debugf(
@@ -1228,12 +1227,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				final Entry mergeMapEntry = (Entry) o;
 				if ( mergeMapEntry.getKey() instanceof HibernateProxy ) {
 					final HibernateProxy proxy = (HibernateProxy) mergeMapEntry.getKey();
-					if ( persister.isSubclassEntityName( proxy.getHibernateLazyInitializer().getEntityName() ) ) {
+					if ( entityDescriptor.isSubclassEntityName( proxy.getHibernateLazyInitializer().getEntityName() ) ) {
 						boolean found = isFoundInParent(
 								propertyName,
 								childEntity,
-								persister,
-								collectionPersister,
+								entityDescriptor,
+								collectionDescriptor,
 								mergeMap.get( proxy )
 						);
 						LOG.debugf(
@@ -1244,8 +1243,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 							found = isFoundInParent(
 									propertyName,
 									mergeMap.get( childEntity ),
-									persister,
-									collectionPersister,
+									entityDescriptor,
+									collectionDescriptor,
 									mergeMap.get( proxy )
 							);
 							LOG.debugf(
@@ -1267,33 +1266,33 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	private boolean isFoundInParent(
 			String property,
 			Object childEntity,
-			EntityDescriptor persister,
-			PersistentCollectionDescriptor collectionPersister,
+			EntityDescriptor entityDescriptor,
+			PersistentCollectionDescriptor collectionDescriptor,
 			Object potentialParent) {
-		final Object collection = persister.getPropertyValue( potentialParent, property );
+		final Object collection = entityDescriptor.getPropertyValue( potentialParent, property );
 		return collection != null
 				&& Hibernate.isInitialized( collection )
-				&& collectionPersister.getTuplizer().contains( collection, childEntity );
+				&& collectionDescriptor.getTuplizer().contains( collection, childEntity );
 	}
 
 	@Override
 	public Object getIndexInOwner(String entity, String property, Object childEntity, Map mergeMap) {
-		final EntityDescriptor persister = session.getFactory().getTypeConfiguration().findEntityDescriptor( entity );
-		final PersistentCollectionDescriptor cp = session.getFactory().getTypeConfiguration().findCollectionDescriptor( entity + '.' + property );
+		final EntityDescriptor entityDescriptor = session.getFactory().getTypeConfiguration().findEntityDescriptor( entity );
+		final PersistentCollectionDescriptor collectionDescriptor = session.getFactory().getTypeConfiguration().findCollectionDescriptor( entity + '.' + property );
 
 	    // try cache lookup first
 		final Object parent = parentsByChild.get( childEntity );
 		if ( parent != null ) {
 			final EntityEntry entityEntry = entityEntryContext.getEntityEntry( parent );
 			//there maybe more than one parent, filter by type
-			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
-				Object index = getIndexInParent( property, childEntity, persister, cp, parent );
+			if ( entityDescriptor.isSubclassEntityName( entityEntry.getEntityName() ) ) {
+				Object index = getIndexInParent( property, childEntity, entityDescriptor, collectionDescriptor, parent );
 
 				if (index==null && mergeMap!=null) {
 					final Object unMergedInstance = mergeMap.get( parent );
 					final Object unMergedChild = mergeMap.get( childEntity );
 					if ( unMergedInstance != null && unMergedChild != null ) {
-						index = getIndexInParent( property, unMergedChild, persister, cp, unMergedInstance );
+						index = getIndexInParent( property, unMergedChild, entityDescriptor, collectionDescriptor, unMergedInstance );
 						LOG.debugf(
 								"A detached object being merged (corresponding to a parent in parentsByChild) has an indexed collection that [%s] the detached child being merged. ",
 								( index != null ? "contains" : "does not contain" )
@@ -1313,15 +1312,15 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		//Not found in cache, proceed
 		for ( Entry<Object, EntityEntry> me : reentrantSafeEntityEntries() ) {
 			final EntityEntry ee = me.getValue();
-			if ( persister.isSubclassEntityName( ee.getEntityName() ) ) {
+			if ( entityDescriptor.isSubclassEntityName( ee.getEntityName() ) ) {
 				final Object instance = me.getKey();
 
-				Object index = getIndexInParent( property, childEntity, persister, cp, instance );
+				Object index = getIndexInParent( property, childEntity, entityDescriptor, collectionDescriptor, instance );
 				if ( index==null && mergeMap!=null ) {
 					final Object unMergedInstance = mergeMap.get( instance );
 					final Object unMergedChild = mergeMap.get( childEntity );
 					if ( unMergedInstance != null && unMergedChild!=null ) {
-						index = getIndexInParent( property, unMergedChild, persister, cp, unMergedInstance );
+						index = getIndexInParent( property, unMergedChild, entityDescriptor, collectionDescriptor, unMergedInstance );
 						LOG.debugf(
 								"A detached object being merged (corresponding to a managed entity) has an indexed collection that [%s] the detached child being merged. ",
 								(index != null ? "contains" : "does not contain" )
@@ -1340,12 +1339,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	private Object getIndexInParent(
 			String property,
 			Object childEntity,
-			EntityDescriptor persister,
-			PersistentCollectionDescriptor collectionPersister,
+			EntityDescriptor entityDescriptor,
+			PersistentCollectionDescriptor collectionDescriptor,
 			Object potentialParent){
-		final Object collection = persister.getPropertyValue( potentialParent, property );
+		final Object collection = entityDescriptor.getPropertyValue( potentialParent, property );
 		if ( collection != null && Hibernate.isInitialized( collection ) ) {
-			return collectionPersister.getTuplizer().indexOf( collection, childEntity );
+			return collectionDescriptor.getTuplizer().indexOf( collection, childEntity );
 		}
 		else {
 			return null;
@@ -1437,7 +1436,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		final EntityEntry oldEntry = entityEntryContext.removeEntityEntry( entity );
 		parentsByChild.clear();
 
-		final EntityKey newKey = session.generateEntityKey( generatedId, oldEntry.getPersister() );
+		final EntityKey newKey = session.generateEntityKey( generatedId, oldEntry.getDescriptor() );
 		addEntity( newKey, entity );
 		addEntry(
 				entity,
@@ -1448,7 +1447,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				oldEntry.getVersion(),
 				oldEntry.getLockMode(),
 				oldEntry.isExistsInDatabase(),
-				oldEntry.getPersister(),
+				oldEntry.getDescriptor(),
 				oldEntry.isBeingReplicated()
 		);
 	}
@@ -1694,15 +1693,15 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	private HashMap<String,List<Serializable>> insertedKeysMap;
 
 	@Override
-	public void registerInsertedKey(EntityDescriptor persister, Serializable id) {
-		// we only are worried about registering these if the persister defines caching
+	public void registerInsertedKey(EntityDescriptor entityDescriptor, Serializable id) {
+		// we only are worried about registering these if the entityDescriptor defines caching
 		final EntityDataAccess cacheAccess = session.getFactory().getCache()
-				.getEntityRegionAccess( persister.getHierarchy() );
+				.getEntityRegionAccess( entityDescriptor.getHierarchy() );
 		if ( cacheAccess != null ) {
 			if ( insertedKeysMap == null ) {
 				insertedKeysMap = new HashMap<>();
 			}
-			final String rootEntityName = persister.getHierarchy().getRootEntityType().getEntityName();
+			final String rootEntityName = entityDescriptor.getHierarchy().getRootEntityType().getEntityName();
 			List<Serializable> insertedEntityIds = insertedKeysMap.get( rootEntityName );
 			if ( insertedEntityIds == null ) {
 				insertedEntityIds = new ArrayList<>();
@@ -1713,14 +1712,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public boolean wasInsertedDuringTransaction(EntityDescriptor persister, Serializable id) {
+	public boolean wasInsertedDuringTransaction(EntityDescriptor descriptor, Serializable id) {
 		// again, we only really care if the entity is cached
-		final EntityDataAccess cacheAccess = persister.getFactory().getCache()
-				.getEntityRegionAccess( persister.getHierarchy() );
+		final EntityDataAccess cacheAccess = descriptor.getFactory().getCache()
+				.getEntityRegionAccess( descriptor.getHierarchy() );
 		if ( cacheAccess != null ) {
 			if ( insertedKeysMap != null ) {
 				final List<Serializable> insertedEntityIds = insertedKeysMap.get(
-						persister.getHierarchy().getRootEntityType().getEntityName()
+						descriptor.getHierarchy().getRootEntityType().getEntityName()
 				);
 				if ( insertedEntityIds != null ) {
 					return insertedEntityIds.contains( id );
@@ -1745,84 +1744,86 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	private final NaturalIdHelper naturalIdHelper = new NaturalIdHelper() {
 		@Override
 		public void cacheNaturalIdCrossReferenceFromLoad(
-				EntityDescriptor persister,
+				EntityDescriptor descriptor,
 				Serializable id,
 				Object[] naturalIdValues) {
-			if ( persister.getHierarchy().getNaturalIdDescriptor() == null ) {
+			if ( descriptor.getHierarchy().getNaturalIdDescriptor() == null ) {
 				// nothing to do
 				return;
 			}
 
-			persister = locateProperPersister( persister );
+			descriptor = locateProperDescriptor( descriptor );
 
 			// 'justAddedLocally' is meant to handle the case where we would get double stats jounaling
 			//	from a single load event.  The first put journal would come from the natural id resolution;
 			// the second comes from the entity loading.  In this condition, we want to avoid the multiple
 			// 'put' stats incrementing.
-			final boolean justAddedLocally = naturalIdXrefDelegate.cacheNaturalIdCrossReference( persister, id, naturalIdValues );
+			final boolean justAddedLocally = naturalIdXrefDelegate.cacheNaturalIdCrossReference( descriptor, id, naturalIdValues );
 
 			if ( justAddedLocally ) {
-				final NaturalIdDataAccess cacheAccess = persister.getFactory().getCache()
-						.getNaturalIdRegionAccess( persister.getHierarchy() );
+				final NaturalIdDataAccess cacheAccess = descriptor.getFactory().getCache()
+						.getNaturalIdRegionAccess( descriptor.getHierarchy() );
 				if ( cacheAccess != null ) {
-					managedSharedCacheEntries( persister, cacheAccess, id, naturalIdValues, null, CachedNaturalIdValueSource.LOAD );
+					managedSharedCacheEntries( descriptor, cacheAccess, id, naturalIdValues, null, CachedNaturalIdValueSource.LOAD );
 				}
 			}
 		}
 
 		@Override
 		public void manageLocalNaturalIdCrossReference(
-				EntityDescriptor persister,
+				EntityDescriptor descriptor,
 				Serializable id,
 				Object[] state,
 				Object[] previousState,
 				CachedNaturalIdValueSource source) {
-			if ( persister.getHierarchy().getNaturalIdDescriptor() == null ) {
+			if ( descriptor.getHierarchy().getNaturalIdDescriptor() == null ) {
 				// nothing to do
 				return;
 			}
 
-			persister = locateProperPersister( persister );
-			final Object[] naturalIdValues = extractNaturalIdValues( state, persister );
+			descriptor = locateProperDescriptor( descriptor );
+			final Object[] naturalIdValues = extractNaturalIdValues( state, descriptor );
 
 			// cache
-			naturalIdXrefDelegate.cacheNaturalIdCrossReference( persister, id, naturalIdValues );
+			naturalIdXrefDelegate.cacheNaturalIdCrossReference( descriptor, id, naturalIdValues );
 		}
 
 		@Override
 		public void manageSharedNaturalIdCrossReference(
-				EntityDescriptor persister,
+				EntityDescriptor descriptor,
 				final Serializable id,
 				Object[] state,
 				Object[] previousState,
 				CachedNaturalIdValueSource source) {
-			if ( persister.getHierarchy().getNaturalIdDescriptor() == null ) {
+			if ( descriptor.getHierarchy().getNaturalIdDescriptor() == null ) {
 				// nothing to do
 				return;
 			}
 
-			final NaturalIdDataAccess cacheAccess = persister.getFactory().getCache()
-					.getNaturalIdRegionAccess( persister.getHierarchy() );
+			final NaturalIdDataAccess cacheAccess = descriptor.getFactory().getCache()
+					.getNaturalIdRegionAccess( descriptor.getHierarchy() );
 			if ( cacheAccess == null ) {
 				// nothing to do
 				return;
 			}
 
-			persister = locateProperPersister( persister );
-			final Object[] naturalIdValues = extractNaturalIdValues( state, persister );
-			final Object[] previousNaturalIdValues = previousState == null ? null : extractNaturalIdValues( previousState, persister );
+			descriptor = locateProperDescriptor( descriptor );
+			final Object[] naturalIdValues = extractNaturalIdValues( state, descriptor );
+			final Object[] previousNaturalIdValues = previousState == null ? null : extractNaturalIdValues( previousState,
+																											descriptor
+			);
 
-			managedSharedCacheEntries( persister, cacheAccess, id, naturalIdValues, previousNaturalIdValues, source );
+			managedSharedCacheEntries( descriptor, cacheAccess, id, naturalIdValues, previousNaturalIdValues, source );
 		}
 
 		private void managedSharedCacheEntries(
-				EntityDescriptor persister,
+				EntityDescriptor descriptor,
 				NaturalIdDataAccess cacheAccess,
 				final Serializable id,
 				Object[] naturalIdValues,
 				Object[] previousNaturalIdValues,
 				CachedNaturalIdValueSource source) {
-			final Object naturalIdCacheKey = cacheAccess.generateCacheKey( naturalIdValues, persister, session );
+			final Object naturalIdCacheKey = cacheAccess.generateCacheKey( naturalIdValues, descriptor, session );
 
 			final SessionFactoryImplementor factory = session.getFactory();
 
@@ -1869,7 +1870,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					break;
 				}
 				case UPDATE: {
-					final Object previousCacheKey = cacheAccess.generateCacheKey( previousNaturalIdValues, persister, session );
+					final Object previousCacheKey = cacheAccess.generateCacheKey( previousNaturalIdValues, descriptor, session );
 					if ( naturalIdCacheKey.equals( previousCacheKey ) ) {
 						// prevent identical re-caching, solves HHH-7309
 						return;
@@ -1913,17 +1914,17 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public Object[] removeLocalNaturalIdCrossReference(EntityDescriptor persister, Serializable id, Object[] state) {
-			if ( persister.getHierarchy().getNaturalIdDescriptor() == null ) {
+		public Object[] removeLocalNaturalIdCrossReference(EntityDescriptor descriptor, Serializable id, Object[] state) {
+			if ( descriptor.getHierarchy().getNaturalIdDescriptor() == null ) {
 				// nothing to do
 				return null;
 			}
 
-			persister = locateProperPersister( persister );
-			final Object[] naturalIdValues = getNaturalIdValues( state, persister );
+			descriptor = locateProperDescriptor( descriptor );
+			final Object[] naturalIdValues = getNaturalIdValues( state, descriptor );
 
 			final Object[] localNaturalIdValues = naturalIdXrefDelegate.removeNaturalIdCrossReference(
-					persister,
+					descriptor,
 					id,
 					naturalIdValues
 			);
@@ -1932,14 +1933,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public void removeSharedNaturalIdCrossReference(EntityDescriptor persister, Serializable id, Object[] naturalIdValues) {
-			if ( persister.getHierarchy().getNaturalIdDescriptor() == null ) {
+		public void removeSharedNaturalIdCrossReference(EntityDescriptor descriptor, Serializable id, Object[] naturalIdValues) {
+			if ( descriptor.getHierarchy().getNaturalIdDescriptor() == null ) {
 				// nothing to do
 				return;
 			}
 
-			final NaturalIdDataAccess cacheAccess = persister.getFactory().getCache()
-					.getNaturalIdRegionAccess( persister.getHierarchy() );
+			final NaturalIdDataAccess cacheAccess = descriptor.getFactory().getCache()
+					.getNaturalIdRegionAccess( descriptor.getHierarchy() );
 			if ( cacheAccess == null ) {
 				// nothing to do
 				return;
@@ -1949,8 +1950,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			//		1) should be using access strategy, not plain evict..
 			//		2) should prefer session-cached values if any (requires interaction from removeLocalNaturalIdCrossReference
 
-			persister = locateProperPersister( persister );
-			final Object naturalIdCacheKey = cacheAccess.generateCacheKey( naturalIdValues, persister, session );
+			descriptor = locateProperDescriptor( descriptor );
+			final Object naturalIdCacheKey = cacheAccess.generateCacheKey( naturalIdValues, descriptor, session );
 			cacheAccess.evict( naturalIdCacheKey );
 
 //			if ( sessionCachedNaturalIdValues != null
@@ -1961,18 +1962,18 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public Object[] findCachedNaturalId(EntityDescriptor persister, Serializable pk) {
-			return naturalIdXrefDelegate.findCachedNaturalId( locateProperPersister( persister ), pk );
+		public Object[] findCachedNaturalId(EntityDescriptor descriptor, Serializable pk) {
+			return naturalIdXrefDelegate.findCachedNaturalId( locateProperDescriptor( descriptor ), pk );
 		}
 
 		@Override
-		public Serializable findCachedNaturalIdResolution(EntityDescriptor persister, Object[] naturalIdValues) {
-			return naturalIdXrefDelegate.findCachedNaturalIdResolution( locateProperPersister( persister ), naturalIdValues );
+		public Serializable findCachedNaturalIdResolution(EntityDescriptor descriptor, Object[] naturalIdValues) {
+			return naturalIdXrefDelegate.findCachedNaturalIdResolution( locateProperDescriptor( descriptor ), naturalIdValues );
 		}
 
 		@Override
-		public Object[] extractNaturalIdValues(Object[] state, EntityDescriptor persister) {
-			final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
+		public Object[] extractNaturalIdValues(Object[] state, EntityDescriptor descriptor) {
+			final int[] naturalIdPropertyIndexes = descriptor.getNaturalIdentifierProperties();
 			if ( state.length == naturalIdPropertyIndexes.length ) {
 				return state;
 			}
@@ -1985,52 +1986,52 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public Object[] extractNaturalIdValues(Object entity, EntityDescriptor persister) {
+		public Object[] extractNaturalIdValues(Object entity, EntityDescriptor descriptor) {
 			if ( entity == null ) {
 				throw new AssertionFailure( "Entity from which to extract natural id value(s) cannot be null" );
 			}
-			if ( persister == null ) {
+			if ( descriptor == null ) {
 				throw new AssertionFailure( "Persister to use in extracting natural id value(s) cannot be null" );
 			}
 
-			final int[] naturalIdentifierProperties = persister.getNaturalIdentifierProperties();
+			final int[] naturalIdentifierProperties = descriptor.getNaturalIdentifierProperties();
 			final Object[] naturalIdValues = new Object[naturalIdentifierProperties.length];
 
 			for ( int i = 0; i < naturalIdentifierProperties.length; i++ ) {
-				naturalIdValues[i] = persister.getPropertyValue( entity, naturalIdentifierProperties[i] );
+				naturalIdValues[i] = descriptor.getPropertyValue( entity, naturalIdentifierProperties[i] );
 			}
 
 			return naturalIdValues;
 		}
 
 		@Override
-		public Collection<Serializable> getCachedPkResolutions(EntityDescriptor entityPersister) {
-			return naturalIdXrefDelegate.getCachedPkResolutions( entityPersister );
+		public Collection<Serializable> getCachedPkResolutions(EntityDescriptor descriptor) {
+			return naturalIdXrefDelegate.getCachedPkResolutions( descriptor );
 		}
 
 		@Override
-		public void handleSynchronization(EntityDescriptor persister, Serializable pk, Object entity) {
-			if ( persister.getHierarchy().getNaturalIdDescriptor() == null  ) {
+		public void handleSynchronization(EntityDescriptor descriptor, Serializable pk, Object entity) {
+			if ( descriptor.getHierarchy().getNaturalIdDescriptor() == null  ) {
 				// nothing to do
 				return;
 			}
 
-			persister = locateProperPersister( persister );
+			descriptor = locateProperDescriptor( descriptor );
 
-			final Object[] naturalIdValuesFromCurrentObjectState = extractNaturalIdValues( entity, persister );
+			final Object[] naturalIdValuesFromCurrentObjectState = extractNaturalIdValues( entity, descriptor );
 			final boolean changed = ! naturalIdXrefDelegate.sameAsCached(
-					persister,
+					descriptor,
 					pk,
 					naturalIdValuesFromCurrentObjectState
 			);
 
 			if ( changed ) {
-				final Object[] cachedNaturalIdValues = naturalIdXrefDelegate.findCachedNaturalId( persister, pk );
-				naturalIdXrefDelegate.cacheNaturalIdCrossReference( persister, pk, naturalIdValuesFromCurrentObjectState );
-				naturalIdXrefDelegate.stashInvalidNaturalIdReference( persister, cachedNaturalIdValues );
+				final Object[] cachedNaturalIdValues = naturalIdXrefDelegate.findCachedNaturalId( descriptor, pk );
+				naturalIdXrefDelegate.cacheNaturalIdCrossReference( descriptor, pk, naturalIdValuesFromCurrentObjectState );
+				naturalIdXrefDelegate.stashInvalidNaturalIdReference( descriptor, cachedNaturalIdValues );
 
 				removeSharedNaturalIdCrossReference(
-						persister,
+						descriptor,
 						pk,
 						cachedNaturalIdValues
 				);
@@ -2043,11 +2044,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public void handleEviction(Object object, EntityDescriptor persister, Serializable identifier) {
+		public void handleEviction(Object object, EntityDescriptor descriptor, Serializable identifier) {
 			naturalIdXrefDelegate.removeNaturalIdCrossReference(
-					persister,
+					descriptor,
 					identifier,
-					findCachedNaturalId( persister, identifier )
+					findCachedNaturalId( descriptor, identifier )
 			);
 		}
 	};
@@ -2057,8 +2058,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		return naturalIdHelper;
 	}
 
-	private Object[] getNaturalIdValues(Object[] state, EntityDescriptor persister) {
-		final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
+	private Object[] getNaturalIdValues(Object[] state, EntityDescriptor descriptor) {
+		final int[] naturalIdPropertyIndexes = descriptor.getNaturalIdentifierProperties();
 		final Object[] naturalIdValues = new Object[naturalIdPropertyIndexes.length];
 
 		for ( int i = 0; i < naturalIdPropertyIndexes.length; i++ ) {

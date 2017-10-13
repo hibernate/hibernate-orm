@@ -27,6 +27,17 @@ public interface InheritanceCapable<T> extends ManagedTypeDescriptor<T> {
 	Collection<InheritanceCapable<? extends T>> getSubclassTypes();
 
 	/**
+	 * Determine whether the given name represents a subclass entity
+	 * (or this entity itself) of the entity mapped by this persister.
+	 *
+	 * @param entityName The entity name to be checked.
+	 * @return True if the given entity name represents either the entity
+	 * mapped by this persister or one of its subclass entities; false
+	 * otherwise.
+	 */
+	boolean isSubclassEntityName(String entityName);
+
+	/**
 	 * Find a declared Navigable by name.  Returns {@code null} if a Navigable of the given
 	 * name cannot be found.
 	 * <p/>

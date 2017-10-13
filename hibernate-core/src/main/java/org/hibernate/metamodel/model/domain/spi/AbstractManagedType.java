@@ -47,6 +47,8 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 	private InheritanceCapable<? super T>  superTypeDescriptor;
 	private List<InheritanceCapable<? extends T>> subclassTypes;
 
+	private final Set<String> subClassEntityNames = new HashSet<>();
+
 	// todo (6.0) : we need some kind of callback after all Navigables have been added to all containers
 	//		use that callback to build these 2 lists - they are cached resolutions
 	//		for performance rather that "recalculating" each time
@@ -107,11 +109,17 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 	@Override
 	public void addSubclassType(InheritanceCapable<? extends T> subclassType) {
 		subclassTypes.add( subclassType );
+		subClassEntityNames.add( subclassType.getNavigableName() );
 	}
 
 	@Override
 	public List<InheritanceCapable<? extends T>> getSubclassTypes() {
 		return subclassTypes;
+	}
+
+	@Override
+	public boolean isSubclassEntityName(String entityName) {
+		return subClassEntityNames.contains( entityName );
 	}
 
 	@Override

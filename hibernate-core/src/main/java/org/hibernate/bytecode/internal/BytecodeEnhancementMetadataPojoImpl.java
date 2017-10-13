@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  */
 public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementMetadata {
 	public static BytecodeEnhancementMetadata from(EntityMapping entityMapping) {
-		final Class mappedClass = entityMapping.getRuntimeEntityDescriptorClass();
+		final Class mappedClass = entityMapping.getJavaTypeDescriptor().getJavaType();
 		final boolean enhancedForLazyLoading = PersistentAttributeInterceptable.class.isAssignableFrom( mappedClass );
 		final LazyAttributesMetadata lazyAttributesMetadata = enhancedForLazyLoading
 				? LazyAttributesMetadata.from( entityMapping )

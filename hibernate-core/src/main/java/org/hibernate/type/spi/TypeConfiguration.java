@@ -739,8 +739,6 @@ public class TypeConfiguration implements SessionFactoryObserver {
 				log.scopingTypesToSessionFactoryAfterAlreadyScoped( this.sessionFactory, factory );
 			}
 			else {
-				this.metadataBuildingContext = null;
-
 				this.sessionFactoryUuid = factory.getUuid();
 				String sfName = factory.getSessionFactoryOptions().getSessionFactoryName();
 				if ( sfName == null ) {

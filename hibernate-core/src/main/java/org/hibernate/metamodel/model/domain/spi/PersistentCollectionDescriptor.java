@@ -389,6 +389,8 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	CollectionDataAccess getCacheAccess();
 
 	void initialize(Serializable loadedKey, SharedSessionContractImplementor session);
+
+	int getBatchSize();
 //
 //	CollectionMetadata getCollectionDescriptor();
 //
@@ -458,7 +460,6 @@ public interface PersistentCollectionDescriptor<O,C,E>
 //	boolean indexExists(Serializable key, Object index, SharedSessionContractImplementor session);
 //	boolean elementExists(Serializable key, Object element, SharedSessionContractImplementor session);
 //	Object getElementByIndex(Serializable key, Object index, SharedSessionContractImplementor session, Object owner);
-//	int getBatchSize();
 //
 //	/**
 //	 * @return the name of the property this collection is mapped by

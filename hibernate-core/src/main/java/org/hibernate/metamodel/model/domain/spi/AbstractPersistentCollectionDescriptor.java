@@ -89,6 +89,8 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 
 	private final String[] spaces;
 
+	private final int batchSize;
+
 	public AbstractPersistentCollectionDescriptor(
 			Collection collectionBinding,
 			ManagedTypeDescriptor source,
@@ -124,6 +126,13 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 		this.keyJavaTypeDescriptor = collectionBinding.getKey().getJavaTypeDescriptor();
 
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( navigableName );
+
+		int batch = collectionBinding.getBatchSize();
+		if ( batch == -1 ) {
+			batch = sessionFactory.getSessionFactoryOptions().getDefaultBatchFetchSize();
+		}
+		batchSize = batch;
+
 	}
 
 	@Override
@@ -281,6 +290,11 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 			Serializable loadedKey,
 			SharedSessionContractImplementor session) {
 		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public int getBatchSize() {
+		return batchSize;
 	}
 
 	@Override

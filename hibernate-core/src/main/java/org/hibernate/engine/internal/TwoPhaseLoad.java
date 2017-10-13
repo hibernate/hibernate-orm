@@ -12,7 +12,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.spi.EntityEntry;
@@ -33,9 +32,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.type.Type;
 import org.hibernate.type.internal.TypeHelper;
 
 import org.jboss.logging.Logger;
@@ -137,7 +134,7 @@ public final class TwoPhaseLoad {
 			final SharedSessionContractImplementor session,
 			final PreLoadEvent preLoadEvent) throws HibernateException {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		final EntityDescriptor entityDescriptor = entityEntry.getDescriptor();
+		final EntityDescriptor<?> entityDescriptor = entityEntry.getDescriptor();
 		final Serializable id = entityEntry.getId();
 		final Object[] hydratedState = entityEntry.getLoadedState();
 
@@ -149,12 +146,18 @@ public final class TwoPhaseLoad {
 			);
 		}
 
-		final Type[] types = entityDescriptor.getPropertyTypes();
-		for ( int i = 0; i < hydratedState.length; i++ ) {
-			final Object value = hydratedState[i];
-			if ( value!=LazyPropertyInitializer.UNFETCHED_PROPERTY && value!= PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				hydratedState[i] = types[i].resolve( value, session, entity );
-			}
+		for ( StateArrayContributor<?> contributor : entityDescriptor.getStateArrayContributors() ) {
+			final int position = contributor.getStateArrayPosition();
+			final Object value = hydratedState[position];
+
+			hydratedState[ contributor.getStateArrayPosition() ] = contributor.resolveHydratedState(
+					value,
+					session,
+					// the container ("owner")... for now just pass null.
+					// ultimately we need to account for fetch parent if the
+					// current sub-contributor is a fetch
+					null
+			);
 		}
 
 		//Must occur afterQuery resolving identifiers!

@@ -69,7 +69,7 @@ public class EvictVisitor extends AbstractVisitor {
 							ce.getLoadedKey(),
 							getSession() ) );
 		}
-		if (ce.getLoadedPersistentCollectionDescriptor() != null && ce.getLoadedPersistentCollectionDescriptor().getgetBatchSize() > 1) {
+		if (ce.getLoadedPersistentCollectionDescriptor() != null && ce.getLoadedPersistentCollectionDescriptor().getBatchSize() > 1) {
 			getSession().getPersistenceContext().getBatchFetchQueue().removeBatchLoadableCollection(ce);
 		}
 		if ( ce.getLoadedPersistentCollectionDescriptor() != null && ce.getLoadedKey() != null ) {

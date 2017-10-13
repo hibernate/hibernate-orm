@@ -346,17 +346,11 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
 
 
 
-### PersistentCollection metadata (18)
+### PersistentCollection metadata (14)
 
 
 [code]
 ----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/CollectionEntry.java:204: error: cannot find symbol
-		if ( getLoadedPersistentCollectionDescriptor().getBatchSize() > 1 ) {
-		                                              ^
-  symbol:   method getBatchSize()
-  location: interface PersistentCollectionDescriptor
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:732: error: cannot find symbol
 			return getEntity( session.generateEntityKey( key, collectionPersister.getOwnerEntityPersister() ) );
 			                                                                     ^
@@ -393,18 +387,6 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
   symbol:   method getOwnerEntityPersister()
   location: variable collectionPersister of type PersistentCollectionDescriptor
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:828: error: cannot find symbol
-		if ( persister.getBatchSize() > 1 ) {
-		              ^
-  symbol:   method getBatchSize()
-  location: variable persister of type PersistentCollectionDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:837: error: cannot find symbol
-		if ( persister.getBatchSize() > 1 ) {
-		              ^
-  symbol:   method getBatchSize()
-  location: variable persister of type PersistentCollectionDescriptor
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:730: error: cannot find symbol
 		final EntityDescriptor ownerPersister = collectionPersister.getOwnerEntityPersister();
 		                                                           ^
@@ -435,12 +417,6 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
   symbol:   method getEntityMetamodel()
   location: variable entityDescriptor of type EntityDescriptor
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/EvictVisitor.java:72: error: cannot find symbol
-		if (ce.getLoadedPersistentCollectionDescriptor() != null && ce.getLoadedPersistentCollectionDescriptor().getgetBatchSize() > 1) {
-		                                                                                                        ^
-  symbol:   method getgetBatchSize()
-  location: interface PersistentCollectionDescriptor
-
 /home/sebersole/projects/hibernate/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Cascade.java:442: error: cannot find symbol
 						descriptor.isCascadeDeleteEnabled
   						^
@@ -452,6 +428,7 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
 		                           ^
   symbol:   method getElementsIterator(Object,EventSource)
   location: variable collectionDescriptor of type PersistentCollectionDescriptor
+
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/CascadingActions.java:506: error: cannot find symbol
 			return collectionDescriptor.getElementsIterator( collection, session );
 			                           ^
@@ -514,7 +491,7 @@ A collection?  etc
 
 
 
-### Type read/write (4)
+### Type read/write (2)
 
 [code]
 ----
@@ -529,18 +506,6 @@ A collection?  etc
 			                            ^
   symbol:   method nullSafeGet(ResultSet,String[],SharedSessionContractImplementor,Object)
   location: variable idType of type Type
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/results/internal/JdbcValuesSourceProcessingStateStandardImpl.java:244: error: cannot find symbol
-				hydratedState[i] = types[i].resolve( value, session, entity );
-				                           ^
-  symbol:   method resolve(Object,SharedSessionContractImplementor,Object)
-  location: interface Type
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/TwoPhaseLoad.java:150: error: cannot find symbol
-  				hydratedState[i] = types[i].resolve( value, session, entity );
-  				                           ^
-    symbol:   method resolve(Object,SharedSessionContractImplementor,Object)
-    location: interface Type
 
 ----
 

@@ -8,6 +8,7 @@ package org.hibernate.jpa.test.ops;
 
 import java.util.Map;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -172,6 +173,55 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 
 		em.getTransaction().commit();
 		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11838")
+	public void testLoadIdNotFound() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Session s = ( Session ) em.getDelegate();
+
+		assertNull( s.get( Workload.class, 999 ) );
+
+		Workload proxy = s.load( Workload.class, 999 );
+		assertFalse( Hibernate.isInitialized( proxy ) );
+
+		try {
+			proxy.getId();
+			fail( "Should have failed because there is no Workload Entity with id == 999" );
+		}
+		catch (EntityNotFoundException ex) {
+			// expected
+			em.getTransaction().rollback();
+		}
+		finally {
+			em.close();
+		}
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11838")
+	public void testReferenceIdNotFound() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		assertNull( em.find( Workload.class, 999 ) );
+
+		Workload proxy = em.getReference( Workload.class, 999 );
+		assertFalse( Hibernate.isInitialized( proxy ) );
+
+		try {
+			proxy.getId();
+			fail( "Should have failed because there is no Workload Entity with id == 999" );
+		}
+		catch (EntityNotFoundException ex) {
+			// expected
+			em.getTransaction().rollback();
+		}
+		finally {
+			em.close();
+		}
 	}
 
 	@Override

@@ -10,7 +10,6 @@ import java.util.List;
 import javax.persistence.metamodel.EmbeddableType;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.mapping.Component;
@@ -107,6 +106,17 @@ public interface EmbeddedTypeDescriptor<T>
 
 
 
+	@Override
+	default boolean isSubclassEntityName(String entityName) {
+		return false;
+	}
+
+	@Override
+	default boolean isSubclassTypeName(String name) {
+		return false;
+	}
+
+
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,4 +156,6 @@ public interface EmbeddedTypeDescriptor<T>
 	 * Get the cascade style of a particular property
 	 */
 	CascadeStyle getCascadeStyle(int i);
+
+
 }

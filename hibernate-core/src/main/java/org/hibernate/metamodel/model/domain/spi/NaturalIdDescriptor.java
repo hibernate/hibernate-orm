@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.util.Collection;
+import java.util.List;
 
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -20,7 +20,7 @@ public interface NaturalIdDescriptor {
 	 *
 	 * todo (6.0) : this likely needs to be a List as per discussions elsewhere regarding attributes
 	 */
-	Collection<PersistentAttribute> getPersistentAttributes();
+	List<NonIdPersistentAttribute> getPersistentAttributes();
 
 	/**
 	 * Is the natural-id defined as mutable?

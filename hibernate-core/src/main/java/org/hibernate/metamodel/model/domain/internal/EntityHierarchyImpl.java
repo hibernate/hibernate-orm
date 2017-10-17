@@ -7,7 +7,7 @@
 
 package org.hibernate.metamodel.model.domain.internal;
 
-import java.util.Collection;
+import java.util.List;
 
 import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
@@ -16,7 +16,6 @@ import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.Component;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Subclass;
@@ -29,7 +28,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.InheritanceStrategy;
 import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
@@ -242,7 +241,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			private NaturalIdDataAccess cacheAccess;
 
 			@Override
-			public Collection<PersistentAttribute> getPersistentAttributes() {
+			public List<NonIdPersistentAttribute> getPersistentAttributes() {
 				throw new NotYetImplementedException(  );
 			}
 

@@ -30,10 +30,13 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.internal.FilterAliasGenerator;
+import org.hibernate.loader.spi.CompositeNaturalIdLoader;
 import org.hibernate.loader.spi.EntityLocker;
 import org.hibernate.loader.spi.MultiIdEntityLoader;
+import org.hibernate.loader.spi.MultiIdLoaderSelectors;
 import org.hibernate.loader.spi.MultiLoadOptions;
 import org.hibernate.loader.spi.NaturalIdLoader;
+import org.hibernate.loader.spi.SimpleNaturalIdLoader;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.loader.spi.SingleUniqueKeyEntityLoader;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -177,6 +180,17 @@ public interface EntityDescriptor<T>
 	BytecodeEnhancementMetadata getBytecodeEnhancementMetadata();
 
 
+	/**
+	 * Access to the root table for this entity.
+	 */
+	Table getPrimaryTable();
+
+	/**
+	 * Access to all "declared" secondary table mapping info for this entity.
+	 * This does not include secondary tables from super-types.
+	 */
+	List<JoinedTableBinding> getSecondaryTableBindings();
+
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -188,32 +202,85 @@ public interface EntityDescriptor<T>
 	SingleIdEntityLoader<T> getSingleIdLoader(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers);
 
 	/**
-	 * @todo (6.0) what args?
+	 * @deprecated Use {@link #getSingleIdLoader} instead
 	 */
-	MultiIdEntityLoader getMultiIdLoader(LoadQueryInfluencers loadQueryInfluencers);
+	@Deprecated
+	default Object load(
+			Serializable id,
+			Object optionalObject,
+			LockMode lockMode,
+			SharedSessionContractImplementor session) {
+		return load( id, optionalObject, new LockOptions( lockMode ), session );
+	}
+
+	/**
+	 * @deprecated Use {@link #getSingleIdLoader} instead
+	 */
+	@Deprecated
+	default Object load(
+			Serializable id,
+			Object optionalObject,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
+		return getSingleIdLoader( lockOptions, session.getLoadQueryInfluencers() ).load( id, lockOptions, session );
+	}
+
+
+	MultiIdEntityLoader getMultiIdLoader(MultiIdLoaderSelectors selectors);
+
+	/**
+	 * Performs a load of multiple entities (of this type) by identifier simultaneously.
+	 *
+	 * @param ids The identifiers to load
+	 * @param loadOptions The options for loading
+	 *
+	 * @param session The originating Sesison
+	 * @return The loaded, matching entities
+	 */
+	default List multiLoad(
+			Object[] ids,
+			MultiLoadOptions loadOptions,
+			SharedSessionContractImplementor session) {
+		return getMultiIdLoader( loadOptions ).load( ids, loadOptions, session );
+	}
 
 	NaturalIdLoader getNaturalIdLoader(LockOptions lockOptions);
+
+	/**
+	 * Load the id for the entity based on the natural id.
+	 */
+	Serializable loadEntityIdByNaturalId(
+			Object[] naturalIdValues, LockOptions lockOptions,
+			SharedSessionContractImplementor session);
 
 	/**
 	 * @todo (6.0) what args?
 	 */
 	SingleUniqueKeyEntityLoader getSingleUniqueKeyLoader(Navigable navigable, LoadQueryInfluencers loadQueryInfluencers);
 
+
 	/**
 	 * @todo (6.0) - other args?
 	 */
 	EntityLocker getLocker(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers);
 
-	/**
-	 * Access to the root table for this entity.
-	 */
-	Table getPrimaryTable();
 
 	/**
-	 * Access to all "declared" secondary table mapping info for this entity.
-	 * This does not include secondary tables from super-types.
+	 * Do a version check (optional operation)
 	 */
-	List<JoinedTableBinding> getSecondaryTableBindings();
+	void lock(Serializable id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session)
+			throws HibernateException;
+
+	/**
+	 * Do a version check (optional operation)
+	 */
+	void lock(Serializable id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session)
+			throws HibernateException;
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Navigable (SQM) support
 
 	@Override
 	default void visitNavigable(NavigableVisitationStrategy visitor) {
@@ -226,13 +293,27 @@ public interface EntityDescriptor<T>
 
 	String[] getAffectedTableNames();
 
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// legacy - "metadata"
+
 	/**
 	 * Does this entity map "across" multiple tables.  Generally this is
 	 * used to
 	 *
 	 * @return `true` indicates it does; `false` indicates it does not.
 	 */
-	boolean isMultiTable();
+	default boolean isMultiTable() {
+		return !getSecondaryTableBindings().isEmpty();
+	}
+
+
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// legacy - yet-uncategorized
 
 	List<EntityNameResolver> getEntityNameResolvers();
 
@@ -266,49 +347,6 @@ public interface EntityDescriptor<T>
 	 * were modified.
 	 */
 	int[] findModified(Object[] old, Object[] current, Object object, SharedSessionContractImplementor session);
-
-
-	/**
-	 * Load the id for the entity based on the natural id.
-	 */
-	Serializable loadEntityIdByNaturalId(
-			Object[] naturalIdValues, LockOptions lockOptions,
-			SharedSessionContractImplementor session);
-
-	/**
-	 * Load an instance of the persistent class.
-	 */
-	Object load(Serializable id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session)
-	throws HibernateException;
-
-	/**
-	 * Load an instance of the persistent class.
-	 */
-	Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session)
-	throws HibernateException;
-
-	/**
-	 * Performs a load of multiple entities (of this type) by identifier simultaneously.
-	 *
-	 * @param ids The identifiers to load
-	 * @param session The originating Sesison
-	 * @param loadOptions The options for loading
-	 *
-	 * @return The loaded, matching entities
-	 */
-	List multiLoad(Serializable[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions);
-
-	/**
-	 * Do a version check (optional operation)
-	 */
-	void lock(Serializable id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session)
-	throws HibernateException;
-
-	/**
-	 * Do a version check (optional operation)
-	 */
-	void lock(Serializable id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session)
-	throws HibernateException;
 
 	/**
 	 * Persist an instance

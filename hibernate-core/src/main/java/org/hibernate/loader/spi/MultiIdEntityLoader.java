@@ -18,5 +18,5 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public interface MultiIdEntityLoader extends Loader {
 	// todo (6.0) - any additional Options info?
 
-	List load(List ids, SharedSessionContractImplementor session, MultiLoadOptions options);
+	List load(Object[] ids, MultiLoadOptions options, SharedSessionContractImplementor session);
 }

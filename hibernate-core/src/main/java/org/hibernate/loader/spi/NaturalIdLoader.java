@@ -6,11 +6,10 @@
  */
 package org.hibernate.loader.spi;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-
 /**
+ * Loader for {@link org.hibernate.annotations.NaturalId} handling
+ *
  * @author Steve Ebersole
  */
 public interface NaturalIdLoader {
-	Object doLoad(Object[] naturalIdValues, SharedSessionContractImplementor session);
 }

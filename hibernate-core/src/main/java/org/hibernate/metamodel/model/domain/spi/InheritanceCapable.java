@@ -65,4 +65,14 @@ public interface InheritanceCapable<T> extends ManagedTypeDescriptor<T> {
 	 * todo (6.0) : again, as with `#injectSuperTypeDescriptor`, I think this can be a detail within the abstract impl
 	 */
 	void addSubclassType(InheritanceCapable<? extends T> subclassType);
+
+	/**
+	 * @deprecated Use {@link #isSubclassTypeName(String)} instead
+	 */
+	@Deprecated
+	boolean isSubclassEntityName(String entityName);
+
+	default boolean isSubclassTypeName(String name) {
+		return isSubclassTypeName( name );
+	}
 }

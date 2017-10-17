@@ -89,6 +89,7 @@ public class UnsavedValueFactory {
 		}
 		else {
 			try {
+				// todo (6.0) : fixing this really needs something other than Type to be passed in
 				return new IdentifierValue( (Serializable) identifierType.getJavaTypeDescriptor()
 						.fromString( unsavedValue ) );
 			}

@@ -317,7 +317,10 @@ public class CustomPersister extends AbstractEntityDescriptor implements EntityD
 	}
 
 	@Override
-	public List multiLoad(Serializable[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions) {
+	public List multiLoad(
+			Object[] ids,
+			MultiLoadOptions loadOptions,
+			SharedSessionContractImplementor session) {
 		return Collections.emptyList();
 	}
 

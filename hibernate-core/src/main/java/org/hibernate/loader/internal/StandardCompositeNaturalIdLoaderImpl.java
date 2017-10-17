@@ -6,21 +6,34 @@
  */
 package org.hibernate.loader.internal;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.spi.NaturalIdLoader;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.loader.spi.CompositeNaturalIdLoader;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
-public class StandardNaturalIdLoaderImpl implements NaturalIdLoader {
-	private static final Logger log = Logger.getLogger( StandardNaturalIdLoaderImpl.class );
+public class StandardCompositeNaturalIdLoaderImpl implements CompositeNaturalIdLoader {
+	private static final Logger log = Logger.getLogger( StandardCompositeNaturalIdLoaderImpl.class );
+
+	private final EntityDescriptor entityDescriptor;
+
+	public StandardCompositeNaturalIdLoaderImpl(EntityDescriptor entityDescriptor) {
+		this.entityDescriptor = entityDescriptor;
+	}
 
 	@Override
-	public Object doLoad(Object[] naturalIdValues, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception(  );
+	public Object resolveIdentifier(Object[] naturalIdValues, SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public Object loadEntity(Object[] naturalIdValues, SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+
 //		if ( log.isTraceEnabled() ) {
 //			log.tracef(
 //					"Resolving natural-id [%s] to id : %s ",
@@ -79,7 +92,11 @@ public class StandardNaturalIdLoaderImpl implements NaturalIdLoader {
 //			);
 //		}
 	}
-//
+
+
+
+
+
 //	private boolean[] determineValueNullness(Object[] naturalIdValues) {
 //		boolean[] nullness = new boolean[naturalIdValues.length];
 //		for ( int i = 0; i < naturalIdValues.length; i++ ) {

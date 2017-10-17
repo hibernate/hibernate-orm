@@ -20,6 +20,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -44,6 +46,7 @@ public class NaturalIdXrefDelegate {
 	 *
 	 * @param persistenceContext The persistence context that owns this delegate
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public NaturalIdXrefDelegate(StatefulPersistenceContext persistenceContext) {
 		this.persistenceContext = persistenceContext;
 	}
@@ -146,6 +149,7 @@ public class NaturalIdXrefDelegate {
 	 * 
 	 * @return The root entityDescriptor.
 	 */
+	@SuppressWarnings("WeakerAccess")
 	protected EntityDescriptor locatePersisterForKey(EntityDescriptor entityDescriptor) {
 		return entityDescriptor.getHierarchy().getRootEntityType();
 	}
@@ -159,6 +163,7 @@ public class NaturalIdXrefDelegate {
 	 * @param persister The persister representing the entity type.
 	 * @param naturalIdValues The natural id values
 	 */
+	@SuppressWarnings("WeakerAccess")
 	protected void validateNaturalId(EntityDescriptor persister, Object[] naturalIdValues) {
 		if ( persister.getHierarchy().getNaturalIdDescriptor() == null  ) {
 			throw new IllegalArgumentException( "Entity did not define a natural-id" );
@@ -343,27 +348,31 @@ public class NaturalIdXrefDelegate {
 	/**
 	 * Used to put natural id values into collections.  Useful mainly to apply equals/hashCode implementations.
 	 */
+	@SuppressWarnings("WeakerAccess")
 	private static class CachedNaturalId implements Serializable {
 		private final EntityDescriptor persister;
 		private final Object[] values;
 		private final JavaTypeDescriptor[] naturalIdTypes;
 		private int hashCode;
 
-		public CachedNaturalId(EntityDescriptor persister, Object[] values) {
-			this.persister = persister;
+		@SuppressWarnings("unchecked")
+		public CachedNaturalId(EntityDescriptor entityDescriptor, Object[] values) {
+			this.persister = entityDescriptor;
 			this.values = values;
 
 			final int prime = 31;
 			int hashCodeCalculation = 1;
-			hashCodeCalculation = prime * hashCodeCalculation + persister.hashCode();
+			hashCodeCalculation = prime * hashCodeCalculation + entityDescriptor.hashCode();
 
-			final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
-			naturalIdTypes = new JavaTypeDescriptor[ naturalIdPropertyIndexes.length ];
+			final NaturalIdDescriptor naturalIdDescriptor = entityDescriptor.getHierarchy().getNaturalIdDescriptor();
+			final int numberOfNaturalIdAttributes = naturalIdDescriptor.getPersistentAttributes().size();
+
+			naturalIdTypes = new JavaTypeDescriptor[ numberOfNaturalIdAttributes ];
 			int i = 0;
-			for ( int naturalIdPropertyIndex : naturalIdPropertyIndexes ) {
-				final JavaTypeDescriptor javaTypeDescriptor = persister.getPropertyJavaTypeDescriptor( persister.getPropertyNames()[ naturalIdPropertyIndex ] );
-				naturalIdTypes[i] = javaTypeDescriptor;
-				final int elementHashCode = values[i] == null ? 0 : javaTypeDescriptor.extractHashCode( values[i] );
+			for ( NonIdPersistentAttribute attribute : naturalIdDescriptor.getPersistentAttributes() ) {
+				naturalIdTypes[ i ] = attribute.getJavaTypeDescriptor();
+
+				final int elementHashCode = values[i] == null ? 0 : attribute.getJavaTypeDescriptor().extractHashCode( values[i] );
 				hashCodeCalculation = prime * hashCodeCalculation + elementHashCode;
 				i++;
 			}
@@ -396,6 +405,7 @@ public class NaturalIdXrefDelegate {
 			return persister.equals( other.persister ) && isSame( other.values );
 		}
 
+		@SuppressWarnings("unchecked")
 		private boolean isSame(Object[] otherValues) {
 			// lengths have already been verified at this point
 			for ( int i = 0; i < naturalIdTypes.length; i++ ) {
@@ -408,11 +418,11 @@ public class NaturalIdXrefDelegate {
 	}
 
 	/**
-	 * Represents the persister-specific cross-reference cache.
+	 * Represents the EntityDescriptor-specific cross-reference cache.
 	 */
+	@SuppressWarnings("WeakerAccess")
 	private static class NaturalIdResolutionCache implements Serializable {
 		private final EntityDescriptor persister;
-		private final JavaTypeDescriptor[] naturalIdTypes;
 
 		private Map<Serializable, CachedNaturalId> pkToNaturalIdMap = new ConcurrentHashMap<>();
 		private Map<CachedNaturalId, Serializable> naturalIdToPkMap = new ConcurrentHashMap<>();
@@ -421,13 +431,6 @@ public class NaturalIdXrefDelegate {
 
 		private NaturalIdResolutionCache(EntityDescriptor persister) {
 			this.persister = persister;
-
-			final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
-			naturalIdTypes = new JavaTypeDescriptor[ naturalIdPropertyIndexes.length ];
-			int i = 0;
-			for ( int naturalIdPropertyIndex : naturalIdPropertyIndexes ) {
-				naturalIdTypes[i++] = persister.getPropertyJavaTypeDescriptor( persister.getPropertyNames()[ naturalIdPropertyIndex ] );
-			}
 		}
 
 		public EntityDescriptor getPersister() {
@@ -439,12 +442,7 @@ public class NaturalIdXrefDelegate {
 				return false;
 			}
 			final CachedNaturalId initial = pkToNaturalIdMap.get( pk );
-			if ( initial != null ) {
-				if ( initial.isSame( naturalIdValues ) ) {
-					return true;
-				}
-			}
-			return false;
+			return initial != null && initial.isSame( naturalIdValues );
 		}
 
 		public boolean cache(Serializable pk, Object[] naturalIdValues) {

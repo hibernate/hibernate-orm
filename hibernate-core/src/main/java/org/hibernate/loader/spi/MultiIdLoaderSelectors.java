@@ -9,20 +9,12 @@ package org.hibernate.loader.spi;
 import org.hibernate.LockOptions;
 
 /**
- * Encapsulation of the options for performing a load by multiple identifiers.
+ * Information that can influence the loader instance returned.
  *
  * @author Steve Ebersole
  */
-public interface MultiLoadOptions extends MultiIdLoaderSelectors {
-	@Override
+public interface MultiIdLoaderSelectors {
 	boolean isOrderReturnEnabled();
-
-	@Override
 	Integer getBatchSize();
-
-	@Override
 	LockOptions getLockOptions();
-
-	boolean isSessionCheckingEnabled();
-	boolean isReturnOfDeletedEntitiesEnabled();
 }

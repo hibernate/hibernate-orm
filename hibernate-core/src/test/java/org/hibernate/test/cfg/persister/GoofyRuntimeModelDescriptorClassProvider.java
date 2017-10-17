@@ -56,7 +56,6 @@ import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
@@ -307,7 +306,9 @@ public class GoofyRuntimeModelDescriptorClassProvider implements RuntimeModelDes
 
 		@Override
 		public List multiLoad(
-				Serializable[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions) {
+				Object[] ids,
+				MultiLoadOptions loadOptions,
+				SharedSessionContractImplementor session) {
 			return Collections.emptyList();
 		}
 
@@ -917,32 +918,7 @@ public class GoofyRuntimeModelDescriptorClassProvider implements RuntimeModelDes
 		}
 
 		@Override
-		public Navigable findNavigable(String navigableName) {
-			return null;
-		}
-
-		@Override
-		public Navigable findDeclaredNavigable(String navigableName) {
-			return null;
-		}
-
-		@Override
-		public List<Navigable> getNavigables() {
-			return null;
-		}
-
-		@Override
-		public List<Navigable> getDeclaredNavigables() {
-			return null;
-		}
-
-		@Override
 		public void visitNavigables(NavigableVisitationStrategy visitor) {
-
-		}
-
-		@Override
-		public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
 
 		}
 

@@ -6,6 +6,9 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.valuegen.ValueGenerationStrategy;
+
 /**
  * @author Steve Ebersole
  */
@@ -13,5 +16,9 @@ public interface NonIdPersistentAttribute<O,J> extends PersistentAttribute<O,J>,
 	@Override
 	default Class<J> getJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
+	}
+
+	default ValueGenerationStrategy getValueGenerationStrategy() {
+		throw new NotYetImplementedFor6Exception();
 	}
 }

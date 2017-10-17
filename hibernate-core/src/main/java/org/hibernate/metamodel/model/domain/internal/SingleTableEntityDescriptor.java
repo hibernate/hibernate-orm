@@ -113,11 +113,6 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 	}
 
 	@Override
-	public NaturalIdLoader getNaturalIdLoader(LockOptions lockOptions) {
-		return null;
-	}
-
-	@Override
 	public Table getPrimaryTable() {
 		return null;
 	}
@@ -130,11 +125,6 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 	@Override
 	public String[] getAffectedTableNames() {
 		return new String[0];
-	}
-
-	@Override
-	public boolean isMultiTable() {
-		return false;
 	}
 
 	@Override
@@ -166,22 +156,10 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 	}
 
 	@Override
-	public Object load(
-			Serializable id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session)
-			throws HibernateException {
-		return null;
-	}
-
-	@Override
-	public Object load(
-			Serializable id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session)
-			throws HibernateException {
-		return null;
-	}
-
-	@Override
 	public List multiLoad(
-			Serializable[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions) {
+			Object[] ids,
+			MultiLoadOptions loadOptions,
+			SharedSessionContractImplementor session) {
 		return null;
 	}
 

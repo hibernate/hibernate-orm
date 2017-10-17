@@ -58,7 +58,8 @@ public final class Versioning {
 			VersionDescriptor versionDescriptor,
 			SharedSessionContractImplementor session) {
 
-		final Object initialVersion = fields[versionProperty];
+		final int versionPosition = versionDescriptor.getStateArrayPosition();
+		final Object initialVersion = fields[ versionPosition ];
 		if (
 			initialVersion==null ||
 			// This next bit is to allow for both unsaved-value="negative"
@@ -67,7 +68,7 @@ public final class Versioning {
 			// TODO: shift it into unsaved-value strategy
 			( (initialVersion instanceof Number) && ( (Number) initialVersion ).longValue()<0 )
 		) {
-			fields[versionProperty] = seed( versionDescriptor.getVersionSupport(), session );
+			fields[versionPosition] = seed( versionDescriptor.getVersionSupport(), session );
 			return true;
 		}
 		LOG.tracev( "Using initial version: {0}", initialVersion );
@@ -110,7 +111,9 @@ public final class Versioning {
 			return;
 		}
 
-		fields[ persister.getVersionProperty() ] = version;
+		final int versionPosition = versionDescriptor.getStateArrayPosition();
+
+		fields[ versionPosition ] = version;
 	}
 
 	/**
@@ -126,7 +129,9 @@ public final class Versioning {
 			return null;
 		}
 
-		return fields[ persister.getVersionProperty() ];
+		final int versionPosition = versionDescriptor.getStateArrayPosition();
+
+		return fields[ versionPosition ];
 	}
 
 	/**

@@ -56,10 +56,12 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ConcurrentReferenceHashMap;
 import org.hibernate.internal.util.collections.IdentityMap;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
 import org.hibernate.pretty.MessageHelper;
@@ -1166,7 +1168,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( parent != null ) {
 			final EntityEntry entityEntry = entityEntryContext.getEntityEntry( parent );
 			//there maybe more than one parent, filter by type
-			if ( entityDescriptor.isSubclassEntityName( entityEntry.getEntityName() )
+			if ( entityDescriptor.isSubclassTypeName( entityEntry.getEntityName() )
 					&& isFoundInParent( propertyName, childEntity, entityDescriptor, collectionDescriptor, parent ) ) {
 				return getEntry( parent ).getId();
 			}
@@ -1181,7 +1183,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		for ( Entry<Object,EntityEntry> me : reentrantSafeEntityEntries() ) {
 			final EntityEntry entityEntry = me.getValue();
 			// does this entity entry pertain to the entity descriptor in which we are interested (owner)?
-			if ( entityDescriptor.isSubclassEntityName( entityEntry.getEntityName() ) ) {
+			if ( entityDescriptor.isSubclassTypeName( entityEntry.getEntityName() ) ) {
 				final Object entityEntryInstance = me.getKey();
 
 				//check if the managed object is the parent
@@ -1972,33 +1974,41 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public Object[] extractNaturalIdValues(Object[] state, EntityDescriptor descriptor) {
-			final int[] naturalIdPropertyIndexes = descriptor.getNaturalIdentifierProperties();
-			if ( state.length == naturalIdPropertyIndexes.length ) {
+		public Object[] extractNaturalIdValues(Object[] state, EntityDescriptor entityDescriptor) {
+			final NaturalIdDescriptor naturalIdDescriptor = entityDescriptor.getHierarchy().getNaturalIdDescriptor();
+			final int numberOfNaturalIdAttributes = naturalIdDescriptor.getPersistentAttributes().size();
+
+			if ( numberOfNaturalIdAttributes == state.length ) {
+				// state just so happens to contain just the natural-id values
 				return state;
 			}
 
-			final Object[] naturalIdValues = new Object[naturalIdPropertyIndexes.length];
-			for ( int i = 0; i < naturalIdPropertyIndexes.length; i++ ) {
-				naturalIdValues[i] = state[naturalIdPropertyIndexes[i]];
+			final Object[] naturalIdValues = new Object[ numberOfNaturalIdAttributes ];
+			int naturalIdIndex = 0;
+			for ( NonIdPersistentAttribute attribute : naturalIdDescriptor.getPersistentAttributes() ) {
+				naturalIdValues[ naturalIdIndex++ ] = state[ attribute.getStateArrayPosition() ];
 			}
+
 			return naturalIdValues;
 		}
 
 		@Override
-		public Object[] extractNaturalIdValues(Object entity, EntityDescriptor descriptor) {
+		public Object[] extractNaturalIdValues(Object entity, EntityDescriptor entityDescriptor) {
 			if ( entity == null ) {
 				throw new AssertionFailure( "Entity from which to extract natural id value(s) cannot be null" );
 			}
-			if ( descriptor == null ) {
-				throw new AssertionFailure( "Persister to use in extracting natural id value(s) cannot be null" );
+
+			if ( entityDescriptor == null ) {
+				throw new AssertionFailure( "EntityDescriptor to use in extracting natural id value(s) cannot be null" );
 			}
 
-			final int[] naturalIdentifierProperties = descriptor.getNaturalIdentifierProperties();
-			final Object[] naturalIdValues = new Object[naturalIdentifierProperties.length];
+			final NaturalIdDescriptor naturalIdDescriptor = entityDescriptor.getHierarchy().getNaturalIdDescriptor();
+			final int numberOfNaturalIdAttributes = naturalIdDescriptor.getPersistentAttributes().size();
 
-			for ( int i = 0; i < naturalIdentifierProperties.length; i++ ) {
-				naturalIdValues[i] = descriptor.getPropertyValue( entity, naturalIdentifierProperties[i] );
+			final Object[] naturalIdValues = new Object[ numberOfNaturalIdAttributes ];
+			int naturalIdIndex = 0;
+			for ( NonIdPersistentAttribute attribute : naturalIdDescriptor.getPersistentAttributes() ) {
+				naturalIdValues[ naturalIdIndex++ ] = attribute.getPropertyAccess().getGetter().get( entity );
 			}
 
 			return naturalIdValues;
@@ -2058,12 +2068,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		return naturalIdHelper;
 	}
 
-	private Object[] getNaturalIdValues(Object[] state, EntityDescriptor descriptor) {
-		final int[] naturalIdPropertyIndexes = descriptor.getNaturalIdentifierProperties();
-		final Object[] naturalIdValues = new Object[naturalIdPropertyIndexes.length];
+	private Object[] getNaturalIdValues(Object[] state, EntityDescriptor entityDescriptor) {
+		final NaturalIdDescriptor naturalIdDescriptor = entityDescriptor.getHierarchy().getNaturalIdDescriptor();
+		final int numberOfNaturalIdAttributes = naturalIdDescriptor.getPersistentAttributes().size();
 
-		for ( int i = 0; i < naturalIdPropertyIndexes.length; i++ ) {
-			naturalIdValues[i] = state[naturalIdPropertyIndexes[i]];
+		final Object[] naturalIdValues = new Object[ numberOfNaturalIdAttributes ];
+		int naturalIdIndex = 0;
+		for ( NonIdPersistentAttribute attribute : naturalIdDescriptor.getPersistentAttributes() ) {
+			naturalIdValues[ naturalIdIndex++ ] = state[ attribute.getStateArrayPosition() ];
 		}
 
 		return naturalIdValues;

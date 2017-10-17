@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain.spi;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -37,9 +38,13 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
+import org.hibernate.loader.internal.StandardCompositeNaturalIdLoaderImpl;
+import org.hibernate.loader.internal.StandardSimpleNaturalIdLoaderImpl;
 import org.hibernate.loader.internal.StandardSingleIdEntityLoader;
 import org.hibernate.loader.spi.EntityLocker;
 import org.hibernate.loader.spi.MultiIdEntityLoader;
+import org.hibernate.loader.spi.MultiIdLoaderSelectors;
+import org.hibernate.loader.spi.NaturalIdLoader;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.loader.spi.SingleUniqueKeyEntityLoader;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -310,14 +315,14 @@ public abstract class AbstractEntityDescriptor<T>
 	}
 
 	private final SingleIdEntityLoader customQueryLoader = null;
-	private Map<LockMode,SingleIdEntityLoader> loaders;
-	private Map<InternalFetchProfileType,SingleIdEntityLoader> internalCascadeLoaders;
+	private EnumMap<LockMode,SingleIdEntityLoader> loaders;
+	private EnumMap<InternalFetchProfileType,SingleIdEntityLoader> internalCascadeLoaders;
 
 	private final FilterHelper filterHelper = null;
 	private final Set<String> affectingFetchProfileNames = new HashSet<>();
 
-
 	@Override
+	@SuppressWarnings("unchecked")
 	public SingleIdEntityLoader getSingleIdLoader(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers) {
 		if ( 	customQueryLoader != null ) {
 			// if the user specified that we should use a custom query for loading this entity, we need
@@ -325,37 +330,36 @@ public abstract class AbstractEntityDescriptor<T>
 			return customQueryLoader;
 		}
 
-
 		if ( isAffectedByEnabledFilters( loadQueryInfluencers ) ) {
 			// special case of not-cacheable based on enabled filters effecting this load.
 			//
 			// This case is special because the filters need to be applied in order to
 			// 		properly restrict the SQL/JDBC results.  For this reason it has higher
 			// 		precedence than even ""internal" fetch profiles.
-			return createLoader( lockOptions, loadQueryInfluencers );
+			return createSingleIdLoader( lockOptions, loadQueryInfluencers );
 		}
 
-		final boolean useInternalFetchProfile = loadQueryInfluencers.getEnabledInternalFetchProfileType() != null
-				&& LockMode.UPGRADE.greaterThan( lockOptions.getLockMode() );
-		if ( useInternalFetchProfile ) {
-			return internalCascadeLoaders.computeIfAbsent(
-					loadQueryInfluencers.getEnabledInternalFetchProfileType(),
-					internalFetchProfileType -> createLoader( lockOptions, loadQueryInfluencers )
-			);
+		if ( loadQueryInfluencers.getEnabledInternalFetchProfileType() != null ) {
+			if ( LockMode.UPGRADE.greaterThan( lockOptions.getLockMode() ) ) {
+				if ( internalCascadeLoaders == null ) {
+					internalCascadeLoaders = new EnumMap<>( InternalFetchProfileType.class );
+				}
+				return internalCascadeLoaders.computeIfAbsent(
+						loadQueryInfluencers.getEnabledInternalFetchProfileType(),
+						internalFetchProfileType -> createSingleIdLoader( lockOptions, loadQueryInfluencers )
+				);
+			}
 		}
 
-		// otherwise see if the loader for the requested load can be cached (which
-		// 		also means we should look in the cache).
+		// otherwise see if the loader for the requested load can be cached - which
+		// 		also means we should look in the cache for an existing one
 
-		final boolean cacheable = ! isAffectedByEnabledFetchProfiles( loadQueryInfluencers )
-				&& ! isAffectedByEntityGraph( loadQueryInfluencers )
-				&& lockOptions.getTimeOut() != LockOptions.WAIT_FOREVER;
-
+		final boolean cacheable = determineIfCacheable( lockOptions, loadQueryInfluencers );
 
 		SingleIdEntityLoader loader = null;
 		if ( cacheable ) {
 			if ( loaders == null ) {
-				loaders = new ConcurrentHashMap<>();
+				loaders = new EnumMap<>( LockMode.class );
 			}
 			else {
 				loader = loaders.get( lockOptions.getLockMode() );
@@ -363,7 +367,7 @@ public abstract class AbstractEntityDescriptor<T>
 		}
 
 		if ( loader == null ) {
-			loader = createLoader( lockOptions, loadQueryInfluencers );
+			loader = createSingleIdLoader( lockOptions, loadQueryInfluencers );
 		}
 
 		if ( cacheable ) {
@@ -374,12 +378,30 @@ public abstract class AbstractEntityDescriptor<T>
 		return loader;
 	}
 
-	protected boolean isAffectedByEnabledFilters(LoadQueryInfluencers loadQueryInfluencers) {
+	@SuppressWarnings("RedundantIfStatement")
+	private boolean determineIfCacheable(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers) {
+		if ( isAffectedByEnabledFetchProfiles( loadQueryInfluencers ) ) {
+			return false;
+		}
+
+		if ( isAffectedByEntityGraph( loadQueryInfluencers ) ) {
+			return false;
+		}
+
+		if ( lockOptions.getTimeOut() == LockOptions.WAIT_FOREVER ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	private boolean isAffectedByEnabledFilters(LoadQueryInfluencers loadQueryInfluencers) {
+		assert filterHelper != null;
 		return loadQueryInfluencers.hasEnabledFilters()
 				&& filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters() );
 	}
 
-	protected boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers loadQueryInfluencers) {
+	private boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers loadQueryInfluencers) {
 		for ( String s : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
 			if ( affectingFetchProfileNames.contains( s ) ) {
 				return true;
@@ -388,12 +410,13 @@ public abstract class AbstractEntityDescriptor<T>
 		return false;
 	}
 
-	protected boolean isAffectedByEntityGraph(LoadQueryInfluencers loadQueryInfluencers) {
+	private boolean isAffectedByEntityGraph(LoadQueryInfluencers loadQueryInfluencers) {
 		return loadQueryInfluencers.getFetchGraph() != null
 				|| loadQueryInfluencers.getLoadGraph() != null;
 	}
 
-	protected SingleIdEntityLoader createLoader(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers) {
+	@SuppressWarnings("WeakerAccess")
+	protected SingleIdEntityLoader createSingleIdLoader(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers) {
 		// todo (6.0) : determine when the loader can be cached....
 
 		// for now, always create a new one
@@ -405,14 +428,52 @@ public abstract class AbstractEntityDescriptor<T>
 	}
 
 	@Override
-	public SingleUniqueKeyEntityLoader getSingleUniqueKeyLoader(Navigable navigable, LoadQueryInfluencers loadQueryInfluencers) {
-		return null;
+	public NaturalIdLoader getNaturalIdLoader(LockOptions lockOptions) {
+		if ( getHierarchy().getNaturalIdDescriptor().getPersistentAttributes().size() > 1 ) {
+			return new StandardCompositeNaturalIdLoaderImpl( this );
+		}
+		else {
+			return new StandardSimpleNaturalIdLoaderImpl( this );
+		}
+	}
+
+
+	private MultiIdEntityLoader orderedMultiIdLoader;
+	private MultiIdEntityLoader unorderedMultiIdLoader;
+
+	@Override
+	public MultiIdEntityLoader getMultiIdLoader(MultiIdLoaderSelectors selectors) {
+		if ( customQueryLoader != null ) {
+			throw new HibernateException(
+					"Cannot perform multi-id loading on an entity defined with a custom load query : " + getEntityName()
+			);
+		}
+
+		if ( selectors.isOrderReturnEnabled() ) {
+			if ( orderedMultiIdLoader == null ) {
+				orderedMultiIdLoader = createOrderedMultiIdLoader();
+			}
+			return orderedMultiIdLoader;
+		}
+
+
+		if ( unorderedMultiIdLoader == null ) {
+			unorderedMultiIdLoader = createUnorderedMultiIdLoader();
+		}
+		return unorderedMultiIdLoader;
+	}
+
+	private MultiIdEntityLoader createOrderedMultiIdLoader() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	private MultiIdEntityLoader createUnorderedMultiIdLoader() {
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
-	public MultiIdEntityLoader getMultiIdLoader(LoadQueryInfluencers loadQueryInfluencers) {
-		// todo (6.0) : disallow against entities for which the user has defined a custom "loader query".
-		return null;
+	public SingleUniqueKeyEntityLoader getSingleUniqueKeyLoader(Navigable navigable, LoadQueryInfluencers loadQueryInfluencers) {
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private Map<LockMode,EntityLocker> lockers;

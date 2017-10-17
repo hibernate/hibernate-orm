@@ -1,24 +1,17 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.tuple;
+package org.hibernate.metamodel.valuegen;
 
 /**
  * Strategy for describing values which are generated in the database.
  *
  * @author Steve Ebersole
  */
-public interface InDatabaseValueGenerationStrategy {
-	/**
-	 * When is this value generated : NEVER, INSERT, ALWAYS (INSERT+UPDATE)
-	 *
-	 * @return When the value is generated.
-	 */
-	public GenerationTiming getGenerationTiming();
-
+public interface InDatabaseValueGenerationStrategy extends ValueGenerationStrategy {
 	/**
 	 * Should the column(s) be referenced in the INSERT / UPDATE SQL?
 	 * <p/>
@@ -28,7 +21,7 @@ public interface InDatabaseValueGenerationStrategy {
 	 *
 	 * @return {@code true} indicates the column should be included in the SQL.
 	 */
-	public boolean referenceColumnsInSql();
+	boolean referenceColumnsInSql();
 
 	/**
 	 * For columns that will be referenced in the SQL (per {@link #referenceColumnsInSql()}), what value
@@ -37,6 +30,6 @@ public interface InDatabaseValueGenerationStrategy {
 	 * @return The column value to be used in the SQL.  {@code null} for any element indicates to use the Column
 	 * defined value ({@link org.hibernate.mapping.Column#getWriteExpr}).
 	 */
-	public String[] getReferencedColumnValues();
+	String[] getReferencedColumnValues();
 
 }

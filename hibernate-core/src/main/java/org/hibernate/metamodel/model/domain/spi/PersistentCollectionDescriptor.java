@@ -78,14 +78,6 @@ public interface PersistentCollectionDescriptor<O,C,E>
 			RuntimeModelCreationContext.class
 	};
 
-	// todo : in terms of SqmNavigableSource.findNavigable() impl, be sure to only recognize:
-	//			1) key
-	//			2) index
-	//			3) element
-	//			4) value
-	//			5) elements
-	//			6) indices
-
 	void finishInitialization(Collection collectionBinding, RuntimeModelCreationContext creationContext);
 
 	CollectionClassification getCollectionClassification();
@@ -119,6 +111,62 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	 * or array).
 	 */
 	CollectionIndex getIndexDescriptor();
+
+
+	// todo : in terms of SqmNavigableSource.findNavigable() impl, be sure to only recognize:
+	//			1) {key}
+	//			2) {keys}
+	//			3) {index}
+	//			4) {indices}
+	//			5) {element}
+	//			6) {elements}
+	//			7) {value}
+	//			8) {values}
+	//
+	//			9) {entry} ? - for Map.Entry
+	//
+	//		- with or without the braces.  Meaning both `c.{element}` and `c.element` are
+	//			recognized
+
+
+	@Override
+	@SuppressWarnings("unchecked")
+	default <N> Navigable<N> findNavigable(String navigableName) {
+		if ( "key".equals( navigableName ) || "{key}".equals( navigableName )
+				|| "keys".equals( navigableName ) || "{keys}".equals( navigableName )
+				|| "index".equals( navigableName ) || "{index}".equals( navigableName )
+				|| "indices".equals( navigableName ) || "{indices}".equals( navigableName ) ) {
+			return getIndexDescriptor();
+		}
+
+		if ( "element".equals( navigableName ) || "{element}".equals( navigableName )
+				|| "elements".equals( navigableName ) || "{elements}".equals( navigableName )
+				|| "value".equals( navigableName ) || "{value}".equals( navigableName )
+				|| "values".equals( navigableName ) || "{values}".equals( navigableName ) ) {
+			return (Navigable<N>) getElementDescriptor();
+		}
+
+		return null;
+	}
+
+	@Override
+	default void visitNavigables(NavigableVisitationStrategy visitor) {
+		if ( getIndexDescriptor() != null ) {
+			getIndexDescriptor().visitNavigable( visitor );
+		}
+
+		getElementDescriptor().visitNavigable( visitor );
+	}
+
+	@Override
+	default String getNavigableName() {
+		return getNavigableRole().getNavigableName();
+	}
+
+	@Override
+	default void visitNavigable(NavigableVisitationStrategy visitor) {
+		visitNavigables( visitor );
+	}
 
 	PersistentCollectionTuplizer getTuplizer();
 

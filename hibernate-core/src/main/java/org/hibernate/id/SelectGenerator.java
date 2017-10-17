@@ -20,7 +20,9 @@ import org.hibernate.id.insert.AbstractSelectingDelegate;
 import org.hibernate.id.insert.IdentifierGeneratingInsert;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.metamodel.model.domain.spi.NaturalIdDescriptor;
+import org.hibernate.metamodel.valuegen.ValueGenerationStrategy;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -68,13 +70,17 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 			);
 		}
 
-		if ( persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
+		final ValueGenerationStrategy generationStrategy = naturalIdDescriptor.getPersistentAttributes()
+				.get( 0 )
+				.getValueGenerationStrategy();
+		if ( generationStrategy.getGenerationTiming() != GenerationTiming.NEVER ) {
 			throw new IdentifierGenerationException(
 					"natural-id also defined as insert-generated; need to specify [key] " +
 							"in generator parameters"
 			);
 		}
-		return naturalIdDescriptor.getPersistentAttributes().iterator().next().getName();
+
+		return naturalIdDescriptor.getPersistentAttributes().get( 0 ).getAttributeName();
 	}
 
 

@@ -29,7 +29,7 @@ public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> 
 	}
 
 	@Override
-	public T load(Serializable id, SharedSessionContractImplementor session, Options options) {
+	public T load(Serializable id, LockOptions lockOptions, SharedSessionContractImplementor session) {
 		throw new NotYetImplementedFor6Exception(  );
 	}
 }

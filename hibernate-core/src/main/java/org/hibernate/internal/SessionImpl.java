@@ -2365,7 +2365,7 @@ public final class SessionImpl
 			}
 
 			try {
-				return entityPersister.multiLoad( ids, SessionImpl.this, this );
+				return entityPersister.multiLoad( ids, this, SessionImpl.this );
 			}
 			finally {
 				if ( cacheModeChanged ) {
@@ -2390,7 +2390,10 @@ public final class SessionImpl
 			}
 
 			try {
-				return entityPersister.multiLoad( ids.toArray( new Serializable[ ids.size() ] ), SessionImpl.this, this );
+				return entityPersister.multiLoad( ids.toArray( new Serializable[ ids.size() ] ),
+												  this,
+												  SessionImpl.this
+				);
 			}
 			finally {
 				if ( cacheModeChanged ) {

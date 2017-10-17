@@ -143,4 +143,6 @@ public interface ManagedTypeDescriptor<T>
 	default void injectAttributeValue(T instance, PersistentAttribute attribute, Object value) {
 		attribute.getPropertyAccess().getSetter().set( instance, value, getTypeConfiguration().getSessionFactory() );
 	}
+
+	boolean hasMutableProperties();
 }

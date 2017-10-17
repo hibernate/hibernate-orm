@@ -9,6 +9,7 @@ package org.hibernate.envers.configuration.internal.metadata;
 import java.util.Properties;
 
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
+import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
@@ -52,7 +53,8 @@ public final class BasicMetadataGenerator {
 
 			// A null mapper means that we only want to add xml mappings
 			if ( mapper != null ) {
-				mapper.add( propertyAuditingData.getPropertyData() );
+				final PropertyData propertyData = propertyAuditingData.resolvePropertyData( value.getType() );
+				mapper.add( propertyData );
 			}
 
 			return true;
@@ -108,7 +110,8 @@ public final class BasicMetadataGenerator {
 
 		// A null mapper means that we only want to add xml mappings
 		if ( mapper != null ) {
-			mapper.add( propertyAuditingData.getPropertyData() );
+			final PropertyData propertyData = propertyAuditingData.resolvePropertyData( value.getType() );
+			mapper.add( propertyData );
 		}
 
 		return true;

@@ -287,13 +287,9 @@ public final class CollectionMetadataGenerator {
 
 			// Checking if there's an index defined. If so, adding a mapper for it.
 			if ( positionMappedBy != null ) {
+				final Type indexType = ( (IndexedCollection) propertyValue ).getIndex().getType();
 				fakeBidirectionalRelationIndexMapper = new SinglePropertyMapper(
-						new PropertyData(
-								positionMappedBy,
-								null,
-								null,
-								null
-						)
+						PropertyData.forProperty( positionMappedBy, indexType )
 				);
 
 				// Also, overwriting the index component data to properly read the index.

@@ -63,7 +63,7 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 			// Don't generate new revision when database replaces empty string with NULL during INSERT or UPDATE statements.
 			dbLogicallyDifferent = !(StringTools.isEmpty( newObj ) && StringTools.isEmpty( oldObj ));
 		}
-		return dbLogicallyDifferent && !EqualsHelper.areEqual( newObj, oldObj );
+		return dbLogicallyDifferent && !areEqual( newObj, oldObj );
 	}
 
 	@Override
@@ -74,7 +74,7 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 			Object oldObj) {
 		// Synthetic properties are not subject to withModifiedFlag analysis
 		if ( propertyData.isUsingModifiedFlag() && !propertyData.isSynthetic() ) {
-			data.put( propertyData.getModifiedFlagPropertyName(), !EqualsHelper.areEqual( newObj, oldObj ) );
+			data.put( propertyData.getModifiedFlagPropertyName(), !areEqual( newObj, oldObj ) );
 		}
 	}
 
@@ -136,5 +136,17 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 	@Override
 	public boolean hasPropertiesWithModifiedFlag() {
 		return propertyData != null && propertyData.isUsingModifiedFlag();
+	}
+
+	private boolean areEqual(Object newObj, Object oldObj) {
+		// Should a Type have been specified on the property mapper, delegate there to make sure
+		// that proper equality comparison occurs based on the Type's semantics rather than the
+		// generalized EqualsHelper #areEqual call.
+		if ( propertyData.getType() != null ) {
+			return propertyData.getType().isEqual( newObj, oldObj );
+		}
+		// todo (6.0) - Confirm if this is still necessary as everything should use a JavaTypeDescriptor.
+		//		This was maintained for legacy 5.2 behavior only.
+		return EqualsHelper.areEqual( newObj, oldObj );
 	}
 }

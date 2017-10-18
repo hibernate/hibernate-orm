@@ -258,6 +258,11 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		if ( getSelection() == null && !hasImplicitSelection() ) {
 			throw new IllegalStateException( "No explicit selection and an implicit one could not be determined" );
 		}
+
+		// check if there's a having clause without the group by defined.
+		if ( queryStructure.getHaving() != null && queryStructure.getGroupings().isEmpty() ) {
+			throw new IllegalStateException( "Having clause defined without the grouping" );
+		}
 	}
 
 	/**

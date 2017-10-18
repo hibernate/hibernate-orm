@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
@@ -192,6 +193,11 @@ public abstract class AbstractManagedType<T> implements InheritanceCapable<T> {
 					}
 				}
 		);
+	}
+
+	@Override
+	public boolean hasMutableProperties() {
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@SuppressWarnings({"unchecked", "WeakerAccess"})

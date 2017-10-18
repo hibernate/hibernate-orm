@@ -34,7 +34,10 @@ public interface InheritanceCapable<T> extends ManagedTypeDescriptor<T> {
 	 * @return True if the given entity name represents either the entity
 	 * mapped by this persister or one of its subclass entities; false
 	 * otherwise.
+	 *
+	 * @deprecated Use {@link #isSubclassTypeName(String)} instead
 	 */
+	@Deprecated
 	boolean isSubclassEntityName(String entityName);
 
 	/**
@@ -66,13 +69,7 @@ public interface InheritanceCapable<T> extends ManagedTypeDescriptor<T> {
 	 */
 	void addSubclassType(InheritanceCapable<? extends T> subclassType);
 
-	/**
-	 * @deprecated Use {@link #isSubclassTypeName(String)} instead
-	 */
-	@Deprecated
-	boolean isSubclassEntityName(String entityName);
-
 	default boolean isSubclassTypeName(String name) {
-		return isSubclassTypeName( name );
+		return isSubclassEntityName( name );
 	}
 }

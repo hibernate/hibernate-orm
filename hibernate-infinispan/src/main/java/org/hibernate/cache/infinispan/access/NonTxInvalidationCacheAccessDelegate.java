@@ -10,12 +10,6 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.resource.transaction.TransactionCoordinator;
-import org.hibernate.resource.transaction.spi.TransactionStatus;
-
-import javax.transaction.Status;
-import javax.transaction.SystemException;
-import javax.transaction.TransactionManager;
 
 /**
  * Delegate for non-transactional caches
@@ -82,5 +76,18 @@ public class NonTxInvalidationCacheAccessDelegate extends InvalidationCacheAcces
 	public boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
 		// endInvalidatingKeys is called from NonTxInvalidationInterceptor, from the synchronization callback
 		return false;
+	}
+
+	@Override
+	public void removeAll() throws CacheException {
+		try {
+			if (!putValidator.beginInvalidatingRegion()) {
+				log.failedInvalidateRegion(region.getName());
+			}
+			cache.clear();
+		}
+		finally {
+			putValidator.endInvalidatingRegion();
+		}
 	}
 }

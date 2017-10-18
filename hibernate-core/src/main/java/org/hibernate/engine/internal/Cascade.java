@@ -30,12 +30,15 @@ import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.JoinablePersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
+
+import static org.hibernate.type.ForeignKeyDirection.TO_PARENT;
 
 /**
  * Delegate responsible for, in conjunction with the various
@@ -153,8 +156,8 @@ public final class Cascade {
 			final Object anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
 		if ( child != null ) {
-			if ( PluralPersistentAttribute.class.isInstance(attribute) || SingularPersistentAttributeEntity.class.isInstance( attribute ) ) {
-				if ( cascadeAssociationNow( cascadePoint, attribute ) ) {
+			if ( JoinablePersistentAttribute.class.isInstance( attribute ) ) {
+				if ( cascadeAssociationNow( cascadePoint, (JoinablePersistentAttribute) attribute ) ) {
 					cascadeAssociation(
 							action,
 							cascadePoint,
@@ -230,10 +233,9 @@ public final class Cascade {
 								final String description = MessageHelper.infoString( entityName, id );
 								LOG.tracev( "Deleting orphaned entity instance: {0}", description );
 							}
-							
-							if (type.isAssociationType() && ((AssociationType)type).getForeignKeyDirection().equals(
-											ForeignKeyDirection.TO_PARENT
-							)) {
+
+							if ( attribute instanceof Joinable
+									&& ( (Joinable) attribute ).getForeignKeyDirection().equals( TO_PARENT ) ) {
 								// If FK direction is to-parent, we must remove the orphan *beforeQuery* the queued update(s)
 								// occur.  Otherwise, replacing the association on a managed entity, without manually
 								// nulling and flushing, causes FK constraint violations.
@@ -262,7 +264,7 @@ public final class Cascade {
 		return attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
 	}
 
-	private static boolean cascadeAssociationNow(final CascadePoint cascadePoint, PersistentAttribute attribute) {
+	private static boolean cascadeAssociationNow(final CascadePoint cascadePoint, JoinablePersistentAttribute attribute) {
 		return attribute.getForeignKeyDirection().cascadeNow( cascadePoint );
 	}
 
@@ -439,7 +441,7 @@ public final class Cascade {
 						style,
 						null,
 						anything,
-						descriptor.isCascadeDeleteEnabled()
+						descriptor.getDescribedAttribute().isCascadeDeleteEnabled()
 				);
 			}
 

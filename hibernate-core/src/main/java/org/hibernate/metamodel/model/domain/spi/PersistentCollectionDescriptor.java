@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import java.io.Serializable;
+import java.util.Iterator;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -531,6 +532,10 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	 * a better plan for handling that stuff.
 	 */
 	default Serializable getKeyOfOwner(Object entity, SessionImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	default Iterator getElementsIterator(Object collection, SharedSessionContractImplementor session) {
 		throw new NotYetImplementedFor6Exception();
 	}
 }

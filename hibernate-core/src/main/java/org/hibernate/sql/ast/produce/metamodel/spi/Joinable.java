@@ -6,8 +6,10 @@
  */
 package org.hibernate.sql.ast.produce.metamodel.spi;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.type.ForeignKeyDirection;
 
 /**
  * Specialization for Navigable that can be used in creating TableGroupJoins
@@ -23,4 +25,12 @@ public interface Joinable<T> extends Navigable<T> {
 	 * Can be `null` when the joinable is an embedded value.
 	 */
 	ForeignKey.ColumnMappings getJoinColumnMappings();
+
+	default ForeignKeyDirection getForeignKeyDirection() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	default boolean isCascadeDeleteEnabled() {
+		throw new NotYetImplementedFor6Exception();
+	}
 }

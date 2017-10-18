@@ -11,9 +11,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-import org.hibernate.EntityMode;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Used to uniquely key an entity instance in relation to a particular session
@@ -29,22 +29,22 @@ public class EntityUniqueKey implements Serializable {
 	private final String uniqueKeyName;
 	private final String entityName;
 	private final Object key;
-	private final Type keyType;
-	private final EntityMode entityMode;
+	private final JavaTypeDescriptor identifierJavaTypeDescriptor;
+	private final RepresentationMode representationMode;
 	private final int hashCode;
 
 	public EntityUniqueKey(
 			final String entityName,
 			final String uniqueKeyName,
 			final Object semiResolvedKey,
-			final Type keyType,
-			final EntityMode entityMode,
+			final JavaTypeDescriptor identifierJavaTypeDescriptor,
+			final RepresentationMode representationMode,
 			final SessionFactoryImplementor factory) {
 		this.uniqueKeyName = uniqueKeyName;
 		this.entityName = entityName;
 		this.key = semiResolvedKey;
-		this.keyType = keyType.getSemiResolvedType( factory );
-		this.entityMode = entityMode;
+		this.identifierJavaTypeDescriptor = identifierJavaTypeDescriptor;
+		this.representationMode = representationMode;
 		this.hashCode = generateHashCode( factory );
 	}
 
@@ -60,11 +60,12 @@ public class EntityUniqueKey implements Serializable {
 		return uniqueKeyName;
 	}
 
-	public int generateHashCode(SessionFactoryImplementor factory) {
+	@SuppressWarnings("unchecked")
+	private int generateHashCode(SessionFactoryImplementor factory) {
 		int result = 17;
 		result = 37 * result + entityName.hashCode();
 		result = 37 * result + uniqueKeyName.hashCode();
-		result = 37 * result + keyType.getJavaTypeDescriptor().extractHashCode( key );
+		result = 37 * result + identifierJavaTypeDescriptor.extractHashCode( key );
 		return result;
 	}
 
@@ -74,11 +75,12 @@ public class EntityUniqueKey implements Serializable {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public boolean equals(Object other) {
 		EntityUniqueKey that = (EntityUniqueKey) other;
 		return that != null && that.entityName.equals( entityName )
 				&& that.uniqueKeyName.equals( uniqueKeyName )
-				&& keyType.getJavaTypeDescriptor().areEqual( that.key, key );
+				&& identifierJavaTypeDescriptor.areEqual( that.key, key );
 	}
 
 	@Override
@@ -116,8 +118,8 @@ public class EntityUniqueKey implements Serializable {
 		oos.writeObject( uniqueKeyName );
 		oos.writeObject( entityName );
 		oos.writeObject( key );
-		oos.writeObject( keyType );
-		oos.writeObject( entityMode );
+		oos.writeObject( identifierJavaTypeDescriptor );
+		oos.writeObject( representationMode );
 	}
 
 	/**
@@ -139,8 +141,8 @@ public class EntityUniqueKey implements Serializable {
 				(String) ois.readObject(),
 				(String) ois.readObject(),
 				ois.readObject(),
-				(Type) ois.readObject(),
-				(EntityMode) ois.readObject(),
+				(JavaTypeDescriptor) ois.readObject(),
+				(RepresentationMode) ois.readObject(),
 				session.getFactory()
 		);
 	}

@@ -163,29 +163,39 @@ public interface ManagedTypeDescriptor<T>
 	/**
 	 * Set the given values to the mapped properties of the given object
 	 */
-	void setPropertyValues(Object object, Object[] values);
+	default void setPropertyValues(Object object, Object[] values) {
+		throw new NotYetImplementedFor6Exception();
+	}
 
 	/**
 	 * Return the (loaded) values of the mapped properties of the object (not including backrefs)
 	 */
-	Object[] getPropertyValues(Object object);
+	default Object[] getPropertyValues(Object object) {
+		throw new NotYetImplementedFor6Exception();
+	}
 
 
 	/**
 	 * @deprecated Use the attribute's {@link org.hibernate.property.access.spi.PropertyAccess} instead
 	 */
 	@Deprecated
-	void setPropertyValue(Object object, int i, Object value);
+	default void setPropertyValue(Object object, int i, Object value) {
+		throw new NotYetImplementedFor6Exception();
+	}
 
 	/**
 	 * @deprecated Use the attribute's {@link org.hibernate.property.access.spi.PropertyAccess} instead
 	 */
 	@Deprecated
-	Object getPropertyValue(Object object, int i) throws HibernateException;
+	default Object getPropertyValue(Object object, int i) throws HibernateException {
+		throw new NotYetImplementedFor6Exception();
+	}
 
 	/**
 	 * @deprecated Use the attribute's {@link org.hibernate.property.access.spi.PropertyAccess} instead
 	 */
 	@Deprecated
-	Object getPropertyValue(Object object, String propertyName);
+	default Object getPropertyValue(Object object, String propertyName) {
+		throw new NotYetImplementedFor6Exception();
+	}
 }

@@ -218,7 +218,7 @@ This would look something like:
 	//
 	//		decide which is more understandable
 
-### Entity metadata (14)
+### Entity metadata (1)
 
 
 Various errors dealing with entity metadata including versioning, natural-ids, attribute "position", etc
@@ -227,89 +227,11 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
 [code]
 ----
 
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/AbstractEntityEntry.java:355: error: cannot find symbol
-		if ( getDescriptor().hasMutableProperties() ) {
-		                    ^
-  symbol:   method hasMutableProperties()
-  location: interface EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/AbstractEntityEntry.java:374: error: cannot find symbol
-		loadedState[ persister.getVersionProperty() ] = version;
-		                      ^
-  symbol:   method getVersionProperty()
-  location: variable persister of type EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:358: error: cannot find symbol
-			final int[] props = persister.getNaturalIdentifierProperties();
-			                             ^
-  symbol:   method getNaturalIdentifierProperties()
-  location: variable persister of type EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:1951: error: cannot find symbol
-			final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
-			                                                ^
-  symbol:   method getNaturalIdentifierProperties()
-  location: variable persister of type EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:1972: error: cannot find symbol
-			final int[] naturalIdentifierProperties = persister.getNaturalIdentifierProperties();
-			                                                   ^
-  symbol:   method getNaturalIdentifierProperties()
-  location: variable persister of type EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/StatefulPersistenceContext.java:2037: error: cannot find symbol
-		final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
-		                                                ^
-  symbol:   method getNaturalIdentifierProperties()
-  location: variable persister of type EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/NaturalIdXrefDelegate.java:360: error: cannot find symbol
-			final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
-			                                                ^
-  symbol:   method getNaturalIdentifierProperties()
-  location: variable persister of type EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/NaturalIdXrefDelegate.java:425: error: cannot find symbol
-			final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
-			                                                ^
-  symbol:   method getNaturalIdentifierProperties()
-  location: variable persister of type EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Versioning.java:61: error: cannot find symbol
-		final Object initialVersion = fields[versionProperty];
-		                                     ^
-  symbol:   variable versionProperty
-  location: class Versioning
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Versioning.java:70: error: cannot find symbol
-			fields[versionProperty] = seed( versionDescriptor.getVersionSupport(), session );
-			       ^
-  symbol:   variable versionProperty
-  location: class Versioning
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Versioning.java:113: error: cannot find symbol
-		fields[ persister.getVersionProperty() ] = version;
-		                 ^
-  symbol:   method getVersionProperty()
-  location: variable persister of type EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/Versioning.java:129: error: cannot find symbol
-		return fields[ persister.getVersionProperty() ];
-		                        ^
-  symbol:   method getVersionProperty()
-  location: variable persister of type EntityDescriptor
-
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/TwoPhaseLoad.java:320: error: cannot find symbol
 			return entityEntry.getPersister().hasLazyProperties()
 			                                 ^
   symbol:   method hasLazyProperties()
   location: interface EntityDescriptor
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/SelectGenerator.java:71: error: cannot find symbol
-		if ( persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
-		              ^
-  symbol:   method getEntityMetamodel()
-  location: variable persister of type PostInsertIdentityPersister
 
 ----
 
@@ -403,22 +325,6 @@ Various errors dealing with entity metadata including versioning, natural-ids, a
 			return collectionDescriptor.getElementsIterator( collection, session );
 			                           ^
 ----
-
-
-
-
-### Composite/embedded metadata (1)
-
-[code]
-----
-		                                            ^
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/pojo/BasicLazyInitializer.java:84: error: cannot find symbol
-		if ( componentIdType != null && componentIdType.isMethodOf( method ) ) {
-		                                               ^
-  symbol:   method isMethodOf(Method)
-  location: variable componentIdType of type EmbeddedTypeDescriptor
-----
-
 
 
 
@@ -575,26 +481,6 @@ internally) as well?
 
 
 
-## Loader/Loadable (2)
-
-
-[code]
-----
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/AbstractEntityEntry.java:299: error: cannot find symbol
-			final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
-			                             ^
-  symbol:   class UniqueKeyLoadable
-  location: class AbstractEntityEntry
-
-/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/AbstractEntityEntry.java:311: error: cannot find symbol
-			final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
-			                             ^
-  symbol:   class UniqueKeyLoadable
-  location: class AbstractEntityEntry
-----
-
-
-
 ## ScrollableResults (1)
 
 [code]
@@ -609,11 +495,18 @@ internally) as well?
 
 
 
-## Misc (1)
+## Misc (2)
 
 
 [code]
 ----
+
+/home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/results/internal/RowReaderStandardImpl.java:97: error: cannot find symbol
+				( (EntityInitializer) initializer ).resolveEntityState( rowProcessingState );
+				                                   ^
+  symbol:   method resolveEntityState(RowProcessingState)
+  location: interface EntityInitializer
+
 /home/sebersole/projects/hibernate/hibernate-orm/master/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/UnsavedValueFactory.java:93: error: cannot find symbol
 						.fromString( unsavedValue ) );
 						^

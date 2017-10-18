@@ -37,6 +37,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
+ * @author Chris Cranford
  */
 public class QueryAuditTest extends BaseEntityManagerFunctionalTestCase {
 
@@ -260,6 +261,17 @@ public class QueryAuditTest extends BaseEntityManagerFunctionalTestCase {
 			//end::envers-querying-entity-relation-join-restriction[]
 
 			assertEquals( 1, customers.size() );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::aggregate-max-revision-with-entity-example[]
+			List<Customer> results = AuditReaderFactory
+				.get( entityManager )
+				.createQuery()
+				.forRevisionsOfEntity( Customer.class, true, false )
+				.add( AuditEntity.revisionNumber().maximize().computeAggregationInInstanceContext() )
+				.getResultList();
+			//end::aggregate-max-revision-with-entity-example[]
 		} );
 	}
 

@@ -859,14 +859,6 @@ include::{sourcedir}/QueryAuditTest.java[tags=revisions-of-entity-query-minimize
 The `minimize()` and `maximize()` methods return a criteria, to which you can add constraints,
 which must be met by the entities with the _maximized_/_minimized_ properties.
 
-[NOTE]
-====
-`AggregatedAuditExpression#computeAggregationInInstanceContext()` enables the possibility to compute
-aggregated expression in the context of each entity instance separately.
-
-It turns out useful when querying for latest revisions of all entities of a particular type.
-====
-
 You probably also noticed that there are two boolean parameters, passed when creating the query.
 
 `selectEntitiesOnly`:: The first parameter is only valid when you don't set an explicit projection.
@@ -883,6 +875,20 @@ If false, the result will be a list of three element arrays:
 in which the entity was deleted should be included in the results.
 +
 If yes, such entities will have the revision type `DEL` and all attributes, except the `id`, will be set to `null`.
+
+Another useful feature is `AggregatedAuditExpression#computeAggregationInInstanceContext()`.  This can be used to create
+an aggregate query based on the entity instance primary key.
+
+For example, if you wanted to locate all customers but only wanted to retrieve the instances with the
+maximum revision number, you would use the following query:
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/QueryAuditTest.java[tags=aggregate-max-revision-with-entity-example]
+----
+
+In other words, the result set would contain a list of `Customer` instances, one per primary key.  Each instance would
+hold the audited property data at the _maximum_ revision number for each `Customer` primary key.
 
 [[envers-tracking-properties-changes-queries]]
 === Querying for revisions of entity that modified a given property

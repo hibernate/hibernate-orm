@@ -72,7 +72,7 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 		// collectionPersister should not be null, but we don't want to throw
 		// an exception if it is null
 		String entityName =
-				( collectionPersister == null ? null : collectionPersister.getOwnerEntityPersister().getEntityName() );
+				( collectionPersister == null ? null : collectionPersister.findEntityOwnerDescriptor().getEntityName() );
 		if ( affectedOwner != null ) {
 			EntityEntry ee = source.getPersistenceContext().getEntry( affectedOwner );
 			if ( ee != null && ee.getEntityName() != null) {

@@ -6,10 +6,14 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.util.Map;
+
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
@@ -112,16 +116,22 @@ public interface StateArrayContributor<J> extends Navigable<J>, ExpressableType<
 		throw new NotYetImplementedFor6Exception();
 	}
 
-	//	todo (6.0) a general consideration.. current code (>= 5.2) basically did the following:
-	//			1) create the hydrated state array
-	//			2) create a copy of that hydrated state array to use in EntityEntry#loadedState, etc
-	//			3) resolved the hydrated state "in place" (same array instance)
-	//
-	// 		the above works because of the copy (2).  however, it would conceptually be the same to:
-	//			1) create the hydrated state array
-	//			2) use that hydrated state array in EntityEntry#loadedState, etc
-	//			3) create a new array that is the resolved copy of the hydrated state
-	//
-	//		decide which is more understandable
+	default Object replace(
+			Object originalValue,
+			Object targetValue,
+			Object owner,
+			Map copyCache,
+			SessionImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
 
+	default Object replace(
+			Object originalValue,
+			Object targetValue,
+			Object owner,
+			Map copyCache,
+			ForeignKeyDirection foreignKeyDirection,
+			SessionImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
 }

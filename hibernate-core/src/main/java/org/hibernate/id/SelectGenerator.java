@@ -14,6 +14,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.insert.AbstractSelectingDelegate;
@@ -128,26 +129,28 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 				SharedSessionContractImplementor session,
 				PreparedStatement ps,
 				Object entity) throws SQLException {
-			Object uniqueKeyValue = persister.getPropertyValue( entity, uniqueKeyPropertyName );
-			uniqueKeyType.nullSafeSet( ps, uniqueKeyValue, 1, session );
+			throw new NotYetImplementedFor6Exception();
+//			Object uniqueKeyValue = persister.getPropertyValue( entity, uniqueKeyPropertyName );
+//			uniqueKeyType.nullSafeSet( ps, uniqueKeyValue, 1, session );
 		}
 
 		protected Serializable getResult(
 				SharedSessionContractImplementor session,
 				ResultSet rs,
 				Object entity) throws SQLException {
-			if ( !rs.next() ) {
-				throw new IdentifierGenerationException(
-						"the inserted row could not be located by the unique key: " +
-								uniqueKeyPropertyName
-				);
-			}
-			return (Serializable) idType.nullSafeGet(
-					rs,
-					persister.getRootTableKeyColumnNames(),
-					session,
-					entity
-			);
+			throw new NotYetImplementedFor6Exception();
+//			if ( !rs.next() ) {
+//				throw new IdentifierGenerationException(
+//						"the inserted row could not be located by the unique key: " +
+//								uniqueKeyPropertyName
+//				);
+//			}
+//			return (Serializable) idType.nullSafeGet(
+//					rs,
+//					persister.getRootTableKeyColumnNames(),
+//					session,
+//					entity
+//			);
 		}
 	}
 }

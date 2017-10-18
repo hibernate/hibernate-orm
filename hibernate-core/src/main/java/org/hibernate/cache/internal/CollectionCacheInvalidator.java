@@ -28,11 +28,14 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.metamodel.model.domain.spi.CollectionElement.ElementClassification.MANY_TO_MANY;
 
 /**
  * Allows the collection cache to be automatically evicted if an element is inserted/removed/updated *without* properly
@@ -114,9 +117,11 @@ public class CollectionCacheInvalidator
 				}
 				// this is the property this OneToMany relation is mapped by
 				String mappedBy = collectionDescriptor.getMappedByProperty();
-				if ( !collectionDescriptor.isManyToMany() &&
-						mappedBy != null && !mappedBy.isEmpty() ) {
-					int i = entityDescriptor.getEntityMetamodel().getPropertyIndex( mappedBy );
+				if ( collectionDescriptor.getElementDescriptor().getClassification() != MANY_TO_MANY
+						&& mappedBy != null
+						&& !mappedBy.isEmpty() ) {
+					final NonIdPersistentAttribute attribute = entityDescriptor.findPersistentAttribute( mappedBy );
+					int i = attribute.getStateArrayPosition();
 					Serializable oldId = null;
 					if ( oldState != null ) {
 						// in case of updating an entity we perhaps have to decache 2 entity collections, this is the

@@ -40,6 +40,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.internal.TypeHelper;
 
 /**
  * Defines the default copy event listener used by hibernate for copying entities
@@ -325,7 +326,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			}
 			else if ( isVersionChanged( entity, source, entityDescriptor, target ) ) {
 				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
-					source.getFactory().getStatisticsImplementor()
+					source.getFactory().getStatistics()
 							.optimisticFailure( entityName );
 				}
 				throw new StaleObjectStateException( entityName, id );
@@ -403,12 +404,12 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			final SessionImplementor source,
 			final Map copyCache) {
 		final Object[] copiedValues = TypeHelper.replace(
-				entityDescriptor.getPropertyValues( entity ),
-				entityDescriptor.getPropertyValues( target ),
-				entityDescriptor.getPropertyTypes(),
-				source,
+				entityDescriptor,
+				entity,
 				target,
-				copyCache
+				copyCache,
+				target,
+				source
 		);
 
 		entityDescriptor.setPropertyValues( target, copiedValues );
@@ -429,24 +430,24 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			// replacement to associations types (value types were already replaced
 			// during the first pass)
 			copiedValues = TypeHelper.replaceAssociations(
-					entityDescriptor.getPropertyValues( entity ),
-					entityDescriptor.getPropertyValues( target ),
-					entityDescriptor.getPropertyTypes(),
-					source,
+					entityDescriptor,
+					entity,
 					target,
 					copyCache,
-					foreignKeyDirection
+					target,
+					foreignKeyDirection,
+					source
 			);
 		}
 		else {
 			copiedValues = TypeHelper.replace(
-					entityDescriptor.getPropertyValues( entity ),
-					entityDescriptor.getPropertyValues( target ),
-					entityDescriptor.getPropertyTypes(),
-					source,
+					entityDescriptor,
+					entity,
 					target,
 					copyCache,
-					foreignKeyDirection
+					target,
+					foreignKeyDirection,
+					source
 			);
 		}
 

@@ -386,93 +386,6 @@ public interface EntityDescriptor<T>
 	) throws HibernateException;
 
 	/**
-	 * Get the Hibernate types of the class properties
-	 */
-	Type[] getPropertyTypes();
-
-	JavaTypeDescriptor[] getPropertyJavaTypeDescriptors();
-
-	/**
-	 * Get the names of the class properties - doesn't have to be the names of the
-	 * actual Java properties (used for XML generation only)
-	 */
-	String[] getPropertyNames();
-
-	/**
-	 * Helper method to locate a property type by property name.
-	 */
-	default Type getPropertyType(String propertyName) {
-		final String[] propertyNames = getPropertyNames();
-		for ( int i = 0; i < propertyNames.length; ++i ) {
-			if ( propertyNames[i] == propertyName ) {
-				return getPropertyTypes()[i];
-			}
-		}
-		return null;
-	}
-
-	default JavaTypeDescriptor getPropertyJavaTypeDescriptor(String propertyName) {
-		final String[] propertyNames = getPropertyNames();
-		for ( int i = 0; i < propertyNames.length; ++i ) {
-			if ( propertyNames[i] == propertyName ) {
-				return getPropertyJavaTypeDescriptors()[i];
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Get the "insertability" of the properties of this class
-	 * (does the property appear in an SQL INSERT)
-	 */
-	boolean[] getPropertyInsertability();
-
-	/**
-	 * Which of the properties of this class are database generated values on insert?
-	 *
-	 * @deprecated Replaced internally with InMemoryValueGenerationStrategy / InDatabaseValueGenerationStrategy
-	 */
-	@Deprecated
-	ValueInclusion[] getPropertyInsertGenerationInclusions();
-
-	/**
-	 * Which of the properties of this class are database generated values on update?
-	 *
-	 * @deprecated Replaced internally with InMemoryValueGenerationStrategy / InDatabaseValueGenerationStrategy
-	 */
-	@Deprecated
-	ValueInclusion[] getPropertyUpdateGenerationInclusions();
-
-	/**
-	 * Get the "updateability" of the properties of this class
-	 * (does the property appear in an SQL UPDATE)
-	 */
-	boolean[] getPropertyUpdateability();
-
-	/**
-	 * Get the "checkability" of the properties of this class
-	 * (is the property dirty checked, does the cache need
-	 * to be updated)
-	 */
-	boolean[] getPropertyCheckability();
-
-	/**
-	 * Get the nullability of the properties of this class
-	 */
-	boolean[] getPropertyNullability();
-
-	/**
-	 * Get the "versionability" of the properties of this class
-	 * (is the property optimistic-locked)
-	 */
-	boolean[] getPropertyVersionability();
-	boolean[] getPropertyLaziness();
-	/**
-	 * Get the cascade styles of the properties (optional operation)
-	 */
-	CascadeStyle[] getPropertyCascadeStyles();
-
-	/**
 	 * Determine whether this entity has any non-none cascading.
 	 *
 	 * @return True if the entity has any properties with a cascade other than NONE;
@@ -652,31 +565,6 @@ public interface EntityDescriptor<T>
 	Class getConcreteProxyClass();
 
 	/**
-	 * Set the given values to the mapped properties of the given object
-	 */
-	void setPropertyValues(Object object, Object[] values);
-
-	/**
-	 * Set the value of a particular property
-	 */
-	void setPropertyValue(Object object, int i, Object value);
-
-	/**
-	 * Return the (loaded) values of the mapped properties of the object (not including backrefs)
-	 */
-	Object[] getPropertyValues(Object object);
-
-	/**
-	 * Get the value of a particular property
-	 */
-	Object getPropertyValue(Object object, int i) throws HibernateException;
-
-	/**
-	 * Get the value of a particular property
-	 */
-	Object getPropertyValue(Object object, String propertyName);
-
-	/**
 	 * Get the identifier of an instance (throw an exception if no identifier property)
 	 *
 	 * @deprecated Use {@link #getIdentifier(Object,SharedSessionContractImplementor)} instead
@@ -789,4 +677,96 @@ public interface EntityDescriptor<T>
 	boolean hasNaturalIdentifier();
 
 	boolean hasCollections();
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo (6.0) : legacy methods based on the legacy "decomposed attribute state" arrays
+
+	/**
+	 * Get the Hibernate types of the class properties
+	 */
+	Type[] getPropertyTypes();
+
+	JavaTypeDescriptor[] getPropertyJavaTypeDescriptors();
+
+	/**
+	 * Get the names of the class properties - doesn't have to be the names of the
+	 * actual Java properties (used for XML generation only)
+	 */
+	String[] getPropertyNames();
+
+	/**
+	 * Helper method to locate a property type by property name.
+	 */
+	default Type getPropertyType(String propertyName) {
+		final String[] propertyNames = getPropertyNames();
+		for ( int i = 0; i < propertyNames.length; ++i ) {
+			if ( propertyNames[i] == propertyName ) {
+				return getPropertyTypes()[i];
+			}
+		}
+		return null;
+	}
+
+	default JavaTypeDescriptor getPropertyJavaTypeDescriptor(String propertyName) {
+		final String[] propertyNames = getPropertyNames();
+		for ( int i = 0; i < propertyNames.length; ++i ) {
+			if ( propertyNames[i] == propertyName ) {
+				return getPropertyJavaTypeDescriptors()[i];
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Get the "insertability" of the properties of this class
+	 * (does the property appear in an SQL INSERT)
+	 */
+	boolean[] getPropertyInsertability();
+
+	/**
+	 * Which of the properties of this class are database generated values on insert?
+	 *
+	 * @deprecated Replaced internally with InMemoryValueGenerationStrategy / InDatabaseValueGenerationStrategy
+	 */
+	@Deprecated
+	ValueInclusion[] getPropertyInsertGenerationInclusions();
+
+	/**
+	 * Which of the properties of this class are database generated values on update?
+	 *
+	 * @deprecated Replaced internally with InMemoryValueGenerationStrategy / InDatabaseValueGenerationStrategy
+	 */
+	@Deprecated
+	ValueInclusion[] getPropertyUpdateGenerationInclusions();
+
+	/**
+	 * Get the "updateability" of the properties of this class
+	 * (does the property appear in an SQL UPDATE)
+	 */
+	boolean[] getPropertyUpdateability();
+
+	/**
+	 * Get the "checkability" of the properties of this class
+	 * (is the property dirty checked, does the cache need
+	 * to be updated)
+	 */
+	boolean[] getPropertyCheckability();
+
+	/**
+	 * Get the nullability of the properties of this class
+	 */
+	boolean[] getPropertyNullability();
+
+	/**
+	 * Get the "versionability" of the properties of this class
+	 * (is the property optimistic-locked)
+	 */
+	boolean[] getPropertyVersionability();
+	boolean[] getPropertyLaziness();
+	/**
+	 * Get the cascade styles of the properties (optional operation)
+	 */
+	CascadeStyle[] getPropertyCascadeStyles();
 }

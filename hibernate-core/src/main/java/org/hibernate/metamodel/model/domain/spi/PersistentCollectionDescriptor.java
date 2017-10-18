@@ -8,7 +8,7 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.collection.spi.CollectionClassification;
@@ -29,20 +29,12 @@ import org.hibernate.sql.ast.produce.spi.TableReferenceContributor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
- * A strategy for persisting a collection role. Defines a contract between
- * the persistence strategy and the actual persistent collection framework
- * and session. Does not define operations that are required for querying
- * collections, or loading by outer join.<br>
- * <br>
- * Implements persistence of a collection instance while the instance is
- * referenced in a particular role.<br>
- * <br>
- * This class is highly coupled to the <tt>PersistentCollection</tt>
- * hierarchy, since double dispatch is used to load and update collection
- * elements.<br>
- * <br>
- * May be considered an immutable view of the mapping object
- * <p/>
+ * Metadata and operations on a persistent collection (plural attribute).
+ *
+ * Works hand-in-hand with both {@link PersistentCollection} and
+ * {@link PersistentCollectionTuplizer} to define complete support
+ * for persistent collections.
+ *
  * Unless a customer {@link RuntimeModelDescriptorFactory} is used, it is expected
  * that implementations of CollectionDefinition define a constructor accepting the following arguments:<ol>
  *     <li>
@@ -357,52 +349,61 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	/**
 	 * Completely remove the persistent state of the collection
 	 */
-	void remove(Serializable id, SharedSessionContractImplementor session) throws HibernateException;
+	default void remove(Serializable id, SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
 
 	/**
 	 * (Re)create the collection's persistent state
 	 */
-	void recreate(
+	default void recreate(
 			PersistentCollection collection,
 			Serializable key,
-			SharedSessionContractImplementor session)
-		throws HibernateException;
+			SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
 
-//	/**
-//	 * Delete the persistent state of any elements that were removed from
-//	 * the collection
-//	 */
-//	void deleteRows(
-//			PersistentCollection collection,
-//			Serializable key,
-//			SharedSessionContractImplementor session)
-//		throws HibernateException;
-//	/**
-//	 * Update the persistent state of any elements that were modified
-//	 */
-//	void updateRows(
-//			PersistentCollection collection,
-//			Serializable key,
-//			SharedSessionContractImplementor session)
-//		throws HibernateException;
-//	/**
-//	 * Insert the persistent state of any new collection elements
-//	 */
-//	void insertRows(
-//			PersistentCollection collection,
-//			Serializable key,
-//			SharedSessionContractImplementor session)
-//		throws HibernateException;
-//
-//	/**
-//	 * Process queued operations within the PersistentCollection.
-//	 */
-//	void processQueuedOps(
-//			PersistentCollection collection,
-//			Serializable key,
-//			SharedSessionContractImplementor session)
-//			throws HibernateException;
-//
+	/**
+	 * Delete the persistent state of any elements that were removed from
+	 * the collection
+	 */
+	default void deleteRows(
+			PersistentCollection collection,
+			Serializable key,
+			SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	/**
+	 * Update the persistent state of any elements that were modified
+	 */
+	default void updateRows(
+			PersistentCollection collection,
+			Serializable key,
+			SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	/**
+	 * Insert the persistent state of any new collection elements
+	 */
+	default void insertRows(
+			PersistentCollection collection,
+			Serializable key,
+			SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	/**
+	 * Process queued operations within the PersistentCollection.
+	 */
+	default void processQueuedOps(
+			PersistentCollection collection,
+			Serializable key,
+			SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
 //	/**
 //	 * Get the name of this collection role (the fully qualified class name,
 //	 * extended by a "property path")
@@ -509,10 +510,27 @@ public interface PersistentCollectionDescriptor<O,C,E>
 //	boolean indexExists(Serializable key, Object index, SharedSessionContractImplementor session);
 //	boolean elementExists(Serializable key, Object element, SharedSessionContractImplementor session);
 //	Object getElementByIndex(Serializable key, Object index, SharedSessionContractImplementor session, Object owner);
-//
-//	/**
-//	 * @return the name of the property this collection is mapped by
-//	 */
-//	String getMappedByProperty();
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// "owner"-related stuff
+	//
+	//		todo (6.0) : rethink all of these...
+
+	EntityDescriptor findEntityOwnerDescriptor();
+
+	/**
+	 * @return the name of the property this collection is mapped by
+	 */
+	String getMappedByProperty();
+
+	/**
+	 * Previously this was defined on CollectionType.
+	 *
+	 * As with all of these "owner"-related methods we need to come up with
+	 * a better plan for handling that stuff.
+	 */
+	default Serializable getKeyOfOwner(Object entity, SessionImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
 }

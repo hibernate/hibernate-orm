@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.persistence.metamodel.ManagedType;
 
+import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -157,4 +158,34 @@ public interface ManagedTypeDescriptor<T>
 	default boolean hasMutableProperties() {
 		throw new NotYetImplementedFor6Exception();
 	}
+
+
+	/**
+	 * Set the given values to the mapped properties of the given object
+	 */
+	void setPropertyValues(Object object, Object[] values);
+
+	/**
+	 * Return the (loaded) values of the mapped properties of the object (not including backrefs)
+	 */
+	Object[] getPropertyValues(Object object);
+
+
+	/**
+	 * @deprecated Use the attribute's {@link org.hibernate.property.access.spi.PropertyAccess} instead
+	 */
+	@Deprecated
+	void setPropertyValue(Object object, int i, Object value);
+
+	/**
+	 * @deprecated Use the attribute's {@link org.hibernate.property.access.spi.PropertyAccess} instead
+	 */
+	@Deprecated
+	Object getPropertyValue(Object object, int i) throws HibernateException;
+
+	/**
+	 * @deprecated Use the attribute's {@link org.hibernate.property.access.spi.PropertyAccess} instead
+	 */
+	@Deprecated
+	Object getPropertyValue(Object object, String propertyName);
 }

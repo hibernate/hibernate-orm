@@ -122,30 +122,6 @@ public interface EmbeddedTypeDescriptor<T>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// todo (6.0) : everything below relates to the "attribute position" discussion
 
-	/**
-	 * Set the given values to the mapped properties of the given object
-	 */
-	void setPropertyValues(Object object, Object[] values);
-
-	/**
-	 * Set the value of a particular property
-	 */
-	void setPropertyValue(Object object, int i, Object value);
-
-	/**
-	 * Return the (loaded) values of the mapped properties of the object (not including backrefs)
-	 */
-	Object[] getPropertyValues(Object object);
-
-	/**
-	 * Get the value of a particular property
-	 */
-	Object getPropertyValue(Object object, int i) throws HibernateException;
-
-	/**
-	 * Get the value of a particular property
-	 */
-	Object getPropertyValue(Object object, String propertyName);
 
 	/**
 	 * Get the nullability of the properties of this class

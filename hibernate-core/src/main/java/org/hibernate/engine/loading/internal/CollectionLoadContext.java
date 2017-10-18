@@ -310,7 +310,8 @@ public class CollectionLoadContext {
 				if ( lce.getCollection() != null ) {
 					final Object linkedOwner = lce.getCollection().getOwner();
 					if ( linkedOwner != null ) {
-						final Serializable ownerKey = persister.getOwnerEntityPersister().getIdentifier( linkedOwner, session );
+						final EntityDescriptor entityOwnerDescriptor = persister.findEntityOwnerDescriptor();
+						final Serializable ownerKey = entityOwnerDescriptor.getIdentifier( linkedOwner, session );
 						collectionOwner = getLoadContext().getPersistenceContext().getCollectionOwner( ownerKey, persister );
 					}
 				}

@@ -6,27 +6,21 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.util.List;
-
-import org.hibernate.HibernateException;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
-import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
-import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class CollectionKey {
-	private final AbstractPersistentCollectionDescriptor collectionPersister;
+	private final AbstractPersistentCollectionDescriptor collectionDescriptor;
 	private final JavaTypeDescriptor javaTypeDescriptor;
 
 	private ForeignKey.ColumnMappings joinColumnMappings;
 
-	public CollectionKey(AbstractPersistentCollectionDescriptor<?,?,?> collectionPersister, Collection mappingBinding) {
-		this.collectionPersister = collectionPersister;
+	public CollectionKey(AbstractPersistentCollectionDescriptor<?,?,?> collectionDescriptor, Collection mappingBinding) {
+		this.collectionDescriptor = collectionDescriptor;
 		javaTypeDescriptor = mappingBinding.getJavaTypeDescriptor();
 	}
 
@@ -49,7 +43,7 @@ public class CollectionKey {
 //		final List<Column> joinSourceColumns = resolveJoinSourceColumns( joinTargetColumns );
 //
 //		if ( joinSourceColumns.size() != joinTargetColumns.size() ) {
-//			throw new HibernateException( "Bad resolution of right-hand and left-hand columns for attribute join : " + collectionPersister );
+//			throw new HibernateException( "Bad resolution of right-hand and left-hand columns for attribute join : " + collectionDescriptor );
 //		}
 //
 //		final ForeignKey.ColumnMappings joinColumnMappings = CollectionHelper.arrayList( joinSourceColumns.size() );
@@ -73,12 +67,12 @@ public class CollectionKey {
 //		//
 //		//		on the bright side, atm CollectionPersister does not currently support
 //		//		formulas in its key definition
-//		final String[] columnNames = ( (Joinable) collectionPersister ).getKeyColumnNames();
+//		final String[] columnNames = ( (Joinable) collectionDescriptor ).getKeyColumnNames();
 //		final List<Column> columns = CollectionHelper.arrayList( columnNames.length );
 //
 //		assert joinTargetColumns.size() == columnNames.length;
 //
-//		final Table separateCollectionTable = collectionPersister.getSeparateCollectionTable();
+//		final Table separateCollectionTable = collectionDescriptor.getSeparateCollectionTable();
 //		if ( separateCollectionTable != null ) {
 //			for ( int i = 0; i < columnNames.length; i++ ) {
 //				columns.add(
@@ -91,7 +85,7 @@ public class CollectionKey {
 //		}
 //		else {
 //			// otherwise we just need to resolve the column names in the element table(s) (as the "collection table")
-//			final EntityDescriptor elementPersister = ( (CollectionElementEntity) collectionPersister.getElementDescriptor() ).getEntityDescriptor();
+//			final EntityDescriptor elementPersister = ( (CollectionElementEntity) collectionDescriptor.getElementDescriptor() ).getEntityDescriptor();
 //
 //			for ( int i = 0; i < columnNames.length; i++ ) {
 //				// it is conceivable that the column already exists

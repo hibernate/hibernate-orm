@@ -324,8 +324,9 @@ public final class TwoPhaseLoad {
 			return session.getCacheMode() != CacheMode.REFRESH;
 		}
 		else {
-			return entityEntry.getDescriptor().hasLazyProperties()
-					&& entityEntry.getDescriptor().isLazyPropertiesCacheable();
+			return false;
+//			return entityEntry.getDescriptor().hasLazyProperties()
+//					&& entityEntry.getDescriptor().isLazyPropertiesCacheable();
 		}
 	}
 

@@ -66,8 +66,8 @@ public class RuntimeModelCreationProcess {
 	private final Map<EntityMappingHierarchy,IdentifiableTypeDescriptor> runtimeRootByBootHierarchy = new HashMap<>();
 	private final Map<EntityMappingHierarchy,EntityDescriptor> runtimeRootEntityByBootHierarchy = new HashMap<>();
 
-	private final Map<IdentifiableTypeMapping,IdentifiableTypeDescriptor> runtimeByBoot = new HashMap<>();
-	private final Map<IdentifiableTypeDescriptor,IdentifiableTypeMapping> bootByRuntime = new HashMap<>();
+	private final Map<IdentifiableTypeMappingImplementor,IdentifiableTypeDescriptor> runtimeByBoot = new HashMap<>();
+	private final Map<IdentifiableTypeDescriptor,IdentifiableTypeMappingImplementor> bootByRuntime = new HashMap<>();
 
 	private final Map<String, DomainDataRegionConfigImpl.Builder> regionConfigBuilders = new ConcurrentHashMap<>();
 
@@ -204,7 +204,7 @@ public class RuntimeModelCreationProcess {
 	@SuppressWarnings("unchecked")
 	private void finishInitialization(
 			IdentifiableTypeDescriptor runtimeType,
-			IdentifiableTypeMapping bootType,
+			IdentifiableTypeMappingImplementor bootType,
 			RuntimeModelCreationContext creationContext,
 			EntityHierarchyImpl runtimeHierarchy) {
 		runtimeType.finishInstantiation(
@@ -217,7 +217,7 @@ public class RuntimeModelCreationProcess {
 		for ( IdentifiableTypeMapping subTypeMapping : bootType.getSubTypeMappings() ) {
 			finishInitialization(
 					runtimeByBoot.get( subTypeMapping ),
-					subTypeMapping,
+					(IdentifiableTypeMappingImplementor) subTypeMapping,
 					creationContext,
 					runtimeHierarchy
 			);

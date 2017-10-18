@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain.spi;
 import java.io.Serializable;
 import java.util.Iterator;
 
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
@@ -420,4 +421,26 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 		throw new NotYetImplementedFor6Exception(  );
 	}
 
+	@Override
+	public EntityDescriptor findEntityOwnerDescriptor() {
+		return findEntityOwner( getContainer() );
+	}
+
+	private EntityDescriptor findEntityOwner(ManagedTypeDescriptor container) {
+		if ( EntityDescriptor.class.isInstance( container ) ) {
+			return (EntityDescriptor) container;
+		}
+
+		if ( MappedSuperclassDescriptor.class.isInstance( container ) ) {
+			throw new NotYetImplementedFor6Exception(
+					"resolving the 'entity owner' of a collection 'across' a MappedSuperclass is not yet implemented"
+			);
+		}
+
+		if ( EmbeddedTypeDescriptor.class.isInstance( container ) ) {
+			return findEntityOwner( ( (EmbeddedTypeDescriptor) container.getContainer() ) );
+		}
+
+		throw new HibernateException( "Expecting an entity (hierarchy) or embeddable, but found : " + container );
+	}
 }

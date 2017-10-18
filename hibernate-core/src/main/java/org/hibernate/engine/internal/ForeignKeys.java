@@ -21,6 +21,7 @@ import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttribute
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute.SingularAttributeClassification;
@@ -65,9 +66,9 @@ public final class ForeignKeys<T> {
 		 * @param attributes The entity attributes */
 		public void nullifyTransientReferences(
 				final Object[] values,
-				final List<PersistentAttribute<?, ?>> attributes) {
+				final List<NonIdPersistentAttribute<?, ?>> attributes) {
 			int i = 0;
-			for(PersistentAttribute attribute : attributes){
+			for(NonIdPersistentAttribute attribute : attributes){
 				values[i] = nullifyTransientReferences( values[i], attribute );
 				i ++;
 			}
@@ -82,7 +83,7 @@ public final class ForeignKeys<T> {
 		 *
 		 * @return {@code null} if the argument is an unsaved entity; otherwise return the argument.
 		 */
-		private Object nullifyTransientReferences(final Object value, final PersistentAttribute attribute) {
+		private Object nullifyTransientReferences(final Object value, final NonIdPersistentAttribute attribute) {
 			if ( value == null ) {
 				return null;
 			}
@@ -108,7 +109,7 @@ public final class ForeignKeys<T> {
 					final Map<String, Object> embeddedValues = new LinkedHashMap<>();
 					boolean substitute = false;
 
-					for ( PersistentAttribute<?, ?> subAttribute : embeddedDescriptor.getDeclaredPersistentAttributes() ) {
+					for ( NonIdPersistentAttribute<?, ?> subAttribute : embeddedDescriptor.getDeclaredPersistentAttributes() ) {
 						final Object subAttributeValue = subAttribute.getPropertyAccess().getGetter().get( value );
 						final Object replacement = nullifyTransientReferences( subAttributeValue, subAttribute );
 						if ( replacement != subAttributeValue ) {
@@ -310,6 +311,7 @@ public final class ForeignKeys<T> {
 	 * @return the transient unsaved entity dependencies that are non-nullable,
 	 *         or null if there are none.
 	 */
+	@SuppressWarnings("unchecked")
 	public static NonNullableTransientDependencies findNonNullableTransientEntities(
 			String entityName,
 			Object entity,

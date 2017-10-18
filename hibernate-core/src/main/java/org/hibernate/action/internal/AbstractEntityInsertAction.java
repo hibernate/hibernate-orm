@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 
 /**
  * A base class for entity insert actions.
@@ -110,10 +110,10 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 *
 	 * @see {@link #makeEntityManaged() }
 	 */
+	@SuppressWarnings("unchecked")
 	protected final void nullifyTransientReferencesIfNotAlready() {
 		if ( ! areTransientReferencesNullified ) {
-			final List<PersistentAttribute<?, ?>> persistentAttributes = (List<PersistentAttribute<?, ?>>) getEntityDescriptor()
-					.getPersistentAttributes();
+			final List<NonIdPersistentAttribute<?,?>> persistentAttributes = ( (EntityDescriptor) getEntityDescriptor() ).getPersistentAttributes();
 			new ForeignKeys.Nullifier( getInstance(), false, isEarlyInsert(), getSession() )
 					.nullifyTransientReferences( getState(), persistentAttributes );
 			new Nullability( getSession() ).checkNullability( getState(), getEntityDescriptor(), false );

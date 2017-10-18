@@ -7,13 +7,21 @@
 package org.hibernate.type.internal;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -132,5 +140,152 @@ public class TypeHelper {
 		}
 
 		return assembledProps;
+	}
+	@SuppressWarnings("unchecked")
+	public static Object[] replace(
+			EntityDescriptor<?> entityDescriptor,
+			Object originalEntity,
+			Object targetEntity,
+			Map copyCache,
+			Object owner,
+			SessionImplementor session) {
+		// todo (6.0) : better way?
+
+		final Object[] originalValues = entityDescriptor.getPropertyValues( originalEntity );
+		final Object[] targetValues = entityDescriptor.getPropertyValues( targetEntity );
+
+		final Object[] copied = new Object[ originalValues.length ];
+
+		for ( StateArrayContributor contributor : entityDescriptor.getStateArrayContributors() ) {
+			final int position = contributor.getStateArrayPosition();
+
+			if ( originalValues[ position ] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+					|| originalValues[ position ] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+				copied[ position ] = targetValues[ position ];
+			}
+			else if ( targetValues[ position ] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				// Should be no need to check for target[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN
+				// because PropertyAccessStrategyBackRefImpl.get( object ) returns
+				// PropertyAccessStrategyBackRefImpl.UNKNOWN, so target[position] == original[position].
+				//
+				// We know from above that original[position] != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
+				// original[position] != PropertyAccessStrategyBackRefImpl.UNKNOWN;
+				// This is a case where the entity being merged has a lazy property
+				// that has been initialized. Copy the initialized value from original.
+				if ( contributor.getMutabilityPlan().isMutable() ) {
+					copied[ position ] = contributor.getMutabilityPlan().deepCopy( originalValues[ position ] );
+				}
+				else {
+					copied[ position ] = originalValues[ position ];
+				}
+			}
+			else {
+				copied[ position ] = contributor.replace(
+						originalValues[ position ],
+						targetValues[ position ],
+						owner,
+						copyCache,
+						session
+				);
+			}
+		}
+		return copied;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static Object[] replace(
+			EntityDescriptor<?> entityDescriptor,
+			Object originalEntity,
+			Object targetEntity,
+			Map copyCache,
+			Object owner,
+			ForeignKeyDirection foreignKeyDirection,
+			SessionImplementor session) {
+		// todo (6.0) : better way?
+
+		final Object[] originalValues = entityDescriptor.getPropertyValues( originalEntity );
+		final Object[] targetValues = entityDescriptor.getPropertyValues( targetEntity );
+
+		final Object[] copied = new Object[ originalValues.length ];
+
+		for ( StateArrayContributor contributor : entityDescriptor.getStateArrayContributors() ) {
+			final int position = contributor.getStateArrayPosition();
+
+			if ( originalValues[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+					|| originalValues[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+				copied[position] = targetValues[ position ];
+			}
+			else if ( targetValues[ position ] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				// Should be no need to check for target[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN
+				// because PropertyAccessStrategyBackRefImpl.get( object ) returns
+				// PropertyAccessStrategyBackRefImpl.UNKNOWN, so target[position] == original[position].
+				//
+				// We know from above that original[position] != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
+				// original[position] != PropertyAccessStrategyBackRefImpl.UNKNOWN;
+				// This is a case where the entity being merged has a lazy property
+				// that has been initialized. Copy the initialized value from original.
+				if ( contributor.getMutabilityPlan().isMutable() ) {
+					copied[position] = contributor.getMutabilityPlan().deepCopy( originalValues[ position ] );
+				}
+				else {
+					copied[position] = originalValues[ position ];
+				}
+			}
+			else {
+				copied[position] = contributor.replace( originalValues[ position ], targetValues[ position ], owner, copyCache, session );
+			}
+		}
+
+		return copied;
+	}
+
+	public static Object[] replaceAssociations(
+			ManagedTypeDescriptor<?> managedTypeDescriptor,
+			Object original,
+			Object target,
+			Map copyCache,
+			Object owner,
+			ForeignKeyDirection foreignKeyDirection,
+			SessionImplementor session) {
+		// todo (6.0) : better way?
+
+		final List<StateArrayContributor<?>> contributors = managedTypeDescriptor.getStateArrayContributors();
+
+		final Object[] originalValues = original == null
+				? new Object[ contributors.size() ]
+				: managedTypeDescriptor.getPropertyValues( original );
+		final Object[] targetValues = target == null
+				? new Object[ contributors.size() ]
+				: managedTypeDescriptor.getPropertyValues( target );
+
+		final Object[] copied = new Object[ originalValues.length ];
+
+		for ( StateArrayContributor contributor : contributors ) {
+			final int position = contributor.getStateArrayPosition();
+
+			if ( originalValues[ position ] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+					|| originalValues[ position ] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+				copied[ position ] = targetValues[ position ];
+			}
+			else if ( contributor instanceof EmbeddedValuedNavigable ) {
+				replaceAssociations(
+						( (EmbeddedValuedNavigable) contributor ).getEmbeddedDescriptor(),
+						originalValues[ position ],
+						targetValues[ position ],
+						copyCache,
+						owner,
+						foreignKeyDirection,
+						session
+				);
+				copied[ position ] = targetValues[ position ];
+			}
+			else if ( contributor instanceof EntityValuedNavigable || contributor instanceof PluralPersistentAttribute ) {
+				copied[position] = contributor.replace( originalValues[ position ], targetValues[ position ], owner, copyCache, foreignKeyDirection, session );
+			}
+			else {
+				copied[ position ] = targetValues[ position ];
+			}
+		}
+		return copied;
 	}
 }

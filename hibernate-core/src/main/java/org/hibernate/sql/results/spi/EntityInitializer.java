@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.spi;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
@@ -39,4 +40,10 @@ public interface EntityInitializer extends Initializer, FetchParentAccess {
 	void resolveEntityKey(RowProcessingState rowProcessingState);
 
 	void hydrateEntityState(RowProcessingState rowProcessingState);
+
+	default void resolveEntityState(RowProcessingState rowProcessingState) {
+		throw new NotYetImplementedFor6Exception(
+				"is this needed?  whats the diff with #hydrateEntityState and/or Initializer#finishUp?"
+		);
+	}
 }

@@ -36,6 +36,7 @@ import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.internal.TypeHelper;
@@ -239,6 +240,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 	 * @param entityDescriptor The entity Descriptor.
 	 * @param transientEntities A cache of already deleted entities.
 	 */
+	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	protected final void deleteEntity(
 			final EventSource session,
 			final Object entity,
@@ -284,8 +286,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 
 		cascadeBeforeDelete( session, entityDescriptor, entity, entityEntry, transientEntities );
 
-		final List<PersistentAttribute<?, ?>> attributes = (List<PersistentAttribute<?, ?>>) entityDescriptor
-				.getPersistentAttributes();
+		final List<NonIdPersistentAttribute<?, ?>> attributes = entityDescriptor.getPersistentAttributes();
 		new ForeignKeys.Nullifier( entity, true, false, session )
 				.nullifyTransientReferences( entityEntry.getDeletedState(), attributes );
 		new Nullability( session ).checkNullability( entityEntry.getDeletedState(), entityDescriptor, true );

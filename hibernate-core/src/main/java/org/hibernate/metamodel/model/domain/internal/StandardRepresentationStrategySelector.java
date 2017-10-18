@@ -6,10 +6,10 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.RepresentationStrategy;
 import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
 
@@ -25,6 +25,7 @@ public class StandardRepresentationStrategySelector implements RepresentationStr
 	@Override
 	public RepresentationStrategy resolveRepresentationStrategy(
 			ManagedTypeMapping bootMapping,
+			ManagedTypeDescriptor runtimeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		// todo (6.0) : allow this selector to be Object to allow for custom RepresentationStrategy impls
 		RepresentationMode representation = bootMapping.getExplicitRepresentationMode();
@@ -47,7 +48,7 @@ public class StandardRepresentationStrategySelector implements RepresentationStr
 			//
 			//		instead, resolve ReflectionOptimizer once - here - and pass along to
 			//		StandardPojoRepresentationStrategy
-			return new StandardPojoRepresentationStrategy( bootMapping, creationContext );
+			return new StandardPojoRepresentationStrategy( bootMapping, runtimeDescriptor, creationContext );
 		}
 	}
 }

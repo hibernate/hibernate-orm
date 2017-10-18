@@ -40,6 +40,8 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 
 	private final NavigableRole navigableRole;
 
+	private int stateArrayPosition;
+
 	public DiscriminatorDescriptorImpl(
 			EntityHierarchy hierarchy,
 			BasicValueMapping<J> valueMapping,
@@ -50,6 +52,16 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( valueMapping.getMappedColumn() );
 
 		this.navigableRole = hierarchy.getRootEntityType().getNavigableRole().append( NAVIGABLE_NAME );
+	}
+
+	@Override
+	public void setStateArrayPosition(int position) {
+		this.stateArrayPosition = position;;
+	}
+
+	@Override
+	public int getStateArrayPosition() {
+		return stateArrayPosition;
 	}
 
 	@Override

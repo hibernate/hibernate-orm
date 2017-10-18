@@ -24,6 +24,8 @@ public abstract class AbstractNonIdSingularPersistentAttribute<O,J>
 	private final boolean updatable;
 	private final boolean includedInDirtyChecking;
 
+	private int stateArrayPosition;
+
 	public AbstractNonIdSingularPersistentAttribute(
 			ManagedTypeDescriptor<O> runtimeContainer,
 			PersistentAttributeMapping bootAttribute,
@@ -39,6 +41,16 @@ public abstract class AbstractNonIdSingularPersistentAttribute<O,J>
 		this.insertable = bootAttribute.isInsertable();
 		this.updatable = bootAttribute.isUpdateable();
 		this.includedInDirtyChecking = bootAttribute.isIncludedInDirtyChecking();
+	}
+
+	@Override
+	public void setStateArrayPosition(int position) {
+		this.stateArrayPosition = position;;
+	}
+
+	@Override
+	public int getStateArrayPosition() {
+		return stateArrayPosition;
 	}
 
 	@Override

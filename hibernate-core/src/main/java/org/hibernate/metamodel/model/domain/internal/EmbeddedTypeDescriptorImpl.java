@@ -15,6 +15,7 @@ import org.hibernate.boot.model.domain.EmbeddedMapping;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
+import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -45,7 +46,7 @@ public class EmbeddedTypeDescriptorImpl<T>
 
 	private final SingularPersistentAttribute.Disposition compositeDisposition;
 
-	private final RepresentationStrategy representationStrategy;
+	private RepresentationStrategy representationStrategy;
 
 	public EmbeddedTypeDescriptorImpl(
 			EmbeddedMapping embeddedMapping,
@@ -64,10 +65,6 @@ public class EmbeddedTypeDescriptorImpl<T>
 		this.container = container;
 		this.compositeDisposition = compositeDisposition;
 		this.navigableRole = container.getNavigableRole().append( localName );
-
-		this.representationStrategy = creationContext.getMetadata().getMetadataBuildingOptions()
-				.getRepresentationStrategySelector()
-				.resolveRepresentationStrategy( embeddedMapping, creationContext);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -95,6 +92,18 @@ public class EmbeddedTypeDescriptorImpl<T>
 			jtdr.addDescriptor( jtd );
 		}
 		return jtd;
+	}
+
+	@Override
+	public void finishInitialization(
+			InheritanceCapable superType,
+			ManagedTypeMappingImplementor mappingDescriptor,
+			RuntimeModelCreationContext creationContext) {
+		super.finishInitialization( superType, mappingDescriptor, creationContext );
+
+		this.representationStrategy = creationContext.getMetadata().getMetadataBuildingOptions()
+				.getRepresentationStrategySelector()
+				.resolveRepresentationStrategy( mappingDescriptor, this, creationContext);
 	}
 
 	@Override

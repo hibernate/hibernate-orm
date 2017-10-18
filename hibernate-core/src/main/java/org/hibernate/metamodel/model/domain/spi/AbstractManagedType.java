@@ -16,8 +16,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
@@ -95,7 +95,7 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 		this.comparator = comparator;
 
 		this.representationStrategy = creationContext.getRepresentationStrategySelector()
-				.resolveRepresentationStrategy( managedTypeMapping, creationContext );
+				.resolveRepresentationStrategy( managedTypeMapping, this, creationContext );
 		this.typeConfiguration = creationContext.getTypeConfiguration();
 	}
 
@@ -166,9 +166,11 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 				this,
 				this.superTypeDescriptor
 		);
-		this.superTypeDescriptor = superTypeDescriptor;
 
-		superTypeDescriptor.addSubclassType( this );
+		this.superTypeDescriptor = superTypeDescriptor;
+		if ( superTypeDescriptor != null ) {
+			superTypeDescriptor.addSubclassType( this );
+		}
 	}
 
 	@Override

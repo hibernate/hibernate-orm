@@ -187,7 +187,8 @@ public class RuntimeModelCreationProcess {
 
 	private void generateBootModelForeignKeys(InFlightMetadataCollector mappingMetadata) {
 		// walk the boot model and create all mapping FKs (so they are ready for db process)
-		throw new NotYetImplementedFor6Exception(  );
+		// todo (6.0) : implement this
+//		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	private IdentifiableTypeDescriptor<?> createIdentifiableType(

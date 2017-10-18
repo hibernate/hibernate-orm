@@ -15,5 +15,6 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 public interface RepresentationStrategySelector {
 	RepresentationStrategy resolveRepresentationStrategy(
 			ManagedTypeMapping bootMapping,
+			ManagedTypeDescriptor runtimeDescriptor,
 			RuntimeModelCreationContext creationContext);
 }

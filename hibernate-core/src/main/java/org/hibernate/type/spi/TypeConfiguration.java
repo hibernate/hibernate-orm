@@ -471,18 +471,18 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	public void scope(MetadataBuildingContext metadataBuildingContext) {
 		log.debugf( "Scoping TypeConfiguration [%s] to MetadataBuildingContext [%s]", this, metadataBuildingContext );
 		scope.setMetadataBuildingContext( metadataBuildingContext );
+	}
 
-		for ( Map.Entry<String, String> importEntry : metadataBuildingContext.getMetadataCollector().getImports().entrySet() ) {
+	public void scope(SessionFactoryImplementor factory, BootstrapContext bootstrapContext) {
+		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactory [%s]", this, factory );
+
+		for ( Map.Entry<String, String> importEntry : scope.metadataBuildingContext.getMetadataCollector().getImports().entrySet() ) {
 			if ( importMap.containsKey( importEntry.getKey() ) ) {
 				continue;
 			}
 
 			importMap.put( importEntry.getKey(), importEntry.getValue() );
 		}
-	}
-
-	public void scope(SessionFactoryImplementor factory, BootstrapContext bootstrapContext) {
-		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactory [%s]", this, factory );
 
 		scope.setSessionFactory( factory );
 		factory.addObserver( this );

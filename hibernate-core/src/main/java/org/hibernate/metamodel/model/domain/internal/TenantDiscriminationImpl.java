@@ -37,6 +37,8 @@ public class TenantDiscriminationImpl implements TenantDiscrimination {
 
 	private final NavigableRole navigableRole;
 
+	private int stateArrayPosition;
+
 	public TenantDiscriminationImpl(
 			IdentifiableTypeDescriptor container,
 			BasicJavaDescriptor<String> javaDescriptor,
@@ -50,6 +52,16 @@ public class TenantDiscriminationImpl implements TenantDiscrimination {
 		this.useParameterBinding = useParameterBinding;
 
 		this.navigableRole = container.getNavigableRole().append( NAVIGABLE_NAME );
+	}
+
+	@Override
+	public void setStateArrayPosition(int position) {
+		this.stateArrayPosition = position;;
+	}
+
+	@Override
+	public int getStateArrayPosition() {
+		return stateArrayPosition;
 	}
 
 	@Override

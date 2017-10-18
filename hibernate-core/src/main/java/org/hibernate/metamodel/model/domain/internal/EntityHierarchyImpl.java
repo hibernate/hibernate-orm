@@ -7,16 +7,16 @@
 
 package org.hibernate.metamodel.model.domain.internal;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.cache.spi.access.EntityDataAccess;
-import org.hibernate.cache.spi.access.NaturalIdDataAccess;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.JoinedSubclass;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.UnionSubclass;
@@ -42,7 +42,7 @@ import org.jboss.logging.Logger;
 public class EntityHierarchyImpl implements EntityHierarchy {
 	private static final Logger log = Logger.getLogger( EntityHierarchyImpl.class );
 
-	private final EntityDescriptor rootEntityPersister;
+	private final EntityDescriptor<?> rootEntityDescriptor;
 
 	private final InheritanceStrategy inheritanceStrategy;
 	private final OptimisticLockStyle optimisticLockStyle;
@@ -63,18 +63,19 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 
 	public EntityHierarchyImpl(
 			RuntimeModelCreationContext creationContext,
-			EntityDescriptor rootEntityPersister,
+			EntityDescriptor rootEntityDescriptor,
 			RootClass rootEntityBinding) {
-		log.debugf( "Creating EntityHierarchy root EntityPersister : %s", rootEntityPersister );
+		log.debugf( "Creating EntityHierarchy root EntityPersister : %s", rootEntityDescriptor );
 
 
-		this.rootEntityPersister = rootEntityPersister;
+		this.rootEntityDescriptor = rootEntityDescriptor;
 
 		this.inheritanceStrategy = interpretInheritanceType( rootEntityBinding );
 		this.optimisticLockStyle = rootEntityBinding.getEntityMappingHierarchy().getOptimisticLockStyle();
-		this.representationMode = determineRepresentationMode( rootEntityBinding, rootEntityPersister, creationContext );
+		this.representationMode = determineRepresentationMode( rootEntityBinding, rootEntityDescriptor, creationContext );
 
-		this.identifierDescriptor = interpretIdentifierDescriptor( this, rootEntityBinding, rootEntityPersister, creationContext );
+		this.identifierDescriptor = interpretIdentifierDescriptor( this, rootEntityBinding,
+																   rootEntityDescriptor, creationContext );
 		this.discriminatorDescriptor = interpretDiscriminatorDescriptor( this, rootEntityBinding, creationContext );
 		this.versionDescriptor = interpretVersionDescriptor( this, rootEntityBinding, creationContext );
 		this.rowIdDescriptor = interpretRowIdDescriptor( this, rootEntityBinding, creationContext );
@@ -228,51 +229,44 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 
 	private static NaturalIdDescriptor interpretNaturalIdentifierDescriptor(
 			EntityHierarchyImpl entityHierarchy,
-			RootClass rootEntityBinding,
+			RootClass rootEntityMapping,
 			RuntimeModelCreationContext creationContext) {
-		if ( !rootEntityBinding.hasNaturalId() ) {
+		if ( !rootEntityMapping.hasNaturalId() ) {
 			return null;
 		}
 
-		return new NaturalIdDescriptor() {
-
-			// todo (6.0) : create NaturalIdDescriptorImpl
-
-			private NaturalIdDataAccess cacheAccess;
-
-			@Override
-			public List<NonIdPersistentAttribute> getPersistentAttributes() {
-				throw new NotYetImplementedException(  );
-			}
-
-			@Override
-			public Object[] resolveSnapshot(Object entityId, SharedSessionContractImplementor session) {
-				return new Object[0];
-			}
-
-			@Override
-			public boolean isMutable() {
-				// todo (6.0) : boot model needs to expose whether the natural-id is mutable
-				return true;
-			}
-
-			@Override
-			public NaturalIdDataAccess getCacheAccess() {
-				return entityHierarchy.getRootEntityType().getFactory().getCache().getNaturalIdRegionAccess( entityHierarchy );
-			}
-		};
+		return new NaturalIdDescriptorImpl(
+				entityHierarchy.getRootEntityType().getFactory().getCache().getNaturalIdRegionAccess( entityHierarchy )
+		);
 	}
 
 
 	@Override
 	public void finishInitialization(RuntimeModelCreationContext creationContext, RootClass mappingType) {
-		// anything to do?
+		if ( mappingType.hasNaturalId() ) {
+			final List<NonIdPersistentAttribute> attributes = new ArrayList<>();
+			for ( Property property : mappingType.getDeclaredProperties() ) {
+				if ( property.isNaturalIdentifier() ) {
+					final NonIdPersistentAttribute<?, ?> runtimeAttribute =
+							rootEntityDescriptor.findPersistentAttribute( property.getName() );
+
+					if ( !SingularPersistentAttribute.class.isInstance( runtimeAttribute ) ) {
+						throw new HibernateException(
+								"Attempt to define non-singular attribute [" + property.getName() +
+										"] as part of the entity's natural-id : " + rootEntityDescriptor.getEntityName()
+						);
+					}
+					attributes.add( runtimeAttribute );
+				}
+			}
+			( (NaturalIdDescriptorImpl) naturalIdentifierDescriptor ).injectAttributes( attributes );
+		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public EntityDescriptor getRootEntityType() {
-		return rootEntityPersister;
+		return rootEntityDescriptor;
 	}
 
 	@Override
@@ -327,7 +321,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	@Override
 	public EntityDataAccess getEntityCacheAccess() {
 		if ( caching == null ) {
-			caching = rootEntityPersister.getFactory().getCache().getEntityRegionAccess( this );
+			caching = rootEntityDescriptor.getFactory().getCache().getEntityRegionAccess( this );
 		}
 		return caching;
 	}

@@ -63,8 +63,8 @@ public class RuntimeModelCreationProcess {
 	private final MetadataBuildingContext metadataBuildingContext;
 	private final RuntimeModelDescriptorFactory descriptorFactory;
 
-	private final Map<EntityMappingHierarchy,IdentifiableTypeDescriptor> rootRootByHierarchy = new HashMap<>();
-	private final Map<EntityMappingHierarchy,EntityDescriptor> rootEntityByHierarchy = new HashMap<>();
+	private final Map<EntityMappingHierarchy,IdentifiableTypeDescriptor> runtimeRootByBootHierarchy = new HashMap<>();
+	private final Map<EntityMappingHierarchy,EntityDescriptor> runtimeRootEntityByBootHierarchy = new HashMap<>();
 
 	private final Map<IdentifiableTypeMapping,IdentifiableTypeDescriptor> runtimeByBoot = new HashMap<>();
 	private final Map<IdentifiableTypeDescriptor,IdentifiableTypeMapping> bootByRuntime = new HashMap<>();
@@ -95,14 +95,15 @@ public class RuntimeModelCreationProcess {
 				dbObjectResolver
 		);
 
+		final JpaStaticMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting(
+				sessionFactory.getProperties()
+		);
+
 		final RuntimeModelCreationContext creationContext = new RuntimeModelCreationContextImpl(
 				mappingMetadata,
 				databaseModel,
+				jpaMetaModelPopulationSetting,
 				dbObjectResolver
-		);
-
-		final JpaStaticMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting(
-				sessionFactory.getProperties()
 		);
 
 		for ( EntityMappingHierarchy bootHierarchy : mappingMetadata.getEntityHierarchies() ) {
@@ -110,28 +111,30 @@ public class RuntimeModelCreationProcess {
 					bootHierarchy.getRootType(),
 					creationContext
 			);
-			rootEntityByHierarchy.put( bootHierarchy, rootEntityDescriptor );
+			runtimeRootEntityByBootHierarchy.put( bootHierarchy, rootEntityDescriptor );
 
 			walkSupers( bootHierarchy, bootHierarchy.getRootType(), rootEntityDescriptor, creationContext );
-			if ( !rootRootByHierarchy.containsKey( bootHierarchy ) ) {
-				rootRootByHierarchy.put( bootHierarchy, rootEntityDescriptor );
+			if ( !runtimeRootByBootHierarchy.containsKey( bootHierarchy ) ) {
+				runtimeRootByBootHierarchy.put( bootHierarchy, rootEntityDescriptor );
 			}
 
 			walkSubs( bootHierarchy.getRootType(), creationContext );
 		}
 
-		for ( Map.Entry<EntityMappingHierarchy, IdentifiableTypeDescriptor> entry : rootRootByHierarchy.entrySet() ) {
-			final EntityDescriptor rootEntity = rootEntityByHierarchy.get( entry.getKey() );
-			final IdentifiableTypeDescriptor rootRoot = entry.getValue();
-			final RootClass rootMapping = (RootClass) bootByRuntime.get( rootEntity );
+		for ( Map.Entry<EntityMappingHierarchy, IdentifiableTypeDescriptor> entry : runtimeRootByBootHierarchy.entrySet() ) {
+			final EntityDescriptor runtimeRootEntity = runtimeRootEntityByBootHierarchy.get( entry.getKey() );
+			final IdentifiableTypeDescriptor runtimeRootRoot = entry.getValue();
+			final RootClass bootRootEntity = (RootClass) bootByRuntime.get( runtimeRootEntity );
 
 			final EntityHierarchyImpl runtimeHierarchy = new EntityHierarchyImpl(
 					creationContext,
-					rootEntity,
-					rootMapping
+					runtimeRootEntity,
+					bootRootEntity
 			);
 
-			finishInitialization( rootRoot, bootByRuntime.get( rootRoot ), creationContext, runtimeHierarchy );
+			finishInitialization( runtimeRootRoot, bootByRuntime.get( runtimeRootRoot ), creationContext, runtimeHierarchy );
+
+			runtimeHierarchy.finishInitialization( creationContext, bootRootEntity );
 		}
 
 		descriptorFactory.finishUp( creationContext );
@@ -154,7 +157,7 @@ public class RuntimeModelCreationProcess {
 		assert bootMapping != null;
 
 		if ( bootMapping.getSuperTypeMapping() == null ) {
-			rootRootByHierarchy.put( bootHierarchy, runtimeMapping );
+			runtimeRootByBootHierarchy.put( bootHierarchy, runtimeMapping );
 		}
 		else {
 			// always create going up
@@ -306,14 +309,17 @@ public class RuntimeModelCreationProcess {
 	private class RuntimeModelCreationContextImpl implements RuntimeModelCreationContext {
 		private final InFlightMetadataCollector mappingMetadata;
 		private final DatabaseModel databaseModel;
+		private final JpaStaticMetaModelPopulationSetting jpaMetaModelPopulationSetting;
 		private final DatabaseObjectResolutionContextImpl dbObjectResolver;
 
 		public RuntimeModelCreationContextImpl(
 				InFlightMetadataCollector mappingMetadata,
 				DatabaseModel databaseModel,
+				JpaStaticMetaModelPopulationSetting jpaMetaModelPopulationSetting,
 				DatabaseObjectResolutionContextImpl dbObjectResolver) {
 			this.mappingMetadata = mappingMetadata;
 			this.databaseModel = databaseModel;
+			this.jpaMetaModelPopulationSetting = jpaMetaModelPopulationSetting;
 			this.dbObjectResolver = dbObjectResolver;
 		}
 
@@ -345,6 +351,11 @@ public class RuntimeModelCreationProcess {
 		@Override
 		public TypeConfiguration getTypeConfiguration() {
 			return metadataBuildingContext.getBootstrapContext().getTypeConfiguration();
+		}
+
+		@Override
+		public JpaStaticMetaModelPopulationSetting getJpaStaticMetaModelPopulationSetting() {
+			return jpaMetaModelPopulationSetting;
 		}
 
 		@Override

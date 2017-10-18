@@ -8,6 +8,9 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.Collection;
 
+import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+
 /**
  * Specialization of ManagedTypeImplementor for types for which
  * we support *mapped* inheritance.
@@ -18,6 +21,17 @@ import java.util.Collection;
  * @author Steve Ebersole
  */
 public interface InheritanceCapable<T> extends ManagedTypeDescriptor<T> {
+	/**
+	 * Opportunity to perform any final tasks as part of initialization of the
+	 * runtime model.  At this point...
+	 *
+	 * todo (6.0) : document the expectations of "at this point"
+	 */
+	void finishInitialization(
+			InheritanceCapable<? super T> superTypeDescriptor,
+			ManagedTypeMappingImplementor bootModelDescriptor,
+			RuntimeModelCreationContext creationContext);
+
 	InheritanceCapable<? super T> getSuperclassType();
 
 	/**
@@ -25,20 +39,6 @@ public interface InheritanceCapable<T> extends ManagedTypeDescriptor<T> {
 	 * guaranteed.
 	 */
 	Collection<InheritanceCapable<? extends T>> getSubclassTypes();
-
-	/**
-	 * Determine whether the given name represents a subclass entity
-	 * (or this entity itself) of the entity mapped by this persister.
-	 *
-	 * @param entityName The entity name to be checked.
-	 * @return True if the given entity name represents either the entity
-	 * mapped by this persister or one of its subclass entities; false
-	 * otherwise.
-	 *
-	 * @deprecated Use {@link #isSubclassTypeName(String)} instead
-	 */
-	@Deprecated
-	boolean isSubclassEntityName(String entityName);
 
 	/**
 	 * Find a declared Navigable by name.  Returns {@code null} if a Navigable of the given
@@ -69,6 +69,16 @@ public interface InheritanceCapable<T> extends ManagedTypeDescriptor<T> {
 	 */
 	void addSubclassType(InheritanceCapable<? extends T> subclassType);
 
+	/**
+	 * @deprecated Use {@link #isSubclassTypeName(String)} instead
+	 */
+	@Deprecated
+	boolean isSubclassEntityName(String entityName);
+
+	/**
+	 * Determine whether the given name represents a subclass (or this type itself)
+	 * of the type described by this descriptor
+	 */
 	default boolean isSubclassTypeName(String name) {
 		return isSubclassEntityName( name );
 	}

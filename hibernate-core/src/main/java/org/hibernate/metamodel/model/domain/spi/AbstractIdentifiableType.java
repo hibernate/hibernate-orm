@@ -18,7 +18,6 @@ import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
  */
 public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T> implements IdentifiableTypeDescriptor<T> {
 	private EntityHierarchy entityHierarchy;
-	private IdentifiableTypeDescriptor<? super T> superclassType;
 
 	public AbstractIdentifiableType(
 			IdentifiableTypeMapping bootMapping,
@@ -34,7 +33,7 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 
 	@SuppressWarnings("unchecked")
 	public IdentifiableTypeDescriptor<? super T> getSuperclassType() {
-		return superclassType;
+		return (IdentifiableTypeDescriptor<? super T>) super.getSuperclassType();
 	}
 
 	@Override
@@ -54,7 +53,6 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 			IdentifiableTypeMappingImplementor mappingDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		this.entityHierarchy = entityHierarchy;
-		this.superclassType = superType;
 
 		super.finishInitialization( superType, mappingDescriptor, creationContext );
 	}

@@ -15,7 +15,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.domain.EntityMapping;
-import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -27,7 +26,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.loader.spi.MultiLoadOptions;
-import org.hibernate.loader.spi.NaturalIdLoader;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractEntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
@@ -50,11 +48,31 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> {
 
-
 	public SingleTableEntityDescriptor(
 			EntityMapping bootMapping,
 			RuntimeModelCreationContext creationContext) throws HibernateException {
 		super( bootMapping, creationContext );
+	}
+
+	@Override
+	public void postInstantiate() {
+	}
+
+	@Override
+	public void finishInstantiation(
+			EntityHierarchy entityHierarchy,
+			IdentifiableTypeDescriptor<? super T> superType,
+			IdentifiableTypeMappingImplementor bootMapping,
+			RuntimeModelCreationContext creationContext) {
+		super.finishInitialization( superType, bootMapping, creationContext );
+	}
+
+	@Override
+	public void completeInitialization(
+			EntityHierarchy entityHierarchy,
+			IdentifiableTypeDescriptor<? super T> superType,
+			IdentifiableTypeMappingImplementor bootMapping,
+			RuntimeModelCreationContext creationContext) {
 	}
 
 	// `select ... from Person p order by p`
@@ -77,29 +95,6 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 	@Override
 	public String asLoggableText() {
 		return String.format( "SingleTableEntityDescriptor<%s>", getEntityName() );
-	}
-
-	@Override
-	public void finishInstantiation(
-			EntityHierarchy entityHierarchy,
-			IdentifiableTypeDescriptor<? super T> superType,
-			IdentifiableTypeMapping bootMapping,
-			RuntimeModelCreationContext creationContext) {
-
-	}
-
-	@Override
-	public void completeInitialization(
-			EntityHierarchy entityHierarchy,
-			IdentifiableTypeDescriptor<? super T> superType,
-			IdentifiableTypeMappingImplementor bootMapping,
-			RuntimeModelCreationContext creationContext) {
-
-	}
-
-	@Override
-	public void postInstantiate() {
-
 	}
 
 	@Override

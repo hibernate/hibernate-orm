@@ -45,9 +45,15 @@ public interface IdentifiableTypeDescriptor<T> extends InheritanceCapable<T>, Id
 	void finishInstantiation(
 			EntityHierarchy entityHierarchy,
 			IdentifiableTypeDescriptor<? super T> superType,
-			IdentifiableTypeMapping bootMapping,
+			IdentifiableTypeMappingImplementor bootMapping,
 			RuntimeModelCreationContext creationContext);
 
+
+	/**
+	 * todo (6.0) : is this needed?
+	 * 		doesn't `#finishInstantiation` cover this need?  ATM it is
+	 * 		(1) not used and (2) an empty impl
+	 */
 	void completeInitialization(
 			EntityHierarchy entityHierarchy,
 			IdentifiableTypeDescriptor<? super T> superType,

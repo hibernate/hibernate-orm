@@ -18,6 +18,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.spi.EntityMappingImplementor;
+import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
@@ -109,6 +110,13 @@ public interface EntityDescriptor<T>
 	// Redesigned contract
 
 	/**
+	 * todo (6.0) : is this needed?
+	 *
+	 * @see #completeInitialization
+	 */
+	void postInstantiate();
+
+	/**
 	 * Called after all EntityDescriptor instance for the persistence unit have been created;
 	 *
 	 * @param superType The entity's super's EntityDescriptor
@@ -123,10 +131,6 @@ public interface EntityDescriptor<T>
 			EntityMappingImplementor bootDescriptor,
 			RuntimeModelCreationContext creationContext);
 
-	/**
-	 * Called after {@link #finishInitialization} has been called on all descriptors.
-	 */
-	void postInstantiate();
 
 	/**
 	 * The entity name which this descriptor maps.

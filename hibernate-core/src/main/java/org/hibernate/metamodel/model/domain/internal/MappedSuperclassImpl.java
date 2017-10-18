@@ -21,7 +21,7 @@ import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
@@ -47,7 +47,7 @@ public class MappedSuperclassImpl<J>
 	public void finishInstantiation(
 			EntityHierarchy entityHierarchy,
 			IdentifiableTypeDescriptor<? super J> superType,
-			IdentifiableTypeMapping bootMapping,
+			IdentifiableTypeMappingImplementor bootMapping,
 			RuntimeModelCreationContext creationContext) {
 		throw new NotYetImplementedFor6Exception(  );
 	}
@@ -140,7 +140,7 @@ public class MappedSuperclassImpl<J>
 	}
 
 	@Override
-	public void injectAttributeValue(J instance, PersistentAttribute attribute, Object value) {
+	public void injectAttributeValue(J instance, NonIdPersistentAttribute attribute, Object value) {
 		throw new NotYetImplementedFor6Exception();
 	}
 }

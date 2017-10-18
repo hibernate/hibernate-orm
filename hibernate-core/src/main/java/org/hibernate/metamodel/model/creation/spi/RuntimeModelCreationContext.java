@@ -15,12 +15,15 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.mapping.Collection;
+import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
 
 /**
  * "Parameter object" providing access to additional information that may be needed
@@ -39,6 +42,9 @@ public interface RuntimeModelCreationContext {
 	DatabaseModel getDatabaseModel();
 	DatabaseObjectResolver getDatabaseObjectResolver();
 
+	JpaStaticMetaModelPopulationSetting getJpaStaticMetaModelPopulationSetting();
+
+
 	RuntimeModelDescriptorFactory getRuntimeModelDescriptorFactory();
 	RepresentationStrategySelector getRepresentationStrategySelector();
 
@@ -47,6 +53,11 @@ public interface RuntimeModelCreationContext {
 	}
 
 	PersistentCollectionTuplizerFactory getPersistentCollectionTuplizerFactory();
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo (6.0) : I think these are no longer needed given the way we build these runtime descriptors
+	//		it happens within the process itself
 
 	void registerEntityDescriptor(EntityDescriptor runtimeDescriptor, EntityMapping bootDescriptor);
 	void registerCollectionDescriptor(PersistentCollectionDescriptor runtimeDescriptor, Collection bootDescriptor);

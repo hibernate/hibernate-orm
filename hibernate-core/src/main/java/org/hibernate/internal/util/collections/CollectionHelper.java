@@ -121,7 +121,7 @@ public final class CollectionHelper {
 	 */
 	public static <K, V> ConcurrentHashMap<K, V> concurrentMap(int expectedNumberOfElements, float loadFactor) {
 		final int size = expectedNumberOfElements + 1 + (int) ( expectedNumberOfElements * loadFactor );
-		return new ConcurrentHashMap<K, V>( size, loadFactor );
+		return new ConcurrentHashMap<>( size, loadFactor );
 	}
 
 	public static <T> ArrayList<T> arrayList(int anticipatedSize) {

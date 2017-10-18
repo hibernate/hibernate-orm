@@ -41,28 +41,38 @@ public interface ManagedTypeDescriptor<T>
 
 	List<StateArrayContributor<?>> getStateArrayContributors();
 
-	PersistentAttribute<? super T, ?> findPersistentAttribute(String name);
+	/**
+	 * Return this managed type's persistent attributes, including those
+	 * declared on super types.
+	 */
+	NonIdPersistentAttribute<? super T, ?> findPersistentAttribute(String name);
 
-	PersistentAttribute<? super T, ?> findDeclaredPersistentAttribute(String name);
+	/**
+	 * Return this managed type's persistent attributes, excluding those
+	 * declared on super types.
+	 *
+	 * @apiNote See the api-note on {@link #findPersistentAttribute}
+	 */
+	NonIdPersistentAttribute<? super T, ?> findDeclaredPersistentAttribute(String name);
 
 	@SuppressWarnings("unchecked")
-	default <R> PersistentAttribute<? super T, R> findDeclaredPersistentAttribute(String name, Class<R> resultType) {
-		return (PersistentAttribute<? super T, R>) findDeclaredPersistentAttribute( name );
+	default <R> NonIdPersistentAttribute<? super T, R> findDeclaredPersistentAttribute(String name, Class<R> resultType) {
+		return (NonIdPersistentAttribute<? super T, R>) findDeclaredPersistentAttribute( name );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// todo (6.0) : both would be pre-built during the process of creating the runtime model
 	//		this proved to be the best solution by far based on JMH testing
-	default List<PersistentAttribute<? super T,?>> getPersistentAttributes() {
+	default List<NonIdPersistentAttribute<? super T,?>> getPersistentAttributes() {
 		throw new NotYetImplementedFor6Exception();
 	}
 
-	default List<PersistentAttribute<? super T, ?>> getDeclaredPersistentAttributes() {
+	default List<NonIdPersistentAttribute<? super T, ?>> getDeclaredPersistentAttributes() {
 		throw new NotYetImplementedFor6Exception();
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	default void visitAttributes(Consumer<? extends PersistentAttribute> consumer) {
+	default void visitAttributes(Consumer<? extends NonIdPersistentAttribute> consumer) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
@@ -93,8 +103,8 @@ public interface ManagedTypeDescriptor<T>
 	 */
 	default Object[] reduceToValuesArray(
 			T instance,
-			Predicate<PersistentAttribute> includeCondition,
-			Predicate<PersistentAttribute> swapCondition,
+			Predicate<NonIdPersistentAttribute> includeCondition,
+			Predicate<NonIdPersistentAttribute> swapCondition,
 			Object swapValue,
 			SharedSessionContractImplementor session) {
 		final ArrayList<Object> values = new ArrayList<>();
@@ -136,13 +146,15 @@ public interface ManagedTypeDescriptor<T>
 		return values.toArray();
 	}
 
-	default Object extractAttributeValue(T instance, PersistentAttribute attribute) {
+	default Object extractAttributeValue(T instance, NonIdPersistentAttribute attribute) {
 		return attribute.getPropertyAccess().getGetter().get( instance );
 	}
 
-	default void injectAttributeValue(T instance, PersistentAttribute attribute, Object value) {
+	default void injectAttributeValue(T instance, NonIdPersistentAttribute attribute, Object value) {
 		attribute.getPropertyAccess().getSetter().set( instance, value, getTypeConfiguration().getSessionFactory() );
 	}
 
-	boolean hasMutableProperties();
+	default boolean hasMutableProperties() {
+		throw new NotYetImplementedFor6Exception();
+	}
 }

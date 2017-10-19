@@ -32,6 +32,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
@@ -50,21 +51,11 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 
 	public SingleTableEntityDescriptor(
 			EntityMapping bootMapping,
+			IdentifiableTypeDescriptor<? super T> superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) throws HibernateException {
-		super( bootMapping, creationContext );
+		super( bootMapping, superTypeDescriptor, creationContext );
 	}
 
-	@Override
-	public void postInstantiate() {
-	}
-
-	@Override
-	public void completeInitialization(
-			EntityHierarchy entityHierarchy,
-			IdentifiableTypeDescriptor<? super T> superType,
-			IdentifiableTypeMappingImplementor bootMapping,
-			RuntimeModelCreationContext creationContext) {
-	}
 
 	// `select ... from Person p order by p`
 	@Override

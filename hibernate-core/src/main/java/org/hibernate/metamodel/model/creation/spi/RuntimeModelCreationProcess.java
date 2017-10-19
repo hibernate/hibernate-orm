@@ -15,7 +15,7 @@ import javax.persistence.NamedEntityGraph;
 import javax.persistence.NamedSubgraph;
 import javax.persistence.metamodel.Attribute;
 
-import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.EmbeddedMapping;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
@@ -41,7 +41,10 @@ import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.model.domain.internal.EntityHierarchyImpl;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
+import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
@@ -109,32 +112,58 @@ public class RuntimeModelCreationProcess {
 		for ( EntityMappingHierarchy bootHierarchy : mappingMetadata.getEntityHierarchies() ) {
 			final EntityDescriptor<?> rootEntityDescriptor = (EntityDescriptor<?>) createIdentifiableType(
 					bootHierarchy.getRootType(),
+					null,
 					creationContext
 			);
-			runtimeRootEntityByBootHierarchy.put( bootHierarchy, rootEntityDescriptor );
 
-			walkSupers( bootHierarchy, bootHierarchy.getRootType(), rootEntityDescriptor, creationContext );
-			if ( !runtimeRootByBootHierarchy.containsKey( bootHierarchy ) ) {
-				runtimeRootByBootHierarchy.put( bootHierarchy, rootEntityDescriptor );
+			if ( runtimeRootEntityByBootHierarchy.containsKey( bootHierarchy )
+					|| runtimeRootByBootHierarchy.containsKey( bootHierarchy ) ) {
+				throw new HibernateException(
+						"Entity boot hierarchy was encountered twice while transforming to runtime model : " +
+						bootHierarchy.getRootType().getEntityName()
+				);
 			}
 
-			walkSubs( bootHierarchy.getRootType(), creationContext );
+			runtimeRootEntityByBootHierarchy.put( bootHierarchy, rootEntityDescriptor );
+
+			final EntityHierarchyImpl runtimeHierarchy = new EntityHierarchyImpl(
+					rootEntityDescriptor, bootHierarchy.getRootType(), creationContext
+			);
+
+			creationContext.registerEntityHierarchy( runtimeHierarchy, bootHierarchy );
+
+			walkSupers(
+					bootHierarchy,
+					bootHierarchy.getRootType(),
+					runtimeHierarchy,
+					rootEntityDescriptor,
+					creationContext
+			);
+			walkSubs(
+					bootHierarchy.getRootType(),
+					runtimeHierarchy,
+					rootEntityDescriptor,
+					creationContext
+			);
 		}
+
+		// NOTE : at this point all ManagedTypeDescriptors have been created and
+		//		their hierarchies have been linked.  Allow the ManagedTypeDescriptors
+		// 		to finish their initialization, which involves building attributes
+		//		etc
 
 		for ( Map.Entry<EntityMappingHierarchy, IdentifiableTypeDescriptor> entry : runtimeRootByBootHierarchy.entrySet() ) {
 			final EntityDescriptor runtimeRootEntity = runtimeRootEntityByBootHierarchy.get( entry.getKey() );
 			final IdentifiableTypeDescriptor runtimeRootRoot = entry.getValue();
 			final RootClass bootRootEntity = (RootClass) bootByRuntime.get( runtimeRootEntity );
 
-			final EntityHierarchyImpl runtimeHierarchy = new EntityHierarchyImpl(
-					creationContext,
-					runtimeRootEntity,
-					bootRootEntity
+			finishInitialization(
+					runtimeRootRoot,
+					bootByRuntime.get( runtimeRootRoot ),
+					creationContext
 			);
 
-			finishInitialization( runtimeRootRoot, bootByRuntime.get( runtimeRootRoot ), creationContext, runtimeHierarchy );
-
-			runtimeHierarchy.finishInitialization( creationContext, bootRootEntity );
+			runtimeRootEntity.getHierarchy().finishInitialization( creationContext, bootRootEntity );
 		}
 
 		descriptorFactory.finishUp( creationContext );
@@ -152,9 +181,18 @@ public class RuntimeModelCreationProcess {
 	private void walkSupers(
 			EntityMappingHierarchy bootHierarchy,
 			IdentifiableTypeMappingImplementor bootMapping,
+			EntityHierarchy runtimeHierarchy,
 			IdentifiableTypeDescriptor<?> runtimeMapping,
 			RuntimeModelCreationContext creationContext) {
+		assert bootHierarchy != null;
 		assert bootMapping != null;
+
+		assert runtimeHierarchy != null;
+		assert runtimeMapping != null;
+
+		if ( runtimeMapping instanceof EntityDescriptor ) {
+			creationContext.registerEntityDescriptor( (EntityDescriptor) runtimeMapping, (EntityMapping) bootMapping );
+		}
 
 		if ( bootMapping.getSuperTypeMapping() == null ) {
 			runtimeRootByBootHierarchy.put( bootHierarchy, runtimeMapping );
@@ -163,25 +201,38 @@ public class RuntimeModelCreationProcess {
 			// always create going up
 			final IdentifiableTypeDescriptor<?> runtimeSuperDescriptor = createIdentifiableType(
 					(IdentifiableTypeMappingImplementor) bootMapping.getSuperTypeMapping(),
+					runtimeMapping,
 					creationContext
 			);
+
 			walkSupers(
 					bootHierarchy,
 					(IdentifiableTypeMappingImplementor) bootMapping.getSuperTypeMapping(),
+					runtimeHierarchy,
 					runtimeSuperDescriptor,
 					creationContext
 			);
 		}
 	}
 
-	private void walkSubs(IdentifiableTypeMappingImplementor bootMapping, RuntimeModelCreationContext creationContext) {
-		for ( IdentifiableTypeMapping bootSubMapping : bootMapping.getSubTypeMappings() ) {
-			createIdentifiableType(
-					(IdentifiableTypeMappingImplementor) bootSubMapping,
+	private void walkSubs(
+			IdentifiableTypeMappingImplementor bootMapping,
+			EntityHierarchy runtimeHierarchy,
+			IdentifiableTypeDescriptor runtimeDescriptor,
+			RuntimeModelCreationContext creationContext) {
+		for ( IdentifiableTypeMapping bootSubTypeMapping : bootMapping.getSubTypeMappings() ) {
+			final IdentifiableTypeDescriptor<?> runtimeSubclassDescriptor = createIdentifiableType(
+					(IdentifiableTypeMappingImplementor) bootSubTypeMapping,
+					runtimeDescriptor,
 					creationContext
 			);
 
-			walkSubs( (IdentifiableTypeMappingImplementor) bootSubMapping, creationContext  );
+			walkSubs(
+					(IdentifiableTypeMappingImplementor) bootSubTypeMapping,
+					runtimeHierarchy,
+					runtimeSubclassDescriptor,
+					creationContext
+			);
 		}
 	}
 
@@ -193,12 +244,22 @@ public class RuntimeModelCreationProcess {
 
 	private IdentifiableTypeDescriptor<?> createIdentifiableType(
 			IdentifiableTypeMappingImplementor bootMapping,
+			InheritanceCapable superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		final IdentifiableTypeDescriptor runtimeType = bootMapping.makeRuntimeDescriptor( creationContext );
+		final IdentifiableTypeDescriptor runtimeType = bootMapping.makeRuntimeDescriptor(
+				superTypeDescriptor,
+				creationContext
+		);
 
 		bootByRuntime.put( runtimeType, bootMapping );
 		runtimeByBoot.put( bootMapping, runtimeType );
 
+		if ( runtimeType instanceof EntityDescriptor ) {
+			creationContext.registerEntityDescriptor( (EntityDescriptor) runtimeType, (EntityMapping) bootMapping );
+		}
+		else if ( runtimeType instanceof MappedSuperclassDescriptor ) {
+			creationContext.registerMappedSuperclassDescriptor( (MappedSuperclassDescriptor) runtimeType );
+		}
 		return runtimeType;
 	}
 
@@ -206,25 +267,17 @@ public class RuntimeModelCreationProcess {
 	private void finishInitialization(
 			IdentifiableTypeDescriptor runtimeType,
 			IdentifiableTypeMappingImplementor bootType,
-			RuntimeModelCreationContext creationContext,
-			EntityHierarchyImpl runtimeHierarchy) {
-		runtimeType.finishInstantiation(
-				runtimeHierarchy,
-				runtimeType.getSuperclassType(),
+			RuntimeModelCreationContext creationContext) {
+		runtimeType.finishInitialization(
 				bootType,
 				creationContext
 		);
-
-		if ( runtimeType instanceof EntityDescriptor ) {
-			creationContext.registerEntityDescriptor( (EntityDescriptor) runtimeType, (EntityMapping) bootType );
-		}
 
 		for ( IdentifiableTypeMapping subTypeMapping : bootType.getSubTypeMappings() ) {
 			finishInitialization(
 					runtimeByBoot.get( subTypeMapping ),
 					(IdentifiableTypeMappingImplementor) subTypeMapping,
-					creationContext,
-					runtimeHierarchy
+					creationContext
 			);
 		}
 	}
@@ -379,17 +432,25 @@ public class RuntimeModelCreationProcess {
 		}
 
 		@Override
+		public void registerEntityHierarchy(EntityHierarchyImpl runtimeHierarchy, EntityMappingHierarchy bootHierarchy) {
+			getTypeConfiguration().register( runtimeHierarchy );
+		}
+
+		@Override
 		public void registerEntityDescriptor(EntityDescriptor runtimeDescriptor, EntityMapping bootDescriptor) {
 			getTypeConfiguration().register( runtimeDescriptor );
+
 			if ( RootClass.class.isInstance( bootDescriptor ) ) {
+				// prepare both the entity and natural-id second level cache access for this hierarchy
 				final RootClass rootBootMapping = (RootClass) bootDescriptor;
 				final AccessType accessType = AccessType.fromExternalName( rootBootMapping.getCacheConcurrencyStrategy() );
 				if ( accessType != null ) {
 					addEntityCachingConfig( runtimeDescriptor, rootBootMapping, accessType );
-				}
 
-				if ( rootBootMapping.getNaturalIdCacheRegionName() != null ) {
-					addNaturalIdCachingConfig( runtimeDescriptor, rootBootMapping, accessType );
+					if ( runtimeDescriptor.getHierarchy().getNaturalIdDescriptor() != null
+							&& rootBootMapping.getNaturalIdCacheRegionName() != null ) {
+						addNaturalIdCachingConfig( runtimeDescriptor, rootBootMapping, accessType );
+					}
 				}
 			}
 		}
@@ -415,6 +476,11 @@ public class RuntimeModelCreationProcess {
 				AccessType accessType) {
 			final DomainDataRegionConfigImpl.Builder configBuilder = locateBuilder( bootDescriptor.getCacheRegionName() );
 			configBuilder.addNaturalIdConfig( runtimeDescriptor.getHierarchy(), accessType );
+		}
+
+		@Override
+		public void registerMappedSuperclassDescriptor(MappedSuperclassDescriptor runtimeType) {
+			getTypeConfiguration().register( runtimeType );
 		}
 
 		@Override

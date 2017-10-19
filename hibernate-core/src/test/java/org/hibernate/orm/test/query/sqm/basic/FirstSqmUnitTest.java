@@ -24,6 +24,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 public class FirstSqmUnitTest extends BaseUnitTest {
 
+	// todo (6.0) : this test can likely just go away ultimately.
+	//		it was intended just as a simple first "smoke" test
+
 	@Entity( name = "Person" )
 	public static class Person {
 		@Id

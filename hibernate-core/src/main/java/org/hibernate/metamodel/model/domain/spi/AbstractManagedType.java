@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
@@ -43,10 +44,9 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 
 	private final TypeConfiguration typeConfiguration;
 
-	private InheritanceCapable<? super J>  superTypeDescriptor;
-	private List<InheritanceCapable<? extends J>> subclassTypes;
-
-	private final Set<String> subClassEntityNames = new HashSet<>();
+	private final InheritanceCapable<? super J> superTypeDescriptor;
+	private final Set<InheritanceCapable<? extends J>> subclassTypes = ConcurrentHashMap.newKeySet();
+	private final Set<String> subClassEntityNames = ConcurrentHashMap.newKeySet();
 
 	// todo (6.0) : I think we can just drop the mutabilityPlan and comparator for managed types
 
@@ -62,20 +62,22 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 	//		see `#getNavigables` and `#getDeclaredNavigables` below.
 
 
-	private List<NonIdPersistentAttribute<J,?>> declaredAttributes;
-	private List<NonIdPersistentAttribute<J,?>> attributes;
+	private List<NonIdPersistentAttribute> declaredAttributes;
+	private List<NonIdPersistentAttribute> attributes;
 
-	private List<StateArrayContributor<?>> stateArrayContributors;
+	private List<StateArrayContributor> stateArrayContributors;
 
 	// a cache to more easily find the PersistentAttribute by name
 	private Map<String,NonIdPersistentAttribute> declaredAttributesByName;
 
 	public AbstractManagedType(
-			ManagedTypeMapping managedTypeMapping,
+			ManagedTypeMapping bootMapping,
+			InheritanceCapable<? super J> superTypeDescriptor,
 			ManagedJavaDescriptor<J> javaTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		this(
-				managedTypeMapping,
+				bootMapping,
+				superTypeDescriptor,
 				javaTypeDescriptor,
 				javaTypeDescriptor.getMutabilityPlan(),
 				javaTypeDescriptor.getComparator(),
@@ -86,10 +88,12 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 	@SuppressWarnings("WeakerAccess")
 	public AbstractManagedType(
 			ManagedTypeMapping managedTypeMapping,
+			InheritanceCapable<? super J> superTypeDescriptor,
 			ManagedJavaDescriptor<J> javaTypeDescriptor,
 			MutabilityPlan<J> mutabilityPlan,
 			Comparator<J> comparator,
 			RuntimeModelCreationContext creationContext) {
+		this.superTypeDescriptor = superTypeDescriptor;
 		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.mutabilityPlan = mutabilityPlan;
 		this.comparator = comparator;
@@ -99,13 +103,11 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 		this.typeConfiguration = creationContext.getTypeConfiguration();
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public void finishInitialization(
-			InheritanceCapable superType,
 			ManagedTypeMappingImplementor mappingDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		injectSuperTypeDescriptor( superTypeDescriptor );
-
 		final int declaredAttributeCount = mappingDescriptor.getDeclaredPersistentAttributes().size();
 
 		declaredAttributes = CollectionHelper.arrayList( declaredAttributeCount );
@@ -113,13 +115,13 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 		// NOTE : we can't know the size of declared contributors up front
 		stateArrayContributors = new ArrayList<>();
 
-		if ( superType != null ) {
+		if ( superTypeDescriptor != null ) {
 			attributes = CollectionHelper.arrayList(
-					superType.getPersistentAttributes().size() + declaredAttributeCount
+					superTypeDescriptor.getPersistentAttributes().size() + declaredAttributeCount
 			);
 
-			attributes.addAll( superType.getPersistentAttributes() );
-			stateArrayContributors.addAll( superType.getStateArrayContributors() );
+			attributes.addAll( superTypeDescriptor.getPersistentAttributes() );
+			stateArrayContributors.addAll( superTypeDescriptor.getStateArrayContributors() );
 		}
 		else {
 			attributes = CollectionHelper.arrayList( declaredAttributeCount );
@@ -158,36 +160,40 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 		}
 	}
 
-	@Override
-	public void injectSuperTypeDescriptor(InheritanceCapable<? super J> superTypeDescriptor) {
+
+	public void addSubclassDescriptor(InheritanceCapable<? extends J> subclassType) {
 		log.debugf(
-				"Injecting super-type descriptor [%s] for ManagedTypeImplementor [%s]; was [%s]",
-				superTypeDescriptor,
-				this,
-				this.superTypeDescriptor
+				"Adding runtime descriptor [%s] as subclass for ManagedType [%s]",
+				subclassType.getJavaTypeDescriptor().getTypeName(),
+				this.getJavaTypeDescriptor().getTypeName()
 		);
 
-		this.superTypeDescriptor = superTypeDescriptor;
+		subclassTypes.add( subclassType );
+		addSubclassName( subclassType );
+	}
+
+	protected void addSubclassName(InheritanceCapable subclassType) {
+		subClassEntityNames.add( subclassType.getNavigableName() );
+
 		if ( superTypeDescriptor != null ) {
-			superTypeDescriptor.addSubclassType( this );
+			if ( !AbstractManagedType.class.isInstance( subclassType ) ) {
+				throw new HibernateException(
+						"Expecting super type to be derived from AbstractManagedType : " + superTypeDescriptor
+				);
+			}
+
+			( (AbstractManagedType) superTypeDescriptor ).addSubclassName( subclassType );
 		}
 	}
 
 	@Override
-	public void addSubclassType(InheritanceCapable<? extends J> subclassType) {
-		subclassTypes.add( subclassType );
-		subClassEntityNames.add( subclassType.getNavigableName() );
-	}
-
-
-	@Override
-	public List<InheritanceCapable<? extends J>> getSubclassTypes() {
+	public Collection<InheritanceCapable<? extends J>> getSubclassTypes() {
 		return subclassTypes;
 	}
 
 	@Override
-	public boolean isSubclassEntityName(String entityName) {
-		return subClassEntityNames.contains( entityName );
+	public boolean isSubclassTypeName(String name) {
+		return subClassEntityNames.contains( name );
 	}
 
 	@Override
@@ -573,7 +579,7 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 	}
 
 	@Override
-	public List<StateArrayContributor<?>> getStateArrayContributors() {
+	public List<StateArrayContributor> getStateArrayContributors() {
 		return stateArrayContributors;
 	}
 }

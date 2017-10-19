@@ -18,7 +18,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.persistence.EntityGraph;
 
 import org.hibernate.EntityNameResolver;
@@ -42,6 +41,7 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationProcess;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
+import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
@@ -57,6 +57,9 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.java.spi.MappedSuperclassJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 
+import org.jboss.logging.Logger;
+
+import static org.hibernate.internal.CoreLogging.logger;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
@@ -80,6 +83,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 @Incubating
 public class TypeConfiguration implements SessionFactoryObserver {
 	private static final CoreMessageLogger log = messageLogger( Scope.class );
+	private static final Logger dev_log = logger( Scope.class );
 
 	// todo : (
 	private final Scope scope;
@@ -90,8 +94,9 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	private final SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry;
 	private final BasicTypeRegistry basicTypeRegistry;
 
-	private final Map<String,EntityDescriptor<?>> entityDescriptorMap = new ConcurrentHashMap<>();
 	private final Set<EntityHierarchy> entityHierarchies = ConcurrentHashMap.newKeySet();
+	private final Map<String,EntityDescriptor<?>> entityDescriptorMap = new ConcurrentHashMap<>();
+	private final Map<String, MappedSuperclassDescriptor> mappedSuperclassDescriptorMap = new ConcurrentHashMap<>();
 	private final Map<String,PersistentCollectionDescriptor<?,?,?>> collectionDescriptorMap = new ConcurrentHashMap<>();
 	private final Map<String,EmbeddedTypeDescriptor<?>> embeddableDescriptorMap = new ConcurrentHashMap<>();
 
@@ -326,13 +331,25 @@ public class TypeConfiguration implements SessionFactoryObserver {
 
 	@SuppressWarnings("unchecked")
 	public <T> EntityValuedExpressableType<T> resolveEntityReference(String entityName) {
-		if ( importMap.containsKey( entityName ) ) {
-			entityName = importMap.get( entityName );
+		final String rename = importMap.get( entityName );
+		if ( rename != null ) {
+			entityName = rename;
 		}
 
-		final EntityDescriptor descriptor = findEntityDescriptor( entityName );
-		if ( descriptor != null ) {
-			return descriptor;
+		{
+			final EntityDescriptor descriptor = findEntityDescriptor( entityName );
+			if ( descriptor != null ) {
+				return descriptor;
+			}
+		}
+
+		{
+			final MappedSuperclassDescriptor descriptor = mappedSuperclassDescriptorMap.get( entityName );
+			if ( descriptor != null ) {
+				// todo (6.0) : a better option is to have MappedSuperclassDescriptor extend EntityValuedExpressableType
+				//		but that currently causes some conflicts regarding `#getJavaTypeDescriptor`
+				throw new NotYetImplementedFor6Exception();
+			}
 		}
 
 		final Class requestedClass = resolveRequestedClass( entityName );
@@ -439,31 +456,15 @@ public class TypeConfiguration implements SessionFactoryObserver {
 
 
 	/**
-	 * Get access to the generic Mapping contract.  This is implemented for both the
-	 * boot-time model (Metamodel) and the run-time model (SessionFactory).
+	 * Obtain the MetadataBuildingContext currently scoping the
+	 * TypeConfiguration.
 	 *
-	 * @return The mapping object.  Should almost never return {@code null}.  There is a minor
-	 * chance this method would get a {@code null}, but that would be an unsupported use-case.
+	 * @apiNote This will throw an exception if the SessionFactory is not yet
+	 * bound here.  See {@link Scope} for more details regarding the stages
+	 * a TypeConfiguration goes through
+	 *
+	 * @return
 	 */
-// todo (6.0) : as discussed below in Scope, it would be great to have a common contract exposable here
-//	public Mapping getMapping() {
-//		return scope.getMapping();
-//	}
-
-	/**
-	 * Attempt to resolve the {@link #getMapping()} reference as a SessionFactory (the runtime model).
-	 * This will throw an exception if the SessionFactory is not yet bound here.
-	 *
-	 * @return The SessionFactory
-	 *
-	 * @throws IllegalStateException if the Mapping reference is not a SessionFactory or the SessionFactory
-	 * cannot be resolved; generally either of these cases would mean that the SessionFactory was not yet
-	 * bound to this scope object
-	 */
-	public SessionFactoryImplementor getSessionFactory() {
-		return scope.getSessionFactory();
-	}
-
 	public MetadataBuildingContext getMetadataBuildingContext() {
 		return scope.getMetadataBuildingContext();
 	}
@@ -471,6 +472,22 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	public void scope(MetadataBuildingContext metadataBuildingContext) {
 		log.debugf( "Scoping TypeConfiguration [%s] to MetadataBuildingContext [%s]", this, metadataBuildingContext );
 		scope.setMetadataBuildingContext( metadataBuildingContext );
+	}
+
+	/**
+	 * Obtain the SessionFactory currently scoping the TypeConfiguration.
+	 *
+	 * @apiNote This will throw an exception if the SessionFactory is not yet
+	 * bound here.  See {@link Scope} for more details regarding the stages
+	 * a TypeConfiguration goes through (this is "runtime stage")
+	 *
+	 * @return The SessionFactory
+	 *
+	 * @throws IllegalStateException if the TypeConfiguration is currently not
+	 * associated with a SessionFactory (in "runtime stage").
+	 */
+	public SessionFactoryImplementor getSessionFactory() {
+		return scope.getSessionFactory();
 	}
 
 	public void scope(SessionFactoryImplementor factory, BootstrapContext bootstrapContext) {
@@ -663,27 +680,27 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	}
 
 	/**
-	 * Encapsulation of lifecycle concerns for a TypeConfiguration, mainly in regards to
-	 * eventually being associated with a SessionFactory.  Goes through the following stages:<ol>
-	 *     <li>
-	 *         TypeConfiguration initialization - during this phase {@link #getMapping()} will
-	 *         return a non-null, no-op impl.  Calls to {@link #getMetadataBuildingContext()} will
-	 *         simply return {@code null}, while calls to {@link #getSessionFactory()} will throw
-	 *         an exception.
-	 *     </li>
-	 *     <li>
-	 *         Metadata building - during this phase {@link #getMetadataBuildingContext()} will
-	 *         return a non-null value and the {@link #getMapping()} return will be the
-	 *         {@link MetadataBuildingContext#getMetadataCollector()} reference.  Calls to
-	 *         {@link #getSessionFactory()} will throw an exception.
-	 *     </li>
-	 *     <li>
-	 *         live SessionFactory - this is the only phase where calls to {@link #getSessionFactory()}
-	 *         are allowed and {@link #getMapping()} returns the SessionFactory itself (since it
-	 *         implements that Mapping contract (for now) too.  Calls to {@link #getMetadataBuildingContext()}
-	 *         will simply return {@code null}.
-	 *     </li>
-	 * </ol>
+	 * Encapsulation of lifecycle concerns for a TypeConfiguration, mainly in
+	 * regards to eventually being associated with a SessionFactory.  Goes
+	 * 3 "lifecycle" stages, pertaining to {@link #getMetadataBuildingContext()}
+	 * and {@link #getSessionFactory()}:
+	 *
+	 * 		* "Initialization" is where the {@link TypeConfiguration} is first
+	 * 			built as the "boot model" ({@link org.hibernate.boot.model}) of
+	 * 			the user's domain model is converted into the "runtime model"
+	 * 			({@link org.hibernate.metamodel.model}).  During this phase,
+	 * 			{@link #getMetadataBuildingContext()} will be accessible but
+	 * 			{@link #getSessionFactory} will throw an exception.
+	 * 		* "Runtime" is where the "runtime model" is accessible while the
+	 * 			SessionFactory is still unclosed.  During this phase
+	 * 			{@link #getSessionFactory()} is accessible while
+	 * 			{@link #getMetadataBuildingContext()} will now throw an
+	 * 			exception
+	 * 		* "Sunset" is after the SessionFactory has been closed.  During this
+	 * 			phase both {@link #getSessionFactory()} and
+	 * 			{@link #getMetadataBuildingContext()} will now throw an exception
+	 *
+	 * Each stage or phase is consider a "scope" for the TypeConfiguration.
 	 */
 	private static class Scope {
 
@@ -762,9 +779,12 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SF-based initialization
 
+	public void register(EntityHierarchy hierarchy) {
+		entityHierarchies.add( hierarchy );
+	}
+
 	public void register(EntityDescriptor entityDescriptor) {
 		entityDescriptorMap.put( entityDescriptor.getEntityName(), entityDescriptor );
-		entityHierarchies.add( entityDescriptor.getHierarchy() );
 
 		if ( entityDescriptor.getConcreteProxyClass() != null
 				&& entityDescriptor.getConcreteProxyClass().isInterface()
@@ -801,6 +821,13 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		}
 
 		registerEntityNameResolvers( entityDescriptor );
+	}
+
+	public void register(MappedSuperclassDescriptor runtimeType) {
+		mappedSuperclassDescriptorMap.put(
+				runtimeType.getJavaTypeDescriptor().getTypeName(),
+				runtimeType
+		);
 	}
 
 	public void register(PersistentCollectionDescriptor collectionDescriptor) {

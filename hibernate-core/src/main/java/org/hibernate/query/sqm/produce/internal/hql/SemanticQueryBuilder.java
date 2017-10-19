@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.collection.spi.CollectionClassification;
@@ -2758,12 +2759,15 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	}
 
 	private static ExpressableType determineTypeDescriptor(SqmSelectClause selectClause) {
-		throw new NotYetImplementedFor6Exception(  );
-//		if ( selectClause.getSelections().size() != 1 ) {
-//			return null;
-//		}
-//
-//		final SqmSelection selection = selectClause.getSelections().get( 0 );
-//		return selection.getSelectableNode().ggetJavaTypeDescriptor().getExpressionType();
+		if ( selectClause.getSelections().size() != 1 ) {
+			return null;
+		}
+
+		final SqmSelectableNode selectableNode = selectClause.getSelections().get( 0 ).getSelectableNode();
+		if ( SqmDynamicInstantiation.class.isInstance( selectableNode ) ) {
+			throw new HibernateException( "Illegal use of dynamic-instantiation in sub-query" );
+		}
+
+		return ( (SqmExpression) selectableNode ).getExpressableType();
 	}
 }

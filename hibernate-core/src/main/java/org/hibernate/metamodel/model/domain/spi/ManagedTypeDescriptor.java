@@ -14,7 +14,9 @@ import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -34,13 +36,23 @@ import org.hibernate.type.spi.TypeConfiguration;
 public interface ManagedTypeDescriptor<T>
 		extends ManagedType<T>, NavigableContainer<T>, EmbeddedContainer<T>, ExpressableType<T> {
 
+	/**
+	 * Opportunity to perform any final tasks as part of initialization of the
+	 * runtime model.  At this point...
+	 *
+	 * todo (6.0) : document the expectations of "at this point"
+	 */
+	void finishInitialization(
+			ManagedTypeMappingImplementor bootModelDescriptor,
+			RuntimeModelCreationContext creationContext);
+
 	TypeConfiguration getTypeConfiguration();
 
 	ManagedJavaDescriptor<T> getJavaTypeDescriptor();
 
 	RepresentationStrategy getRepresentationStrategy();
 
-	List<StateArrayContributor<?>> getStateArrayContributors();
+	List<StateArrayContributor> getStateArrayContributors();
 
 	/**
 	 * Return this managed type's persistent attributes, including those

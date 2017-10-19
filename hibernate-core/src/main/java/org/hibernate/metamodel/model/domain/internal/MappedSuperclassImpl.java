@@ -13,11 +13,13 @@ import javax.persistence.metamodel.Type;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
+import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
@@ -32,10 +34,21 @@ import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 public class MappedSuperclassImpl<J>
 		extends AbstractIdentifiableType<J>
 		implements MappedSuperclassDescriptor<J> {
+	private final EntityHierarchy hierarchy;
+
+	@SuppressWarnings("unchecked")
 	public MappedSuperclassImpl(
 			IdentifiableTypeMapping bootMapping,
+			EntityHierarchy hierarchy,
+			IdentifiableTypeDescriptor<? super J> superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		super( bootMapping, bootMapping.getJavaTypeDescriptor(), creationContext );
+		super( bootMapping, superTypeDescriptor, bootMapping.getJavaTypeDescriptor(), creationContext );
+		this.hierarchy = hierarchy;
+	}
+
+	@Override
+	public EntityHierarchy getHierarchy() {
+		return hierarchy;
 	}
 
 	@Override
@@ -44,19 +57,8 @@ public class MappedSuperclassImpl<J>
 	}
 
 	@Override
-	public void finishInstantiation(
-			EntityHierarchy entityHierarchy,
-			IdentifiableTypeDescriptor<? super J> superType,
-			IdentifiableTypeMappingImplementor bootMapping,
-			RuntimeModelCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception(  );
-	}
-
-	@Override
-	public void completeInitialization(
-			EntityHierarchy entityHierarchy,
-			IdentifiableTypeDescriptor<? super J> superType,
-			IdentifiableTypeMappingImplementor bootMapping,
+	public void finishInitialization(
+			ManagedTypeMappingImplementor bootModelDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		throw new NotYetImplementedFor6Exception(  );
 	}

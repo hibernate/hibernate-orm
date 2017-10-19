@@ -39,37 +39,6 @@ public interface EmbeddedTypeDescriptor<T>
 			RuntimeModelCreationContext.class
 	};
 
-	/**
-	 * Called after all managed types in the persistence unit have been
-	 * instantiated.  Some will have been at least partially populated.
-	 * <p/>
-	 * At this point implementors ought to be able to locate other
-	 * managed types.
-	 *
-	 * @param embeddedValueMapping The source boot-time mapping descriptor
-	 * @param creationContext Access to services needed while finishing the instantiation
-	 */
-	void finishInstantiation(
-			EmbeddedValueMappingImplementor embeddedValueMapping,
-			RuntimeModelCreationContext creationContext);
-
-	/**
-	 * Called after all managed types in the persistence unit have been
-	 * fully instantiated (all their `#finishInstantiation` calls have completed).
-	 * <p/>
-	 * At this point implementors ought to be able to rely on the complete Navigable structure to have
-	 * at least been "stitched" together and most information has been populated (there are a few
-	 * exceptions, which we ought to list in a Navigable "design doc").
-	 *
-	 * todo (6.0) : Create Navigable-design-doc either here in repo or as wiki
-	 *
-	 * @param embeddedValueMapping The source boot-time mapping descriptor
-	 * @param creationContext Access to services needed while finishing the instantiation
-	 */
-	void completeInitialization(
-			EmbeddedValueMappingImplementor embeddedValueMapping,
-			RuntimeModelCreationContext creationContext);
-
 	default String getRoleName() {
 		return getNavigableRole().getFullPath();
 	}
@@ -103,13 +72,6 @@ public interface EmbeddedTypeDescriptor<T>
 		return getEmbeddedDescriptor().getNumberOfJdbcParametersForRestriction();
 	}
 
-
-
-
-	@Override
-	default boolean isSubclassEntityName(String entityName) {
-		return false;
-	}
 
 	@Override
 	default boolean isSubclassTypeName(String name) {

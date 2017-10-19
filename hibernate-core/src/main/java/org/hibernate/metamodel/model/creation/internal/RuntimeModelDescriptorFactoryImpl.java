@@ -16,12 +16,16 @@ import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.MappedSuperclassMapping;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorClassResolver;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorFactory;
+import org.hibernate.metamodel.model.domain.internal.EntityHierarchyImpl;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
+import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
@@ -48,9 +52,11 @@ public final class RuntimeModelDescriptorFactoryImpl
 	@SuppressWarnings("unchecked")
 	public <J> EntityDescriptor<J> createEntityDescriptor(
 			EntityMapping bootMapping,
+			InheritanceCapable superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		return instantiateEntityDescriptor(
 				bootMapping,
+				superTypeDescriptor,
 				creationContext
 		);
 	}
@@ -58,6 +64,7 @@ public final class RuntimeModelDescriptorFactoryImpl
 	@SuppressWarnings("unchecked")
 	private EntityDescriptor instantiateEntityDescriptor(
 			EntityMapping bootMapping,
+			InheritanceCapable superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		// If the metadata for the entity specified an explicit persister class, use it...
 		Class<? extends EntityDescriptor> entityDescriptorClass = bootMapping.getRuntimeEntityDescriptorClass();
@@ -69,6 +76,7 @@ public final class RuntimeModelDescriptorFactoryImpl
 		return instantiateEntityDescriptor(
 				entityDescriptorClass,
 				bootMapping,
+				superTypeDescriptor,
 				creationContext
 		);
 	}
@@ -77,12 +85,15 @@ public final class RuntimeModelDescriptorFactoryImpl
 	private EntityDescriptor instantiateEntityDescriptor(
 			Class<? extends EntityDescriptor> persisterClass,
 			EntityMapping bootMapping,
+			InheritanceCapable superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
+
 		try {
 			final Constructor<? extends EntityDescriptor> constructor = persisterClass.getConstructor( EntityDescriptor.STANDARD_CONSTRUCTOR_SIG );
 			try {
 				return constructor.newInstance(
 						bootMapping,
+						superTypeDescriptor,
 						creationContext
 				);
 			}
@@ -114,6 +125,7 @@ public final class RuntimeModelDescriptorFactoryImpl
 	@SuppressWarnings("unchecked")
 	public <J> MappedSuperclassDescriptor<J> createMappedSuperclassDescriptor(
 			MappedSuperclassMapping bootMapping,
+			InheritanceCapable superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) throws HibernateException {
 		return instantiateMappedSuperclassDescriptor(
 				bootMapping,
@@ -278,10 +290,6 @@ public final class RuntimeModelDescriptorFactoryImpl
 		catch (Exception e) {
 			throw new MappingException( "Could not get constructor for " + persisterClass.getName(), e );
 		}
-	}
-
-	@Override
-	public void finishUp(RuntimeModelCreationContext creationContext) {
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

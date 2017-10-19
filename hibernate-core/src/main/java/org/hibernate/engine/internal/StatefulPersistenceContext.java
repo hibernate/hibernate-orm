@@ -1234,7 +1234,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				final Entry mergeMapEntry = (Entry) o;
 				if ( mergeMapEntry.getKey() instanceof HibernateProxy ) {
 					final HibernateProxy proxy = (HibernateProxy) mergeMapEntry.getKey();
-					if ( entityDescriptor.isSubclassEntityName( proxy.getHibernateLazyInitializer().getEntityName() ) ) {
+					if ( entityDescriptor.isSubclassTypeName( proxy.getHibernateLazyInitializer().getEntityName() ) ) {
 						boolean found = isFoundInParent(
 								propertyName,
 								childEntity,
@@ -1292,7 +1292,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( parent != null ) {
 			final EntityEntry entityEntry = entityEntryContext.getEntityEntry( parent );
 			//there maybe more than one parent, filter by type
-			if ( entityDescriptor.isSubclassEntityName( entityEntry.getEntityName() ) ) {
+			if ( entityDescriptor.isSubclassTypeName( entityEntry.getEntityName() ) ) {
 				Object index = getIndexInParent( property, childEntity, entityDescriptor, collectionDescriptor, parent );
 
 				if (index==null && mergeMap!=null) {
@@ -1319,7 +1319,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		//Not found in cache, proceed
 		for ( Entry<Object, EntityEntry> me : reentrantSafeEntityEntries() ) {
 			final EntityEntry ee = me.getValue();
-			if ( entityDescriptor.isSubclassEntityName( ee.getEntityName() ) ) {
+			if ( entityDescriptor.isSubclassTypeName( ee.getEntityName() ) ) {
 				final Object instance = me.getKey();
 
 				Object index = getIndexInParent( property, childEntity, entityDescriptor, collectionDescriptor, instance );

@@ -57,7 +57,9 @@ public class DatabaseObjectResolutionContextImpl
 	@Override
 	public ForeignKey.ColumnMappings resolveColumnMappings(
 			List<Selectable> columns, List<Selectable> otherColumns) {
-		throw new NotYetImplementedException(  );
+		//throw new NotYetImplementedException(  );
+		// todo (6.0) : implement
+		return null;
 	}
 
 	private static class ColumnMapping {

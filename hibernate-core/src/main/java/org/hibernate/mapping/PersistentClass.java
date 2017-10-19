@@ -37,6 +37,7 @@ import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
@@ -1073,10 +1074,14 @@ public abstract class PersistentClass
 	public RepresentationMode getExplicitRepresentationMode() {
 		return explicitRepresentation;
 	}
+
 	@Override
-	public <X> IdentifiableTypeDescriptor<X> makeRuntimeDescriptor(RuntimeModelCreationContext creationContext) {
+	public <X> IdentifiableTypeDescriptor<X> makeRuntimeDescriptor(
+			InheritanceCapable superTypeDescriptor,
+			RuntimeModelCreationContext creationContext) {
 		return creationContext.getRuntimeModelDescriptorFactory().createEntityDescriptor(
 				this,
+				superTypeDescriptor,
 				creationContext
 		);
 	}

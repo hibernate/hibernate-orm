@@ -21,16 +21,6 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
  * @author Steve Ebersole
  */
 public interface InheritanceCapable<T> extends ManagedTypeDescriptor<T> {
-	/**
-	 * Opportunity to perform any final tasks as part of initialization of the
-	 * runtime model.  At this point...
-	 *
-	 * todo (6.0) : document the expectations of "at this point"
-	 */
-	void finishInitialization(
-			InheritanceCapable<? super T> superTypeDescriptor,
-			ManagedTypeMappingImplementor bootModelDescriptor,
-			RuntimeModelCreationContext creationContext);
 
 	InheritanceCapable<? super T> getSuperclassType();
 
@@ -56,30 +46,8 @@ public interface InheritanceCapable<T> extends ManagedTypeDescriptor<T> {
 	void visitDeclaredNavigables(NavigableVisitationStrategy visitor);
 
 	/**
-	 * todo (6.0) : this should be part of the complete / finishInitialization handling
-	 * 		which means it can probably be hidden in the abstract impls.  Would be nice to
-	 * 		not expose such mutators
-	 */
-	void injectSuperTypeDescriptor(InheritanceCapable<? super T> superTypeDescriptor);
-
-	/**
-	 * Do not call directly.  Use {@link #injectSuperTypeDescriptor} instead.
-	 *
-	 * todo (6.0) : again, as with `#injectSuperTypeDescriptor`, I think this can be a detail within the abstract impl
-	 */
-	void addSubclassType(InheritanceCapable<? extends T> subclassType);
-
-	/**
-	 * @deprecated Use {@link #isSubclassTypeName(String)} instead
-	 */
-	@Deprecated
-	boolean isSubclassEntityName(String entityName);
-
-	/**
 	 * Determine whether the given name represents a subclass (or this type itself)
 	 * of the type described by this descriptor
 	 */
-	default boolean isSubclassTypeName(String name) {
-		return isSubclassEntityName( name );
-	}
+	boolean isSubclassTypeName(String name);
 }

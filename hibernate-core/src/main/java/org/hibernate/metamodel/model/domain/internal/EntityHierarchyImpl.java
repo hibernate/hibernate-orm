@@ -62,29 +62,57 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	private EntityDataAccess caching;
 
 	public EntityHierarchyImpl(
-			RuntimeModelCreationContext creationContext,
-			EntityDescriptor rootEntityDescriptor,
-			RootClass rootEntityBinding) {
-		log.debugf( "Creating EntityHierarchy root EntityPersister : %s", rootEntityDescriptor );
+			EntityDescriptor rootRuntimeDescriptor,
+			RootClass rootBootDescriptor,
+			RuntimeModelCreationContext creationContext) {
+		log.debugf( "Creating EntityHierarchy root EntityPersister : %s", rootRuntimeDescriptor );
 
+		this.rootEntityDescriptor = rootRuntimeDescriptor;
 
-		this.rootEntityDescriptor = rootEntityDescriptor;
+		this.inheritanceStrategy = interpretInheritanceType( rootBootDescriptor );
 
-		this.inheritanceStrategy = interpretInheritanceType( rootEntityBinding );
-		this.optimisticLockStyle = rootEntityBinding.getEntityMappingHierarchy().getOptimisticLockStyle();
-		this.representationMode = determineRepresentationMode( rootEntityBinding, rootEntityDescriptor, creationContext );
+		this.identifierDescriptor = interpretIdentifierDescriptor(
+				this,
+				rootBootDescriptor,
+				rootRuntimeDescriptor,
+				creationContext
+		);
+		this.discriminatorDescriptor = interpretDiscriminatorDescriptor(
+				this,
+				rootBootDescriptor,
+				creationContext
+		);
+		this.versionDescriptor = interpretVersionDescriptor(
+				this,
+				rootBootDescriptor,
+				creationContext
+		);
+		this.rowIdDescriptor = interpretRowIdDescriptor(
+				this,
+				rootBootDescriptor,
+				creationContext
+		);
+		this.tenantDiscrimination = interpretTenantDiscrimination(
+				this,
+				rootBootDescriptor,
+				creationContext
+		);
+		this.naturalIdentifierDescriptor = interpretNaturalIdentifierDescriptor(
+				this,
+				rootBootDescriptor,
+				creationContext
+		);
 
-		this.identifierDescriptor = interpretIdentifierDescriptor( this, rootEntityBinding,
-																   rootEntityDescriptor, creationContext );
-		this.discriminatorDescriptor = interpretDiscriminatorDescriptor( this, rootEntityBinding, creationContext );
-		this.versionDescriptor = interpretVersionDescriptor( this, rootEntityBinding, creationContext );
-		this.rowIdDescriptor = interpretRowIdDescriptor( this, rootEntityBinding, creationContext );
-		this.tenantDiscrimination = interpretTenantDiscrimination( this, rootEntityBinding, creationContext );
-		this.naturalIdentifierDescriptor = interpretNaturalIdentifierDescriptor( this, rootEntityBinding, creationContext );
+		this.representationMode = determineRepresentationMode(
+				rootBootDescriptor,
+				rootRuntimeDescriptor,
+				creationContext
+		);
 
-		this.whereFragment = rootEntityBinding.getWhere();
-		this.mutable = rootEntityBinding.isMutable();
-		this.implicitPolymorphismEnabled = !rootEntityBinding.isExplicitPolymorphism();
+		this.optimisticLockStyle = rootBootDescriptor.getEntityMappingHierarchy().getOptimisticLockStyle();
+		this.whereFragment = rootBootDescriptor.getWhere();
+		this.mutable = rootBootDescriptor.isMutable();
+		this.implicitPolymorphismEnabled = !rootBootDescriptor.isExplicitPolymorphism();
 	}
 
 	private RepresentationMode determineRepresentationMode(

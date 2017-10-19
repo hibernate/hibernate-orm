@@ -6,12 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.util.List;
 import javax.persistence.metamodel.IdentifiableType;
-
-import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
-import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 
 /**
  * Hibernate extension SPI for working with {@link IdentifiableType} implementations, which includes
@@ -30,34 +25,4 @@ public interface IdentifiableTypeDescriptor<T> extends InheritanceCapable<T>, Id
 	IdentifiableTypeDescriptor<? super T> getSuperclassType();
 
 	EntityHierarchy getHierarchy();
-
-	/**
-	 * Called after all EntityPersister instance have been created and (at least partially) initialized.
-	 *
-	 * @param entityHierarchy The entity hierarchy descriptor for the entity tree this
-	 * 		identifiable belongs to
-	 * @param superType The entity's super's EntityPersister
-	 * @param bootMapping The mapping object from Hibernate's boot-time model.  Should be
-	 * 		the same mapping instance originally passed to the ctor, but we want to not
-	 * 		have to store that around as instance state - so we pass it in here again
-	 * @param creationContext Access to the database model
-	 */
-	void finishInstantiation(
-			EntityHierarchy entityHierarchy,
-			IdentifiableTypeDescriptor<? super T> superType,
-			IdentifiableTypeMappingImplementor bootMapping,
-			RuntimeModelCreationContext creationContext);
-
-
-	/**
-	 * todo (6.0) : is this needed?
-	 * 		doesn't `#finishInstantiation` cover this need?  ATM it is
-	 * 		(1) not used and (2) an empty impl
-	 */
-	void completeInitialization(
-			EntityHierarchy entityHierarchy,
-			IdentifiableTypeDescriptor<? super T> superType,
-			IdentifiableTypeMappingImplementor bootMapping,
-			RuntimeModelCreationContext creationContext);
-
 }

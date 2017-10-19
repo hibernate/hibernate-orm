@@ -56,6 +56,7 @@ public class EmbeddedTypeDescriptorImpl<T>
 			RuntimeModelCreationContext creationContext) {
 		super(
 				embeddedMapping,
+				null,
 				resolveJtd( creationContext, embeddedMapping ),
 				creationContext
 		);
@@ -96,28 +97,13 @@ public class EmbeddedTypeDescriptorImpl<T>
 
 	@Override
 	public void finishInitialization(
-			InheritanceCapable superType,
 			ManagedTypeMappingImplementor mappingDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		super.finishInitialization( superType, mappingDescriptor, creationContext );
+		super.finishInitialization( mappingDescriptor, creationContext );
 
 		this.representationStrategy = creationContext.getMetadata().getMetadataBuildingOptions()
 				.getRepresentationStrategySelector()
 				.resolveRepresentationStrategy( mappingDescriptor, this, creationContext);
-	}
-
-	@Override
-	public void finishInstantiation(
-			EmbeddedValueMappingImplementor embeddedValueMapping,
-			RuntimeModelCreationContext creationContext) {
-		finishInitialization( null, embeddedValueMapping, creationContext );
-	}
-
-	@Override
-	public void completeInitialization(
-			EmbeddedValueMappingImplementor embeddedValueMapping,
-			RuntimeModelCreationContext creationContext) {
-		// todo (6.0) : I think we will want some form of "after all mappings have been 'initialized' (see #finishInstantiation)"
 	}
 
 	@Override
@@ -155,17 +141,6 @@ public class EmbeddedTypeDescriptorImpl<T>
 	public List<InheritanceCapable<? extends T>> getSubclassTypes() {
 		return Collections.emptyList();
 	}
-
-	@Override
-	public void injectSuperTypeDescriptor(InheritanceCapable<? super T> superType) {
-		throw new UnsupportedOperationException( "Embeddable inheritance is not yet implemented" );
-	}
-
-	@Override
-	public void addSubclassType(InheritanceCapable<? extends T> subclassType) {
-		throw new UnsupportedOperationException( "Embeddable inheritance is not yet implemented" );
-	}
-
 
 
 

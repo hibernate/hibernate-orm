@@ -249,7 +249,7 @@ public class TypeHelper {
 			SessionImplementor session) {
 		// todo (6.0) : better way?
 
-		final List<StateArrayContributor<?>> contributors = managedTypeDescriptor.getStateArrayContributors();
+		final List<StateArrayContributor> contributors = managedTypeDescriptor.getStateArrayContributors();
 
 		final Object[] originalValues = original == null
 				? new Object[ contributors.size() ]

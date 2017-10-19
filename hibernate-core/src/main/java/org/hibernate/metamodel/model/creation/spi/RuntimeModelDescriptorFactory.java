@@ -12,8 +12,8 @@ import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.MappedSuperclassMapping;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.mapping.Collection;
+import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.metamodel.model.domain.internal.MappedSuperclassImpl;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
@@ -37,6 +37,7 @@ public interface RuntimeModelDescriptorFactory extends Service {
 	 * initialized later via its {@link EntityDescriptor#afterInitialize} method during {@link #finishUp}
 	 *
 	 * @param bootMapping The mapping information describing the entity
+	 * @param superTypeDescriptor
 	 * @param creationContext Access to additional information needed to create an EntityPersister
 	 *
 	 * @return An appropriate entity persister instance.
@@ -45,10 +46,12 @@ public interface RuntimeModelDescriptorFactory extends Service {
 	 */
 	<J> EntityDescriptor<J> createEntityDescriptor(
 			EntityMapping bootMapping,
+			InheritanceCapable superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) throws HibernateException;
 
 	<J> MappedSuperclassDescriptor<J> createMappedSuperclassDescriptor(
 			MappedSuperclassMapping bootMapping,
+			InheritanceCapable superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) throws HibernateException;
 
 	/**
@@ -97,7 +100,12 @@ public interface RuntimeModelDescriptorFactory extends Service {
 	/**
 	 * Called after all entity mapping descriptors have been processed.
 	 *
+	 * @apiNote Intended for custom implementors needing to perform some
+	 * logic after all runtime descriptors are built
+	 *
 	 * @param creationContext Access to additional information
 	 */
-	void finishUp(RuntimeModelCreationContext creationContext);
+	default void finishUp(RuntimeModelCreationContext creationContext) {
+		// by default, impls would have nothing to do.
+	}
 }

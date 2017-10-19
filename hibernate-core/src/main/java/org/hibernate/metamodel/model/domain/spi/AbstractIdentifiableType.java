@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.domain.spi;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
-import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 
@@ -17,13 +16,12 @@ import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
  * @author Steve Ebersole
  */
 public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T> implements IdentifiableTypeDescriptor<T> {
-	private EntityHierarchy entityHierarchy;
-
 	public AbstractIdentifiableType(
 			IdentifiableTypeMapping bootMapping,
+			IdentifiableTypeDescriptor<? super T> superTypeDescriptor,
 			IdentifiableJavaDescriptor<T> javaTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		super( bootMapping, javaTypeDescriptor, creationContext );
+		super( bootMapping, superTypeDescriptor, javaTypeDescriptor, creationContext );
 	}
 
 	@Override
@@ -37,33 +35,9 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 	}
 
 	@Override
-	public EntityHierarchy getHierarchy() {
-		return entityHierarchy;
-	}
-
-	@Override
 	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
 		getHierarchy().getIdentifierDescriptor().visitNavigable( visitor );
 		super.visitDeclaredNavigables( visitor );
-	}
-
-	@Override
-	public void finishInstantiation(
-			EntityHierarchy entityHierarchy,
-			IdentifiableTypeDescriptor<? super T> superType,
-			IdentifiableTypeMappingImplementor bootMapping,
-			RuntimeModelCreationContext creationContext) {
-		finishInitialization( entityHierarchy, superType, bootMapping, creationContext );
-	}
-
-	public void finishInitialization(
-			EntityHierarchy entityHierarchy,
-			IdentifiableTypeDescriptor<? super T> superType,
-			IdentifiableTypeMappingImplementor mappingDescriptor,
-			RuntimeModelCreationContext creationContext) {
-		this.entityHierarchy = entityHierarchy;
-
-		super.finishInitialization( superType, mappingDescriptor, creationContext );
 	}
 
 	@Override

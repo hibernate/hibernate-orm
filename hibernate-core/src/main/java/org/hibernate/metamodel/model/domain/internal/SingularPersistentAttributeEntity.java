@@ -85,6 +85,7 @@ public class SingularPersistentAttributeEntity<O,J>
 					"Cannot create SingularPersistentAttributeEntity instance until after associated entity descriptor has been registered"
 			);
 		}
+
 		this.entityDescriptor = context.getTypeConfiguration().findEntityDescriptor( valueMapping.getReferencedEntityName() );
 		this.navigableRole = runtimeModelContainer.getNavigableRole().append( bootModelAttribute.getName() );
 
@@ -102,6 +103,8 @@ public class SingularPersistentAttributeEntity<O,J>
 		}
 
 		this.sqlAliasStem =  SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( bootModelAttribute.getName() );
+
+		instantiationComplete( bootModelAttribute, context );
 	}
 
 	@Override

@@ -12,6 +12,7 @@ import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
 
 /**
  * @author Steve Ebersole
@@ -47,5 +48,7 @@ public interface IdentifiableTypeMappingImplementor extends IdentifiableTypeMapp
 
 	int nextSubclassId();
 
-	<X> IdentifiableTypeDescriptor<X> makeRuntimeDescriptor(RuntimeModelCreationContext context);
+	<X> IdentifiableTypeDescriptor<X> makeRuntimeDescriptor(
+			InheritanceCapable superTypeDescriptor,
+			RuntimeModelCreationContext context);
 }

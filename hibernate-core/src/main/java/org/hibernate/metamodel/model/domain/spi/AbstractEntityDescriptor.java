@@ -23,9 +23,11 @@ import javax.persistence.metamodel.Type;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.EntityMapping;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.MappedTableJoin;
-import org.hibernate.boot.model.domain.spi.EntityMappingImplementor;
+import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
@@ -47,9 +49,11 @@ import org.hibernate.loader.spi.MultiIdLoaderSelectors;
 import org.hibernate.loader.spi.NaturalIdLoader;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.loader.spi.SingleUniqueKeyEntityLoader;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
+import org.hibernate.metamodel.model.domain.internal.EntityHierarchyImpl;
 import org.hibernate.metamodel.model.domain.internal.EntityIdentifierCompositeAggregatedImpl;
 import org.hibernate.metamodel.model.domain.internal.EntityIdentifierSimpleImpl;
 import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
@@ -59,7 +63,6 @@ import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
@@ -90,6 +93,7 @@ public abstract class AbstractEntityDescriptor<T>
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractEntityDescriptor.class );
 
 	private final SessionFactoryImplementor factory;
+	private final EntityHierarchy hierarchy;
 
 	private final NavigableRole navigableRole;
 
@@ -105,12 +109,20 @@ public abstract class AbstractEntityDescriptor<T>
 	@SuppressWarnings("UnnecessaryBoxing")
 	public AbstractEntityDescriptor(
 			EntityMapping bootMapping,
+			IdentifiableTypeDescriptor<? super T> superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) throws HibernateException {
-		super( bootMapping,  resolveJavaTypeDescriptor( creationContext, bootMapping ), creationContext );
+		super(
+				bootMapping,
+				superTypeDescriptor,
+				resolveJavaTypeDescriptor( creationContext, bootMapping ),
+				creationContext
+		);
 
 		this.factory = creationContext.getSessionFactory();
 
 		this.navigableRole = new NavigableRole( bootMapping.getEntityName() );
+
+		this.hierarchy = resolveEntityHierarchy( bootMapping, superTypeDescriptor, creationContext );
 
 		this.rootTable = resolveRootTable( bootMapping, creationContext );
 		this.secondaryTableBindings = resolveSecondaryTableBindings( bootMapping, creationContext );
@@ -132,6 +144,18 @@ public abstract class AbstractEntityDescriptor<T>
 
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( bootMapping.getEntityName() );
 		this.dialect = factory.getServiceRegistry().getService( JdbcServices.class ).getDialect();
+	}
+
+	private EntityHierarchy resolveEntityHierarchy(
+			IdentifiableTypeMapping bootMapping,
+			IdentifiableTypeDescriptor superTypeDescriptor,
+			RuntimeModelCreationContext creationContext) {
+		if ( bootMapping instanceof RootClass ) {
+			return new EntityHierarchyImpl( this, (RootClass) bootMapping, creationContext );
+		}
+		else {
+			return superTypeDescriptor.getHierarchy();
+		}
 	}
 
 	// todo (6.0) : the root-table may not need to be phyically stored here
@@ -187,11 +211,9 @@ public abstract class AbstractEntityDescriptor<T>
 
 	@Override
 	public void finishInitialization(
-			EntityHierarchy entityHierarchy,
-			IdentifiableTypeDescriptor<? super T> superType,
-			EntityMappingImplementor bootDescriptor,
+			ManagedTypeMappingImplementor mappingDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		super.finishInitialization( entityHierarchy, superType, bootDescriptor, creationContext );
+		super.finishInitialization( mappingDescriptor, creationContext );
 
 		log.debugf(
 				"Completed initialization of descriptor [%s] for entity [%s (%s)]",
@@ -204,6 +226,11 @@ public abstract class AbstractEntityDescriptor<T>
 	@Override
 	public SessionFactoryImplementor getFactory() {
 		return factory;
+	}
+
+	@Override
+	public EntityHierarchy getHierarchy() {
+		return hierarchy;
 	}
 
 	@Override

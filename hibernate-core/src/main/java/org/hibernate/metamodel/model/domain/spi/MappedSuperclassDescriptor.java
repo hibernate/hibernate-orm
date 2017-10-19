@@ -11,7 +11,8 @@ import javax.persistence.metamodel.MappedSuperclassType;
 /**
  * @author Steve Ebersole
  */
-public interface MappedSuperclassDescriptor<T> extends IdentifiableTypeDescriptor<T>, MappedSuperclassType<T> {
+public interface MappedSuperclassDescriptor<T>
+		extends IdentifiableTypeDescriptor<T>, MappedSuperclassType<T> {
 	// logically this should change to extend ManagedTypeImplementor instead of IdentifiableTypeImplementor
 	// this would allow us to continue to support the case of MappedSuperclass as super-type of Embeddable.
 	// Hibernate allows this.  JPA does not - MappedSuperclass is only supported as part of an entity hierarchy,

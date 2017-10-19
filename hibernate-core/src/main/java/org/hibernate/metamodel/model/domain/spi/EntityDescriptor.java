@@ -17,11 +17,7 @@ import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.domain.EntityMapping;
-import org.hibernate.boot.model.domain.spi.EntityMappingImplementor;
-import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.cache.spi.access.EntityDataAccess;
-import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -31,13 +27,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.internal.FilterAliasGenerator;
-import org.hibernate.loader.spi.CompositeNaturalIdLoader;
 import org.hibernate.loader.spi.EntityLocker;
 import org.hibernate.loader.spi.MultiIdEntityLoader;
 import org.hibernate.loader.spi.MultiIdLoaderSelectors;
 import org.hibernate.loader.spi.MultiLoadOptions;
 import org.hibernate.loader.spi.NaturalIdLoader;
-import org.hibernate.loader.spi.SimpleNaturalIdLoader;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.loader.spi.SingleUniqueKeyEntityLoader;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -74,25 +68,15 @@ public interface EntityDescriptor<T>
 		extends EntityValuedNavigable<T>, NavigableContainer<T>, EmbeddedContainer<T>,
 				RootTableGroupProducer, IdentifiableTypeDescriptor<T>, EntityType<T>, Filterable {
 
-	// todo (6.0) : ? - can OptimisticCacheSource stuff go away?
-	// 		It was added for caches like JBoss Tree Cache that supported MVCC-based
-	//		transactional consistency via integration with JTA.  Do not believe
-	//		any of our existing cache integrations support MVCC.
-
-
 	/**
 	 * Unless a custom {@link RuntimeModelDescriptorFactory} is used, it is expected
 	 * that implementations of EntityDescriptor define a constructor accepting the following arguments:<ol>
 	 *     <li>
-	 *         {@link org.hibernate.mapping.PersistentClass} - describes the metadata about the entity
-	 *         to be handled by the descriptor
+	 *         {@link EntityMapping} is the boot-model description of the entity
 	 *     </li>
 	 *     <li>
-	 *         {@link EntityDataAccess} - the second level caching strategy for this entity
-	 *     </li>
-	 *     <li>
-	 *         {@link NaturalIdDataAccess} - the second level caching strategy for the natural-id
-	 *         defined for this entity, if one
+	 *         {@link IdentifiableTypeDescriptor} is the runtime-model descriptor of
+	 *         the entity's super type
 	 *     </li>
 	 *     <li>
 	 *         {@link RuntimeModelCreationContext} - access to additional
@@ -102,35 +86,13 @@ public interface EntityDescriptor<T>
 	 */
 	Class[] STANDARD_CONSTRUCTOR_SIG = new Class[] {
 			EntityMapping.class,
+			IdentifiableTypeDescriptor.class,
 			RuntimeModelCreationContext.class
 	};
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Redesigned contract
-
-	/**
-	 * todo (6.0) : is this needed?
-	 *
-	 * @see #completeInitialization
-	 */
-	void postInstantiate();
-
-	/**
-	 * Called after all EntityDescriptor instance for the persistence unit have been created;
-	 *
-	 * @param superType The entity's super's EntityDescriptor
-	 * @param bootDescriptor Should be  the same reference (instance) originally passed to the
-	 * 		ctor, but we want to not have to store that reference as instance state -
-	 * 		so we pass it in again
-	 * @param creationContext Access to the database model, etc
-	 */
-	void finishInitialization(
-			EntityHierarchy entityHierarchy,
-			IdentifiableTypeDescriptor<? super T> superType,
-			EntityMappingImplementor bootDescriptor,
-			RuntimeModelCreationContext creationContext);
-
 
 	/**
 	 * The entity name which this descriptor maps.

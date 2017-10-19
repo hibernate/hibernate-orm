@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
@@ -17,14 +18,14 @@ public abstract class AbstractNonIdSingularPersistentAttribute<O,J>
 		extends AbstractSingularPersistentAttribute<O,J>
 		implements NonIdPersistentAttribute<O,J> {
 
-	private final MutabilityPlan<J> mutabilityPlan;
-
 	private final boolean nullable;
 	private final boolean insertable;
 	private final boolean updatable;
 	private final boolean includedInDirtyChecking;
 
 	private int stateArrayPosition;
+	private MutabilityPlan<J> mutabilityPlan;
+
 
 	public AbstractNonIdSingularPersistentAttribute(
 			ManagedTypeDescriptor<O> runtimeContainer,
@@ -32,10 +33,6 @@ public abstract class AbstractNonIdSingularPersistentAttribute<O,J>
 			PropertyAccess propertyAccess,
 			Disposition disposition) {
 		super( runtimeContainer, bootAttribute, propertyAccess, disposition );
-
-		// todo (6.0) : determine mutability plan based on JTD & @Immutable
-		//		for now just use the JTD MP
-		this.mutabilityPlan = getJavaTypeDescriptor().getMutabilityPlan();
 
 		this.nullable = bootAttribute.isOptional();
 		this.insertable = bootAttribute.isInsertable();
@@ -45,7 +42,15 @@ public abstract class AbstractNonIdSingularPersistentAttribute<O,J>
 
 	@Override
 	public void setStateArrayPosition(int position) {
-		this.stateArrayPosition = position;;
+		this.stateArrayPosition = position;
+	}
+
+	protected void instantiationComplete(
+			PersistentAttributeMapping bootModelAttribute,
+			RuntimeModelCreationContext context) {
+		// todo (6.0) : determine mutability plan based on JTD & @Immutable
+		//		for now just use the JTD MP
+		this.mutabilityPlan = getJavaTypeDescriptor().getMutabilityPlan();
 	}
 
 	@Override

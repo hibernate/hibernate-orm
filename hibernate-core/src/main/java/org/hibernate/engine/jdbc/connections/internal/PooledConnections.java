@@ -22,7 +22,7 @@ public class PooledConnections {
 	private final ConcurrentLinkedQueue<Connection> allConnections = new ConcurrentLinkedQueue<Connection>();
 	private final ConcurrentLinkedQueue<Connection> availableConnections = new ConcurrentLinkedQueue<Connection>();
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( DriverManagerConnectionProviderImpl.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( PooledConnections .class );
 
 	private final ConnectionCreator connectionCreator;
 	private final boolean autoCommit;

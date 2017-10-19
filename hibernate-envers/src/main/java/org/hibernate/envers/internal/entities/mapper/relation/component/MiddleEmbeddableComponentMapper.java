@@ -52,6 +52,10 @@ public class MiddleEmbeddableComponentMapper implements MiddleComponentMapper, C
 			);
 			return componentInstance;
 		}
+		catch (AuditException e) {
+			// just throw the AuditException without wrapping in another AuditException
+			throw e;
+		}
 		catch (Exception e) {
 			throw new AuditException( e );
 		}

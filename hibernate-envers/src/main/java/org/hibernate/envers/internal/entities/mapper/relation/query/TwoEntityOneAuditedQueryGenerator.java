@@ -31,9 +31,9 @@ public final class TwoEntityOneAuditedQueryGenerator extends AbstractRelationQue
 	public TwoEntityOneAuditedQueryGenerator(
 			AuditEntitiesConfiguration verEntCfg, AuditStrategy auditStrategy,
 			String versionsMiddleEntityName, MiddleIdData referencingIdData,
-			MiddleIdData referencedIdData, boolean elementRevisionTypeInId,
+			MiddleIdData referencedIdData, boolean revisionTypeInId,
 			MiddleComponentData... componentData) {
-		super( verEntCfg, referencingIdData, elementRevisionTypeInId, elementRevisionTypeInId );
+		super( verEntCfg, referencingIdData, revisionTypeInId );
 
 		/*
 		 * The valid query that we need to create:
@@ -112,7 +112,7 @@ public final class TwoEntityOneAuditedQueryGenerator extends AbstractRelationQue
 				originalIdPropertyName, MIDDLE_ENTITY_ALIAS, true, componentData
 		);
 		// ee.revision_type != DEL
-		rootParameters.addWhereWithNamedParam( getElementRevisionTypePath(), "!=", DEL_REVISION_TYPE_PARAMETER );
+		rootParameters.addWhereWithNamedParam( getRevisionTypePath(), "!=", DEL_REVISION_TYPE_PARAMETER );
 	}
 
 	/**
@@ -130,7 +130,7 @@ public final class TwoEntityOneAuditedQueryGenerator extends AbstractRelationQue
 		// ee.revision = :revision
 		removed.addWhereWithNamedParam( verEntCfg.getRevisionNumberPath(), "=", REVISION_PARAMETER );
 		// ee.revision_type = DEL
-		removed.addWhereWithNamedParam( getElementRevisionTypePath(), "=", DEL_REVISION_TYPE_PARAMETER );
+		removed.addWhereWithNamedParam( getRevisionTypePath(), "=", DEL_REVISION_TYPE_PARAMETER );
 	}
 
 	@Override

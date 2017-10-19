@@ -35,8 +35,7 @@ public final class QueryGeneratorBuilder {
 	private final MiddleIdData referencingIdData;
 	private final String auditMiddleEntityName;
 	private final List<MiddleIdData> idDatas;
-	private final boolean elementRevisionTypeInId;
-	private final boolean keyRevisionTypeInId;
+	private final boolean revisionTypeInId;
 
 	QueryGeneratorBuilder(
 			GlobalConfiguration globalCfg,
@@ -44,15 +43,13 @@ public final class QueryGeneratorBuilder {
 			AuditStrategy auditStrategy,
 			MiddleIdData referencingIdData,
 			String auditMiddleEntityName,
-			boolean keyRevisionTypeInId,
-			boolean elementRevisionTypeInId) {
+			boolean revisionTypeInId) {
 		this.globalCfg = globalCfg;
 		this.verEntCfg = verEntCfg;
 		this.auditStrategy = auditStrategy;
 		this.referencingIdData = referencingIdData;
 		this.auditMiddleEntityName = auditMiddleEntityName;
-		this.keyRevisionTypeInId = keyRevisionTypeInId;
-		this.elementRevisionTypeInId = elementRevisionTypeInId;
+		this.revisionTypeInId = revisionTypeInId;
 
 		idDatas = new ArrayList<>();
 	}
@@ -65,20 +62,20 @@ public final class QueryGeneratorBuilder {
 		if ( idDatas.size() == 0 ) {
 			return new OneEntityQueryGenerator(
 					verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-					elementRevisionTypeInId, componentDatas
+					revisionTypeInId, componentDatas
 			);
 		}
 		else if ( idDatas.size() == 1 ) {
 			if ( idDatas.get( 0 ).isAudited() ) {
 				return new TwoEntityQueryGenerator(
 						globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-						idDatas.get( 0 ), elementRevisionTypeInId, keyRevisionTypeInId, componentDatas
+						idDatas.get( 0 ), revisionTypeInId, componentDatas
 				);
 			}
 			else {
 				return new TwoEntityOneAuditedQueryGenerator(
 						verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-						idDatas.get( 0 ), elementRevisionTypeInId, componentDatas
+						idDatas.get( 0 ), revisionTypeInId, componentDatas
 				);
 			}
 		}
@@ -92,7 +89,7 @@ public final class QueryGeneratorBuilder {
 
 			return new ThreeEntityQueryGenerator(
 					globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-					idDatas.get( 0 ), idDatas.get( 1 ), elementRevisionTypeInId, componentDatas
+					idDatas.get( 0 ), idDatas.get( 1 ), revisionTypeInId, componentDatas
 			);
 		}
 		else {

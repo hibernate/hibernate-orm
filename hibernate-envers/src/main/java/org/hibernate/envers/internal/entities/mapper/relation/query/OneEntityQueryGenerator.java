@@ -31,7 +31,7 @@ public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerato
 			AuditEntitiesConfiguration verEntCfg, AuditStrategy auditStrategy,
 			String versionsMiddleEntityName, MiddleIdData referencingIdData,
 			boolean revisionTypeInId, MiddleComponentData... componentData) {
-		super( verEntCfg, referencingIdData, revisionTypeInId, revisionTypeInId );
+		super( verEntCfg, referencingIdData, revisionTypeInId );
 
 		/*
 		 * The valid query that we need to create:
@@ -99,7 +99,7 @@ public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerato
 				originalIdPropertyName, MIDDLE_ENTITY_ALIAS, inclusive, componentData
 		);
 		// ee.revision_type != DEL
-		rootParameters.addWhereWithNamedParam( getElementRevisionTypePath(), "!=", DEL_REVISION_TYPE_PARAMETER );
+		rootParameters.addWhereWithNamedParam( getRevisionTypePath(), "!=", DEL_REVISION_TYPE_PARAMETER );
 	}
 
 	/**
@@ -118,7 +118,7 @@ public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerato
 		// ee.revision = :revision
 		removed.addWhereWithNamedParam( verEntCfg.getRevisionNumberPath(), "=", REVISION_PARAMETER );
 		// ee.revision_type = DEL
-		removed.addWhereWithNamedParam( getElementRevisionTypePath(), "=", DEL_REVISION_TYPE_PARAMETER );
+		removed.addWhereWithNamedParam( getRevisionTypePath(), "=", DEL_REVISION_TYPE_PARAMETER );
 	}
 
 	@Override

@@ -76,6 +76,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.BagType;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.ListType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.MapType;
@@ -448,8 +449,7 @@ public final class CollectionMetadataGenerator {
 				mainGenerator.getAuditStrategy(),
 				referencingIdData,
 				auditMiddleEntityName,
-				isKeyRevisionTypeInId(),
-				isElementRevisionTypeInId()
+				isRevisionTypeInId()
 		);
 
 		// Adding the XML mapping for the referencing entity, if the relation isn't inverse.
@@ -471,7 +471,7 @@ public final class CollectionMetadataGenerator {
 				queryGeneratorBuilder,
 				referencedPrefix,
 				propertyAuditingData.getJoinTable().inverseJoinColumns(),
-				!isLobMapElementType() && isMapElementInPrimaryKey()
+				!isLobMapElementType()
 		);
 
 		// ******
@@ -855,9 +855,9 @@ public final class CollectionMetadataGenerator {
 
 		// Adding the revision type property to the entity xml.
 		mainGenerator.addRevisionType(
-				isElementRevisionTypeInId() ? middleEntityXmlId : middleEntityXml,
+				isRevisionTypeInId() ? middleEntityXmlId : middleEntityXml,
 				middleEntityXml,
-				isElementRevisionTypeInId()
+				isRevisionTypeInId()
 		);
 
 		// All other properties should also be part of the primary key of the middle entity.
@@ -1028,7 +1028,7 @@ public final class CollectionMetadataGenerator {
 	 *
 	 * @return {@code true} if the revision type should be part of the primary key, otherwise {@code false}.
 	 */
-	private boolean isElementRevisionTypeInId() {
+	private boolean isRevisionTypeInId() {
 		return isEmbeddableElementType() || isLobMapElementType();
 	}
 

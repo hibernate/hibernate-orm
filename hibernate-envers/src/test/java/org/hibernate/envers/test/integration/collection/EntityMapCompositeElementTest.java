@@ -19,6 +19,8 @@ import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.transaction.TransactionUtil;
 
 import static org.junit.Assert.assertEquals;
@@ -27,6 +29,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Chris Cranford
  */
+@TestForIssue(jiraKey = "HHH-11841")
 public class EntityMapCompositeElementTest extends BaseEnversJPAFunctionalTestCase {
 
 	private Category category;
@@ -51,6 +54,7 @@ public class EntityMapCompositeElementTest extends BaseEnversJPAFunctionalTestCa
 	}
 
 	@Test
+	@FailureExpected(jiraKey = "HHH-11841", message = "Reverted fix in HHH-12018 and will be fixed in HHH-12043")
 	public void testRevisionHistory() {
 		final AuditReader reader = getAuditReader();
 

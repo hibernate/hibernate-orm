@@ -29,18 +29,15 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
 public abstract class AbstractRelationQueryGenerator implements RelationQueryGenerator {
 	protected final AuditEntitiesConfiguration verEntCfg;
 	protected final MiddleIdData referencingIdData;
-	protected final boolean keyRevisionTypeInId;
-	protected final boolean elementRevisionTypeInId;
+	protected final boolean revisionTypeInId;
 
 	protected AbstractRelationQueryGenerator(
 			AuditEntitiesConfiguration verEntCfg,
 			MiddleIdData referencingIdData,
-			boolean keyRevisionTypeInId,
-			boolean elementRevisionTypeInId) {
+			boolean revisionTypeInId) {
 		this.verEntCfg = verEntCfg;
 		this.referencingIdData = referencingIdData;
-		this.keyRevisionTypeInId = keyRevisionTypeInId;
-		this.elementRevisionTypeInId = elementRevisionTypeInId;
+		this.revisionTypeInId = revisionTypeInId;
 	}
 
 	/**
@@ -68,14 +65,6 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 		return query;
 	}
 
-	protected String getElementRevisionTypePath() {
-		return getRevisionTypePath( this.elementRevisionTypeInId );
-	}
-
-	protected String getKeyRevisionTypePath() {
-		return getRevisionTypePath( this.keyRevisionTypeInId );
-	}
-
 	protected String queryToString(QueryBuilder query) {
 		return queryToString( query, Collections.emptyMap() );
 	}
@@ -86,7 +75,7 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 		return sb.toString();
 	}
 
-	private String getRevisionTypePath(boolean revisionTypeInId) {
+	protected String getRevisionTypePath() {
 		return revisionTypeInId
 				? verEntCfg.getOriginalIdPropName() + "." + verEntCfg.getRevisionTypePropName()
 				: verEntCfg.getRevisionTypePropName();

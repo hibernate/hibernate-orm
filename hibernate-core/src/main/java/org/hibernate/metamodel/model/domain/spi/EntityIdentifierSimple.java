@@ -6,6 +6,12 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReferenceSimple;
+import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypedReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+
 /**
  * @author Steve Ebersole
  */
@@ -24,5 +30,23 @@ public interface EntityIdentifierSimple<O,J>
 	@Override
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;
+	}
+
+	@Override
+	default boolean matchesNavigableName(String navigableName) {
+		return LEGACY_NAVIGABLE_ID.equals( navigableName )
+				|| NAVIGABLE_ID.equals( navigableName )
+				|| getAttributeName().equals( navigableName );
+	}
+
+	@Override
+	default SqmNavigableReference createSqmExpression(
+			SqmFrom sourceSqmFrom,
+			SqmNavigableContainerReference containerReference,
+			SqmReferenceCreationContext creationContext) {
+		return new SqmEntityIdentifierReferenceSimple(
+				(SqmEntityTypedReference) containerReference,
+				this
+		);
 	}
 }

@@ -59,15 +59,6 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 	}
 
 	@Override
-	public void finishInstantiation(
-			EntityHierarchy entityHierarchy,
-			IdentifiableTypeDescriptor<? super T> superType,
-			IdentifiableTypeMappingImplementor bootMapping,
-			RuntimeModelCreationContext creationContext) {
-		super.finishInitialization( superType, bootMapping, creationContext );
-	}
-
-	@Override
 	public void completeInitialization(
 			EntityHierarchy entityHierarchy,
 			IdentifiableTypeDescriptor<? super T> superType,

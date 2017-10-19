@@ -69,7 +69,7 @@ public class PathResolverJoinAttributeImpl extends PathResolverBasicImpl {
 			Navigable navigable,
 			EntityValuedExpressableType subclassIndicator) {
 		final SqmAttributeReference attributeBinding = (SqmAttributeReference) context().getParsingContext()
-				.findOrCreateNavigableBinding(
+				.findOrCreateNavigableReference(
 						sourceBinding,
 						navigable
 				);

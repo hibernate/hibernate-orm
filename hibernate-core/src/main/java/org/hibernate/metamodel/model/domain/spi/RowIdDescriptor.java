@@ -38,4 +38,8 @@ public interface RowIdDescriptor<J> extends VirtualNavigable<J>, BasicValuedNavi
 	default ValueBinder getValueBinder() {
 		throw new HibernateException( "Illegal attempt to bind ROW_ID value" );
 	}
+
+	default boolean matchesNavigableName(J navigableName) {
+		return NAVIGABLE_NAME.equals( navigableName );
+	}
 }

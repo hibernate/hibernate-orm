@@ -47,6 +47,15 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 		super.visitDeclaredNavigables( visitor );
 	}
 
+	@Override
+	public void finishInstantiation(
+			EntityHierarchy entityHierarchy,
+			IdentifiableTypeDescriptor<? super T> superType,
+			IdentifiableTypeMappingImplementor bootMapping,
+			RuntimeModelCreationContext creationContext) {
+		finishInitialization( entityHierarchy, superType, bootMapping, creationContext );
+	}
+
 	public void finishInitialization(
 			EntityHierarchy entityHierarchy,
 			IdentifiableTypeDescriptor<? super T> superType,
@@ -80,5 +89,29 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 //		}
 
 		super.visitStateArrayNavigables( consumer );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
+		Navigable<Object> navigable = super.findDeclaredNavigable( navigableName );
+		if ( navigable == null ) {
+			if ( getHierarchy().getRootEntityType().equals( this ) ) {
+				navigable = getHierarchy().findNavigable( navigableName );
+			}
+		}
+
+		return (Navigable<N>) navigable;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Navigable findNavigable(String navigableName) {
+		Navigable<Object> navigable = super.findDeclaredNavigable( navigableName );
+		if ( navigable == null ) {
+			navigable = getHierarchy().findNavigable( navigableName );
+		}
+
+		return navigable;
 	}
 }

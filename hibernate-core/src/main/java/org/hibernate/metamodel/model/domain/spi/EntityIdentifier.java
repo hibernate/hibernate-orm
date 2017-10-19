@@ -60,4 +60,6 @@ public interface EntityIdentifier<O,J> extends Navigable<J>, AllowableParameterT
 	 * Retrieve the columns making up the identifier
 	 */
 	List<Column> getColumns();
+
+	boolean matchesNavigableName(String navigableName);
 }

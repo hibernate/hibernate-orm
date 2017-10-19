@@ -158,7 +158,7 @@ public class PathResolverBasicImpl extends AbstractNavigableBindingResolver {
 			);
 
 			// todo (6.0) : we should probably force these to forcefully resolve the join.
-			return context().getParsingContext().findOrCreateNavigableBinding(
+			return context().getParsingContext().findOrCreateNavigableReference(
 					sourceBinding,
 					navigable
 			);

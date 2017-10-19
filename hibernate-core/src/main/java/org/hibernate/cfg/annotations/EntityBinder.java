@@ -416,6 +416,7 @@ public class EntityBinder {
 			persistentClass.addFilter(filterName, cond, filter.deduceAliasInjectionPoints(), 
 					toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 		}
+
 		LOG.debugf( "Import with entity name %s", name );
 		try {
 			context.getMetadataCollector().addImport( name, persistentClass.getEntityName() );

@@ -61,7 +61,7 @@ public abstract class AbstractNavigableBindingResolver implements NavigableBindi
 			Navigable joinedNavigable,
 			EntityValuedExpressableType subclassIndicator) {
 		final SqmAttributeReference attributeBinding = (SqmAttributeReference) context().getParsingContext()
-				.findOrCreateNavigableBinding( sourceBinding, joinedNavigable );
+				.findOrCreateNavigableReference( sourceBinding, joinedNavigable );
 
 		if ( attributeBinding.getExportedFromElement() == null ) {
 			attributeBinding.injectExportedFromElement(

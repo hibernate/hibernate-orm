@@ -102,7 +102,7 @@ public class ParsingContext {
 		return navigableBindingMap.get( navigable );
 	}
 
-	public SqmNavigableReference findOrCreateNavigableBinding(
+	public SqmNavigableReference findOrCreateNavigableReference(
 			SqmNavigableContainerReference lhs,
 			String navigableName) {
 		final Navigable sqmNavigable = lhs.getReferencedNavigable().findNavigable( navigableName );
@@ -118,10 +118,10 @@ public class ParsingContext {
 			);
 		}
 
-		return findOrCreateNavigableBinding( lhs, sqmNavigable );
+		return findOrCreateNavigableReference( lhs, sqmNavigable );
 	}
 
-	public SqmNavigableReference findOrCreateNavigableBinding(
+	public SqmNavigableReference findOrCreateNavigableReference(
 			SqmNavigableContainerReference lhs,
 			Navigable navigable) {
 		Map<Navigable,SqmNavigableReference> bindingsMap = null;

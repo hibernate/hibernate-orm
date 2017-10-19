@@ -18,9 +18,7 @@ import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
 public interface DiscriminatorDescriptor<J>
 		extends VirtualNavigable<J>, BasicValuedNavigable<J>, StateArrayContributor<J>, DomainTypeExposer<J> {
 
-	// todo (6.0) : why does this implement PersistentAttribute?
-	//		we do not support a model exposing the discriminator as a real attribute
-	// 		`@Discriminator` is only valid on TYPE
+	public static final String NAVIGABLE_NAME = "{type}";
 
 	/**
 	 * The mappings for `entity-name` <--> `discriminator-value` for this
@@ -74,6 +72,10 @@ public interface DiscriminatorDescriptor<J>
 	@Override
 	default MutabilityPlan<J> getMutabilityPlan() {
 		return ImmutableMutabilityPlan.INSTANCE;
+	}
+
+	default boolean matchesNavigableName(J navigableName) {
+		return NAVIGABLE_NAME.equals( navigableName );
 	}
 }
 

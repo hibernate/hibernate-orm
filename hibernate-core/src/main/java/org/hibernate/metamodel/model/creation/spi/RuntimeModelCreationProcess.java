@@ -215,6 +215,10 @@ public class RuntimeModelCreationProcess {
 				creationContext
 		);
 
+		if ( runtimeType instanceof EntityDescriptor ) {
+			creationContext.registerEntityDescriptor( (EntityDescriptor) runtimeType, (EntityMapping) bootType );
+		}
+
 		for ( IdentifiableTypeMapping subTypeMapping : bootType.getSubTypeMappings() ) {
 			finishInitialization(
 					runtimeByBoot.get( subTypeMapping ),

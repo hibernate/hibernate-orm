@@ -89,4 +89,21 @@ public interface EntityHierarchy {
 	boolean isImplicitPolymorphismEnabled();
 
 	void finishInitialization(RuntimeModelCreationContext creationContext, RootClass mappingType);
+
+	default Navigable findNavigable(String navigableName) {
+		if ( getIdentifierDescriptor().matchesNavigableName( navigableName ) ) {
+			return getIdentifierDescriptor();
+		}
+
+		if ( getDiscriminatorDescriptor() != null
+				&& getDiscriminatorDescriptor().matchesNavigableName( navigableName ) ) {
+			return getDiscriminatorDescriptor();
+		}
+
+		if ( getRowIdDescriptor() != null && getRowIdDescriptor().matchesNavigableName( navigableName ) ) {
+			return getRowIdDescriptor();
+		}
+
+		return null;
+	}
 }

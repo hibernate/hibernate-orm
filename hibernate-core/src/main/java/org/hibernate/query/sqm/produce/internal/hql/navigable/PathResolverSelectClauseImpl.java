@@ -25,7 +25,7 @@ public class PathResolverSelectClauseImpl extends PathResolverBasicImpl {
 
 	@Override
 	protected SqmNavigableReference resolveTerminalAttributeBinding(SqmNavigableContainerReference sourceBinding, String terminalName) {
-		SqmNavigableReference attrBinding = context().getParsingContext().findOrCreateNavigableBinding( sourceBinding, terminalName );
+		SqmNavigableReference attrBinding = context().getParsingContext().findOrCreateNavigableReference( sourceBinding, terminalName );
 		resolveAttributeJoinIfNot( attrBinding );
 		return attrBinding;
 	}

@@ -504,10 +504,9 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		log.tracef( "Handling #sessionFactoryClosed from [%s] for TypeConfiguration", factory );
 		scope.unsetSessionFactory( factory );
 
-		// todo : come back and implement this...
+		// todo (6.0) : finish this
 		//		release Database, descriptor Maps, etc... things that are only
 		// 		valid while the TypeConfiguration is scoped to SessionFactory
-		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	// todo (6.0) - have this algorithm be extendable by users.
@@ -763,45 +762,45 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SF-based initialization
 
-	public void register(EntityDescriptor entityentityDescriptor) {
-		entityDescriptorMap.put( entityentityDescriptor.getEntityName(), entityentityDescriptor );
-		entityHierarchies.add( entityentityDescriptor.getHierarchy() );
+	public void register(EntityDescriptor entityDescriptor) {
+		entityDescriptorMap.put( entityDescriptor.getEntityName(), entityDescriptor );
+		entityHierarchies.add( entityDescriptor.getHierarchy() );
 
-		if ( entityentityDescriptor.getConcreteProxyClass() != null
-				&& entityentityDescriptor.getConcreteProxyClass().isInterface()
-				&& !Map.class.isAssignableFrom( entityentityDescriptor.getConcreteProxyClass() )
-				&& entityentityDescriptor.getMappedClass() != entityentityDescriptor.getConcreteProxyClass() ) {
+		if ( entityDescriptor.getConcreteProxyClass() != null
+				&& entityDescriptor.getConcreteProxyClass().isInterface()
+				&& !Map.class.isAssignableFrom( entityDescriptor.getConcreteProxyClass() )
+				&& entityDescriptor.getMappedClass() != entityDescriptor.getConcreteProxyClass() ) {
 			// IMPL NOTE : we exclude Map based proxy interfaces here because that should
 			//		indicate MAP entity mode.0
 
-			if ( entityentityDescriptor.getMappedClass().equals( entityentityDescriptor.getConcreteProxyClass() ) ) {
+			if ( entityDescriptor.getMappedClass().equals( entityDescriptor.getConcreteProxyClass() ) ) {
 				// this part handles an odd case in the Hibernate test suite where we map an interface
 				// as the class and the proxy.  I cannot think of a real life use case for that
 				// specific test, but..
 				log.debugf(
 						"Entity [%s] mapped same interface [%s] as class and proxy",
-						entityentityDescriptor.getEntityName(),
-						entityentityDescriptor.getMappedClass()
+						entityDescriptor.getEntityName(),
+						entityDescriptor.getMappedClass()
 				);
 			}
 			else {
-				final JavaTypeDescriptor proxyInterfaceJavaDescriptor = getJavaTypeDescriptorRegistry().getDescriptor( entityentityDescriptor.getConcreteProxyClass() );
-				final String old = entityProxyInterfaceMap.put( proxyInterfaceJavaDescriptor, entityentityDescriptor.getEntityName() );
+				final JavaTypeDescriptor proxyInterfaceJavaDescriptor = getJavaTypeDescriptorRegistry().getDescriptor( entityDescriptor.getConcreteProxyClass() );
+				final String old = entityProxyInterfaceMap.put( proxyInterfaceJavaDescriptor, entityDescriptor.getEntityName() );
 				if ( old != null ) {
 					throw new HibernateException(
 							String.format(
 									Locale.ENGLISH,
 									"Multiple entities [%s, %s] named the same interface [%s] as their proxy which is not supported",
 									old,
-									entityentityDescriptor.getEntityName(),
-									entityentityDescriptor.getConcreteProxyClass().getName()
+									entityDescriptor.getEntityName(),
+									entityDescriptor.getConcreteProxyClass().getName()
 							)
 					);
 				}
 			}
 		}
 
-		registerEntityNameResolvers( entityentityDescriptor );
+		registerEntityNameResolvers( entityDescriptor );
 	}
 
 	public void register(PersistentCollectionDescriptor collectionDescriptor) {

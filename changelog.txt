@@ -3,7 +3,62 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
-Changes in 5.2.10.Final (September 13, 2017)
+
+Changes in 5.2.12.Final (October 19, 2017)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/31000
+
+** Bug
+    * [HHH-3870] - Hibernate proxies Groovy's getMetaClass method breaking proxies when used with Groovy
+    * [HHH-7842] - Hibernate Criteria does not respect fetch mode, when alias is used
+    * [HHH-11615] - Envers integration tests fail when WildFly security manager is enabled
+    * [HHH-11640] - NamedQuery doesn't log comment when UPDATE/DELETE
+    * [HHH-11651] - unwrapping errors in multiple classes
+    * [HHH-11656] - Optimistic Locking with HANA Dialect results in invalid SQL syntax.
+    * [HHH-11732] - HHH000352: in StatelessSession on rollback with JDBC batch
+    * [HHH-11816] - JoinProcessor considers table names with colons dynamic filter parameters
+    * [HHH-11838] - Id retrieving from proxy with FK leads to query execution
+    * [HHH-11863] - Implement REF_CURSOR support for StoredProcedureQuery.getOutputParameterValue(4);
+    * [HHH-11965] - Using unproxy in getter does not work properly
+    * [HHH-11969] - hibernate-spatial requires old 9.4-1200-jdbc41 dependency
+    * [HHH-11970] - Use of @NotFound(IGNORE) and @BatchSize when there are unresolved foreign key values results in extra queries
+    * [HHH-11971] - QueryParameterBindingValidator does not handle primitive types
+    * [HHH-11980] - MultiTenantConnectionProvider is required for MultiTenancyStrategy.DISCRIMINATOR
+    * [HHH-11988] - Envers creates unnecessary audit records for unchanged BigDecimal values
+    * [HHH-11996] - order_inserts causing constraint violation
+    * [HHH-11997] - EntityManager.createNamedQuery throwing illegalstateexception
+    * [HHH-12018] - NonUniqueObjectException when trying to update audited ElementCollection
+    * [HHH-12022] - hibernate-spatial adds org.slf4j:slf4j-simple:jar:1.7.7:runtime dependency
+
+** New Feature
+    * [HHH-6382] - Support OnDelete=OnDeleteAction.CASCADE for unidirectional OneToMany ( JPA )
+    * [HHH-11984] - Add support for navigating between different doc versions
+    * [HHH-12006] - Make User Guide sections bookmark-able
+    * [HHH-12020] - Add SAP HANA to the list of provided dialects
+    * [HHH-12021] - Fix tests failing on SAP HANA
+    * [HHH-12033] - README.md links should use Markdown notation instead of AsciiDoc
+
+** Task
+    * [HHH-11507] - Upgrade to Gradle 4.2
+    * [HHH-12001] - Allow ORM to be built with Java 9
+    * [HHH-12010] - Improve documentation for computeAggregationInInstanceContext
+
+** Improvement
+    * [HHH-2897] - Adding support for use of sequence objects in DB2 V8 OS390
+    * [HHH-9576] - Use JDBC bind variables for handling JPA Criteria query numeric literals
+    * [HHH-11999] - Envers documentation issues
+    * [HHH-12026] - Make sure that search icon is rendered correctly in TOC
+    * [HHH-12037] - Remove unused code in ArrayHelper
+    * [HHH-12042] - Update to latest geolatte-geom version
+
+** Deprecation
+    * [HHH-11989] - Deprecate LogicalConnectionImplementor#makeShareableCopy
+
+** Remove Feature
+    * [HHH-11906] - Add support for MySQL query optimizer hints
+
+
+Changes in 5.2.11.Final (September 13, 2017)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/28600/
 

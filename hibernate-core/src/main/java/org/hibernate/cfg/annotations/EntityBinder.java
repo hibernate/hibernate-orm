@@ -967,4 +967,66 @@ public class EntityBinder {
 
 		return accessType;
 	}
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("EntityBinder [name=");
+        builder.append(name);
+        builder.append(", persistentClass=");
+        builder.append(persistentClass);
+//        builder.append(", mappings=");
+//        builder.append(mappings);
+        builder.append(", discriminatorValue=");
+        builder.append(discriminatorValue);
+        builder.append(", forceDiscriminator=");
+        builder.append(forceDiscriminator);
+        builder.append(", insertableDiscriminator=");
+        builder.append(insertableDiscriminator);
+        builder.append(", dynamicInsert=");
+        builder.append(dynamicInsert);
+        builder.append(", dynamicUpdate=");
+        builder.append(dynamicUpdate);
+        builder.append(", explicitHibernateEntityAnnotation=");
+        builder.append(explicitHibernateEntityAnnotation);
+        builder.append(", optimisticLockType=");
+        builder.append(optimisticLockType);
+        builder.append(", polymorphismType=");
+        builder.append(polymorphismType);
+        builder.append(", selectBeforeUpdate=");
+        builder.append(selectBeforeUpdate);
+        builder.append(", batchSize=");
+        builder.append(batchSize);
+        builder.append(", lazy=");
+        builder.append(lazy);
+        builder.append(", where=");
+        builder.append(where);
+//        builder.append(", secondaryTables=");
+//        builder.append(secondaryTables);
+//        builder.append(", secondaryTableJoins=");
+//        builder.append(secondaryTableJoins);
+        builder.append(", cacheConcurrentStrategy=");
+        builder.append(cacheConcurrentStrategy);
+        builder.append(", cacheRegion=");
+        builder.append(cacheRegion);
+//        builder.append(", filters=");
+//        builder.append(filters);
+//        builder.append(", inheritanceState=");
+//        builder.append(inheritanceState);
+        builder.append(", ignoreIdAnnotations=");
+        builder.append(ignoreIdAnnotations);
+        builder.append(", cacheLazyProperty=");
+        builder.append(cacheLazyProperty);
+        builder.append(", propertyAccessType=");
+        builder.append(propertyAccessType);
+        builder.append(", wrapIdsInEmbeddedComponents=");
+        builder.append(wrapIdsInEmbeddedComponents);
+        builder.append(", subselect=");
+        builder.append(subselect);
+        builder.append("]");
+        return builder.toString();
+    }
+
+
+
 }

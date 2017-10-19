@@ -710,6 +710,7 @@ public final class AnnotationBinder {
 		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Table.class ) );
 		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Tables.class ) );
 
+		LOG.infof("AnnotationBinder processed annotations for class %s - %s", clazzToProcess.getName(), entityBinder);
 	}
 
 	// parse everything discriminator column relevant in case of single table inheritance

@@ -6,17 +6,9 @@
  */
 package org.hibernate.orm.test.query.sqm.produce;
 
-import java.time.Instant;
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
+import org.hibernate.orm.test.query.sqm.produce.domain.Person;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
@@ -39,10 +31,18 @@ import static org.junit.Assert.assertThat;
  * @author Steve Ebersole
  */
 public class CaseExpressionsTest extends BaseSqmUnitTest {
+
+	@Override
+	protected void applyMetadataSources(MetadataSources metadataSources) {
+		super.applyMetadataSources( metadataSources );
+
+		metadataSources.addAnnotatedClass( Person.class );
+	}
+
 	@Test
 	public void testBasicSimpleCaseExpression() {
 		SqmSelectStatement select = interpretSelect(
-				"select p from Person p where p.numberOfToes = case p.name.first when 'Steve' then 6 else 8 end"
+				"select p from Person p where p.numberOfToes = case p.dob when ?1 then 6 else 8 end"
 		);
 
 		final RelationalSqmPredicate predicate = cast(
@@ -72,7 +72,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 	@Test
 	public void testBasicSearchedCaseExpression() {
 		SqmSelectStatement select = interpretSelect(
-				"select p from Person p where p.numberOfToes = case when p.name.first = 'Steve' then 6 else 8 end"
+				"select p from Person p where p.numberOfToes = case when p.dob = ?1 then 6 else 8 end"
 		);
 
 		final RelationalSqmPredicate predicate = cast(
@@ -94,7 +94,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 	@Test
 	public void testBasicCoalesceExpression() {
 		SqmSelectStatement select = interpretSelect(
-				"select coalesce(p.nickName,p.name.first,p.name.last) from Person p"
+				"select coalesce(p.nickName, p.mate.nickName) from Person p"
 		);
 
 		assertThat( select.getQuerySpec().getSelectClause().getSelections(), hasSize( 1 ) );
@@ -104,14 +104,14 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 				SqmCoalesceFunction.class
 		);
 
-		assertThat( coalesce.getArguments(), hasSize( 3 ) );
+		assertThat( coalesce.getArguments(), hasSize( 2 ) );
 		assertEquals( coalesce.getJavaTypeDescriptor().getJavaType(), String.class );
 	}
 
 	@Test
 	public void testBasicNullifExpression() {
 		SqmSelectStatement select = interpretSelect(
-				"select nullif(p.nickName, p.name.first) from Person p"
+				"select nullif(p.nickName, p.mate.nickName) from Person p"
 		);
 
 		assertThat( select.getQuerySpec().getSelectClause().getSelections(), hasSize( 1 ) );
@@ -123,36 +123,4 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 		assertEquals( nullif.getJavaTypeDescriptor().getJavaType(), String.class );
 	}
 
-
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-
-		metadataSources.addAnnotatedClass( Person.class );
-	}
-
-	@Entity( name = "Person" )
-	public static class Person {
-		@Embeddable
-		public static class Name {
-			public String first;
-			public String last;
-		}
-
-		@Id
-		public Integer pk;
-
-		@Embedded
-		public Person.Name name;
-
-		public String nickName;
-
-		@ManyToOne
-		Person mate;
-
-		@Temporal( TemporalType.TIMESTAMP )
-		public Instant dob;
-
-		public int numberOfToes;
-	}
 }

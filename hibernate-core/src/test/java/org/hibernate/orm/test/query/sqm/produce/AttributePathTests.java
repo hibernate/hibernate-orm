@@ -6,18 +6,11 @@
  */
 package org.hibernate.orm.test.query.sqm.produce;
 
-import java.time.Instant;
 import java.util.List;
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
+import org.hibernate.orm.test.query.sqm.produce.domain.Person;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
@@ -37,6 +30,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Steve Ebersole
  */
 public class AttributePathTests extends BaseSqmUnitTest {
+
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {
 		super.applyMetadataSources( metadataSources );
@@ -46,7 +40,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testImplicitJoinReuse() {
-		final SqmSelectStatement statement = interpretSelect( "select s.mate.name.first, s.mate.name.last from Person s" );
+		final SqmSelectStatement statement = interpretSelect( "select s.mate.dob, s.mate.numberOfToes from Person s" );
 
 		assertThat( statement.getQuerySpec().getFromClause().getFromElementSpaces().size(), is(1) );
 		final SqmFromElementSpace space = statement.getQuerySpec().getFromClause().getFromElementSpaces().get( 0 );
@@ -61,8 +55,8 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		assertThat( selections.size(), is(2) );
 
 		// expression paths
-		assertPropertyPath( (SqmExpression) selections.get( 0 ).getSelectableNode(), Person.class.getName() + "(s).mate.name.first" );
-		assertPropertyPath( (SqmExpression) selections.get( 1 ).getSelectableNode(), Person.class.getName() + "(s).mate.name.last" );
+		assertPropertyPath( (SqmExpression) selections.get( 0 ).getSelectableNode(), Person.class.getName() + "(s).mate.dob" );
+		assertPropertyPath( (SqmExpression) selections.get( 1 ).getSelectableNode(), Person.class.getName() + "(s).mate.numberOfToes" );
 	}
 
 	private void assertPropertyPath(SqmExpression expression, String expectedFullPath) {
@@ -73,7 +67,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testImplicitJoinReuse2() {
-		final SqmSelectStatement statement = interpretSelect( "select s.mate from Person s where s.mate.name.first = ?1" );
+		final SqmSelectStatement statement = interpretSelect( "select s.mate from Person s where s.mate.dob = ?1" );
 
 		assertThat( statement.getQuerySpec().getFromClause().getFromElementSpaces().size(), is(1) );
 		final SqmFromElementSpace space = statement.getQuerySpec().getFromClause().getFromElementSpaces().get( 0 );
@@ -96,32 +90,13 @@ public class AttributePathTests extends BaseSqmUnitTest {
 
 		// expression paths
 		assertPropertyPath( (SqmExpression) selection.getSelectableNode(), Person.class.getName() + "(s).mate" );
-		assertPropertyPath( predicateLhs, Person.class.getName() + "(s).mate.name.first" );
+		assertPropertyPath( predicateLhs, Person.class.getName() + "(s).mate.dob" );
 	}
 
-	@Entity( name = "Person" )
-	public static class Person {
-		@Embeddable
-		public static class Name {
-			public String first;
-			public String last;
-		}
-
-		@Id
-		public Integer pk;
-
-		@Embedded
-		public Name name;
-
-		public String nickName;
-
-		@ManyToOne
-		Person mate;
-
-		@Temporal( TemporalType.TIMESTAMP )
-		public Instant dob;
-
-		public int numberOfToes;
+	@Test
+	public void testEntityIdReferences() {
+		interpretSelect( "select s.mate from Person s where s.id = ?1" );
+		interpretSelect( "select s.mate from Person s where s.{id} = ?1" );
+		interpretSelect( "select s.mate from Person s where s.pk = ?1" );
 	}
-
 }

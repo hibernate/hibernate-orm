@@ -7,10 +7,10 @@
 package org.hibernate.orm.test.query.sqm.produce;
 
 import java.util.List;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.orm.test.support.domains.gambit.EntityWithManyToOneSelfReference;
+import org.hibernate.orm.test.support.domains.gambit.SimpleEntity;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
@@ -43,14 +43,13 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 	public void testDuplicateResultVariableCollision() {
 		// in both cases the query is using an alias (`b`) as 2 different
 		// select-clause result variables - that's an error
-		interpretSelect( "select a.address as b, a.name as b from Anything a" );
-
-		interpretSelect( "select a.address as b, a.address as b from Anything a" );
+		interpretSelect( "select a.someString as b, a.someInteger as b from SimpleEntity a" );
+		interpretSelect( "select a.someInteger as b, a.someInteger as b from SimpleEntity a" );
 	}
 
 	@Test(expected = AliasCollisionException.class)
 	public void testResultVariableRenamesIdentificationVariableCollision() {
-		interpretSelect( "select a.basic as a from Anything as a" );
+		interpretSelect( "select a.someString as a from SimpleEntity as a" );
 
 		// NOTE that there is a special form of this rule.  consider:
 		//
@@ -64,20 +63,20 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 
 	@Test(expected = AliasCollisionException.class)
 	public void testDuplicateIdentificationVariableCollision() {
-		interpretSelect( "select a from Anything as a, SomethingElse as a" );
+		interpretSelect( "select a from SimpleEntity as a, SimpleEntity as a" );
 		interpretSelect(
-				"select a.address as b, a.basic as c from Anything a where a.basic2 in " +
-				"(select b.basic3 as e from SomethingElse as b, Something as b)"
+				"select a.someString as b, a.someInteger as c from SimpleEntity a where a.someLong in " +
+				"(select b.someLong as e from SimpleEntity as b, SimpleEntity as b)"
 		);
 		interpretSelect(
-				"select a from Something a left outer join a.entity a on a.basic1 > 5"
+				"select a from EntityWithManyToOneSelfReference a left outer join a.other a on a.someInteger > 5"
 		);
 
 	}
 
 	@Test
 	public void testSameIdentificationVariablesInSubquery() {
-		final String query = "select a from Anything a where a.basic1 in ( select a from SomethingElse a where a.basic = 5)";
+		final String query = "select a from SimpleEntity a where a.someString in (select a.someString from SimpleEntity a where a.someInteger = 5)";
 		final SqmSelectStatement sqm = interpretSelect( query );
 
 		final SqmQuerySpec querySpec = sqm.getQuerySpec();
@@ -105,8 +104,8 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 
 	@Test
 	public void testSubqueryUsingIdentificationVariableDefinedInRootQuery() {
-		final String query = "select a from Anything a where a.basic in " +
-				"( select b.basic from SomethingElse b where a.basic = b.basic2 )";
+		final String query = "select a from SimpleEntity a where a.someString in " +
+				"( select b.someString from SimpleEntity b where a.someLong = b.someLong )";
 		final SqmSelectStatement sqm = interpretSelect( query );
 
 		final SqmQuerySpec querySpec = sqm.getQuerySpec();
@@ -147,61 +146,8 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 	protected void applyMetadataSources(MetadataSources metadataSources) {
 		super.applyMetadataSources( metadataSources );
 
-		metadataSources.addAnnotatedClass( Entity.class );
-		metadataSources.addAnnotatedClass( Anything.class );
-		metadataSources.addAnnotatedClass( Something.class );
-		metadataSources.addAnnotatedClass( SomethingElse.class );
-	}
-
-	@javax.persistence.Entity( name = "Entity" )
-	public static class Entity {
-		@Id
-		public Integer id;
-
-		String basic;
-		String basic1;
-	}
-
-	@javax.persistence.Entity( name = "Anything" )
-	public static class Anything {
-		@Id
-		public Integer id;
-
-		String address;
-		String name;
-		Long basic;
-		Long basic1;
-		Long basic2;
-		Long basic3;
-		Long b;
-	}
-
-	@javax.persistence.Entity( name = "Something" )
-	public static class Something {
-		@Id
-		public Integer id;
-
-		Long basic;
-		Long basic1;
-		Long basic2;
-		Long basic3;
-		Long basic4;
-
-		@ManyToOne
-		Entity entity;
-	}
-
-	@javax.persistence.Entity( name = "SomethingElse" )
-	public static class SomethingElse {
-		@Id
-		public Integer id;
-
-		Long basic;
-		Long basic1;
-		Long basic2;
-		Long basic3;
-
-		@ManyToOne
-		Entity entity;
+		metadataSources.addAnnotatedClass( EntityWithManyToOneSelfReference.class );
+		metadataSources.addAnnotatedClass( SimpleEntity.class );
+		metadataSources.addAnnotatedClass( EntityWithManyToOneSelfReference.class );
 	}
 }

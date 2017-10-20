@@ -250,11 +250,28 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				);
 			}
 			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn( buildingContext );
-			joinColumn.setJoinAnnotation( ann, null );
-			if ( StringHelper.isEmpty( joinColumn.getLogicalColumnName().getText() )
-				&& ! StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
-				joinColumn.setLogicalColumnName( propertyName + suffixForDefaultColumnName );
+			if ( BinderHelper.isEmptyAnnotationValue( ann.name() ) ) {
+				final String baseName;
+				if ( StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
+					baseName = propertyName;
+				}
+				else {
+					baseName = propertyName + suffixForDefaultColumnName;
+				}
+
+				joinColumn.setLogicalColumnName(
+						Ejb3Column.buildLogicalName(
+								buildingContext.getMetadataCollector().getDatabase(),
+								baseName
+						)
+				);
 			}
+			else {
+				joinColumn.setLogicalColumnName(
+						buildingContext.getMetadataCollector().getDatabase().toIdentifier( ann.name() )
+				);
+			}
+			joinColumn.setJoinAnnotation( ann, null );
 			joinColumn.setJoins( joins );
 			joinColumn.setPropertyHolder( propertyHolder );
 			joinColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );

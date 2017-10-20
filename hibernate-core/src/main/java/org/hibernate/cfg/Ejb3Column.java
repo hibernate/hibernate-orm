@@ -623,7 +623,7 @@ public class Ejb3Column {
 		return col.scale();
 	}
 
-	private static Identifier buildLogicalName(Database database, String name) {
+	public static Identifier buildLogicalName(Database database, String name) {
 		return database.getJdbcEnvironment()
 				.getIdentifierHelper()
 				.toIdentifier( name );
@@ -707,15 +707,18 @@ public class Ejb3Column {
 
 		// property name + suffix is an "explicit" column name
 		if ( !StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
-			column.setLogicalColumnName( buildLogicalName(
-					context.getMetadataCollector().getDatabase(),
-					propertyName + suffixForDefaultColumnName
-			) );
+			column.setLogicalColumnName(
+					buildLogicalName(
+							context.getMetadataCollector().getDatabase(),
+							propertyName + suffixForDefaultColumnName
+					)
+			);
 			column.setImplicit( false );
 		}
 		else {
 			column.setImplicit( true );
 		}
+
 		applyColumnDefault( column, inferredData );
 		column.extractDataFromPropertyData( inferredData );
 		column.bind();

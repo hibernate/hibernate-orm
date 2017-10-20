@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.persistence.metamodel.Type.PersistenceType;
@@ -324,7 +325,13 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 
 	@Override
 	public String toString() {
-		return getClass().getName() + '(' + properties.toString() + ')';
+		return String.format(
+				Locale.ROOT,
+				"%s( %s : %s )",
+				getClass().getSimpleName(),
+				getRoleName(),
+				getTypeName()
+		);
 	}
 
 	private IdentifierGenerator builtIdentifierGenerator;

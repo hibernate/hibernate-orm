@@ -6,18 +6,11 @@
  */
 package org.hibernate.orm.test.query.sqm.produce;
 
-import java.time.Instant;
 import java.util.List;
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
+import org.hibernate.orm.test.query.sqm.produce.domain.Person;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -25,7 +18,6 @@ import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -51,6 +43,14 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class FromClauseTests extends BaseSqmUnitTest {
+
+	@Override
+	protected void applyMetadataSources(MetadataSources metadataSources) {
+		super.applyMetadataSources( metadataSources );
+
+		metadataSources.addAnnotatedClass( Person.class );
+	}
+
 	@Test
 	public void testSimpleFrom() {
 		final SqmSelectStatement selectStatement = interpretSelect( "select p.nickName from Person p" );
@@ -200,15 +200,15 @@ public class FromClauseTests extends BaseSqmUnitTest {
 				"c"
 		);
 
-		final SqmJoin join = selectStatement.getQuerySpec()
-				.getFromClause()
-				.getFromElementSpaces()
-				.get( 0 )
-				.getJoins()
-				.get( 0 );
-
 		// todo (6.0) : check join restrictions
 		//		not yet tracked, nor exposed.  SqmPredicate
+
+//		final SqmJoin join = selectStatement.getQuerySpec()
+//				.getFromClause()
+//				.getFromElementSpaces()
+//				.get( 0 )
+//				.getJoins()
+//				.get( 0 );
 	}
 
 	@Test
@@ -268,7 +268,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testCrossSpaceReferencesFail() {
-		final String query = "select p from Person p, Person p2 join Person p3 on p3.id = p.id ";
+		final String query = "select p from Person p, Person p2 join Person p3 on p3.id = p.id";
 		try {
 			interpretSelect( query );
 			fail( "Expecting failure" );
@@ -279,36 +279,4 @@ public class FromClauseTests extends BaseSqmUnitTest {
 		}
 	}
 
-
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-
-		metadataSources.addAnnotatedClass( Person.class );
-	}
-
-	@Entity( name = "Person" )
-	public static class Person {
-		@Embeddable
-		public static class Name {
-			public String first;
-			public String last;
-		}
-
-		@Id
-		public Integer pk;
-
-		@Embedded
-		public Person.Name name;
-
-		public String nickName;
-
-		@ManyToOne
-		Person mate;
-
-		@Temporal( TemporalType.TIMESTAMP )
-		public Instant dob;
-
-		public int numberOfToes;
-	}
 }

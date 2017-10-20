@@ -157,11 +157,13 @@ public final class RuntimeModelDescriptorFactoryImpl
 		try {
 			final Constructor<? extends MappedSuperclassDescriptor> constructor = descriptorClass.getConstructor( MappedSuperclassDescriptor.STANDARD_CONSTRUCTOR_SIG );
 			try {
-				return constructor.newInstance(
+				final MappedSuperclassDescriptor descriptor = constructor.newInstance(
 						bootMapping,
 						superTypeDescriptor,
 						creationContext
 				);
+				creationContext.registerMappedSuperclassDescriptor( descriptor, bootMapping );
+				return descriptor;
 			}
 			catch (MappingException e) {
 				throw e;
@@ -214,12 +216,14 @@ public final class RuntimeModelDescriptorFactoryImpl
 		try {
 			Constructor<? extends PersistentCollectionDescriptor> constructor = persisterClass.getConstructor( PersistentCollectionDescriptor.CONSTRUCTOR_SIGNATURE );
 			try {
-				return constructor.newInstance(
+				final PersistentCollectionDescriptor descriptor = constructor.newInstance(
 						collectionBinding,
 						source,
 						localName,
 						creationContext
 				);
+				creationContext.registerCollectionDescriptor( descriptor, collectionBinding );
+				return descriptor;
 			}
 			catch (MappingException e) {
 				throw e;

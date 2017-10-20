@@ -19,6 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.MappedSuperclassMapping;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -140,6 +141,7 @@ public class RuntimeModelCreationProcess {
 					rootEntityDescriptor,
 					creationContext
 			);
+
 			walkSubs(
 					bootHierarchy.getRootType(),
 					runtimeHierarchy,
@@ -152,6 +154,16 @@ public class RuntimeModelCreationProcess {
 		//		their hierarchies have been linked.  Allow the ManagedTypeDescriptors
 		// 		to finish their initialization, which involves building attributes
 		//		etc
+		//
+		// NOTE 2 : notice that we iterate the "root root" which is the IdentifiableTypeDescriptor
+		//		that is the "very top" of the hierarchy, as opposed to the "root entity" which
+		//		is the first entity in that hierarchy.  This "root entity" is very special in
+		//		Hibernate (and JPA overall) because it defines many values pertaining to or
+		//		applied to the hierarchy as a whole (identifier, version, etc).  The "root entity"
+		//		may very well be the "root root" as well.
+		//
+		//		Anyway, the point here is that we start at the very, very top so we only ever
+		//		have to walk dowwn here as opposed to above with `#walkSupers` and `#walkSubs`
 
 		for ( Map.Entry<EntityMappingHierarchy, IdentifiableTypeDescriptor> entry : runtimeRootByBootHierarchy.entrySet() ) {
 			final EntityDescriptor runtimeRootEntity = runtimeRootEntityByBootHierarchy.get( entry.getKey() );
@@ -263,7 +275,10 @@ public class RuntimeModelCreationProcess {
 			creationContext.registerEntityDescriptor( (EntityDescriptor) runtimeType, (EntityMapping) bootMapping );
 		}
 		else if ( runtimeType instanceof MappedSuperclassDescriptor ) {
-			creationContext.registerMappedSuperclassDescriptor( (MappedSuperclassDescriptor) runtimeType );
+			creationContext.registerMappedSuperclassDescriptor(
+					(MappedSuperclassDescriptor) runtimeType,
+					(MappedSuperclassMapping) bootMapping
+			);
 		}
 		return runtimeType;
 	}
@@ -484,7 +499,9 @@ public class RuntimeModelCreationProcess {
 		}
 
 		@Override
-		public void registerMappedSuperclassDescriptor(MappedSuperclassDescriptor runtimeType) {
+		public void registerMappedSuperclassDescriptor(
+				MappedSuperclassDescriptor runtimeType,
+				MappedSuperclassMapping bootMapping) {
 			getTypeConfiguration().register( runtimeType );
 		}
 

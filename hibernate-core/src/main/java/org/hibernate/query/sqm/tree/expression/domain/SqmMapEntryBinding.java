@@ -24,7 +24,7 @@ public class SqmMapEntryBinding implements SqmExpression {
 		this.attributeBinding = attributeBinding;
 	}
 
-	public SqmPluralAttributeReference getAttributeBinding() {
+	public SqmPluralAttributeReference getAttributeAttributeReference() {
 		return attributeBinding;
 	}
 

@@ -6,9 +6,9 @@
  */
 package org.hibernate.metamodel.model.creation.spi;
 
-import org.hibernate.boot.model.domain.EmbeddedMapping;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
+import org.hibernate.boot.model.domain.MappedSuperclassMapping;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -55,17 +55,24 @@ public interface RuntimeModelCreationContext {
 
 	PersistentCollectionTuplizerFactory getPersistentCollectionTuplizerFactory();
 
+	void registerEntityHierarchy(
+			EntityHierarchyImpl runtimeHierarchy,
+			EntityMappingHierarchy bootHierarchy);
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// todo (6.0) : I think these are no longer needed given the way we build these runtime descriptors
-	//		it happens within the process itself
+	void registerEntityDescriptor(
+			EntityDescriptor runtimeDescriptor,
+			EntityMapping bootDescriptor);
 
-	void registerEntityHierarchy(EntityHierarchyImpl runtimeHierarchy, EntityMappingHierarchy bootHierarchy);
-	void registerEntityDescriptor(EntityDescriptor runtimeDescriptor, EntityMapping bootDescriptor);
-	void registerMappedSuperclassDescriptor(MappedSuperclassDescriptor runtimeType);
+	void registerMappedSuperclassDescriptor(
+			MappedSuperclassDescriptor runtimeType,
+			MappedSuperclassMapping bootMapping);
 
-	void registerCollectionDescriptor(PersistentCollectionDescriptor runtimeDescriptor, Collection bootDescriptor);
+	void registerCollectionDescriptor(
+			PersistentCollectionDescriptor runtimeDescriptor,
+			Collection bootDescriptor);
 
-	void registerEmbeddableDescriptor(EmbeddedTypeDescriptor runtimeDescriptor, EmbeddedValueMappingImplementor bootDescriptor);
+	void registerEmbeddableDescriptor(
+			EmbeddedTypeDescriptor runtimeDescriptor,
+			EmbeddedValueMappingImplementor bootDescriptor);
 
 }

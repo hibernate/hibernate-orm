@@ -492,7 +492,7 @@ public final class ReflectHelper {
 		// verify that the Class does not also define a method with the same stem name with 'is'
 		try {
 			final Method isMethod = containerClass.getDeclaredMethod( "is" + stemName );
-			if ( isMethod.getAnnotation( Transient.class ) == null ) {
+			if ( !Modifier.isStatic( isMethod.getModifiers() ) && isMethod.getAnnotation( Transient.class ) == null ) {
 				// No such method should throw the caught exception.  So if we get here, there was
 				// such a method.
 				checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
@@ -534,7 +534,7 @@ public final class ReflectHelper {
 			final Method getMethod = containerClass.getDeclaredMethod( "get" + stemName );
 			// No such method should throw the caught exception.  So if we get here, there was
 			// such a method.
-			if ( getMethod.getAnnotation( Transient.class ) == null ) {
+			if ( !Modifier.isStatic( getMethod.getModifiers() ) && getMethod.getAnnotation( Transient.class ) == null ) {
 				checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
 			}
 		}

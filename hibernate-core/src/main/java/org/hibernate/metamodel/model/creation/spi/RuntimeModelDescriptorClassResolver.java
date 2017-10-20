@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.creation.spi;
 
+import org.hibernate.boot.model.domain.EmbeddedMapping;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.MappedSuperclassMapping;
@@ -75,7 +76,7 @@ public interface RuntimeModelDescriptorClassResolver extends Service {
 	 *
 	 * @since 6.0
 	 */
-	default Class<? extends EmbeddedTypeDescriptor> getEmbeddedTypeDescriptorClass(EmbeddedValueMapping bootMapping) {
+	default Class<? extends EmbeddedTypeDescriptor> getEmbeddedTypeDescriptorClass(EmbeddedValueMapping bootValueMapping) {
 		return EmbeddedTypeDescriptorImpl.class;
 	}
 }

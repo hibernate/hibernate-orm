@@ -7,6 +7,8 @@
 
 package org.hibernate.metamodel.model.domain.internal;
 
+import java.util.Locale;
+
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.engine.FetchStrategy;
@@ -21,6 +23,10 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEmbedded;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.internal.CompositeFetchImpl;
@@ -54,6 +60,7 @@ public class SingularPersistentAttributeEmbedded<O,J>
 				context
 		);
 	}
+
 
 	@Override
 	public ManagedTypeDescriptor<O> getContainer() {
@@ -107,6 +114,14 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	}
 
 	@Override
+	public SqmNavigableReference createSqmExpression(
+			SqmFrom sourceSqmFrom,
+			SqmNavigableContainerReference containerReference,
+			SqmReferenceCreationContext creationContext) {
+		return new SqmSingularAttributeReferenceEmbedded( containerReference, this );
+	}
+
+	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
 			ColumnReferenceQualifier qualifier,
@@ -136,5 +151,16 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	@Override
 	public ForeignKey.ColumnMappings getJoinColumnMappings() {
 		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public String toString() {
+		return String.format(
+				Locale.ROOT,
+				"%s(%s)@%s",
+				getClass().getSimpleName(),
+				getNavigableRole().getFullPath(),
+				System.identityHashCode( this )
+		);
 	}
 }

@@ -16,10 +16,10 @@ import javax.persistence.NamedSubgraph;
 import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.model.domain.EmbeddedMapping;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -43,7 +43,6 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
@@ -71,6 +70,8 @@ public class RuntimeModelCreationProcess {
 
 	private final Map<IdentifiableTypeMappingImplementor,IdentifiableTypeDescriptor> runtimeByBoot = new HashMap<>();
 	private final Map<IdentifiableTypeDescriptor,IdentifiableTypeMappingImplementor> bootByRuntime = new HashMap<>();
+
+	private final Map<EmbeddedValueMappingImplementor,EmbeddedTypeDescriptor> embeddableRuntimeByBoot = new HashMap<>();
 
 	private final Map<String, DomainDataRegionConfigImpl.Builder> regionConfigBuilders = new ConcurrentHashMap<>();
 
@@ -166,6 +167,10 @@ public class RuntimeModelCreationProcess {
 			runtimeRootEntity.getHierarchy().finishInitialization( creationContext, bootRootEntity );
 		}
 
+		for ( Map.Entry<EmbeddedValueMappingImplementor, EmbeddedTypeDescriptor> entry : embeddableRuntimeByBoot.entrySet() ) {
+			entry.getValue().finishInitialization( entry.getKey(), creationContext );
+		}
+
 		descriptorFactory.finishUp( creationContext );
 
 		mappingMetadata.getNamedEntityGraphs().values().forEach( this::applyNamedEntityGraph );
@@ -244,7 +249,7 @@ public class RuntimeModelCreationProcess {
 
 	private IdentifiableTypeDescriptor<?> createIdentifiableType(
 			IdentifiableTypeMappingImplementor bootMapping,
-			InheritanceCapable superTypeDescriptor,
+			IdentifiableTypeDescriptor superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		final IdentifiableTypeDescriptor runtimeType = bootMapping.makeRuntimeDescriptor(
 				superTypeDescriptor,
@@ -505,8 +510,9 @@ public class RuntimeModelCreationProcess {
 		@Override
 		public void registerEmbeddableDescriptor(
 				EmbeddedTypeDescriptor runtimeDescriptor,
-				EmbeddedMapping bootDescriptor) {
+				EmbeddedValueMappingImplementor bootDescriptor) {
 			getTypeConfiguration().register( runtimeDescriptor );
+			embeddableRuntimeByBoot.put( bootDescriptor, runtimeDescriptor );
 		}
 	}
 }

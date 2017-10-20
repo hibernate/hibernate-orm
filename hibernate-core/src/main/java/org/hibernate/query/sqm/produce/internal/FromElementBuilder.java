@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.produce.internal;
 
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.spi.AliasRegistry;
@@ -172,13 +173,17 @@ public class FromElementBuilder {
 			join = (SqmAttributeJoin) NavigableBindingHelper.resolveExportedFromElement( navigableBinding );
 		}
 
+		final EntityDescriptor indicatedSubclassDescriptor = subclassIndicator == null
+				? null
+				: subclassIndicator.getEntityDescriptor();
+
 		if ( join == null ) {
 			join = new SqmAttributeJoin(
 					attributeBinding.getSourceReference().getExportedFromElement(),
 					attributeBinding,
 					parsingContext.makeUniqueIdentifier(),
 					alias,
-					subclassIndicator.getEntityDescriptor(),
+					indicatedSubclassDescriptor,
 					joinType,
 					fetched
 			);

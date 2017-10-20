@@ -30,7 +30,7 @@ public class StandardRepresentationStrategySelector implements RepresentationStr
 		// todo (6.0) : allow this selector to be Object to allow for custom RepresentationStrategy impls
 		RepresentationMode representation = bootMapping.getExplicitRepresentationMode();
 		if ( representation == null ) {
-			if ( bootMapping.getJavaTypeDescriptor().getJavaType() == null ) {
+			if ( runtimeDescriptor.getJavaTypeDescriptor().getJavaType() == null ) {
 				representation = RepresentationMode.MAP;
 			}
 			else {

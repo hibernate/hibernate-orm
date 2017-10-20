@@ -49,6 +49,6 @@ public interface IdentifiableTypeMappingImplementor extends IdentifiableTypeMapp
 	int nextSubclassId();
 
 	<X> IdentifiableTypeDescriptor<X> makeRuntimeDescriptor(
-			InheritanceCapable superTypeDescriptor,
+			IdentifiableTypeDescriptor superTypeDescriptor,
 			RuntimeModelCreationContext context);
 }

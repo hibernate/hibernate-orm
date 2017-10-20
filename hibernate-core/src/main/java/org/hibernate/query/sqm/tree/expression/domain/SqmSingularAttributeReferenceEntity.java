@@ -56,7 +56,7 @@ public class SqmSingularAttributeReferenceEntity
 
 	@Override
 	public SingularPersistentAttributeEntity getReferencedNavigable() {
-		return (SingularPersistentAttributeEntity) super.getExpressableType();
+		return (SingularPersistentAttributeEntity) super.getReferencedNavigable();
 	}
 
 	@Override

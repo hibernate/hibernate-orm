@@ -78,7 +78,6 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 	public Component(MetadataBuildingContext metadata, Table table, PersistentClass owner) throws MappingException {
 		super( metadata, table );
 		this.owner = owner;
-		resolveJavaTypeDescriptor( metadata );
 	}
 
 	@Override
@@ -152,10 +151,15 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 	}
 
 	/**
-	 * @deprecated since 6.0, use {@link #getName()}.
+	 * @deprecated since 6.0, use {@link #getEmbeddableClassName()}.
 	 */
 	@Deprecated
 	public String getComponentClassName() {
+		return getEmbeddableClassName();
+	}
+
+	@Override
+	public String getEmbeddableClassName() {
 		return componentClassName;
 	}
 
@@ -181,6 +185,9 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 
 	public void setComponentClassName(String componentClass) {
 		this.componentClassName = componentClass;
+		if ( componentClass == null ) {
+			javaTypeDescriptor = resolveJavaTypeDescriptor( getMetadataBuildingContext(), componentClassName );
+		}
 	}
 
 	public void setEmbedded(boolean embedded) {
@@ -212,6 +219,7 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 		return context.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
 				this,
 				embeddedContainer,
+				null,
 				localName,
 				disposition,
 				context
@@ -530,7 +538,9 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 		return PersistenceType.EMBEDDABLE;
 	}
 
-	private void resolveJavaTypeDescriptor(MetadataBuildingContext metadata) {
+	private static EmbeddableJavaDescriptor resolveJavaTypeDescriptor(
+			MetadataBuildingContext metadata,
+			String componentClassName) {
 		final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry = metadata.getMetadataCollector()
 				.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry();
@@ -549,6 +559,7 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 			typeDescriptor = new EmbeddableJavaDescriptorImpl( componentClassName, javaType, null );
 			javaTypeDescriptorRegistry.addDescriptor( typeDescriptor );
 		}
-		javaTypeDescriptor = typeDescriptor;
+
+		return typeDescriptor;
 	}
 }

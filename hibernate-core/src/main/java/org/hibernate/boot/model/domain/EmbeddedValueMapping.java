@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.domain;
 
+import javax.persistence.metamodel.Type;
+
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
@@ -23,4 +25,11 @@ public interface EmbeddedValueMapping extends ValueMapping, ManagedTypeMapping {
 			String localName,
 			SingularPersistentAttribute.Disposition disposition,
 			RuntimeModelCreationContext context);
+
+	@Override
+	default Type.PersistenceType getPersistenceType() {
+		return Type.PersistenceType.EMBEDDABLE;
+	}
+
+	String getEmbeddableClassName();
 }

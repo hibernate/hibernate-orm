@@ -47,7 +47,7 @@ public class StandardPojoRepresentationStrategy implements RepresentationStrateg
 			ManagedTypeDescriptor runtimeDescriptor,
 			RuntimeModelCreationContext creationContext,
 			BytecodeProvider bytecodeProvider) {
-		if ( bootModel.getJavaTypeDescriptor().getJavaType() == null ) {
+		if ( runtimeDescriptor.getJavaTypeDescriptor().getJavaType() == null ) {
 			return null;
 		}
 
@@ -57,7 +57,7 @@ public class StandardPojoRepresentationStrategy implements RepresentationStrateg
 		final Class[] types = null;
 
 		return bytecodeProvider.getReflectionOptimizer(
-				bootModel.getJavaTypeDescriptor().getJavaType(),
+				runtimeDescriptor.getJavaTypeDescriptor().getJavaType(),
 				getterNames,
 				setterNames,
 				types

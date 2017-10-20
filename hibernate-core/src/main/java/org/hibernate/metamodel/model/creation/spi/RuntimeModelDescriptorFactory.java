@@ -10,9 +10,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.MappedSuperclassMapping;
+import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.mapping.Collection;
-import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
@@ -46,12 +47,12 @@ public interface RuntimeModelDescriptorFactory extends Service {
 	 */
 	<J> EntityDescriptor<J> createEntityDescriptor(
 			EntityMapping bootMapping,
-			InheritanceCapable superTypeDescriptor,
+			IdentifiableTypeDescriptor superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) throws HibernateException;
 
 	<J> MappedSuperclassDescriptor<J> createMappedSuperclassDescriptor(
 			MappedSuperclassMapping bootMapping,
-			InheritanceCapable superTypeDescriptor,
+			IdentifiableTypeDescriptor superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) throws HibernateException;
 
 	/**
@@ -73,7 +74,6 @@ public interface RuntimeModelDescriptorFactory extends Service {
 			Collection collectionBinding,
 			ManagedTypeDescriptor<O> source,
 			String localName,
-			CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) throws HibernateException;
 
 	/**
@@ -91,8 +91,9 @@ public interface RuntimeModelDescriptorFactory extends Service {
 	 * @throws HibernateException Indicates a problem building the persister.
 	 */
 	<J> EmbeddedTypeDescriptor<J> createEmbeddedTypeDescriptor(
-			EmbeddedValueMapping bootModelEmbeddedDescriptor,
+			EmbeddedValueMappingImplementor bootValueMapping,
 			EmbeddedContainer runtimeModelContainer,
+			EmbeddedTypeDescriptor<? super J> superTypeDescriptor,
 			String localName,
 			SingularPersistentAttribute.Disposition singularAttributeDisposition,
 			RuntimeModelCreationContext creationContext);

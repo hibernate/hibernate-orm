@@ -11,9 +11,6 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.boot.model.domain.EmbeddedMapping;
-import org.hibernate.boot.model.domain.EmbeddedValueMapping;
-import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -27,7 +24,6 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.RepresentationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -48,15 +44,17 @@ public class EmbeddedTypeDescriptorImpl<T>
 
 	private RepresentationStrategy representationStrategy;
 
+	@SuppressWarnings("unchecked")
 	public EmbeddedTypeDescriptorImpl(
-			EmbeddedMapping embeddedMapping,
+			EmbeddedValueMappingImplementor embeddedMapping,
 			EmbeddedContainer container,
+			EmbeddedTypeDescriptor superTypeDescriptor,
 			String localName,
 			SingularPersistentAttribute.Disposition compositeDisposition,
 			RuntimeModelCreationContext creationContext) {
 		super(
 				embeddedMapping,
-				null,
+				superTypeDescriptor,
 				resolveJtd( creationContext, embeddedMapping ),
 				creationContext
 		);
@@ -69,7 +67,7 @@ public class EmbeddedTypeDescriptorImpl<T>
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T> EmbeddableJavaDescriptor<T> resolveJtd(RuntimeModelCreationContext creationContext, EmbeddedMapping embeddedMapping) {
+	private static <T> EmbeddableJavaDescriptor<T> resolveJtd(RuntimeModelCreationContext creationContext, EmbeddedValueMappingImplementor embeddedMapping) {
 		final JavaTypeDescriptorRegistry jtdr = creationContext.getTypeConfiguration().getJavaTypeDescriptorRegistry();
 
 		EmbeddableJavaDescriptor<T> jtd = (EmbeddableJavaDescriptor<T>) jtdr.getDescriptor( embeddedMapping.getName() );
@@ -92,6 +90,7 @@ public class EmbeddedTypeDescriptorImpl<T>
 			);
 			jtdr.addDescriptor( jtd );
 		}
+
 		return jtd;
 	}
 

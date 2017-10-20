@@ -8,6 +8,11 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import javax.persistence.metamodel.MappedSuperclassType;
 
+import org.hibernate.boot.model.domain.EntityMapping;
+import org.hibernate.boot.model.domain.MappedSuperclassMapping;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorFactory;
+
 /**
  * @author Steve Ebersole
  */
@@ -21,4 +26,23 @@ public interface MappedSuperclassDescriptor<T>
 	// MappedSuperclassType.
 	//
 	// todo (6.0) - make a decision ^^
+
+
+	/**
+	 * Unless a custom {@link RuntimeModelDescriptorFactory} is used, it is
+	 * expected that implementations of MappedSuperclassDescriptor define a
+	 * constructor accepting the following arguments:
+	 *
+	 * 		* {@link MappedSuperclassMapping} is the boot-model description of
+	 * 			the mapped-superclass
+	 * 		* {@link IdentifiableTypeDescriptor} is the runtime-model descriptor
+	 * 			of mapped-superclass's super type
+	 * 		* {@link RuntimeModelCreationContext} - access to additional
+	 *         information useful while constructing the descriptor.
+	 */
+	Class[] STANDARD_CONSTRUCTOR_SIG = new Class[] {
+			MappedSuperclassMapping.class,
+			IdentifiableTypeDescriptor.class,
+			RuntimeModelCreationContext.class
+	};
 }

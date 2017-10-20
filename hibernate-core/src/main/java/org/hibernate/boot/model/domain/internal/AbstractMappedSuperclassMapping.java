@@ -52,7 +52,7 @@ public abstract class AbstractMappedSuperclassMapping
 
 	@Override
 	public <X> IdentifiableTypeDescriptor<X> makeRuntimeDescriptor(
-			InheritanceCapable superTypeDescriptor,
+			IdentifiableTypeDescriptor superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		return creationContext.getRuntimeModelDescriptorFactory().createMappedSuperclassDescriptor(
 				this,

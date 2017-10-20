@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.creation.spi;
 import org.hibernate.boot.model.domain.EmbeddedMapping;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
+import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
@@ -65,6 +66,6 @@ public interface RuntimeModelCreationContext {
 
 	void registerCollectionDescriptor(PersistentCollectionDescriptor runtimeDescriptor, Collection bootDescriptor);
 
-	void registerEmbeddableDescriptor(EmbeddedTypeDescriptor runtimeDescriptor, EmbeddedMapping bootDescriptor);
+	void registerEmbeddableDescriptor(EmbeddedTypeDescriptor runtimeDescriptor, EmbeddedValueMappingImplementor bootDescriptor);
 
 }

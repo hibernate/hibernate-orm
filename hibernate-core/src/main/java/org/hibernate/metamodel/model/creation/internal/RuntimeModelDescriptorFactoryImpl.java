@@ -11,21 +11,17 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.MappedSuperclassMapping;
-import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorClassResolver;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorFactory;
-import org.hibernate.metamodel.model.domain.internal.EntityHierarchyImpl;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
-import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
@@ -52,7 +48,7 @@ public final class RuntimeModelDescriptorFactoryImpl
 	@SuppressWarnings("unchecked")
 	public <J> EntityDescriptor<J> createEntityDescriptor(
 			EntityMapping bootMapping,
-			InheritanceCapable superTypeDescriptor,
+			IdentifiableTypeDescriptor superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		return instantiateEntityDescriptor(
 				bootMapping,
@@ -64,7 +60,7 @@ public final class RuntimeModelDescriptorFactoryImpl
 	@SuppressWarnings("unchecked")
 	private EntityDescriptor instantiateEntityDescriptor(
 			EntityMapping bootMapping,
-			InheritanceCapable superTypeDescriptor,
+			IdentifiableTypeDescriptor superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		// If the metadata for the entity specified an explicit persister class, use it...
 		Class<? extends EntityDescriptor> entityDescriptorClass = bootMapping.getRuntimeEntityDescriptorClass();
@@ -85,7 +81,7 @@ public final class RuntimeModelDescriptorFactoryImpl
 	private EntityDescriptor instantiateEntityDescriptor(
 			Class<? extends EntityDescriptor> persisterClass,
 			EntityMapping bootMapping,
-			InheritanceCapable superTypeDescriptor,
+			IdentifiableTypeDescriptor superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 
 		try {
@@ -125,10 +121,11 @@ public final class RuntimeModelDescriptorFactoryImpl
 	@SuppressWarnings("unchecked")
 	public <J> MappedSuperclassDescriptor<J> createMappedSuperclassDescriptor(
 			MappedSuperclassMapping bootMapping,
-			InheritanceCapable superTypeDescriptor,
+			IdentifiableTypeDescriptor superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) throws HibernateException {
 		return instantiateMappedSuperclassDescriptor(
 				bootMapping,
+				superTypeDescriptor,
 				creationContext
 		);
 	}
@@ -136,6 +133,7 @@ public final class RuntimeModelDescriptorFactoryImpl
 	@SuppressWarnings("unchecked")
 	private MappedSuperclassDescriptor instantiateMappedSuperclassDescriptor(
 			MappedSuperclassMapping bootMapping,
+			IdentifiableTypeDescriptor superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		// currently we do not allow user to explicitly name a descriptor class to use on the mapping.
 		// so just look to the resolver
@@ -145,6 +143,7 @@ public final class RuntimeModelDescriptorFactoryImpl
 		return instantiateMappedSuperclassDescriptor(
 				runtimeDescriptorClass,
 				bootMapping,
+				superTypeDescriptor,
 				creationContext
 		);
 	}
@@ -153,12 +152,14 @@ public final class RuntimeModelDescriptorFactoryImpl
 	private MappedSuperclassDescriptor instantiateMappedSuperclassDescriptor(
 			Class<? extends MappedSuperclassDescriptor> descriptorClass,
 			MappedSuperclassMapping bootMapping,
+			IdentifiableTypeDescriptor superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		try {
-			final Constructor<? extends MappedSuperclassDescriptor> constructor = descriptorClass.getConstructor( EntityDescriptor.STANDARD_CONSTRUCTOR_SIG );
+			final Constructor<? extends MappedSuperclassDescriptor> constructor = descriptorClass.getConstructor( MappedSuperclassDescriptor.STANDARD_CONSTRUCTOR_SIG );
 			try {
 				return constructor.newInstance(
 						bootMapping,
+						superTypeDescriptor,
 						creationContext
 				);
 			}
@@ -193,7 +194,6 @@ public final class RuntimeModelDescriptorFactoryImpl
 			Collection collectionBinding,
 			ManagedTypeDescriptor<O> source,
 			String localName,
-			CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) throws HibernateException {
 		// If the metadata for the collection specified an explicit persister class, use it
 		Class<? extends PersistentCollectionDescriptor> persisterClass = collectionBinding.getCollectionPersisterClass();
@@ -201,7 +201,7 @@ public final class RuntimeModelDescriptorFactoryImpl
 			// Otherwise, use the persister class indicated by the PersisterClassResolver service
 			persisterClass = descriptorClassResolver.getCollectionDescriptorClass( collectionBinding );
 		}
-		return createCollectionPersister( persisterClass, collectionBinding, source, localName, cacheAccessStrategy, creationContext );
+		return createCollectionPersister( persisterClass, collectionBinding, source, localName, creationContext );
 	}
 
 	@SuppressWarnings( {"unchecked"})
@@ -210,7 +210,6 @@ public final class RuntimeModelDescriptorFactoryImpl
 			Collection collectionBinding,
 			ManagedTypeDescriptor source,
 			String localName,
-			CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) {
 		try {
 			Constructor<? extends PersistentCollectionDescriptor> constructor = persisterClass.getConstructor( PersistentCollectionDescriptor.CONSTRUCTOR_SIGNATURE );
@@ -219,7 +218,6 @@ public final class RuntimeModelDescriptorFactoryImpl
 						collectionBinding,
 						source,
 						localName,
-						cacheAccessStrategy,
 						creationContext
 				);
 			}
@@ -250,23 +248,27 @@ public final class RuntimeModelDescriptorFactoryImpl
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public EmbeddedTypeDescriptor createEmbeddedTypeDescriptor(
-			EmbeddedValueMapping embeddedValueMapping,
+			EmbeddedValueMappingImplementor bootValueMapping,
 			EmbeddedContainer source,
+			EmbeddedTypeDescriptor superTypeDescriptor,
 			String localName,
 			SingularPersistentAttribute.Disposition disposition,
 			RuntimeModelCreationContext creationContext) {
-		final Class<? extends EmbeddedTypeDescriptor> persisterClass = descriptorClassResolver.getEmbeddedTypeDescriptorClass( embeddedValueMapping );
+		final Class<? extends EmbeddedTypeDescriptor> persisterClass = descriptorClassResolver.getEmbeddedTypeDescriptorClass( bootValueMapping );
 
 		try {
 			Constructor<? extends EmbeddedTypeDescriptor> constructor = persisterClass.getConstructor( EmbeddedTypeDescriptor.STANDARD_CTOR_SIGNATURE );
 			try {
-				return constructor.newInstance(
-						embeddedValueMapping,
+				final EmbeddedTypeDescriptor descriptor = constructor.newInstance(
+						bootValueMapping,
 						source,
+						superTypeDescriptor,
 						localName,
 						disposition,
 						creationContext
 				);
+				creationContext.registerEmbeddableDescriptor( descriptor, bootValueMapping );
+				return descriptor;
 			}
 			catch (MappingException e) {
 				throw e;

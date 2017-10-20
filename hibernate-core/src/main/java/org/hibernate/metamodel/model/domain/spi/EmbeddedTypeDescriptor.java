@@ -9,10 +9,8 @@ package org.hibernate.metamodel.model.domain.spi;
 import java.util.List;
 import javax.persistence.metamodel.EmbeddableType;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.mapping.Component;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
@@ -32,8 +30,9 @@ public interface EmbeddedTypeDescriptor<T>
 		extends InheritanceCapable<T>, EmbeddedContainer<T>, EmbeddableType<T>,	EmbeddedValuedNavigable<T> {
 
 	Class[] STANDARD_CTOR_SIGNATURE = new Class[] {
-			Component.class,
+			EmbeddedValueMappingImplementor.class,
 			EmbeddedContainer.class,
+			EmbeddedTypeDescriptor.class,
 			String.class,
 			SingularPersistentAttribute.Disposition.class,
 			RuntimeModelCreationContext.class

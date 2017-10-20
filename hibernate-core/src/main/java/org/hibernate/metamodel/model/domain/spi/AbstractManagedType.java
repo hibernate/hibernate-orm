@@ -98,9 +98,10 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 		this.mutabilityPlan = mutabilityPlan;
 		this.comparator = comparator;
 
+		this.typeConfiguration = creationContext.getTypeConfiguration();
+
 		this.representationStrategy = creationContext.getRepresentationStrategySelector()
 				.resolveRepresentationStrategy( managedTypeMapping, this, creationContext );
-		this.typeConfiguration = creationContext.getTypeConfiguration();
 	}
 
 	@Override

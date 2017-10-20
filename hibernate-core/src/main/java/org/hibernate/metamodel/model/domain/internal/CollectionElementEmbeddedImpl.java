@@ -8,7 +8,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
-import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionElement;
@@ -38,8 +38,9 @@ public class CollectionElementEmbeddedImpl<J>
 		super( persister );
 
 		this.embeddedPersister = creationContext.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
-				(EmbeddedValueMapping) mapping.getElement(),
+				(EmbeddedValueMappingImplementor) mapping.getElement(),
 				persister,
+				null,
 				NAVIGABLE_NAME,
 				SingularPersistentAttribute.Disposition.NORMAL,
 				creationContext

@@ -16,9 +16,9 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.NotYetImplementedFor6Exception;
 
 /**
  * A persistent wrapper for a <tt>java.util.List</tt>. Underlying
@@ -28,22 +28,10 @@ import org.hibernate.NotYetImplementedFor6Exception;
  * @author Gavin King
  */
 public class PersistentList extends AbstractPersistentCollection implements List {
-	protected List list;
+	private PersistentCollectionDescriptor descriptor;
+	private Object key;
 
-	/**
-	 * Constructs a PersistentList.  This form needed for SOAP libraries, etc
-	 */
-	public PersistentList() {
-	}
-
-	/**
-	 * Constructs a PersistentList.
-	 *
-	 * @param session The session
-	 */
-	public PersistentList(SharedSessionContractImplementor session) {
-		super( session );
-	}
+	private List list;
 
 	/**
 	 * Constructs a PersistentList.
@@ -51,12 +39,37 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	 * @param session The session
 	 * @param list The raw list
 	 */
-	public PersistentList(SharedSessionContractImplementor session, List list) {
+	public PersistentList(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor,
+			List list) {
 		super( session );
-		this.list = list;
-		setInitialized();
+		this.descriptor = descriptor;
+		setList( list );
 		setDirectlyAccessible( true );
 	}
+
+	private void setList(List list) {
+		this.list = list;
+		setInitialized();
+	}
+
+	public PersistentList(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor,
+			Serializable key) {
+		super( session );
+		this.descriptor = descriptor;
+		this.key = key;
+	}
+
+	protected List list() {
+		return list;
+	}
+
+
+
+
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
@@ -98,7 +111,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 
 	@Override
 	public void beforeInitialize(PersistentCollectionDescriptor persister, int anticipatedSize) {
-		this.list = (List) persister.getTuplizer().instantiate( anticipatedSize );
+		this.list = (List) persister.getTuplizer().instantiateRaw( anticipatedSize );
 	}
 
 	@Override

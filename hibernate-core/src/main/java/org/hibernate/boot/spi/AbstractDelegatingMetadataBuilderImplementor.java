@@ -22,7 +22,8 @@ import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
-import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
+import org.hibernate.collection.spi.PersistentCollectionRepresentationResolver;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.type.spi.BasicType;
 
@@ -226,8 +227,14 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Abs
 	}
 
 	@Override
-	public MetadataBuilder applyRepresentationStrategySelector(RepresentationStrategySelector strategySelector) {
+	public MetadataBuilder applyRepresentationStrategySelector(ManagedTypeRepresentationResolver strategySelector) {
 		delegate.applyRepresentationStrategySelector( strategySelector );
+		return getThis();
+	}
+
+	@Override
+	public MetadataBuilder applyRepresentationStrategySelector(PersistentCollectionRepresentationResolver resolver) {
+		delegate.applyRepresentationStrategySelector( resolver );
 		return getThis();
 	}
 }

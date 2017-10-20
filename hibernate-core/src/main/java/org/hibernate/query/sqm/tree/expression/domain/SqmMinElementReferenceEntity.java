@@ -38,7 +38,7 @@ public class SqmMinElementReferenceEntity
 
 	@Override
 	public CollectionElementEntity getReferencedNavigable() {
-		return (CollectionElementEntity) getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor();
+		return (CollectionElementEntity) getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor();
 	}
 
 	@Override

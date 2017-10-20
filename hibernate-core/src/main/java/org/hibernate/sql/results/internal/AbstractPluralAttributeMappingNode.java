@@ -32,6 +32,6 @@ public abstract class AbstractPluralAttributeMappingNode implements PluralAttrib
 
 	@Override
 	public PersistentCollectionDescriptor getCollectionDescriptor() {
-		return getNavigable().getPersistentCollectionMetadata();
+		return getNavigable().getPersistentCollectionDescriptor();
 	}
 }

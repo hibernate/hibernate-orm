@@ -12,14 +12,14 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.Instantiator;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.RepresentationStrategy;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationStrategy;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 
 /**
  * @author Steve Ebersole
  */
-public class StandardMapRepresentationStrategy implements RepresentationStrategy {
+public class StandardMapRepresentationStrategy implements ManagedTypeRepresentationStrategy {
 	/**
 	 * Singleton access
 	 */

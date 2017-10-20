@@ -47,7 +47,7 @@ public class SqmMaxElementReferenceBasic
 	@Override
 	public BasicCollectionElement getReferencedNavigable() {
 		return (BasicCollectionElement) getPluralAttributeBinding().getReferencedNavigable()
-				.getPersistentCollectionMetadata()
+				.getPersistentCollectionDescriptor()
 				.getElementDescriptor();
 	}
 }

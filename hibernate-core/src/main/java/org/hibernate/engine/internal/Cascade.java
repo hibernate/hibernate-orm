@@ -350,7 +350,7 @@ public final class Cascade {
 			final CascadeStyle style,
 			final Object anything,
 			final PluralPersistentAttribute attribute) {
-		final CollectionElement collectionElement = attribute.getPersistentCollectionMetadata().getElementDescriptor();
+		final CollectionElement collectionElement = attribute.getPersistentCollectionDescriptor().getElementDescriptor();
 		final PersistentCollectionDescriptor descriptor = eventSource.getFactory()
 				.getTypeConfiguration()
 				.findCollectionDescriptor( attribute.getNavigableName() );

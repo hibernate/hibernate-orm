@@ -70,9 +70,9 @@ public class PathResolverJoinPredicateImpl extends PathResolverBasicImpl {
 		}
 		else {
 			final PluralPersistentAttribute attrRef = (PluralPersistentAttribute) joinedAttribute;
-			if ( attrRef.getPersistentCollectionMetadata().getElementDescriptor().getClassification() == ElementClassification.ANY
-					|| attrRef.getPersistentCollectionMetadata().getElementDescriptor().getClassification() == ElementClassification.ONE_TO_MANY
-					|| attrRef.getPersistentCollectionMetadata().getElementDescriptor().getClassification() == ElementClassification.MANY_TO_MANY ) {
+			if ( attrRef.getPersistentCollectionDescriptor().getElementDescriptor().getClassification() == ElementClassification.ANY
+					|| attrRef.getPersistentCollectionDescriptor().getElementDescriptor().getClassification() == ElementClassification.ONE_TO_MANY
+					|| attrRef.getPersistentCollectionDescriptor().getElementDescriptor().getClassification() == ElementClassification.MANY_TO_MANY ) {
 				throw new SemanticException(
 						"On-clause predicate of a qualified join cannot contain implicit collection joins : " +
 								joinedAttribute.getAttributeName()

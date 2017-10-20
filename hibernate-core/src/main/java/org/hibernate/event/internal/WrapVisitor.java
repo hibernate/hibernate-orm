@@ -83,7 +83,7 @@ public class WrapVisitor extends ProxyVisitor {
 
 				PersistentCollection ah = persistenceContext.getCollectionHolder( collection );
 				if ( ah == null ) {
-					ah = collectionDescriptor.getTuplizer().wrap( session, collection );
+					ah = collectionDescriptor.getTuplizer().wrap( session, collectionDescriptor, collection );
 					persistenceContext.addNewCollection( collectionDescriptor, ah );
 					persistenceContext.addCollectionHolder( ah );
 				}
@@ -91,7 +91,7 @@ public class WrapVisitor extends ProxyVisitor {
 			}
 			else {
 
-				PersistentCollection persistentCollection = collectionDescriptor.getTuplizer().wrap( session, collection );
+				PersistentCollection persistentCollection = collectionDescriptor.getTuplizer().wrap( session, collectionDescriptor,  collection );
 				persistenceContext.addNewCollection( collectionDescriptor, persistentCollection );
 
 				if ( LOG.isTraceEnabled() ) {

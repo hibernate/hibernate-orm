@@ -16,7 +16,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
-import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationResolver;
 
 /**
  * Convenience base class for custom implementors of {@link MetadataBuildingOptions} using delegation.
@@ -100,8 +100,8 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
-	public RepresentationStrategySelector getRepresentationStrategySelector() {
-		return delegate.getRepresentationStrategySelector();
+	public ManagedTypeRepresentationResolver getManagedTypeRepresentationResolver() {
+		return delegate.getManagedTypeRepresentationResolver();
 	}
 
 	@Override

@@ -10,6 +10,8 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 
 import org.hibernate.EntityMode;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationStrategy;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationResolver;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -23,8 +25,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @deprecated as of 6.0 with no replacement.  See
  * {@link org.hibernate.metamodel.model.domain.RepresentationMode},
- * {@link org.hibernate.metamodel.model.domain.spi.RepresentationStrategy} and
- * {@link org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector}
+ * {@link ManagedTypeRepresentationStrategy} and
+ * {@link ManagedTypeRepresentationResolver}
  * for further details
  */
 @java.lang.annotation.Target( {TYPE, FIELD, METHOD} )

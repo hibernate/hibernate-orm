@@ -20,7 +20,7 @@ import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.cfg.Environment;
-import org.hibernate.collection.spi.PersistentCollectionTuplizer;
+import org.hibernate.collection.spi.PersistentCollectionRepresentation;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -30,6 +30,7 @@ import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttribute
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute.SingularAttributeClassification;
@@ -421,16 +422,15 @@ public class Property implements Serializable, PersistentAttributeMapping {
 			ManagedTypeDescriptor runtimeContainer,
 			ManagedTypeMapping bootContainer,
 			RuntimeModelCreationContext context) {
-		// todo (6.0) : allow to define a specific tuplizer on the collection mapping
-		//		for now use the default
-		final PersistentCollectionTuplizer tuplizer = context.getPersistentCollectionTuplizerFactory()
-				.getImplicitTuplizer( value.getJavaTypeDescriptor().getJavaType() );
-		return tuplizer.generatePluralPersistentAttribute(
+		final PersistentCollectionRepresentation representation = context.getPersistentCollectionRepresentationResolver()
+				.resolveRepresentation( (Collection) value );
+		final PersistentCollectionDescriptor descriptor = representation.generatePersistentCollectionDescriptor(
 				runtimeContainer,
 				bootContainer,
 				this,
 				context
 		);
+		return descriptor.getDescribedAttribute();
 	}
 
 	@SuppressWarnings("unchecked")

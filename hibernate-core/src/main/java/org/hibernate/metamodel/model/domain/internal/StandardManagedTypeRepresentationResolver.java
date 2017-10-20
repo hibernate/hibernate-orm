@@ -10,20 +10,20 @@ import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.RepresentationStrategy;
-import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationStrategy;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationResolver;
 
 /**
  * @author Steve Ebersole
  */
-public class StandardRepresentationStrategySelector implements RepresentationStrategySelector {
+public class StandardManagedTypeRepresentationResolver implements ManagedTypeRepresentationResolver {
 	/**
 	 * Singleton access
 	 */
-	public static final StandardRepresentationStrategySelector INSTANCE = new StandardRepresentationStrategySelector();
+	public static final StandardManagedTypeRepresentationResolver INSTANCE = new StandardManagedTypeRepresentationResolver();
 
 	@Override
-	public RepresentationStrategy resolveRepresentationStrategy(
+	public ManagedTypeRepresentationStrategy resolveStrategy(
 			ManagedTypeMapping bootMapping,
 			ManagedTypeDescriptor runtimeDescriptor,
 			RuntimeModelCreationContext creationContext) {

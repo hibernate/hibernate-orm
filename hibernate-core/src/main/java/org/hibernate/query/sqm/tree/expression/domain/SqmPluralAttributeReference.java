@@ -36,7 +36,7 @@ public class SqmPluralAttributeReference
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return getReferencedNavigable().getPersistentCollectionMetadata().getPersistenceType();
+		return getReferencedNavigable().getPersistentCollectionDescriptor().getPersistenceType();
 	}
 
 	@Override

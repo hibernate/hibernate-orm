@@ -15,7 +15,8 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
-import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
+import org.hibernate.collection.spi.PersistentCollectionRepresentationResolver;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 
 /**
@@ -123,5 +124,6 @@ public interface MetadataBuildingOptions {
 	 */
 	List<MetadataSourceType> getSourceProcessOrdering();
 
-	RepresentationStrategySelector getRepresentationStrategySelector();
+	ManagedTypeRepresentationResolver getManagedTypeRepresentationResolver();
+	PersistentCollectionRepresentationResolver getPersistentCollectionRepresentationResolver();
 }

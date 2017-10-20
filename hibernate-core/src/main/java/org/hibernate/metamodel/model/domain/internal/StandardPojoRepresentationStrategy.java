@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.Instantiator;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.RepresentationStrategy;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationStrategy;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
@@ -26,7 +26,7 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 /**
  * @author Steve Ebersole
  */
-public class StandardPojoRepresentationStrategy implements RepresentationStrategy {
+public class StandardPojoRepresentationStrategy implements ManagedTypeRepresentationStrategy {
 	private final ReflectionOptimizer reflectionOptimizer;
 
 	public StandardPojoRepresentationStrategy(

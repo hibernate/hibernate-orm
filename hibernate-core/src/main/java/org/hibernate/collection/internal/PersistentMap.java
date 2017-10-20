@@ -113,7 +113,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	public void beforeInitialize(PersistentCollectionDescriptor persister, int anticipatedSize) {
-		this.map = (Map) persister.getTuplizer().instantiate( anticipatedSize );
+		this.map = (Map) persister.getTuplizer().instantiateRaw( anticipatedSize );
 	}
 
 	@Override

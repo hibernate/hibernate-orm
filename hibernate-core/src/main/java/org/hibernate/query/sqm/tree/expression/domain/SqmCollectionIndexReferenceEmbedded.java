@@ -43,6 +43,6 @@ public class SqmCollectionIndexReferenceEmbedded
 
 	@Override
 	public Class getJavaType() {
-		return getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getIndexDescriptor().getJavaType();
+		return getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionDescriptor().getIndexDescriptor().getJavaType();
 	}
 }

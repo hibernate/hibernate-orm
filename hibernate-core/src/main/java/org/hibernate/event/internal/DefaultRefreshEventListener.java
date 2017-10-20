@@ -200,7 +200,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			throws HibernateException {
 		for ( PersistentAttribute attribute : persistentAttributes ) {
 			if ( PluralPersistentAttribute.class.isInstance( attribute ) ) {
-				final PersistentCollectionDescriptor collectionPersister = ( (PluralPersistentAttribute) attribute ).getPersistentCollectionMetadata();
+				final PersistentCollectionDescriptor collectionPersister = ( (PluralPersistentAttribute) attribute ).getPersistentCollectionDescriptor();
 				final CollectionDataAccess cacheAccess = source.getFactory().getCache()
 						.getCollectionRegionAccess( collectionPersister );
 				if ( cacheAccess != null ) {

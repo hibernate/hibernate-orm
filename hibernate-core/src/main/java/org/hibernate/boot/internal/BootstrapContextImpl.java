@@ -36,7 +36,7 @@ import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
-import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
+import org.hibernate.collection.spi.PersistentCollectionRepresentationResolver;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -160,9 +160,8 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public PersistentCollectionTuplizerFactory getPersistentCollectionTuplizerFactory() {
-		// todo (6.0) : create PersistentCollectionTuplizerFactory
-		throw new NotYetImplementedException( "Creation of PersistentCollectionTuplizerFactory is not implemented yet" );
+	public PersistentCollectionRepresentationResolver getCollectionRepresentationResolver() {
+		return metadataBuildingOptions.getPersistentCollectionRepresentationResolver();
 	}
 
 	@Override

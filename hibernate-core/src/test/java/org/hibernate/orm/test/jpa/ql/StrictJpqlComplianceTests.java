@@ -8,6 +8,8 @@ package org.hibernate.orm.test.jpa.ql;
 
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 
+import org.junit.Ignore;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -19,6 +21,7 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  * @author Christian Beikov
  */
+@Ignore
 public class StrictJpqlComplianceTests extends LenientJpqlComplianceTests {
 	@Override
 	protected boolean strictJpaCompliance() {
@@ -33,6 +36,6 @@ public class StrictJpqlComplianceTests extends LenientJpqlComplianceTests {
 	@Override
 	protected void validateViolation(StrictJpaComplianceViolation violation) {
 		assertThat( violation.getType(), notNullValue() );
-		assertThat( violation.getType(), is( getCurrectViolationBeingChecked() ) );
+		assertThat( violation.getType(), is( getCurrentViolationBeingChecked() ) );
 	}
 }

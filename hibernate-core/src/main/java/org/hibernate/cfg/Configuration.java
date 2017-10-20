@@ -49,8 +49,8 @@ import org.hibernate.exception.SerializationException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.xml.XmlDocument;
-import org.hibernate.metamodel.model.domain.internal.StandardRepresentationStrategySelector;
-import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
+import org.hibernate.metamodel.model.domain.internal.StandardManagedTypeRepresentationResolver;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.ResultSetMappingDescriptor;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
@@ -107,7 +107,7 @@ public class Configuration {
 	// used to build SF
 	private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
 	private EntityNotFoundDelegate entityNotFoundDelegate;
-	private RepresentationStrategySelector representationStrategySelector;
+	private ManagedTypeRepresentationResolver representationStrategySelector;
 	private Interceptor interceptor;
 	private SessionFactoryObserver sessionFactoryObserver;
 	private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
@@ -159,7 +159,7 @@ public class Configuration {
 
 		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
 
-		representationStrategySelector = StandardRepresentationStrategySelector.INSTANCE;
+		representationStrategySelector = StandardManagedTypeRepresentationResolver.INSTANCE;
 
 		interceptor = EmptyInterceptor.INSTANCE;
 		properties = new Properties(  );
@@ -599,7 +599,7 @@ public class Configuration {
 		return this;
 	}
 
-	public RepresentationStrategySelector getRepresentationStrategySelector() {
+	public ManagedTypeRepresentationResolver getRepresentationStrategySelector() {
 		return representationStrategySelector;
 	}
 

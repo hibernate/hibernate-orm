@@ -22,6 +22,7 @@ import org.hibernate.cache.spi.entry.StructuredMapCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.collection.spi.CollectionClassification;
+import org.hibernate.collection.spi.PersistentCollectionRepresentation;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -34,6 +35,7 @@ import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -55,19 +57,23 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.type.Type;
 
-import static org.hibernate.metamodel.model.domain.internal.PersisterHelper.interpretCollectionClassification;
-
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements PersistentCollectionDescriptor<O,C,E> {
 	private final SessionFactoryImplementor sessionFactory;
-	private final ManagedTypeDescriptor source;
+
+	private final CollectionClassification classifiction;
+
+	private final ManagedTypeDescriptor container;
 
 	private final NavigableRole navigableRole;
-	private final CollectionClassification collectionClassification;
 
 	private final CollectionKey foreignKeyDescriptor;
+	private final PersistentCollectionRepresentation representation;
+	private CollectionIdentifier idDescriptor;
+	private CollectionElement elementDescriptor;
+	private CollectionIndex indexDescriptor;
 
 	// todo (6.0) - rework this (and friend) per todo item...
 	//		* Redesign `org.hibernate.cache.spi.entry.CacheEntryStructure` and friends (with better names)
@@ -78,9 +84,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 	private final CacheEntryStructure cacheEntryStructure;
 
 
-	private CollectionIdentifier idDescriptor;
-	private CollectionElement elementDescriptor;
-	private CollectionIndex indexDescriptor;
 
 	private Table separateCollectionTable;
 
@@ -93,14 +96,19 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 	private final int batchSize;
 
 	public AbstractPersistentCollectionDescriptor(
-			Collection collectionBinding,
-			ManagedTypeDescriptor source,
-			String navigableName,
+			Property pluralProperty,
+			ManagedTypeDescriptor runtimeContainer,
+			PersistentCollectionRepresentation representation,
+			CollectionClassification classification,
 			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
+		this.representation = representation;
+		final Collection collectionBinding = (Collection) pluralProperty.getValue();
+
 		this.sessionFactory = creationContext.getSessionFactory();
-		this.source = source;
-		this.navigableRole = source.getNavigableRole().append( navigableName );
-		this.collectionClassification = interpretCollectionClassification( collectionBinding );
+		this.container = runtimeContainer;
+		this.navigableRole = container.getNavigableRole().append( pluralProperty.getName() );
+		this.classifiction = classification;
+
 		this.foreignKeyDescriptor = new CollectionKey( this, collectionBinding );
 
 		if ( sessionFactory.getSessionFactoryOptions().isStructuredCacheEntriesEnabled() ) {
@@ -126,7 +134,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 
 		this.keyJavaTypeDescriptor = collectionBinding.getKey().getJavaTypeDescriptor();
 
-		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( navigableName );
+		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( pluralProperty.getName() );
 
 		int batch = collectionBinding.getBatchSize();
 		if ( batch == -1 ) {
@@ -296,6 +304,11 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 	@Override
 	public int getBatchSize() {
 		return batchSize;
+	}
+
+	@Override
+	public PersistentCollectionRepresentation getRepresentation() {
+		return representation;
 	}
 
 	@Override

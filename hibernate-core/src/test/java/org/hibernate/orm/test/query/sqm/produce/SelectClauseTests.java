@@ -338,8 +338,8 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 
 		final AbstractSqmCollectionIndexReference mapKeyPathExpression = (AbstractSqmCollectionIndexReference) statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode();
 		final PluralPersistentAttribute attribute = mapKeyPathExpression.getPluralAttributeBinding().getReferencedNavigable();
-		assertThat( attribute.getPersistentCollectionMetadata().getCollectionClassification(), is( collectionClassification ) );
-		assertThat( attribute.getPersistentCollectionMetadata().getIndexDescriptor().getClassification(), is( indexClassification) );
+		assertThat( attribute.getPersistentCollectionDescriptor().getCollectionClassification(), is( collectionClassification ) );
+		assertThat( attribute.getPersistentCollectionDescriptor().getIndexDescriptor().getClassification(), is( indexClassification) );
 		assertThat( mapKeyPathExpression.getExpressableType(), sameInstance( attribute ) );
 	}
 
@@ -442,9 +442,9 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		final SqmCollectionElementReference elementBinding = (SqmCollectionElementReference) statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode();
 		final SqmPluralAttributeReference attrRef = elementBinding.getSourceReference();
 
-		assertThat( attrRef.getReferencedNavigable().getPersistentCollectionMetadata().getCollectionClassification(), is( collectionClassification) );
+		assertThat( attrRef.getReferencedNavigable().getPersistentCollectionDescriptor().getCollectionClassification(), is( collectionClassification) );
 //		assertThat( elementBinding.getSelectableNodeType(), sameInstance( attrRef.getElementDescriptor().getType() ) );
-		assertThat( attrRef.getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor().getClassification(), is( elementClassification ) );
+		assertThat( attrRef.getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor().getClassification(), is( elementClassification ) );
 		assertThat( attrRef.getExportedFromElement().getIdentificationVariable(), is( collectionIdentificationVariable ) );
 	}
 
@@ -463,16 +463,16 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		assertThat( mapEntryFunction.getAttributeAttributeReference().getExportedFromElement().getIdentificationVariable(), is( "m") );
 
 		final PluralPersistentAttribute attribute = mapEntryFunction.getAttributeAttributeReference().getReferencedNavigable();
-		assertThat( attribute.getPersistentCollectionMetadata().getCollectionClassification(), is(CollectionClassification.MAP) );
+		assertThat( attribute.getPersistentCollectionDescriptor().getCollectionClassification(), is( CollectionClassification.MAP) );
 
 		// Key
-		assertThat( attribute.getPersistentCollectionMetadata().getIndexDescriptor().getClassification(), is( IndexClassification.BASIC) );
-		assertEquals( String.class, attribute.getPersistentCollectionMetadata().getIndexDescriptor().getJavaTypeDescriptor().getJavaType() );
+		assertThat( attribute.getPersistentCollectionDescriptor().getIndexDescriptor().getClassification(), is( IndexClassification.BASIC) );
+		assertEquals( String.class, attribute.getPersistentCollectionDescriptor().getIndexDescriptor().getJavaTypeDescriptor().getJavaType() );
 
 		// value/element
-		assertThat( attribute.getPersistentCollectionMetadata().getElementDescriptor().getClassification(), is( ElementClassification.ONE_TO_MANY) );
-		assertThat( ( (SqmEntityReference) attribute.getPersistentCollectionMetadata().getElementDescriptor() ).getExpressableType().getEntityName(), is( "org.hibernate.sqm.test.domain.EntityOfMaps" ) );
-		assertEquals( EntityOfMaps.class, attribute.getPersistentCollectionMetadata().getElementDescriptor().getJavaTypeDescriptor().getJavaType() );
+		assertThat( attribute.getPersistentCollectionDescriptor().getElementDescriptor().getClassification(), is( ElementClassification.ONE_TO_MANY) );
+		assertThat( ( (SqmEntityReference) attribute.getPersistentCollectionDescriptor().getElementDescriptor() ).getExpressableType().getEntityName(), is( "org.hibernate.sqm.test.domain.EntityOfMaps" ) );
+		assertEquals( EntityOfMaps.class, attribute.getPersistentCollectionDescriptor().getElementDescriptor().getJavaTypeDescriptor().getJavaType() );
 	}
 
 	@Override

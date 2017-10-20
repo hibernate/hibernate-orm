@@ -142,7 +142,7 @@ public final class Nullability {
 
 		if ( persistentAttributeType == PersistentAttributeType.ELEMENT_COLLECTION ) {
 			// persistent collections may have components
-			final PersistentCollectionDescriptor collectionDescriptor = ( (PluralAttributeCollection) attribute ).getPersistentCollectionMetadata();
+			final PersistentCollectionDescriptor collectionDescriptor = ( (PluralAttributeCollection) attribute ).getPersistentCollectionDescriptor();
 			final CollectionElement elementDescriptor = collectionDescriptor.getElementDescriptor();
 
 			if ( elementDescriptor.getClassification() == CollectionElement.ElementClassification.EMBEDDABLE ) {

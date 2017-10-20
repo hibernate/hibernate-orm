@@ -83,19 +83,19 @@ public interface NavigableVisitationStrategy {
 	}
 
 	default void visitPluralAttribute(PluralPersistentAttribute attribute) {
-		visitCollectionForeignKey( attribute.getPersistentCollectionMetadata().getForeignKeyDescriptor() );
+		visitCollectionForeignKey( attribute.getPersistentCollectionDescriptor().getForeignKeyDescriptor() );
 
-		final CollectionIdentifier idDescriptor = attribute.getPersistentCollectionMetadata().getIdDescriptor();
+		final CollectionIdentifier idDescriptor = attribute.getPersistentCollectionDescriptor().getIdDescriptor();
 		if ( idDescriptor != null ) {
 			visitCollectionIdentifier( idDescriptor );
 		}
 
-		final CollectionIndex indexDescriptor = attribute.getPersistentCollectionMetadata().getIndexDescriptor();
+		final CollectionIndex indexDescriptor = attribute.getPersistentCollectionDescriptor().getIndexDescriptor();
 		if ( indexDescriptor != null ) {
 			indexDescriptor.visitNavigable( this );
 		}
 
-		attribute.getPersistentCollectionMetadata().getElementDescriptor().visitNavigable( this );
+		attribute.getPersistentCollectionDescriptor().getElementDescriptor().visitNavigable( this );
 	}
 
 	default void visitCollectionForeignKey(CollectionKey collectionKey) {

@@ -40,7 +40,7 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 		if ( collection != null ) {
 			final SessionImplementor session = getSession();
 			final PersistentCollection persistentCollection;
-			if ( attributeCollection.getPersistentCollectionMetadata().getCollectionClassification() == CollectionClassification.ARRAY ) {
+			if ( attributeCollection.getPersistentCollectionDescriptor().getCollectionClassification() == CollectionClassification.ARRAY ) {
 				persistentCollection = session.getPersistenceContext().getCollectionHolder( collection );
 				// if no array holder we found an unwrappered array (this can't occur,
 				// because we now always call wrap() beforeQuery getting to here)

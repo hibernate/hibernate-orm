@@ -74,7 +74,7 @@ public class FetchProfile {
 		final PersistentAttribute attribute = fetch.getAssociation().getOwner().findPersistentAttribute( fetchAssociactionRole );
 		if ( PluralPersistentAttribute.class.isInstance( attribute ) ) {
 			LOG.tracev( "Handling request to add collection fetch [{0}]", fetchAssociactionRole );
-			final CollectionClassification collectionClassification = ( (PluralPersistentAttribute) attribute ).getPersistentCollectionMetadata()
+			final CollectionClassification collectionClassification = ( (PluralPersistentAttribute) attribute ).getPersistentCollectionDescriptor()
 					.getCollectionClassification();
 			// couple of things for which to account in the case of collection
 			// join fetches

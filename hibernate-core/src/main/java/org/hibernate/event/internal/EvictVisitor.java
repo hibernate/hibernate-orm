@@ -42,7 +42,7 @@ public class EvictVisitor extends AbstractVisitor {
 
 	public void evictCollection(Object value, PluralAttributeCollection attributeCollection) {
 		final Object pc;
-		if ( attributeCollection.getPersistentCollectionMetadata()
+		if ( attributeCollection.getPersistentCollectionDescriptor()
 				.getCollectionClassification() == CollectionClassification.ARRAY ) {
 			pc = getSession().getPersistenceContext().removeCollectionHolder( value );
 		}

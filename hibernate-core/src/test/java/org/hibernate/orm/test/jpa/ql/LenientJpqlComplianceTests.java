@@ -29,7 +29,7 @@ import static org.hibernate.query.sqm.StrictJpaComplianceViolation.Type.VALUE_FU
  *
  * @author Steve Ebersole
  */
-@Ignore( "")
+@Ignore
 public class LenientJpqlComplianceTests extends BaseSqmUnitTest {
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {
@@ -40,7 +40,7 @@ public class LenientJpqlComplianceTests extends BaseSqmUnitTest {
 
 	private StrictJpaComplianceViolation.Type violationChecked;
 
-	protected StrictJpaComplianceViolation.Type getCurrectViolationBeingChecked() {
+	protected StrictJpaComplianceViolation.Type getCurrentViolationBeingChecked() {
 		if ( violationChecked == null ) {
 			throw new IllegalStateException( "Current StrictJpaComplianceViolation.Type being checked is not set" );
 		}

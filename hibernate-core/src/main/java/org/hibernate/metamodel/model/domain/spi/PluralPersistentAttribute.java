@@ -17,7 +17,7 @@ public interface PluralPersistentAttribute<O,C,E>
 		extends NonIdPersistentAttribute<O,C>, NavigableContainer<C>,
 		javax.persistence.metamodel.PluralAttribute<O,C,E>, Fetchable<C> {
 
-	PersistentCollectionDescriptor<O,C,E> getPersistentCollectionMetadata();
+	PersistentCollectionDescriptor<O,C,E> getPersistentCollectionDescriptor();
 
 	@Override
 	Class<C> getJavaType();
@@ -29,16 +29,16 @@ public interface PluralPersistentAttribute<O,C,E>
 
 	@Override
 	default PersistenceType getPersistenceType() {
-		return getPersistentCollectionMetadata().getPersistenceType();
+		return getPersistentCollectionDescriptor().getPersistenceType();
 	}
 
 	@Override
 	default CollectionType getCollectionType() {
-		return getPersistentCollectionMetadata().getCollectionClassification().toJpaClassification();
+		return getPersistentCollectionDescriptor().getCollectionClassification().toJpaClassification();
 	}
 
 	@Override
 	default Type<E> getElementType() {
-		return getPersistentCollectionMetadata().getElementDescriptor();
+		return getPersistentCollectionDescriptor().getElementDescriptor();
 	}
 }

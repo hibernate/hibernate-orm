@@ -7,6 +7,7 @@
 package org.hibernate.property.access.spi;
 
 import org.hibernate.EntityMode;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationStrategy;
 import org.hibernate.service.Service;
 
 /**
@@ -16,7 +17,7 @@ import org.hibernate.service.Service;
  *
  * @author Steve Ebersole
  *
- * @deprecated Use {@link org.hibernate.metamodel.model.domain.spi.RepresentationStrategy#generatePropertyAccess}
+ * @deprecated Use {@link ManagedTypeRepresentationStrategy#generatePropertyAccess}
  * instead
  */
 @Deprecated

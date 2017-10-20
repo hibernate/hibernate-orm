@@ -27,29 +27,16 @@ public class PersistentSortedSet extends PersistentSet implements SortedSet {
 	protected Comparator comparator;
 
 	/**
-	 * Constructs a PersistentSortedSet.  This form needed for SOAP libraries, etc
-	 */
-	@SuppressWarnings("UnusedDeclaration")
-	public PersistentSortedSet() {
-	}
-
-	/**
-	 * Constructs a PersistentSortedSet
-	 *
-	 * @param session The session
-	 */
-	public PersistentSortedSet(SharedSessionContractImplementor session) {
-		super( session );
-	}
-
-	/**
 	 * Constructs a PersistentSortedSet
 	 *
 	 * @param session The session
 	 * @param set The underlying set data
 	 */
-	public PersistentSortedSet(SharedSessionContractImplementor session, SortedSet set) {
-		super( session, set );
+	public PersistentSortedSet(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor,
+			SortedSet set) {
+		super( session, descriptor, set );
 		comparator = set.comparator();
 	}
 

@@ -20,7 +20,7 @@ public class SqmMinElementReferenceBasic extends AbstractSpecificSqmElementRefer
 
 	@Override
 	public BasicCollectionElement getExpressableType() {
-		return (BasicCollectionElement) getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor();
+		return (BasicCollectionElement) getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor();
 	}
 
 	@Override

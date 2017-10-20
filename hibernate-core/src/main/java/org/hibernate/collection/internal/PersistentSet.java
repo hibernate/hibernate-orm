@@ -17,9 +17,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.collection.spi.PersistentCollectionRepresentation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.NotYetImplementedFor6Exception;
 
 
 /**
@@ -30,28 +31,18 @@ import org.hibernate.NotYetImplementedFor6Exception;
  * @author Gavin King
  */
 public class PersistentSet extends AbstractPersistentCollection implements java.util.Set {
+	private PersistentCollectionDescriptor descriptor;
+	private Serializable key;
 	protected Set set;
 	protected transient List tempList;
 
-	/**
-	 * Empty constructor.
-	 * <p/>
-	 * Note: this form is not ever ever ever used by Hibernate; it is, however,
-	 * needed for SOAP libraries and other such marshalling code.
-	 */
-	public PersistentSet() {
-		// intentionally empty
+	protected PersistentSet(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor) {
+		super( session );
+		this.descriptor = descriptor;
 	}
 
-	/**
-	 * Constructor matching super.  Instantiates a lazy set (the underlying
-	 * set is un-initialized).
-	 *
-	 * @param session The session to which this set will belong.
-	 */
-	public PersistentSet(SharedSessionContractImplementor session) {
-		super( session );
-	}
 
 	/**
 	 * Instantiates a non-lazy set (the underlying set is constructed
@@ -60,16 +51,36 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	 * @param session The session to which this set will belong.
 	 * @param set The underlying set data.
 	 */
-	public PersistentSet(SharedSessionContractImplementor session, java.util.Set set) {
-		super( session );
+	public PersistentSet(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor,
+			java.util.Set set) {
+		this( session, descriptor );
+
 		// Sets can be just a view of a part of another collection.
 		// do we need to copy it to be sure it won't be changing
 		// underneath us?
 		// ie. this.set.addAll(set);
-		this.set = set;
-		setInitialized();
+		setSet( set );
+
 		setDirectlyAccessible( true );
 	}
+
+	private void setSet(Set set) {
+		this.set = set;
+		setInitialized();
+	}
+
+	public PersistentSet(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor,
+			Serializable key) {
+		super( session );
+
+		this.descriptor = descriptor;
+		this.key = key;
+	}
+
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
@@ -112,7 +123,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 
 	@Override
 	public void beforeInitialize(PersistentCollectionDescriptor persister, int anticipatedSize) {
-		this.set = (Set) persister.getTuplizer().instantiate( anticipatedSize );
+		this.set = (Set) persister.getTuplizer().instantiateRaw( anticipatedSize );
 	}
 
 	@Override

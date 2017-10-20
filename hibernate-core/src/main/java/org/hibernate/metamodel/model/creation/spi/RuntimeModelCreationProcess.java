@@ -29,7 +29,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
-import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
+import org.hibernate.collection.spi.PersistentCollectionRepresentationResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.internal.AbstractAttributeNodeContainer;
 import org.hibernate.graph.internal.AttributeNodeImpl;
@@ -46,7 +46,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -442,13 +442,13 @@ public class RuntimeModelCreationProcess {
 		}
 
 		@Override
-		public RepresentationStrategySelector getRepresentationStrategySelector() {
-			return metadataBuildingContext.getBuildingOptions().getRepresentationStrategySelector();
+		public ManagedTypeRepresentationResolver getRepresentationStrategySelector() {
+			return metadataBuildingContext.getBuildingOptions().getManagedTypeRepresentationResolver();
 		}
 
 		@Override
-		public PersistentCollectionTuplizerFactory getPersistentCollectionTuplizerFactory() {
-			return metadataBuildingContext.getBootstrapContext().getPersistentCollectionTuplizerFactory();
+		public PersistentCollectionRepresentationResolver getPersistentCollectionRepresentationResolver() {
+			return metadataBuildingContext.getBootstrapContext().getCollectionRepresentationResolver();
 		}
 
 		@Override

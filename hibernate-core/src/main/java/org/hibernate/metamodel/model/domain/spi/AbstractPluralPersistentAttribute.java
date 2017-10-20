@@ -44,7 +44,7 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 	}
 
 	@Override
-	public PersistentCollectionDescriptor<O,C,E> getPersistentCollectionMetadata() {
+	public PersistentCollectionDescriptor<O,C,E> getPersistentCollectionDescriptor() {
 		return collectionMetadata;
 	}
 
@@ -55,7 +55,7 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 	@Override
 	public Type<E> getElementType() {
 		// NOTE : this is the JPA Type
-		return getPersistentCollectionMetadata().getElementDescriptor();
+		return getPersistentCollectionDescriptor().getElementDescriptor();
 	}
 
 	@Override
@@ -65,12 +65,12 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 
 	@Override
 	public Class<E> getBindableJavaType() {
-		return getPersistentCollectionMetadata().getElementDescriptor().getJavaType();
+		return getPersistentCollectionDescriptor().getElementDescriptor().getJavaType();
 	}
 
 	@Override
 	public PersistentAttributeType getPersistentAttributeType() {
-		switch ( getPersistentCollectionMetadata().getElementDescriptor().getClassification() ) {
+		switch ( getPersistentCollectionDescriptor().getElementDescriptor().getClassification() ) {
 			case EMBEDDABLE:
 			case BASIC: {
 				return PersistentAttributeType.ELEMENT_COLLECTION;
@@ -110,17 +110,17 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 
 	@Override
 	public <N> Navigable<N> findNavigable(String navigableName) {
-		return getPersistentCollectionMetadata().findNavigable( navigableName );
+		return getPersistentCollectionDescriptor().findNavigable( navigableName );
 	}
 
 	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
-		getPersistentCollectionMetadata().visitNavigables( visitor );
+		getPersistentCollectionDescriptor().visitNavigables( visitor );
 	}
 
 	@Override
 	public String asLoggableText() {
-		return getPersistentCollectionMetadata().asLoggableText();
+		return getPersistentCollectionDescriptor().asLoggableText();
 	}
 
 	@Override
@@ -170,7 +170,7 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 
 	@Override
 	public ForeignKey.ColumnMappings getJoinColumnMappings() {
-		return getPersistentCollectionMetadata().getForeignKeyDescriptor().getJoinColumnMappings();
+		return getPersistentCollectionDescriptor().getForeignKeyDescriptor().getJoinColumnMappings();
 	}
 
 	@Override

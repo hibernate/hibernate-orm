@@ -31,8 +31,8 @@ public abstract class AbstractSqmCollectionIndexReference
 		this.attributeBinding = pluralAttributeBinding;
 		this.pluralAttributeReference = pluralAttributeBinding.getReferencedNavigable();
 
-		assert pluralAttributeReference.getPersistentCollectionMetadata().getCollectionClassification() == CollectionClassification.MAP
-				|| pluralAttributeReference.getPersistentCollectionMetadata().getCollectionClassification() == CollectionClassification.LIST;
+		assert pluralAttributeReference.getPersistentCollectionDescriptor().getCollectionClassification() == CollectionClassification.MAP
+				|| pluralAttributeReference.getPersistentCollectionDescriptor().getCollectionClassification() == CollectionClassification.LIST;
 
 		this.propertyPath = pluralAttributeBinding.getNavigablePath().append( "{keys}" );
 	}
@@ -43,7 +43,7 @@ public abstract class AbstractSqmCollectionIndexReference
 
 	@Override
 	public ExpressableType getExpressableType() {
-		return getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getIndexDescriptor();
+		return getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionDescriptor().getIndexDescriptor();
 	}
 
 	@Override
@@ -58,7 +58,7 @@ public abstract class AbstractSqmCollectionIndexReference
 
 	@Override
 	public Navigable getReferencedNavigable() {
-		return pluralAttributeReference.getPersistentCollectionMetadata().getIndexDescriptor();
+		return pluralAttributeReference.getPersistentCollectionDescriptor().getIndexDescriptor();
 	}
 
 	@Override

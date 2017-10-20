@@ -25,7 +25,7 @@ public class SqmIndexedElementReferenceEmbedded
 
 	@Override
 	public CollectionElementEmbedded getReferencedNavigable() {
-		return (CollectionElementEmbedded) getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor();
+		return (CollectionElementEmbedded) getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor();
 	}
 
 	@Override

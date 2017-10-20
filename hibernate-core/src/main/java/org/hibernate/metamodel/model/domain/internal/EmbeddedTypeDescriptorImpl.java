@@ -24,7 +24,7 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.domain.spi.RepresentationStrategy;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
@@ -42,7 +42,7 @@ public class EmbeddedTypeDescriptorImpl<T>
 
 	private final SingularPersistentAttribute.Disposition compositeDisposition;
 
-	private RepresentationStrategy representationStrategy;
+	private ManagedTypeRepresentationStrategy representationStrategy;
 
 	@SuppressWarnings("unchecked")
 	public EmbeddedTypeDescriptorImpl(
@@ -101,8 +101,8 @@ public class EmbeddedTypeDescriptorImpl<T>
 		super.finishInitialization( mappingDescriptor, creationContext );
 
 		this.representationStrategy = creationContext.getMetadata().getMetadataBuildingOptions()
-				.getRepresentationStrategySelector()
-				.resolveRepresentationStrategy( mappingDescriptor, this, creationContext);
+				.getManagedTypeRepresentationResolver()
+				.resolveStrategy( mappingDescriptor, this, creationContext);
 	}
 
 	@Override

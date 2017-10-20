@@ -20,7 +20,8 @@ import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
-import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
+import org.hibernate.collection.spi.PersistentCollectionRepresentationResolver;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 
@@ -398,7 +399,8 @@ public interface MetadataBuilder {
 
 	MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter);
 
-	MetadataBuilder applyRepresentationStrategySelector(RepresentationStrategySelector strategySelector);
+	MetadataBuilder applyRepresentationStrategySelector(ManagedTypeRepresentationResolver strategySelector);
+	MetadataBuilder applyRepresentationStrategySelector(PersistentCollectionRepresentationResolver resolver);
 
 //	/**
 //	 * Specify the resolve to be used in identifying the backing members of a

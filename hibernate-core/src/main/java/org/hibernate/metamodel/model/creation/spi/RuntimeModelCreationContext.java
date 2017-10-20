@@ -12,7 +12,7 @@ import org.hibernate.boot.model.domain.MappedSuperclassMapping;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
+import org.hibernate.collection.spi.PersistentCollectionRepresentationResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
@@ -23,7 +23,7 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -47,13 +47,13 @@ public interface RuntimeModelCreationContext {
 	JpaStaticMetaModelPopulationSetting getJpaStaticMetaModelPopulationSetting();
 
 	RuntimeModelDescriptorFactory getRuntimeModelDescriptorFactory();
-	RepresentationStrategySelector getRepresentationStrategySelector();
+	ManagedTypeRepresentationResolver getRepresentationStrategySelector();
 
 	default IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return getSessionFactory().getServiceRegistry().getService( MutableIdentifierGeneratorFactory.class );
 	}
 
-	PersistentCollectionTuplizerFactory getPersistentCollectionTuplizerFactory();
+	PersistentCollectionRepresentationResolver getPersistentCollectionRepresentationResolver();
 
 	void registerEntityHierarchy(
 			EntityHierarchyImpl runtimeHierarchy,

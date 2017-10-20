@@ -50,7 +50,7 @@ public interface ManagedTypeDescriptor<T>
 
 	ManagedJavaDescriptor<T> getJavaTypeDescriptor();
 
-	RepresentationStrategy getRepresentationStrategy();
+	ManagedTypeRepresentationStrategy getRepresentationStrategy();
 
 	List<StateArrayContributor> getStateArrayContributors();
 

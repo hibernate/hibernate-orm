@@ -52,14 +52,17 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.collection.internal.PersistentCollectionRepresentationResolverImpl;
+import org.hibernate.collection.spi.PersistentCollectionRepresentation;
+import org.hibernate.collection.spi.PersistentCollectionRepresentationResolver;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.model.domain.internal.StandardRepresentationStrategySelector;
-import org.hibernate.metamodel.model.domain.spi.RepresentationStrategySelector;
+import org.hibernate.metamodel.model.domain.internal.StandardManagedTypeRepresentationResolver;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
@@ -374,8 +377,14 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyRepresentationStrategySelector(RepresentationStrategySelector strategySelector) {
-		this.options.representationStrategySelector = strategySelector;
+	public MetadataBuilder applyRepresentationStrategySelector(ManagedTypeRepresentationResolver resolver) {
+		this.options.managedTypeRepresentationResolver = resolver;
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder applyRepresentationStrategySelector(PersistentCollectionRepresentationResolver resolver) {
+		this.options.collectionRepresentationResolver = resolver;
 		return this;
 	}
 
@@ -540,7 +549,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private ArrayList<MetadataSourceType> sourceProcessOrdering;
 
 		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
-		private RepresentationStrategySelector representationStrategySelector;
+		private ManagedTypeRepresentationResolver managedTypeRepresentationResolver;
+		private PersistentCollectionRepresentationResolver collectionRepresentationResolver;
 
 		private boolean autoQuoteKeywords;
 
@@ -638,7 +648,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 			this.sourceProcessOrdering = resolveInitialSourceProcessOrdering( configService );
 
-			this.representationStrategySelector = StandardRepresentationStrategySelector.INSTANCE;
+			this.managedTypeRepresentationResolver = StandardManagedTypeRepresentationResolver.INSTANCE;
+			this.collectionRepresentationResolver = new PersistentCollectionRepresentationResolverImpl();
 
 			final boolean useNewIdentifierGenerators = configService.getSetting(
 					AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS,
@@ -752,8 +763,13 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		public RepresentationStrategySelector getRepresentationStrategySelector() {
-			return representationStrategySelector;
+		public ManagedTypeRepresentationResolver getManagedTypeRepresentationResolver() {
+			return managedTypeRepresentationResolver;
+		}
+
+		@Override
+		public PersistentCollectionRepresentationResolver getPersistentCollectionRepresentationResolver() {
+			return collectionRepresentationResolver;
 		}
 
 		/**

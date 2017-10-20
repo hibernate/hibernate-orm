@@ -101,7 +101,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	@Override
 	public void beforeInitialize(PersistentCollectionDescriptor persister, int anticipatedSize) {
-		this.bag = (List) persister.getTuplizer().instantiate( anticipatedSize );
+		this.bag = (List) persister.getTuplizer().instantiateRaw( anticipatedSize );
 	}
 
 	@Override

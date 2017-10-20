@@ -52,7 +52,7 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.RepresentationStrategy;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationStrategy;
 import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
@@ -293,7 +293,7 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements EntityDesc
 	// unsupported operations
 
 	@Override
-	public RepresentationStrategy getRepresentationStrategy() {
+	public ManagedTypeRepresentationStrategy getRepresentationStrategy() {
 		throw new UnsupportedOperationException(  );
 	}
 

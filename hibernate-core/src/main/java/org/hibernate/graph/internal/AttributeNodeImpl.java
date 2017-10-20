@@ -59,7 +59,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 
 	private <X> boolean determineCanContainKeySubgraphs(PersistentAttribute<X, T> attribute) {
 		final boolean isCollectionIndex = attribute instanceof PluralPersistentAttribute
-				&& ( (PluralPersistentAttribute) attribute ).getPersistentCollectionMetadata().getIndexDescriptor() != null;
+				&& ( (PluralPersistentAttribute) attribute ).getPersistentCollectionDescriptor().getIndexDescriptor() != null;
 		final boolean isCompositeId = attribute instanceof EntityIdentifier;
 
 		return isCollectionIndex || isCompositeId;
@@ -151,7 +151,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 		final ManagedTypeDescriptor<X> associatedManagedTypeDescriptor;
 		if ( attribute instanceof PluralPersistentAttribute ) {
 			final PluralPersistentAttribute pluralAttribute = (PluralPersistentAttribute) attribute;
-			final CollectionElement elementDescriptor = pluralAttribute.getPersistentCollectionMetadata().getElementDescriptor();
+			final CollectionElement elementDescriptor = pluralAttribute.getPersistentCollectionDescriptor().getElementDescriptor();
 			if ( CollectionElementEmbedded.class.isInstance( elementDescriptor ) ) {
 				associatedManagedTypeDescriptor = ( (CollectionElementEmbedded) elementDescriptor ).getEmbeddedDescriptor();
 			}
@@ -228,7 +228,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 		final ManagedTypeDescriptor<X> associatedManagedTypeDescriptor;
 		if ( attribute instanceof PluralPersistentAttribute ) {
 			final PluralPersistentAttribute pluralAttribute = (PluralPersistentAttribute) attribute;
-			final CollectionIndex indexDescriptor = pluralAttribute.getPersistentCollectionMetadata().getIndexDescriptor();
+			final CollectionIndex indexDescriptor = pluralAttribute.getPersistentCollectionDescriptor().getIndexDescriptor();
 			if ( CollectionIndexEmbedded.class.isInstance( indexDescriptor ) ) {
 				associatedManagedTypeDescriptor = ( (CollectionIndexEmbedded) indexDescriptor ).getEmbeddedDescriptor();
 			}

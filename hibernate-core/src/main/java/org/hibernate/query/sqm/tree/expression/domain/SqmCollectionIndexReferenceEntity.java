@@ -30,7 +30,7 @@ public class SqmCollectionIndexReferenceEntity
 
 	@Override
 	public EntityValuedNavigable getReferencedNavigable() {
-		return (CollectionIndexEntity) getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getIndexDescriptor();
+		return (CollectionIndexEntity) getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionDescriptor().getIndexDescriptor();
 	}
 
 	@Override

@@ -31,7 +31,7 @@ import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface RepresentationStrategy {
+public interface ManagedTypeRepresentationStrategy {
 	RepresentationMode getMode();
 
 	/**

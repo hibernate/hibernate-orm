@@ -14,7 +14,7 @@ import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.collection.spi.PersistentCollectionTuplizer;
+import org.hibernate.collection.spi.PersistentCollectionRepresentation;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MarkerObject;
@@ -33,7 +33,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * Metadata and operations on a persistent collection (plural attribute).
  *
  * Works hand-in-hand with both {@link PersistentCollection} and
- * {@link PersistentCollectionTuplizer} to define complete support
+ * {@link PersistentCollectionRepresentation} to define complete support
  * for persistent collections.
  *
  * Unless a customer {@link RuntimeModelDescriptorFactory} is used, it is expected
@@ -73,7 +73,17 @@ public interface PersistentCollectionDescriptor<O,C,E>
 
 	void finishInitialization(Collection collectionBinding, RuntimeModelCreationContext creationContext);
 
-	CollectionClassification getCollectionClassification();
+	PersistentCollectionRepresentation getRepresentation();
+
+	/**
+	 * todo (6.0) : remove this method
+	 *
+	 * @deprecated Use {@link #getRepresentation()} instead
+	 */
+	@Deprecated
+	default CollectionClassification getCollectionClassification() {
+		return getRepresentation().getCollectionClassification();
+	}
 
 	@Override
 	ManagedTypeDescriptor getContainer();
@@ -161,7 +171,13 @@ public interface PersistentCollectionDescriptor<O,C,E>
 		visitNavigables( visitor );
 	}
 
-	PersistentCollectionTuplizer getTuplizer();
+	/**
+	 * todo (6.0) : remove this method
+	 *
+	 * @deprecated Use {@link #getRepresentation()} instead
+	 */
+	@Deprecated
+	PersistentCollectionRepresentation getTuplizer();
 
 	@Override
 	default boolean canCompositeContainCollections() {

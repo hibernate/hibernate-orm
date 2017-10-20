@@ -40,7 +40,7 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 	// todo (6.0) : I think we can just drop the mutabilityPlan and comparator for managed types
 
 	private final ManagedJavaDescriptor<J> javaTypeDescriptor;
-	private final RepresentationStrategy representationStrategy;
+	private final ManagedTypeRepresentationStrategy representationStrategy;
 
 	private final TypeConfiguration typeConfiguration;
 
@@ -101,7 +101,7 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 		this.typeConfiguration = creationContext.getTypeConfiguration();
 
 		this.representationStrategy = creationContext.getRepresentationStrategySelector()
-				.resolveRepresentationStrategy( managedTypeMapping, this, creationContext );
+				.resolveStrategy( managedTypeMapping, this, creationContext );
 	}
 
 	@Override
@@ -198,7 +198,7 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 	}
 
 	@Override
-	public RepresentationStrategy getRepresentationStrategy() {
+	public ManagedTypeRepresentationStrategy getRepresentationStrategy() {
 		return representationStrategy;
 	}
 

@@ -34,7 +34,7 @@ public class FlushVisitor extends AbstractVisitor {
 
 		if (collection!=null) {
 			final PersistentCollection coll;
-			if ( attributeCollection.getPersistentCollectionMetadata().getCollectionClassification() == CollectionClassification.ARRAY ) {
+			if ( attributeCollection.getPersistentCollectionDescriptor().getCollectionClassification() == CollectionClassification.ARRAY ) {
 				coll = getSession().getPersistenceContext().getCollectionHolder(collection);
 			}
 			else {

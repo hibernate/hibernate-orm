@@ -190,6 +190,7 @@ distributions {
                     exclude( '**/.project' )
                     exclude( '**/.settings' )
                     exclude( '**/.nbattrs' )
+                    exclude( '**/out/**' )
                 }
             }
         }

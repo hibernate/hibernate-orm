@@ -12,27 +12,38 @@ import java.util.List;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmCoalesceFunction extends AbstractSqmFunction {
+public class SqmCoalesceFunction implements SqmFunction {
 	public static final String NAME = "coalesce";
 
+	private AllowableFunctionReturnType resultType;
 	private List<SqmExpression> arguments = new ArrayList<>();
 
 	public SqmCoalesceFunction() {
-		this( null );
 	}
 
-	public SqmCoalesceFunction(AllowableFunctionReturnType resultType) {
-		this( resultType, null );
+	@Override
+	public AllowableFunctionReturnType getExpressableType() {
+		return resultType;
 	}
 
-	public SqmCoalesceFunction(
-			AllowableFunctionReturnType resultType, List<SqmExpression> arguments) {
-		super( resultType );
-		this.arguments = arguments;
+	@Override
+	public ExpressableType getInferableType() {
+		return getExpressableType();
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		if ( getExpressableType() == null ) {
+			return null;
+		}
+
+		return getExpressableType().getJavaTypeDescriptor();
 	}
 
 	public List<SqmExpression> getArguments() {
@@ -41,6 +52,10 @@ public class SqmCoalesceFunction extends AbstractSqmFunction {
 
 	public void value(SqmExpression expression) {
 		arguments.add( expression );
+
+		if ( resultType == null ) {
+			resultType = (AllowableFunctionReturnType) expression.getExpressableType();
+		}
 	}
 
 	@Override

@@ -17,7 +17,7 @@ ext {
     elVersion = '2.2.4'
     cdiVersion = '1.1'
 
-    javassistVersion = '3.20.0-GA'
+    javassistVersion = '3.22.0-GA'
     byteBuddyVersion = '1.6.14' // Improved JDK9 compatibility
 
     // Wildfly version targeted by module ZIP; Arquillian/Shrinkwrap versions used for CDI testing and testing the module ZIP

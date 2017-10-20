@@ -124,7 +124,11 @@ public class PhysicalColumn implements Column {
 
 	public String getSqlTypeName(Dialect dialect) {
 		if ( sqlType == null ) {
-			sqlType = dialect.getTypeName( getSqlTypeDescriptor().getJdbcTypeCode(), getSize() );
+			Size size = getSize();
+			if ( size.getLength() == null ) {
+				size = dialect.getDefaultSizeStrategy().resolveDefaultSize( getSqlTypeDescriptor(), null );
+			}
+			sqlType = dialect.getTypeName( getSqlTypeDescriptor().getJdbcTypeCode(), size );
 		}
 		return sqlType;
 	}

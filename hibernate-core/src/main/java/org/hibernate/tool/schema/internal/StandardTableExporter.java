@@ -225,6 +225,5 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 
 	protected String tableCreateString(boolean hasPrimaryKey) {
 		return hasPrimaryKey ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString();
-
 	}
 }

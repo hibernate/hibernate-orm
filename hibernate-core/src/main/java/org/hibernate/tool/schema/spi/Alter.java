@@ -8,6 +8,7 @@ package org.hibernate.tool.schema.spi;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.metamodel.model.relational.spi.Exportable;
+import org.hibernate.tool.schema.extract.spi.TableInformation;
 
 /**
  * Defines a contract for exporting of database objects (tables, etc) for use in SQL {@code ALTER} scripts.
@@ -16,7 +17,7 @@ import org.hibernate.metamodel.model.relational.spi.Exportable;
  *
  * @author Andrea Boriero
  */
-public interface Alterer<T extends Exportable> {
+public interface Alter<T extends Exportable> {
 	String[] NO_COMMANDS = new String[0];
 
 	/**
@@ -24,5 +25,5 @@ public interface Alterer<T extends Exportable> {
 	 *
 	 * @return The commands needed for alter scripting.
 	 */
-	String[] getSqlAlterStrings(T exportable, JdbcServices jdbcServices);
+	String[] getSqlAlterStrings(T exportable, TableInformation tableInfo, JdbcServices jdbcServices);
 }

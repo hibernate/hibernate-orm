@@ -75,7 +75,7 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 	@Override
 	public void addColumn(Column column) {
 		if ( getMappedColumns().size() > 0 ) {
-			throw new MappingException( "Attempt to add additional MappedColumn to BasicValueMapping" );
+			throw new MappingException( "Attempt to add additional MappedColumn to BasicValueMapping " + column.getName() );
 		}
 		super.addColumn( column );
 	}

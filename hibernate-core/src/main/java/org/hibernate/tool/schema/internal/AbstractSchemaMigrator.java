@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -294,20 +293,13 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			Formatter formatter,
 			ExecutionOptions options,
 			GenerationTarget... targets) {
-		// todo: (6.0) create and use a StandardTableAlter
-		throw new NotYetImplementedException(  );
-		//noinspection unchecked
-//		applySqlStrings(
-//				false,
-//				table.sqlAlterStrings(
-//						dialect,
-//						metadata,
-//						tableInformation
-//				),
-//				formatter,
-//				options,
-//				targets
-//		);
+		applySqlStrings(
+				false,
+				dialect.getTableAlter().getSqlAlterStrings( table, tableInformation, jdbcServices ),
+				formatter,
+				options,
+				targets
+		);
 	}
 
 	protected void applyIndexes(

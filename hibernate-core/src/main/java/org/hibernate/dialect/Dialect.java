@@ -99,13 +99,20 @@ import org.hibernate.tool.schema.internal.StandardAuxiliaryDatabaseObjectExporte
 import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
+import org.hibernate.tool.schema.internal.StandardTableAlter;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
+import org.hibernate.tool.schema.spi.Alter;
+import org.hibernate.tool.schema.spi.DefaultSizeStrategy;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.NVarcharSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.sql.spi.VarbinarySqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -146,6 +153,8 @@ public abstract class Dialect implements ConversionContext {
 	private final Set<String> sqlKeywords = new HashSet<>();
 
 	private final UniqueDelegate uniqueDelegate;
+
+	private DefaultSizeStrategy defaultSizeStrategy;
 
 
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -213,6 +222,7 @@ public abstract class Dialect implements ConversionContext {
 		}
 
 		uniqueDelegate = new DefaultUniqueDelegate( this );
+		defaultSizeStrategy = new DefaultSizeStrategyImpl();
 	}
 
 	/**
@@ -430,7 +440,22 @@ public abstract class Dialect implements ConversionContext {
 	// todo (6.0) : use one of these (pick) vv, rather than ^^
 
 	public String getTypeName(int code, Size size) throws HibernateException {
-		throw new NotYetImplementedFor6Exception(  );
+		if ( size == null ) {
+			return getTypeName( code );
+		}
+		else {
+			String result = typeNames.get( code, size.getLength(), size.getPrecision(), size.getScale() );
+			if ( result == null ) {
+				throw new HibernateException(
+						String.format(
+								"No type mapping for java.sql.Types code: %s, length: %s",
+								code,
+								size.getLength()
+						)
+				);
+			}
+			return result;
+		}
 	}
 
 	public String getTypeName(SqlTypeDescriptor sqlTypeDescriptor, Size size) {
@@ -774,8 +799,8 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The Hibernate {@link Type} name.
 	 * @throws HibernateException If no mapping was specified for that type.
 	 */
-	public String getHibernateTypeName(int code, int length, int precision, int scale) throws HibernateException {
-		final String result = hibernateTypeNames.get( code, length, precision, scale );
+	public String getHibernateTypeName(int code, Integer length, Integer precision, Integer scale) throws HibernateException {
+		final String result = hibernateTypeNames.get( code, length.longValue(), precision, scale );
 		if ( result == null ) {
 			throw new HibernateException(
 					String.format(
@@ -1527,6 +1552,22 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Command used to alter a table.
+	 *
+	 * @param tableName The name of the table to alter
+	 * @return The command used to alter a table.
+	 * @since 5.2.11
+	 */
+	public String getAlterTableString(String tableName) {
+		final StringBuilder sb = new StringBuilder( "alter table " );
+		if ( supportsIfExistsAfterAlterTable() ) {
+			sb.append( "if exists " );
+		}
+		sb.append( tableName );
+		return sb.toString();
+	}
+
+	/**
 	 * Slight variation on {@link #getCreateTableString}.  Here, we have the
 	 * command used to create a table when there is no primary key and
 	 * duplicate rows are expected.
@@ -2007,6 +2048,7 @@ public abstract class Dialect implements ConversionContext {
 	private StandardForeignKeyExporter foreignKeyExporter;
 	private StandardUniqueKeyExporter uniqueKeyExporter;
 	private StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter;
+	private StandardTableAlter tableAlter;
 
 	public Exporter<ExportableTable> getTableExporter() {
 		if ( tableExporter == null ) {
@@ -2048,6 +2090,13 @@ public abstract class Dialect implements ConversionContext {
 			auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter();
 		}
 		return auxiliaryObjectExporter;
+	}
+
+	public Alter<ExportableTable> getTableAlter() {
+		if ( tableAlter == null ) {
+			tableAlter = new StandardTableAlter( this );
+		}
+		return tableAlter;
 	}
 
 	/**
@@ -2336,6 +2385,16 @@ public abstract class Dialect implements ConversionContext {
 	 * @return {@code true} if the "if exists" can be applied afterQuery the constraint name
 	 */
 	public boolean supportsIfExistsAfterConstraintName() {
+		return false;
+	}
+
+	/**
+	 * For an "alter table", can the phrase "if exists" be applied?
+	 *
+	 * @return {@code true} if the "if exists" can be applied after ALTER TABLE
+	 * @since 5.2.11
+	 */
+	public boolean supportsIfExistsAfterAlterTable() {
 		return false;
 	}
 
@@ -2953,5 +3012,43 @@ public abstract class Dialect implements ConversionContext {
 		// boolean data-type.  And BIT happens to be the JDBC recommended
 		// mapping
 		return Types.BIT;
+	}
+
+	public DefaultSizeStrategy getDefaultSizeStrategy(){
+		return defaultSizeStrategy;
+	}
+
+	public void setDefaultSizeStrategy(DefaultSizeStrategy defaultSizeStrategy){
+		this.defaultSizeStrategy = defaultSizeStrategy;
+	}
+
+	public static class DefaultSizeStrategyImpl implements DefaultSizeStrategy {
+		@Override
+		public Size resolveDefaultSize(SqlTypeDescriptor sqlType, JavaTypeDescriptor javaType) {
+			final Size.Builder builder = new Size.Builder();
+			int jdbcTypeCode = sqlType.getJdbcTypeCode();
+
+			if ( jdbcTypeCode == Types.VARCHAR
+					|| jdbcTypeCode == Types.VARBINARY
+					|| jdbcTypeCode == Types.LONGVARBINARY
+					|| jdbcTypeCode == Types.CHAR
+					|| jdbcTypeCode == Types.LONGVARCHAR
+					|| jdbcTypeCode == Types.NCHAR
+					|| jdbcTypeCode == Types.NVARCHAR
+					|| jdbcTypeCode == Types.LONGNVARCHAR ) {
+				builder.setLength( Size.Builder.DEFAULT_LENGTH );
+				return builder.build();
+			}
+			else if ( jdbcTypeCode == Types.FLOAT ) {
+				builder.setPrecision( Size.Builder.DEFAULT_PRECISION );
+				return builder.build();
+			}
+			else if ( jdbcTypeCode == Types.NUMERIC ) {
+				builder.setPrecision( Size.Builder.DEFAULT_PRECISION );
+				builder.setScale( Size.Builder.DEFAULT_SCALE );
+				return builder.build();
+			}
+			return null;
+		}
 	}
 }

@@ -420,12 +420,12 @@ public interface MetadataBuilder {
 	 *
 	 * @return The unwrapped builder.
 	 */
-	public <T extends MetadataBuilder> T unwrap(Class<T> type);
+	<T extends MetadataBuilder> T unwrap(Class<T> type);
 
 	/**
 	 * Actually build the metamodel
 	 *
 	 * @return The built metadata.
 	 */
-	public Metadata build();
+	Metadata build();
 }

@@ -102,7 +102,6 @@ public class BasicValueBinder<T> {
 	private String propertyName;
 	private String returnedClassName;
 	private String persistentClassName;
-	private String explicitType = "";
 	private String defaultType = "";
 	private Properties typeParameters = new Properties();
 
@@ -336,7 +335,7 @@ public class BasicValueBinder<T> {
 	}
 
 	public void setExplicitType(String explicitType) {
-		this.explicitType = explicitType;
+		this.basicTypeResolver = new BasicTypeResolverExplicitNamedImpl( buildingContext, explicitType );
 	}
 
 	//FIXME raise an assertion failure  if setResolvedTypeMapping(String) and setResolvedTypeMapping(Type) are use at the same time
@@ -497,6 +496,23 @@ public class BasicValueBinder<T> {
 //			}
 //		}
 
+	}
+
+	private static class BasicTypeResolverExplicitNamedImpl implements BasicTypeResolver {
+		private final MetadataBuildingContext buildingContext;
+		private final String name;
+
+		BasicTypeResolverExplicitNamedImpl(MetadataBuildingContext buildingContext, String typeName) {
+			this.buildingContext = buildingContext;
+			this.name = typeName;
+		}
+
+		@Override
+		public <T> BasicType<T> resolveBasicType() {
+			return buildingContext.getBootstrapContext().getTypeConfiguration()
+					.getBasicTypeRegistry()
+					.getBasicType( name );
+		}
 	}
 
 	private static class BasicTypeResolverExplicitImpl implements BasicTypeResolver {

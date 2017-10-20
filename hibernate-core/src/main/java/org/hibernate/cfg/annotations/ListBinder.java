@@ -122,9 +122,8 @@ public class ListBinder extends CollectionBinder {
 					buildingContext
 			);
 			valueBinder.setColumns( new Ejb3Column[] { indexColumn } );
-			valueBinder.setExplicitType( "integer" );
+			valueBinder.setExplicitType( Integer.class.getName() );
 			SimpleValue indexValue = valueBinder.make();
-			indexColumn.linkWithValue( indexValue );
 			list.setIndex( indexValue );
 			list.setBaseIndex( indexColumn.getBase() );
 			if ( list.isOneToMany() && !list.getKey().isNullable() && !list.isInverse() ) {

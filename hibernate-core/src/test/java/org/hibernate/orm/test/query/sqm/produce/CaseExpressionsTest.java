@@ -16,7 +16,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.orm.test.query.sqm.BaseUnitTest;
+import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
@@ -38,7 +38,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Steve Ebersole
  */
-public class CaseExpressionsTest extends BaseUnitTest {
+public class CaseExpressionsTest extends BaseSqmUnitTest {
 	@Test
 	public void testBasicSimpleCaseExpression() {
 		SqmSelectStatement select = interpretSelect(

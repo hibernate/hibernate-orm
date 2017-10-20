@@ -11,7 +11,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.orm.test.query.sqm.BaseUnitTest;
+import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
@@ -26,7 +26,6 @@ import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.nullValue;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.isEmpty;
 import static org.junit.Assert.assertThat;
@@ -38,7 +37,7 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
-public class AliasCollisionTest extends BaseUnitTest {
+public class AliasCollisionTest extends BaseSqmUnitTest {
 
 	@Test(expected = AliasCollisionException.class)
 	public void testDuplicateResultVariableCollision() {

@@ -17,7 +17,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.orm.test.query.sqm.BaseUnitTest;
+import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
@@ -36,7 +36,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-public class AttributePathTests extends BaseUnitTest {
+public class AttributePathTests extends BaseSqmUnitTest {
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {
 		super.applyMetadataSources( metadataSources );

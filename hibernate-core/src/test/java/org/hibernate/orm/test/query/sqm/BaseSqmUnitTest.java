@@ -22,7 +22,7 @@ import org.junit.Before;
 /**
  * @author Steve Ebersole
  */
-public abstract class BaseUnitTest
+public abstract class BaseSqmUnitTest
 		extends org.hibernate.testing.junit4.BaseUnitTestCase
 		implements SqlAstBuildingContext, Callback {
 	private SessionFactoryImplementor sessionFactory;

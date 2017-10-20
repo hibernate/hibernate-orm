@@ -10,7 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.orm.test.query.sqm.BaseUnitTest;
+import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 
 import org.junit.Test;
@@ -22,7 +22,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-public class FirstSqmUnitTest extends BaseUnitTest {
+public class FirstSqmUnitTest extends BaseSqmUnitTest {
 
 	// todo (6.0) : this test can likely just go away ultimately.
 	//		it was intended just as a simple first "smoke" test

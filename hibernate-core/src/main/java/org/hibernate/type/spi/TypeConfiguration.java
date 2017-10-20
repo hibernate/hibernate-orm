@@ -330,21 +330,21 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	// 			interpretation of queries and implements its calls accordingly
 
 	@SuppressWarnings("unchecked")
-	public <T> EntityValuedExpressableType<T> resolveEntityReference(String entityName) {
-		final String rename = importMap.get( entityName );
+	public <T> EntityValuedExpressableType<T> resolveEntityReference(String name) {
+		final String rename = importMap.get( name );
 		if ( rename != null ) {
-			entityName = rename;
+			name = rename;
 		}
 
 		{
-			final EntityDescriptor descriptor = findEntityDescriptor( entityName );
+			final EntityDescriptor descriptor = findEntityDescriptor( name );
 			if ( descriptor != null ) {
 				return descriptor;
 			}
 		}
 
 		{
-			final MappedSuperclassDescriptor descriptor = mappedSuperclassDescriptorMap.get( entityName );
+			final MappedSuperclassDescriptor descriptor = mappedSuperclassDescriptorMap.get( name );
 			if ( descriptor != null ) {
 				// todo (6.0) : a better option is to have MappedSuperclassDescriptor extend EntityValuedExpressableType
 				//		but that currently causes some conflicts regarding `#getJavaTypeDescriptor`
@@ -352,12 +352,12 @@ public class TypeConfiguration implements SessionFactoryObserver {
 			}
 		}
 
-		final Class requestedClass = resolveRequestedClass( entityName );
+		final Class requestedClass = resolveRequestedClass( name );
 		if ( requestedClass != null ) {
 			return resolveEntityReference( requestedClass );
 		}
 
-		throw new IllegalArgumentException( "Per JPA spec : no entity named " + entityName );
+		throw new IllegalArgumentException( "Per JPA spec : no entity named " + name );
 	}
 
 	private Class resolveRequestedClass(String entityName) {
@@ -396,7 +396,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		final Set<EntityDescriptor<?>> implementors = getImplementors( javaType );
 		if ( !implementors.isEmpty() ) {
 			final PolymorphicEntityValuedExpressableTypeImpl entityReference = new PolymorphicEntityValuedExpressableTypeImpl(
-					(EntityJavaDescriptor) jtd,
+					jtd,
 					implementors
 			);
 			polymorphicEntityReferenceMap.put( jtd, entityReference );

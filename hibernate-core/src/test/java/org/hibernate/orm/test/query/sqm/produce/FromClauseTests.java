@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.query.sqm.produce;
 
 import java.time.Instant;
+import java.util.List;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -17,23 +18,32 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
+import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.core.Is.is;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.isEmpty;
+import static org.hibernate.testing.hamcrest.sqm.SqmAliasMatchers.isImplicitAlias;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Initial work on a "from clause processor"
@@ -199,6 +209,74 @@ public class FromClauseTests extends BaseSqmUnitTest {
 
 		// todo (6.0) : check join restrictions
 		//		not yet tracked, nor exposed.  SqmPredicate
+	}
+
+	@Test
+	public void testPathExpression() {
+		final String query = "select p.mate from Person p";
+		SqmSelectStatement selectStatement = interpretSelect( query );
+
+
+		final SqmFromClause fromClause = selectStatement.getQuerySpec().getFromClause();
+		assertThat( fromClause, notNullValue() );
+		assertThat( fromClause.getFromElementSpaces(), hasSize( 1 ) );
+
+		final SqmFromElementSpace firstSpace = fromClause.getFromElementSpaces().get( 0 );
+		assertThat( firstSpace, notNullValue() );
+
+		assertThat( firstSpace.getRoot(), notNullValue() );
+		assertThat( firstSpace.getRoot().getIdentificationVariable(), is( "p" )  );
+
+		assertThat( firstSpace.getJoins(), hasSize( 1 ) );
+		assertThat( firstSpace.getJoins().get( 0 ).getIdentificationVariable(), isImplicitAlias() );
+	}
+
+	@Test
+	public void testFromElementReferenceInSelect() {
+		final String query = "select p from Person p";
+		SqmSelectStatement selectStatement = interpretSelect( query );
+
+		final SqmFromClause fromClause = selectStatement.getQuerySpec().getFromClause();
+		assertThat( fromClause, notNullValue() );
+		assertThat( fromClause.getFromElementSpaces(), hasSize( 1 ) );
+
+		final SqmFromElementSpace firstSpace = fromClause.getFromElementSpaces().get( 0 );
+		assertThat( firstSpace, notNullValue() );
+
+		assertThat( selectStatement.getQuerySpec().getSelectClause().getSelections(), hasSize( 1 ) );
+		final SqmSelection sqmSelection = selectStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
+
+		assertThat( sqmSelection.getSelectableNode(), instanceOf( SqmEntityReference.class ) );
+	}
+
+	@Test
+	public void testFromElementReferenceInOrderBy() {
+		final String query = "select p from Person p order by p";
+		SqmSelectStatement selectStatement = interpretSelect( query );
+
+		final SqmFromClause fromClause = selectStatement.getQuerySpec().getFromClause();
+		assertThat( fromClause, notNullValue() );
+		assertThat( fromClause.getFromElementSpaces(), hasSize( 1 ) );
+
+		final List<SqmSortSpecification> orderBy = selectStatement.getQuerySpec()
+				.getOrderByClause()
+				.getSortSpecifications();
+		assertThat( orderBy, hasSize( 1 ) );
+
+		assertThat( orderBy.get( 0 ).getSortExpression(), instanceOf( SqmEntityReference.class ) );
+	}
+
+	@Test
+	public void testCrossSpaceReferencesFail() {
+		final String query = "select p from Person p, Person p2 join Person p3 on p3.id = p.id ";
+		try {
+			interpretSelect( query );
+			fail( "Expecting failure" );
+		}
+		catch (SemanticException e) {
+			assertThat( e.getMessage(), startsWith( "Qualified join predicate referred to FromElement [" ) );
+			assertThat( e.getMessage(), endsWith( "] outside the FromElementSpace containing the join" ) );
+		}
 	}
 
 

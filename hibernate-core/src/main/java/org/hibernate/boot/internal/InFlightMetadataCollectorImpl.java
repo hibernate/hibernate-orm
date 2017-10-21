@@ -1782,7 +1782,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				Column column = columns[i];
 				String order = orderings != null ? orderings[i] : null;
 				if ( table.containsColumn( column ) ) {
-					uk.addColumn( column, order );
+					uk.addColumn( table.getColumn( column ), order );
 					unbound.remove( column );
 				}
 			}
@@ -1822,7 +1822,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				Column column = columns[i];
 				String order = orderings != null ? orderings[i] : null;
 				if ( table.containsColumn( column ) ) {
-					index.addColumn( column, order );
+					index.addColumn( table.getColumn( column ), order );
 					unbound.remove( column );
 				}
 			}

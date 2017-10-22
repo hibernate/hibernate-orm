@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -30,6 +31,11 @@ public class DependantValue extends BasicValue {
 	@Override
 	protected void setSqlTypeDescriptorResolver(Column column) {
 		column.setSqlTypeDescriptorResolver( new DependantValueSqlTypeDescriptorResolver( columns.size() - 1 ) );
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return wrappedValue.getJavaTypeDescriptor();
 	}
 
 	public class DependantValueSqlTypeDescriptorResolver implements SqlTypeDescriptorResolver {

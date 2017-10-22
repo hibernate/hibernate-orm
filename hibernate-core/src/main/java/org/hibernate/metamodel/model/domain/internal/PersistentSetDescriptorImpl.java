@@ -7,10 +7,11 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Set;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.collection.internal.PersistentList;
+import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -30,22 +31,24 @@ import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
  *
  * @author Steve Ebersole
  */
-public class PersistentListDescriptorImpl extends AbstractPersistentCollectionDescriptor {
-	public PersistentListDescriptorImpl(
+public class PersistentSetDescriptorImpl extends AbstractPersistentCollectionDescriptor {
+	public PersistentSetDescriptorImpl(
 			Property bootProperty,
 			ManagedTypeDescriptor runtimeContainer,
 			RuntimeModelCreationContext context) {
-		super( bootProperty, runtimeContainer, CollectionClassification.LIST, context );
+		super( bootProperty, runtimeContainer, CollectionClassification.SET, context );
 	}
 
 	@Override
 	protected CollectionJavaDescriptor resolveCollectionJtd(RuntimeModelCreationContext creationContext) {
-		return findCollectionJtd( List.class, creationContext );
+		return findCollectionJtd( Set.class, creationContext );
 	}
 
 	@Override
 	public Object instantiateRaw(int anticipatedSize) {
-		return CollectionHelper.arrayList( anticipatedSize );
+		return new HashMap<>(
+				CollectionHelper.determineProperSizing( anticipatedSize )
+		);
 	}
 
 	@Override
@@ -53,7 +56,12 @@ public class PersistentListDescriptorImpl extends AbstractPersistentCollectionDe
 			SharedSessionContractImplementor session,
 			PersistentCollectionDescriptor descriptor,
 			Serializable key) {
-		return new PersistentList( session, descriptor, key );
+		return new PersistentSet( session, descriptor, key );
+	}
+
+	@Override
+	public boolean contains(Object collection, Object childObject) {
+		return ( (Set) collection ).contains( childObject );
 	}
 
 	@Override
@@ -61,12 +69,7 @@ public class PersistentListDescriptorImpl extends AbstractPersistentCollectionDe
 			SharedSessionContractImplementor session,
 			PersistentCollectionDescriptor descriptor,
 			Object rawCollection) {
-		return new PersistentList( session, descriptor, (List) rawCollection );
-	}
-
-	@Override
-	public boolean contains(Object collection, Object childObject) {
-		return ( (List) collection ).contains( childObject );
+		return new PersistentSet( session, descriptor, (Set) rawCollection );
 	}
 
 	@Override

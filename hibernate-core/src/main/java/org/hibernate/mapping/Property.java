@@ -430,6 +430,7 @@ public class Property implements Serializable, PersistentAttributeMapping {
 				this,
 				context
 		);
+		context.registerCollectionDescriptor( descriptor, (Collection) value );
 		return descriptor.getDescribedAttribute();
 	}
 

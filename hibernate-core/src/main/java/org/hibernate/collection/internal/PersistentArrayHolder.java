@@ -16,10 +16,10 @@ import java.util.Collections;
 import java.util.Iterator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.NotYetImplementedFor6Exception;
 
 import org.jboss.logging.Logger;
 
@@ -36,11 +36,26 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 			PersistentArrayHolder.class.getName()
 	);
 
+	private PersistentCollectionDescriptor descriptor;
+
+	private Serializable key;
 	protected Object array;
 
 	//just to help out during the load (ugly, i know)
-	private transient Class elementClass;
 	private transient java.util.List tempList;
+
+	/**
+	 * Constructs a PersistentCollection instance for holding an array.
+	 *
+	 * @param session The session
+	 * @param descriptor The descriptor for the array
+	 */
+	public PersistentArrayHolder(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor) {
+		super( session );
+		this.descriptor = descriptor;
+	}
 
 	/**
 	 * Constructs a PersistentCollection instance for holding an array.
@@ -48,23 +63,26 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	 * @param session The session
 	 * @param array The array (the persistent "collection").
 	 */
-	public PersistentArrayHolder(SharedSessionContractImplementor session, Object array) {
-		super( session );
+	public PersistentArrayHolder(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor,
+			Object array) {
+		this( session, descriptor );
+		setArray( (Object[]) array );
+	}
+
+	private void setArray(Object[] array) {
 		this.array = array;
 		setInitialized();
 	}
 
-	/**
-	 * Constructs a PersistentCollection instance for holding an array.
-	 *
-	 * @param session The session
-	 * @param persister The persister for the array
-	 */
-	public PersistentArrayHolder(SharedSessionContractImplementor session, PersistentCollectionDescriptor persister) {
-		super( session );
-		elementClass = persister.getElementDescriptor().getJavaType();
+	public PersistentArrayHolder(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor,
+			Serializable key) {
+		this( session, descriptor );
+		this.key = key;
 	}
-
 
 
 	@Override
@@ -178,7 +196,11 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	@Override
 	public boolean endRead() {
 		setInitialized();
-		array = Array.newInstance( elementClass, tempList.size() );
+
+		array = Array.newInstance(
+				descriptor.getElementDescriptor().getJavaType(),
+				tempList.size()
+		);
 		for ( int i=0; i<tempList.size(); i++ ) {
 			Array.set( array, i, tempList.get( i ) );
 		}

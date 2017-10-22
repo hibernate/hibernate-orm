@@ -10,8 +10,6 @@ import java.util.Iterator;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.type.descriptor.java.internal.SetJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.SortedSetJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -75,9 +73,6 @@ public class Set extends Collection {
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		if ( isSorted() ) {
-			return SortedSetJavaDescriptor.INSTANCE;
-		}
-		return SetJavaDescriptor.INSTANCE;
+		return null;
 	}
 }

@@ -35,18 +35,13 @@ public class PluralPersistentAttributeImpl implements PluralPersistentAttribute 
 	private final PersistentCollectionDescriptor collectionDescriptor;
 
 	public PluralPersistentAttributeImpl(
-			ManagedTypeDescriptor runtimeContainer,
-			ManagedTypeMapping bootContainer,
+			PersistentCollectionDescriptor collectionDescriptor,
 			Property bootProperty,
 			RuntimeModelCreationContext creationContext) {
 
 		final Collection bootCollectionDescriptor = (Collection) bootProperty.getValue();
 
-		this.collectionDescriptor = creationContext.getBootstrapContext()
-				.getMetadataBuildingOptions()
-				.getPersistentCollectionRepresentationResolver()
-				.resolveRepresentation( bootCollectionDescriptor )
-				.generatePersistentCollectionDescriptor( runtimeContainer, bootContainer, bootProperty, creationContext );
+		this.collectionDescriptor = collectionDescriptor;
 
 		creationContext.registerCollectionDescriptor( collectionDescriptor, bootCollectionDescriptor );
 	}

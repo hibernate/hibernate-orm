@@ -41,8 +41,10 @@ public class PersistentSortedMap extends PersistentMap implements SortedMap {
 	 *
 	 * @param session The session
 	 */
-	public PersistentSortedMap(SharedSessionContractImplementor session) {
-		super( session );
+	public PersistentSortedMap(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor) {
+		super( session, descriptor );
 	}
 
 	/**
@@ -51,8 +53,11 @@ public class PersistentSortedMap extends PersistentMap implements SortedMap {
 	 * @param session The session
 	 * @param map The underlying map data
 	 */
-	public PersistentSortedMap(SharedSessionContractImplementor session, SortedMap map) {
-		super( session, map );
+	public PersistentSortedMap(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor,
+			SortedMap map) {
+		super( session, descriptor );
 		comparator = map.comparator();
 	}
 

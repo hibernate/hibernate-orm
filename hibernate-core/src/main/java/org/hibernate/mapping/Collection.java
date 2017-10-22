@@ -683,6 +683,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return CollectionJavaDescriptor.INSTANCE;
+		return null;
 	}
 }

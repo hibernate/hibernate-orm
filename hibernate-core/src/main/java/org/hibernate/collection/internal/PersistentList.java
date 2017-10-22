@@ -111,7 +111,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 
 	@Override
 	public void beforeInitialize(PersistentCollectionDescriptor persister, int anticipatedSize) {
-		this.list = (List) persister.getTuplizer().instantiateRaw( anticipatedSize );
+		this.list = (List) persister.instantiateRaw( anticipatedSize );
 	}
 
 	@Override

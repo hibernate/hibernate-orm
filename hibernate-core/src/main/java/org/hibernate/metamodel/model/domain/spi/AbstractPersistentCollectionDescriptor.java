@@ -8,14 +8,17 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cache.spi.entry.StructuredCollectionCacheEntry;
 import org.hibernate.cache.spi.entry.StructuredMapCacheEntry;
@@ -29,6 +32,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.loader.spi.CollectionLoader;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IdentifierCollection;
@@ -41,21 +45,29 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.internal.BasicCollectionElementImpl;
+import org.hibernate.metamodel.model.domain.internal.BasicCollectionIndexImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionElementEmbeddedImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionElementEntityImpl;
-import org.hibernate.metamodel.model.domain.internal.BasicCollectionIndexImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionIndexEmbeddedImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionIndexEntityImpl;
+import org.hibernate.metamodel.model.domain.internal.PluralPersistentAttributeImpl;
 import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
+import org.hibernate.sql.ast.produce.spi.TableGroupContext;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
+import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 
 /**
  * @author Steve Ebersole
@@ -63,19 +75,20 @@ import org.hibernate.type.Type;
 public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements PersistentCollectionDescriptor<O,C,E> {
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final CollectionClassification classifiction;
-
 	private final ManagedTypeDescriptor container;
-
+	private final CollectionClassification classification;
+	private final PluralPersistentAttribute attribute;
 	private final NavigableRole navigableRole;
-
 	private final CollectionKey foreignKeyDescriptor;
-	private final PersistentCollectionRepresentation representation;
+
+	private CollectionJavaDescriptor javaTypeDescriptor;
 	private CollectionIdentifier idDescriptor;
 	private CollectionElement elementDescriptor;
 	private CollectionIndex indexDescriptor;
 
-	// todo (6.0) - rework this (and friend) per todo item...
+	private CollectionDataAccess cacheAccess;
+
+	// todo (6.0) - rework this (and friends) per todo item...
 	//		* Redesign `org.hibernate.cache.spi.entry.CacheEntryStructure` and friends (with better names)
 	// 			and make more efficient.  At the moment, to cache, we:
 	//				.. Create a "cache entry" (object creation)
@@ -98,16 +111,23 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 	public AbstractPersistentCollectionDescriptor(
 			Property pluralProperty,
 			ManagedTypeDescriptor runtimeContainer,
-			PersistentCollectionRepresentation representation,
 			CollectionClassification classification,
 			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
-		this.representation = representation;
+
 		final Collection collectionBinding = (Collection) pluralProperty.getValue();
 
 		this.sessionFactory = creationContext.getSessionFactory();
 		this.container = runtimeContainer;
+
+		this.classification = classification;
+
 		this.navigableRole = container.getNavigableRole().append( pluralProperty.getName() );
-		this.classifiction = classification;
+
+		this.attribute = new PluralPersistentAttributeImpl(
+				this,
+				pluralProperty,
+				creationContext
+		);
 
 		this.foreignKeyDescriptor = new CollectionKey( this, collectionBinding );
 
@@ -119,6 +139,8 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 		else {
 			cacheEntryStructure = UnstructuredCacheEntry.INSTANCE;
 		}
+
+		cacheAccess = sessionFactory.getCache().getCollectionRegionAccess( this );
 
 		int spacesSize = 1 + collectionBinding.getSynchronizedTables().size();
 		spaces = new String[spacesSize];
@@ -142,6 +164,36 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 		}
 		batchSize = batch;
 
+	}
+
+	protected abstract CollectionJavaDescriptor resolveCollectionJtd(RuntimeModelCreationContext creationContext);
+
+	protected CollectionJavaDescriptor findOrCreateCollectionJtd(
+			Class javaType,
+			RuntimeModelCreationContext creationContext) {
+		final JavaTypeDescriptorRegistry jtdRegistry = creationContext.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry();
+
+		CollectionJavaDescriptor descriptor = (CollectionJavaDescriptor) jtdRegistry.getDescriptor( javaType );
+		if ( descriptor == null ) {
+			descriptor = new CollectionJavaDescriptor( javaType );
+		}
+
+		return descriptor;
+	}
+
+	protected CollectionJavaDescriptor findCollectionJtd(
+			Class javaType,
+			RuntimeModelCreationContext creationContext) {
+		final JavaTypeDescriptorRegistry jtdRegistry = creationContext.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry();
+
+		CollectionJavaDescriptor descriptor = (CollectionJavaDescriptor) jtdRegistry.getDescriptor( javaType );
+		if ( descriptor == null ) {
+			throw new HibernateException( "Could not locate JavaTypeDescriptor for requested Java type : " + javaType.getName() );
+		}
+
+		return descriptor;
 	}
 
 	@Override
@@ -180,6 +232,8 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 
 		this.indexDescriptor = resolveIndexDescriptor( this, collectionBinding, creationContext );
 		this.elementDescriptor = resolveElementDescriptor( this, collectionBinding, separateCollectionTable, creationContext );
+
+		this.javaTypeDescriptor = resolveCollectionJtd( creationContext );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -307,8 +361,8 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 	}
 
 	@Override
-	public PersistentCollectionRepresentation getRepresentation() {
-		return representation;
+	public CollectionClassification getCollectionClassification() {
+		return classification;
 	}
 
 	@Override
@@ -455,5 +509,168 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 		}
 
 		throw new HibernateException( "Expecting an entity (hierarchy) or embeddable, but found : " + container );
+	}
+
+
+
+
+
+	/**
+	 * @deprecated todo (6.0) remove
+	 */
+	@Override
+	@Deprecated
+	public PersistentCollectionRepresentation getTuplizer() {
+		throw new UnsupportedOperationException();
+	}
+
+
+
+
+
+
+	@Override
+	public ManagedTypeDescriptor getContainer() {
+		return container;
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
+	}
+
+	@Override
+	public SqlSelectionGroup resolveSqlSelectionGroup(
+			ColumnReferenceQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public String asLoggableText() {
+		return String.format(
+				Locale.ROOT,
+				"%s(%s)",
+				PersistentCollectionDescriptor.class.getSimpleName(),
+				getNavigableRole().getFullPath()
+		);
+	}
+
+	@Override
+	public PluralPersistentAttribute getDescribedAttribute() {
+		return attribute;
+	}
+
+	@Override
+	public CollectionKey getForeignKeyDescriptor() {
+		return foreignKeyDescriptor;
+	}
+
+	@Override
+	public CollectionIdentifier getIdDescriptor() {
+		return idDescriptor;
+	}
+
+	@Override
+	public CollectionElement getElementDescriptor() {
+		return elementDescriptor;
+	}
+
+	@Override
+	public CollectionIndex getIndexDescriptor() {
+		return indexDescriptor;
+	}
+
+	@Override
+	public CollectionLoader getLoader() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public Table getSeparateCollectionTable() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public boolean isInverse() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public boolean hasOrphanDelete() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public boolean isOneToMany() {
+		return getElementDescriptor().getClassification() == CollectionElement.ElementClassification.ONE_TO_MANY;
+	}
+
+	@Override
+	public boolean isExtraLazy() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public boolean isDirty(Object old, Object value, SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public int getSize(Serializable loadedKey, SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public Boolean indexExists(
+			Serializable loadedKey, Object index, SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public Boolean elementExists(
+			Serializable loadedKey, Object element, SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public Object getElementByIndex(
+			Serializable loadedKey, Object index, SharedSessionContractImplementor session, Object owner) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public CacheEntryStructure getCacheEntryStructure() {
+		return cacheEntryStructure;
+	}
+
+	@Override
+	public CollectionDataAccess getCacheAccess() {
+		return cacheAccess;
+	}
+
+	@Override
+	public String getMappedByProperty() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return javaTypeDescriptor;
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public void applyTableReferenceJoins(
+			ColumnReferenceQualifier lhs,
+			JoinType joinType,
+			SqlAliasBase sqlAliasBase,
+			TableReferenceJoinCollector joinCollector,
+			TableGroupContext tableGroupContext) {
+		throw new NotYetImplementedFor6Exception();
 	}
 }

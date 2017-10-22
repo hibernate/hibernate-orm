@@ -8,33 +8,34 @@ package org.hibernate.collection.internal;
 
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.collection.spi.CollectionClassification;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.PersistentCollectionRepresentation;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.domain.internal.PersistentSetDescriptorImpl;
+import org.hibernate.metamodel.model.domain.internal.PersistentMapDescriptorImpl;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class PersistentSetRepresentation implements PersistentCollectionRepresentation {
+public class PersistentMapRepresentation implements PersistentCollectionRepresentation {
 	/**
 	 * Singleton access
 	 */
-	public static final PersistentSetRepresentation INSTANCE = new PersistentSetRepresentation();
+	public static final PersistentMapRepresentation INSTANCE = new PersistentMapRepresentation();
 
-	private PersistentSetRepresentation() {
+	private PersistentMapRepresentation() {
 	}
 
 	@Override
 	public CollectionClassification getCollectionClassification() {
-		return CollectionClassification.SET;
+		return CollectionClassification.MAP;
 	}
 
 	@Override
-	public Class getPersistentCollectionJavaType() {
-		return PersistentSet.class;
+	public Class<? extends PersistentCollection> getPersistentCollectionJavaType() {
+		return PersistentMap.class;
 	}
 
 	@Override
@@ -43,7 +44,7 @@ public class PersistentSetRepresentation implements PersistentCollectionRepresen
 			ManagedTypeMapping bootContainer,
 			Property bootProperty,
 			RuntimeModelCreationContext context) {
-		return new PersistentSetDescriptorImpl(
+		return new PersistentMapDescriptorImpl(
 				bootProperty,
 				runtimeContainer,
 				context

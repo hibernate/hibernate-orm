@@ -120,7 +120,7 @@ public class CollectionLoadContext {
 				}
 				// create one
 				LOG.tracev( "Instantiating new collection [key={0}, rs={1}]", key, resultSet );
-				collection = persister.getTuplizer().instantiateWrapped(
+				collection = persister.instantiateWrapper(
 						loadContexts.getPersistenceContext().getSession(),
 						persister,
 						key

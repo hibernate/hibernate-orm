@@ -73,17 +73,7 @@ public interface PersistentCollectionDescriptor<O,C,E>
 
 	void finishInitialization(Collection collectionBinding, RuntimeModelCreationContext creationContext);
 
-	PersistentCollectionRepresentation getRepresentation();
-
-	/**
-	 * todo (6.0) : remove this method
-	 *
-	 * @deprecated Use {@link #getRepresentation()} instead
-	 */
-	@Deprecated
-	default CollectionClassification getCollectionClassification() {
-		return getRepresentation().getCollectionClassification();
-	}
+	CollectionClassification getCollectionClassification();
 
 	@Override
 	ManagedTypeDescriptor getContainer();
@@ -553,5 +543,25 @@ public interface PersistentCollectionDescriptor<O,C,E>
 
 	default Iterator getElementsIterator(Object collection, SharedSessionContractImplementor session) {
 		throw new NotYetImplementedFor6Exception();
+	}
+
+
+
+	Object instantiateRaw(int anticipatedSize);
+
+	PersistentCollection instantiateWrapper(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor,
+			Serializable key);
+
+	PersistentCollection wrap(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor,
+			Object rawCollection);
+
+	boolean contains(Object collection, Object childObject);
+
+	default Object indexOf(Object collection, Object element) {
+		throw new UnsupportedOperationException( "Collection type does not support indexes" );
 	}
 }

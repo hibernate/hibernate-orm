@@ -18,9 +18,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.NotYetImplementedFor6Exception;
 
 
 /**
@@ -32,6 +32,8 @@ import org.hibernate.NotYetImplementedFor6Exception;
  */
 public class PersistentMap extends AbstractPersistentCollection implements Map {
 
+	private PersistentCollectionDescriptor descriptor;
+	private Serializable key;
 	protected Map map;
 
 	/**
@@ -44,13 +46,11 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		// intentionally empty
 	}
 
-	/**
-	 * Instantiates a lazy map (the underlying map is un-initialized).
-	 *
-	 * @param session The session to which this map will belong.
-	 */
-	public PersistentMap(SharedSessionContractImplementor session) {
+	public PersistentMap(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor) {
 		super( session );
+		this.descriptor = descriptor;
 	}
 
 	/**
@@ -60,11 +60,26 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	 * @param session The session to which this map will belong.
 	 * @param map The underlying map data.
 	 */
-	public PersistentMap(SharedSessionContractImplementor session, Map map) {
-		super( session );
+	public PersistentMap(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor,
+			Map map) {
+		this( session, descriptor );
+		setMap( map );
+		setDirectlyAccessible( true );
+	}
+
+	private void setMap(Map map) {
 		this.map = map;
 		setInitialized();
-		setDirectlyAccessible( true );
+	}
+
+	public PersistentMap(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor,
+			Serializable key) {
+		this( session, descriptor );
+		this.key = key;
 	}
 
 	@Override
@@ -113,7 +128,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	public void beforeInitialize(PersistentCollectionDescriptor persister, int anticipatedSize) {
-		this.map = (Map) persister.getTuplizer().instantiateRaw( anticipatedSize );
+		this.map = (Map) persister.instantiateRaw( anticipatedSize );
 	}
 
 	@Override

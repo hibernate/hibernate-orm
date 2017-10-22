@@ -6,10 +6,7 @@
  */
 package org.hibernate.collection.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
@@ -38,42 +35,15 @@ public interface PersistentCollectionRepresentation<T extends PersistentCollecti
 	 * wrapper gives it hooks into the various Collection/Map operations in
 	 * order to apply its "aspects" such as lazy-loading, operation-queueing, etc.
 	 */
-	Class<? extends PersistentCollection> getPersistentCollectionJavaType();
+	Class<T> getPersistentCollectionJavaType();
 
+	/**
+	 * Create an instance of PersistentCollectionDescriptor
+	 */
 	<O, C, E> PersistentCollectionDescriptor<O, C, E> generatePersistentCollectionDescriptor(
 			ManagedTypeDescriptor runtimeContainer,
 			ManagedTypeMapping bootContainer,
 			Property bootProperty,
 			RuntimeModelCreationContext context);
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// todo (6.0) : I'd like to get rid of the methods below here.
-	//		they really all ought to be defined by
-	// 		PluralPersistentAttribute/PersistentCollectionDescriptor
-
-	/**
-	 * Create a new instance of the wrapped bare/raw/naked collection
-	 */
-	Object instantiateRaw(int anticipatedSize);
-
-	PersistentCollection instantiateWrapped(
-			SharedSessionContractImplementor session,
-			PersistentCollectionDescriptor descriptor,
-			Serializable key);
-
-	/**
-	 * Wrap the bare/raw/naked collection instance in a PersistentCollection wrapper.
-	 * <p/>
-	 * NOTE : Callers <b>MUST</b> add the holder to the persistence context!
-	 */
-	T wrap(
-			SharedSessionContractImplementor session,
-			PersistentCollectionDescriptor descriptor,
-			Object rawCollection);
-
-	default Object indexOf(Object collection, Object element) {
-		throw new UnsupportedOperationException( "generic collections don't have indexes" );
-	}
-
-	boolean contains(Object collection, Object childObject);
 }

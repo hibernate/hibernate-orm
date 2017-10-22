@@ -1279,7 +1279,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		final Object collection = entityDescriptor.getPropertyValue( potentialParent, property );
 		return collection != null
 				&& Hibernate.isInitialized( collection )
-				&& collectionDescriptor.getTuplizer().contains( collection, childEntity );
+				&& collectionDescriptor.contains( collection, childEntity );
 	}
 
 	@Override
@@ -1349,9 +1349,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			EntityDescriptor entityDescriptor,
 			PersistentCollectionDescriptor collectionDescriptor,
 			Object potentialParent){
-		final Object collection = entityDescriptor.getPropertyValue( potentialParent, property );
+		final Object collection = entityDescriptor.findPersistentAttribute( property )
+				.getPropertyAccess()
+				.getGetter()
+				.get( potentialParent );
 		if ( collection != null && Hibernate.isInitialized( collection ) ) {
-			return collectionDescriptor.getTuplizer().indexOf( collection, childEntity );
+			return collectionDescriptor.indexOf( collection, childEntity );
 		}
 		else {
 			return null;

@@ -18,7 +18,6 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.collection.spi.PersistentCollectionRepresentation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
@@ -123,7 +122,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 
 	@Override
 	public void beforeInitialize(PersistentCollectionDescriptor persister, int anticipatedSize) {
-		this.set = (Set) persister.getTuplizer().instantiateRaw( anticipatedSize );
+		this.set = (Set) persister.instantiateRaw( anticipatedSize );
 	}
 
 	@Override

@@ -7,14 +7,14 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
-import java.util.List;
+import java.lang.reflect.Array;
+import java.util.Map;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.collection.internal.PersistentList;
+import org.hibernate.collection.internal.PersistentArrayHolder;
 import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -25,27 +25,40 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
 
 /**
- * Hibernate's standard PersistentCollectionDescriptor implementor
- * for Lists
- *
  * @author Steve Ebersole
  */
-public class PersistentListDescriptorImpl extends AbstractPersistentCollectionDescriptor {
-	public PersistentListDescriptorImpl(
-			Property bootProperty,
+public class PersistentArrayDescriptorImpl extends AbstractPersistentCollectionDescriptor {
+
+	public PersistentArrayDescriptorImpl(
+			Property pluralProperty,
 			ManagedTypeDescriptor runtimeContainer,
-			RuntimeModelCreationContext context) {
-		super( bootProperty, runtimeContainer, CollectionClassification.LIST, context );
+			RuntimeModelCreationContext creationContext) {
+		super( pluralProperty, runtimeContainer, CollectionClassification.ARRAY, creationContext );
 	}
 
 	@Override
 	protected CollectionJavaDescriptor resolveCollectionJtd(RuntimeModelCreationContext creationContext) {
-		return findCollectionJtd( List.class, creationContext );
+		Class componentType = getElementDescriptor().getJavaTypeDescriptor().getJavaType();
+		if ( componentType == null ) {
+			// MAP entity mode?
+			// todo (6.0) : verify this
+			componentType = Map.class;
+		}
+
+		// The only way I know to handle this is by instantiating an array...
+		// todo (6.0) : better way?
+		final Class arrayType = Array.newInstance( componentType, 0 ).getClass();
+		assert arrayType.isArray();
+
+		return findOrCreateCollectionJtd( arrayType, creationContext );
 	}
 
 	@Override
 	public Object instantiateRaw(int anticipatedSize) {
-		return CollectionHelper.arrayList( anticipatedSize );
+		return Array.newInstance(
+				getJavaTypeDescriptor().getJavaType().getComponentType(),
+				anticipatedSize
+		);
 	}
 
 	@Override
@@ -53,7 +66,7 @@ public class PersistentListDescriptorImpl extends AbstractPersistentCollectionDe
 			SharedSessionContractImplementor session,
 			PersistentCollectionDescriptor descriptor,
 			Serializable key) {
-		return new PersistentList( session, descriptor, key );
+		return new PersistentArrayHolder( session, descriptor, key );
 	}
 
 	@Override
@@ -61,13 +74,24 @@ public class PersistentListDescriptorImpl extends AbstractPersistentCollectionDe
 			SharedSessionContractImplementor session,
 			PersistentCollectionDescriptor descriptor,
 			Object rawCollection) {
-		return new PersistentList( session, descriptor, (List) rawCollection );
+		return new PersistentArrayHolder( session, descriptor, rawCollection );
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public boolean contains(Object collection, Object childObject) {
-		return ( (List) collection ).contains( childObject );
+		assert collection.getClass().isArray();
+
+		final int length = Array.getLength( collection );
+		for ( int i = 0; i < length; i++ ) {
+			if ( getElementDescriptor().getJavaTypeDescriptor().areEqual( Array.get( collection, i ), childObject ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
+
 
 	@Override
 	protected Table resolveCollectionTable(

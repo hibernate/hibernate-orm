@@ -6,15 +6,9 @@
  */
 package org.hibernate.collection.internal;
 
-import java.io.Serializable;
-import java.util.List;
-
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.collection.spi.CollectionClassification;
-import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.PersistentCollectionRepresentation;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.internal.PersistentListDescriptorImpl;
@@ -27,6 +21,14 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
  * @author Steve Ebersole
  */
 public class PersistentListRepresentation implements PersistentCollectionRepresentation {
+	/**
+	 * Singleton access
+	 */
+	public static final PersistentListRepresentation INSTANCE = new PersistentListRepresentation();
+
+	private PersistentListRepresentation() {
+	}
+
 	@Override
 	public CollectionClassification getCollectionClassification() {
 		return CollectionClassification.LIST;
@@ -46,35 +48,7 @@ public class PersistentListRepresentation implements PersistentCollectionReprese
 		return new PersistentListDescriptorImpl(
 				bootProperty,
 				runtimeContainer,
-				this,
 				context
 		);
-	}
-
-
-	@Override
-	public Object instantiateRaw(int anticipatedSize) {
-		return CollectionHelper.arrayList( anticipatedSize );
-	}
-
-	@Override
-	public PersistentCollection instantiateWrapped(
-			SharedSessionContractImplementor session,
-			PersistentCollectionDescriptor descriptor,
-			Serializable key) {
-		return new PersistentList( session, descriptor, key );
-	}
-
-	@Override
-	public PersistentCollection wrap(
-			SharedSessionContractImplementor session,
-			PersistentCollectionDescriptor descriptor,
-			Object rawCollection) {
-		return new PersistentList( session, descriptor, (List) rawCollection );
-	}
-
-	@Override
-	public boolean contains(Object collection, Object childObject) {
-		return ( (List) collection ).contains( childObject );
 	}
 }

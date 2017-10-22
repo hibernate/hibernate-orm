@@ -7,10 +7,12 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.Map;
 
+import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.collection.internal.PersistentList;
+import org.hibernate.cache.CacheException;
+import org.hibernate.collection.internal.PersistentMap;
 import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -25,27 +27,25 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
 
 /**
- * Hibernate's standard PersistentCollectionDescriptor implementor
- * for Lists
- *
  * @author Steve Ebersole
  */
-public class PersistentListDescriptorImpl extends AbstractPersistentCollectionDescriptor {
-	public PersistentListDescriptorImpl(
-			Property bootProperty,
+public class PersistentMapDescriptorImpl extends AbstractPersistentCollectionDescriptor {
+	public PersistentMapDescriptorImpl(
+			Property pluralProperty,
 			ManagedTypeDescriptor runtimeContainer,
-			RuntimeModelCreationContext context) {
-		super( bootProperty, runtimeContainer, CollectionClassification.LIST, context );
+			RuntimeModelCreationContext creationContext)
+			throws MappingException, CacheException {
+		super( pluralProperty, runtimeContainer, CollectionClassification.MAP, creationContext );
 	}
 
 	@Override
 	protected CollectionJavaDescriptor resolveCollectionJtd(RuntimeModelCreationContext creationContext) {
-		return findCollectionJtd( List.class, creationContext );
+		return findCollectionJtd( Map.class, creationContext );
 	}
 
 	@Override
 	public Object instantiateRaw(int anticipatedSize) {
-		return CollectionHelper.arrayList( anticipatedSize );
+		return CollectionHelper.mapOfSize( anticipatedSize );
 	}
 
 	@Override
@@ -53,7 +53,7 @@ public class PersistentListDescriptorImpl extends AbstractPersistentCollectionDe
 			SharedSessionContractImplementor session,
 			PersistentCollectionDescriptor descriptor,
 			Serializable key) {
-		return new PersistentList( session, descriptor, key );
+		return new PersistentMap( session, descriptor, key );
 	}
 
 	@Override
@@ -61,12 +61,14 @@ public class PersistentListDescriptorImpl extends AbstractPersistentCollectionDe
 			SharedSessionContractImplementor session,
 			PersistentCollectionDescriptor descriptor,
 			Object rawCollection) {
-		return new PersistentList( session, descriptor, (List) rawCollection );
+		return new PersistentMap( session, descriptor, (Map) rawCollection );
 	}
 
 	@Override
 	public boolean contains(Object collection, Object childObject) {
-		return ( (List) collection ).contains( childObject );
+		// todo (6.0) : do we need to check key as well?
+		// todo (6.0) : or perhaps make distinction between #containsValue and #containsKey/Index?
+		return ( (Map) collection ).containsValue( childObject );
 	}
 
 	@Override

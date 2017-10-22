@@ -17,13 +17,8 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public class CollectionJavaDescriptor extends AbstractBasicJavaDescriptor<Collection> {
-	/**
-	 * Singleton access
-	 */
-	public static final CollectionJavaDescriptor INSTANCE = new CollectionJavaDescriptor();
-
-	private CollectionJavaDescriptor() {
-		super( Collection.class );
+	public CollectionJavaDescriptor(Class type) {
+		super( type );
 	}
 
 	@Override
@@ -39,7 +34,7 @@ public class CollectionJavaDescriptor extends AbstractBasicJavaDescriptor<Collec
 
 	@Override
 	public String toString(Collection value) {
-		return "{java.util.Collection}";
+		return "CollectionJavaDescriptor(" + getTypeName() + ")";
 	}
 
 	@Override

@@ -6,34 +6,37 @@
  */
 package org.hibernate.collection.internal;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollectionRepresentation;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.domain.internal.PersistentSetDescriptorImpl;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class PersistentSetRepresentation implements PersistentCollectionRepresentation {
+public class PersistentOrderedSetRepresentation implements PersistentCollectionRepresentation {
 	/**
 	 * Singleton access
 	 */
-	public static final PersistentSetRepresentation INSTANCE = new PersistentSetRepresentation();
+	public static final PersistentOrderedSetRepresentation INSTANCE = new PersistentOrderedSetRepresentation();
 
-	private PersistentSetRepresentation() {
+	private PersistentOrderedSetRepresentation() {
 	}
 
 	@Override
 	public CollectionClassification getCollectionClassification() {
-		return CollectionClassification.SET;
+		return CollectionClassification.ORDERED_SET;
 	}
 
 	@Override
 	public Class getPersistentCollectionJavaType() {
+		// for now we re-use the Set wrapper - the important distinction
+		//		here is in the raw Set used (LinkedHashSet rather than HashSet)
+		//		which is handled in the descriptor
 		return PersistentSet.class;
 	}
 
@@ -43,10 +46,6 @@ public class PersistentSetRepresentation implements PersistentCollectionRepresen
 			ManagedTypeMapping bootContainer,
 			Property bootProperty,
 			RuntimeModelCreationContext context) {
-		return new PersistentSetDescriptorImpl(
-				bootProperty,
-				runtimeContainer,
-				context
-		);
+		throw new NotYetImplementedFor6Exception();
 	}
 }

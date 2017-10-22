@@ -6,6 +6,13 @@
  */
 package org.hibernate.type.descriptor.java.internal;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 
 /**
@@ -63,12 +70,12 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( UrlJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( UUIDJavaDescriptor.INSTANCE );
 
-		target.addBaselineDescriptor( CollectionJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( ListJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( MapJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( SetJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( SortedMapJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( SortedSetJavaDescriptor.INSTANCE );
+		target.addBaselineDescriptor( new CollectionJavaDescriptor( Collection.class ) );
+		target.addBaselineDescriptor( new CollectionJavaDescriptor( List.class ) );
+		target.addBaselineDescriptor( new CollectionJavaDescriptor( Set.class ) );
+		target.addBaselineDescriptor( new CollectionJavaDescriptor( SortedSet.class ) );
+		target.addBaselineDescriptor( new CollectionJavaDescriptor( Map.class ) );
+		target.addBaselineDescriptor( new CollectionJavaDescriptor( SortedMap.class ) );
 
 	}
 }

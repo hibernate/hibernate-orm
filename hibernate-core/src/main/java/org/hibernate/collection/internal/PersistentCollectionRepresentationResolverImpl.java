@@ -9,11 +9,12 @@ package org.hibernate.collection.internal;
 import java.util.EnumMap;
 
 import org.hibernate.HibernateException;
-import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.collection.UnknownClassificationException;
 import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollectionRepresentation;
 import org.hibernate.collection.spi.PersistentCollectionRepresentationResolver;
 import org.hibernate.mapping.Array;
+import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.mapping.List;
@@ -28,27 +29,36 @@ public class PersistentCollectionRepresentationResolverImpl implements Persisten
 	private final EnumMap<CollectionClassification,PersistentCollectionRepresentation> standardRepresentations = new EnumMap<>( CollectionClassification.class );
 
 	public PersistentCollectionRepresentationResolverImpl() {
-		standardRepresentations.put( CollectionClassification.LIST, new PersistentListRepresentation() );
+		standardRepresentations.put( CollectionClassification.ARRAY, PersistentArrayRepresentation.INSTANCE );
+		standardRepresentations.put( CollectionClassification.BAG, PersistentBagRepresentation.INSTANCE );
+		standardRepresentations.put( CollectionClassification.IDBAG, PersistentIdentifierBagRepresentation.INSTANCE );
+		standardRepresentations.put( CollectionClassification.LIST, PersistentListRepresentation.INSTANCE );
+		standardRepresentations.put( CollectionClassification.MAP, PersistentMapRepresentation.INSTANCE );
+		standardRepresentations.put( CollectionClassification.SET, PersistentSetRepresentation.INSTANCE );
+
+		standardRepresentations.put( CollectionClassification.SORTED_MAP, PersistentSortedMapRepresentation.INSTANCE );
+		standardRepresentations.put( CollectionClassification.SORTED_SET, PersistentSortedSetRepresentation.INSTANCE );
+
+		standardRepresentations.put( CollectionClassification.ORDERED_MAP, PersistentOrderedMapRepresentation.INSTANCE );
+		standardRepresentations.put( CollectionClassification.ORDERED_SET, PersistentOrderedSetRepresentation.INSTANCE );
 	}
 
 	@Override
 	public PersistentCollectionRepresentation resolveRepresentation(Collection bootDescriptor) {
-
-		// todo (6.0) : allow to define a specific representation on the collection mapping
-		//		for now use the default
-
 		final CollectionClassification classification = determineClassification( bootDescriptor );
 		final PersistentCollectionRepresentation representation = standardRepresentations.get( classification );
 		if ( representation == null ) {
-			throw new NotYetImplementedFor6Exception(
-					"PersistentCollectionRepresentation not yet implemented for classification : " +
-							classification
-			);
+			throw new UnknownClassificationException( classification );
 		}
 		return representation;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	protected CollectionClassification determineClassification(Collection bootDescriptor) {
+		// todo (6.0) : allow to define a specific representation on the collection mapping
+		//
+		// for now use the default
+
 		if ( List.class.isInstance( bootDescriptor ) ) {
 			return CollectionClassification.LIST;
 		}
@@ -63,6 +73,10 @@ public class PersistentCollectionRepresentationResolverImpl implements Persisten
 			}
 
 			return CollectionClassification.SET;
+		}
+
+		if ( Bag.class.isInstance( bootDescriptor ) ) {
+			return CollectionClassification.BAG;
 		}
 
 		if ( IdentifierBag.class.isInstance( bootDescriptor ) ) {

@@ -86,7 +86,7 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 										 .getIdentityColumnString( col.getSqlTypeDescriptor().getJdbcTypeCode() ) );
 			}
 			else {
-				buf.append( col.getSqlTypeName( dialect ) );
+				buf.append( col.getSqlTypeName() );
 
 				String defaultValue = col.getDefaultValue();
 				if ( defaultValue != null ) {

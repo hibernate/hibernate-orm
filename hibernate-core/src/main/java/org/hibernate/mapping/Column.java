@@ -31,6 +31,8 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	private SqlTypeDescriptor sqlTypeDescriptor;
 	private SimpleValue.SqlTypeDescriptorResolver sqlTypeCodeResolver;
+
+	private SimpleValue simpleValue;
 	private String sqlType;
 
 	int uniqueInteger;
@@ -102,6 +104,10 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	public boolean isUnique() {
 		return unique;
+	}
+
+	public void setSimpleValue(SimpleValue simpleValue) {
+		this.simpleValue = simpleValue;
 	}
 
 	@Override
@@ -226,22 +232,35 @@ public class Column implements Selectable, Serializable, Cloneable {
 				getName(),
 				jdbcEnvironment
 		);
+
+		final Dialect dialect = jdbcEnvironment.getDialect();
+		Size size = new Size.Builder().setLength( getLength() )
+				.setPrecision( getPrecision() )
+				.setScale( getScale() )
+				.build();
+		if ( size.getLength() == null
+				|| ( size.getScale() == null && size.getPrecision() == null ) ) {
+			size = dialect.getDefaultSizeStrategy().resolveDefaultSize(
+					getSqlTypeDescriptor(),
+					simpleValue.getJavaTypeDescriptor()
+			);
+		}
+
+		String columnSqlType = getSqlType();
+		if ( columnSqlType == null ) {
+			columnSqlType = dialect.getTypeName( getSqlTypeDescriptor().getJdbcTypeCode(), size );
+		}
+
 		final PhysicalColumn column = new PhysicalColumn(
 				runtimeTable,
 				physicalName,
 				getSqlTypeDescriptor(),
 				getDefaultValue(),
-				getSqlType(),
+				columnSqlType,
 				isNullable(),
 				isUnique()
 		);
-
-		column.setSize(
-				new Size.Builder().setLength( getLength() )
-						.setPrecision( getPrecision() )
-						.setScale( getScale() )
-						.build()
-		);
+		column.setSize(	size );
 		column.setCheckConstraint( getCheckConstraint() );
 		return column;
 	}

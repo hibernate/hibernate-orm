@@ -55,7 +55,7 @@ public class StandardTableAlter implements Alter<ExportableTable> {
 						.append( ' ' )
 						.append( physicalColumn.getName().render( dialect ) )
 						.append( ' ' )
-						.append( physicalColumn.getSqlTypeName( dialect ) );
+						.append( physicalColumn.getSqlTypeName() );
 
 				final String defaultValue = physicalColumn.getDefaultValue();
 				if ( defaultValue != null ) {

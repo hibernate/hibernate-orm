@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.model.relational.spi;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.naming.Identifier;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
@@ -122,14 +121,7 @@ public class PhysicalColumn implements Column {
 		this.checkConstraint = checkConstraint;
 	}
 
-	public String getSqlTypeName(Dialect dialect) {
-		if ( sqlType == null ) {
-			Size size = getSize();
-			if ( size.getLength() == null ) {
-				size = dialect.getDefaultSizeStrategy().resolveDefaultSize( getSqlTypeDescriptor(), null );
-			}
-			sqlType = dialect.getTypeName( getSqlTypeDescriptor().getJdbcTypeCode(), size );
-		}
+	public String getSqlTypeName() {
 		return sqlType;
 	}
 

@@ -47,7 +47,7 @@ public class IdTableExporterImpl implements Exporter<IdTable> {
 			}
 
 			buffer.append( column.getName().render( dialect ) ).append( ' ' );
-			buffer.append( column.getSqlTypeName( dialect ) );
+			buffer.append( column.getSqlTypeName() );
 			// id values cannot be null
 			buffer.append( " not null" );
 		}

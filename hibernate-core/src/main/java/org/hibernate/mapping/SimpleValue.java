@@ -104,6 +104,7 @@ public abstract class SimpleValue implements KeyValue {
 			column.setTableName( getTable().getNameIdentifier() );
 		}
 		setSqlTypeDescriptorResolver(column);
+		column.setSimpleValue( this );
 	}
 
 	protected abstract void setSqlTypeDescriptorResolver(Column column);

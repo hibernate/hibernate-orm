@@ -81,8 +81,8 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 	}
 
 	@Override
-	protected void setSqlTypeDescriptorResolver(Column column) {
-		column.setSqlTypeDescriptorResolver( new BasicValueSqlTypeDescriptorResolver( ) );
+	protected void setTypeDescriptorResolver(Column column) {
+		column.setTypeDescriptorResolver( new BasicValueTypeDescriptorResolver( ) );
 	}
 
 	@Override
@@ -90,10 +90,15 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 		return visitor.accept(this);
 	}
 
-	public class BasicValueSqlTypeDescriptorResolver implements SqlTypeDescriptorResolver {
+	public class BasicValueTypeDescriptorResolver implements TypeDescriptorResolver {
 		@Override
 		public SqlTypeDescriptor resolveSqlTypeDescriptor() {
 			return resolveType().getSqlTypeDescriptor();
+		}
+
+		@Override
+		public JavaTypeDescriptor resolveJavaTypeDescriptor() {
+			return resolveType().getJavaTypeDescriptor();
 		}
 	}
 

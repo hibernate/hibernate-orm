@@ -29,8 +29,8 @@ public class DependantValue extends BasicValue {
 	}
 
 	@Override
-	protected void setSqlTypeDescriptorResolver(Column column) {
-		column.setSqlTypeDescriptorResolver( new DependantValueSqlTypeDescriptorResolver( columns.size() - 1 ) );
+	protected void setTypeDescriptorResolver(Column column) {
+		column.setTypeDescriptorResolver( new DependantValueTypeDescriptorResolver( columns.size() - 1 ) );
 	}
 
 	@Override
@@ -38,16 +38,21 @@ public class DependantValue extends BasicValue {
 		return wrappedValue.getJavaTypeDescriptor();
 	}
 
-	public class DependantValueSqlTypeDescriptorResolver implements SqlTypeDescriptorResolver {
+	public class DependantValueTypeDescriptorResolver implements TypeDescriptorResolver {
 		private int index;
 
-		public DependantValueSqlTypeDescriptorResolver(int index) {
+		public DependantValueTypeDescriptorResolver(int index) {
 			this.index = index;
 		}
 
 		@Override
 		public SqlTypeDescriptor resolveSqlTypeDescriptor() {
 			return ( (Column) wrappedValue.getMappedColumns().get( index ) ).getSqlTypeDescriptor();
+		}
+
+		@Override
+		public JavaTypeDescriptor resolveJavaTypeDescriptor() {
+			return wrappedValue.getJavaTypeDescriptor();
 		}
 	}
 

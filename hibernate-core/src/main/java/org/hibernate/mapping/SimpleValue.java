@@ -103,11 +103,10 @@ public abstract class SimpleValue implements KeyValue {
 		if ( getTable() != null ) {
 			column.setTableName( getTable().getNameIdentifier() );
 		}
-		setSqlTypeDescriptorResolver(column);
-		column.setSimpleValue( this );
+		setTypeDescriptorResolver(column);
 	}
 
-	protected abstract void setSqlTypeDescriptorResolver(Column column);
+	protected abstract void setTypeDescriptorResolver(Column column);
 
 	public void addFormula(Formula formula) {
 		columns.add( formula );
@@ -530,7 +529,8 @@ public abstract class SimpleValue implements KeyValue {
 		return getColumnInsertability();
 	}
 
-	public interface SqlTypeDescriptorResolver {
+	public interface TypeDescriptorResolver {
 		SqlTypeDescriptor resolveSqlTypeDescriptor();
+		JavaTypeDescriptor resolveJavaTypeDescriptor();
 	}
 }

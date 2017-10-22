@@ -30,9 +30,8 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private Identifier name;
 
 	private SqlTypeDescriptor sqlTypeDescriptor;
-	private SimpleValue.SqlTypeDescriptorResolver sqlTypeCodeResolver;
+	private SimpleValue.TypeDescriptorResolver typeDescriptorResolver;
 
-	private SimpleValue simpleValue;
 	private String sqlType;
 
 	int uniqueInteger;
@@ -104,10 +103,6 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	public boolean isUnique() {
 		return unique;
-	}
-
-	public void setSimpleValue(SimpleValue simpleValue) {
-		this.simpleValue = simpleValue;
 	}
 
 	@Override
@@ -213,13 +208,13 @@ public class Column implements Selectable, Serializable, Cloneable {
 	@Override
 	public SqlTypeDescriptor getSqlTypeDescriptor() {
 		if ( sqlTypeDescriptor == null ) {
-			sqlTypeDescriptor = sqlTypeCodeResolver.resolveSqlTypeDescriptor();
+			sqlTypeDescriptor = typeDescriptorResolver.resolveSqlTypeDescriptor();
 		}
 		return sqlTypeDescriptor;
 	}
 
-	public void setSqlTypeDescriptorResolver(SimpleValue.SqlTypeDescriptorResolver sqlTypeCodeResolver) {
-		this.sqlTypeCodeResolver = sqlTypeCodeResolver;
+	public void setTypeDescriptorResolver(SimpleValue.TypeDescriptorResolver typeDescriptorResolver) {
+		this.typeDescriptorResolver = typeDescriptorResolver;
 	}
 
 	@Override
@@ -242,7 +237,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 				|| ( size.getScale() == null && size.getPrecision() == null ) ) {
 			size = dialect.getDefaultSizeStrategy().resolveDefaultSize(
 					getSqlTypeDescriptor(),
-					simpleValue.getJavaTypeDescriptor()
+					typeDescriptorResolver.resolveJavaTypeDescriptor()
 			);
 		}
 
@@ -336,7 +331,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		copy.setDefaultValue( defaultValue );
 		copy.setCustomRead( customRead );
 		copy.setCustomWrite( customWrite );
-		copy.setSqlTypeDescriptorResolver( sqlTypeCodeResolver );
+		copy.setTypeDescriptorResolver( typeDescriptorResolver );
 		return copy;
 	}
 

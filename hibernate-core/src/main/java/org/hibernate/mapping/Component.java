@@ -120,7 +120,7 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 	}
 
 	@Override
-	protected void setSqlTypeDescriptorResolver(Column column) {
+	protected void setTypeDescriptorResolver(Column column) {
 		throw new UnsupportedOperationException("Cant add a column to a component");
 	}
 

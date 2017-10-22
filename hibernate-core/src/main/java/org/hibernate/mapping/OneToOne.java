@@ -57,11 +57,11 @@ public class OneToOne extends ToOne {
 	}
 
 	@Override
-	protected void setSqlTypeDescriptorResolver(Column column) {
-		column.setSqlTypeDescriptorResolver( new OneToOneTypeDescriptorResolverImpl( columns.size() - 1 ) );
+	protected void setTypeDescriptorResolver(Column column) {
+		column.setTypeDescriptorResolver( new OneToOneTypeDescriptorResolverImpl( columns.size() - 1 ) );
 	}
 
-	public class OneToOneTypeDescriptorResolverImpl implements SqlTypeDescriptorResolver {
+	public class OneToOneTypeDescriptorResolverImpl implements TypeDescriptorResolver {
 
 		private int index;
 
@@ -91,6 +91,11 @@ public class OneToOne extends ToOne {
 			else {
 				throw new IllegalStateException( "No SqlType code to resolve for " + entityName );
 			}
+		}
+
+		@Override
+		public JavaTypeDescriptor resolveJavaTypeDescriptor() {
+			return getJavaTypeDescriptor();
 		}
 	}
 

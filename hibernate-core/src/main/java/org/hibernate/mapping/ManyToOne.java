@@ -28,14 +28,14 @@ public class ManyToOne extends ToOne {
 	}
 
 	@Override
-	protected void setSqlTypeDescriptorResolver(Column column) {
-		column.setSqlTypeDescriptorResolver( new ManyToOneSqlTypeDescriptorResolver( columns.size() - 1 ) );
+	protected void setTypeDescriptorResolver(Column column) {
+		column.setTypeDescriptorResolver( new ManyToOneTypeDescriptorResolver( columns.size() - 1 ) );
 	}
 
-	public class ManyToOneSqlTypeDescriptorResolver implements SqlTypeDescriptorResolver {
+	public class ManyToOneTypeDescriptorResolver implements TypeDescriptorResolver {
 		private int index;
 
-		public ManyToOneSqlTypeDescriptorResolver(int index) {
+		public ManyToOneTypeDescriptorResolver(int index) {
 			this.index = index;
 		}
 
@@ -56,6 +56,11 @@ public class ManyToOne extends ToOne {
 						.getMappedColumns()
 						.get( index ) ).getSqlTypeDescriptor();
 			}
+		}
+
+		@Override
+		public JavaTypeDescriptor resolveJavaTypeDescriptor() {
+			return getJavaTypeDescriptor();
 		}
 	}
 

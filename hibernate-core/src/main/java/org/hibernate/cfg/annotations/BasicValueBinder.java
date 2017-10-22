@@ -811,7 +811,6 @@ public class BasicValueBinder<T> {
 
 	private class BasicTypeResolverCollectionElementImpl
 			extends BasicTypeResolverConvertibleSupport {
-		private final XProperty attributeDescriptor;
 		private final boolean isLob;
 		private final boolean isNationalized;
 
@@ -824,7 +823,6 @@ public class BasicValueBinder<T> {
 				boolean isNationalized) {
 			super( buildingContext, converterDescriptor );
 
-			this.attributeDescriptor = attributeDescriptor;
 			this.isLob = isLob;
 			this.isNationalized = isNationalized;
 

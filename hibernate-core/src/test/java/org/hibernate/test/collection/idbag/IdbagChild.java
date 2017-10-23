@@ -6,23 +6,25 @@
  */
 package org.hibernate.test.collection.idbag;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * {@inheritDoc}
- *
- * @author Steve Ebersole
+ * @author Daniel Strobusch
  */
-public class IdbagOwner {
+public class IdbagChild {
+	private Long id;
 	private String name;
-	private List<IdbagOwner> children = new ArrayList<>();
+	private String parent;
 
-	public IdbagOwner() {
+	public IdbagChild(String name)
+	{
+		this.name = name;
 	}
 
-	public IdbagOwner(String name) {
-		this.name = name;
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
 	}
 
 	public String getName() {
@@ -33,11 +35,11 @@ public class IdbagOwner {
 		this.name = name;
 	}
 
-	public List<IdbagOwner> getChildren() {
-		return children;
+	public String getParent() {
+		return parent;
 	}
 
-	public void setChildren(List<IdbagOwner> children) {
-		this.children = children;
+	public void setParent(String parent) {
+		this.parent = parent;
 	}
 }

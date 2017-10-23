@@ -24,4 +24,13 @@
         </idbag>
 	</class>
 
+    <!-- add a table to create a unique constraint on (PARENT_FK, CHILD_FK) to reproduce bug HHH-10875 -->
+    <class name="IdbagChild" table="idbag_owner_children">
+        <id name="id" column="CHILD" type="long"/>
+        <properties name="uc_parent_child" unique="true">
+            <property name="parent" column="PARENT_FK" type="string"/>
+            <property name="name" column="CHILD_FK" type="string"/>
+        </properties>
+    </class>
+
 </hibernate-mapping>

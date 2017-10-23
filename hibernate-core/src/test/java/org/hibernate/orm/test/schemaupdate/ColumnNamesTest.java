@@ -12,6 +12,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.junit.Test;
@@ -22,21 +25,31 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-public class ColumnNamesTest extends BaseSchemaTest {
+public class ColumnNamesTest extends BaseSchemaUnitTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[]{Employee.class };
 	}
 
 	@Override
-	protected boolean createTempOutputFile() {
+	protected boolean createSqlScriptTempOutputFile() {
 		return true;
+	}
+
+	@Override
+	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, "true" );
 	}
 
 	@Test
 	public void testSchemaUpdateWithQuotedColumnNames() throws Exception {
+		//first create the schema
+		createSchemaExport().create( EnumSet.of( TargetType.DATABASE ) );
+
+		// try to update the schema
 		createSchemaUpdate().setHaltOnError( true ).execute( EnumSet.of( TargetType.SCRIPT ) );
 
+		// the schema update script shouls be empty
 		final String fileContent = getOutputFileContent();
 		assertThat( "The update output file should be empty", fileContent, is( "" ) );
 	}

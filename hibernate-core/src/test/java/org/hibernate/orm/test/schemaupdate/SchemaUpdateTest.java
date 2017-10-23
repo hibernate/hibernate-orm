@@ -29,6 +29,7 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -48,7 +49,7 @@ import static org.junit.Assert.assertThat;
  * @author Andrea Boriero
  */
 @RunWith(Parameterized.class)
-public class SchemaUpdateTest extends BaseSchemaTest {
+public class SchemaUpdateTest extends BaseSchemaUnitTestCase {
 
 	private boolean skipTest;
 
@@ -67,7 +68,12 @@ public class SchemaUpdateTest extends BaseSchemaTest {
 	}
 
 	@Override
-	protected boolean createTempOutputFile() {
+	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, "true" );
+	}
+
+	@Override
+	protected boolean createSqlScriptTempOutputFile() {
 		return true;
 	}
 

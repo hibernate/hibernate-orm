@@ -9,15 +9,14 @@
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.test.schemaupdate">
+<hibernate-mapping package="org.hibernate.orm.test.schemaupdate">
 
 	<class name="Version">
 		<id name="id">
-			<generator class="sequence"/>
+			<generator class="increment"/>
 		</id>
 		<property name="description"/>	
-		<property name="name"/>			
 	</class>
-	
+
 </hibernate-mapping>
 

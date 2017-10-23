@@ -9,13 +9,15 @@
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.test.schemaupdate" schema="schema1">
+<hibernate-mapping package="org.hibernate.orm.test.schemaupdate">
 
-    <class name="Version">
-        <id name="id">
-            <generator class="increment"/>
-        </id>
-        <property name="description"/>
+    <class name="Version" table="version">
+        <id name="id"/>
+        <property name="description">
+            <column name="description">
+                <comment>This is a column comment</comment>
+            </column>
+        </property>
     </class>
 
 </hibernate-mapping>

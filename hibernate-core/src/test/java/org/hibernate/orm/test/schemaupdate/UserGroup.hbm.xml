@@ -10,9 +10,9 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping
-        package="org.hibernate.test.schemaupdate">
+        package="org.hibernate.orm.test.schemaupdate">
 
-    <class name="org.hibernate.test.schemaupdate.User" table="`User`">
+    <class name="User" table="`User`">
         <composite-id>
             <key-property name="name"/>
             <key-property name="org"/>
@@ -22,14 +22,14 @@
                 <column name="userName"/>
                 <column name="org"/>
             </key>
-            <many-to-many class="org.hibernate.test.schemaupdate.Group">
+            <many-to-many class="Group">
                 <column name="groupName"/>
                 <formula>org</formula>
             </many-to-many>
         </set>
     </class>
 
-    <class name="org.hibernate.test.schemaupdate.Group" table="`Group`">
+    <class name="Group" table="`Group`">
         <composite-id>
             <key-property name="name"/>
             <key-property name="org"/>
@@ -40,7 +40,7 @@
                 <column name="groupName"/>
                 <column name="org"/>
             </key>
-            <many-to-many class="org.hibernate.test.schemaupdate.User">
+            <many-to-many class="User">
                 <column name="userName"/>
                 <formula>org</formula>
             </many-to-many>

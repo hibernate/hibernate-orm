@@ -35,8 +35,9 @@ import org.junit.runners.Parameterized;
  * @author Andrea Boriero
  */
 @RunWith(Parameterized.class)
-public abstract class BaseSchemaTest {
+public abstract class BaseSchemaUnitTestCase {
 	protected static final Class<?>[] NO_CLASSES = new Class[0];
+	protected static final String[] NO_MAPPINGS = new String[0];
 
 	@Parameterized.Parameters
 	public static Collection<String> parameters() {
@@ -53,37 +54,28 @@ public abstract class BaseSchemaTest {
 
 	private StandardServiceRegistry standardServiceRegistry;
 	private DatabaseModel databaseModel;
+
 	private File output;
 
 	@Before
 	public void setUp() throws IOException {
-		standardServiceRegistry = new StandardServiceRegistryBuilder()
-				.applySetting( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, "true" )
-				.applySetting(
-						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
-						jdbcMetadataExtractorStrategy
-				)
-				.build();
-		if ( createTempOutputFile() ) {
-			output = File.createTempFile( "update_script", ".sql" );
-			output.deleteOnExit();
-		}
-		MetadataSources metadataSources = new MetadataSources( standardServiceRegistry );
-		Class<?>[] annotatedClasses = getAnnotatedClasses();
-		for ( int i = 0; i < annotatedClasses.length; i++ ) {
-			metadataSources.addAnnotatedClass( annotatedClasses[i] );
-		}
-		final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		createTempOutputFile();
+
+		standardServiceRegistry = buildServiceRegistry();
+
+		final MetadataImplementor metadata = buildMetadata();
+
 		databaseModel = Helper.buildDatabaseModel( metadata );
-		new SchemaExport( databaseModel, standardServiceRegistry ).create( EnumSet.of( TargetType.DATABASE ) );
 	}
 
-	protected Class<?>[] getAnnotatedClasses() {
-		return NO_CLASSES;
-	}
-
-	protected boolean createTempOutputFile() {
-		return false;
+	@After
+	public void tearDown() {
+		try {
+			createSchemaExport().drop( EnumSet.of( TargetType.DATABASE ) );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( standardServiceRegistry );
+		}
 	}
 
 	public StandardServiceRegistry getStandardServiceRegistry() {
@@ -96,7 +88,7 @@ public abstract class BaseSchemaTest {
 
 	public SchemaUpdate createSchemaUpdate() {
 		SchemaUpdate schemaUpdate = new SchemaUpdate( databaseModel, standardServiceRegistry );
-		if ( createTempOutputFile() ) {
+		if ( createSqlScriptTempOutputFile() ) {
 			schemaUpdate.setOutputFile( output.getAbsolutePath() );
 		}
 		return schemaUpdate;
@@ -104,7 +96,7 @@ public abstract class BaseSchemaTest {
 
 	public SchemaExport createSchemaExport() {
 		SchemaExport schemaExport = new SchemaExport( databaseModel, standardServiceRegistry );
-		if ( createTempOutputFile() ) {
+		if ( createSqlScriptTempOutputFile() ) {
 			schemaExport.setOutputFile( output.getAbsolutePath() );
 		}
 		return schemaExport;
@@ -115,22 +107,79 @@ public abstract class BaseSchemaTest {
 	}
 
 	public String getOutputFileContent() throws IOException {
-		if ( createTempOutputFile() ) {
+		if ( createSqlScriptTempOutputFile() ) {
 			return new String( Files.readAllBytes( output.toPath() ) );
 		}
 		else {
 			throw new RuntimeException(
-					"Temporary Output file was not created, the BaseSchemaTest createTempOutputFile() method must be overridden to return true" );
+					"Temporary Output file was not created, the BaseSchemaTest createSqlScriptTempOutputFile() method must be overridden to return true" );
 		}
 	}
 
-	@After
-	public void tearDown() {
-		try {
-			createSchemaExport().drop( EnumSet.of( TargetType.DATABASE ) );
+	protected String getBaseForMappings() {
+		return "org/hibernate/orm/test/";
+	}
+
+	protected String getOutputTempScriptFileName() {
+		return "update_script";
+	}
+
+	protected Class<?>[] getAnnotatedClasses() {
+		return NO_CLASSES;
+	}
+
+	protected String[] getHmbMappingFiles() {
+		return NO_MAPPINGS;
+	}
+
+	protected boolean createSqlScriptTempOutputFile() {
+		return false;
+	}
+
+	private void createTempOutputFile() throws IOException {
+		if ( createSqlScriptTempOutputFile() ) {
+			output = File.createTempFile( getOutputTempScriptFileName(), ".sql" );
+			output.deleteOnExit();
 		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( standardServiceRegistry );
+	}
+
+	private StandardServiceRegistry buildServiceRegistry() {
+		StandardServiceRegistryBuilder standardServiceRegistryBuilder = new StandardServiceRegistryBuilder();
+		applySettings( standardServiceRegistryBuilder );
+		return standardServiceRegistryBuilder
+				.applySetting(
+						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
+						jdbcMetadataExtractorStrategy
+				)
+				.build();
+	}
+
+	private MetadataImplementor buildMetadata() {
+		final MetadataSources metadataSources = new MetadataSources( standardServiceRegistry );
+		addAnnotatedClass( metadataSources );
+		addResources( metadataSources );
+
+		return (MetadataImplementor) metadataSources.buildMetadata();
+	}
+
+	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder){
+	}
+
+	private void addResources(MetadataSources metadataSources) {
+		String[] mappings = getHmbMappingFiles();
+		if ( mappings != null ) {
+			for ( String mapping : mappings ) {
+				metadataSources.addResource(
+						getBaseForMappings() + mapping
+				);
+			}
+		}
+	}
+
+	private void addAnnotatedClass(MetadataSources metadataSources) {
+		Class<?>[] annotatedClasses = getAnnotatedClasses();
+		for ( int i = 0; i < annotatedClasses.length; i++ ) {
+			metadataSources.addAnnotatedClass( annotatedClasses[i] );
 		}
 	}
 

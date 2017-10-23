@@ -17,6 +17,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.internal.util.ReflectHelper;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.AfterClass;
@@ -26,6 +27,7 @@ import org.junit.Test;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -97,6 +99,18 @@ public class GetAndIsVariantGetterTest {
 		assertNotNull( metadata.getEntityBinding( AnotherEntity.class.getName() ).getIdentifierProperty() );
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-12046" )
+	public void testInstanceStaticConflict() {
+		Metadata metadata = new MetadataSources( ssr )
+				.addAnnotatedClass( InstanceStaticEntity.class )
+				.buildMetadata();
+		assertNotNull( metadata.getEntityBinding( InstanceStaticEntity.class.getName() ).getIdentifier() );
+		assertNotNull( metadata.getEntityBinding( InstanceStaticEntity.class.getName() ).getIdentifierProperty() );
+		assertTrue( metadata.getEntityBinding( InstanceStaticEntity.class.getName() ).hasProperty("foo") );
+		ReflectHelper.findGetterMethod( InstanceStaticEntity.class, "foo" );
+	}
+
 	@Entity
 	public static class TheEntity {
 		private Integer id;
@@ -151,6 +165,36 @@ public class GetAndIsVariantGetterTest {
 
 		public void setId(Integer id) {
 			this.id = id;
+		}
+	}
+
+	@Entity
+	public static class InstanceStaticEntity {
+
+		private Integer id;
+		private boolean foo;
+
+		@Id
+		public Integer getId() {
+			return id;
+		}
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public boolean isFoo() {
+			return this.foo;
+		}
+		public void setFoo(boolean foo) {
+			this.foo = foo;
+		}
+
+		public static Object getFoo() {
+			return null;
+		}
+
+		public static boolean isId() {
+			return false;
 		}
 	}
 }

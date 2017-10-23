@@ -268,6 +268,21 @@ subprojects { subProject ->
 //		}
 	}
 
+	/*
+	 The latest versions of IntelliJ copy and use the test resources into out/test/resources
+	 this occurs before the placeholder in the test config file are substituted
+	 with the testing values.
+
+	 This behaviour prevents the execution of the hibernate tests from inside the IDE.
+
+	 A solution is to enable the 'After Build' Execution of the copyResourcesToIntelliJOutFolder task
+	 from the 'Gradle project' IntelliJ tool window ( The task can be found under hibernate-orm > Task > other)
+	 */
+	task copyResourcesToIntelliJOutFolder(type: Copy)  {
+		from "$subProject.buildDir/resources/test"
+		into 'out/test/resources'
+	}
+
 	processTestResources.doLast( {
 		copy {
 			from( sourceSets.test.java.srcDirs ) {

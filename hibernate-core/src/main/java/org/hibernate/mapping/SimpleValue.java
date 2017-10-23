@@ -17,10 +17,8 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.BasicTypeResolverConvertibleSupport;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -31,9 +29,7 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -406,71 +402,6 @@ public abstract class SimpleValue implements KeyValue {
 		@Override
 		public TypeConfiguration getTypeConfiguration() {
 			return typeConfiguration;
-		}
-	}
-
-	private static class BasicTypeResolverUsingReflection extends BasicTypeResolverConvertibleSupport {
-		private final JavaTypeDescriptor javaTypeDescriptor;
-		private final SqlTypeDescriptor sqlTypeDescriptor;
-		private final boolean isLob;
-		private final boolean isNationalized;
-
-		public BasicTypeResolverUsingReflection(
-				MetadataBuildingContext buildingContext,
-				AttributeConverterDescriptor converterDefinition,
-				String className,
-				String propertyName,
-				boolean isLob,
-				boolean isNationalized) {
-			super( buildingContext, converterDefinition );
-			this.isLob = isLob;
-			this.isNationalized = isNationalized;
-
-			if ( converterDefinition == null ) {
-				final Class attributeType = ReflectHelper.reflectedPropertyClass(
-						className,
-						propertyName,
-						buildingContext.getBootstrapContext().getServiceRegistry().getService( ClassLoaderService.class )
-				);
-				javaTypeDescriptor = buildingContext.getBootstrapContext().getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( attributeType );
-				sqlTypeDescriptor = javaTypeDescriptor.getJdbcRecommendedSqlType(
-						buildingContext.getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry().getBaseJdbcRecommendedSqlTypeMappingContext()
-				);
-
-			}
-			else {
-				javaTypeDescriptor = converterDefinition.getDomainType();
-				sqlTypeDescriptor = converterDefinition.getJdbcType().getJdbcRecommendedSqlType(
-						buildingContext.getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry().getBaseJdbcRecommendedSqlTypeMappingContext()
-				);
-			}
-		}
-
-		@Override
-		public BasicJavaDescriptor getJavaTypeDescriptor() {
-			return (BasicJavaDescriptor) javaTypeDescriptor;
-		}
-
-		@Override
-		public SqlTypeDescriptor getSqlTypeDescriptor() {
-			return sqlTypeDescriptor;
-		}
-
-		@Override
-		public boolean isNationalized() {
-			return isNationalized;
-		}
-
-		@Override
-		public boolean isLob() {
-			return isLob;
-		}
-
-		@Override
-		public int getPreferredSqlTypeCodeForBoolean() {
-			return ConfigurationHelper.getPreferredSqlTypeCodeForBoolean(
-					getBuildingContext().getBootstrapContext().getServiceRegistry()
-			);
 		}
 	}
 

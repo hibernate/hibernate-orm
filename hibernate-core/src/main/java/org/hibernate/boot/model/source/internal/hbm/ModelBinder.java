@@ -50,6 +50,7 @@ import org.hibernate.boot.model.source.spi.CompositeIdentifierSource;
 import org.hibernate.boot.model.source.spi.EmbeddableSource;
 import org.hibernate.boot.model.source.spi.EntitySource;
 import org.hibernate.boot.model.source.spi.FilterSource;
+import org.hibernate.boot.model.source.spi.HibernateTypeSource;
 import org.hibernate.boot.model.source.spi.IdentifiableTypeSource;
 import org.hibernate.boot.model.source.spi.IdentifierSourceAggregatedComposite;
 import org.hibernate.boot.model.source.spi.IdentifierSourceNonAggregatedComposite;
@@ -777,14 +778,11 @@ public class ModelBinder {
 		bindSimpleValueType(
 				sourceDocument,
 				idValue,
-				new HbmBasicTypeResolverImpl(
-						sourceDocument,
-						idSource.getIdentifierAttributeSource().getTypeInformation()
-				)
+				idSource.getIdentifierAttributeSource().getTypeInformation()
 		);
 
 		final String propertyName = idSource.getIdentifierAttributeSource().getName();
-		if ( propertyName == null || rootEntityDescriptor.getExplicitRepresentationMode() != RepresentationMode.POJO ) {
+		if ( propertyName == null || rootEntityDescriptor.getClassName() == null ) {
 			if ( !idValue.isTypeSpecified() ) {
 				throw new MappingException(
 						"must specify an identifier type: " + rootEntityDescriptor.getEntityName(),
@@ -1076,7 +1074,7 @@ public class ModelBinder {
 		bindSimpleValueType(
 				sourceDocument,
 				versionValue,
-				new HbmBasicTypeResolverImpl( sourceDocument, versionAttributeSource.getTypeInformation() )
+				versionAttributeSource.getTypeInformation()
 		);
 
 		relationalObjectBinder.bindColumnsAndFormulas(
@@ -1140,7 +1138,7 @@ public class ModelBinder {
 		bindSimpleValueType(
 				sourceDocument,
 				discriminatorValue,
-				new HbmBasicTypeResolverImpl( sourceDocument, new HibernateTypeSourceImpl( typeName ) )
+				new HibernateTypeSourceImpl( typeName )
 		);
 
 		relationalObjectBinder.bindColumnOrFormula(
@@ -1964,7 +1962,7 @@ public class ModelBinder {
 		bindSimpleValueType(
 				sourceDocument,
 				value,
-				new HbmBasicTypeResolverImpl( sourceDocument, attributeSource.getTypeInformation() )
+				attributeSource.getTypeInformation()
 		);
 
 		relationalObjectBinder.bindColumnsAndFormulas(
@@ -2774,13 +2772,21 @@ public class ModelBinder {
 		}
 	}
 
-	private static void bindSimpleValueType(MappingDocument mappingDocument, SimpleValue simpleValue, BasicTypeResolver basicTypeResolver) {
+	private static void bindSimpleValueType(MappingDocument mappingDocument, SimpleValue simpleValue, HibernateTypeSource typeSource) {
 		if ( simpleValue instanceof BasicValue ) {
 			BasicValue basicValue = BasicValue.class.cast( simpleValue );
 			if ( mappingDocument.getBuildingOptions().useNationalizedCharacterData() ) {
 				basicValue.makeNationalized();
 			}
-			basicValue.setBasicTypeResolver( basicTypeResolver );
+
+			if ( !StringHelper.isEmpty( typeSource.getName() ) ) {
+				basicValue.setBasicTypeResolver(
+						new HbmBasicTypeResolverImpl(
+								mappingDocument,
+								typeSource
+						)
+				);
+			}
 		}
 	}
 
@@ -3282,7 +3288,7 @@ public class ModelBinder {
 				bindSimpleValueType(
 						mappingDocument,
 						idBinding,
-						new HbmBasicTypeResolverImpl( mappingDocument, idSource.getTypeInformation() )
+						idSource.getTypeInformation()
 				);
 
 				relationalObjectBinder.bindColumn(
@@ -3322,8 +3328,7 @@ public class ModelBinder {
 				bindSimpleValueType(
 						getMappingDocument(),
 						elementBinding,
-						new HbmBasicTypeResolverImpl( getMappingDocument(),
-													  elementSource.getExplicitHibernateTypeSource() )
+						elementSource.getExplicitHibernateTypeSource()
 				);
 
 				relationalObjectBinder.bindColumnsAndFormulas(
@@ -3713,7 +3718,7 @@ public class ModelBinder {
 		bindSimpleValueType(
 				mappingDocument,
 				indexBinding,
-				new HbmBasicTypeResolverImpl( mappingDocument, indexSource.getTypeInformation() )
+				indexSource.getTypeInformation()
 		);
 
 		relationalObjectBinder.bindColumnsAndFormulas(
@@ -3756,7 +3761,7 @@ public class ModelBinder {
 			bindSimpleValueType(
 					mappingDocument,
 					value,
-					new HbmBasicTypeResolverImpl( mappingDocument, mapKeySource.getTypeInformation() )
+					mapKeySource.getTypeInformation()
 			);
 
 			if ( !value.isTypeSpecified() ) {

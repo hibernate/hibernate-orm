@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.generated">
+
+    <class name="ComponentOwner" table="part_gen_comp">
+    	<id name="id">
+    		<generator class="increment"/>
+    	</id>
+        <property name="name" />
+        <component name="component" class="ComponentOwner$Component">
+            <property name="generated" type="int" generated="always" column="GENED"/>
+        </component>
+	</class>
+
+    <database-object>
+        <create>
+            <![CDATA[CREATE OR REPLACE TRIGGER t_iu_part_gen_comp
+            BEFORE INSERT OR UPDATE ON part_gen_comp
+            FOR EACH ROW
+            BEGIN
+                IF INSERTING THEN
+                    :new.gened := 1;
+                ELSE
+                    :new.gened := :old.gened + 1;
+                END IF;
+            END;]]>
+        </create>
+        <drop>
+            <![CDATA[DROP TRIGGER t_iu_part_gen_comp]]>
+        </drop>
+        <dialect-scope name="org.hibernate.dialect.Oracle9iDialect"/>
+        <dialect-scope name="org.hibernate.dialect.Oracle10gDialect"/>
+        <dialect-scope name="org.hibernate.dialect.Oracle12cDialect"/>
+    </database-object>
+
+</hibernate-mapping>

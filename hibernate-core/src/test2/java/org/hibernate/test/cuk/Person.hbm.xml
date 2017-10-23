@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+
+  Demonstrates the use of property-ref to map legacy data where
+  foreign keys reference something other than the primary key of
+  the associated entity. Here we show:
+  
+  (1) A one-to-one foreign key association (prefer primary key 
+      associations)
+      
+  (2) A bidirectional one-to-many association on a key that is
+      comprised of several properties of the associated entity
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.cuk">
+
+	<class name="Person">
+		<id name="id">
+			<generator class="increment"/>
+		</id>
+		<property name="name" length="100"/>
+        <one-to-one name="address" property-ref="person" cascade="all" fetch="join"/>
+		<set name="accounts" inverse="true">
+            <key property-ref="userIdAndDeleted">
+				<column name="userId"/>
+				<column name="userDeleted"/>
+			</key>
+			<one-to-many class="Account"/>
+		</set>
+		<properties name="userIdAndDeleted" update="false" unique="true">
+			<property name="userId" length="8"/>
+			<property name="deleted"/>
+		</properties>
+		
+	</class>
+
+	<class name="Address">
+	    <id name="id">
+			<generator class="increment"/>
+		</id>
+		<property name="address" length="300"/>
+		<property name="zip" length="5"/>
+		<property name="country" length="25"/>
+		<many-to-one name="person" unique="true" not-null="true"/>
+	</class>
+	
+	<class name="Account" table="`Account`">
+		<id name="accountId" length="32">
+			<generator class="uuid.hex"/>
+		</id>
+		<many-to-one name="user" property-ref="userIdAndDeleted">
+			<column name="userId"/>
+			<column name="userDeleted"/>
+		</many-to-one>
+		<property name="type" column="`type`" not-null="true"/>
+	</class>
+
+</hibernate-mapping>

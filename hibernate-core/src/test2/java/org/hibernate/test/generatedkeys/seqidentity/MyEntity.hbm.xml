@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.generatedkeys.seqidentity" default-access="field">
+
+    <class name="MyEntity" table="my_entity">
+
+    	<id name="id">
+    		<generator class="sequence-identity"/>
+    	</id>
+        <natural-id>
+            <property name="name"/>
+        </natural-id>
+	</class>
+
+</hibernate-mapping>

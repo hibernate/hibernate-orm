@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+
+<hibernate-mapping package="org.hibernate.test.collection.list">
+
+    <class name="ListOwner">
+        <id name="name" column="NAME" type="string" />
+
+        <many-to-one name="parent" class="ListOwner" cascade="none" />
+
+        <list name="children" inverse="true" cascade="all">
+            <key column="PARENT" />
+            <list-index column="LIST_INDEX"/>
+            <one-to-many class="ListOwner" />
+        </list>
+    </class>
+
+    <class name="Order" table="T_ORDER">
+        <id name="id" column="id" type="integer">
+            <generator class="increment"/>
+        </id>
+        <property name="code" column="code" type="string"/>
+        <list name="lineItems" inverse="true" cascade="all">
+            <key column="order_id" />
+            <list-index column="INDX"/>
+            <one-to-many class="LineItem" />
+        </list>
+    </class>
+
+    <class name="LineItem" table="T_LINE_ITEM">
+        <id name="id" column="id" type="integer">
+            <generator class="increment"/>
+        </id>
+        <many-to-one name="order" class="Order" column="order_id" cascade="all"/>
+        <property name="productCode" column="PRD_CODE" type="string"/>
+        <property name="quantity" column="qty" type="integer"/>
+    </class>
+
+</hibernate-mapping>

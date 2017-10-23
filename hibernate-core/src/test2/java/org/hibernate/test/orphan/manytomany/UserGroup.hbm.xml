@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.orphan.manytomany">
+
+	<class name="User" table="`User`">
+		<id name="name" length="32" />
+		<map name="groups" table="UserGroup" cascade="all,delete-orphan">
+			<key column="name" />
+			<map-key column="groupType" type="integer" />
+			<many-to-many class="Group" unique="true">
+				<column name="groupName" />
+			</many-to-many>
+		</map>
+	</class>
+
+	<class name="Group" table="`Group`">
+		<id name="name" length="32" />
+		<property name="description" />
+		<property name="groupType" type="integer" />
+	</class>
+
+</hibernate-mapping>

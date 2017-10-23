@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+
+  This mapping demonstrates how to use an idbag to represent
+  a many-to-many association where the association table has
+  a surrogate key.
+     
+-->
+
+<hibernate-mapping package="org.hibernate.test.idbag">
+	
+	<class name="User" table="`Users`">
+		<id name="name"/>
+		
+		<idbag name="groups" 
+				order-by="groupName asc" 
+				table="`UserGroups`">
+			<collection-id column="userGroupId" 
+					type="long">
+				<generator class="increment"/>
+			</collection-id>
+			<key column="userName"/>
+			<many-to-many column="groupName" 
+					class="Group"/>
+		</idbag>
+		
+	</class>
+	
+	<class name="Group" table="`Groups`">
+		<id name="name"/>
+	</class>
+	
+
+</hibernate-mapping>

@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping
+        SYSTEM
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.filter">
+
+    <class name="Product" table="PRODUCT">
+    	<id name="id" column="PROD_ID" >
+    		<generator class="native"/>
+    	</id>
+
+    	<property name="name" type="string"/>
+	    <property name="stockNumber" column="STOCK_NUM" type="int"/>
+	    <property name="weightPounds">
+	    	<column name="weight_kg" 
+	    		not-null="true" 
+	    		write="0.453E0 * ?"
+	    		read="weight_kg / 0.453E0"/>
+	    </property>
+
+	    <property name="effectiveStartDate" column="eff_start_dt" type="java.util.Date"/>
+	    <property name="effectiveEndDate" column="eff_end_dt" type="java.util.Date"/>
+
+	    <set cascade="none" inverse="true" name="orderLineItems">
+		    <key column="PROD_ID"/>
+		    <one-to-many class="LineItem"/>
+	    </set>
+
+	    <set cascade="all" inverse="false" name="categories" fetch="join" table="PROD_CAT" >
+		    <key column="PROD_ID"/>
+		    <many-to-many class="Category" column="CAT_ID" fetch="join" >
+	            <filter name="effectiveDate" condition=":asOfDate BETWEEN eff_start_dt and eff_end_dt"/>
+			    <filter name="cat" condition="CAT_ID = :catId"/> 
+            </many-to-many>
+	    </set>
+
+	    <filter name="effectiveDate" condition=":asOfDate BETWEEN eff_start_dt and eff_end_dt"/>
+	    <filter name="heavyProducts" condition=":weightKilograms &lt; weight_kg"/>
+
+	</class>
+
+</hibernate-mapping>

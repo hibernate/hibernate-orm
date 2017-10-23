@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+
+  This mapping demonstrates composite-id using a generator.
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.cid">
+
+    <class name="PurchaseRecord">
+    	
+    	<composite-id name="id" 
+    		class="PurchaseRecord$Id">
+    		<key-property name="purchaseNumber"/>
+    		<key-property name="purchaseSequence"/>
+    		<generator class="org.hibernate.test.cid.PurchaseRecordIdGenerator"/>
+    	</composite-id>
+    	
+		<set name="details" 
+			lazy="false" 
+			inverse="true" 
+			cascade="all">
+		    <key>
+			    <column name="purchaseNumber"/>
+			    <column name="purchaseSequence"/>
+		    </key>
+		    <one-to-many class="PurchaseDetail"/>
+		</set>		
+		
+		<property name="timestamp" column="`timestamp`"/>
+    	
+    </class>
+
+    <class name="PurchaseDetail">
+    	
+    	<id name="productId" 
+    		type="string" 
+    		column="productId">
+    		<generator class="assigned"/>
+    	</id>
+    	
+    	<property name="quantity"/>
+    	
+ 		<many-to-one name="purchaseRecord" 
+	        class="PurchaseRecord"
+	        not-null="true">
+	     	<column name="purchaseNumber"/>
+	     	<column name="purchaseSequence"/>
+	     </many-to-one>
+    	
+    </class>
+
+</hibernate-mapping>

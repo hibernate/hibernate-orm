@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+	
+<hibernate-mapping default-lazy="false">
+
+	<class name="org.hibernate.test.legacy.Master" table="`master`">
+		<meta attribute="foo">foo</meta>
+		<id name="id" column="master_key_column" type="long">
+			<generator class="native"/>
+		</id>
+		<version name="version" access="field"/>
+		<!--version type="timestamp" name="stamp" column="ts_"/-->
+		<!--timestamp name="stamp" column="ts_"/-->
+		<property name="name">
+			<meta attribute="bar">bar</meta>
+			<meta attribute="bar">bar2</meta>
+		</property>
+		<property name="x"/>
+		<property name="bigDecimal" column="big_dec" precision="7" scale="3"/>
+		<set name="details" inverse="true" lazy="true" order-by="i asc">
+			<key column="master_key"/>
+			<one-to-many class="org.hibernate.test.legacy.Detail"/>
+		</set>
+		<set name="moreDetails" cascade="all" lazy="true" order-by="i desc">
+			<key column="more_master_key"/>
+			<one-to-many class="org.hibernate.test.legacy.Detail"/>
+		</set>
+		<set name="incoming" lazy="true" table="mtm">
+			<key foreign-key="AA" column="outgoingabcdef"/>
+			<many-to-many class="org.hibernate.test.legacy.Master" foreign-key="BB">
+				<column name="incomingabcdef" index="IBB"/>
+			</many-to-many>
+		</set>
+		<set name="outgoing" lazy="true" table="mtm" inverse="true">
+			<key column="incomingabcdef"/>
+			<many-to-many class="org.hibernate.test.legacy.Master" column="outgoingabcdef"/>
+		</set>
+		<many-to-one name="otherMaster"/>
+		<!--query-list name="allDetails" query-ref="all_details"/-->
+	</class>
+	
+	<class name="org.hibernate.test.legacy.Detail">
+		<id column="detail_key_column" type="long">
+			<generator class="native"/>
+		</id>
+		<property name="x">
+			<column name="x" unique-key="uk" not-null="true"/>
+		</property>
+		<property name="i">
+			<column name="i" unique-key="uk" not-null="true"/>
+		</property>
+		<many-to-one name="master" foreign-key="CC"> <!--not-null="true"-->
+			<column name="master_key" unique-key="uk" not-null="true"/>
+		</many-to-one>
+		<!-- <cache timeout="10000" type="readwrite"/> -->
+		<set name="subDetails" lazy="true" cascade="all">
+			<key column="detail_key"/>
+			<one-to-many class="org.hibernate.test.legacy.SubDetail"/>
+		</set>
+	</class>
+	
+	<class name="org.hibernate.test.legacy.SubDetail">
+		<id column="subdetail_key_col" type="long">
+			<generator class="native">
+				<param name="sequence">fooseq</param>
+			</generator>
+		</id>
+		<property name="name"/>
+	</class>
+	
+	<query name="all_details" cacheable="true" fetch-size="10"><![CDATA[
+		from 
+			Detail as d
+	]]></query>
+
+</hibernate-mapping>

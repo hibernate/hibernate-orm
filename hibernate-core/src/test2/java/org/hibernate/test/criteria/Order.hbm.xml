@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping  package="org.hibernate.test.criteria">
+  <class name="Order" table="t_order">
+    <id name="orderId" column="order_id" type="int" unsaved-value="0" access="field" >
+      <generator class="increment" />
+    </id>
+    <many-to-one name="orderAddress" cascade="all"/>
+    <set name="orderLines" cascade="all-delete-orphan" access="field" inverse="true" fetch="select">
+      <key column="order_id" />
+      <one-to-many class="OrderLine" />
+    </set>
+    <set name="orderContacts" cascade="all-delete-orphan" access="field" fetch="select">
+        <key column="order_id" />
+        <many-to-many class="OrderContact" />
+    </set>
+  </class>
+  <class name="OrderLine" table="order_line">
+    <id name="lineId" column="order_line_id" type="int" unsaved-value="0" access="field" >
+      <generator class="increment" />
+    </id>
+    <many-to-one name="order" column="order_id" class="Order" />
+    <property name="articleId" column="article_id" type="string" />
+  </class>
+  <class name="OrderContact" table="order_contact">
+    <id name="contactId" column="order_contact_id" type="int" unsaved-value="0" access="field" >
+      <generator class="increment" />
+    </id>
+    <property name="contact" column="contact" type="string" />
+    <set name="orders" access="field" inverse="true" fetch="select">
+          <key column="contact_id" />
+          <many-to-many class="Order" />
+    </set>
+  </class>
+  <class name="OrderAddress">
+      <id name="orderAddressId" type="int" unsaved-value="0" access="field" >
+          <generator class="increment" />
+      </id>
+      <many-to-one name="deliveryAddress" class="Address" cascade="all" />
+      <set name="notifiedAddresses" cascade="all"  inverse="false" fetch="select" >
+          <key column="orderAddressId"/>
+          <one-to-many class="Address"/>
+      </set>
+  </class>
+   <class name="Address">
+        <id name="addressId" column="address_id" type="int" unsaved-value="0" access="field" >
+            <generator class="increment" />
+        </id>
+        <property name="addressText"/>
+    </class>
+</hibernate-mapping>
+

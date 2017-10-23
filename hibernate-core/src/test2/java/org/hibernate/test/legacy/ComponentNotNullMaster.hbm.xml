@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-lazy="false">
+
+	<class name="org.hibernate.test.legacy.ComponentNotNullMaster"> <!-- discriminator-value="A"> -->
+		<id name="id" column="container_id">
+			<generator class="native" />
+		</id>
+		<property name="test"/>
+		
+		<component name="nullable">
+		  <property name="prop1Nullable" />
+		  <property name="prop2Nullable"/>
+		</component>
+		
+		<component name="supercomp">
+		  <component name="subcomp">
+    		  <property name="prop1Subcomp" not-null="true"/>
+		  </component>
+		</component>
+		
+		<list name="components" lazy="true" table="CompNotNullMaster_Comps">
+			<key column = "container_id"/>
+			<index column = "list_index"/>
+			<composite-element class="org.hibernate.test.legacy.ComponentNotNullMaster$ContainerInnerClass">
+				<property name="name"/>
+				<property name="count" column="count_"/>
+				<many-to-one name="simple" not-null="true" cascade="save-update"/>
+				<many-to-one name="one" cascade="save-update"/>
+				<many-to-one name="many" cascade="save-update"/>
+			</composite-element>
+		</list>
+
+		<list name="componentsImplicit" lazy="true" table="CompNotNullMaster_CompsImpl">
+			<key column = "container_id"/>
+			<index column = "list_index3"/>
+			<composite-element class="org.hibernate.test.legacy.ComponentNotNullMaster$ContainerInnerClass">
+				<property name="name"/>
+				<property name="count" column="count_"/>
+				<many-to-one name="simple" cascade="save-update"/>
+				<many-to-one name="one" cascade="save-update"/>
+				<nested-composite-element name="nested" class="org.hibernate.test.legacy.ComponentNotNullMaster$ContainerInnerClass">
+					<property name="nestedproperty" not-null="true"/>
+				</nested-composite-element>
+			</composite-element>
+		</list>
+		<!-- subclass name="org.hibernate.test.legacy.ExtendedComponentNotNull" discriminator-value="B">
+		  <component name="subclassComp" not-null="true">
+		    <property name="subclass" />
+		  </component>
+		</subclass -->
+		<!-- joined-subclass name="org.hibernate.test.legacy.ExtendedComponentNotNull">
+		  <key column="id"/>
+		  <component name="subclassComp" not-null="true">
+		    <property name="subclass" />
+		  </component>
+		</joined-subclass -->
+	</class>
+	
+</hibernate-mapping>

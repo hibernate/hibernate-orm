@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.propertyref">
+    <class name="DoesNotWork" table="vgras007_v031">
+        <composite-id name="doesNotWorkPk" class="DoesNotWorkPk">
+            <key-property name="id1" column="track_no"/>
+            <key-property name="id2" column="track_ext"/>
+        </composite-id>
+        <property name="globAdditInfoTid" column="production_credits_tid"/>
+        <list name="globalNotes" table="vgras029_v031">
+            <key column="text_id" property-ref="globAdditInfoTid"/>
+            <list-index column="seq_no" base="1"/>
+            <element column="text_part" type="string"/>
+        </list>
+    </class>
+</hibernate-mapping>

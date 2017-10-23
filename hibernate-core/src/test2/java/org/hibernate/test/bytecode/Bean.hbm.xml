@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.bytecode">
+
+	<class name="Bean">
+		<id name="someString" type="string">
+			<generator class="assigned"/>
+		</id>
+        <property name="someLong" type="long" column="S_LONG_1" />
+        <property name="someInteger" type="int" column="S_INT_1" />
+        <property name="someDate" type="timestamp" column="S_DATE_1" />
+        <property name="somelong" type="long" column="S_LONG_2" />
+        <property name="someint" type="int" column="S_INT_2" />
+        <property name="someObject" type="serializable" column="S_OBJ_1" />
+	</class>
+
+
+	<class name="ProxyBean" lazy="true">
+		<id name="someString" type="string">
+			<generator class="assigned"/>
+		</id>
+		<property name="someLong" type="long" column="S_LONG_1" />
+	</class>
+
+</hibernate-mapping>

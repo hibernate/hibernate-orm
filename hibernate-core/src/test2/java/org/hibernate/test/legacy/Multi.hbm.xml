@@ -1,0 +1,107 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+
+    <class 
+    	name="org.hibernate.test.legacy.Top" 
+    	table="rootclass" 
+    	dynamic-insert="true" 
+    	dynamic-update="true"
+    	select-before-update="true"
+    	where="id1_ is not null">
+        <!--cache-->
+        <id name="id" type="long" column="id1_" unsaved-value="0">
+            <generator class="native"/>
+        </id>
+        <version name="count" column="count_"/>
+        <property name="name"/>
+        <property name="address"/>
+        <property name="date" column="date_"/>
+        <many-to-one name="top" access="field" column="top_"/>
+                
+        <joined-subclass name="org.hibernate.test.legacy.TrivialClass">
+        	<key column="tcid"/>
+        </joined-subclass>
+        
+	    <joined-subclass 
+	    	name="org.hibernate.test.legacy.Lower" 
+	    	table="leafsubclass"
+	    	dynamic-insert="true" 
+    		dynamic-update="true">
+	        <key column="id__"/>
+	        <property name="intprop" not-null="true"/>
+	        <one-to-one name="other" class="org.hibernate.test.legacy.Lower"/>
+	        <many-to-one name="another" column="other1" class="org.hibernate.test.legacy.Top"/>
+	        <many-to-one name="yetanother" column="other3" class="org.hibernate.test.legacy.Lower"/>
+	        <property name="foo"/>
+	        <set name="set" lazy="false">
+	        	<key column="parent"/>
+	        	<one-to-many class="org.hibernate.test.legacy.Top"/>
+	        </set>
+	        <bag name="bag" lazy="true" table="simple_simple">
+	        	<key column="simple1"/>
+	        	<many-to-many column="simple2" class="org.hibernate.test.legacy.Top"/>
+	        </bag>
+	        <one-to-one name="mypo"/>
+	    </joined-subclass>
+	    
+	    <joined-subclass name="org.hibernate.test.legacy.Multi" table="nonleafsubclass">
+	    	<key column="sid" on-delete="cascade"/>
+	        <property name="extraProp" column="dupe"/>
+	        <many-to-one name="other" column="other2" class="org.hibernate.test.legacy.Multi" />
+	        <many-to-one name="po"/>
+	        <property name="derived" formula="upper(dupe)"/>
+	        
+	        <component name="comp" class="org.hibernate.test.legacy.Multi$Component">
+	        	<property name="cal"/>
+	        	<property name="floaty"/>
+	        </component>
+	        
+	        <joined-subclass name="org.hibernate.test.legacy.SubMulti" table="leafsubsubclass">
+	        	<key column="sid"/>
+	        	<property name="amount" column="dupe"/>
+	        	<bag name="children" lazy="true" inverse="true">
+	        		<key column="parent"/>
+	        		<one-to-many class="org.hibernate.test.legacy.SubMulti"/>
+	        	</bag>
+	        	<many-to-one name="parent"/>
+				<list name="moreChildren" lazy="true">
+	        		<key column="another_parent"/>
+	        		<index column="list_ind"/>
+	        		<one-to-many class="org.hibernate.test.legacy.SubMulti"/>
+	        	</list>
+	        </joined-subclass>
+	        
+	    </joined-subclass>
+
+    </class>
+    
+    <class 
+    	name="org.hibernate.test.legacy.Po"
+    	dynamic-insert="true">
+    	<id type="long" column="id_">
+    		<generator class="native"/>
+    	</id>
+    	<property name="value" column="value_"/>
+    	<list name="list" cascade="all">
+    		<key column="list_po"/>
+    		<index column="i"/>
+    		<one-to-many class="org.hibernate.test.legacy.SubMulti"/>
+    	</list>
+    	<set name="set" inverse="true" cascade="all">
+    		<key column="po"/>
+    		<one-to-many class="org.hibernate.test.legacy.Multi"/>
+    	</set>
+    	<many-to-one name="top" column="tl" insert="false" update="false"/>
+    	<many-to-one name="lower" column="tl"/>
+    </class>
+
+</hibernate-mapping>

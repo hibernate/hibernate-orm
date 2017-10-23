@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.manytomanyassociationclass">
+
+    <class name="User" table="HB_USER">
+		<id name="id" column="ID" type="long">
+            <generator class="native"/>
+        </id>
+        <property name="name" column="NAME" type="string" length="40" not-null="true"/>
+        <set name="memberships" cascade="all, delete-orphan" inverse="true" lazy="true">
+            <key column="USER_ID"/>
+            <one-to-many class="Membership"/>
+        </set>
+    </class>
+
+    <class name="Group" table="HB_GROUP">
+		<id name="id" column="ID" type="long">
+            <generator class="native"/>
+        </id>
+        <property name="name" column="NAME" type="string" length="40" not-null="true"/>
+        <set name="memberships" cascade="all, delete-orphan" inverse="true" lazy="true">
+            <key column="GROUP_ID"/>
+            <one-to-many class="Membership"/>
+        </set>
+    </class>
+
+    <class name="Membership" table="HB_MEMBERSHIP">
+		<id name="id" column="ID" type="long">
+            <generator class="assigned"/>
+        </id>
+        <property name="name" column="NAME" type="string" length="40" not-null="true"/>
+        <many-to-one column="USER_ID" name="user" class="User" not-null="true" unique-key="UK_MEMBERSHIP"/>
+        <many-to-one column="GROUP_ID" name="group" class="Group" not-null="true" unique-key="UK_MEMBERSHIP"/>
+    </class>
+
+</hibernate-mapping>

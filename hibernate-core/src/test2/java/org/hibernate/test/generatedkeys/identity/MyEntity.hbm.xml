@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.generatedkeys.identity" default-access="field">
+
+    <class name="MyEntity" table="my_entity">
+    	<id name="id">
+    		<generator class="identity"/>
+    	</id>
+        <property name="name"/>
+
+        <!-- used to test cascades "out" to a many-to-one association -->
+        <many-to-one name="sibling" class="MySibling" cascade="persist, merge"/>
+
+        <!-- used to test cascades "out" to non-inverse collections -->
+        <set name="nonInverseChildren" inverse="false" cascade="persist, merge">
+            <key column="non_inv_parent_id"/>
+            <one-to-many class="MyChild"/>
+        </set>
+
+        <!-- used to test cascades "out" to inverse collections -->
+        <set name="inverseChildren" inverse="true" cascade="persist, merge">
+            <key column="inv_parent_id"/>
+            <one-to-many class="MyChild"/>
+        </set>
+    </class>
+
+
+    <class name="MySibling" table="my_sibling">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="name"/>
+        <many-to-one name="entity" class="MyEntity" cascade="persist, merge"/>
+    </class>
+
+
+    <class name="MyChild" table="my_child">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="name"/>
+        <many-to-one name="inverseParent" column="inv_parent_id" class="MyEntity"/>
+    </class>
+
+</hibernate-mapping>

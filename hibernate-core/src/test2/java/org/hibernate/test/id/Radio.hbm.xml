@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+
+  This mapping demonstrates the use of
+  the EJB3 compliant table hilo generator
+  with all the parameters
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.id">
+
+    <class name="Radio">
+    
+    	<id name="id">
+    		<generator class="org.hibernate.id.MultipleHiLoPerTableGenerator">
+				<param name="table">sequences</param>
+				<param name="value_column">hi_value</param>
+                <param name="primary_key_column">name</param>
+				<param name="primary_key_length">50</param>
+				<param name="max_lo">2</param>
+				<param name="primary_key_value">Radio</param>
+ 			</generator>
+    	</id>
+        <property name="frequency"/>
+	</class>
+
+</hibernate-mapping>

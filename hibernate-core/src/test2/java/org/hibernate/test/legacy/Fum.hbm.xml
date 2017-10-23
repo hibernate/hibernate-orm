@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+
+	<class name="org.hibernate.test.legacy.Fum" dynamic-update="true">
+		<!--cache-->
+		<composite-id name="id" unsaved-value="any">
+			<meta attribute="fum">fum</meta>
+			<key-property name="string">
+				<column name="string_" length="10"/>
+			</key-property>
+			<key-property name="short" column="short_"/>
+		</composite-id>
+		<version name="vid" type="short" access="field"/>
+		<!--version name="lastUpdated" type="calendar"/-->
+		<property name="fum" not-null="true"/>
+		<property name="TString"/>
+		<many-to-one name="fo">
+			<column name="fo_string" length="10"/>
+			<column name="fo_short"/>
+		</many-to-one>
+		<set name="friends">
+			<key>
+				<column name="fr_string_" length="10"/>
+				<column name="fr_short_"/>
+			</key>
+			<one-to-many class="org.hibernate.test.legacy.Fum"/>
+		</set>
+		<array name="quxArray">
+			<key>
+				<column name="fum_str_" length="10"/>
+				<column name="fum_sho_"/>
+			</key>
+			<index column="i"/>
+			<one-to-many class="org.hibernate.test.legacy.Qux"/>
+		</array>
+		<property name="dupe" 
+			column="short_" 
+			insert="false" 
+			update="false" 
+			not-null="true"/>
+		<component name="mapComponent">
+			<property name="count" column="count_"/>
+			<map name="fummap" lazy="true">
+				<key>
+					<column name="fum_str_" length="10"/>
+					<column name="fum_sho_"/>
+				</key>
+				<index column="fummapindex" type="string"/>
+				<one-to-many class="org.hibernate.test.legacy.Fum"/>
+			</map>
+			<map name="stringmap" outer-join="true">
+				<key>
+					<column name="fum_str_" length="10"/>
+					<column name="fum_sho_"/>
+				</key>
+				<index column="mapindex" type="string"/>
+				<element column="mapelement" type="string"/>
+			</map>
+		</component>
+	</class>
+	
+</hibernate-mapping>

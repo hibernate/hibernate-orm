@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+	
+	<class name="org.hibernate.test.legacy.Qux" table="quux" proxy="org.hibernate.test.legacy.Qux"> <!---->
+		<id name="key" column="qux_key" unsaved-value="0">
+			<generator class="increment"/>
+		</id>
+		<many-to-one name="foo" class="org.hibernate.test.legacy.Foo">
+			<column name="foo" length="36"/>
+		</many-to-one>
+		<property name="deleted"/>
+		<property name="loaded"/>
+		<property name="store"/>
+		<property name="created"/>
+		<property name="childKey" type="long"/>
+		<property name="stuff"/>
+		<set name="fums" lazy="true">
+			<key column="qux_id"/>
+			<many-to-many class="org.hibernate.test.legacy.Fum">
+				<column name="fum_string" length="10" not-null="true"/>
+				<column name="fum_short" not-null="true"/>
+			</many-to-many>
+		</set>
+		<list name="moreFums" lazy="true">
+			<key column="qux_id"/>
+			<index column="posn"/>
+			<one-to-many class="org.hibernate.test.legacy.Fum"/>
+		</list>
+		<many-to-one name="holder" column="HOLDER_NAME" property-ref="name"/>
+	</class>
+	
+</hibernate-mapping>

@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+	package="org.hibernate.test.unionsubclass"
+	default-access="field">
+	
+	<class name="Being" abstract="true">
+	
+		<id name="id" unsaved-value="0" column="bid">
+			<generator class="increment"/>
+			<!--generator class="hilo">
+				<param name="table">being_id</param>
+				<param name="column">next_id</param>
+			</generator-->
+		</id>
+		
+		<property name="identity" not-null="true" column="ident"/>
+		<many-to-one name="location" not-null="true"/>
+		
+		<bag name="things" inverse="true">
+			<key column="owner"/>
+			<one-to-many class="Thing"/>
+		</bag>
+		
+		<map name="info">
+			<key column="bid"/>
+			<map-key type="string" column="attribute"/>
+			<element type="string" column="`value`"/>
+		</map>
+
+		<union-subclass name="Human" table="humans">
+			<property name="sex" 
+				not-null="true" 
+				update="false"/>
+			<union-subclass name="Employee" table="employees">
+				<property name="salary"/>
+			</union-subclass>
+		</union-subclass>
+		
+		<union-subclass name="Alien" table="aliens">
+			<property name="species" 
+				not-null="true" 
+				update="false"/>
+			<many-to-one name="hive" not-null="true"/>
+			<bag name="hivemates">
+				<key column="alien1"/>
+				<many-to-many column="alien2" class="Alien"/>
+			</bag>
+		</union-subclass>
+		
+	</class>
+	
+	<class name="Hive" table="hives">
+
+		<id name="id" unsaved-value="0">
+			<generator class="increment"/>
+			<!--generator class="hilo">
+				<param name="table">location_id</param>
+				<param name="column">next_id</param>
+			</generator-->
+		</id>
+
+		<many-to-one name="location" not-null="true"/>
+		
+		<bag name="members"
+			inverse="true"
+			cascade="all,delete-orphan">
+			<key column="hive"/>
+			<one-to-many class="Alien"/>
+		</bag>	
+		
+	</class>
+	
+	<class name="Location" table="locations">
+	
+		<id name="id" unsaved-value="0">
+			<generator class="increment"/>			
+			<!--generator class="hilo">
+				<param name="table">location_id</param>
+				<param name="column">next_id</param>
+			</generator-->
+		</id>
+		
+		<property name="name" not-null="true"/>
+		
+		<bag name="beings"
+			inverse="true"
+			cascade="all">
+			<key column="location"/>
+			<one-to-many class="Being"/>
+		</bag>
+		
+	</class>
+	
+	<class name="Thing" table="things">
+	
+		<id name="id" unsaved-value="0">
+			<generator class="increment"/>			
+			<!--generator class="hilo">
+				<param name="table">thing_id</param>
+				<param name="column">next_id</param>
+			</generator-->
+		</id>
+
+		<property name="description"/>
+		<many-to-one name="owner"/>
+		
+	</class>
+
+</hibernate-mapping>

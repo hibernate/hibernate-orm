@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+ Mappings demonstrating bidirectional one-to-one mappings for testing
+ with various operations.
+
+ Person -> Address is modeled as a bidirectional one to one based on FK.
+ Person -> Details is modeled as a bidirectional one to one based on PK.
+-->
+
+<hibernate-mapping package="org.hibernate.test.ops">
+
+    <class name="Person" table="OPS_PERSON">
+        <id name="id" column="ID" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="name" column="NAME" type="string"/>
+        <one-to-one name="address" class="Address" property-ref="resident" />
+        <one-to-one name="details" class="PersonalDetails" cascade="all" />
+    </class>
+
+    <class name="Address" table="OPS_ADDRESS">
+        <id name="id" column="ID" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="streetAddress" column="STREET" type="string" />
+        <property name="city" column="CITY" type="string" />
+        <property name="country" column="CTRY" type="string" />
+        <many-to-one name="resident" column="RESIDENT" class="Person" />
+    </class>
+
+    <class name="PersonalDetails" table="OPS_PERS_DETAIL">
+        <id name="id" column="ID" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="somePersonalDetail" column="SOME_DETAIL" type="string"/>
+        <one-to-one name="person" class="Person" cascade="none" constrained="true" />
+    </class>
+
+</hibernate-mapping>

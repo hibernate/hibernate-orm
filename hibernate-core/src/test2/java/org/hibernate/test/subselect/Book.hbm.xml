@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+        package="org.hibernate.test.subselect"
+        default-access="field">
+
+    <class name="Author" table="author">
+        <id name="id"/>
+
+        <property name="name"
+                  not-null="true"/>
+
+        <set name="books">
+            <subselect>
+                SELECT b.author_id, b.title FROM book b join author a on b.author_id = a.id
+            </subselect>
+            <key column="author_id"/>
+
+            <element type="string" column="title"/>
+        </set>
+    </class>
+
+    <class name="Book" table="book">
+        <id name="id"/>
+        <property name="title"/>
+        <property name="authorId" column="author_id"/>
+    </class>
+
+</hibernate-mapping>

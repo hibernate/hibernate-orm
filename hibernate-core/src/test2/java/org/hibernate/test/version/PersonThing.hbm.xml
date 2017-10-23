@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+    Demonstrates how to control the optimistic locking behavior
+    of a collection (do changes to the collection result in
+    a version increment on the owning instance)
+ -->
+<hibernate-mapping 
+		package="org.hibernate.test.version">
+
+	<class name="Person">
+		<id name="name"/>
+		<version name="version" column="`version`"/>
+		<bag name="things" 
+				inverse="true"
+				cascade="all,delete-orphan"> 
+			<key column="person"/>
+			<one-to-many class="Thing"/>	
+		</bag>
+		<bag name="tasks"
+				inverse="true"
+				cascade="all,delete-orphan"
+				optimistic-lock="false"> 
+			<key column="person"/>
+			<one-to-many class="Task"/>	
+		</bag>
+	</class>
+
+    <class name="Thing">
+    	<id name="description"/>
+    	<version name="version" column="`version`"/>
+    	<property name="longDescription"/>
+    	<many-to-one name="person"/>
+    </class>	
+
+    <class name="Task">
+    	<id name="description"/>
+    	<version name="version" column="`version`"/>
+    	<many-to-one name="person"/>
+    </class>	
+
+</hibernate-mapping>

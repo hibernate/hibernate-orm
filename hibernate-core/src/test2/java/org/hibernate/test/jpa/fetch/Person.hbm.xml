@@ -1,0 +1,54 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.jpa.fetch">
+
+	<class name="Person" table="PERSON">
+        <id name="id" column="ID" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="firstName"/>
+        <property name="lastName"/>
+        <property name="companyName"/>
+
+        <bag name="stays" cascade="all" lazy="true" inverse="true">
+            <key column="PERS_ID"/>
+            <one-to-many class="Stay"/>
+        </bag>
+
+        <bag name="oldStays" cascade="all" lazy="extra" fetch="subselect" inverse="true">
+            <key column="OLD_PERS_ID"/>
+            <one-to-many class="Stay"/>
+        </bag>
+
+        <bag name="veryOldStays" cascade="all" lazy="true" fetch="select" inverse="true">
+            <key column="VERY_OLD_PERS_ID"/>
+            <one-to-many class="Stay"/>
+        </bag>
+    </class>
+
+	<class name="Stay" table="STAY">
+        <id name="id" column="ID" type="long">
+            <generator class="increment"/>
+        </id>
+
+        <property name="startDate"/>
+        <property name="endDate"/>
+        <property name="vessel"/>
+        <property name="authoriser"/>
+        <property name="comments"/>
+
+        <many-to-one name="person" column="PERS_ID" class="Person" cascade="all"/>
+        <many-to-one name="oldPerson" column="OLD_PERS_ID" class="Person" cascade="all" fetch="select"/>
+        <many-to-one name="veryOldPerson" column="VERY_OLD_PERS_ID" class="Person" cascade="all" fetch="join"/>
+
+    </class>
+
+</hibernate-mapping>

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.event.collection.association.unidirectional">
+
+    <class name="ParentWithCollectionOfEntities" table="PARENT">
+        <id name="id" column="ID" type="long">
+            <generator class="native"/>
+        </id>
+        <bag name="children" table="PARENT_CHILD"
+             inverse="false" cascade="all">
+            <key column="parent_id"/>
+            <many-to-many column="child_id" class="org.hibernate.test.event.collection.ChildEntity"/>
+        </bag>
+    </class>
+
+    <class name="org.hibernate.test.event.collection.ChildEntity" table="CHILD">
+        <id name="id" column="ID" type="long">
+            <generator class="native"/>
+        </id>
+        <property name="name" column="NAME" type="string"/>
+    </class>
+
+</hibernate-mapping>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+	<class name="org.hibernate.test.legacy.Componentizable">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		<property name="nickName"/>
+		<component name="component" access="property" class="org.hibernate.test.legacy.Component">
+			<property name="name"/>
+			<component name="subComponent" class="org.hibernate.test.legacy.SubComponent">
+		   	<property name="subName"/>
+		   	<property name="subName1"/>
+	  		</component>
+		</component>
+	</class>
+	
+	<sql-query name="queryComponentWithOtherColumn">
+	 <return class="org.hibernate.test.legacy.Componentizable">
+	   <return-property name="nickName" column="n2"/>
+	   <return-property name="component.subComponent.subName">
+         <return-column name="otherSubName"/>
+       </return-property>
+       <return-property name="component.subComponent.subName1">
+         <return-column name="subName1"/>
+	   </return-property>
+       <return-property name="component.name">
+         <return-column name="name"/>
+       </return-property>
+     </return>
+	 select id, nickName as n2, name, subName as otherSubName, subName1 from Componentizable
+	</sql-query>
+</hibernate-mapping>

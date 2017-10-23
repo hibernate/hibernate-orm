@@ -1,0 +1,298 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+
+	<class name="org.hibernate.test.legacy.Baz" 
+		table="baz" 
+		check="count_count > -666">
+		<id name="code" type="string">
+			<column name="baz_id_column_" length="32"/>
+			<generator class="uuid.hex"/>
+		</id>
+		<property name="count" column="count_count"/>
+		<property name="name" column="name_b"/>
+		<!--property name="text" type="text" column="text_"/-->
+		<many-to-one name="foo" outer-join="true" class="org.hibernate.test.legacy.Foo"/>
+
+		<list name="stringList" table="string_list" batch-size="12">
+			<key>
+				<column name="id" length="16"/>
+			</key>
+			<index column="`i`"/>
+			<element column="element" type="string"/>
+		</list>
+		<primitive-array name="intArray" table="int_array">
+			<key>
+				<column name="id" length="16"/>
+			</key>
+			<index column="i"/>
+			<element column="j" type="int"/>
+		</primitive-array>
+		<set name="fooSet" lazy="true" order-by="string_" batch-size="12">
+			<key>
+				<column name="baz_id" length="16"/>
+			</key>
+			<one-to-many class="org.hibernate.test.legacy.Foo"/>
+		</set>
+		<array name="components" table="bazcomponents">
+			<key>
+				<column name="baz_id" length="16"/>
+			</key>
+			<index column="i"/>
+			<composite-element class="org.hibernate.test.legacy.FooComponent">
+				<parent name="baz"/>
+				<property name="name">
+					<column name="name" length="56"/>
+				</property>
+				<property name="count" column="count_"/>
+				<nested-composite-element name="subcomponent" class="org.hibernate.test.legacy.FooComponent">
+					<property name="name" column="x_"/>
+					<property name="count" column="y_"/>
+				</nested-composite-element>
+			</composite-element>
+		</array>
+		<array name="timeArray">
+			<key>
+				<column name="baz_id" length="16"/>
+			</key>
+			<index column="j"/>
+			<element column="the_time" type="time"/>
+		</array>
+		<bag name="bag" order-by="`name_`" table="`bxaxg`">
+			<key>
+				<column name="`baz_id_`" length="16"/>
+			</key>
+			<element column="`name_`" type="string"/>
+		</bag>
+		<map name="fooToGlarch" lazy="false">
+			<key>
+				<column name="baz_id" length="16"/>
+			</key>
+			<index-many-to-many column="foo_id" class="org.hibernate.test.legacy.Foo"/>
+			<many-to-many column="glarch_id" class="org.hibernate.test.legacy.Glarch"/>
+		</map>
+		<map name="fooComponentToFoo">
+			<!--cache-->
+			<key>
+				<column name="baz_id" length="16"/>
+			</key>
+			<composite-index class="org.hibernate.test.legacy.FooComponent">
+				<key-property name="name" length="32"/>
+				<key-property name="count" column="count_"/>
+			</composite-index>
+			<many-to-many column="foo_id" class="org.hibernate.test.legacy.Foo" outer-join="true"/>
+		</map>
+		<map name="glarchToFoo">
+			<key>
+				<column name="gtf_baz_id" length="16"/>
+			</key>
+			<index-many-to-many column="gtf_foo_id" class="org.hibernate.test.legacy.Foo"/>
+			<one-to-many class="org.hibernate.test.legacy.Glarch"/>
+		</map>
+		
+		<set name="stringSet" lazy="true" sort="org.hibernate.test.legacy.StringComparator" batch-size="12">
+			<!--<cache usage="read-write"/>-->
+			<key column="id_"/>
+			<element column="element" type="string" not-null="true" length="32"/>
+		</set>
+	
+		<map name="stringDateMap" lazy="true" sort="org.hibernate.test.legacy.ReverseComparator">
+			<key column="id_"/>
+			<index column="map_key" type="string" length="32"/>
+			<element column="map_value" type="date"/>
+		</map>
+	
+		<array name="fooArray" table="FOO_ARRAY" element-class="org.hibernate.test.legacy.FooProxy" where="i&lt;8" check="i>=0">
+			<!--cache-->
+			<key column="id_"/>
+			<index column="i"/>
+			<many-to-many class="org.hibernate.test.legacy.Foo" fetch="select">
+				<column name="foo" length="36"/>
+			</many-to-many>
+		</array>
+	
+		<bag name="fooBag" lazy="true" table="baz_foo" cascade="all-delete-orphan" inverse="false">
+			<key column="baz"/>
+			<many-to-many class="org.hibernate.test.legacy.Foo" column="foo" outer-join="true"/>
+		</bag>
+	
+		<idbag name="idFooBag" lazy="true" table="baz_id_foo" cascade="all">
+			<collection-id column="pkid" type="long"> 
+				<generator class="increment"/>
+			</collection-id>
+			<key column="baz"/>
+			<many-to-many class="org.hibernate.test.legacy.Foo" column="foo" outer-join="true"/>
+		</idbag>
+	
+		<idbag name="byteBag" lazy="true" table="baz_byte_bag">
+			<collection-id column="pkid" type="long"> 
+				<generator class="increment"/>
+			</collection-id>
+			<key column="baz"/>
+			<element type="binary" column="bytez" not-null="true"/>
+		</idbag>
+	
+		<array name="stringArray">
+			<key column="id_"/>
+			<index column="i"/>
+			<element column="name" type="string"/>
+		</array>
+		
+		<list name="fees" lazy="true" cascade="all" check="bazind is null or (bazind>=0 and bazind&lt;10)">
+			<key column="bazid"/>
+			<index column="bazind"/>
+			<one-to-many class="org.hibernate.test.legacy.Fee"/>
+		</list>
+		
+		<list name="customs">
+			<key column="id_"/>
+			<index column="indx"/>
+			<element type="org.hibernate.test.legacy.DoubleStringType">
+				<column name="first_"/>
+				<column name="second_"/>
+			</element>
+		</list>
+	
+		<list name="topComponents" table="topcomponents">
+			<!--cache-->
+			<key column="id_"/>
+			<index column="i"/>
+			<composite-element class="org.hibernate.test.legacy.FooComponent">
+				<property name="name"/>
+				<property name="count" column="count_"/>
+			</composite-element>
+		</list>
+		
+		<set name="topFoos">
+			<key column="idtopbar" />
+			<one-to-many class = "org.hibernate.test.legacy.Bar"/>
+		</set>
+	
+		<set name="cascadingBars" cascade="all-delete-orphan">
+			<key column="idofbaz" />
+			<one-to-many class = "org.hibernate.test.legacy.Bar"/>
+		</set>
+	
+		<map name="topGlarchez" outer-join="true">
+			<key column="idtopglarch" />
+			<index type="character">
+				<column name="mapkey" sql-type="char(1)"/>
+			</index>
+			<one-to-many class = "org.hibernate.test.legacy.Glarch"/>
+		</map>
+		
+		<set name="cached" sort="natural" table="cached_set">
+			<!--cache-->
+			<key column="baz"/>
+			<composite-element class="org.hibernate.test.legacy.CompositeElement">
+				<property name="foo" not-null="true"/>
+				<property name="bar" not-null="true"/>
+			</composite-element>
+		</set>
+	
+		<map name="cachedMap" sort="natural" table="cached_map">
+			<!--cache-->
+			<key column="baz"/>
+			<index-many-to-many column="another_baz" class="org.hibernate.test.legacy.Baz"/>
+			<composite-element class="org.hibernate.test.legacy.CompositeElement">
+				<property name="foo"/>
+				<property name="bar"/>
+			</composite-element>
+		</map>
+		
+		<map name="stringGlarchMap" where="baz_map_index &gt; 'a' and tha_key is not null" cascade="all">
+			<key column="baz_map_id"/>
+			<index column="baz_map_index" type="string"/>
+			<one-to-many class="org.hibernate.test.legacy.Glarch"/>
+		</map>
+		
+		<map name="anyToAny" lazy="true">
+			<key column="baz"/>
+			<index-many-to-any id-type="long">
+				<column name="ind_clazz_"/>
+				<column name="ind_id_"/>
+			</index-many-to-any>
+			<many-to-any id-type="long">
+				<column name="el_clazz_"/>
+				<column name="el_id_"/>
+			</many-to-any>
+		</map>
+		
+		<list name="manyToAny" lazy="true">
+			<key column="baz"/>
+			<index column="ind"/>
+			<many-to-any id-type="string">
+				<column name="el_clazz_"/>
+				<column name="el_id_"/>
+			</many-to-any>
+		</list>
+		
+		<bag name="bazez" lazy="true" order-by="name_b desc" cascade="all">
+			<key column="`baz-id`"/>
+			<one-to-many class="org.hibernate.test.legacy.Baz"/>
+		</bag>
+		
+		<set name="sortablez" sort="natural" cascade="all">
+			<key column="baz"/>
+			<one-to-many class="org.hibernate.test.legacy.Sortable"/>
+		</set>
+		
+		<bag name="parts" lazy="true" cascade="save-update">
+			<key column="baz"/>
+			<one-to-many class="org.hibernate.test.legacy.Part"/>
+		</bag>
+		
+		<bag name="moreParts" lazy="true" cascade="save-update">
+			<key column="baz"/>
+			<many-to-many column="part" class="org.hibernate.test.legacy.Part"/>
+		</bag>
+		
+		<bag name="subs" inverse="true" cascade="all" access="field">
+			<key column="superBaz" on-delete="cascade"/>
+			<one-to-many class="org.hibernate.test.legacy.Baz"/>
+		</bag>
+		
+		<many-to-one name="superBaz" access="field"/>
+		
+		<component name="collectionComponent">
+			<component name="nested">
+				<property name="str" column="`str`"/>
+				<bag name="foos" cascade="all">
+					<key column="baz_compon_id"/>
+					<one-to-many class="org.hibernate.test.legacy.Foo"/>
+				</bag>
+				<bag name="floats" table="baz_floats_bag">
+					<key column="baz_compon_id"/>
+					<element type="float" column="float_value"/>
+				</bag>
+			</component>
+		</component>
+		
+	</class>
+	
+	<class name="org.hibernate.test.legacy.Sortable">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		<property name="name"/>
+	</class>
+	
+	<class name="org.hibernate.test.legacy.Part" where="description like 'x%'">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		<discriminator column="clazz"/>
+		<property name="description"/>
+		<subclass name="org.hibernate.test.legacy.Part$SpecialPart"/>
+	</class>
+	
+	
+</hibernate-mapping>

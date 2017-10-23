@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+
+  This mapping demonstrates 
+
+     (1) a table-per-subclass mapping strategy where subclass data is
+         retrieved by sequential select instead of a join (we do NOT
+         recommend you do this, since it is very vulnerable to N+1
+         problems; users porting applications from TopLink might find
+         this useful for reproducing old behavior)
+         
+     (2) spreading data from a single class across multiple tables
+         (again, we do not recommend you do this; use finer grained
+         classes instead)
+     
+     (3) use of null as a discriminator value
+     
+     (4) recursive associations withing an inheritance tree
+     
+-->
+
+<hibernate-mapping package="org.hibernate.test.join" default-access="field">
+
+    <class name="Person" table="person" lazy="true" discriminator-value="null">
+
+        <id name="id" column="person_id" unsaved-value="0">
+            <generator class="native"/>
+        </id>
+
+        <!-- force is unnecessary, in case we had other unknown discriminator values -->
+        <discriminator column="person_type" type="string" length="1" not-null="false" force="true"/>
+
+        <property name="name" not-null="true" length="80"/>
+        <property name="sex" not-null="true" update="false"/>
+		<property name="heightInches">
+			<column name="height_centimeters" 
+				not-null="true" 
+				read="height_centimeters / 2.54E0"
+				write="? * 2.54E0"/>
+		</property>        
+
+        <join table="address">
+            <key column="address_id"/>
+            <property name="address"/>
+            <property name="zip"/>
+            <property name="country"/>
+        </join>
+
+        <subclass name="Employee" lazy="true" discriminator-value="E">
+            <join table="employee" fetch="select">
+                <key column="person_id"/>
+                <property name="title" column="`title`" not-null="true" length="20"/>
+                <property name="salary" length="0"/>
+                <many-to-one name="manager"/>
+            </join>
+        </subclass>
+
+        <subclass name="Customer" lazy="true" discriminator-value="C">
+            <join table="customer" fetch="select">
+                <key column="person_id"/>
+                <property name="comments"/>
+                <many-to-one name="salesperson"/>
+            </join>
+        </subclass>
+
+        <subclass name="User" lazy="true" discriminator-value="U">
+            <join table="t_user" fetch="select" optional="true">
+                <key column="person_id"/>
+                <property name="login" column="u_login"/>
+				<property name="passwordExpiryDays">
+					<column name="pwd_expiry_weeks" 
+						read="pwd_expiry_weeks * 7.0E0"
+						write="? / 7.0E0"/>
+				</property>                
+            </join>
+            <join table="t_silly" fetch="select" optional="true">
+                <key column="person_id"/>
+                <property name="silly"/>
+            </join>
+        </subclass>
+
+    </class>
+
+
+</hibernate-mapping>

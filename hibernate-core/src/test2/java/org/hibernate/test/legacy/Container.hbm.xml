@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-lazy="false" auto-import="false">
+
+	<import class="org.hibernate.test.legacy.Container" rename="ContainerX"/>
+	<import class="org.hibernate.test.legacy.Contained"/>
+	<import class="java.lang.Object" rename="Universe"/>
+
+	<class name="org.hibernate.test.legacy.Container" proxy="org.hibernate.test.legacy.Container">
+		<id name="id" column="container_id" unsaved-value="0">
+			<generator class="native" />
+		</id>
+		<list name="oneToMany" lazy="true">
+			<key column = "container_id1"/>
+			<index column = "list_index"/>
+			<one-to-many class="org.hibernate.test.legacy.Simple"/>
+		</list>
+		<list name="manyToMany" lazy="true">
+			<key column = "container_id2"/>
+			<index column = "list_index"/>
+			<many-to-many class="org.hibernate.test.legacy.Simple"/>
+		</list>
+		<list name="components" lazy="true">
+			<key column = "container_id"/>
+			<index column = "list_index"/>
+			<composite-element class="org.hibernate.test.legacy.Container$ContainerInnerClass">
+				<property name="name"/>
+				<property name="count" column="count_"/>
+				<many-to-one name="simple"/>
+				<many-to-one name="one"/>
+				<many-to-one name="many"/>
+			</composite-element>
+		</list>
+		<set name="composites" lazy="true">
+			<key column = "container_id"/>
+			<composite-element class="org.hibernate.test.legacy.Container$ContainerInnerClass">
+				<property name="name"/>
+				<many-to-one name="simple"/>
+				<many-to-one name="one"/>
+				<many-to-one name="many"/>
+			</composite-element>
+		</set>
+		<bag name="cascades" cascade="all" table="abcd">
+			<key column="container_id"/>
+			<composite-element class="org.hibernate.test.legacy.Container$ContainerInnerClass">
+				<property name="name"/>
+				<many-to-one name="simple" cascade="all"/>
+				<many-to-one name="one" cascade="all" not-null="true"/>
+				<many-to-one name="many" cascade="all" not-null="true"/>
+			</composite-element>
+		</bag>
+		<bag name="bag" inverse="true" cascade="save-update" table="CCBAG">
+			<key column="container_id"/>
+			<many-to-many column="contained_id" class="org.hibernate.test.legacy.Contained" outer-join="true"/>
+		</bag>
+		<bag name="lazyBag" inverse="true" lazy="true" table="LCCBAG" cascade="save-update">
+			<!--cache usage="read-write"-->
+			<key column="container_id"/>
+			<many-to-many column="contained_id" class="org.hibernate.test.legacy.Contained"/>
+		</bag>
+		<map name="ternaryMap">
+			<key column="container_id"/>
+			<index column="idx" type="string" length="32"/>
+			<composite-element class="org.hibernate.test.legacy.Container$Ternary">
+				<property name="name"/>
+				<many-to-one name="foo"/>
+				<many-to-one name="glarch"/>
+			</composite-element>
+		</map>
+		<set name="ternarySet">
+			<key column="container_id"/>
+			<composite-element class="org.hibernate.test.legacy.Container$Ternary">
+				<property name="name" not-null="true"/>
+				<many-to-one name="foo" not-null="true"/>
+				<many-to-one name="glarch" not-null="true"/>
+			</composite-element>
+		</set>
+	</class>
+	
+	<class name="org.hibernate.test.legacy.Contained" proxy="org.hibernate.test.legacy.Contained">
+		<id name="id" column="container_id" unsaved-value="0">
+			<generator class="native" />
+		</id>
+		<bag name="bag" table="CCBAG">
+			<key column="contained_id"/>
+			<many-to-many column="container_id" class="org.hibernate.test.legacy.Container" outer-join="false"/>
+		</bag>
+		<bag name="lazyBag" lazy="true" table="LCCBAG">
+			<key column="contained_id"/>
+			<many-to-many column="container_id" class="org.hibernate.test.legacy.Container"/>
+		</bag>
+	</class>
+	
+</hibernate-mapping>

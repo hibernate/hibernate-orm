@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.component.cascading.collection">
+
+	<class name="Definition" >
+		<id name="id" type="long" column="ID">
+			<generator class="increment"/>
+		</id>
+		<set name="values" cascade="all-delete-orphan,merge" lazy="false" inverse="true">
+			<key column="DEF_ID" />
+			<one-to-many class="Value"/>
+		</set>
+	</class>
+
+    <class name="Value" table="`Value`">
+		<id name="id" type="long" column="ID">
+			<generator class="increment"/>
+		</id>
+
+		<many-to-one name="definition" class="Definition" column="DEF_ID"/>
+
+        <component name="localizedStrings" class="LocalizedStrings">
+            <map name="strings" access="field" cascade="persist,merge" lazy="false">
+                <key column="VAL_ID" />
+                <map-key type="locale" column="LOC" />
+                <element type="string" column="STR_VAL" />
+            </map>
+		</component>
+
+	</class>
+
+</hibernate-mapping>

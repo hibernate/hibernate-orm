@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.onetoone.formula">
+
+	<class name="Person">
+		<id name="name"/>
+		<one-to-one name="address" cascade="all" constrained="false">
+			<formula>name</formula>
+			<formula>'HOME'</formula>
+		</one-to-one>
+		<one-to-one name="mailingAddress" constrained="false">
+			<formula>name</formula>
+			<formula>'MAILING'</formula>
+		</one-to-one>
+	</class>
+	
+	<class name="Address" batch-size="2" 
+			check="addressType in ('MAILING', 'HOME', 'BUSINESS')">
+		<composite-id>
+			<key-many-to-one name="person" 
+					column="personName"/>
+			<key-property name="type" 
+					column="addressType"/>
+		</composite-id>
+		<property name="street"/>
+		<property name="state"/>
+		<property name="zip"/>
+	</class>
+
+</hibernate-mapping>

@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping
+        SYSTEM
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping>
+	<filter-def name="region">
+		<filter-param name="region" type="string"/>
+	</filter-def>
+
+	<filter-def name="regionlist">
+		<filter-param name="regions" type="string"/>
+	</filter-def>
+
+	<filter-def name="fulfilledOrders">
+		<filter-param name="asOfDate" type="timestamp"/>
+	</filter-def>
+
+	<filter-def name="effectiveDate">
+		<filter-param name="asOfDate" type="timestamp"/>
+	</filter-def>
+
+	<filter-def name="heavyProducts">
+		<filter-param name="weightKilograms" type="double"/>
+	</filter-def>
+
+	<filter-def name="seniorSalespersons">
+		<filter-param name="asOfDate" type="timestamp"/>
+	</filter-def>
+
+	<filter-def name="cat">
+		<filter-param name="catId" type="long"/>
+	</filter-def>
+
+    <filter-def name="unioned">
+    </filter-def>
+
+</hibernate-mapping>

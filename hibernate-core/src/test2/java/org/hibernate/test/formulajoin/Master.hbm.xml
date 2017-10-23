@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+  
+  Demonstrates use of an association "filtered" using a formula
+  mapping in the foreign key.
+  
+-->
+
+<hibernate-mapping package="org.hibernate.test.formulajoin">
+
+	<class name="Master" table="t_masters">
+	
+		<id name="id">
+			<generator class="increment"/>
+		</id>
+		
+		<property name="name" 
+			not-null="true" 
+			length="100" 
+			update="false"/>
+		
+		<many-to-one name="detail" 
+				property-ref="currentMaster" 
+				insert="false"
+				update="false">
+			<column name="id"/>
+			<formula>true</formula>
+		</many-to-one>
+		
+	</class>
+
+	<class name="Detail" table="t_details">
+	
+		<id name="id">
+			<generator class="increment"/>
+		</id>
+		
+		<property name="details" 
+			length="300" 
+			update="false" 
+			not-null="true"/>
+			
+		<property name="version" update="false">
+			<column name="version" 
+				not-null="true" 
+				unique-key="masterVersion"/>
+		</property>
+		
+		<properties name="currentMaster">
+			<many-to-one name="master">
+				<column name="cur_master" 
+					unique-key="masterVersion" 
+					not-null="true"/>
+			</many-to-one>
+			<property name="currentVersion" 
+				not-null="true"/>
+		</properties>
+		
+	</class>
+
+</hibernate-mapping>

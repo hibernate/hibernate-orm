@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.cid">
+
+<!-- 
+
+  This mapping demonstrates 
+
+     (1) use of a derived property which performs a
+         subselect against an associated table
+         
+     (2) use of <synchronize/> to ensure that auto-flush
+         works correctly for an entity with a property
+         derived from another table
+         
+     
+-->
+
+    <class name="Product">
+    	<synchronize table="LineItem"/>
+    
+    	<id name="productId"
+    		length="10">
+    		<generator class="assigned"/>
+    	</id>
+    	
+    	<property name="description" 
+    		not-null="true" 
+    		length="200"/>
+    	<property name="price" length="3" column="cost"/>
+    	<property name="numberAvailable"/>
+    	
+    	<property name="numberOrdered"
+    		formula="( select sum(li.quantity) from LineItem li where li.productId = productId )"/>
+	</class>
+
+</hibernate-mapping>

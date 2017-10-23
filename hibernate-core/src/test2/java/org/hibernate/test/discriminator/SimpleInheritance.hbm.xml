@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+	package="org.hibernate.test.discriminator"
+	default-access="field">
+
+<!--
+
+  This mapping demonstrates a simple table-per-hierarchy mapping strategy;
+  each subclass has simple properties
+
+-->
+
+	<class name="Person"
+		discriminator-value="P">
+		
+		<id name="id" 
+			column="person_id" 
+			unsaved-value="0">
+			<generator class="assigned"/>
+		</id>
+		
+        <discriminator column="`TYPE`" type="character"/>
+
+		<property name="name"
+			not-null="true"
+			length="80"/>
+
+		<property name="sex"
+			not-null="true"
+			update="false"/>
+		
+		<subclass name="Employee"
+			discriminator-value="E">
+				<property name="title" length="20"/>
+				<property name="salary" />
+            <!-- commented out until HHH-6551 is fixed
+			<subclass name="PartTimeEmployee" discriminator-value="M">
+				<property name="percent"/>
+			</subclass>
+			-->
+   		</subclass>
+		
+		<subclass name="Customer" 
+			discriminator-value="C">
+				<property name="comments"/>
+		</subclass>
+		
+	</class>
+	
+
+</hibernate-mapping>

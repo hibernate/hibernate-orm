@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.lazyonetoone">
+
+	<class name="Person">
+		<id name="name"/>
+		<one-to-one name="employee" lazy="no-proxy" cascade="persist,delete"/>
+	</class>
+	
+	<class name="Employee">
+		<id name="personName"/>
+		<one-to-one name="person" lazy="no-proxy"/>
+		<bag name="employments" 
+				inverse="true"
+				fetch="join" 
+				lazy="false"
+				where="endDate is null" 
+				cascade="persist,delete">
+			<key column="personName"/>
+			<one-to-many class="Employment"/>
+		</bag>
+	</class>
+	
+	<class name="Employment">
+		<composite-id>
+			<key-property name="personName"/>
+			<key-property name="organizationName"/>
+		</composite-id>
+		<property name="startDate" update="false"/>
+		<property name="endDate"/>
+	</class>
+	
+</hibernate-mapping>

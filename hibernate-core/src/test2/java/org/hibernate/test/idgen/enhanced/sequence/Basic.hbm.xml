@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+    Demonstrates use of the enhanced sequence-based identifier
+    generator, with no performance optimizations (the DB is hit
+    everytime when generating a value).
+-->
+
+<hibernate-mapping package="org.hibernate.test.idgen.enhanced.sequence">
+
+    <class name="Entity" table="ID_SEQ_BSC_ENTITY">
+        <id name="id" column="ID" type="long">
+            <generator class="org.hibernate.id.enhanced.SequenceStyleGenerator">
+                <param name="sequence_name">ID_SEQ_BSC_SEQ</param>
+                <param name="initial_value">1</param>
+                <param name="increment_size">1</param>
+                <param name="optimizer">none</param>
+            </generator>
+        </id>
+        <property name="name" type="string"/>
+	</class>
+
+</hibernate-mapping>

@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- Mapping document mainly used for testing non-reflective MetadataSourceProcessor + meta inheritance -->
+<hibernate-mapping default-lazy="false">
+  <meta attribute="global">global value</meta>
+  <meta attribute="globalnoinherit" inherit="false">only visible at top level</meta>
+  <meta attribute="globalmutated">top level</meta>
+  
+    <class name="org.hibernate.test.legacy.Wicked"
+           table="WICKED"
+           schema="HR">
+           <meta attribute="implements">java.lang.Observer</meta>
+           <meta attribute="implements">java.lang.Observer</meta>           
+           <meta attribute="implements" inherit="false">org.foo.BogusVisitor</meta>                      
+           <meta attribute="extends">AuditInfo</meta>
+		   <meta attribute="globalmutated">wicked level</meta>
+        <id name="id"
+            type="long"
+            column="EMPLOYEE_ID">
+            <generator class="assigned"/>
+        </id>
+        <version name="versionProp"       type="long"/>
+        <property name="stringProp"       type="string"/>
+        <property name="doubleProp"       type="double"/>
+	    <property name="objectDoubleProp" type="java.lang.Double"/>
+        <property name="booleanProp"       type="boolean"/>
+	    <property name="objectBooleanProp" type="java.lang.Boolean"/>
+  	    <property name="binaryProp"       type="binary"/>
+        <many-to-one name="objectManyToOne"  class="org.hibernate.test.legacy.Employee" column="MANAGER_ID"/>
+		<component name="component" class="net.sf.hibern8ide.test.MonetaryAmount">
+		  <meta attribute="componentonly" inherit="true"/>
+		  <meta attribute="implements">AnotherInterface</meta>
+		  <meta attribute="allcomponent"/>
+ 		  <meta attribute="globalmutated">monetaryamount level</meta>
+			<property name="x" type="string">
+	  		    <meta attribute="globalmutated">monetaryamount x level</meta>
+  		    </property>
+		</component>
+
+		<set name="sortedEmployee" sort="org.hibernate.test.legacy.NonExistingComparator">
+  		     <meta attribute="globalmutated">sortedemployee level</meta>
+			 <key column="attrb_id"/> 
+    	     <many-to-many class="org.hibernate.test.legacy.Employee" column="id"/>
+		</set>
+
+        <bag name="anotherSet">
+			 <key column="attrb2_id"/> 			 
+			 <composite-element class="org.hibernate.test.legacy.Employee">
+				 <meta attribute="globalmutated">monetaryamount anotherSet composite level</meta>
+				  <property name="emp" type="string">
+					  <meta attribute="globalmutated">monetaryamount anotherSet composite property emp level</meta>
+				  </property>
+				  <many-to-one name="empinone" class="org.hibernate.test.legacy.Employee">
+					  <meta attribute="globalmutated">monetaryamount anotherSet composite property empinone level</meta>
+				  </many-to-one>
+			 </composite-element>
+        </bag>	
+
+   </class>
+   
+   <class name="org.hibernate.test.legacy.Employee">
+        <composite-id class="X">
+            <key-property name="comp" type="string"/>
+        </composite-id>
+		
+   </class>
+</hibernate-mapping>
+

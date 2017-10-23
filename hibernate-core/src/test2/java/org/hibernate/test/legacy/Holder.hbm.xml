@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+	<class name="org.hibernate.test.legacy.Holder">
+		<id name="id" column="id_" type="string" length="32" unsaved-value="null">
+			<generator class="uuid.hex"/>
+		</id>
+		<property name="name" unique="true" not-null="true" length="36"/>
+		<list name="ones">
+			<key column="holder"/>
+			<index column="i"/>
+			<one-to-many class="org.hibernate.test.legacy.One"/>
+		</list>
+		<array name="fooArray">
+			<key column="holder1"/>
+			<index column="j1"/>
+			<one-to-many class="org.hibernate.test.legacy.Foo"/>
+		</array>
+		<set name="foos">
+			<key column="holder2"/>
+			<one-to-many class="org.hibernate.test.legacy.Foo"/>
+		</set>
+		<many-to-one name="otherHolder" property-ref="name" cascade="all"/>
+	</class>
+</hibernate-mapping>

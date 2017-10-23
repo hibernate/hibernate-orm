@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+    Demonstrates a unidirectional map mapping where the map key is a
+    composite.  The unidirectional collection forces Hibernate to use
+    a backref.  We want to make sure the backref works properly with
+    the component.
+-->
+<hibernate-mapping package="org.hibernate.test.collection.backref.map.compkey" default-access="field">
+
+    <class name="Product" table="t_product">
+        <id name="name"/>
+        <map name="parts" table="Parts" cascade="all,delete-orphan" fetch="join">
+            <key column="productName" not-null="true"/>
+            <composite-map-key class="MapKey">
+                <key-property name="role" column="role_"/>
+            </composite-map-key>
+            <one-to-many class="Part"/>
+        </map>
+    </class>
+
+    <class name="Part" table="t_part">
+        <id name="name"/>
+        <property name="description" not-null="true"/>
+    </class>
+
+</hibernate-mapping>

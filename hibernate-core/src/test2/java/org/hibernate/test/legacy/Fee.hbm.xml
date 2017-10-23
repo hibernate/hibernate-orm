@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+
+    <class name="org.hibernate.test.legacy.Fee" table="`the fees`">
+        <id type="string" name="key" column="id_" length="64" unsaved-value="null">
+            <generator class="uuid"/>
+        </id>
+        <property name="fi"/>
+        <many-to-one name="fee"/>
+        <many-to-one name="anotherFee"/>
+        <many-to-one name="qux" cascade="all"/>
+        <property name="count" column="count_"/>
+        <set name="fees">
+        	<key column="fee_id"/>
+        	<element column="str_" type="string" not-null="true"/>
+        </set>
+        <component name="compon" update="false">
+        	<property name="name"/>
+        	<property name="null" column="null_prop"/>
+        </component>
+    </class>
+
+</hibernate-mapping>

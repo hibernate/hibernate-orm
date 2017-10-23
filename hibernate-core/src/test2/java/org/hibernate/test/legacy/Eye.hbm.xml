@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false"
+	default-cascade="save-update"
+	package="org.hibernate.test.legacy">
+	
+	<class name="Eye" lazy="true">
+		<id name="id" unsaved-value="0">
+			<generator class="increment"/>
+		</id>
+		<property name="name"/>
+		<set name="jays" inverse="true" outer-join="true" cascade="all">
+			<key column="eye"/>
+			<one-to-many class="Jay"/>
+		</set>
+		<many-to-one name="jay" outer-join="true"/>
+	</class>
+	
+	<class name="Jay" lazy="true">
+		<id name="id" unsaved-value="0">
+			<generator class="increment"/>
+		</id>
+		<many-to-one name="eye" outer-join="true"/>
+	</class>
+	
+</hibernate-mapping>

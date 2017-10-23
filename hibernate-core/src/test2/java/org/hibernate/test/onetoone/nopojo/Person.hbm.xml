@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.onetoone.nopojo">
+
+	<class entity-name="Person">
+		<id name="id" type="long">
+            <generator class="foreign">
+                <param name="property">address</param>
+            </generator>
+        </id>
+        <property name="name" type="string"/>
+        <one-to-one name="address" cascade="all" entity-name="Address" constrained="true"/>
+	</class>
+	
+	<class entity-name="Address">
+		<id name="id" type="long">
+            <generator class="native"/>
+        </id>
+		<property name="street" type="string"/>
+		<property name="state" type="string"/>
+		<property name="zip" type="string"/>
+        <one-to-one name="owner" entity-name="Person" />
+	</class>
+
+</hibernate-mapping>

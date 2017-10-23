@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping
+        SYSTEM
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.queryplan">
+    <class name="Person" table="FILTER_HQL_JOINED_PERSON">
+        <id column="ID" name="id" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="name" type="string"/>
+        <property name="sex" column="SEX_CODE" type="char"/>
+        <joined-subclass name="User" table="FILTER_HQL_JOINED_USER">
+            <key column="USER_ID"/>
+            <property name="username" type="string"/>
+            <joined-subclass name="Employee" table="FILTER_HQL_JOINED_EMP">
+                <key column="EMP_ID"/>
+                <property name="hireDate" type="date"/>
+            </joined-subclass>
+            <joined-subclass name="Customer" table="FILTER_HQL_JOINED_CUST">
+                <key column="CUST_ID"/>
+                <property name="company" type="string"/>
+            </joined-subclass>
+        </joined-subclass>
+        <filter name="sex"/>
+    </class>
+</hibernate-mapping>

@@ -1,0 +1,8 @@
+<hibernate-configuration
+        xmlns="http://www.hibernate.org/xsd/hibernate-configuration"
+        xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-configuration hibernate-configuration-4.0.xsd"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <session-factory>
+        <property name="cache.provider_class">org.hibernate.cache.NoCacheProvider</property>
+    </session-factory>
+</hibernate-configuration>

@@ -40,27 +40,30 @@ public class BasicCollectionElementImpl<J>
 	private final BasicType<J> basicType;
 	private final AttributeConverterDefinition attributeConverter;
 
+	@SuppressWarnings("unchecked")
 	public BasicCollectionElementImpl(
 			PersistentCollectionDescriptor persister,
-			Collection mappingBinding,
+			Collection bootCollectionMapping,
 			RuntimeModelCreationContext creationContext) {
 		super( persister );
 
-		final BasicValueMapping simpleElementValueMapping = (BasicValueMapping) mappingBinding.getElement();
+		final BasicValueMapping simpleElementValueMapping = (BasicValueMapping) bootCollectionMapping.getElement();
 
 		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( simpleElementValueMapping.getMappedColumn() );
 
 		// todo (6.0) : resolve SimpleValue -> BasicType
-		this.basicType = null;
+		this.basicType = ( (BasicValueMapping) bootCollectionMapping.getElement() ).resolveType();
 
 		this.attributeConverter = simpleElementValueMapping.getAttributeConverterDefinition();
 
-		log.debugf(
-				"AttributeConverter [%s] being injected for elements of the '%s' collection; was : %s",
-				attributeConverter.getAttributeConverter(),
-				getContainer().getNavigableRole(),
-				this.attributeConverter
-		);
+		if ( attributeConverter != null ) {
+			log.debugf(
+					"AttributeConverter [%s] being injected for elements of the '%s' collection; was : %s",
+					attributeConverter.getAttributeConverter(),
+					getContainer().getNavigableRole(),
+					this.attributeConverter
+			);
+		}
 	}
 
 	@Override
@@ -83,10 +86,10 @@ public class BasicCollectionElementImpl<J>
 		return column;
 	}
 
-	@Override
-	public List<Column> getColumns() {
-		return Collections.singletonList( getBoundColumn() );
-	}
+//	@Override
+//	public List<Column> getColumns() {
+//		return Collections.singletonList( getBoundColumn() );
+//	}
 
 	@Override
 	public ValueBinder getValueBinder() {

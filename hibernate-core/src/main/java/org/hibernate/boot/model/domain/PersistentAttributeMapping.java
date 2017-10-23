@@ -16,7 +16,7 @@ import org.hibernate.tuple.ValueGeneration;
 /**
  * @author Steve Ebersole
  */
-public interface PersistentAttributeMapping extends ValueMappingContainer, MetaAttributable {
+public interface PersistentAttributeMapping extends MetaAttributable {
 	String getName();
 
 	default boolean isVirtual() {
@@ -26,6 +26,8 @@ public interface PersistentAttributeMapping extends ValueMappingContainer, MetaA
 	default boolean isBackRef() {
 		return false;
 	}
+
+	ValueMapping getValueMapping();
 
 	String getPropertyAccessorName();
 

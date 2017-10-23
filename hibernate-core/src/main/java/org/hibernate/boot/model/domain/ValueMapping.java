@@ -15,6 +15,9 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
+ * Corollary to {@link org.hibernate.metamodel.model.domain.spi.Navigable}
+ * in the runtime model
+ *
  * @author Steve Ebersole
  */
 public interface ValueMapping<J> {

@@ -133,7 +133,8 @@ public class EmbeddedTypeDescriptorImpl<T>
 
 	@Override
 	public List<Column> collectColumns() {
-		throw new NotYetImplementedException(  );
+//		throw new NotYetImplementedException(  );
+		return null;
 	}
 
 	@Override

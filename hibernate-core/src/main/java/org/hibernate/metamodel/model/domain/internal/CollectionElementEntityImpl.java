@@ -95,10 +95,10 @@ public class CollectionElementEntityImpl<J>
 		getEntityDescriptor().applyTableReferenceJoins( lhs, joinType, sqlAliasBase, joinCollector, tableGroupContext );
 	}
 
-	@Override
-	public List<Column> getColumns() {
-		throw new NotYetImplementedFor6Exception();
-	}
+//	@Override
+//	public List<Column> getColumns() {
+//		throw new NotYetImplementedFor6Exception();
+//	}
 
 	@Override
 	public QueryResult createQueryResult(

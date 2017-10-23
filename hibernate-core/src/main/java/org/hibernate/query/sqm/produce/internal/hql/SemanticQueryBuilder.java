@@ -1684,7 +1684,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 
 	@SuppressWarnings("RedundantIfStatement")
 	private SqmPluralAttributeReference asPluralAttribute(SqmNavigableReference attributeBinding) {
-		if ( !SqmPluralAttributeReference.class.isInstance( attributeBinding.getReferencedNavigable() ) ) {
+		if ( !SqmPluralAttributeReference.class.isInstance( attributeBinding ) ) {
 			throw new SemanticException( "Expecting plural-attribute, but found : " + attributeBinding );
 		}
 

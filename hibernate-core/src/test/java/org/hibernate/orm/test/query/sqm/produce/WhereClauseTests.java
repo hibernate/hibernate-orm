@@ -11,6 +11,8 @@ import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.Person;
+import org.hibernate.orm.test.support.domains.gambit.EntityOfLists;
+import org.hibernate.orm.test.support.domains.gambit.EntityOfMaps;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfSets;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
@@ -22,7 +24,6 @@ import org.hibernate.query.sqm.tree.predicate.RelationalPredicateOperator;
 import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -35,14 +36,16 @@ import static org.junit.Assert.assertThat;
  *
  * @author Gunnar Morling
  */
-@Ignore( "bombs on boot model trying to resolve BasicTypes" )
+//@Ignore( "bombs on boot model trying to resolve BasicTypes for collection fk" )
 public class WhereClauseTests extends BaseSqmUnitTest {
 
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {
 		super.applyMetadataSources( metadataSources );
 		metadataSources.addAnnotatedClass( Person.class );
+		metadataSources.addAnnotatedClass( EntityOfLists.class );
 		metadataSources.addAnnotatedClass( EntityOfSets.class );
+		metadataSources.addAnnotatedClass( EntityOfMaps.class );
 	}
 
 	@Test

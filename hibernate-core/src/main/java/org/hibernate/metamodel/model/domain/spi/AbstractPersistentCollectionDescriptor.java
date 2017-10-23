@@ -53,6 +53,7 @@ import org.hibernate.metamodel.model.domain.internal.CollectionIndexEntityImpl;
 import org.hibernate.metamodel.model.domain.internal.PluralPersistentAttributeImpl;
 import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
 import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.naming.Identifier;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
@@ -60,6 +61,7 @@ import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
+import org.hibernate.sql.ast.tree.spi.from.CollectionTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
@@ -203,22 +205,29 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 
 		// todo (6.0) : this is technically not the `separateCollectionTable` as for one-to-many it returns the element entity's table.
 		//		need to decide how we want to model tables for collections.
-		separateCollectionTable = resolveCollectionTable( collectionBinding, creationContext );
+		//
+		//	^^ the better option seems to be exposing through `#createRootTableGroup` and `#createTableGroupJoin`
+
+//		separateCollectionTable = resolveCollectionTable( collectionBinding, creationContext );
 
 		final Database database = creationContext.getMetadata().getDatabase();
 		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		final MappedNamespace defaultNamespace = creationContext.getMetadata().getDatabase().getDefaultNamespace();
-		final String defaultCatalogName = defaultNamespace == null ? null : defaultNamespace.getName().getCatalog().render( dialect );
-		final String defaultSchemaName = defaultNamespace == null ? null : defaultNamespace.getName().getSchema().render( dialect );
+
+		final Identifier defaultCatalogName = defaultNamespace.getName().getCatalog();
+		final String defaultCatalogNameString = defaultCatalogName == null ? null : defaultNamespace.getName().getCatalog().render( dialect );
+
+		final Identifier defaultSchemaName = defaultNamespace.getName().getSchema();
+		final String defaultSchemaNameString = defaultSchemaName == null ? null : defaultNamespace.getName().getSchema().render( dialect );
 
 		if ( collectionBinding instanceof IdentifierCollection ) {
 			final IdentifierGenerator identifierGenerator = ( (IdentifierCollection) collectionBinding ).getIdentifier().createIdentifierGenerator(
 					creationContext.getIdentifierGeneratorFactory(),
 					dialect,
-					defaultCatalogName,
-					defaultSchemaName,
+					defaultCatalogNameString,
+					defaultSchemaNameString,
 					null
 			);
 			this.idDescriptor = new CollectionIdentifier(
@@ -370,6 +379,21 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 			TableGroupInfo tableGroupInfo,
 			RootTableGroupContext tableGroupContext) {
 		throw new NotYetImplementedFor6Exception(  );
+
+
+//		final TableGroup tableGroup = new CollectionTableGroup(
+//				this,
+//				tableGroupContext.getTableSpace(),
+//				tableGroupInfo.getUniqueIdentifier(),
+//
+//																);
+//		final Table elementTable = getElementDescriptor().getTable();
+//
+//		if ( getIndexDescriptor() != null ) {
+//
+//		}
+//		final Table indexTable = getElementDescriptor().getTable();
+
 //		final SqlAliasBase sqlAliasBase = tableGroupContext.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
 //		final RootTableGroupTableReferenceCollector collector = new RootTableGroupTableReferenceCollector( this, sqlAliasBase );
 //		applyTableReferenceJoins(
@@ -401,7 +425,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 	//			is the primary table for the associated entity
 
 //	private static class RootTableGroupTableReferenceCollector implements TableReferenceJoinCollector {
-//		private final AbstractPersistentCollectionMetadata collectionMetadata;
+//		private final AbstractPersistentCollectionDescriptor collectionDe;
 //		private final TableReference collectionTableReference;
 //		private TableReference primaryTableReference;
 //
@@ -478,7 +502,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 //				indexTableGroup
 //		);
 //	}
-
 
 	@Override
 	public TableGroupJoin createTableGroupJoin(

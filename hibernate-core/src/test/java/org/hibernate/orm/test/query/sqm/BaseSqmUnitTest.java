@@ -6,64 +6,19 @@
  */
 package org.hibernate.orm.test.query.sqm;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.spi.AfterLoadAction;
+import org.hibernate.orm.test.BaseUnitTest;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-
-import org.junit.After;
-import org.junit.Before;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class BaseSqmUnitTest
-		extends org.hibernate.testing.junit4.BaseUnitTestCase
+		extends BaseUnitTest
 		implements SqlAstBuildingContext, Callback {
-	private SessionFactoryImplementor sessionFactory;
-
-	@Before
-	public void before() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
-				.applySetting( AvailableSettings.JPAQL_STRICT_COMPLIANCE, strictJpaCompliance() )
-				.applySetting( AvailableSettings.HBM2DDL_AUTO, "none" )
-				.build();
-
-		try {
-			MetadataSources metadataSources = new MetadataSources( ssr );
-			applyMetadataSources( metadataSources );
-
-			this.sessionFactory = (SessionFactoryImplementor) metadataSources.buildMetadata().buildSessionFactory();
-		}
-		catch (Exception e) {
-			StandardServiceRegistryBuilder.destroy( ssr );
-			throw e;
-		}
-	}
-
-	protected boolean strictJpaCompliance() {
-		return false;
-	}
-
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-	}
-
-	@After
-	public void after() {
-		if ( sessionFactory != null ) {
-			sessionFactory.close();
-		}
-	}
-
-	@Override
-	public final SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
-	}
 
 	@Override
 	public Callback getCallback() {

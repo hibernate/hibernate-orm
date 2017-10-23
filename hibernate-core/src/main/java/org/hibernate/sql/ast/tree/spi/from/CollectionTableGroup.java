@@ -34,23 +34,20 @@ public class CollectionTableGroup implements TableGroup {
 
 	private final TableSpace tableSpace;
 	private final String uniqueIdentifier;
-	private final TableReference collectionTableReference;
-	private final ElementColumnReferenceQualifier elementTableGroup;
-	private final IndexColumnReferenceQualifier indexTableGroup;
+	private final TableReference elementTableReference;
+	private final TableReference indexTableReference;
 
 	public CollectionTableGroup(
 			PersistentCollectionDescriptor persister,
 			TableSpace tableSpace,
 			String uniqueIdentifier,
-			TableReference collectionTableReference,
-			ElementColumnReferenceQualifier elementTableGroup,
-			IndexColumnReferenceQualifier indexTableGroup) {
+			TableReference elementTableReference,
+			TableReference indexTableReference) {
 		this.persister = persister;
 		this.tableSpace = tableSpace;
 		this.uniqueIdentifier = uniqueIdentifier;
-		this.collectionTableReference = collectionTableReference;
-		this.elementTableGroup = elementTableGroup;
-		this.indexTableGroup = indexTableGroup;
+		this.elementTableReference = elementTableReference;
+		this.indexTableReference = indexTableReference;
 	}
 
 	public PersistentCollectionDescriptor getPersister() {
@@ -74,17 +71,8 @@ public class CollectionTableGroup implements TableGroup {
 
 	@Override
 	public TableReference locateTableReference(Table table) {
-		if ( table == collectionTableReference.getTable() ) {
-			return collectionTableReference;
-		}
-
-		final TableReference elementHit = elementTableGroup.locateTableReference( table );
-		if ( elementHit != null ) {
-			return elementHit;
-		}
-
-		if ( indexTableGroup != null ) {
-			return indexTableGroup.locateTableReference( table );
+		if ( table == elementTableReference.getTable() ) {
+			return elementTableReference;
 		}
 
 		return null;
@@ -92,6 +80,9 @@ public class CollectionTableGroup implements TableGroup {
 
 	@Override
 	public void render(SqlAppender sqlAppender, SqlAstWalker walker) {
+		// todo (6.0) : need to determine which table (if 2) to render first
+		//		(think many-to-many).  does the order of the joins matter given the serial join?
+
 		throw new NotYetImplementedFor6Exception(  );
 
 //		renderTableReference( rootTableReference, sqlAppender, walker );

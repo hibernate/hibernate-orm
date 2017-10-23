@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.mapping.Collection;
@@ -19,6 +20,10 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -33,6 +38,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  */
 public class PluralPersistentAttributeImpl implements PluralPersistentAttribute {
 	private final PersistentCollectionDescriptor collectionDescriptor;
+	private int stateArrayPosition;
 
 	public PluralPersistentAttributeImpl(
 			PersistentCollectionDescriptor collectionDescriptor,
@@ -112,13 +118,18 @@ public class PluralPersistentAttributeImpl implements PluralPersistentAttribute 
 	}
 
 	@Override
-	public boolean isIncludedInDirtyChecking() {
-		return false;
+	public int getStateArrayPosition() {
+		return stateArrayPosition;
+	}
+
+	@Override
+	public void setStateArrayPosition(int position) {
+		this.stateArrayPosition = position;
 	}
 
 	@Override
 	public MutabilityPlan getMutabilityPlan() {
-		return null;
+		return getJavaTypeDescriptor().getMutabilityPlan();
 	}
 
 	@Override
@@ -132,48 +143,64 @@ public class PluralPersistentAttributeImpl implements PluralPersistentAttribute 
 	}
 
 	@Override
+	public NavigableRole getNavigableRole() {
+		return collectionDescriptor.getNavigableRole();
+	}
+
+	@Override
+	public String asLoggableText() {
+		return toString();
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return collectionDescriptor.getJavaTypeDescriptor();
+	}
+
+	@Override
+	public SqmNavigableReference createSqmExpression(
+			SqmFrom sourceSqmFrom,
+			SqmNavigableContainerReference containerReference,
+			SqmReferenceCreationContext creationContext) {
+		return new SqmPluralAttributeReference(
+				containerReference,
+				this
+		);
+	}
+
+	@Override
+	public boolean isIncludedInDirtyChecking() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
 			ColumnReferenceQualifier qualifier,
 			FetchStrategy fetchStrategy,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
-		return null;
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
 	public FetchStrategy getMappedFetchStrategy() {
-		return null;
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
 	public ManagedTypeDescriptor getFetchedManagedType() {
-		return null;
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
 	public ForeignKey.ColumnMappings getJoinColumnMappings() {
-		return null;
-	}
-
-	@Override
-	public NavigableRole getNavigableRole() {
-		return null;
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
 	public SqlSelectionGroup resolveSqlSelectionGroup(
 			ColumnReferenceQualifier qualifier, SqlSelectionGroupResolutionContext resolutionContext) {
-		return null;
-	}
-
-	@Override
-	public String asLoggableText() {
-		return null;
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return null;
+		throw new NotYetImplementedFor6Exception();
 	}
 }

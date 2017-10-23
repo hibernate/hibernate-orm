@@ -28,5 +28,5 @@ public interface CollectionElement<J> extends Navigable<J> {
 	ElementClassification getClassification();
 
 	// todo (6.0) : another place to consider removing generic access to columns
-	List<Column> getColumns();
+	//List<Column> getColumns();
 }

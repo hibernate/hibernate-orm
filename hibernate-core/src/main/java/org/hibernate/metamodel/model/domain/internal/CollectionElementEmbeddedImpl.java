@@ -69,8 +69,8 @@ public class CollectionElementEmbeddedImpl<J>
 		getEmbeddedDescriptor().visitNavigables( visitor );
 	}
 
-	@Override
-	public List<Column> getColumns() {
-		return columnList;
-	}
+//	@Override
+//	public List<Column> getColumns() {
+//		return columnList;
+//	}
 }

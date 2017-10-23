@@ -73,6 +73,7 @@ public class RuntimeModelCreationProcess {
 	private final Map<IdentifiableTypeDescriptor,IdentifiableTypeMappingImplementor> bootByRuntime = new HashMap<>();
 
 	private final Map<EmbeddedValueMappingImplementor,EmbeddedTypeDescriptor> embeddableRuntimeByBoot = new HashMap<>();
+	private final Map<Collection,PersistentCollectionDescriptor> collectonRuntimeByBoot = new HashMap<>();
 
 	private final Map<String, DomainDataRegionConfigImpl.Builder> regionConfigBuilders = new ConcurrentHashMap<>();
 
@@ -180,6 +181,10 @@ public class RuntimeModelCreationProcess {
 		}
 
 		for ( Map.Entry<EmbeddedValueMappingImplementor, EmbeddedTypeDescriptor> entry : embeddableRuntimeByBoot.entrySet() ) {
+			entry.getValue().finishInitialization( entry.getKey(), creationContext );
+		}
+
+		for ( Map.Entry<Collection, PersistentCollectionDescriptor> entry : collectonRuntimeByBoot.entrySet() ) {
 			entry.getValue().finishInitialization( entry.getKey(), creationContext );
 		}
 
@@ -509,6 +514,7 @@ public class RuntimeModelCreationProcess {
 		public void registerCollectionDescriptor(
 				PersistentCollectionDescriptor runtimeDescriptor,
 				Collection bootDescriptor) {
+			collectonRuntimeByBoot.put( bootDescriptor, runtimeDescriptor );
 			getTypeConfiguration().register( runtimeDescriptor );
 			final AccessType accessType = AccessType.fromExternalName( bootDescriptor.getCacheConcurrencyStrategy() );
 			if ( accessType != null ) {

@@ -38,19 +38,20 @@ public class BasicCollectionIndexImpl<J>
 	private final Column column;
 	private final AttributeConverterDefinition attributeConverter;
 
+	@SuppressWarnings("unchecked")
 	public BasicCollectionIndexImpl(
 			PersistentCollectionDescriptor persister,
-			IndexedCollection mappingBinding,
+			IndexedCollection bootCollectionMapping,
 			RuntimeModelCreationContext creationContext) {
 		super( persister );
 
-		final BasicValueMapping valueMapping = (BasicValueMapping) mappingBinding.getIndex();
+		final BasicValueMapping valueMapping = (BasicValueMapping) bootCollectionMapping.getIndex();
 		this.column  = creationContext.getDatabaseObjectResolver().resolveColumn( valueMapping.getMappedColumn() );
 
 		this.attributeConverter = valueMapping.getAttributeConverterDefinition();
 
 		// todo (6.0) : SimpleValue -> BasicType
-		this.basicType = null;
+		this.basicType = ( (BasicValueMapping) bootCollectionMapping.getIndex() ).resolveType();
 	}
 
 	@Override

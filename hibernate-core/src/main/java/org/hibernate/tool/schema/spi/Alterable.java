@@ -17,9 +17,7 @@ import org.hibernate.tool.schema.extract.spi.TableInformation;
  *
  * @author Andrea Boriero
  */
-public interface Alter<T extends Exportable> {
-	String[] NO_COMMANDS = new String[0];
-
+public interface Alterable<T extends Exportable> {
 	/**
 	 * Get the commands needed for alter.
 	 *

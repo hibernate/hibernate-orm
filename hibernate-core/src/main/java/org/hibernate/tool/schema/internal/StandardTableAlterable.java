@@ -16,19 +16,19 @@ import org.hibernate.naming.spi.QualifiedName;
 import org.hibernate.naming.spi.QualifiedNameParser;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
-import org.hibernate.tool.schema.spi.Alter;
+import org.hibernate.tool.schema.spi.Alterable;
 
 import org.jboss.logging.Logger;
 
 /**
  * @author Andrea Boriero
  */
-public class StandardTableAlter implements Alter<ExportableTable> {
-	private static final Logger log = Logger.getLogger( StandardTableAlter.class );
+public class StandardTableAlterable implements Alterable<ExportableTable> {
+	private static final Logger log = Logger.getLogger( StandardTableAlterable.class );
 
 	protected final Dialect dialect;
 
-	public StandardTableAlter(Dialect dialect) {
+	public StandardTableAlterable(Dialect dialect) {
 		this.dialect = dialect;
 	}
 

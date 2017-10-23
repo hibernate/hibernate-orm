@@ -295,7 +295,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			GenerationTarget... targets) {
 		applySqlStrings(
 				false,
-				dialect.getTableAlter().getSqlAlterStrings( table, tableInformation, jdbcServices ),
+				dialect.getTableAlterable().getSqlAlterStrings( table, tableInformation, jdbcServices ),
 				formatter,
 				options,
 				targets

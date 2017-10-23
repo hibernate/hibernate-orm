@@ -99,20 +99,17 @@ import org.hibernate.tool.schema.internal.StandardAuxiliaryDatabaseObjectExporte
 import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
-import org.hibernate.tool.schema.internal.StandardTableAlter;
+import org.hibernate.tool.schema.internal.StandardTableAlterable;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
-import org.hibernate.tool.schema.spi.Alter;
+import org.hibernate.tool.schema.spi.Alterable;
 import org.hibernate.tool.schema.spi.DefaultSizeStrategy;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.NVarcharSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
-import org.hibernate.type.descriptor.sql.spi.VarbinarySqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -2048,7 +2045,7 @@ public abstract class Dialect implements ConversionContext {
 	private StandardForeignKeyExporter foreignKeyExporter;
 	private StandardUniqueKeyExporter uniqueKeyExporter;
 	private StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter;
-	private StandardTableAlter tableAlter;
+	private StandardTableAlterable tableAlter;
 
 	public Exporter<ExportableTable> getTableExporter() {
 		if ( tableExporter == null ) {
@@ -2092,9 +2089,9 @@ public abstract class Dialect implements ConversionContext {
 		return auxiliaryObjectExporter;
 	}
 
-	public Alter<ExportableTable> getTableAlter() {
+	public Alterable<ExportableTable> getTableAlterable() {
 		if ( tableAlter == null ) {
-			tableAlter = new StandardTableAlter( this );
+			tableAlter = new StandardTableAlterable( this );
 		}
 		return tableAlter;
 	}

@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-public class SchemaCreationTest extends BaseSchemaTest {
+public class ColumnNamesTest extends BaseSchemaTest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[]{Employee.class };

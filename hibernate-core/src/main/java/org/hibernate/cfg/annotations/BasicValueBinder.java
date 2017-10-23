@@ -189,7 +189,7 @@ public class BasicValueBinder<T> {
 		final boolean isMap = Map.class.isAssignableFrom(
 				buildingContext.getBootstrapContext()
 						.getReflectionManager()
-						.toClass( returnedClassOrElement )
+						.toClass( navigableXProperty.getType() )
 		);
 
 

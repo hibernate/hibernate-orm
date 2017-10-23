@@ -15,7 +15,10 @@ import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
  */
 public interface Selectable extends MappedColumn {
 	boolean isFormula();
+
 	String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry);
+
 	String getText(Dialect dialect);
+
 	String getText();
 }

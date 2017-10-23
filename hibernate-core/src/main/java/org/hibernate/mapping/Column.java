@@ -9,7 +9,6 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.Locale;
 
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
@@ -19,6 +18,8 @@ import org.hibernate.naming.Identifier;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.sql.Template;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+
+import static org.hibernate.mapping.SimpleValue.*;
 
 /**
  * A column of a relational database table
@@ -30,11 +31,11 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private Identifier name;
 
 	private SqlTypeDescriptor sqlTypeDescriptor;
-	private SimpleValue.TypeDescriptorResolver typeDescriptorResolver;
+	private TypeDescriptorResolver typeDescriptorResolver;
 
 	private String sqlType;
 
-	int uniqueInteger;
+	private int uniqueInteger;
 
 	private boolean quoted;
 
@@ -85,6 +86,14 @@ public class Column implements Selectable, Serializable, Cloneable {
 		}
 	}
 
+	public int getUniqueInteger() {
+		return uniqueInteger;
+	}
+
+	public void setUniqueInteger(int uniqueInteger) {
+		this.uniqueInteger = uniqueInteger;
+	}
+
 	public String getQuotedName() {
 		return name.render();
 	}
@@ -128,18 +137,6 @@ public class Column implements Selectable, Serializable, Cloneable {
 		}
 
 		return name.equals( column.name );
-	}
-
-	public String getSqlType(Dialect dialect) throws HibernateException {
-		if ( sqlType == null ) {
-			sqlType = dialect.getTypeName(
-					getSqlTypeDescriptor().getJdbcTypeCode(),
-					getLength(),
-					getPrecision(),
-					getScale()
-			);
-		}
-		return sqlType;
 	}
 
 	public String getSqlType() {
@@ -196,13 +193,13 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	@Override
-	public String getText(Dialect d) {
-		return name.getText();
+	public String getText(Dialect dialect) {
+		return name.render(dialect);
 	}
 
 	@Override
 	public String getText() {
-		return name.render( Dialect.getDialect() );
+		return name.getText();
 	}
 
 	@Override
@@ -213,7 +210,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		return sqlTypeDescriptor;
 	}
 
-	public void setTypeDescriptorResolver(SimpleValue.TypeDescriptorResolver typeDescriptorResolver) {
+	public void setTypeDescriptorResolver(TypeDescriptorResolver typeDescriptorResolver) {
 		this.typeDescriptorResolver = typeDescriptorResolver;
 	}
 
@@ -325,7 +322,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		copy.setPrecision( precision );
 		copy.setUnique( unique );
 		copy.setSqlType( sqlType );
-		copy.uniqueInteger = uniqueInteger; //usually useless
+		copy.setUniqueInteger( uniqueInteger ); //usually useless
 		copy.setCheckConstraint( checkConstraint );
 		copy.setComment( comment );
 		copy.setDefaultValue( defaultValue );

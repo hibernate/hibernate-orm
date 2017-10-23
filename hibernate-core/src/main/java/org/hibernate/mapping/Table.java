@@ -278,10 +278,10 @@ public class Table implements MappedTable, Serializable {
 				}
 			}
 			this.columns.put( column.getCanonicalName(), column );
-			column.uniqueInteger = this.columns.size();
+			column.setUniqueInteger( this.columns.size() );
 		}
 		else {
-			column.uniqueInteger = old.uniqueInteger;
+			column.setUniqueInteger( old.getUniqueInteger() );
 		}
 	}
 

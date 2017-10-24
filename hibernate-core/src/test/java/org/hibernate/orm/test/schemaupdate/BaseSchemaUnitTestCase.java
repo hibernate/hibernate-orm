@@ -31,6 +31,8 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import static org.junit.Assert.fail;
+
 /**
  * @author Andrea Boriero
  */
@@ -58,8 +60,13 @@ public abstract class BaseSchemaUnitTestCase {
 	private File output;
 
 	@Before
-	public void setUp() throws IOException {
-		createTempOutputFile();
+	public void setUp() {
+		try {
+			createTempOutputFile();
+		}
+		catch (IOException e) {
+			fail("Fail creating temporary file" + e.getMessage());
+		}
 
 		standardServiceRegistry = buildServiceRegistry();
 

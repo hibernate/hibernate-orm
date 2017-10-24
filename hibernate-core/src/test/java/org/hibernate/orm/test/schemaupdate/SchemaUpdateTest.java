@@ -78,7 +78,7 @@ public class SchemaUpdateTest extends BaseSchemaUnitTestCase {
 	}
 
 	@Override
-	public void setUp() throws IOException {
+	public void setUp() {
 		super.setUp();
 		if ( SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() ) ) {
 			// SQLServerDialect stores case-insensitive quoted identifiers in mixed case,

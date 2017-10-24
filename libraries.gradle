@@ -21,7 +21,7 @@ ext {
     byteBuddyVersion = '1.6.14' // Improved JDK9 compatibility
 
     // Wildfly version targeted by module ZIP; Arquillian/Shrinkwrap versions used for CDI testing and testing the module ZIP
-    wildflyVersion = '11.0.0.CR1'
+    wildflyVersion = '11.0.0.Final'
     arquillianVersion = '1.1.11.Final'
     shrinkwrapVersion = '1.2.6'
     shrinkwrapDescriptorsVersion = '2.0.0-alpha-8'

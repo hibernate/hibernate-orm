@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.criteria;
 
+import org.hibernate.HibernateException;
+
 /**
  * This enum defines how literals are handled by JPA Criteria.
  *
@@ -25,5 +27,33 @@ public enum LiteralHandlingMode {
 
 	AUTO,
 	BIND,
-	INLINE
+	INLINE;
+
+	/**
+	 * Interpret the configured literalHandlingMode value.
+	 * Valid values are either a {@link LiteralHandlingMode} object or its String representation.
+	 * For string values, the matching is case insensitive, so you can use either {@code AUTO} or {@code auto}.
+	 *
+	 * @param literalHandlingMode configured {@link LiteralHandlingMode} representation
+	 * @return associated {@link LiteralHandlingMode} object
+	 */
+	public static LiteralHandlingMode interpret(Object literalHandlingMode) {
+		if ( literalHandlingMode == null ) {
+			return AUTO;
+		}
+		else if ( literalHandlingMode instanceof LiteralHandlingMode ) {
+			return (LiteralHandlingMode) literalHandlingMode;
+		}
+		else if ( literalHandlingMode instanceof String ) {
+			for ( LiteralHandlingMode value : values() ) {
+				if ( value.name().equalsIgnoreCase( (String) literalHandlingMode ) ) {
+					return value;
+				}
+			}
+		}
+		throw new HibernateException(
+				"Unrecognized literal_handling_mode value : " + literalHandlingMode
+						+ ".  Supported values include 'auto', 'inline', and 'bind'."
+		);
+	}
 }

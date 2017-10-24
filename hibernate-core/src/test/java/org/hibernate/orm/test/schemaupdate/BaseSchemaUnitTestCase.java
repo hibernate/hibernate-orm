@@ -71,7 +71,9 @@ public abstract class BaseSchemaUnitTestCase {
 	@After
 	public void tearDown() {
 		try {
-			createSchemaExport().drop( EnumSet.of( TargetType.DATABASE ) );
+			if ( dropSchemaAfterTest() ) {
+				createSchemaExport().drop( EnumSet.of( TargetType.DATABASE ) );
+			}
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( standardServiceRegistry );
@@ -136,6 +138,10 @@ public abstract class BaseSchemaUnitTestCase {
 		return false;
 	}
 
+	protected boolean dropSchemaAfterTest() {
+		return true;
+	}
+
 	private void createTempOutputFile() throws IOException {
 		if ( createSqlScriptTempOutputFile() ) {
 			output = File.createTempFile( getOutputTempScriptFileName(), ".sql" );
@@ -162,7 +168,7 @@ public abstract class BaseSchemaUnitTestCase {
 		return (MetadataImplementor) metadataSources.buildMetadata();
 	}
 
-	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder){
+	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 	}
 
 	private void addResources(MetadataSources metadataSources) {

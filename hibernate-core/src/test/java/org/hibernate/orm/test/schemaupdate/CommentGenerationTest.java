@@ -36,6 +36,11 @@ public class CommentGenerationTest extends BaseSchemaUnitTestCase {
 	}
 
 	@Override
+	protected boolean dropSchemaAfterTest() {
+		return false;
+	}
+
+	@Override
 	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( Environment.DIALECT, SupportCommentDialect.class.getName() );
 	}

@@ -51,7 +51,5 @@ public class MigrationTest extends BaseSchemaUnitTestCase {
 		@Id
 		private Integer id;
 	}
-
-
 }
 

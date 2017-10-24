@@ -31,6 +31,11 @@ public class SchemaExportTest extends BaseSchemaUnitTestCase {
 		return new String[] { "schemaupdate/mapping.hbm.xml" };
 	}
 
+	@Override
+	protected boolean dropSchemaAfterTest() {
+		return false;
+	}
+
 	@Test
 	public void testCreateAndDropOnlyType() {
 		final SchemaExport schemaExport = createSchemaExport();
@@ -104,9 +109,11 @@ public class SchemaExportTest extends BaseSchemaUnitTestCase {
 		else {
 			assertEquals( 1, schemaExport.getExceptions().size() );
 		}
+
 		// call create again; it should drop tables beforeQuery re-creating
 		schemaExport.create( EnumSet.of( TargetType.DATABASE ) );
 		assertEquals( 0, schemaExport.getExceptions().size() );
+
 		// drop the tables
 		schemaExport.drop( EnumSet.of( TargetType.DATABASE ) );
 		assertEquals( 0, schemaExport.getExceptions().size() );

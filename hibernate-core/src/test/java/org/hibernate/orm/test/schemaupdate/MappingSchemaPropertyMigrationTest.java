@@ -34,6 +34,11 @@ public class MappingSchemaPropertyMigrationTest extends BaseSchemaUnitTestCase {
 		return true;
 	}
 
+	@Override
+	protected boolean dropSchemaAfterTest() {
+		return false;
+	}
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-10678")
 	@RequiresDialectFeature(value = DialectChecks.SupportSchemaCreation.class)

@@ -89,7 +89,11 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 
 	@Override
 	public String getName() {
-		return componentClassName;
+		// todo (6.0) - For cases where a component doesn't have a pojo representation, should we return roleName?
+		if ( componentClassName != null ) {
+			return componentClassName;
+		}
+		return roleName;
 	}
 
 	@Override

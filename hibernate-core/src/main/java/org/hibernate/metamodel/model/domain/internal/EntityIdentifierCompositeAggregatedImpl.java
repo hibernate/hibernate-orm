@@ -45,7 +45,7 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 			EmbeddedTypeDescriptor embeddedMetadata,
 			RuntimeModelCreationContext creationContext) {
 		super(
-				(ManagedTypeDescriptor<O>) runtimeModelHierarchy.getRootEntityType().getJavaTypeDescriptor(),
+				runtimeModelHierarchy.getRootEntityType(),
 				bootModelRootEntity.getIdentifierProperty(),
 				embeddedMetadata.getRepresentationStrategy().generatePropertyAccess(
 						bootModelRootEntity,

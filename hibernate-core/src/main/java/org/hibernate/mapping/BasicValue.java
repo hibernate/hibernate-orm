@@ -156,14 +156,22 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 
 	@Override
 	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
-		this.basicTypeResolver = new BasicTypeResolverUsingReflection(
-				getMetadataBuildingContext(),
-				getAttributeConverterDescriptor(),
-				className,
-				propertyName,
-				isLob(),
-				isNationalized()
-		);
+		// todo (6.0) - this check seems silly
+		//		Several places call this method and its possible there are situations where the className
+		//		is null because we're dealing with non-pojo cases.  In those cases, we cannot use reflection
+		//		to determine type, so we don't overwrite the BasicTypeResolver that is already set.
+		//
+		//		Ideally can we remove this method call and somehow bake this into `#setType` ?
+		if ( className != null ) {
+			this.basicTypeResolver = new BasicTypeResolverUsingReflection(
+					getMetadataBuildingContext(),
+					getAttributeConverterDescriptor(),
+					className,
+					propertyName,
+					isLob(),
+					isNationalized()
+			);
+		}
 	}
 
 	public static class BasicTypeResolverUsingReflection extends BasicTypeResolverConvertibleSupport {

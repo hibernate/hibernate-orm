@@ -132,7 +132,7 @@ public abstract class PersistentClass
 
 	@Override
 	public String getName() {
-		return getMappedClass().getName();
+		return entityName;
 	}
 
 	public String getProxyInterfaceName() {

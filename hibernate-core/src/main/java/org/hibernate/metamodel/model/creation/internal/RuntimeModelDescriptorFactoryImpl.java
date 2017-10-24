@@ -283,11 +283,11 @@ public final class RuntimeModelDescriptorFactoryImpl
 					throw (HibernateException) target;
 				}
 				else {
-					throw new MappingException( "Could not instantiate collection persister " + persisterClass.getName(), target );
+					throw new MappingException( "Could not instantiate embedded persister " + persisterClass.getName(), target );
 				}
 			}
 			catch (Exception e) {
-				throw new MappingException( "Could not instantiate collection persister " + persisterClass.getName(), e );
+				throw new MappingException( "Could not instantiate embedded persister " + persisterClass.getName(), e );
 			}
 		}
 		catch (MappingException e) {

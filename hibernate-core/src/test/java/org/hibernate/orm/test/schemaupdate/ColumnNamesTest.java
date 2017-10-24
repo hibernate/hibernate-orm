@@ -14,7 +14,6 @@ import javax.persistence.Table;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.junit.Test;
@@ -50,7 +49,7 @@ public class ColumnNamesTest extends BaseSchemaUnitTestCase {
 		createSchemaUpdate().setHaltOnError( true ).execute( EnumSet.of( TargetType.SCRIPT ) );
 
 		// the schema update script shouls be empty
-		final String fileContent = getOutputFileContent();
+		final String fileContent = getSqlScriptOutputFileContent();
 		assertThat( "The update output file should be empty", fileContent, is( "" ) );
 	}
 

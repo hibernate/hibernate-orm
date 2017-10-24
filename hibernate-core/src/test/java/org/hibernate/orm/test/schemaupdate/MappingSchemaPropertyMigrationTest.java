@@ -40,7 +40,7 @@ public class MappingSchemaPropertyMigrationTest extends BaseSchemaUnitTestCase {
 	public void testHibernateMappingSchemaPropertyIsNotIgnored() throws Exception {
 		createSchemaExport().execute( EnumSet.of( TargetType.SCRIPT ), SchemaExport.Action.CREATE );
 
-		final String fileContent = getOutputFileContent();
+		final String fileContent = getSqlScriptOutputFileContent();
 		assertThat( fileContent, fileContent.toLowerCase().contains( "create table schema1.version" ), is( true ) );
 	}
 }

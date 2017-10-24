@@ -106,7 +106,7 @@ public abstract class BaseSchemaUnitTestCase {
 		return new SchemaValidator( databaseModel, standardServiceRegistry );
 	}
 
-	public String getOutputFileContent() throws IOException {
+	public String getSqlScriptOutputFileContent() throws IOException {
 		if ( createSqlScriptTempOutputFile() ) {
 			return new String( Files.readAllBytes( output.toPath() ) );
 		}

@@ -137,7 +137,7 @@ public class SchemaUpdateTest extends BaseSchemaUnitTestCase {
 				.setFormat( false )
 				.execute( EnumSet.of( TargetType.DATABASE, TargetType.SCRIPT ) );
 
-		final String fileContent = getOutputFileContent();
+		final String fileContent = getSqlScriptOutputFileContent();
 		assertThat( "The update output file should be empty", fileContent, is( "" ) );
 	}
 

@@ -250,7 +250,8 @@ public class Column implements Selectable, Serializable, Cloneable {
 				getDefaultValue(),
 				columnSqlType,
 				isNullable(),
-				isUnique()
+				isUnique(),
+				getComment()
 		);
 		column.setSize(	size );
 		column.setCheckConstraint( getCheckConstraint() );

@@ -14,6 +14,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 
 /**
  *
@@ -26,14 +27,15 @@ public class JavaTypeDescriptorBaseline {
 	}
 
 	public static void prime(BaselineTarget target) {
-		target.addBaselineDescriptor( ByteJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( BooleanJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( CharacterJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( ShortJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( IntegerJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( LongJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( FloatJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( DoubleJavaDescriptor.INSTANCE );
+		primePrimitive( target, ByteJavaDescriptor.INSTANCE );
+		primePrimitive( target, BooleanJavaDescriptor.INSTANCE );
+		primePrimitive( target, CharacterJavaDescriptor.INSTANCE );
+		primePrimitive( target, ShortJavaDescriptor.INSTANCE );
+		primePrimitive( target, IntegerJavaDescriptor.INSTANCE );
+		primePrimitive( target, LongJavaDescriptor.INSTANCE );
+		primePrimitive( target, FloatJavaDescriptor.INSTANCE );
+		primePrimitive( target, DoubleJavaDescriptor.INSTANCE );
+
 		target.addBaselineDescriptor( BigDecimalJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( BigIntegerJavaDescriptor.INSTANCE );
 
@@ -77,5 +79,10 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( new CollectionJavaDescriptor( Map.class ) );
 		target.addBaselineDescriptor( new CollectionJavaDescriptor( SortedMap.class ) );
 
+	}
+
+	private static void primePrimitive(BaselineTarget target, BasicJavaDescriptor descriptor) {
+		target.addBaselineDescriptor( descriptor );
+		target.addBaselineDescriptor( ( (Primitive) descriptor ).getPrimitiveClass(), descriptor );
 	}
 }

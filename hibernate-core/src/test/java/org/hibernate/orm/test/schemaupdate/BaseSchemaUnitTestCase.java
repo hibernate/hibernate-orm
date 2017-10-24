@@ -8,16 +8,19 @@ package org.hibernate.orm.test.schemaupdate;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
@@ -123,6 +126,14 @@ public abstract class BaseSchemaUnitTestCase {
 			throw new RuntimeException(
 					"Temporary Output file was not created, the BaseSchemaTest createSqlScriptTempOutputFile() method must be overridden to return true" );
 		}
+	}
+
+	public List<String> getSqlScriptOutputFileLines() throws IOException {
+		return Files.readAllLines( output.toPath(), Charset.defaultCharset() );
+	}
+
+	public Dialect getDialect(){
+		return databaseModel.getJdbcEnvironment().getDialect();
 	}
 
 	protected String getBaseForMappings() {

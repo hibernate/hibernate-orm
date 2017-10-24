@@ -23,7 +23,7 @@ import static org.junit.Assert.assertThat;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10635")
-public class CommentGenerationTest extends BaseSchemaUnitTestCase {
+public class CommentColumnTest extends BaseSchemaUnitTestCase {
 
 	@Override
 	protected String[] getHmbMappingFiles() {

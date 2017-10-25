@@ -19,7 +19,6 @@ import org.hibernate.loader.plan.exec.spi.CollectionReferenceAliases;
 import org.hibernate.loader.plan.spi.CollectionReference;
 import org.hibernate.loader.plan.spi.Fetch;
 import org.hibernate.pretty.MessageHelper;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -84,7 +83,11 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 
 			}
 			else {
-				final Serializable optionalKey = findCollectionOwnerKey( context );
+				ResultSetProcessingContext.EntityReferenceProcessingState ownerState = context.getOwnerProcessingState( (Fetch) collectionReference );
+
+				Serializable optionalKey = collectionReference.getCollectionPersister().getCollectionType()
+				.getKeyOfOwnerNoSemiResolve(ownerState.getEntityInstance(), context.getSession());
+
 				if ( optionalKey != null ) {
 					// we did not find a collection element in the result set, so we
 					// ensure that a collection is created with the owner's identifier,

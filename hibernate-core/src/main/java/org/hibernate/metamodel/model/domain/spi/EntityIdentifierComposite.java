@@ -20,7 +20,8 @@ public interface EntityIdentifierComposite<O,J>
 		extends EntityIdentifier<O,J>, EmbeddedValuedNavigable<J>, EmbeddedValueExpressableType<J> {
 	@Override
 	default boolean matchesNavigableName(String navigableName) {
-		return LEGACY_NAVIGABLE_ID.equals( navigableName )
+		return getNavigableName().equals( navigableName )
+				|| LEGACY_NAVIGABLE_ID.equals( navigableName )
 				|| NAVIGABLE_ID.equals( navigableName );
 	}
 

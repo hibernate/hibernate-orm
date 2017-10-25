@@ -95,7 +95,7 @@ public class CustomSqlSchemaResolvingIdentityTest extends BaseCoreFunctionalTest
 		query = "SELECT id, name FROM {h-schema}FOO WHERE id = ?",
 		resultClass = CustomEntity.class
 	)
-	@SQLInsert(sql = "INSERT INTO {h-schema}FOO (name) VALUES (?)", callable = true)
+	@SQLInsert(sql = "INSERT INTO {h-schema}FOO (name) VALUES (?)")
 	@SQLDelete(sql = "DELETE FROM {h-schema}FOO WHERE id = ?", check = ResultCheckStyle.COUNT)
 	@SQLUpdate(sql = "UPDATE {h-schema}FOO SET name = ? WHERE id = ? ")
 	public static class CustomEntity {

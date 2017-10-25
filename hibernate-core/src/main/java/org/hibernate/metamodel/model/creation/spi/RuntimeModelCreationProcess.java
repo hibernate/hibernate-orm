@@ -39,7 +39,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
-import org.hibernate.metamodel.model.domain.internal.EntityHierarchyImpl;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
@@ -129,23 +128,19 @@ public class RuntimeModelCreationProcess {
 
 			runtimeRootEntityByBootHierarchy.put( bootHierarchy, rootEntityDescriptor );
 
-			final EntityHierarchyImpl runtimeHierarchy = new EntityHierarchyImpl(
-					rootEntityDescriptor, bootHierarchy.getRootType(), creationContext
-			);
-
-			creationContext.registerEntityHierarchy( runtimeHierarchy, bootHierarchy );
+			creationContext.registerEntityHierarchy( rootEntityDescriptor.getHierarchy(), bootHierarchy );
 
 			walkSupers(
 					bootHierarchy,
 					bootHierarchy.getRootType(),
-					runtimeHierarchy,
+					rootEntityDescriptor.getHierarchy(),
 					rootEntityDescriptor,
 					creationContext
 			);
 
 			walkSubs(
 					bootHierarchy.getRootType(),
-					runtimeHierarchy,
+					rootEntityDescriptor.getHierarchy(),
 					rootEntityDescriptor,
 					creationContext
 			);
@@ -457,7 +452,7 @@ public class RuntimeModelCreationProcess {
 		}
 
 		@Override
-		public void registerEntityHierarchy(EntityHierarchyImpl runtimeHierarchy, EntityMappingHierarchy bootHierarchy) {
+		public void registerEntityHierarchy(EntityHierarchy runtimeHierarchy, EntityMappingHierarchy bootHierarchy) {
 			getTypeConfiguration().register( runtimeHierarchy );
 		}
 

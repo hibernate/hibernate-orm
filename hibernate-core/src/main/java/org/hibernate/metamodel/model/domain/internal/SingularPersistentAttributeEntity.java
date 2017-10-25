@@ -10,7 +10,6 @@ import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -95,7 +94,7 @@ public class SingularPersistentAttributeEntity<O,J>
 				valueMapping.getMappedColumns()
 		);
 
-		if ( valueMapping instanceof ManyToOne ) {
+		if ( SingularAttributeClassification.MANY_TO_ONE.equals( classification ) ) {
 			persistentAttributeType = PersistentAttributeType.MANY_TO_ONE;
 		}
 		else {

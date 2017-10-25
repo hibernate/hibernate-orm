@@ -17,7 +17,6 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeAggregated;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
@@ -150,12 +149,12 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 
 	@Override
 	public <N> Navigable<N> findNavigable(String navigableName) {
-		throw new NotYetImplementedFor6Exception(  );
+		return getEmbeddedDescriptor().findNavigable( navigableName );
 	}
 
 	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
-		throw new NotYetImplementedFor6Exception(  );
+		getEmbeddedDescriptor().visitNavigables( visitor );
 	}
 
 	@Override

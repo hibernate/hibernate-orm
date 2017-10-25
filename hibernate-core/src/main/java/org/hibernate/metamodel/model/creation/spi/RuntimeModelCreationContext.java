@@ -18,9 +18,9 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
-import org.hibernate.metamodel.model.domain.internal.EntityHierarchyImpl;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationResolver;
@@ -56,7 +56,7 @@ public interface RuntimeModelCreationContext {
 	PersistentCollectionRepresentationResolver getPersistentCollectionRepresentationResolver();
 
 	void registerEntityHierarchy(
-			EntityHierarchyImpl runtimeHierarchy,
+			EntityHierarchy runtimeHierarchy,
 			EntityMappingHierarchy bootHierarchy);
 
 	void registerEntityDescriptor(

@@ -91,7 +91,7 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 
 	@Override
 	public <N> Navigable<N> findNavigable(String navigableName) {
-		return getEmbeddedDescriptor() .findNavigable( navigableName );
+		return getEmbeddedDescriptor().findNavigable( navigableName );
 	}
 
 	@Override

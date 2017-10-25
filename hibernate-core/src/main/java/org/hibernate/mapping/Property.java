@@ -484,7 +484,7 @@ public class Property implements Serializable, PersistentAttributeMapping {
 	}
 
 	private boolean isManyToOne(ToOne value) {
-		return false;
+		return ManyToOne.class.isInstance( value );
 	}
 
 }

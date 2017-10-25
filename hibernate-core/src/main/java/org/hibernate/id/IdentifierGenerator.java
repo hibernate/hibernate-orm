@@ -34,12 +34,12 @@ public interface IdentifierGenerator {
 	/**
 	 * The configuration parameter holding the entity name
 	 */
-	public static final String ENTITY_NAME = "entity_name";
+	String ENTITY_NAME = "entity_name";
 
 	/**
 	 * The configuration parameter holding the JPA entity name
 	 */
-	public static final String JPA_ENTITY_NAME = "jpa_entity_name";
+	String JPA_ENTITY_NAME = "jpa_entity_name";
 
 	/**
 	 * Generate a new identifier.
@@ -51,5 +51,5 @@ public interface IdentifierGenerator {
 	 *
 	 * @throws HibernateException Indicates trouble generating the identifier
 	 */
-	public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException;
+	Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException;
 }

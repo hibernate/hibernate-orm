@@ -29,6 +29,7 @@ import org.hibernate.metamodel.model.relational.spi.Sequence;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.naming.Identifier;
+import org.hibernate.naming.NamespaceName;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
@@ -157,33 +158,16 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			GenerationTarget... targets) {
 		final boolean format = Helper.interpretFormattingEnabled( options.getConfigurationValues() );
 		final Formatter formatter = format ? FormatStyle.DDL.getFormatter() : FormatStyle.NONE.getFormatter();
+		final Map<NamespaceName, NameSpaceTablesInformation> tablesInformation = new HashMap<>();
+		final Set<Identifier> exportedCatalogs = new HashSet<>();
 
 		final Set<String> exportIdentifiers = new HashSet<>( 50 );
 
 		// Drop all AuxiliaryDatabaseObjects
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
-				applySqlStrings(
-						true,
-						dialect.getAuxiliaryDatabaseObjectExporter()
-								.getSqlDropStrings( auxiliaryDatabaseObject, jdbcServices ),
-						formatter,
-						options,
-						targets
-				);
-		}
+		dropAuxiliaryDatabaseObjects( options, dialect, formatter, targets );
 
 		// Create beforeQuery-table AuxiliaryDatabaseObjects
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
-			if ( !auxiliaryDatabaseObject.isBeforeTablesOnCreation() ) {
-				applySqlStrings(
-						true,
-						auxiliaryDatabaseObject.getSqlCreateStrings(),
-						formatter,
-						options,
-						targets
-				);
-			}
-		}
+		createBeforeTableCreationAuxiliaryDatabaseObjects( options, formatter, targets );
 
 		boolean tryToCreateCatalogs = false;
 		boolean tryToCreateSchemas = false;
@@ -195,8 +179,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				tryToCreateCatalogs = true;
 			}
 		}
-		final Map<Namespace, NameSpaceTablesInformation> tablesInformation = new HashMap<>();
-		Set<Identifier> exportedCatalogs = new HashSet<>();
+
 		for ( Namespace namespace : databaseModel.getNamespaces() ) {
 			final NameSpaceTablesInformation nameSpaceTablesInformation = performTablesMigration(
 					existingDatabase,
@@ -210,54 +193,79 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					namespace,
 					targets
 			);
-			tablesInformation.put( namespace, nameSpaceTablesInformation );
-			if ( schemaFilter.includeNamespace( namespace ) ) {
-				for ( Sequence sequence : namespace.getSequences() ) {
-					checkExportIdentifier( sequence, exportIdentifiers );
-					final SequenceInformation sequenceInformation = existingDatabase.getSequenceInformation( sequence.getQualifiedName() );
-					if ( sequenceInformation == null ) {
-						applySqlStrings(
-								false,
-								dialect.getSequenceExporter().getSqlCreateStrings(
-										sequence,
-										jdbcServices
-								),
-								formatter,
-								options,
-								targets
-						);
-					}
-				}
-			}
+			tablesInformation.put( namespace.getName(), nameSpaceTablesInformation );
+			createSequences( existingDatabase, options, dialect, formatter, exportIdentifiers, namespace, targets );
 		}
 
 		//NOTE : Foreign keys must be created *afterQuery* all tables of all namespaces for cross namespace fks. see HHH-10420
 		for ( Namespace namespace : databaseModel.getNamespaces() ) {
-			if ( schemaFilter.includeNamespace( namespace ) ) {
-				final NameSpaceTablesInformation nameSpaceTablesInformation = tablesInformation.get( namespace );
-				for ( Table table : namespace.getTables() ) {
-					if ( table.isExportable() ) {
-						final ExportableTable exportableTable = (ExportableTable) table;
-						if ( schemaFilter.includeTable( table ) ) {
-							final TableInformation tableInformation = nameSpaceTablesInformation
-									.getTableInformation( exportableTable );
-							if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
-								applyForeignKeys(
-										exportableTable,
-										tableInformation,
-										dialect,
-										formatter,
-										options,
-										targets
-								);
-							}
+			createForeignKeys( options, dialect, formatter, tablesInformation, namespace, targets );
+		}
+
+		// Create afterQuery-table AuxiliaryDatabaseObjects
+		createAfterTableCreationAuxiliaryDatabaseObjects( options, formatter, targets );
+	}
+
+	private void createSequences(
+			DatabaseInformation existingDatabase,
+			ExecutionOptions options,
+			Dialect dialect,
+			Formatter formatter, Set<String> exportIdentifiers, Namespace namespace, GenerationTarget[] targets) {
+		if ( schemaFilter.includeNamespace( namespace ) ) {
+			for ( Sequence sequence : namespace.getSequences() ) {
+				checkExportIdentifier( sequence, exportIdentifiers );
+				final SequenceInformation sequenceInformation = existingDatabase.getSequenceInformation( sequence.getQualifiedName() );
+				if ( sequenceInformation == null ) {
+					applySqlStrings(
+							false,
+							dialect.getSequenceExporter().getSqlCreateStrings(
+									sequence,
+									jdbcServices
+							),
+							formatter,
+							options,
+							targets
+					);
+				}
+			}
+		}
+	}
+
+	private void createForeignKeys(
+			ExecutionOptions options,
+			Dialect dialect,
+			Formatter formatter,
+			Map<NamespaceName, NameSpaceTablesInformation> tablesInformation,
+			Namespace namespace,
+			GenerationTarget[] targets) {
+		if ( schemaFilter.includeNamespace( namespace ) ) {
+			final NameSpaceTablesInformation nameSpaceTablesInformation = tablesInformation.get( namespace.getName() );
+			for ( Table table : namespace.getTables() ) {
+				if ( table.isExportable() ) {
+					final ExportableTable exportableTable = (ExportableTable) table;
+					if ( schemaFilter.includeTable( table ) ) {
+						final TableInformation tableInformation = nameSpaceTablesInformation
+								.getTableInformation( exportableTable );
+						if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
+							applyForeignKeys(
+									exportableTable,
+									tableInformation,
+									dialect,
+									formatter,
+									options,
+									targets
+							);
 						}
 					}
 				}
 			}
 		}
+	}
 
-		// Create afterQuery-table AuxiliaryDatabaseObjects
+	private void createAfterTableCreationAuxiliaryDatabaseObjects(
+			ExecutionOptions options,
+			Formatter formatter,
+			GenerationTarget[] targets) {
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.isBeforeTablesOnCreation() ) {
 				applySqlStrings(
@@ -268,6 +276,40 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 						targets
 				);
 			}
+		}
+	}
+
+	private void createBeforeTableCreationAuxiliaryDatabaseObjects(
+			ExecutionOptions options,
+			Formatter formatter,
+			GenerationTarget[] targets) {
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
+			if ( !auxiliaryDatabaseObject.isBeforeTablesOnCreation() ) {
+				applySqlStrings(
+						true,
+						auxiliaryDatabaseObject.getSqlCreateStrings(),
+						formatter,
+						options,
+						targets
+				);
+			}
+		}
+	}
+
+	private void dropAuxiliaryDatabaseObjects(
+			ExecutionOptions options,
+			Dialect dialect,
+			Formatter formatter,
+			GenerationTarget[] targets) {
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : databaseModel.getAuxiliaryDatabaseObjects() ) {
+				applySqlStrings(
+						true,
+						dialect.getAuxiliaryDatabaseObjectExporter()
+								.getSqlDropStrings( auxiliaryDatabaseObject, jdbcServices ),
+						formatter,
+						options,
+						targets
+				);
 		}
 	}
 

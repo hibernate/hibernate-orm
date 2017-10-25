@@ -17,6 +17,7 @@ import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.sql.Template;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 import static org.hibernate.mapping.SimpleValue.*;
@@ -52,7 +53,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private String customRead;
 
 	public Column(String columnName) {
-		setName( Identifier.toIdentifier( columnName ) );
+		this( Identifier.toIdentifier( columnName ) );
 	}
 
 	public Column(Identifier columnName) {
@@ -210,6 +211,10 @@ public class Column implements Selectable, Serializable, Cloneable {
 		return sqlTypeDescriptor;
 	}
 
+	protected JavaTypeDescriptor getJavaTypeDescriptor(){
+		return typeDescriptorResolver.resolveJavaTypeDescriptor();
+	}
+
 	public void setTypeDescriptorResolver(TypeDescriptorResolver typeDescriptorResolver) {
 		this.typeDescriptorResolver = typeDescriptorResolver;
 	}
@@ -234,7 +239,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 				|| ( size.getScale() == null && size.getPrecision() == null ) ) {
 			size = dialect.getDefaultSizeStrategy().resolveDefaultSize(
 					getSqlTypeDescriptor(),
-					typeDescriptorResolver.resolveJavaTypeDescriptor()
+					getJavaTypeDescriptor()
 			);
 		}
 

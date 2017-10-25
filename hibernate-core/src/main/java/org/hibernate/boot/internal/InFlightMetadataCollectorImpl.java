@@ -1728,9 +1728,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			boolean unique,
 			final MetadataBuildingContext buildingContext) {
 		int size = columnNames.length;
-		Column[] columns = new Column[size];
-		Set<Column> unbound = new HashSet<>();
-		Set<Column> unboundNoLogical = new HashSet<>();
+		final Column[] columns = new Column[size];
+		final Set<Column> unbound = new HashSet<>();
+		final Set<Column> unboundNoLogical = new HashSet<>();
 		for ( int index = 0; index < size; index++ ) {
 			final String logicalColumnName = columnNames[index];
 			try {
@@ -1777,10 +1777,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
 			}
 
-			UniqueKey uk = table.getOrCreateUniqueKey( keyName );
+			final UniqueKey uk = table.getOrCreateUniqueKey( keyName );
 			for ( int i = 0; i < columns.length; i++ ) {
-				Column column = columns[i];
-				String order = orderings != null ? orderings[i] : null;
+				final Column column = columns[i];
+				final String order = orderings != null ? orderings[i] : null;
 				if ( table.containsColumn( column ) ) {
 					uk.addColumn( table.getColumn( column ), order );
 					unbound.remove( column );
@@ -1817,10 +1817,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
 			}
 
-			MappedIndex index = table.getOrCreateIndex( keyName );
+			final MappedIndex index = table.getOrCreateIndex( keyName );
 			for ( int i = 0; i < columns.length; i++ ) {
-				Column column = columns[i];
-				String order = orderings != null ? orderings[i] : null;
+				final Column column = columns[i];
+				final String order = orderings != null ? orderings[i] : null;
 				if ( table.containsColumn( column ) ) {
 					index.addColumn( table.getColumn( column ), order );
 					unbound.remove( column );
@@ -1829,7 +1829,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		if ( unbound.size() > 0 || unboundNoLogical.size() > 0 ) {
-			StringBuilder sb = new StringBuilder( "Unable to create " );
+			final StringBuilder sb = new StringBuilder( "Unable to create " );
 			if ( unique ) {
 				sb.append( "unique key constraint (" );
 			}

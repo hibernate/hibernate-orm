@@ -9,6 +9,7 @@ package org.hibernate.id;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.mapping.Column;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
 
@@ -49,4 +50,8 @@ public class ExportableColumn extends Column {
 		return type.getSqlTypeDescriptor();
 	}
 
+	@Override
+	protected JavaTypeDescriptor getJavaTypeDescriptor() {
+		return type.getJavaTypeDescriptor();
+	}
 }

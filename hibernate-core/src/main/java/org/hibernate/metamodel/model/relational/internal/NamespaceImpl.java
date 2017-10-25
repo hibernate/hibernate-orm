@@ -12,10 +12,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-import org.hibernate.naming.Identifier;
-import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.metamodel.model.relational.spi.Namespace;
 import org.hibernate.metamodel.model.relational.spi.Sequence;
+import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.naming.Identifier;
+import org.hibernate.naming.NamespaceName;
 
 import org.jboss.logging.Logger;
 
@@ -26,26 +27,29 @@ import org.jboss.logging.Logger;
 public class NamespaceImpl implements Namespace {
 	private static final Logger log = Logger.getLogger( NamespaceImpl.class );
 
-	private final Identifier catalogName;
-	private final Identifier schemaName;
+	private final NamespaceName name;
 
 	private List<Table> tables;
 	private List<Sequence> sequences;
 
 
 	public NamespaceImpl(Identifier catalogName, Identifier schemaName) {
-		this.catalogName = catalogName;
-		this.schemaName = schemaName;
+		this.name = new NamespaceName( catalogName, schemaName );
 	}
 
 	@Override
 	public Identifier getCatalogName() {
-		return catalogName;
+		return name.getCatalog();
 	}
 
 	@Override
 	public Identifier getSchemaName() {
-		return schemaName;
+		return name.getSchema();
+	}
+
+	@Override
+	public NamespaceName getName() {
+		return name;
 	}
 
 	@Override
@@ -70,7 +74,12 @@ public class NamespaceImpl implements Namespace {
 
 	@Override
 	public String toString() {
-		return String.format( Locale.ROOT, "Namespace[catalog=%s, schema=%s]", catalogName, schemaName );
+		return String.format(
+				Locale.ROOT,
+				"Namespace[catalogName=%s, schemaName=%s]",
+				name.getCatalog(),
+				name.getSchema()
+		);
 	}
 
 	public void addSequence(Sequence sequence) {

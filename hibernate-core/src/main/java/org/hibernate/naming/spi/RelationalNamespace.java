@@ -9,6 +9,7 @@ package org.hibernate.naming.spi;
 import java.util.Collection;
 
 import org.hibernate.naming.Identifier;
+import org.hibernate.naming.NamespaceName;
 
 /**
  * @author Steve Ebersole
@@ -22,4 +23,6 @@ public interface RelationalNamespace<T,S> {
 	Collection<T> getTables();
 
 	Collection<S> getSequences();
+
+	NamespaceName getName();
 }

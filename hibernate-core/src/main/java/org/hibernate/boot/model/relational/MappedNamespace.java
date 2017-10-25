@@ -49,6 +49,7 @@ public class MappedNamespace implements RelationalNamespace<MappedTable, MappedS
 		return getName().getSchema();
 	}
 
+	@Override
 	public NamespaceName getName() {
 		return name;
 	}

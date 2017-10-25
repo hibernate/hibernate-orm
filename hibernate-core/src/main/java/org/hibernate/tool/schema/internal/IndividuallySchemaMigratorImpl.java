@@ -79,6 +79,7 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 				}
 			}
 
+			//create Index and Unique keys
 			for ( Table table : namespace.getTables() ) {
 				if ( schemaFilter.includeTable( table ) && table.isExportable() ) {
 					final ExportableTable exportableTable = (ExportableTable) table;

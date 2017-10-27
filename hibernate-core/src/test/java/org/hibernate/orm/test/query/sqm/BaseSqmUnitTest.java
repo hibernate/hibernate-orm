@@ -6,9 +6,11 @@
  */
 package org.hibernate.orm.test.query.sqm;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.spi.AfterLoadAction;
-import org.hibernate.orm.test.BaseUnitTest;
+import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
@@ -17,8 +19,19 @@ import org.hibernate.sql.ast.produce.sqm.spi.Callback;
  * @author Steve Ebersole
  */
 public abstract class BaseSqmUnitTest
-		extends BaseUnitTest
+		extends SessionFactoryBasedFunctionalTest
 		implements SqlAstBuildingContext, Callback {
+
+	@Override
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		super.applySettings( builder );
+
+		builder.applySetting( AvailableSettings.JPAQL_STRICT_COMPLIANCE, strictJpaCompliance() );
+	}
+
+	protected boolean strictJpaCompliance() {
+		return false;
+	}
 
 	@Override
 	public Callback getCallback() {
@@ -27,6 +40,11 @@ public abstract class BaseSqmUnitTest
 
 	@Override
 	public void registerAfterLoadAction(AfterLoadAction afterLoadAction) {
+	}
+
+	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory();
 	}
 
 	protected SqmSelectStatement interpretSelect(String hql) {

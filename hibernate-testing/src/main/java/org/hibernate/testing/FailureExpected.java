@@ -16,9 +16,12 @@ import java.lang.annotation.Target;
  *
  * @author Hardy Ferentschik
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link org.hibernate.testing.junit5.FailureExpected} instead
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.TYPE })
+@Deprecated
 public @interface FailureExpected {
 	/**
 	 * The key of a JIRA issue which covers this expected failure.

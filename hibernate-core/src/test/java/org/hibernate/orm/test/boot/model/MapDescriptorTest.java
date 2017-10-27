@@ -11,7 +11,7 @@ import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.orm.test.BaseUnitTest;
+import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfMaps;
 
 import org.junit.Before;
@@ -24,7 +24,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Steve Ebersole
  */
-public class MapDescriptorTest extends BaseUnitTest {
+public class MapDescriptorTest extends SessionFactoryBasedFunctionalTest {
 	private EntityDescriptor entityDescriptor;
 
 	@Override
@@ -36,7 +36,7 @@ public class MapDescriptorTest extends BaseUnitTest {
 
 	@Before
 	public void findEntityDescriptor() {
-		entityDescriptor = getSessionFactory().getTypeConfiguration().findEntityDescriptor( EntityOfMaps.class );
+		entityDescriptor = sessionFactory().getTypeConfiguration().findEntityDescriptor( EntityOfMaps.class );
 	}
 
 	@Test

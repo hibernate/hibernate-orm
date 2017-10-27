@@ -33,10 +33,9 @@ import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
 
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.hibernate.testing.junit5.FailureExpected;
+
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -52,10 +51,9 @@ import static org.junit.Assert.assertThat;
  *
  * @author Steve Ebersole
  */
-@Ignore( "Boot model building has problem binding some of this model" )
+@SuppressWarnings("WeakerAccess")
+@FailureExpected( "Boot model building has problem binding some of this model" )
 public class SelectClauseTests extends BaseSqmUnitTest {
-	@Rule
-	public ExpectedException expectedException = ExpectedException.none();
 
 	@Test
 	public void testSimpleAliasSelection() {

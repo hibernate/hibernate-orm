@@ -18,7 +18,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
 import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -30,6 +30,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 public class CaseExpressionsTest extends BaseSqmUnitTest {
 
 	@Override

@@ -22,7 +22,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -42,6 +42,7 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 public class FromClauseTests extends BaseSqmUnitTest {
 
 	@Override

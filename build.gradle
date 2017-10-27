@@ -28,6 +28,7 @@ buildscript {
 		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
 		classpath 'org.hibernate.build.gradle:gradle-xjc-plugin:1.0.2.Final'
 		classpath 'com.github.lburgazzoli:lb-karaf-features-gen:1.0.0-SNAPSHOT'
+		classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.1'
 	}
 }
 
@@ -121,6 +122,8 @@ subprojects { subProject ->
 	apply plugin: 'build-dashboard'
 	apply plugin: 'project-report'
 
+	apply plugin: 'org.junit.platform.gradle.plugin'
+
 	apply plugin: org.hibernate.build.HibernateBuildPlugin
 
 	sourceCompatibility = rootProject.baselineJavaVersion
@@ -147,7 +150,6 @@ subprojects { subProject ->
 
 		jbossLoggingTool( libraries.logging_processor )
 
-		testCompile( libraries.junit )
 		testCompile( libraries.byteman )
 		testCompile( libraries.byteman_install )
 		testCompile( libraries.byteman_bmunit )
@@ -156,6 +158,18 @@ subprojects { subProject ->
 		testRuntime( libraries.javassist )
 		testRuntime( libraries.byteBuddy )
 		testRuntime( libraries.woodstox )
+
+		// JUnit dependencies made up of:
+		// 		* JUnit 5
+		// 		* the Jupiter engine which runs JUnit 5 based tests
+		//		* the "vintage" engine - which runs JUnit 3 and 4 based tests
+		testCompile( libraries.junit5_api )
+		testRuntime( libraries.junit5_jupiter )
+		testCompile( libraries.junit )
+		testRuntime( libraries.junit5_vintage )
+
+		// IDE support for JUnit 5
+//		testRuntime("org.junit.platform:junit-platform-launcher:1.0.1")
 
 		//Databases
 		testRuntime( libraries.h2 )

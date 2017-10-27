@@ -22,7 +22,8 @@ import org.hibernate.query.sqm.tree.predicate.InSubQuerySqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
-import org.junit.Test;
+import org.hibernate.testing.junit5.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.core.Is.is;
@@ -37,9 +38,11 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
+@SuppressWarnings("WeakerAccess")
 public class AliasCollisionTest extends BaseSqmUnitTest {
 
-	@Test(expected = AliasCollisionException.class)
+	@Test
+	@ExpectedException( AliasCollisionException.class )
 	public void testDuplicateResultVariableCollision() {
 		// in both cases the query is using an alias (`b`) as 2 different
 		// select-clause result variables - that's an error
@@ -47,7 +50,8 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 		interpretSelect( "select a.someInteger as b, a.someInteger as b from SimpleEntity a" );
 	}
 
-	@Test(expected = AliasCollisionException.class)
+	@Test
+	@ExpectedException( AliasCollisionException.class )
 	public void testResultVariableRenamesIdentificationVariableCollision() {
 		interpretSelect( "select a.someString as a from SimpleEntity as a" );
 
@@ -61,7 +65,8 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 		//		select {alias} from XYZ as {alias}
 	}
 
-	@Test(expected = AliasCollisionException.class)
+	@Test
+	@ExpectedException( AliasCollisionException.class )
 	public void testDuplicateIdentificationVariableCollision() {
 		interpretSelect( "select a from SimpleEntity as a, SimpleEntity as a" );
 		interpretSelect(

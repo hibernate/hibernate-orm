@@ -24,7 +24,7 @@ import org.hibernate.query.sqm.tree.predicate.RelationalPredicateOperator;
 import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertThat;
  *
  * @author Gunnar Morling
  */
-//@Ignore( "bombs on boot model trying to resolve BasicTypes for collection fk" )
+@SuppressWarnings("WeakerAccess")
 public class WhereClauseTests extends BaseSqmUnitTest {
 
 	@Override
@@ -116,34 +116,5 @@ public class WhereClauseTests extends BaseSqmUnitTest {
 		assertThat( relationalPredicate.getLeftHandExpression(), instanceOf( SqmCollectionIndexReference.class ) );
 		final SqmPluralAttributeReference collectionBinding = ( (SqmCollectionIndexReference) relationalPredicate.getLeftHandExpression() ).getSourceReference();
 		assertThat( collectionBinding.getExportedFromElement().getIdentificationVariable(), is( "l" ) );
-	}
-
-	@Test
-	public void testMapKeyFunction() {
-		SqmSelectStatement statement = interpretSelect( "select e from EntityOfMaps e join e.basicToBasicMap m where key(m) = 'foo'" );
-
-		SqmPredicate predicate = statement.getQuerySpec().getWhereClause().getPredicate();
-		assertThat( predicate, instanceOf( RelationalSqmPredicate.class ) );
-		RelationalSqmPredicate relationalPredicate = ( (RelationalSqmPredicate) predicate );
-
-		final SqmCollectionIndexReference collectionIndexBinding = (SqmCollectionIndexReference) relationalPredicate.getLeftHandExpression();
-		final SqmPluralAttributeReference collectionBinding = collectionIndexBinding.getSourceReference();
-		final PluralPersistentAttribute attribute = collectionBinding.getReferencedNavigable();
-
-		assertThat(
-				collectionIndexBinding.getExpressableType(),
-				is( attribute.getPersistentCollectionDescriptor().getIndexDescriptor() )
-		);
-
-		assertThat(
-				attribute.getPersistentCollectionDescriptor().getIndexDescriptor().getClassification(),
-				is( CollectionIndex.IndexClassification.BASIC )
-		);
-		assertEquals(
-				String.class,
-				attribute.getPersistentCollectionDescriptor().getIndexDescriptor().getJavaTypeDescriptor().getJavaType()
-		);
-
-		assertThat( collectionBinding.getExportedFromElement().getIdentificationVariable(), is( "m" ) );
 	}
 }

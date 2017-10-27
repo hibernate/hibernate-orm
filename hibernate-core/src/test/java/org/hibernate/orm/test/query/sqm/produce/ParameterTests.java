@@ -21,9 +21,12 @@ import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceBasic;
 
-import org.junit.Test;
+
+import org.hibernate.testing.junit5.ExpectedException;
+import org.hibernate.testing.junit5.ExpectedExceptionExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -33,19 +36,24 @@ import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
+@ExtendWith( ExpectedExceptionExtension.class )
 public class ParameterTests extends BaseSqmUnitTest {
-	@Test( expected = SemanticException.class )
+	@Test
+	@ExpectedException( SemanticException.class )
 	public void testInvalidLegacyPositionalParam() {
 		// todo (6.0) : should we define the rule with the integer as optional and then give a better exception?
 		interpretSelect( "select a.nickName from Person a where a.numberOfToes = ?" );
 	}
 
-	@Test( expected = SemanticException.class )
+	@Test
+	@ExpectedException( SemanticException.class )
 	public void testZeroBasedPositionalParam() {
 		interpretSelect( "select a.nickName from Person a where a.numberOfToes = ?0" );
 	}
 
-	@Test( expected = SemanticException.class )
+	@Test
+	@ExpectedException( SemanticException.class )
 	public void testNonContiguousPositionalParams() {
 		interpretSelect( "select a.nickName from Person a where a.numberOfToes = ?1 or a.numberOfToes = ?3" );
 

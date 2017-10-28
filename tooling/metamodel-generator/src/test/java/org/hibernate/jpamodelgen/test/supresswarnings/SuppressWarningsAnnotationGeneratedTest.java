@@ -32,7 +32,7 @@ public class SuppressWarningsAnnotationGeneratedTest extends CompilationTest {
 		String metaModelSource = getMetaModelSourceAsString( TestEntity.class );
 		assertTrue(
 				"@SuppressWarnings should be added to the metamodel.",
-				metaModelSource.contains( "@SuppressWarnings(\"all\")" )
+				metaModelSource.contains( "@SuppressWarnings({ \"deprecation\", \"rawtypes\" })" )
 		);
 	}
 }

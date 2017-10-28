@@ -210,7 +210,7 @@ public final class ClassWriter {
 	}
 
 	private static String writeSuppressWarnings() {
-		return "@SuppressWarnings(\"all\")";
+		return "@SuppressWarnings({ \"deprecation\", \"rawtypes\" })";
 	}
 
 	private static String writeStaticMetaModelAnnotation(MetaEntity entity) {

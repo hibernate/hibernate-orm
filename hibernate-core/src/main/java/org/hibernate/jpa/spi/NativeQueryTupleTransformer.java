@@ -81,12 +81,11 @@ public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
 
 		@Override
 		public Object get(String alias) {
-			Object tupleElement = aliasToValue.get( alias.toLowerCase() );
-
-			if ( tupleElement == null ) {
+			final String lowerCasedAlias = alias.toLowerCase();
+			if (!aliasToValue.containsKey(lowerCasedAlias)) {
 				throw new IllegalArgumentException( "Unknown alias [" + alias + "]" );
 			}
-			return tupleElement;
+			return aliasToValue.get(lowerCasedAlias);
 		}
 
 		@Override

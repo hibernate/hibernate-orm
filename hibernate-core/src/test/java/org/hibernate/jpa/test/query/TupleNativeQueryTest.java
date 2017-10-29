@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 @RequiresDialect(H2Dialect.class)
 public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
@@ -700,12 +701,17 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
         });
         doInJPA(this::entityManagerFactory, entityManager -> {
             List<Tuple> tuples = getTupleResult(entityManager);
-            List<TupleElement<?>> result = tuples.get(0).getElements();
+            final Tuple tuple = tuples.get(0);
+            List<TupleElement<?>> result = tuple.getElements();
             assertEquals(2, result.size());
-            assertEquals(BigInteger.class, result.get(0).getJavaType());
-            assertEquals("id", result.get(0).getAlias());
-            assertEquals(Object.class, result.get(1).getJavaType());
-            assertEquals("firstname", result.get(1).getAlias());
+            final TupleElement<?> firstTupleElement = result.get(0);
+            assertEquals(BigInteger.class, firstTupleElement.getJavaType());
+            assertEquals("id", firstTupleElement.getAlias());
+            assertEquals(BigInteger.valueOf(1L), tuple.get(firstTupleElement.getAlias()));
+            final TupleElement<?> secondTupleElement = result.get(1);
+            assertEquals(Object.class, secondTupleElement.getJavaType());
+            assertEquals("firstname", secondTupleElement.getAlias());
+            assertNull(tuple.get(secondTupleElement.getAlias()));
         });
     }
 

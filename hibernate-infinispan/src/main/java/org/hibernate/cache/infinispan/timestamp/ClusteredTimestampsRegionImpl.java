@@ -41,13 +41,13 @@ public class ClusteredTimestampsRegionImpl extends TimestampsRegionImpl {
 	 */
 	private final Map localCache = new ConcurrentHashMap();
 
-   /**
-    * Clustered timestamps region constructor.
-    *
-    * @param cache instance to store update timestamps
-    * @param name of the update timestamps region
-    * @param factory for the update timestamps region
-    */
+	/**
+	 * Clustered timestamps region constructor.
+	 *
+	 * @param cache instance to store update timestamps
+	 * @param name of the update timestamps region
+	 * @param factory for the update timestamps region
+	 */
 	public ClusteredTimestampsRegionImpl(
 			AdvancedCache cache,
 			String name, InfinispanRegionFactory factory) {
@@ -74,6 +74,12 @@ public class ClusteredTimestampsRegionImpl extends TimestampsRegionImpl {
 			}
 		}
 		return value;
+	}
+
+	@Override
+	public void put(SharedSessionContractImplementor session, Object key, Object value) throws CacheException {
+		updateLocalCache(key, value);
+		super.put(session, key, value);
 	}
 
 	@Override
@@ -128,7 +134,7 @@ public class ClusteredTimestampsRegionImpl extends TimestampsRegionImpl {
 	@SuppressWarnings({"unused", "unchecked"})
 	public void nodeModified(CacheEntryModifiedEvent event) {
 		if ( !event.isPre() ) {
-			localCache.put( event.getKey(), event.getValue() );
+			updateLocalCache( event.getKey(), event.getValue() );
 		}
 	}
 
@@ -146,4 +152,14 @@ public class ClusteredTimestampsRegionImpl extends TimestampsRegionImpl {
 		localCache.remove( event.getKey() );
 	}
 
+	private void updateLocalCache(Object key, Object value) {
+		localCache.compute(key, (k, v) -> {
+			if (v instanceof Number && value instanceof Number) {
+				return Math.max(((Number) v).longValue(), ((Number) value).longValue());
+			}
+			else {
+				return value;
+			}
+		});
+	}
 }

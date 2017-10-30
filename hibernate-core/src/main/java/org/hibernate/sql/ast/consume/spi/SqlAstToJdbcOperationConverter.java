@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.ast.consume.spi;
 
+import java.util.Set;
+
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
@@ -18,4 +20,5 @@ import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
  */
 public interface SqlAstToJdbcOperationConverter
 		extends SqlAstWalker, ParameterBindingContext, JdbcRecommendedSqlTypeMappingContext {
+	Set<String> getAffectedTableNames();
 }

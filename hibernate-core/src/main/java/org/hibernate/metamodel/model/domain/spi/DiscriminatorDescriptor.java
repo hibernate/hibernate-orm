@@ -6,6 +6,9 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
 
@@ -25,6 +28,8 @@ public interface DiscriminatorDescriptor<J>
 	 * hierarchy's discriminator.
 	 */
 	DiscriminatorMappings getDiscriminatorMappings();
+
+	SqlSelection resolveSqlSelection(ColumnReferenceQualifier qualifier, QueryResultCreationContext creationContext);
 
 	@Override
 	default PersistenceType getPersistenceType() {

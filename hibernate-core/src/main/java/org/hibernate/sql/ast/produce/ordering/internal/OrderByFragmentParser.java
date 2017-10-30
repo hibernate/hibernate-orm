@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 
 import org.jboss.logging.Logger;
 
@@ -66,7 +67,7 @@ public class OrderByFragmentParser extends SemanticQueryBuilder {
 	}
 
 	@Override
-	public Object visitPathExpression(HqlParser.PathExpressionContext ctx) {
+	public SqmNavigableReference visitPathExpression(HqlParser.PathExpressionContext ctx) {
 		final String pathText = ctx.path().getText();
 		final String[] pathSplits = PathHelper.split( pathText );
 		final SqmNavigableReference resolvedNavigableReference = navigableBindingResolver.resolvePath( pathSplits );
@@ -89,7 +90,7 @@ public class OrderByFragmentParser extends SemanticQueryBuilder {
 		}
 
 		// otherwise assume we have a column name
-		return new SqmColumnReference( sqmFromBase );
+		return new SqmColumnReference( sqmFromBase, pathSplits[0] );
 	}
 
 	public List<SqmSortSpecification> getSqmSortSpecifications() {

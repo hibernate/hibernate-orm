@@ -69,15 +69,25 @@ public class FetchGraphBuilder {
 
 		this.fetchDepthLimit = builder.getSessionFactory().getSessionFactoryOptions().getMaximumFetchDepth();
 
-		this.entityGraphQueryHintType = entityGraphQueryHint.getType();
-		this.rootGraphAttributeContainer = entityGraphQueryHint.getHintedGraph();
+		if ( entityGraphQueryHint != null ) {
+			this.entityGraphQueryHintType = entityGraphQueryHint.getType();
+			this.rootGraphAttributeContainer = entityGraphQueryHint.getHintedGraph();
+		}
+		else {
+			this.entityGraphQueryHintType = EntityGraphQueryHint.Type.NONE;
+			this.rootGraphAttributeContainer = null;
+		}
 
 	}
 
 	// todo (6.0) : need proper circularity checks here
 
+	// todo (6.0) : need to decide who should "apply" fetches
+	//		this means both (1) adding to the from-clause and (2) adding the the select-clause.
+
+
 	public void process(FetchParent fetchParent) {
-		processFetchParent( fetchParent, rootGraphAttributeContainer, 0 );
+//		processFetchParent( fetchParent, rootGraphAttributeContainer, 0 );
 	}
 
 	private void processFetchParent(

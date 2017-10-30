@@ -44,8 +44,9 @@ public class LowerFunction extends AbstractStandardFunction implements StandardF
 	@Override
 	public SqlSelection createSqlSelection(int jdbcPosition) {
 		return new SqlSelectionImpl(
-				getType().getBasicType().getSqlSelectionReader(),
-				jdbcPosition
+				jdbcPosition,
+				this,
+				getType().getBasicType().getSqlSelectionReader()
 		);
 	}
 }

@@ -7,23 +7,29 @@
 package org.hibernate.sql.ast.produce.internal;
 
 import java.util.List;
+import java.util.Set;
 
+import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
 
 /**
+ * The standard Hibernate implementation of SqlAstSelectDescriptor.
+ *
  * @author Steve Ebersole
  */
-public class SqlSelectPlanImpl implements SqlAstSelectInterpretation {
+public class SqlAstSelectDescriptorImpl implements SqlAstSelectDescriptor {
 	private final SelectStatement selectQuery;
 	private final List<QueryResult> queryReturns;
+	private final Set<String> affectedTables;
 
-	public SqlSelectPlanImpl(
+	public SqlAstSelectDescriptorImpl(
 			SelectStatement selectQuery,
-			List<QueryResult> queryReturns) {
+			List<QueryResult> queryReturns,
+			Set<String> affectedTables) {
 		this.selectQuery = selectQuery;
 		this.queryReturns = queryReturns;
+		this.affectedTables = affectedTables;
 	}
 
 	@Override
@@ -34,5 +40,10 @@ public class SqlSelectPlanImpl implements SqlAstSelectInterpretation {
 	@Override
 	public List<QueryResult> getQueryResults() {
 		return queryReturns;
+	}
+
+	@Override
+	public Set<String> getAffectedTableNames() {
+		return affectedTables;
 	}
 }

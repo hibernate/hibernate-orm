@@ -53,8 +53,9 @@ public class ModFunction extends AbstractStandardFunction implements StandardFun
 	@Override
 	public SqlSelection createSqlSelection(int jdbcPosition) {
 		return new SqlSelectionImpl(
-				getType().getBasicType().getSqlSelectionReader(),
-				jdbcPosition
+				jdbcPosition,
+				this,
+				getType().getBasicType().getSqlSelectionReader()
 		);
 	}
 }

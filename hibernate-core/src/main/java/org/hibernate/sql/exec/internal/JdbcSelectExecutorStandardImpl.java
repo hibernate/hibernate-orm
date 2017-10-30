@@ -53,6 +53,11 @@ import org.jboss.logging.Logger;
  */
 public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 	// todo (6.0) : Make resolving these executors swappable - JdbcServices?
+	//		Since JdbcServices is just a "composition service", this is actually
+	//		a very good option...
+
+	// todo (6.0) : where do affected-table-names get checked for up-to-date?
+	//		who is responsible for that?  Here?
 
 	/**
 	 * Singleton access
@@ -226,10 +231,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			PreparedStatementCreator statementCreator,
 			ResultsConsumer<T,R> resultsConsumer) {
 
-		// todo (6.0) - if we want native-query processing to hook in here we need to define a "type discovery" tie-in
-		//		as part of this process.  Logical spot seems to be during the ctor of
-		//		`JdbcValuesSourceResultSetImpl`
-
 		final JdbcValuesSource jdbcValuesSource = resolveJdbcValuesSource(
 				jdbcSelect,
 				executionContext,
@@ -337,7 +338,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					queryResultsCacheKey,
 					// todo (6.0) : `querySpaces` and `session` make perfect sense as args, but its odd passing those into this method just to pass along
 					//		atm we do not even collect querySpaces, but we need to
-					jdbcSelect.getQueriedTableNames(),
+					jdbcSelect.getAffectedTableNames(),
 					executionContext.getSession()
 			);
 

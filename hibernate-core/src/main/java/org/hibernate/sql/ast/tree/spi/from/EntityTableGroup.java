@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.tree.spi.from;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Table;
@@ -109,6 +110,14 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 				sqlAppender.appendSql( " on " );
 				tableJoin.getJoinPredicate().accept( walker );
 			}
+		}
+	}
+
+	@Override
+	public void applyAffectedTableNames(Consumer<String> nameCollector) {
+		nameCollector.accept( getPrimaryTableReference().getTable().getTableExpression() );
+		for ( TableReferenceJoin tableReferenceJoin : getTableReferenceJoins() ) {
+			nameCollector.accept( tableReferenceJoin.getJoinedTableBinding().getTable().getTableExpression() );
 		}
 	}
 

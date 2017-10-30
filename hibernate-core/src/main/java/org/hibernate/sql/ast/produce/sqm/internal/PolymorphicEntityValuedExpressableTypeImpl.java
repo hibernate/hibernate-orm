@@ -68,6 +68,7 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.Type;
@@ -275,7 +276,7 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements EntityDesc
 	}
 
 	@Override
-	public SqlSelectionGroup resolveSqlSelectionGroup(
+	public List<SqlSelection> resolveSqlSelectionGroup(
 			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
 		throw new NotYetImplementedFor6Exception();

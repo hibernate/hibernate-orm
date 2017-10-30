@@ -57,8 +57,9 @@ public class LocateFunction extends AbstractStandardFunction implements Standard
 	@Override
 	public SqlSelection createSqlSelection(int jdbcPosition) {
 		return new SqlSelectionImpl(
-				getType().getBasicType().getSqlSelectionReader(),
-				jdbcPosition
+				jdbcPosition,
+				this,
+				getType().getBasicType().getSqlSelectionReader()
 		);
 	}
 }

@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.internal;
 
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.SqlSelectionReader;
 
@@ -14,12 +15,14 @@ import org.hibernate.sql.results.spi.SqlSelectionReader;
  * @author Steve Ebersole
  */
 public class SqlSelectionImpl implements SqlSelection {
-	private final SqlSelectionReader reader;
 	private final int position;
+	private final Expression sqlExpression;
+	private final SqlSelectionReader reader;
 
-	public SqlSelectionImpl(SqlSelectionReader reader, int position) {
-		this.reader = reader;
+	public SqlSelectionImpl(int position, Expression sqlExpression, SqlSelectionReader reader) {
 		this.position = position;
+		this.sqlExpression = sqlExpression;
+		this.reader = reader;
 	}
 
 	@Override
@@ -33,7 +36,8 @@ public class SqlSelectionImpl implements SqlSelection {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public void accept(SqlAstWalker interpreter) {
-		interpreter.visitSqlSelection( this );
+		sqlExpression.accept( interpreter );
 	}
 }

@@ -16,10 +16,11 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
  * @author Steve Ebersole
  */
 public interface NativeNonSelectQueryDefinition {
-
-	// todo (6.0) : would prefer to drop support for executing calls via NativeQuery at which point this can simply be replaced with JdbcMutation
-
 	String getSqlString();
-	boolean isCallable();
 	List<JdbcParameterBinder> getParameterBinders();
+
+	// todo (6.0) : affected table - either table names or Table references
+
+	// todo (6.0) : drop support for executing callables via NativeQuery
+	boolean isCallable();
 }

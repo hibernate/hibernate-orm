@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import org.hibernate.HibernateException;
@@ -22,10 +24,9 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
-import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.spi.ValueBinder;
@@ -148,19 +149,5 @@ public class VersionDescriptorImpl<O,J>
 	@Override
 	public ValueExtractor getValueExtractor() {
 		return getBasicType().getValueExtractor();
-	}
-
-	@Override
-	public SqlSelectionGroup resolveSqlSelectionGroup(
-			ColumnReferenceQualifier qualifier,
-			SqlSelectionGroupResolutionContext resolutionContext) {
-		return new SqlSelectionGroupImpl(
-				resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
-						resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
-								qualifier,
-								column
-						)
-				)
-		);
 	}
 }

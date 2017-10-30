@@ -7,6 +7,7 @@
 package org.hibernate.query.sql.spi;
 
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
@@ -18,12 +19,16 @@ import org.hibernate.sql.exec.spi.RowTransformer;
  * @author Steve Ebersole
  */
 public interface NativeSelectQueryDefinition<R> {
-
-	// todo (6.0) : would prefer to drop support for executing calls via NativeQuery at which point this can simply be replaced with JdbcSelect
-
 	String getSqlString();
-	boolean isCallable();
 	List<JdbcParameterBinder> getParameterBinders();
 	ResultSetMappingDescriptor getResultSetMapping();
+
+	Set<String> getAffectedTableNames();
+
 	RowTransformer<R> getRowTransformer();
+
+
+	// todo (6.0) : drop support for executing callables via NativeQuery
+	boolean isCallable();
+
 }

@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -45,8 +44,9 @@ public class UpperFunction extends AbstractStandardFunction implements StandardF
 	@Override
 	public SqlSelection createSqlSelection(int jdbcPosition) {
 		return new SqlSelectionImpl(
-				getType().getBasicType().getSqlSelectionReader(),
-				jdbcPosition
+				jdbcPosition,
+				this,
+				getType().getBasicType().getSqlSelectionReader()
 		);
 	}
 }

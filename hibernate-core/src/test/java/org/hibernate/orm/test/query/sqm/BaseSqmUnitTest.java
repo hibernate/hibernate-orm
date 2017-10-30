@@ -15,9 +15,13 @@ import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 
+import org.hibernate.testing.junit5.StandardTags;
+import org.junit.jupiter.api.Tag;
+
 /**
  * @author Steve Ebersole
  */
+@Tag(StandardTags.SQM)
 public abstract class BaseSqmUnitTest
 		extends SessionFactoryBasedFunctionalTest
 		implements SqlAstBuildingContext, Callback {

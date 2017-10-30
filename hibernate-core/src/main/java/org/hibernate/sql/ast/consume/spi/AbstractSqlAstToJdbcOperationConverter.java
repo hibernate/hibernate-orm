@@ -7,8 +7,11 @@
 package org.hibernate.sql.ast.consume.spi;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.consume.SyntaxException;
 import org.hibernate.sql.ast.tree.spi.assign.Assignment;
@@ -25,6 +28,8 @@ public class AbstractSqlAstToJdbcOperationConverter
 	private final QueryParameterBindings parameterBindings;
 	private final java.util.Collection<?> loadIdentifiers;
 
+	private final Set<String> affectedTableNames = new HashSet<>();
+
 	protected AbstractSqlAstToJdbcOperationConverter(
 			SharedSessionContractImplementor persistenceContext,
 			QueryParameterBindings parameterBindings,
@@ -37,6 +42,19 @@ public class AbstractSqlAstToJdbcOperationConverter
 	@Override
 	public void visitAssignment(Assignment assignment) {
 		throw new SyntaxException( "Encountered unexpected assignment clause" );
+	}
+
+	@Override
+	public Set<String> getAffectedTableNames() {
+		return affectedTableNames;
+	}
+
+	protected void registerAffectedTable(Table table) {
+		affectedTableNames.add( table.getTableExpression() );
+	}
+
+	protected void registerAffectedTable(String tableExpression) {
+		affectedTableNames.add( tableExpression );
 	}
 
 

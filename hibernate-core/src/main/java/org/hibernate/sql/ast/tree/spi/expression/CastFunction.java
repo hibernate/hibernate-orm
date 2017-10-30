@@ -54,8 +54,9 @@ public class CastFunction extends AbstractStandardFunction {
 	@Override
 	public SqlSelection createSqlSelection(int jdbcPosition) {
 		return new SqlSelectionImpl(
-				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlSelectionReader(),
-				jdbcPosition
+				jdbcPosition,
+				this,
+				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlSelectionReader()
 		);
 	}
 }

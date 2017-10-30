@@ -39,6 +39,8 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerRefer
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.results.internal.EntityQueryResultImpl;
+import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.type.Type;
@@ -67,46 +69,14 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 	}
 
 	@Override
-	public QueryResult createQueryResult(
-			NavigableReference navigableReference,
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		throw new NotYetImplementedException(  );
-	}
-
-	@Override
 	public String asLoggableText() {
 		return String.format( "SingleTableEntityDescriptor<%s>", getEntityName() );
-	}
 
-	@Override
-	public EntityIdentifier getIdentifierDescriptor() {
-		return null;
-	}
-
-	@Override
-	public EntityEntryFactory getEntityEntryFactory() {
-		return null;
-	}
-
-	@Override
-	public Table getPrimaryTable() {
-		return null;
-	}
-
-	@Override
-	public List<JoinedTableBinding> getSecondaryTableBindings() {
-		return null;
 	}
 
 	@Override
 	public String[] getAffectedTableNames() {
 		return new String[0];
-	}
-
-	@Override
-	public List<EntityNameResolver> getEntityNameResolvers() {
-		return null;
 	}
 
 	@Override
@@ -129,14 +99,6 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 	@Override
 	public Serializable loadEntityIdByNaturalId(
 			Object[] naturalIdValues, LockOptions lockOptions, SharedSessionContractImplementor session) {
-		return null;
-	}
-
-	@Override
-	public List multiLoad(
-			Object[] ids,
-			MultiLoadOptions loadOptions,
-			SharedSessionContractImplementor session) {
 		return null;
 	}
 

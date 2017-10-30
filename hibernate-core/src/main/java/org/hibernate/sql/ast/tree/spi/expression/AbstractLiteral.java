@@ -61,8 +61,9 @@ public abstract class AbstractLiteral
 		//		see `org.hibernate.sql.ast.tree.spi.expression.AbstractParameter.createSqlSelection`
 
 		return new SqlSelectionImpl(
-				getType().getBasicType().getSqlSelectionReader(),
-				jdbcPosition
+				jdbcPosition,
+				this,
+				getType().getBasicType().getSqlSelectionReader()
 		);
 	}
 

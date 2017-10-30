@@ -40,6 +40,7 @@ import org.hibernate.query.sqm.tree.expression.domain.AbstractSpecificSqmCollect
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypeExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMapEntryBinding;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReference;
@@ -102,6 +103,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.set.SqmAssignment;
 import org.hibernate.query.sqm.tree.set.SqmSetClause;
+import org.hibernate.sql.ast.produce.ordering.internal.SqmColumnReference;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 
 /**
@@ -133,6 +135,8 @@ public interface SemanticQueryWalker<T> {
 	T visitFromElementSpace(SqmFromElementSpace fromElementSpace);
 
 	T visitRootEntityFromElement(SqmRoot rootEntityFromElement);
+
+	T visitRootEntityReference(SqmEntityReference sqmEntityReference);
 
 	T visitCrossJoinedFromElement(SqmCrossJoin joinedFromElement);
 
@@ -347,4 +351,6 @@ public interface SemanticQueryWalker<T> {
 	T visitSimpleCaseExpression(SqmCaseSimple expression);
 
 	T visitSearchedCaseExpression(SqmCaseSearched expression);
+
+	T visitExplicitColumnReference(SqmColumnReference sqmColumnReference);
 }

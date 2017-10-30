@@ -38,7 +38,9 @@ public class SingularAttributeReference implements NavigableReference {
 	public ColumnReferenceQualifier getSqlExpressionQualifier() {
 		// todo (6.0) : we need a combined TableSpace to act as the qualifier
 		//		combining the container table-space and the associated table-space (if one)
-		throw new NotYetImplementedFor6Exception(  );
+		//
+		// 	for now just use the qualifier from the container reference
+		return containerReference.getSqlExpressionQualifier();
 	}
 
 	@Override

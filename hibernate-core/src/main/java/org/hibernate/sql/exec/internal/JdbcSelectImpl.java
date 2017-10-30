@@ -7,6 +7,7 @@
 package org.hibernate.sql.exec.internal;
 
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -19,14 +20,17 @@ public class JdbcSelectImpl implements JdbcSelect {
 	private final String sql;
 	private final List<JdbcParameterBinder> parameterBinders;
 	private final ResultSetMappingDescriptor resultSetMapping;
+	private final Set<String> affectedTableNames;
 
 	public JdbcSelectImpl(
 			String sql,
 			List<JdbcParameterBinder> parameterBinders,
-			ResultSetMappingDescriptor resultSetMapping) {
+			ResultSetMappingDescriptor resultSetMapping,
+			Set<String> affectedTableNames) {
 		this.sql = sql;
 		this.parameterBinders = parameterBinders;
 		this.resultSetMapping = resultSetMapping;
+		this.affectedTableNames = affectedTableNames;
 	}
 
 	@Override
@@ -42,5 +46,10 @@ public class JdbcSelectImpl implements JdbcSelect {
 	@Override
 	public ResultSetMappingDescriptor getResultSetMapping() {
 		return resultSetMapping;
+	}
+
+	@Override
+	public Set<String> getAffectedTableNames() {
+		return affectedTableNames;
 	}
 }

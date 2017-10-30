@@ -117,8 +117,9 @@ public abstract class AbstractParameter implements GenericParameter, QueryResult
 		//		see `org.hibernate.sql.ast.tree.spi.expression.AbstractLiteral.createSqlSelection`
 
 		return new SqlSelectionImpl(
-				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlSelectionReader(),
-				jdbcPosition
+				jdbcPosition,
+				this,
+				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlSelectionReader()
 		);
 	}
 }

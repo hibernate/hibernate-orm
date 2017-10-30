@@ -22,8 +22,6 @@ import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.sql.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.spi.BasicType;
@@ -121,23 +119,22 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 			NavigableReference navigableReference,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
-		final SqlSelectionGroup group = resolveSqlSelectionGroup(
-				navigableReference.getSqlExpressionQualifier(),
-				creationContext
-		);
-
 		return new ScalarQueryResultImpl(
 				resultVariable,
-				group.getSqlSelections().get( 0 ),
+				resolveSqlSelection(
+						navigableReference.getSqlExpressionQualifier(),
+						creationContext
+				),
 				this
 		);
 	}
 
-	private SqlSelection resolveSqlSelection(
+	@Override
+	public SqlSelection resolveSqlSelection(
 			ColumnReferenceQualifier qualifier,
-			SqlSelectionGroupResolutionContext resolutionContext) {
-		return resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
-				resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
+			QueryResultCreationContext creationContext) {
+		return creationContext.getSqlSelectionResolver().resolveSqlSelection(
+				creationContext.getSqlSelectionResolver().resolveSqlExpression(
 						qualifier,
 						getBoundColumn()
 				)

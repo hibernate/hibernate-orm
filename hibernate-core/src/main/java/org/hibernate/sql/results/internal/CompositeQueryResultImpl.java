@@ -6,14 +6,16 @@
  */
 package org.hibernate.sql.results.internal;
 
+import java.util.List;
+
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.results.spi.CompositeQueryResult;
 import org.hibernate.sql.results.spi.InitializerCollector;
 import org.hibernate.sql.results.spi.QueryResultAssembler;
-import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
@@ -27,13 +29,13 @@ public class CompositeQueryResultImpl extends AbstractFetchParent implements Com
 	public CompositeQueryResultImpl(
 			String resultVariable,
 			EmbeddedValuedNavigable navigable,
-			SqlSelectionGroup sqlSelections) {
+			List<SqlSelection> sqlSelections) {
 		super( navigable, new NavigablePath( navigable.getEmbeddedDescriptor().getRoleName() ) );
 		this.resultVariable = resultVariable;
 
 		this.assembler = new CompositeQueryResultAssembler(
 				this,
-				sqlSelections.getSqlSelections(),
+				sqlSelections,
 				navigable.getEmbeddedDescriptor()
 		);
 	}

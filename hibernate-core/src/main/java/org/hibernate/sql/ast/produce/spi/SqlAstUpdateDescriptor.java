@@ -6,18 +6,16 @@
  */
 package org.hibernate.sql.ast.produce.spi;
 
-import java.util.List;
-
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.ast.tree.spi.SelectStatement;
+import org.hibernate.sql.ast.tree.spi.UpdateStatement;
 
 /**
+ * SqlAstDescriptor specialization for update queries
  *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
-public interface SqlAstSelectInterpretation extends SqlAstInterpretation {
+public interface SqlAstUpdateDescriptor extends SqlAstDescriptor {
 	@Override
-	SelectStatement getSqlAstStatement();
-
-	List<QueryResult> getQueryResults();
+	UpdateStatement getSqlAstStatement();
 }

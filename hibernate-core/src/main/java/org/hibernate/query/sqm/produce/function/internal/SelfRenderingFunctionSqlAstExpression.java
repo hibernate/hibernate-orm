@@ -66,8 +66,9 @@ public class SelfRenderingFunctionSqlAstExpression
 	@Override
 	public SqlSelection createSqlSelection(int jdbcPosition) {
 		return new SqlSelectionImpl(
-				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlSelectionReader(),
-				jdbcPosition
+				jdbcPosition,
+				null,
+				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlSelectionReader()
 		);
 	}
 

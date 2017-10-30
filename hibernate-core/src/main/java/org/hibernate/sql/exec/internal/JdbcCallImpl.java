@@ -7,10 +7,13 @@
 package org.hibernate.sql.exec.internal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.sql.results.spi.ResultSetMappingDescriptor;
 import org.hibernate.sql.exec.spi.JdbcCall;
@@ -77,6 +80,11 @@ public class JdbcCallImpl implements JdbcCall {
 	@Override
 	public List<JdbcParameterBinder> getParameterBinders() {
 		return parameterBinders == null ? Collections.emptyList() : parameterBinders;
+	}
+
+	@Override
+	public Set<String> getAffectedTableNames() {
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override

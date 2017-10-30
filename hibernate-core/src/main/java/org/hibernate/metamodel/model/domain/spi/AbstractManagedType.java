@@ -259,6 +259,18 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 
 
 	@Override
+	@SuppressWarnings("unchecked")
+	public List<NonIdPersistentAttribute> getPersistentAttributes() {
+		return attributes;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<NonIdPersistentAttribute> getDeclaredPersistentAttributes() {
+		return declaredAttributes;
+	}
+
+	@Override
 	public void visitStateArrayNavigables(Consumer<StateArrayContributor<?>> consumer) {
 		visitAttributes(
 				attribute -> {

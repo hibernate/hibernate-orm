@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.spi;
 
+import java.util.List;
+
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 
 /**
@@ -18,11 +20,11 @@ public interface EntitySqlSelectionMappings {
 
 	// todo (6.0) : as discussed elsewhere, drop SqlSelectionGroup and just use List<SqlSelection>
 
-	SqlSelectionGroup getIdSqlSelectionGroup();
+	List<SqlSelection> getIdSqlSelectionGroup();
 
 	SqlSelection getDiscriminatorSqlSelection();
 
 	SqlSelection getTenantDiscriminatorSqlSelection();
 
-	SqlSelectionGroup getAttributeSqlSelectionGroup(PersistentAttribute attribute);
+	List<SqlSelection> getAttributeSqlSelectionGroup(PersistentAttribute attribute);
 }

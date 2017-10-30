@@ -370,10 +370,6 @@ public class NavigableBindingHelper {
 		}
 	}
 
-	public static SqmEntityTypedReference createEntityBinding(EntityValuedExpressableType entityReference) {
-		return new SqmEntityReference( entityReference );
-	}
-
 	private NavigableBindingHelper() {
 	}
 }

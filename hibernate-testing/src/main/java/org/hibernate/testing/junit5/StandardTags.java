@@ -9,9 +9,13 @@ package org.hibernate.testing.junit5;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings({"WeakerAccess", "unused"})
 public final class StandardTags {
 	public static final String FAILURE_EXPECTED = "failure-expected";
 	public static final String PERF = "perf";
+	public static final String QUERY = "query";
+	public static final String SQM = "sqm";
+	public static final String UNIT = "unit";
 
 	private StandardTags() {
 	}

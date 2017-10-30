@@ -13,6 +13,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.LockMode;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.model.domain.internal.BasicSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
@@ -29,7 +30,6 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
@@ -346,7 +346,7 @@ public class QueryResultBuilderRootEntity
 
 		@Override
 		public void visitDiscriminator(DiscriminatorDescriptor discriminator) {
-			setDiscriminatorSqlSelection( discriminator.resolveSqlSelectionGroup( getQualifier(), getCreationContext() ) );
+			setDiscriminatorSqlSelection( discriminator.resolveSqlSelection( getQualifier(), getCreationContext() ) );
 		}
 
 		@Override

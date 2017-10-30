@@ -6,6 +6,9 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
@@ -13,8 +16,7 @@ import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
-import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
-import org.hibernate.sql.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
@@ -72,20 +74,6 @@ public class TenantDiscriminationImpl implements TenantDiscrimination {
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
-	}
-
-	@Override
-	public SqlSelectionGroup resolveSqlSelectionGroup(
-			ColumnReferenceQualifier qualifier,
-			SqlSelectionGroupResolutionContext resolutionContext) {
-		return new SqlSelectionGroupImpl(
-				resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
-						resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
-								qualifier,
-								getBoundColumn()
-						)
-				)
-		);
 	}
 
 	@Override

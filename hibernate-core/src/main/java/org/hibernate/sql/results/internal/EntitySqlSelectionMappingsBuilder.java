@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.internal;
 
+import java.util.List;
+
 import org.hibernate.HibernateException;
 import org.hibernate.metamodel.model.domain.internal.BasicSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
@@ -72,7 +74,7 @@ public class EntitySqlSelectionMappingsBuilder implements NavigableVisitationStr
 		);
 	}
 
-	protected void setIdSqlSelectionGroup(SqlSelectionGroup group) {
+	protected void setIdSqlSelectionGroup(List<SqlSelection> group) {
 		sqlSelectionMappingsBuilder.applyIdSqlSelectionGroup( group );
 	}
 
@@ -93,7 +95,7 @@ public class EntitySqlSelectionMappingsBuilder implements NavigableVisitationStr
 	@Override
 	public void visitDiscriminator(DiscriminatorDescriptor discriminator) {
 		setDiscriminatorSqlSelection(
-				discriminator.resolveSqlSelectionGroup( qualifier, getCreationContext() )
+				discriminator.resolveSqlSelection( qualifier, getCreationContext() )
 		);
 	}
 

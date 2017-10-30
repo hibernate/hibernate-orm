@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -17,6 +19,7 @@ import org.hibernate.sql.results.internal.CompositeQueryResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
@@ -58,12 +61,12 @@ public interface EmbeddedValuedNavigable<J> extends EmbeddedValueExpressableType
 	}
 
 	@Override
-	default SqlSelectionGroup resolveSqlSelectionGroup(
+	default List<SqlSelection> resolveSqlSelectionGroup(
 			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
-		final SqlSelectionGroupImpl group = new SqlSelectionGroupImpl();
+		final List<SqlSelection> group = new ArrayList<>();
 		for ( Column column : getEmbeddedDescriptor().collectColumns() ) {
-			group.addSqlSelection(
+			group.add(
 					resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
 							resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
 									qualifier,

@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.ast.produce.sqm.internal;
 
+import java.util.List;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.NavigablePath;
@@ -14,14 +16,12 @@ import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
+import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
@@ -29,6 +29,7 @@ import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelection;
 
 /**
@@ -99,7 +100,7 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 
 		entityIdSelectionTableSpace.setRootTableGroup( rootTableGroup );
 
-		final SqlSelectionGroup sqlSelectionGroup = entityDescriptor.getIdentifierDescriptor().resolveSqlSelectionGroup(
+		final List sqlSelectionGroup = entityDescriptor.getIdentifierDescriptor().resolveSqlSelectionGroup(
 				rootTableGroup,
 				new QueryResultCreationContext() {
 					final NavigablePath path = new NavigablePath();
@@ -121,7 +122,8 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 				}
 		);
 
-		for ( SqlSelection sqlSelection : sqlSelectionGroup.getSqlSelections() ) {
+		//noinspection unchecked
+		for ( SqlSelection sqlSelection : (List<SqlSelection>) sqlSelectionGroup ) {
 			entityIdSelection.getSelectClause().addSqlSelection( sqlSelection );
 		}
 

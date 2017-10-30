@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.spi;
 
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 
 /**
  * @author Steve Ebersole
@@ -18,6 +19,9 @@ public interface SqlSelection {
 	 *
 	 */
 	SqlSelectionReader getSqlSelectionReader();
+
+	// todo (6.0) : need this to encapsulate and expose the SqlSelectable or "thing to be selected"
+	//		so that we can render the SQL select clause
 
 	/**
 	 * Get the position within the values array (0-based)

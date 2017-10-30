@@ -387,7 +387,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 		// todo (6.0) : need something like org.hibernate.engine.loading.internal.LoadingCollectionEntry
 
-		throw new NotYetImplementedFor6Exception(  );
+//		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	private void postLoad() {

@@ -6,25 +6,40 @@
  */
 package org.hibernate.sql.ast.produce.ordering.internal;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import java.util.Collection;
+import javax.persistence.metamodel.Type;
+
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.from.SqmDowncast;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.ast.consume.spi.SelfRenderingExpression;
-import org.hibernate.sql.ast.consume.spi.SqlAppender;
-import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmColumnReference implements SqmExpression {
+public class SqmColumnReference implements SqmExpression, SqmNavigableReference {
 	private final SqmFrom sqmFromBase;
+	private final String columnName;
 
-	public SqmColumnReference(SqmFrom sqmFromBase) {
+	public SqmColumnReference(SqmFrom sqmFromBase, String columnName) {
 		this.sqmFromBase = sqmFromBase;
+		this.columnName = columnName;
+	}
+
+	public SqmFrom getSqmFromBase() {
+		return sqmFromBase;
+	}
+
+	public String getColumnName() {
+		return columnName;
 	}
 
 	@Override
@@ -40,7 +55,7 @@ public class SqmColumnReference implements SqmExpression {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return (T) new ExplicitColumnReference();
+		return walker.visitExplicitColumnReference( this );
 	}
 
 	@Override
@@ -53,30 +68,69 @@ public class SqmColumnReference implements SqmExpression {
 		return null;
 	}
 
-	private class ExplicitColumnReference implements SelfRenderingExpression {
-		@Override
-		public void renderToSql(
-				SqlAppender sqlAppender,
-				SqlAstWalker walker,
-				SessionFactoryImplementor sessionFactory) {
-			// todo (6.0) - need to be able to resolve the table name to use as placeholder
-			//
-			// 		^^based on assumption that we will render the reference using the pattern:
-			//				"{table_name}" + column_name
-			//
-			//		which allows us to be better about injecting the aliases - currently
-			//			the referenced column must be from the "driving table".  The idea
-			//			here is to handle that for any table in the "group"
-		}
 
-		@Override
-		public ExpressableType getType() {
-			return null;
-		}
 
-		@Override
-		public SqlSelection createSqlSelection(int jdbcPosition) {
-			throw new UnsupportedOperationException( "Only intended for use in order-by clause" );
-		}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SqmNavigableReference
+
+
+	@Override
+	public SqmNavigableContainerReference getSourceReference() {
+		return (SqmNavigableContainerReference) sqmFromBase.getNavigableReference();
+	}
+
+	@Override
+	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
+		return getSourceReference();
+	}
+
+	@Override
+	public Navigable getReferencedNavigable() {
+		return null;
+	}
+
+	@Override
+	public NavigablePath getNavigablePath() {
+		return null;
+	}
+
+	@Override
+	public SqmNavigableReference treatAs(EntityDescriptor target) {
+		throw new UnsupportedOperationException( "Explicit column reference cannot be TREAT'ed" );
+	}
+
+	@Override
+	public void addDowncast(SqmDowncast downcast) {
+		throw new UnsupportedOperationException( "Explicit column reference cannot be TREAT'ed" );
+	}
+
+	@Override
+	public Collection<SqmDowncast> getDowncasts() {
+		throw new UnsupportedOperationException( "Explicit column reference cannot be TREAT'ed" );
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
+	@Override
+	public Class getJavaType() {
+		return null;
+	}
+
+	@Override
+	public String getUniqueIdentifier() {
+		return null;
+	}
+
+	@Override
+	public String getIdentificationVariable() {
+		return null;
+	}
+
+	@Override
+	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
+		return null;
 	}
 }

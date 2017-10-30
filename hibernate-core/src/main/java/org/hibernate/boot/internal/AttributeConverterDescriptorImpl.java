@@ -94,14 +94,16 @@ public class AttributeConverterDescriptorImpl implements AttributeConverterDescr
 
 	@Override
 	public BasicJavaDescriptor<?> getDomainType() {
-		return (BasicJavaDescriptor) typeConfiguration.getBasicTypeRegistry()
-				.getBasicType( domainType.getErasedType() );
+		return typeConfiguration.getBasicTypeRegistry()
+				.getBasicType( domainType.getErasedType() )
+				.getJavaTypeDescriptor();
 	}
 
 	@Override
 	public BasicJavaDescriptor<?> getJdbcType() {
-		return (BasicJavaDescriptor) typeConfiguration.getBasicTypeRegistry()
-				.getBasicType( jdbcType.getErasedType() );
+		return typeConfiguration.getBasicTypeRegistry()
+				.getBasicType( jdbcType.getErasedType() )
+				.getJavaTypeDescriptor();
 	}
 
 	@Override

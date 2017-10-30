@@ -25,9 +25,9 @@ import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
-import org.hibernate.sql.ast.produce.internal.SqlSelectPlanImpl;
+import org.hibernate.sql.ast.produce.internal.SqlAstSelectDescriptorImpl;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
-import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
+import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.sqm.internal.FetchGraphBuilder;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
@@ -77,13 +77,16 @@ public class SqmSelectToSqlAstConverter
 			SqlAstBuildingContext sqlAstBuildingContext) {
 		super( sqlAstBuildingContext, queryOptions );
 		this.fetchDepthLimit = sqlAstBuildingContext.getSessionFactory().getSessionFactoryOptions().getMaximumFetchDepth();
-		this.entityGraphQueryHintType = queryOptions.getEntityGraphQueryHint().getType();
+		this.entityGraphQueryHintType = queryOptions.getEntityGraphQueryHint() == null
+				? EntityGraphQueryHint.Type.NONE
+				:  queryOptions.getEntityGraphQueryHint().getType();
 	}
 
-	public SqlAstSelectInterpretation interpret(SqmSelectStatement statement) {
-		return new SqlSelectPlanImpl(
+	public SqlAstSelectDescriptor interpret(SqmSelectStatement statement) {
+		return new SqlAstSelectDescriptorImpl(
 				visitSelectStatement( statement ),
-				queryResults
+				queryResults,
+				affectedTableNames()
 		);
 	}
 
@@ -183,10 +186,10 @@ public class SqmSelectToSqlAstConverter
 		return this;
 	}
 
-	@Override
-	public SqlSelection resolveSqlSelection(Expression expression) {
-		return sqlSelectionByExpressionMap.get( expression );
-	}
+//	@Override
+//	public SqlSelection resolveSqlSelection(Expression expression) {
+//		return sqlSelectionByExpressionMap.get( expression );
+//	}
 
 	//	@Override
 //	public DomainReferenceExpression visitAttributeReferenceExpression(AttributeBinding attributeBinding) {

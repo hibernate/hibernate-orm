@@ -7,30 +7,30 @@
 package org.hibernate.sql.results.internal;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.sql.results.spi.SqlSelectionGroup;
 
 /**
  * @author Steve Ebersole
  */
 public class EntitySqlSelectionMappingsImpl implements EntitySqlSelectionMappings {
 	private final SqlSelection rowIdSqlSelection;
-	private final SqlSelectionGroup idSqlSelectionGroup;
+	private final List<SqlSelection> idSqlSelectionGroup;
 	private final SqlSelection discriminatorSqlSelection;
 	private final SqlSelection tenantDiscriminatorSqlSelection;
-	private final Map<PersistentAttribute, SqlSelectionGroup> attributeSqlSelectionGroupMap;
+	private final Map<PersistentAttribute, List<SqlSelection>> attributeSqlSelectionGroupMap;
 
 	public EntitySqlSelectionMappingsImpl(
 			SqlSelection rowIdSqlSelection,
-			SqlSelectionGroup idSqlSelectionGroup,
+			List<SqlSelection> idSqlSelectionGroup,
 			SqlSelection discriminatorSqlSelection,
 			SqlSelection tenantDiscriminatorSqlSelection,
-			Map<PersistentAttribute, SqlSelectionGroup> attributeSqlSelectionGroupMap) {
+			Map<PersistentAttribute, List<SqlSelection>> attributeSqlSelectionGroupMap) {
 		this.rowIdSqlSelection = rowIdSqlSelection;
 		this.idSqlSelectionGroup = idSqlSelectionGroup;
 		this.discriminatorSqlSelection = discriminatorSqlSelection;
@@ -44,7 +44,7 @@ public class EntitySqlSelectionMappingsImpl implements EntitySqlSelectionMapping
 	}
 
 	@Override
-	public SqlSelectionGroup getIdSqlSelectionGroup() {
+	public List<SqlSelection> getIdSqlSelectionGroup() {
 		return idSqlSelectionGroup;
 	}
 
@@ -59,23 +59,23 @@ public class EntitySqlSelectionMappingsImpl implements EntitySqlSelectionMapping
 	}
 
 	@Override
-	public SqlSelectionGroup getAttributeSqlSelectionGroup(PersistentAttribute attribute) {
+	public List<SqlSelection> getAttributeSqlSelectionGroup(PersistentAttribute attribute) {
 		return attributeSqlSelectionGroupMap.get( attribute );
 	}
 
 	public static class Builder {
 		private SqlSelection rowIdSqlSelection;
-		private SqlSelectionGroup idSqlSelectionGroup;
+		private List<SqlSelection> idSqlSelectionGroup;
 		private SqlSelection discriminatorSqlSelection;
 		private SqlSelection tenantDiscriminatorSqlSelection;
-		private Map<PersistentAttribute, SqlSelectionGroup> attributeSqlSelectionGroupMap;
+		private Map<PersistentAttribute, List<SqlSelection>> attributeSqlSelectionGroupMap;
 
 		public Builder applyRowIdSqlSelection(SqlSelection rowIdSqlSelection) {
 			this.rowIdSqlSelection = rowIdSqlSelection;
 			return this;
 		}
 
-		public Builder applyIdSqlSelectionGroup(SqlSelectionGroup idSqlSelectionGroup) {
+		public Builder applyIdSqlSelectionGroup(List<SqlSelection> idSqlSelectionGroup) {
 			if ( this.idSqlSelectionGroup != null ) {
 				throw new HibernateException( "Multiple calls to set entity id SqlSelections" );
 			}
@@ -102,7 +102,7 @@ public class EntitySqlSelectionMappingsImpl implements EntitySqlSelectionMapping
 			return this;
 		}
 
-		public Builder applyAttributeSqlSelectionGroup(PersistentAttribute attribute, SqlSelectionGroup sqlSelectionGroup) {
+		public Builder applyAttributeSqlSelectionGroup(PersistentAttribute attribute, List<SqlSelection> sqlSelectionGroup) {
 			if ( attributeSqlSelectionGroupMap == null ) {
 				attributeSqlSelectionGroupMap = new HashMap<>();
 			}
@@ -110,7 +110,7 @@ public class EntitySqlSelectionMappingsImpl implements EntitySqlSelectionMapping
 			return this;
 		}
 
-		public Builder applyAttributeSqlSelectionGroupMap(Map<PersistentAttribute, SqlSelectionGroup> map) {
+		public Builder applyAttributeSqlSelectionGroupMap(Map<PersistentAttribute, List<SqlSelection>> map) {
 			if ( attributeSqlSelectionGroupMap == null ) {
 				attributeSqlSelectionGroupMap = new HashMap<>();
 			}

@@ -89,7 +89,7 @@ public abstract class AbstractEntityInitializer implements EntityInitializer {
 	}
 
 	private Object buildIdentifierHydratedForm(RowProcessingState rowProcessingState) {
-		final List<SqlSelection> idSqlSelections = sqlSelectionMappings.getIdSqlSelectionGroup().getSqlSelections();
+		final List<SqlSelection> idSqlSelections = sqlSelectionMappings.getIdSqlSelectionGroup();
 		if ( idSqlSelections.size() == 1 ) {
 			return rowProcessingState.getJdbcValue( idSqlSelections.get( 0 ) );
 		}
@@ -117,8 +117,8 @@ public abstract class AbstractEntityInitializer implements EntityInitializer {
 		concretePersister = resolveConcreteEntityPersister( rowProcessingState, persistenceContext );
 
 		//		1) resolve the value(s) into its identifier representation
-		final Object id = concretePersister.getEntityDescriptor()
-				.getIdentifierType()
+		final Object id = concretePersister.getHierarchy()
+				.getIdentifierDescriptor()
 				.getJavaTypeDescriptor()
 				.getMutabilityPlan()
 				.assemble( (Serializable) identifierHydratedState );
@@ -200,7 +200,7 @@ public abstract class AbstractEntityInitializer implements EntityInitializer {
 			}
 			else {
 				SingularPersistentAttribute singularAttribute = (SingularPersistentAttribute) persistentAttribute;
-				final List<SqlSelection> sqlSelections = sqlSelectionMappings.getAttributeSqlSelectionGroup( singularAttribute ).getSqlSelections();
+				final List<SqlSelection> sqlSelections = sqlSelectionMappings.getAttributeSqlSelectionGroup( singularAttribute );
 				if ( sqlSelections == null ) {
 					// not selected (lazy group, etc)
 					hydratedValue = LazyPropertyInitializer.UNFETCHED_PROPERTY;

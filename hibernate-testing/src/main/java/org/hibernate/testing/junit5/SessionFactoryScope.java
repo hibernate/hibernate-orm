@@ -9,8 +9,11 @@ package org.hibernate.testing.junit5;
 
 import java.util.function.Consumer;
 
-import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+
+import org.jboss.logging.Logger;
 
 /**
  * A scope or holder fot the SessionFactory instance associated with a
@@ -23,6 +26,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Steve Ebersole
  */
 public class SessionFactoryScope implements SessionFactoryAccess {
+	private static final Logger log = Logger.getLogger( SessionFactoryScope.class );
+
 	private final SessionFactoryProducer producer;
 
 	private SessionFactoryImplementor sessionFactory;
@@ -55,20 +60,78 @@ public class SessionFactoryScope implements SessionFactoryAccess {
 		return sessionFactory;
 	}
 
-	public void withSession(Consumer<Session> action) {
-		System.out.println( "  >> SessionFactoryScope#withSession" );
+	public void inSession(Consumer<SessionImplementor> action) {
+		log.trace( "  >> SessionFactoryScope#inSession" );
 
-		final Session session = getSessionFactory().openSession();
-		System.out.println( "  >> SessionFactoryScope - Session opened" );
+		final SessionImplementor session = (SessionImplementor) getSessionFactory().openSession();
+		log.trace( "  >> SessionFactoryScope - Session opened" );
 
 		try {
-			System.out.println( "    >> SessionFactoryScope - calling action" );
+			log.trace( "    >> SessionFactoryScope - calling action" );
 			action.accept( session );
-			System.out.println( "    >> SessionFactoryScope - called action" );
+			log.trace( "    >> SessionFactoryScope - called action" );
 		}
 		finally {
-			System.out.println( "  >> SessionFactoryScope - closing Session" );
+			log.trace( "  >> SessionFactoryScope - closing Session" );
 			session.close();
+		}
+	}
+
+	public void inTransaction(Consumer<SessionImplementor> action) {
+		log.trace( "  >> SessionFactoryScope#inTransaction[not-passed-session]" );
+
+		final SessionImplementor session = (SessionImplementor) getSessionFactory().openSession();
+		log.trace( "  >> SessionFactoryScope - Session opened" );
+
+		try {
+			log.trace( "    >> SessionFactoryScope - calling action" );
+			inTransaction( session, action );
+			log.trace( "    >> SessionFactoryScope - called action" );
+		}
+		finally {
+			log.trace( "  >> SessionFactoryScope - closing Session" );
+			session.close();
+		}
+	}
+
+	public void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action) {
+		log.trace( "  >> SessionFactoryScope#inTransaction[passed-session]" );
+
+		final Transaction txn = session.beginTransaction();
+		log.trace( "  >> SessionFactoryScope - Began transaction" );
+
+		try {
+			log.trace( "    >> SessionFactoryScope - calling action (in txn)" );
+			action.accept( session );
+			log.trace( "    >> SessionFactoryScope - called action (in txn)" );
+		}
+		catch (Exception e) {
+			log.tracef(
+					"    >> SessionFactoryScope - error calling action: %s (%s)",
+					e.getClass().getName(),
+					e.getMessage()
+			);
+			try {
+				txn.rollback();
+			}
+			catch (Exception ignore) {
+				log.trace( "Was unable to roll back transaction" );
+				// really nothing else we can do here - the attempt to
+				//		rollback already failed and there is nothing else
+				// 		to clean up.
+			}
+
+			throw e;
+		}
+		finally {
+			try {
+				log.trace( "  >> SessionFactoryScope - committing transaction" );
+				txn.commit();
+				log.trace( "  >> SessionFactoryScope - committing transaction" );
+			}
+			catch (Exception ignore) {
+				// by definition a failed commit should rollback, so nothing more to do here
+			}
 		}
 	}
 }

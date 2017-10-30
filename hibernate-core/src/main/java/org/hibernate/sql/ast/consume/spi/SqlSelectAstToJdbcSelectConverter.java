@@ -10,14 +10,12 @@ import java.util.Collection;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
-import org.hibernate.sql.exec.internal.JdbcSelectImpl;
-import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
+import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
+import org.hibernate.sql.exec.internal.JdbcSelectImpl;
 import org.hibernate.sql.exec.internal.ResultSetMappingDescriptorExplicit;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.ParameterBindingContext;
-import org.hibernate.sql.results.spi.InitializerCreationContext;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 
@@ -41,7 +39,7 @@ public class SqlSelectAstToJdbcSelectConverter
 	 * @return The interpretation result
 	 */
 	public static JdbcSelect interpret(
-			SqlAstSelectInterpretation sqlSelectPlan,
+			SqlAstSelectDescriptor sqlSelectPlan,
 			SharedSessionContractImplementor persistenceContext,
 			QueryParameterBindings parameterBindings,
 			QueryResultCreationContext initializerCreationContext,
@@ -58,7 +56,8 @@ public class SqlSelectAstToJdbcSelectConverter
 				new ResultSetMappingDescriptorExplicit(
 						sqlSelectPlan.getSqlAstStatement().getQuerySpec().getSelectClause().getSqlSelections(),
 						sqlSelectPlan.getQueryResults()
-				)
+				),
+				sqlSelectPlan.getAffectedTableNames()
 		);
 	}
 

@@ -10,10 +10,11 @@ package org.hibernate.sql.ast.tree.spi.expression;
 import java.util.Locale;
 
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
+import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.results.spi.SqlSelection;
@@ -33,8 +34,9 @@ public class ColumnReference implements Expression {
 	@Override
 	public SqlSelection createSqlSelection(int jdbcPosition) {
 		return new SqlSelectionImpl(
-				new SqlSelectionReaderImpl( column.getSqlTypeDescriptor().getJdbcTypeCode() ),
-				jdbcPosition
+				jdbcPosition,
+				this,
+				new SqlSelectionReaderImpl( column.getSqlTypeDescriptor().getJdbcTypeCode() )
 		);
 	}
 
@@ -49,6 +51,22 @@ public class ColumnReference implements Expression {
 	@Override
 	public void accept(SqlAstWalker  interpreter) {
 		interpreter.visitColumnReference( this );
+	}
+
+	@Override
+	public ExpressableType getType() {
+		// n/a
+		return null;
+	}
+
+	@Override
+	public SqlExpressable getExpressable() {
+		return getColumn();
+	}
+
+	public String renderSqlFragment() {
+		final TableReference tableReference = qualifier.locateTableReference( column.getSourceTable() );
+		return column.render( tableReference.getIdentificationVariable() );
 	}
 
 	@Override
@@ -76,25 +94,10 @@ public class ColumnReference implements Expression {
 	public String toString() {
 		return String.format(
 				Locale.ROOT,
-				"ColumnBinding(%s.%s)",
+				"%s(%s.%s)",
+				getClass().getSimpleName(),
 				qualifier,
 				column.getExpression()
 		);
-	}
-
-	@Override
-	public ExpressableType getType() {
-		// n/a
-		return null;
-	}
-
-
-	public String renderSqlFragment() {
-		// todo (6.0) : ultimately we need to be able to "render" this column ref and append to SqlAppender
-		//		this means we need to be able to:
-		//			1) resolve corresponding TableReference, currently defined
-		//				on ColumnReferenceSource - a *subtype* of SqlExpressionQualifier -
-		//			2) use TableReference to render qualified SQL fragment
-		throw new NotYetImplementedFor6Exception(  );
 	}
 }

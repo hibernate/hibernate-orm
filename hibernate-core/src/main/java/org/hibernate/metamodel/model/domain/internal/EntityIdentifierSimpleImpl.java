@@ -27,6 +27,7 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
@@ -150,13 +151,6 @@ public class EntityIdentifierSimpleImpl<O,J>
 	@Override
 	public String getName() {
 		return name;
-	}
-
-	@Override
-	public SqlSelectionGroup resolveSqlSelectionGroup(
-			ColumnReferenceQualifier qualifier,
-			SqlSelectionGroupResolutionContext resolutionContext) {
-		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override

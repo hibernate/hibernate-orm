@@ -39,9 +39,9 @@ public interface NativeQueryInterpreter extends Service {
 	default <R> NativeSelectQueryPlan<R> createQueryPlan(
 			NativeSelectQueryDefinition<R> queryDefinition,
 			SessionFactoryImplementor sessionFactory) {
-		return new NativeSelectQueryPlanImpl<>(
+		return new NativeSelectQueryPlanImpl<R>(
 				queryDefinition.getSqlString(),
-				queryDefinition.isCallable(),
+				queryDefinition.getAffectedTableNames(),
 				queryDefinition.getParameterBinders(),
 				queryDefinition.getResultSetMapping(),
 				queryDefinition.getRowTransformer()

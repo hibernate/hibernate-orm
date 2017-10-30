@@ -10,13 +10,19 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 
 import org.jboss.logging.Logger;
 
 /**
+ * Defines a reference to an entity that is the root of a TableSpace:
+ *
+ * 		* Root
+ * 		* Cross-join
+ * 		* Entity-join
+ *
  * @author Steve Ebersole
  */
 public class SqmEntityReference extends AbstractSqmNavigableReference
@@ -76,7 +82,7 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 
 	@Override
 	public EntityValuedExpressableType getExpressableType() {
-		return entityReference;
+		return getReferencedNavigable();
 	}
 
 	@Override
@@ -90,7 +96,14 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 		// todo (6.0) : this needs to vary based on who/what exactly created this entity-reference
 		//		- one option, in keeping with visitation, would be to have specific subclasses of
 		//			SqmEntityReference with different SemanticQueryWalker target methods
-		throw new NotYetImplementedFor6Exception(  );
+		//
+		//	e.g., given `select p from Person p` we'd need to call `walker.visitRootEntityFromElement`
+		//		whereas with `select p.mate from Person p` we'd need to call `.visitEntityValuedSingularAttribute`
+		//
+		//	in the latter case we'd need to render the FK columns as well
+
+		// for now, here are the "branches of visitation"...
+		return walker.visitRootEntityReference( this );
 	}
 
 	@Override

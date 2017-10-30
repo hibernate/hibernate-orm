@@ -17,6 +17,7 @@ import java.util.ListIterator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.internal.PersistentBagDescriptorImpl;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.NotYetImplementedFor6Exception;
 
@@ -30,7 +31,9 @@ import org.hibernate.NotYetImplementedFor6Exception;
  */
 public class PersistentBag extends AbstractPersistentCollection implements List {
 
-	protected List bag;
+	private PersistentBagDescriptorImpl descriptor;
+	private Serializable key;
+	private List bag;
 
 	/**
 	 * Constructs a PersistentBag.  Needed for SOAP libraries, etc
@@ -48,6 +51,13 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		super( session );
 	}
 
+	public PersistentBag(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor) {
+		this( session );
+		this.descriptor = (PersistentBagDescriptorImpl) descriptor;
+	}
+
 	/**
 	 * Constructs a PersistentBag
 	 *
@@ -55,19 +65,36 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	 * @param coll The base elements.
 	 */
 	@SuppressWarnings("unchecked")
-	public PersistentBag(SharedSessionContractImplementor session, Collection coll) {
-		super( session );
+	public PersistentBag(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor,
+			Collection coll) {
+		this( session, descriptor );
+
+		setRawCollection( coll );
+	}
+
+	@SuppressWarnings("unchecked")
+	private void setRawCollection(Collection coll) {
 		if ( coll instanceof List ) {
 			bag = (List) coll;
 		}
 		else {
 			bag = new ArrayList();
-			for ( Object element : coll ) {
-				bag.add( element );
-			}
+			bag.addAll( coll );
 		}
+
 		setInitialized();
 		setDirectlyAccessible( true );
+	}
+
+	public PersistentBag(
+			SharedSessionContractImplementor session,
+			PersistentCollectionDescriptor descriptor,
+			Serializable key) {
+		this( session, descriptor );
+		this.key = key;
+
 	}
 
 	@Override

@@ -47,7 +47,7 @@ import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
-import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
+import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
@@ -76,7 +76,7 @@ import org.jboss.logging.Logger;
  * that need to walk the run-time metamodel and build a SqlSelectPlan (SQL AST for
  * SELECT queries).
  * <p/>
- * Specifically, this class helps builds the {@link SqlAstSelectInterpretation} and its single {@link QueryResult}
+ * Specifically, this class helps builds the {@link SqlAstSelectDescriptor} and its single {@link QueryResult}
  *
  * @author Steve Ebersole
  */

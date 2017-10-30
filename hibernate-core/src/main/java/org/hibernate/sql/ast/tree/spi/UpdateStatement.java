@@ -9,7 +9,9 @@ package org.hibernate.sql.ast.tree.spi;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
+import org.hibernate.sql.ast.produce.spi.SqlAstUpdateDescriptor;
 import org.hibernate.sql.ast.tree.spi.assign.Assignment;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
@@ -73,12 +75,24 @@ public class UpdateStatement implements MutationStatement {
 			return this;
 		}
 
-		public UpdateStatement createUpdateStatement() {
-			return new UpdateStatement(
+		public SqlAstUpdateDescriptor createUpdateDescriptor() {
+			final UpdateStatement sqlAst = new UpdateStatement(
 					targetTable,
 					assignments != null ? assignments : Collections.emptyList(),
 					restriction != null ? restriction : new Junction( Junction.Nature.CONJUNCTION )
 			);
+			return new SqlAstUpdateDescriptor() {
+
+				@Override
+				public UpdateStatement getSqlAstStatement() {
+					return sqlAst;
+				}
+
+				@Override
+				public Set<String> getAffectedTableNames() {
+					return Collections.singleton( targetTable.getTable().getTableExpression() );
+				}
+			};
 		}
 	}
 }

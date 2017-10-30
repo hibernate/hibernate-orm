@@ -16,10 +16,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -33,7 +33,9 @@ import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.LoadQueryInfluencers.InternalFetchProfileType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -184,7 +186,13 @@ public abstract class AbstractEntityDescriptor<T>
 			);
 		}
 
-		return secondaryTables.stream().map( m ->generateJoinedTableBinding( m, creationContext ) ).collect( Collectors.toList() );
+		final ArrayList<JoinedTableBinding> bindings = new ArrayList<>();
+		for ( MappedTableJoin secondaryTable : secondaryTables ) {
+			bindings.add(
+					generateJoinedTableBinding( secondaryTable, creationContext )
+			);
+		}
+		return bindings;
 	}
 
 	private JoinedTableBinding generateJoinedTableBinding(MappedTableJoin mappedTableJoin, RuntimeModelCreationContext creationContext) {
@@ -196,9 +204,16 @@ public abstract class AbstractEntityDescriptor<T>
 		return new JoinedTableBinding(
 				joinedTable,
 				getPrimaryTable(),
-				null,
+				resolveJoinedTableForeignKey( joinedTable, creationContext ),
 				mappedTableJoin.isOptional()
 		);
+	}
+
+	private ForeignKey.ColumnMappings resolveJoinedTableForeignKey(
+			Table joinedTable,
+			RuntimeModelCreationContext creationContext) {
+
+		return null;
 	}
 
 	private static <T> IdentifiableJavaDescriptor<T> resolveJavaTypeDescriptor(
@@ -291,6 +306,17 @@ public abstract class AbstractEntityDescriptor<T>
 	@Override
 	public EntityDescriptor<T> getEntityDescriptor() {
 		return this;
+	}
+
+	@Override
+	public EntityEntryFactory getEntityEntryFactory() {
+		// todo (6.0) : allow plugging in the EntityEntryFactory to use
+		return MutableEntityEntryFactory.INSTANCE;
+	}
+
+	@Override
+	public List<EntityNameResolver> getEntityNameResolvers() {
+		return null;
 	}
 
 	@Override
@@ -578,10 +604,10 @@ public abstract class AbstractEntityDescriptor<T>
 			SqlAliasBase sqlAliasBase,
 			TableGroupContext context,
 			Consumer<TableReferenceJoin> collector) {
-		getSecondaryTableBindings()
-				.stream()
-				.map( joinedTableBinding -> createTableReferenceJoin( joinedTableBinding, rootTableReference, sqlAliasBase, context ) )
-				.forEach( collector );
+
+		for ( JoinedTableBinding joinedTableBinding : getSecondaryTableBindings() ) {
+			collector.accept( createTableReferenceJoin( joinedTableBinding, rootTableReference, sqlAliasBase, context ) );
+		}
 	}
 
 	private TableReferenceJoin createTableReferenceJoin(
@@ -654,44 +680,48 @@ public abstract class AbstractEntityDescriptor<T>
 		);
 	}
 
-	// todo (6.0) : rather than SqlSelection, I kind of think that these contracts should capture the Expressions
-	//		an "(Sql)ExpressionGroup" if you will.  This is because the entity may be
-	// 		used in clauses other than the select.
-	//
-	// note : we could also cache mappings between a NavigableReference and its "(Sql)Expression"
-	//		group mappings
+	// todo (6.0) : we need some way here to limit which attributes are rendered as how "deep" we render them
+	//		* which to render comes down to bytecode enhanced laziness
+	//		* how deep (associations) comes down to fetching
+
 
 	private EntitySqlSelectionMappings buildSqlSelectionMappings(
 			NavigableReference selectedExpression,
 			QueryResultCreationContext resolutionContext) {
 		final EntitySqlSelectionMappingsImpl.Builder mappings = new EntitySqlSelectionMappingsImpl.Builder();
 
-		mappings.applyRowIdSqlSelection(
-				resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
-						resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
-								selectedExpression.getSqlExpressionQualifier(),
-								getHierarchy().getRowIdDescriptor().getBoundColumn()
-						)
-				)
-		);
+		if ( getHierarchy().getRowIdDescriptor() != null ) {
+			mappings.applyRowIdSqlSelection(
+					resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
+							resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
+									selectedExpression.getSqlExpressionQualifier(),
+									getHierarchy().getRowIdDescriptor().getBoundColumn()
+							)
+					)
+			);
+		}
 
-		mappings.applyDiscriminatorSqlSelection(
-				resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
-						resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
-								selectedExpression.getSqlExpressionQualifier(),
-								getHierarchy().getDiscriminatorDescriptor().getBoundColumn()
-						)
-				)
-		);
+		if ( getHierarchy().getDiscriminatorDescriptor() != null ) {
+			mappings.applyDiscriminatorSqlSelection(
+					resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
+							resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
+									selectedExpression.getSqlExpressionQualifier(),
+									getHierarchy().getDiscriminatorDescriptor().getBoundColumn()
+							)
+					)
+			);
+		}
 
-		mappings.applyTenantDiscriminatorSqlSelection(
-				resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
-						resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
-								selectedExpression.getSqlExpressionQualifier(),
-								getHierarchy().getTenantDiscrimination().getBoundColumn()
-						)
-				)
-		);
+		if ( getHierarchy().getTenantDiscrimination() != null ) {
+			mappings.applyTenantDiscriminatorSqlSelection(
+					resolutionContext.getSqlSelectionResolver().resolveSqlSelection(
+							resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
+									selectedExpression.getSqlExpressionQualifier(),
+									getHierarchy().getTenantDiscrimination().getBoundColumn()
+							)
+					)
+			);
+		}
 
 		mappings.applyIdSqlSelectionGroup(
 				getHierarchy().getIdentifierDescriptor().resolveSqlSelectionGroup(

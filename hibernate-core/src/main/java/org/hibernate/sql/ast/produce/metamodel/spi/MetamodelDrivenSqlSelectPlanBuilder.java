@@ -8,11 +8,11 @@ package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.sql.ast.produce.spi.SqlAstSelectInterpretation;
+import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
 
 /**
  * Specialization {@link NavigableVisitationStrategy} implementation for
- * building {@link SqlAstSelectInterpretation} instances driven primarily by mapping
+ * building {@link SqlAstSelectDescriptor} instances driven primarily by mapping
  * metadata.
  *
  * @author Steve Ebersole
@@ -21,10 +21,10 @@ public interface MetamodelDrivenSqlSelectPlanBuilder extends NavigableVisitation
 	/**
 	 * Build the SqlSelectPlan, driven by mapping model, with the given
 	 * NavigableSource as query root..  The mapping model indicates the shape
-	 * of the SelectQuery AST ({@link SqlAstSelectInterpretation#getSqlAstStatement}) as well as the shape of the results
-	 * as indicated by the query Return graphs ({@link SqlAstSelectInterpretation#getQueryResults}).
+	 * of the SelectQuery AST ({@link SqlAstSelectDescriptor#getSqlAstStatement}) as well as the shape of the results
+	 * as indicated by the query Return graphs ({@link SqlAstSelectDescriptor#getQueryResults}).
 	 *
 	 * @param rootNavigable The NavigableSource which is the root of the query.
 	 */
-	SqlAstSelectInterpretation buildSqlSelectPlan(NavigableContainer rootNavigable);
+	SqlAstSelectDescriptor buildSqlSelectPlan(NavigableContainer rootNavigable);
 }

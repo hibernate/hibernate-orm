@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.HibernateException;
@@ -64,6 +65,7 @@ import org.hibernate.sql.ast.produce.spi.TableGroupContext;
 import org.hibernate.sql.ast.tree.spi.from.CollectionTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.Type;
@@ -563,7 +565,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 	}
 
 	@Override
-	public SqlSelectionGroup resolveSqlSelectionGroup(
+	public List<SqlSelection> resolveSqlSelectionGroup(
 			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext) {
 		throw new NotYetImplementedFor6Exception();

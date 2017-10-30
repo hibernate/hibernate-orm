@@ -26,9 +26,9 @@ import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfo;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstUpdateDescriptor;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
-import org.hibernate.sql.ast.tree.spi.UpdateStatement;
 import org.hibernate.sql.ast.tree.spi.UpdateStatement.UpdateStatementBuilder;
 import org.hibernate.sql.ast.tree.spi.assign.Assignment;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
@@ -53,7 +53,7 @@ public class SqmUpdateToSqlAstConverterMultiTable
 		extends BaseSqmToSqlAstConverter implements SqlSelectionGroupResolutionContext {
 	private static final Logger log = Logger.getLogger( SqmUpdateToSqlAstConverterMultiTable.class );
 
-	public static List<UpdateStatement> interpret(
+	public static List<SqlAstUpdateDescriptor> interpret(
 			SqmUpdateStatement sqmStatement,
 			QuerySpec idTableSelect,
 			QueryOptions queryOptions,
@@ -69,7 +69,7 @@ public class SqmUpdateToSqlAstConverterMultiTable
 		walker.visitUpdateStatement( sqmStatement );
 
 		return walker.updateStatementBuilderMap.entrySet().stream()
-				.map( entry -> entry.getValue().createUpdateStatement() )
+				.map( entry -> entry.getValue().createUpdateDescriptor() )
 				.collect( Collectors.toList() );
 	}
 
@@ -150,6 +150,8 @@ public class SqmUpdateToSqlAstConverterMultiTable
 		);
 
 		final TableGroupMock tableGroup = new TableGroupMock( entityTableGroup );
+		tableGroup.applyAffectedTableNames( affectedTableNames()::add );
+
 		primeStack( getTableGroupStack(), tableGroup );
 		getFromClauseIndex().crossReference( sqmStatement.getEntityFromElement(), tableGroup );
 	}

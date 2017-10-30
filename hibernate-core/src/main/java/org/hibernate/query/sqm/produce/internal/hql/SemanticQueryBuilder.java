@@ -679,6 +679,25 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	}
 
 	@Override
+	public SqmNavigableReference visitPathExpression(HqlParser.PathExpressionContext ctx) {
+		final String pathText = ctx.path().getText();
+		final String[] pathSplits = PathHelper.split( pathText );
+		final SqmNavigableReference resolvedNavigableReference = pathResolverStack.getCurrent().resolvePath( pathSplits );
+
+		if ( resolvedNavigableReference != null ) {
+			return resolvedNavigableReference;
+		}
+
+		throw new SemanticException(
+				String.format(
+						Locale.ROOT,
+						"Unable to resolve path [%s]",
+						pathText
+				)
+		);
+	}
+
+	@Override
 	public SqmExpression visitParameterOrNumberLiteral(HqlParser.ParameterOrNumberLiteralContext ctx) {
 		if ( ctx.INTEGER_LITERAL() != null ) {
 			return integerLiteral( ctx.INTEGER_LITERAL().getText() );
@@ -1033,14 +1052,17 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 			// or an attribute-join (... from p.address a on ...)
 			final Object joinRhsResolution = ctx.qualifiedJoinRhs().path().accept( this );
 			final SqmNavigableReference navigableBinding;
-			if ( joinRhsResolution instanceof SqmLiteralEntityType ) {
-				// convert the EntityTypeLiteralSqmExpression into an EntityBinding
-				final SqmLiteralEntityType entityReference = (SqmLiteralEntityType) joinRhsResolution;
-				navigableBinding = new SqmEntityReference( entityReference.getExpressableType() );
-			}
-			else {
+
+			// todo (6.0) : can this ever happen?
+			//		from Person p join TYPE(p.mate)?
+//			if ( joinRhsResolution instanceof SqmLiteralEntityType ) {
+//				// convert the EntityTypeLiteralSqmExpression into an EntityBinding
+//				final SqmLiteralEntityType entityReference = (SqmLiteralEntityType) joinRhsResolution;
+//				navigableBinding = new SqmLiteralEntityType( entityReference.getExpressableType().getEntityDescriptor() );
+//			}
+//			else {
 				navigableBinding = (SqmNavigableReference) joinRhsResolution;
-			}
+//			}
 
 			if ( navigableBinding instanceof SqmAttributeReference ) {
 				resolveAttributeJoinIfNot( (SqmAttributeReference) navigableBinding, identificationVariable );
@@ -1466,8 +1488,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 			// an example of the warning about treats...
 			//		from Person p cross join (treat Person as Person)...
 
-			return new SqmLiteralEntityType( entityReference );
-//			return new EntityBindingImpl( entityReference );
+			return new SqmEntityReference( entityReference );
 		}
 
 		try {

@@ -44,7 +44,6 @@ import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
-import org.hibernate.query.named.internal.NamedNativeQueryDescriptorImpl;
 import org.hibernate.query.named.spi.NamedNativeQueryDescriptor;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NativeQueryImplementor;
@@ -91,7 +90,7 @@ public class NativeQueryImpl<R>
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
-	private Collection<String> querySpaces;
+	private Set<String> affectedTableNames;
 
 	private Serializable collectionKey;
 
@@ -513,6 +512,11 @@ public class NativeQueryImpl<R>
 			public RowTransformer getRowTransformer() {
 				return NativeQueryImpl.this.resolveRowTransformer();
 			}
+
+			@Override
+			public Set<String> getAffectedTableNames() {
+				return affectedTableNames;
+			}
 		};
 	}
 
@@ -610,7 +614,7 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public Collection<String> getSynchronizedQuerySpaces() {
-		return querySpaces;
+		return affectedTableNames;
 	}
 
 	@Override
@@ -621,19 +625,10 @@ public class NativeQueryImpl<R>
 
 	protected void addQuerySpaces(String... spaces) {
 		if ( spaces != null ) {
-			if ( querySpaces == null ) {
-				querySpaces = new ArrayList<>();
+			if ( affectedTableNames == null ) {
+				affectedTableNames = new HashSet<>();
 			}
-			querySpaces.addAll( Arrays.asList( (String[]) spaces ) );
-		}
-	}
-
-	protected void addQuerySpaces(Serializable... spaces) {
-		if ( spaces != null ) {
-			if ( querySpaces == null ) {
-				querySpaces = new ArrayList<>();
-			}
-			querySpaces.addAll( Arrays.asList( (String[]) spaces ) );
+			affectedTableNames.addAll( Arrays.asList( (String[]) spaces ) );
 		}
 	}
 

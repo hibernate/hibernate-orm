@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.util.List;
+
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
@@ -16,6 +18,7 @@ import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 
@@ -84,7 +87,7 @@ public interface Navigable<T> extends DomainType<T> {
 	}
 
 	// todo (6.0) : Consider instead to resolve just the `List<SqlSelection>` and avoid the extra allocations here
-	SqlSelectionGroup resolveSqlSelectionGroup(
+	List<SqlSelection> resolveSqlSelectionGroup(
 			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext);
 

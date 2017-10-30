@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import java.util.List;
+
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.engine.FetchStrategy;
@@ -28,6 +30,7 @@ import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
+import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -199,7 +202,7 @@ public class PluralPersistentAttributeImpl implements PluralPersistentAttribute 
 	}
 
 	@Override
-	public SqlSelectionGroup resolveSqlSelectionGroup(
+	public List<SqlSelection> resolveSqlSelectionGroup(
 			ColumnReferenceQualifier qualifier, SqlSelectionGroupResolutionContext resolutionContext) {
 		throw new NotYetImplementedFor6Exception();
 	}

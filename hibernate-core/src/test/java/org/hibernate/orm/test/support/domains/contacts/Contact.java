@@ -13,6 +13,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OrderColumn;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -27,6 +28,9 @@ public class Contact {
 
 	private java.time.LocalDate birthDay;
 
+	// NOTE : because of the @OrderColumn `addresses` is a List, while `phoneNumbers` is a BAG
+	// 		which is a List with no persisted order
+	@OrderColumn
 	private List<Address> addresses;
 	private List<PhoneNumber> phoneNumbers;
 

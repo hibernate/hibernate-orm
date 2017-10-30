@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EnumType;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
@@ -17,7 +18,6 @@ import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.sqm.QueryException;
 import org.hibernate.query.sqm.tree.order.SqmSortOrder;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.consume.SemanticException;
 import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;

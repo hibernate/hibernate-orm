@@ -8,10 +8,12 @@ package org.hibernate.sql.ast.consume.spi;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.sql.ast.produce.spi.SqlAstUpdateDescriptor;
 import org.hibernate.sql.ast.tree.spi.UpdateStatement;
 import org.hibernate.sql.ast.tree.spi.assign.Assignment;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
@@ -28,7 +30,7 @@ public class SqlUpdateToJdbcUpdateConverter
 	//		we could also control this when we build the SQL AST
 
 	public static JdbcUpdate interpret(
-			UpdateStatement updateStatement,
+			SqlAstUpdateDescriptor sqlAst,
 			SharedSessionContractImplementor persistenceContext,
 			QueryParameterBindings parameterBindings) {
 		final SqlUpdateToJdbcUpdateConverter walker = new SqlUpdateToJdbcUpdateConverter(
@@ -36,7 +38,7 @@ public class SqlUpdateToJdbcUpdateConverter
 				parameterBindings
 		);
 
-		walker.processUpdateStatement( updateStatement );
+		walker.processUpdateStatement( sqlAst.getSqlAstStatement() );
 
 		return new JdbcUpdate() {
 			@Override
@@ -47,6 +49,11 @@ public class SqlUpdateToJdbcUpdateConverter
 			@Override
 			public List<JdbcParameterBinder> getParameterBinders() {
 				return walker.getParameterBinders();
+			}
+
+			@Override
+			public Set<String> getAffectedTableNames() {
+				return walker.getAffectedTableNames();
 			}
 		};
 	}

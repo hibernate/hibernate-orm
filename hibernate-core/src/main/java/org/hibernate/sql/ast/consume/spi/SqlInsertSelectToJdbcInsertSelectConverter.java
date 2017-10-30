@@ -7,7 +7,9 @@
 package org.hibernate.sql.ast.consume.spi;
 
 import java.util.List;
+import java.util.Set;
 
+import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.consume.SyntaxException;
 import org.hibernate.sql.ast.tree.spi.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.spi.assign.Assignment;
@@ -41,6 +43,11 @@ public class SqlInsertSelectToJdbcInsertSelectConverter
 			@Override
 			public List<JdbcParameterBinder> getParameterBinders() {
 				return walker.getParameterBinders();
+			}
+
+			@Override
+			public Set<String> getAffectedTableNames() {
+				return walker.getAffectedTableNames();
 			}
 		};
 	}

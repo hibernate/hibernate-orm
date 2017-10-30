@@ -6,9 +6,16 @@
  */
 package org.hibernate.sql.ast.tree.spi.from;
 
+import java.util.function.Consumer;
+import java.util.stream.Collector;
+
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 
@@ -39,5 +46,15 @@ public interface TableGroup extends ColumnReferenceQualifier, SqlAstNode {
 	@Override
 	default void accept(SqlAstWalker  sqlTreeWalker) {
 		sqlTreeWalker.visitTableGroup( this );
+	}
+
+	default void applyAffectedTableNames(Consumer<String> nameCollector) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	default ColumnReference locateColumnReferenceByName(String name) {
+		throw new UnsupportedOperationException(
+				"Cannot call #locateColumnReferenceByName on this type of TableGroup"
+		);
 	}
 }

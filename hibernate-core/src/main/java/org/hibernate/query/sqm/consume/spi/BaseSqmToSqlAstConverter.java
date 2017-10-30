@@ -10,9 +10,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
@@ -25,6 +29,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmConcat;
 import org.hibernate.query.sqm.tree.expression.SqmConstantEnum;
 import org.hibernate.query.sqm.tree.expression.SqmConstantFieldReference;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralBigDecimal;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralBigInteger;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralCharacter;
@@ -38,7 +43,6 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralString;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralTrue;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
@@ -94,10 +98,11 @@ import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.produce.ordering.internal.SqmColumnReference;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.NonQualifiableSqlExpressable;
@@ -107,7 +112,6 @@ import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
-import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
@@ -123,6 +127,7 @@ import org.hibernate.sql.ast.tree.spi.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.spi.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.spi.expression.CastFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CoalesceFunction;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.ConcatFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CountFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CountStarFunction;
@@ -204,6 +209,8 @@ public abstract class BaseSqmToSqlAstConverter
 	private final Stack<SqmSelectToSqlAstConverter.Shallowness> shallownessStack = new Stack<>( SqmSelectToSqlAstConverter.Shallowness.NONE );
 	private final Stack<NavigableReference> navigableReferenceStack = new Stack<>();
 
+	private final Set<String> affectedTableNames = new HashSet<>();
+
 	public BaseSqmToSqlAstConverter(
 			SqlAstBuildingContext sqlAstBuildingContext,
 			QueryOptions queryOptions) {
@@ -214,6 +221,10 @@ public abstract class BaseSqmToSqlAstConverter
 
 	public SqlAstBuildingContext getSqlAstBuildingContext() {
 		return sqlAstBuildingContext;
+	}
+
+	protected Set<String> affectedTableNames() {
+		return affectedTableNames;
 	}
 
 	protected QuerySpec currentQuerySpec() {
@@ -330,7 +341,7 @@ public abstract class BaseSqmToSqlAstConverter
 				k -> new HashMap<>()
 		);
 
-		final SqlSelection existing = sqlSelectionMap.get( expression );
+		final SqlSelection existing = sqlSelectionMap.get( expression.getExpressable() );
 		if ( existing != null ) {
 			return existing;
 		}
@@ -341,29 +352,6 @@ public abstract class BaseSqmToSqlAstConverter
 
 		return sqlSelection;
 	}
-
-
-//	@Override
-//	public SqlSelection resolveSqlSelection(SqlExpressable sqlSelectable) {
-//		// todo (6.0) : this needs to be relative to some notion of a particular TableGroup
-//		//		SqlSelectable e.g. would be a ColumnReference
-//
-//		final Map<SqlExpressable,SqlSelection> sqlSelectionMap = sqlSelectionMapByQuerySpec.computeIfAbsent(
-//				currentQuerySpec(),
-//				k -> new HashMap<>()
-//		);
-//
-//		final SqlSelection existing = sqlSelectionMap.get( sqlSelectable );
-//		if ( existing != null ) {
-//			return existing;
-//		}
-//
-//		final SqlSelection sqlSelection = new SqlSelectionImpl( sqlSelectable, sqlSelectionMap.size() );
-//		currentQuerySpec().getSelectClause().addSqlSelection( sqlSelection );
-//		sqlSelectionMap.put( sqlSelectable, sqlSelection );
-//
-//		return sqlSelection;
-//	}
 
 
 	@Override
@@ -526,15 +514,24 @@ public abstract class BaseSqmToSqlAstConverter
 					}
 				}
 		);
+
 		tableSpace.setRootTableGroup( group );
 		tableGroupStack.push( group );
 		fromClauseIndex.crossReference( sqmRoot, group );
+
+		group.applyAffectedTableNames( affectedTableNames::add );
 
 		navigableReferenceStack.push( group.asExpression() );
 
 		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, group );
 
 		return group;
+	}
+
+	@Override
+	public NavigableReference visitRootEntityReference(SqmEntityReference sqmEntityReference) {
+		return fromClauseIndex.findResolvedTableGroup( sqmEntityReference.getExportedFromElement() )
+				.asExpression();
 	}
 
 	@Override
@@ -650,6 +647,8 @@ public abstract class BaseSqmToSqlAstConverter
 					}
 				}
 		);
+
+		group.applyAffectedTableNames( affectedTableNames::add );
 
 		tableGroupStack.push( group );
 		fromClauseIndex.crossReference( joinedFromElement, group );
@@ -1345,6 +1344,20 @@ public abstract class BaseSqmToSqlAstConverter
 //		);
 //	}
 
+	@Override
+	public ColumnReference visitExplicitColumnReference(SqmColumnReference sqmColumnReference) {
+		final TableGroup tableGroup = fromClauseIndex.findResolvedTableGroup(
+				sqmColumnReference.getSqmFromBase()
+		);
+
+		final ColumnReference columnReference = tableGroup.locateColumnReferenceByName( sqmColumnReference.getColumnName() );
+
+		if ( columnReference == null ) {
+			throw new HibernateException( "Could not resolve ColumnReference" );
+		}
+
+		return columnReference;
+	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

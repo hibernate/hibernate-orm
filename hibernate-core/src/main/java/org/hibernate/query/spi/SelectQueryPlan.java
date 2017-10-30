@@ -22,13 +22,25 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
  *
  * todo (6.0) : ? - can this be re-used for handling entity and collection loads as well?
  *
+ * todo (6.0) : Stream/Spliterator version as well?  depends on answer to ^^
+ * 		short term it makes no sense to return a Stream/Spliterator for entity
+ * 		or collection loads.  Long term it might if/when we start to define
+ * 		Session#stream(Class entityClass) style API
+ *
  * @since 6.0
  *
  * @author Steve Ebersole
  */
 @Incubating
 public interface SelectQueryPlan<R> extends QueryPlan {
+	/**
+	 * Perform (execute) the query returning a List
+	 */
 	List<R> performList(ExecutionContext executionContext);
 
+	/**
+	 * Perform (execute) the query returning a ScrollableResults
+	 */
 	ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, ExecutionContext executionContext);
+
 }

@@ -16,8 +16,8 @@ import org.hibernate.query.sqm.consume.multitable.spi.UpdateHandler;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 import org.hibernate.sql.ast.consume.spi.SqlUpdateToJdbcUpdateConverter;
+import org.hibernate.sql.ast.produce.spi.SqlAstUpdateDescriptor;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmUpdateToSqlAstConverterMultiTable;
-import org.hibernate.sql.ast.tree.spi.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcUpdate;
 
@@ -62,19 +62,19 @@ public class TableBasedUpdateHandlerImpl
 	@Override
 	protected void performMutations(HandlerExecutionContext executionContext) {
 
-		final List<UpdateStatement> updateStatements = SqmUpdateToSqlAstConverterMultiTable.interpret(
+		final List<SqlAstUpdateDescriptor> updateDescriptors = SqmUpdateToSqlAstConverterMultiTable.interpret(
 				getSqmDeleteOrUpdateStatement(),
 				generateIdTableSelect( executionContext ),
 				executionContext.getQueryOptions(),
 				executionContext
 		);
 
-		for ( UpdateStatement updateStatement : updateStatements ) {
+		for ( SqlAstUpdateDescriptor updateDescriptor : updateDescriptors ) {
 			// convert each SQL AST UpdateStatement into a JdbcUpdate operation
 			// 		and execute it
 
 			final JdbcUpdate jdbcUpdate = SqlUpdateToJdbcUpdateConverter.interpret(
-					updateStatement,
+					updateDescriptor,
 					executionContext.getSession(),
 					executionContext.getParameterBindingContext().getQueryParameterBindings()
 			);

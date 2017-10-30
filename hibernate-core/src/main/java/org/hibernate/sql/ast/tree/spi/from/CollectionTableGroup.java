@@ -9,16 +9,15 @@ package org.hibernate.sql.ast.tree.spi.from;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
-import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.ElementColumnReferenceQualifier;
-import org.hibernate.sql.ast.produce.metamodel.spi.IndexColumnReferenceQualifier;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
@@ -73,6 +72,10 @@ public class CollectionTableGroup implements TableGroup {
 	public TableReference locateTableReference(Table table) {
 		if ( table == elementTableReference.getTable() ) {
 			return elementTableReference;
+		}
+
+		if ( indexTableReference != null && table == indexTableReference.getTable() ) {
+			return indexTableReference;
 		}
 
 		return null;
@@ -138,5 +141,28 @@ public class CollectionTableGroup implements TableGroup {
 	@Override
 	public Expression qualify(QualifiableSqlExpressable sqlSelectable) {
 		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	public void applyAffectedTableNames(Consumer<String> nameCollector) {
+		nameCollector.accept( elementTableReference.getTable().getTableExpression() );
+		if ( indexTableReference != null ) {
+			nameCollector.accept( indexTableReference.getTable().getTableExpression() );
+		}
+	}
+
+	@Override
+	public ColumnReference locateColumnReferenceByName(String name) {
+		Column column = elementTableReference.getTable().getColumn( name );
+
+		if ( column == null && indexTableReference != null ) {
+			column = indexTableReference.getTable().getColumn( name );
+		}
+
+		if ( column == null ) {
+			return null;
+		}
+
+		return resolveColumnReference( column );
 	}
 }

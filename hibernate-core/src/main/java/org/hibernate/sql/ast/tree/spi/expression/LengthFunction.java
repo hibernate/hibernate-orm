@@ -46,8 +46,9 @@ public class LengthFunction extends AbstractStandardFunction implements Standard
 	@Override
 	public SqlSelection createSqlSelection(int jdbcPosition) {
 		return new SqlSelectionImpl(
-				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlSelectionReader(),
-				jdbcPosition
+				jdbcPosition,
+				this,
+				( (BasicValuedExpressableType) getType() ).getBasicType().getSqlSelectionReader()
 		);
 	}
 }

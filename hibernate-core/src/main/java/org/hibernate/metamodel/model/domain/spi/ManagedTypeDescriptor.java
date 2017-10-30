@@ -76,11 +76,11 @@ public interface ManagedTypeDescriptor<T>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// todo (6.0) : both would be pre-built during the process of creating the runtime model
 	//		this proved to be the best solution by far based on JMH testing
-	default List<NonIdPersistentAttribute<? super T,?>> getPersistentAttributes() {
+	default List<NonIdPersistentAttribute> getPersistentAttributes() {
 		throw new NotYetImplementedFor6Exception();
 	}
 
-	default List<NonIdPersistentAttribute<? super T, ?>> getDeclaredPersistentAttributes() {
+	default List<NonIdPersistentAttribute> getDeclaredPersistentAttributes() {
 		throw new NotYetImplementedFor6Exception();
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

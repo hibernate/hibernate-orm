@@ -81,7 +81,7 @@ public class EntityEntryContext {
 		// We only need to check a mutable EntityEntry is associated with the same PersistenceContext.
 		// Immutable EntityEntry can be associated with multiple PersistenceContexts, so no need to check.
 		// ImmutableEntityEntry#getPersistenceContext() throws an exception (HHH-10251).
-		if ( entityEntry.getPersister().getJavaTypeDescriptor().getMutabilityPlan().isMutable() ) {
+		if ( entityEntry.getDescriptor().getJavaTypeDescriptor().getMutabilityPlan().isMutable() ) {
 			assert AbstractEntityEntry.class.cast( entityEntry ).getPersistenceContext() == persistenceContext;
 		}
 

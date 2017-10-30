@@ -8,6 +8,8 @@ package org.hibernate.test.bytecode.enhancement;
 
 import javassist.CtClass;
 
+import org.hibernate.test.bytecode.enhancement.cascade.CascadeDetachedTestTask;
+import org.hibernate.test.bytecode.enhancement.lazy.LazyBasicFieldMergeTest;
 import org.hibernate.test.bytecode.enhancement.lazy.cache.LazyInCacheTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.cache.UninitializedAssociationsInCacheTask;
 import org.hibernate.test.bytecode.enhancement.lazy.cache.UninitializedLazyBasicCacheTask;
@@ -184,7 +186,13 @@ public class EnhancerTest extends BaseUnitTestCase {
 	public void testCascadeFkDelete() {
 		EnhancerTestUtils.runEnhancerTestTask( CascadeWithFkConstraintTestTask.class );
 	}
-	
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10254" )
+	public void testCascadeDetachedTest() {
+		EnhancerTestUtils.runEnhancerTestTask( CascadeDetachedTestTask.class );
+	}
+
 	@Test
 	@TestForIssue( jiraKey = "HHH-10055" )
 	public void testLazyCollectionHandling() {
@@ -308,5 +316,11 @@ public class EnhancerTest extends BaseUnitTestCase {
 	@Test
 	public void testInitFromCache() {
 		EnhancerTestUtils.runEnhancerTestTask( InitFromCacheTestTask.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11117")
+	public void testLazyBasicFieldMergeTest() {
+		EnhancerTestUtils.runEnhancerTestTask( LazyBasicFieldMergeTest.class );
 	}
 }

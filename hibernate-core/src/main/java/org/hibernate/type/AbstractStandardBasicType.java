@@ -15,6 +15,7 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -67,10 +68,12 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	protected T getReplacement(T original, T target, SessionImplementor session) {
-		if ( !isMutable() ) {
-			return original;
+		if ( original == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+			return target;
+
 		}
-		else if ( isEqual( original, target ) ) {
+		else if ( !isMutable() ||
+					( target != LazyPropertyInitializer.UNFETCHED_PROPERTY && isEqual( original, target ) ) ) {
 			return original;
 		}
 		else {

@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpa.test.enhancement.runtime;
 
+import org.hibernate.jpa.test.enhancement.cases.CascadeDetachedExecutableTestTask;
 import org.hibernate.jpa.test.enhancement.cases.DetachedGetIdentifierTestTask;
 import org.hibernate.jpa.test.enhancement.cases.TestLazyPropertyOnPreUpdateExecutable;
 
@@ -86,6 +87,12 @@ public class JpaRuntimeEnhancementTest extends BaseUnitTestCase {
 	@TestForIssue( jiraKey = "HHH-11426" )
 	public void testDetached() {
 		EnhancerTestUtils.runEnhancerTestTask( DetachedGetIdentifierTestTask.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11426" )
+	public void testCascadeDetached() {
+		EnhancerTestUtils.runEnhancerTestTask( CascadeDetachedExecutableTestTask.class );
 	}
 
 

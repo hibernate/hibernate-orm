@@ -12,9 +12,9 @@ import org.hibernate.orm.test.query.sqm.produce.domain.Person;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfLists;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 
-import org.junit.After;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.query.sqm.StrictJpaComplianceViolation.Type.ALIASED_FETCH_JOIN;
 import static org.hibernate.query.sqm.StrictJpaComplianceViolation.Type.FUNCTION_CALL;
@@ -29,7 +29,7 @@ import static org.hibernate.query.sqm.StrictJpaComplianceViolation.Type.VALUE_FU
  *
  * @author Steve Ebersole
  */
-@Ignore
+@Disabled
 public class LenientJpqlComplianceTests extends BaseSqmUnitTest {
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {
@@ -55,7 +55,7 @@ public class LenientJpqlComplianceTests extends BaseSqmUnitTest {
 		throw violation;
 	}
 
-	@After
+	@AfterEach
 	public void resetViolationChecked() {
 		violationChecked = null;
 	}

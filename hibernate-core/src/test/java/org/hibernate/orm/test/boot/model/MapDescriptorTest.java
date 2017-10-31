@@ -14,8 +14,8 @@ import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfMaps;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
@@ -34,7 +34,7 @@ public class MapDescriptorTest extends SessionFactoryBasedFunctionalTest {
 		metadataSources.addAnnotatedClass( EntityOfMaps.class );
 	}
 
-	@Before
+	@BeforeEach
 	public void findEntityDescriptor() {
 		entityDescriptor = sessionFactory().getTypeConfiguration().findEntityDescriptor( EntityOfMaps.class );
 	}

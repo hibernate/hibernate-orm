@@ -669,9 +669,6 @@ public abstract class BaseSqmToSqlAstConverter
 		shallownessStack.push( SqmSelectToSqlAstConverter.Shallowness.SUBQUERY );
 		try {
 			super.visitSelectClause( selectClause );
-			for ( SqmSelection sqmSelection : selectClause.getSelections() ) {
-				visitSelection( sqmSelection );
-			}
 
 			currentQuerySpec().getSelectClause().makeDistinct( selectClause.isDistinct() );
 			return currentQuerySpec().getSelectClause();

@@ -65,27 +65,31 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 			);
 			final NameSpaceTablesInformation tables = existingDatabase.getTablesInformation( namespace );
 			for ( Table table : namespace.getTables() ) {
-				if ( schemaFilter.includeTable( table ) && table.isExportable() ) {
+				if ( table.isExportable() ) {
 					final ExportableTable exportableTable = (ExportableTable) table;
-					checkExportIdentifier( exportableTable, exportIdentifiers );
-					final TableInformation tableInformation = tables.getTableInformation( exportableTable );
-					if ( tableInformation == null ) {
-						createTable( exportableTable, dialect, formatter, options, targets );
-					}
-					else if ( tableInformation.isPhysicalTable() ) {
-						tablesInformation.addTableInformation( tableInformation );
-						migrateTable( exportableTable, tableInformation, dialect, formatter, options, targets );
+					if ( schemaFilter.includeTable( exportableTable ) ) {
+						checkExportIdentifier( exportableTable, exportIdentifiers );
+						final TableInformation tableInformation = tables.getTableInformation( exportableTable );
+						if ( tableInformation == null ) {
+							createTable( exportableTable, dialect, formatter, options, targets );
+						}
+						else if ( tableInformation.isPhysicalTable() ) {
+							tablesInformation.addTableInformation( tableInformation );
+							migrateTable( exportableTable, tableInformation, dialect, formatter, options, targets );
+						}
 					}
 				}
 			}
 
 			for ( Table table : namespace.getTables() ) {
-				if ( schemaFilter.includeTable( table ) && table.isExportable() ) {
+				if ( table.isExportable() ) {
 					final ExportableTable exportableTable = (ExportableTable) table;
-					final TableInformation tableInformation = tablesInformation.getTableInformation( exportableTable );
-					if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
-						applyIndexes( exportableTable, tableInformation, dialect, formatter, options, targets );
-						applyUniqueKeys( exportableTable, tableInformation, dialect, formatter, options, targets );
+					if ( schemaFilter.includeTable( exportableTable ) ) {
+						final TableInformation tableInformation = tablesInformation.getTableInformation( exportableTable );
+						if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
+							applyIndexes( exportableTable, tableInformation, dialect, formatter, options, targets );
+							applyUniqueKeys( exportableTable, tableInformation, dialect, formatter, options, targets );
+						}
 					}
 				}
 			}

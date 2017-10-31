@@ -243,7 +243,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			for ( Table table : namespace.getTables() ) {
 				if ( table.isExportable() ) {
 					final ExportableTable exportableTable = (ExportableTable) table;
-					if ( schemaFilter.includeTable( table ) ) {
+					if ( schemaFilter.includeTable( exportableTable ) ) {
 						final TableInformation tableInformation = nameSpaceTablesInformation
 								.getTableInformation( exportableTable );
 						if ( tableInformation == null || tableInformation.isPhysicalTable() ) {

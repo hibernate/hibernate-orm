@@ -38,12 +38,14 @@ public class IndividuallySchemaValidatorImpl extends AbstractSchemaValidator {
 			Dialect dialect,
 			Namespace namespace) {
 		for ( Table table : namespace.getTables() ) {
-			if ( schemaFilter.includeTable( table ) && table.isExportable() ) {
+			if ( table.isExportable() ) {
 				final ExportableTable exportableTable = (ExportableTable) table;
-				final TableInformation tableInformation = databaseInformation.getTableInformation(
-						exportableTable.getQualifiedTableName()
-				);
-				validateTable( exportableTable, tableInformation, options, dialect );
+				if ( schemaFilter.includeTable( exportableTable ) ) {
+					final TableInformation tableInformation = databaseInformation.getTableInformation(
+							exportableTable.getQualifiedTableName()
+					);
+					validateTable( exportableTable, tableInformation, options, dialect );
+				}
 			}
 		}
 	}

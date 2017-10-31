@@ -1,63 +1,54 @@
-package org.hibernate.test.schemafilter;
+package org.hibernate.orm.test.schemafilter;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.relational.MappedNamespace;
-import org.hibernate.boot.model.relational.MappedSequence;
-import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.Namespace;
+import org.hibernate.metamodel.model.relational.spi.Sequence;
 import org.hibernate.naming.Identifier;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.orm.test.schemaupdate.BaseSchemaUnitTestCase;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
-import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
-import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.spi.SchemaFilter;
-import org.junit.Assert;
-import org.junit.Test;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
-import static org.hibernate.test.schemafilter.RecordingTarget.Category.TABLE_CREATE;
-import static org.hibernate.test.schemafilter.RecordingTarget.Category.TABLE_DROP;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
-@RequiresDialectFeature( value = {DialectChecks.SupportCatalogCreation.class})
-public class CatalogFilterTest extends BaseUnitTestCase {
+import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.TABLE_CREATE;
+import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.TABLE_DROP;
 
-	private final ServiceRegistry serviceRegistry;
-	private final Metadata metadata;
 
-	public CatalogFilterTest() {
-		Map settings = new HashMap();
-		settings.putAll( Environment.getProperties() );
-		settings.put( AvailableSettings.DIALECT, SQLServerDialect.class.getName() );
-		settings.put( AvailableSettings.FORMAT_SQL, false );
+@SuppressWarnings({ "rawtypes", "unchecked" })
+@RequiresDialectFeature(value = { DialectChecks.SupportCatalogCreation.class })
+public class CatalogFilterTest extends BaseSchemaUnitTestCase {
 
-		this.serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( settings );
+	@Override
+	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( AvailableSettings.DIALECT, SQLServerDialect.class.getName() );
+		serviceRegistryBuilder.applySetting( AvailableSettings.FORMAT_SQL, false );
+	}
 
-		MetadataSources ms = new MetadataSources( serviceRegistry );
-		ms.addAnnotatedClass( CatalogNoneEntity0.class );
-		ms.addAnnotatedClass( Catalog1Entity1.class );
-		ms.addAnnotatedClass( Catalog1Entity2.class );
-		ms.addAnnotatedClass( Catalog2Entity3.class );
-		ms.addAnnotatedClass( Catalog2Entity4.class );
-		this.metadata = ms.buildMetadata();
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				CatalogNoneEntity0.class,
+				Catalog1Entity1.class,
+				Catalog1Entity2.class,
+				Catalog2Entity3.class,
+				Catalog2Entity4.class
+		};
 	}
 
 	@Test
@@ -108,13 +99,13 @@ public class CatalogFilterTest extends BaseUnitTestCase {
 
 	private RecordingTarget doCreation(SchemaFilter filter) {
 		RecordingTarget target = new RecordingTarget();
-		new SchemaCreatorImpl( serviceRegistry, filter ).doCreation( metadata, true, target );
+		createSchemaCreator( filter ).doCreation( true, target );
 		return target;
 	}
 
 	private RecordingTarget doDrop(SchemaFilter filter) {
 		RecordingTarget target = new RecordingTarget();
-		new SchemaDropperImpl( serviceRegistry, filter ).doDrop( metadata, true, target );
+		createSchemaDropper( filter ).doDrop( true, target );
 		return target;
 	}
 
@@ -141,28 +132,27 @@ public class CatalogFilterTest extends BaseUnitTestCase {
 	private static class TestSchemaFilter implements SchemaFilter {
 
 		@Override
-		public boolean includeNamespace(MappedNamespace namespace) {
+		public boolean includeNamespace(Namespace namespace) {
 			// exclude schema "the_catalog_2"
 			Identifier identifier = namespace.getName().getCatalog();
 			return identifier == null || !"the_catalog_2".equals( identifier.getText() );
 		}
 
 		@Override
-		public boolean includeTable(MappedTable table) {
+		public boolean includeTable(ExportableTable table) {
 			// exclude table "the_entity_2"
-			return !"the_entity_2".equals( table.getName() );
+			return !"the_entity_2".equals( table.getTableName().getText() );
 		}
 
 		@Override
-		public boolean includeSequence(MappedSequence sequence) {
+		public boolean includeSequence(Sequence sequence) {
 			return true;
 		}
 	}
 
 	@Entity
-	@javax.persistence.Table(name = "the_entity_1", catalog = "the_catalog_1")
+	@Table(name = "the_entity_1", catalog = "the_catalog_1")
 	public static class Catalog1Entity1 {
-
 		@Id
 		private long id;
 
@@ -170,15 +160,14 @@ public class CatalogFilterTest extends BaseUnitTestCase {
 			return id;
 		}
 
-		public void setId( long id ) {
+		public void setId(long id) {
 			this.id = id;
 		}
 	}
 
 	@Entity
-	@javax.persistence.Table(name = "the_entity_2", catalog = "the_catalog_1")
+	@Table(name = "the_entity_2", catalog = "the_catalog_1")
 	public static class Catalog1Entity2 {
-
 		@Id
 		private long id;
 
@@ -186,15 +175,14 @@ public class CatalogFilterTest extends BaseUnitTestCase {
 			return id;
 		}
 
-		public void setId( long id ) {
+		public void setId(long id) {
 			this.id = id;
 		}
 	}
 
 	@Entity
-	@javax.persistence.Table(name = "the_entity_3", catalog = "the_catalog_2")
+	@Table(name = "the_entity_3", catalog = "the_catalog_2")
 	public static class Catalog2Entity3 {
-
 		@Id
 		private long id;
 
@@ -202,15 +190,14 @@ public class CatalogFilterTest extends BaseUnitTestCase {
 			return id;
 		}
 
-		public void setId( long id ) {
+		public void setId(long id) {
 			this.id = id;
 		}
 	}
 
 	@Entity
-	@javax.persistence.Table(name = "the_entity_4", catalog = "the_catalog_2")
+	@Table(name = "the_entity_4", catalog = "the_catalog_2")
 	public static class Catalog2Entity4 {
-
 		@Id
 		private long id;
 
@@ -218,15 +205,14 @@ public class CatalogFilterTest extends BaseUnitTestCase {
 			return id;
 		}
 
-		public void setId( long id ) {
+		public void setId(long id) {
 			this.id = id;
 		}
 	}
 
 	@Entity
-	@javax.persistence.Table(name = "the_entity_0")
+	@Table(name = "the_entity_0")
 	public static class CatalogNoneEntity0 {
-
 		@Id
 		private long id;
 
@@ -234,9 +220,8 @@ public class CatalogFilterTest extends BaseUnitTestCase {
 			return id;
 		}
 
-		public void setId( long id ) {
+		public void setId(long id) {
 			this.id = id;
 		}
-
 	}
 }

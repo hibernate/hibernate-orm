@@ -1,4 +1,4 @@
-package org.hibernate.test.util;
+package org.hibernate.orm.test.util;
 
 import java.sql.Connection;
 

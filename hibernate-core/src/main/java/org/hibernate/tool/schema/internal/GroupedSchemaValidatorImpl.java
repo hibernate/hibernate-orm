@@ -40,14 +40,16 @@ public class GroupedSchemaValidatorImpl extends AbstractSchemaValidator {
 
 		final NameSpaceTablesInformation tables = databaseInformation.getTablesInformation( namespace );
 		for ( Table table : namespace.getTables() ) {
-			if ( schemaFilter.includeTable( table ) && table.isExportable() ) {
+			if ( table.isExportable() ) {
 				final ExportableTable exportableTable = (ExportableTable) table;
-				validateTable(
-						exportableTable,
-						tables.getTableInformation( exportableTable ),
-						options,
-						dialect
-				);
+				if ( schemaFilter.includeTable( exportableTable ) ) {
+					validateTable(
+							exportableTable,
+							tables.getTableInformation( exportableTable ),
+							options,
+							dialect
+					);
+				}
 			}
 		}
 	}

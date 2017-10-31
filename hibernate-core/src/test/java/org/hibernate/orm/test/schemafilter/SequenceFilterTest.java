@@ -4,79 +4,56 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.schemafilter;
+package org.hibernate.orm.test.schemafilter;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import javax.persistence.Table;
+
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.Namespace;
+import org.hibernate.orm.test.schemaupdate.BaseSchemaUnitTestCase;
+import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
+import org.hibernate.tool.schema.spi.SchemaFilter;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
+import org.junit.Assert;
+import org.junit.Test;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.relational.MappedNamespace;
-import org.hibernate.boot.model.relational.MappedSequence;
-import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.mapping.Table;
-import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
-import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
-import org.hibernate.tool.schema.internal.SchemaDropperImpl;
-import org.hibernate.tool.schema.spi.SchemaFilter;
+import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.SEQUENCE_CREATE;
+import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.SEQUENCE_DROP;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.hibernate.test.schemafilter.RecordingTarget.Category.SEQUENCE_CREATE;
-import static org.hibernate.test.schemafilter.RecordingTarget.Category.SEQUENCE_DROP;
 
 /**
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10937")
-@RequiresDialectFeature(value = {DialectChecks.SupportSchemaCreation.class})
-public class SequenceFilterTest extends BaseUnitTestCase {
-	private StandardServiceRegistryImpl serviceRegistry;
-	private Metadata metadata;
+@RequiresDialectFeature(value = { DialectChecks.SupportSchemaCreation.class })
+public class SequenceFilterTest extends BaseSchemaUnitTestCase {
 
-	@Before
-	public void setUp() {
-		Map settings = new HashMap();
-		settings.putAll( Environment.getProperties() );
-		settings.put( AvailableSettings.DIALECT, H2Dialect.class.getName() );
-		settings.put( AvailableSettings.FORMAT_SQL, false );
-
-		this.serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( settings );
-
-		MetadataSources ms = new MetadataSources( serviceRegistry );
-		ms.addAnnotatedClass( Schema1Entity1.class );
-		ms.addAnnotatedClass( Schema2Entity2.class );
-		this.metadata = ms.buildMetadata();
+	@Override
+	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( AvailableSettings.DIALECT, H2Dialect.class.getName() );
+		serviceRegistryBuilder.applySetting( AvailableSettings.FORMAT_SQL, false );
 	}
 
-	@After
-	public void tearDown() {
-		serviceRegistry.destroy();
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Schema1Entity1.class, Schema2Entity2.class };
 	}
 
 	@Test
@@ -120,9 +97,8 @@ public class SequenceFilterTest extends BaseUnitTestCase {
 
 	@Entity
 	@SequenceGenerator(initialValue = 1, name = "idgen", sequenceName = "entity_1_seq_gen")
-	@javax.persistence.Table(name = "the_entity_1", schema = "the_schema_1")
+	@Table(name = "the_entity_1", schema = "the_schema_1")
 	public static class Schema1Entity1 {
-
 		@Id
 		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idgen")
 		private long id;
@@ -138,9 +114,8 @@ public class SequenceFilterTest extends BaseUnitTestCase {
 
 	@Entity
 	@SequenceGenerator(initialValue = 1, name = "idgen2", sequenceName = "entity_2_seq_gen")
-	@javax.persistence.Table(name = "the_entity_2", schema = "the_schema_2")
+	@Table(name = "the_entity_2", schema = "the_schema_2")
 	public static class Schema2Entity2 {
-
 		@Id
 		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idgen2")
 		private long id;
@@ -155,33 +130,32 @@ public class SequenceFilterTest extends BaseUnitTestCase {
 	}
 
 	private static class TestSchemaFilter implements SchemaFilter {
-
 		@Override
-		public boolean includeNamespace(MappedNamespace namespace) {
+		public boolean includeNamespace(Namespace namespace) {
 			return true;
 		}
 
 		@Override
-		public boolean includeTable(MappedTable table) {
+		public boolean includeTable(ExportableTable table) {
 			return true;
 		}
 
 		@Override
-		public boolean includeSequence(MappedSequence sequence) {
-			final String render = sequence.getLogicalName().render();
-			return !"entity_2_seq_gen".endsWith( sequence.getLogicalName().render() );
+		public boolean includeSequence(org.hibernate.metamodel.model.relational.spi.Sequence sequence) {
+			final String render = sequence.getName().render();
+			return !"entity_2_seq_gen".endsWith( sequence.getName().render() );
 		}
 	}
 
 	private RecordingTarget doCreation(SchemaFilter filter) {
 		RecordingTarget target = new RecordingTarget();
-		new SchemaCreatorImpl( serviceRegistry, filter ).doCreation( metadata, true, target );
+		createSchemaCreator( filter ).doCreation( true, target );
 		return target;
 	}
 
 	private RecordingTarget doDrop(SchemaFilter filter) {
 		RecordingTarget target = new RecordingTarget();
-		new SchemaDropperImpl( serviceRegistry, filter ).doDrop( metadata, true, target );
+		createSchemaDropper( filter ).doDrop( true, target );
 		return target;
 	}
 

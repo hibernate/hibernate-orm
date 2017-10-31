@@ -28,6 +28,10 @@ import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.Helper;
+import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
+import org.hibernate.tool.schema.internal.SchemaDropperImpl;
+import org.hibernate.tool.schema.spi.SchemaCreator;
+import org.hibernate.tool.schema.spi.SchemaFilter;
 
 import org.junit.After;
 import org.junit.Before;
@@ -116,6 +120,20 @@ public abstract class BaseSchemaUnitTestCase {
 
 	public SchemaValidator createSchemaValidator() {
 		return new SchemaValidator( databaseModel, standardServiceRegistry );
+	}
+
+	public SchemaCreatorImpl createSchemaCreator(SchemaFilter filter) {
+		if ( filter != null ) {
+			return new SchemaCreatorImpl( databaseModel, standardServiceRegistry, filter );
+		}
+		return new SchemaCreatorImpl( databaseModel, standardServiceRegistry );
+	}
+
+	public SchemaDropperImpl createSchemaDropper(SchemaFilter filter) {
+		if ( filter != null ) {
+			return new SchemaDropperImpl( databaseModel, standardServiceRegistry, filter );
+		}
+		return new SchemaDropperImpl( databaseModel, standardServiceRegistry );
 	}
 
 	public String getSqlScriptOutputFileContent() throws IOException {

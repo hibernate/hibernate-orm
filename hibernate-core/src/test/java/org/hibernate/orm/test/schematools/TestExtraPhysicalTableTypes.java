@@ -4,13 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.schematools;
+package org.hibernate.orm.test.schematools;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -18,19 +17,20 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.internal.ExtractionContextImpl;
 import org.hibernate.tool.schema.extract.internal.InformationExtractorJdbcDatabaseMetaDataImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.After;
 import org.junit.Test;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.test.util.DdlTransactionIsolatorTestingImpl;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -40,9 +40,9 @@ import static org.junit.Assert.assertThat;
  */
 @TestForIssue(jiraKey = "HHH-10298")
 public class TestExtraPhysicalTableTypes {
-
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;
+
 	@After
 	public void tearDown() {
 		StandardServiceRegistryBuilder.destroy( ssr );
@@ -88,25 +88,24 @@ public class TestExtraPhysicalTableTypes {
 
 	private InformationExtractorJdbcDatabaseMetaDataImplTest buildInformationExtractorJdbcDatabaseMetaDataImplTest()
 			throws SQLException {
-		Database database = metadata.getDatabase();
-
+		final DatabaseModel databaseModel = Helper.buildDatabaseModel( metadata );
 		final ConnectionProvider connectionProvider = ssr.getService( ConnectionProvider.class );
-		DatabaseInformation dbInfo = new DatabaseInformationImpl(
+		final DatabaseInformation dbInfo = new DatabaseInformationImpl(
 				ssr,
-				database.getJdbcEnvironment(),
+				databaseModel.getJdbcEnvironment(),
 				new DdlTransactionIsolatorTestingImpl( ssr,
 													   new JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess(
 															   connectionProvider )
 				),
-				database.getDefaultNamespace().getName()
+				databaseModel.getDefaultNamespace()
 		);
-		ExtractionContextImpl extractionContext = new ExtractionContextImpl(
+		final ExtractionContextImpl extractionContext = new ExtractionContextImpl(
 				ssr,
-				database.getJdbcEnvironment(),
+				databaseModel.getJdbcEnvironment(),
 				ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess(),
 				(ExtractionContext.DatabaseObjectAccess) dbInfo,
-				database.getDefaultNamespace().getName().getCatalog(),
-				database.getDefaultNamespace().getName().getSchema()
+				databaseModel.getDefaultNamespace().getName().getCatalog(),
+				databaseModel.getDefaultNamespace().getName().getSchema()
 
 		);
 		return new InformationExtractorJdbcDatabaseMetaDataImplTest(

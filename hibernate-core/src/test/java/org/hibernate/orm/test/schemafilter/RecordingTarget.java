@@ -1,4 +1,4 @@
-package org.hibernate.test.schemafilter;
+package org.hibernate.orm.test.schemafilter;
 
 import java.util.EnumMap;
 import java.util.HashSet;

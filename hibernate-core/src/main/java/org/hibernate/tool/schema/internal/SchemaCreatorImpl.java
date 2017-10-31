@@ -298,7 +298,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 			final List<ExportableTable> exportableTables = namespace.getTables()
 					.stream()
-					.filter( table -> table.isExportable() && schemaFilter.includeTable( table ) )
+					.filter( table -> table.isExportable() && schemaFilter.includeTable( (ExportableTable) table ) )
 					.map( table -> (ExportableTable)table )
 					.collect(
 							Collectors.toList() );
@@ -351,7 +351,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				if ( !table.isExportable() ) {
 					continue;
 				}
-				if ( !schemaFilter.includeTable( table ) ) {
+				if ( !schemaFilter.includeTable( (ExportableTable) table ) ) {
 					continue;
 				}
 				// foreign keys

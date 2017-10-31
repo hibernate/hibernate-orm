@@ -231,7 +231,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			// now it's safe to drop the tables
 			namespace.getTables().stream()
 					.filter( table -> table.isExportable() )
-					.filter( table -> schemaFilter.includeTable( table ) )
+					.filter( table -> schemaFilter.includeTable( (ExportableTable) table ) )
 					.map( table -> (ExportableTable) table )
 					.forEach( table -> {
 						checkExportIdentifier( table, exportIdentifiers );
@@ -323,7 +323,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			if ( !table.isExportable() ) {
 				continue;
 			}
-			if ( !schemaFilter.includeTable( table ) ) {
+			if ( !schemaFilter.includeTable( (ExportableTable) table ) ) {
 				continue;
 			}
 

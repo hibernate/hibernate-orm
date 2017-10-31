@@ -43,6 +43,9 @@ public class BasicFormatterTest extends BaseUnitTestCase {
 		assertNoLoss(
 				"/* Here we' go! */ select case when p.age > 50 then 'old' when p.age > 18 then 'adult' else 'child' end from Person p where ( case when p.age > 50 then 'old' when p.age > 18 then 'adult' else 'child' end ) like ?"
 		);
+		assertNoLoss(
+				"(select p.pid from Address where city = 'Boston') union (select p.pid from Address where city = 'Taipei')"
+		);
 	}
 
 	private void assertNoLoss(String query) {

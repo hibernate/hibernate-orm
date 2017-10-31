@@ -356,14 +356,18 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private static boolean isFunctionName(String tok) {
-			final char begin = tok.charAt( 0 );
-			final boolean isIdentifier = Character.isJavaIdentifierStart( begin ) || '"' == begin;
-			return isIdentifier &&
-					!LOGICAL.contains( tok ) &&
-					!END_CLAUSES.contains( tok ) &&
-					!QUANTIFIERS.contains( tok ) &&
-					!DML.contains( tok ) &&
-					!MISC.contains( tok );
+			if (tok != null && tok.length() > 0) {
+				final char begin = tok.charAt( 0 );
+				final boolean isIdentifier = Character.isJavaIdentifierStart( begin ) || '"' == begin;
+				return isIdentifier &&
+						!LOGICAL.contains( tok ) &&
+						!END_CLAUSES.contains( tok ) &&
+						!QUANTIFIERS.contains( tok ) &&
+						!DML.contains( tok ) &&
+						!MISC.contains( tok );
+			} else {
+				return false;
+			}
 		}
 
 		private static boolean isWhitespace(String token) {

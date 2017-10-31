@@ -10,7 +10,8 @@
 ext {
 
     junitVersion = '4.12'
-    junit5Version = '5.0.0'
+    junitVintageVersion = '4.12.1'
+    junit5Version = '5.0.1'
 //    h2Version = '1.2.145'
     h2Version = '1.3.176'
     bytemanVersion = '3.0.6'
@@ -90,7 +91,7 @@ ext {
             junit5_api:     "org.junit.jupiter:junit-jupiter-api:${junit5Version}",
             junit5_jupiter: "org.junit.jupiter:junit-jupiter-engine:${junit5Version}",
             junit:          "junit:junit:${junitVersion}",
-            junit5_vintage: "org.junit.vintage:junit-vintage-engine:${junitVersion}",
+            junit5_vintage: "org.junit.vintage:junit-vintage-engine:${junitVintageVersion}",
 
             log4j:          "log4j:log4j:1.2.17",
             byteman:         "org.jboss.byteman:byteman:${bytemanVersion}",

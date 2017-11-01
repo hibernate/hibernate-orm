@@ -6,9 +6,6 @@
  */
 package org.hibernate.orm.test.query.sqm.produce;
 
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement.ElementClassification;
@@ -29,16 +26,12 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReferenc
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
-import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationNature;
 
 import org.hibernate.testing.junit5.FailureExpected;
-
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.endsWith;
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
@@ -52,7 +45,6 @@ import static org.junit.Assert.assertThat;
  * @author Steve Ebersole
  */
 @SuppressWarnings("WeakerAccess")
-@FailureExpected( "Boot model building has problem binding some of this model" )
 public class SelectClauseTests extends BaseSqmUnitTest {
 
 	@Test
@@ -72,6 +64,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 	}
 
 	@Test
+	@FailureExpected( "EmbeddedTypeDescriptor still does not initialize its attributes." )
 	public void testCompoundAttributeSelection() {
 		SqmSelectStatement statement = interpretSelect( "select p.nickName, p.name.first from Person p" );
 		assertEquals( 2, statement.getQuerySpec().getSelectClause().getSelections().size() );
@@ -95,161 +88,6 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		);
 		assertThat(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 1 ).getSelectableNode(),
-				instanceOf( SqmSingularAttributeReference.class )
-		);
-	}
-
-	@Test
-	public void testSimpleDynamicInstantiationSelection() {
-		SqmSelectStatement statement = interpretSelect(
-				"select new org.hibernate.sqm.test.hql.SelectClauseTests$DTO(p.nickName, p.numberOfToes) from Person p"
-		);
-		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
-		assertThat(
-				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				instanceOf( SqmDynamicInstantiation.class )
-		);
-	}
-
-	@Test
-	public void testMultipleDynamicInstantiationSelection() {
-		SqmSelectStatement statement = interpretSelect(
-				"select new org.hibernate.sqm.test.hql.SelectClauseTests$DTO(p.nickName, p.numberOfToes), " +
-						"new org.hibernate.sqm.test.hql.SelectClauseTests$DTO(p.nickName, p.numberOfToes) " +
-						"from Person p"
-		);
-		assertEquals( 2, statement.getQuerySpec().getSelectClause().getSelections().size() );
-		assertThat(
-				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				instanceOf( SqmDynamicInstantiation.class )
-		);
-		assertThat(
-				statement.getQuerySpec().getSelectClause().getSelections().get( 1 ).getSelectableNode(),
-				instanceOf( SqmDynamicInstantiation.class )
-		);
-	}
-
-	@Test
-	public void testMixedAttributeAndDynamicInstantiationSelection() {
-		SqmSelectStatement statement = interpretSelect(
-				"select new org.hibernate.sqm.test.hql.SelectClauseTests$DTO(p.nickName, p.numberOfToes), p.nickName from Person p"
-		);
-		assertEquals( 2, statement.getQuerySpec().getSelectClause().getSelections().size() );
-		assertThat(
-				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				instanceOf( SqmDynamicInstantiation.class )
-		);
-		assertThat(
-				statement.getQuerySpec().getSelectClause().getSelections().get( 1 ).getSelectableNode(),
-				instanceOf( SqmSingularAttributeReference.class )
-		);
-	}
-
-	@Test
-	public void testNestedDynamicInstantiationSelection() {
-		SqmSelectStatement statement = interpretSelect(
-				"select new org.hibernate.sqm.test.hql.SelectClauseTests$DTO(" +
-						"    p.nickName, " +
-						"    p.numberOfToes, " +
-						"    new org.hibernate.sqm.test.hql.SelectClauseTests$DTO(p.nickName, p.numberOfToes) " +
-						" ) " +
-						"from Person p"
-		);
-		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
-		assertThat(
-				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				instanceOf( SqmDynamicInstantiation.class )
-		);
-
-		SqmDynamicInstantiation dynamicInstantiation = (SqmDynamicInstantiation) statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode();
-		assertThat(
-				dynamicInstantiation.getInstantiationTarget().getNature(),
-				equalTo( DynamicInstantiationNature.CLASS )
-		);
-		assertThat(
-				dynamicInstantiation.getInstantiationTarget().getJavaType(),
-				equalTo( DTO.class )
-		);
-
-		assertEquals( 3, dynamicInstantiation.getArguments().size() );
-		assertThat(
-				dynamicInstantiation.getArguments().get( 0 ).getSelectableNode(),
-				instanceOf( SqmSingularAttributeReference.class )
-		);
-		assertThat(
-				dynamicInstantiation.getArguments().get( 1 ).getSelectableNode(),
-				instanceOf( SqmSingularAttributeReference.class )
-		);
-		assertThat(
-				dynamicInstantiation.getArguments().get( 2 ).getSelectableNode(),
-				instanceOf( SqmDynamicInstantiation.class )
-		);
-		SqmDynamicInstantiation nestedInstantiation = (SqmDynamicInstantiation) dynamicInstantiation.getArguments().get( 2 ).getSelectableNode();
-		assertThat(
-				nestedInstantiation.getInstantiationTarget().getNature(),
-				equalTo( DynamicInstantiationNature.CLASS )
-		);
-		assertThat(
-				nestedInstantiation.getInstantiationTarget().getJavaType(),
-				equalTo( DTO.class )
-		);
-
-	}
-
-	@Test
-	public void testSimpleDynamicListInstantiation() {
-		SqmSelectStatement statement = interpretSelect( "select new list(p.nickName, p.numberOfToes) from Person p" );
-		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
-		assertThat(
-				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				instanceOf( SqmDynamicInstantiation.class )
-		);
-		SqmDynamicInstantiation instantiation = (SqmDynamicInstantiation) statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode();
-		assertThat(
-				instantiation.getInstantiationTarget().getNature(),
-				equalTo( DynamicInstantiationNature.LIST )
-		);
-		assertThat(
-				instantiation.getInstantiationTarget().getJavaType(),
-				equalTo( List.class )
-		);
-
-		assertEquals( 2, instantiation.getArguments().size() );
-		assertThat(
-				instantiation.getArguments().get( 0 ).getSelectableNode(),
-				instanceOf( SqmSingularAttributeReference.class )
-		);
-		assertThat(
-				instantiation.getArguments().get( 1 ).getSelectableNode(),
-				instanceOf( SqmSingularAttributeReference.class )
-		);
-	}
-
-	@Test
-	public void testSimpleDynamicMapInstantiation() {
-		SqmSelectStatement statement = interpretSelect( "select new map(p.nickName as nn, p.numberOfToes as nt) from Person p" );
-		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
-		assertThat(
-				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				instanceOf( SqmDynamicInstantiation.class )
-		);
-		SqmDynamicInstantiation instantiation = (SqmDynamicInstantiation) statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode();
-		assertThat(
-				instantiation.getInstantiationTarget().getNature(),
-				equalTo( DynamicInstantiationNature.MAP )
-		);
-		assertThat(
-				instantiation.getInstantiationTarget().getJavaType(),
-				equalTo( Map.class )
-		);
-
-		assertEquals( 2, instantiation.getArguments().size() );
-		assertThat(
-				instantiation.getArguments().get( 0 ).getSelectableNode(),
-				instanceOf( SqmSingularAttributeReference.class )
-		);
-		assertThat(
-				instantiation.getArguments().get( 1 ).getSelectableNode(),
 				instanceOf( SqmSingularAttributeReference.class )
 		);
 	}
@@ -308,6 +146,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 	}
 
 	@Test
+	@FailureExpected( "same problem discussed on HqlParser.g `#path`" )
 	public void testMapKeyFunction() {
 		collectionIndexFunctionAssertions(
 				interpretSelect( "select key(m) from EntityOfMaps e join e.basicToBasicMap m" ),
@@ -342,6 +181,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 	}
 
 	@Test
+	@FailureExpected( "same problem discussed on HqlParser.g `#path`" )
 	public void testMapValueFunction() {
 		collectionValueFunctionAssertions(
 				interpretSelect( "select value(m) from EntityOfMaps e join e.basicToBasicMap m" ),
@@ -364,6 +204,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 	}
 
 	@Test
+	@FailureExpected( "same problem discussed on HqlParser.g `#path`" )
 	public void testCollectionValueFunction() {
 		collectionValueFunctionAssertions(
 				interpretSelect( "select value(b) from EntityOfLists e join e.listOfBasics b" ),
@@ -447,6 +288,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 	}
 
 	@Test
+	@FailureExpected( "same problem discussed on HqlParser.g `#path`" )
 	public void testMapEntryFunction() {
 		SqmSelectStatement statement = interpretSelect( "select entry(m) from EntityOfMaps e join e.basicToManyToMany m" );
 
@@ -479,8 +321,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 
 		metadataSources.addAnnotatedClass( Person.class );
 		metadataSources.addAnnotatedClass( EntityOfLists.class );
+		metadataSources.addAnnotatedClass( EntityOfMaps.class );
 	}
 
-	public static class DTO {
-	}
 }

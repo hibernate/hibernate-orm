@@ -57,7 +57,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 		);
 		if ( effectiveRequiresDialect.isPresent() ) {
 			if ( effectiveRequiresDialect.get().matchSubTypes() ) {
-				if ( effectiveRequiresDialect.get().dialectClass().isAssignableFrom( dialect.getClass() ) ) {
+				if ( effectiveRequiresDialect.get().dialectClass().isInstance( dialect ) ) {
 					return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
 				}
 			}
@@ -70,7 +70,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 			return ConditionEvaluationResult.disabled(
 					String.format(
 							Locale.ROOT,
-							"Failed @RequiresDialect(dialect=%s, allowSubTypes=%s) check - found %s]",
+							"Failed @RequiresDialect(dialect=%s, matchSubTypes=%s) check - found %s]",
 							effectiveRequiresDialect.get().dialectClass().getName(),
 							effectiveRequiresDialect.get().matchSubTypes(),
 							dialect.getClass().getName()
@@ -85,8 +85,8 @@ public class DialectFilterExtension implements ExecutionCondition {
 		);
 
 		for ( SkipForDialect effectiveSkipForDialect : effectiveSkips ) {
-			if ( effectiveSkipForDialect.allowSubTypes() ) {
-				if ( effectiveSkipForDialect.dialectClass().isAssignableFrom( dialect.getClass() ) ) {
+			if ( effectiveSkipForDialect.matchSubTypes() ) {
+				if ( effectiveSkipForDialect.dialectClass().isInstance( dialect ) ) {
 					return ConditionEvaluationResult.disabled( "Matched @SkipForDialect(group)" );
 				}
 			}

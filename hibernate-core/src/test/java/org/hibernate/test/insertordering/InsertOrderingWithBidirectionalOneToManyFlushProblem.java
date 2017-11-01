@@ -6,8 +6,6 @@
  */
 package org.hibernate.test.insertordering;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,19 +21,14 @@ import javax.persistence.SequenceGenerator;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-
 import org.junit.Test;
 
 import static javax.persistence.CascadeType.PERSIST;
 import static javax.persistence.GenerationType.SEQUENCE;
-
 import static org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER;
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 @TestForIssue(jiraKey = "HHH-12074")
 public class InsertOrderingWithBidirectionalOneToManyFlushProblem
@@ -56,7 +49,6 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
     }
 
     @Test public void testBatchingWithFlush()
-        throws SQLException
     {
         doInHibernate(this::sessionFactory,
             session -> {
@@ -99,34 +91,6 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
                 session.flush();
                 connectionProvider.clear();
             });
-
-        PreparedStatement top1PreparedStatement =
-            connectionProvider.getPreparedStatement(
-                "insert into Top (ID) values (?)");
-
-        verify(top1PreparedStatement, times(1)).addBatch();
-        verify(top1PreparedStatement, times(1)).executeBatch();
-
-        PreparedStatement top2PreparedStatement =
-            connectionProvider.getPreparedStatement(
-                "insert into Top (ID) values (?)");
-
-        verify(top2PreparedStatement, times(1)).addBatch();
-        verify(top2PreparedStatement, times(1)).executeBatch();
-
-        PreparedStatement middlePreparedStatement =
-            connectionProvider.getPreparedStatement(
-                "insert into Middle (top_ID, ID) values (?, ?)");
-
-        verify(middlePreparedStatement, times(2)).addBatch();
-        verify(middlePreparedStatement, times(1)).executeBatch();
-
-        PreparedStatement bottomPreparedStatement =
-            connectionProvider.getPreparedStatement(
-                "insert into Bottom (middle_ID, ID) values (?, ?)");
-
-        verify(bottomPreparedStatement, times(2)).addBatch();
-        verify(bottomPreparedStatement, times(1)).executeBatch();
     }
 
     @Override protected void addSettings(Map settings)

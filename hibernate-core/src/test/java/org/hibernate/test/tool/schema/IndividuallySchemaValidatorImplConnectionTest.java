@@ -67,8 +67,6 @@ import static org.junit.Assert.assertTrue;
 @RequiresDialect(H2Dialect.class)
 public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestCase {
 
-	private static final Logger log = Logger.getLogger( IndividuallySchemaValidatorImplConnectionTest.class );
-
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
 			Logger.getMessageLogger( CoreMessageLogger.class, IndividuallySchemaValidatorImplConnectionTest.class.getName() ) );

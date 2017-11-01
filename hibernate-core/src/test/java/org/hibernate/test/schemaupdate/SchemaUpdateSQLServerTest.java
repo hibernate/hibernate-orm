@@ -70,8 +70,6 @@ import static org.junit.Assert.assertThat;
 @RequiresDialect(SQLServerDialect.class)
 public class SchemaUpdateSQLServerTest extends BaseUnitTestCase {
 
-	private static final Logger log = Logger.getLogger( SchemaUpdateSQLServerTest.class );
-
 	@Parameterized.Parameters
 	public static Collection<String> parameters() {
 		return Arrays.asList(

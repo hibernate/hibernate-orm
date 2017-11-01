@@ -32,8 +32,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  */
 public class ManyToManyBidirectionalWithLinkEntityTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( ManyToManyBidirectionalWithLinkEntityTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

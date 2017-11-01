@@ -16,6 +16,7 @@ import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.infinispan.util.FutureUpdate;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.infinispan.util.TombstoneUpdate;
 import org.hibernate.cache.internal.SimpleCacheKeysFactory;
 import org.hibernate.cache.spi.RegionFactory;
@@ -33,6 +34,7 @@ import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLoca
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
+import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTest;
 import org.hibernate.test.cache.infinispan.util.ExpectingInterceptor;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -57,6 +59,9 @@ import org.infinispan.configuration.cache.CacheMode;
  */
 @RunWith(CustomParameterized.class)
 public abstract class AbstractFunctionalTest extends BaseNonConfigCoreFunctionalTestCase {
+
+	protected final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( DualNodeTest.class );
+
 	protected static final Object[] TRANSACTIONAL = new Object[]{"transactional", JtaPlatformImpl.class, JtaTransactionCoordinatorBuilderImpl.class, XaConnectionProvider.class, AccessType.TRANSACTIONAL, true, CacheMode.INVALIDATION_SYNC, false };
 	protected static final Object[] READ_WRITE_INVALIDATION = new Object[]{"read-write", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_WRITE, false, CacheMode.INVALIDATION_SYNC, false };
 	protected static final Object[] READ_ONLY_INVALIDATION = new Object[]{"read-only", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_ONLY, false, CacheMode.INVALIDATION_SYNC, false };

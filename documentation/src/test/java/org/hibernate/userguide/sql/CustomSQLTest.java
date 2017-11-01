@@ -45,8 +45,6 @@ import static org.junit.Assert.assertNull;
 @RequiresDialect(PostgreSQL82Dialect.class)
 public class CustomSQLTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( CustomSQLTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

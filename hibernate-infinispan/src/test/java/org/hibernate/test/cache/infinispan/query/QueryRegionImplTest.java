@@ -55,7 +55,6 @@ import static org.junit.Assert.assertTrue;
  * @since 3.5
  */
 public class QueryRegionImplTest extends AbstractGeneralDataRegionTest {
-	private static final Logger log = Logger.getLogger( QueryRegionImplTest.class );
 
 	@Override
 	protected Region createRegion(

@@ -51,8 +51,6 @@ import static org.junit.Assert.fail;
  */
 public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( SQLTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

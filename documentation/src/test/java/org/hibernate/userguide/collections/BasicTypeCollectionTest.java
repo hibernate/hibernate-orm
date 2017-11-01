@@ -27,8 +27,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
  */
 public class BasicTypeCollectionTest extends BaseCoreFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( BasicTypeCollectionTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

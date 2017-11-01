@@ -57,7 +57,6 @@ import static org.junit.Assert.fail;
  * @author Gail Badner
  */
 public class MultipleSessionCollectionTest extends BaseCoreFunctionalTestCase {
-	private static final Logger log = Logger.getLogger( MultipleSessionCollectionTest.class );
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9518" )

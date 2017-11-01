@@ -33,7 +33,6 @@ import static org.junit.Assert.assertTrue;
  */
 @SuppressWarnings("unchecked")
 public class JoinColumnOverrideTest extends BaseUnitTestCase {
-	private static final Logger log = Logger.getLogger( JoinColumnOverrideTest.class );
 
 	private static final String expectedSqlPointyTooth = "create table PointyTooth (id numeric(128,0) not null, " +
 			"bunny_id numeric(128,0), primary key (id))";

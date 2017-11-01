@@ -23,8 +23,6 @@ import static org.junit.Assert.assertNotNull;
 @TestForIssue(jiraKey = "HHH-11005")
 public class MappedSuperclassMapTest extends BaseNonConfigCoreFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( MappedSuperclassMapTest.class );
-	
 	private static final String SKU001 = "SKU001";
 	private static final String SKU002 = "SKU002";
 	private static final String WAR_AND_PEACE = "0140447938";

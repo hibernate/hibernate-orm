@@ -33,7 +33,6 @@ import static org.junit.Assert.assertNotNull;
  * @since 3.5
  */
 public class SessionRefreshTest extends DualNodeTest {
-	private static final Logger log = Logger.getLogger( SessionRefreshTest.class );
 
 	private Cache localCache;
 

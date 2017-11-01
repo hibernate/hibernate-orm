@@ -22,6 +22,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.junit4.CustomParameterized;
 import org.hibernate.test.cache.infinispan.util.BatchModeJtaPlatform;
 import org.hibernate.test.cache.infinispan.util.CacheTestSupport;
@@ -46,8 +47,7 @@ import org.jboss.logging.Logger;
  * @since 3.5
  */
 @RunWith(CustomParameterized.class)
-public abstract class AbstractNonFunctionalTest extends org.hibernate.testing.junit4.BaseUnitTestCase {
-	private static final Logger log = Logger.getLogger(AbstractNonFunctionalTest.class);
+public abstract class AbstractNonFunctionalTest extends BaseUnitTestCase {
 
 	@Rule
 	public InfinispanTestingSetup infinispanTestIdentifier = new InfinispanTestingSetup();

@@ -27,8 +27,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  */
 public class OptimisticLockTypeAllTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( OptimisticLockTypeAllTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

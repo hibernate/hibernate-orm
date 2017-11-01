@@ -53,7 +53,6 @@ import static org.junit.Assert.assertTrue;
  */
 @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-3637")
 public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
-	private static final Logger log = Logger.getLogger( DynamicFilterTest.class );
 
 	@Override
 	public String[] getMappings() {

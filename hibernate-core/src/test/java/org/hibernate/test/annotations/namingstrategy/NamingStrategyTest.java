@@ -37,7 +37,6 @@ import static org.junit.Assert.assertEquals;
  * @author Hardy Ferentschik
  */
 public class NamingStrategyTest extends BaseUnitTestCase {
-	private static final Logger log = Logger.getLogger( NamingStrategyTest.class );
 
 	private ServiceRegistry serviceRegistry;
 

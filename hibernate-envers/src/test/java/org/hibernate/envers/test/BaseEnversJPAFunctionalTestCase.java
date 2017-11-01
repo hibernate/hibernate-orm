@@ -42,7 +42,6 @@ import org.junit.After;
  * @author Strong Liu (stliu@hibernate.org)
  */
 public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest {
-	private static final Logger log = Logger.getLogger( BaseEnversJPAFunctionalTestCase.class );
 
 	private static final Dialect dialect = Dialect.getDialect();
 

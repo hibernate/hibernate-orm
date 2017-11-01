@@ -28,8 +28,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 @RequiresDialect(H2Dialect.class)
 public class DirectVsQueryFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( DirectVsQueryFetchingTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

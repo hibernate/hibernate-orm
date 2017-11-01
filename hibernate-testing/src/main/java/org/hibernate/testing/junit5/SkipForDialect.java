@@ -30,6 +30,6 @@ import org.hibernate.dialect.Dialect;
 @Repeatable( SkipForDialectGroup.class  )
 public @interface SkipForDialect {
 	Class<? extends Dialect> dialectClass();
-	boolean matchSubTypes() default false;
+	boolean allowSubTypes() default false;
 	String reason() default "<undefined>";
 }

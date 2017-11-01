@@ -12,8 +12,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Indicates that the annotated test class/method should only
- * be run when the indicated Dialect is being used.
+ * Annotation that can be used, in conjunction with {@link ExpectedExceptionExtension},
+ * to indicate that a specific test is expected to fail in a particular way
+ * (throw the specified exception) as its "success condition".
  *
  * @see ExpectedExceptionExtension
  *

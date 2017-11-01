@@ -1051,18 +1051,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 			// Object because join-target might be either an Entity join (... join Address a on ...)
 			// or an attribute-join (... from p.address a on ...)
 			final Object joinRhsResolution = ctx.qualifiedJoinRhs().path().accept( this );
-			final SqmNavigableReference navigableBinding;
-
-			// todo (6.0) : can this ever happen?
-			//		from Person p join TYPE(p.mate)?
-//			if ( joinRhsResolution instanceof SqmLiteralEntityType ) {
-//				// convert the EntityTypeLiteralSqmExpression into an EntityBinding
-//				final SqmLiteralEntityType entityReference = (SqmLiteralEntityType) joinRhsResolution;
-//				navigableBinding = new SqmLiteralEntityType( entityReference.getExpressableType().getEntityDescriptor() );
-//			}
-//			else {
-				navigableBinding = (SqmNavigableReference) joinRhsResolution;
-//			}
+			final SqmNavigableReference navigableBinding = (SqmNavigableReference) joinRhsResolution;
 
 			if ( navigableBinding instanceof SqmAttributeReference ) {
 				resolveAttributeJoinIfNot( (SqmAttributeReference) navigableBinding, identificationVariable );

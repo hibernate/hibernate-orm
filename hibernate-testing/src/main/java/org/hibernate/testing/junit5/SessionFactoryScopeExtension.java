@@ -6,10 +6,14 @@
  */
 package org.hibernate.testing.junit5;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.junit.jupiter.api.extension.TestInstancePostProcessor;
+
+import org.jboss.logging.Logger;
 
 import static org.junit.jupiter.api.extension.ExtensionContext.Namespace.create;
 
@@ -26,10 +30,23 @@ import static org.junit.jupiter.api.extension.ExtensionContext.Namespace.create;
 public class SessionFactoryScopeExtension
 		implements TestInstancePostProcessor, AfterAllCallback, TestExecutionExceptionHandler {
 
-	public static final ExtensionContext.Namespace NAMESPACE = create( SessionFactoryScopeExtension.class.getName() );
+	private static final Logger log = Logger.getLogger( SessionFactoryScopeExtension.class );
+
+	public static ExtensionContext.Namespace namespace(Object testInstance) {
+		return create( SessionFactoryScopeExtension.class.getName(), testInstance );
+	}
+
+	public static Optional<SessionFactoryScope> findSessionFactoryScope(ExtensionContext context) {
+		return Optional.of(
+				(SessionFactoryScope) context.getStore( namespace( context.getRequiredTestInstance() ) )
+						.get( SESSION_FACTORY_KEY )
+		);
+	}
+
+	public static final Object SESSION_FACTORY_KEY = "SESSION_FACTORY";
 
 	public SessionFactoryScopeExtension() {
-		System.out.println( "SessionFactoryScopeExtension#<init>" );
+		log.trace( "SessionFactoryScopeExtension#<init>" );
 	}
 
 
@@ -38,13 +55,12 @@ public class SessionFactoryScopeExtension
 
 	@Override
 	public void postProcessTestInstance(Object testInstance, ExtensionContext context) {
-		System.out.println( "SessionFactoryScopeExtension#postProcessTestInstance" );
-
+		log.trace( "SessionFactoryScopeExtension#postProcessTestInstance" );
 		if ( SessionFactoryScopeContainer.class.isInstance( testInstance ) ) {
 			final SessionFactoryScopeContainer scopeContainer = SessionFactoryScopeContainer.class.cast(
 					testInstance );
 			final SessionFactoryScope scope = new SessionFactoryScope( scopeContainer.getSessionFactoryProducer() );
-			context.getStore( NAMESPACE ).put( testInstance, scope );
+			context.getStore( namespace( testInstance ) ).put( SESSION_FACTORY_KEY, scope );
 
 			scopeContainer.injectSessionFactoryScope( scope );
 		}
@@ -56,8 +72,8 @@ public class SessionFactoryScopeExtension
 
 	@Override
 	public void afterAll(ExtensionContext context) {
-		final SessionFactoryScope scope = (SessionFactoryScope) context.getStore( NAMESPACE )
-				.remove( context.getRequiredTestInstance() );
+		final SessionFactoryScope scope = (SessionFactoryScope) context.getStore( namespace( context.getRequiredTestInstance() ) )
+				.remove( SESSION_FACTORY_KEY );
 		if ( scope != null ) {
 			scope.releaseSessionFactory();
 		}
@@ -69,7 +85,7 @@ public class SessionFactoryScopeExtension
 
 	@Override
 	public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
-		final SessionFactoryScope scope = (SessionFactoryScope) context.getStore( NAMESPACE )
+		final SessionFactoryScope scope = (SessionFactoryScope) context.getStore( namespace( context.getRequiredTestInstance() ) )
 				.get( context.getRequiredTestInstance() );
 		if ( scope != null ) {
 			scope.releaseSessionFactory();

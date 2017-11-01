@@ -154,6 +154,13 @@ dotIdentifierSequence
 	: identifier (DOT identifier)*
 	;
 
+// todo (6.0) : there is a lot of complexity here regarding certain types of paths
+//		- e.g. ENTRY | KEY | VALUE | ELEMENTS are all "collection qualifiers" refering to
+//			specific "parts" of the collection (Map.Entry, etc).  Some can be limited by
+//			usage - e.g. I believe ENTRY(someMapReference) can only be used in the SELECT clause
+//			according to JPA.  If we also believe that limitatation for HQL (I can see
+// 			e.g. allowing to use this to define a "tuple") then this can be moved into
+//			the selection rule to help clarify this rule and pathRoot
 path
 	// a SimplePath may be any number of things like:
 	//		* Class FQN
@@ -171,8 +178,8 @@ path
 pathRoot
 	: identifier																			# SimplePathRoot
 	| TREAT LEFT_PAREN dotIdentifierSequence AS dotIdentifierSequence RIGHT_PAREN			# TreatedPathRoot
-	| KEY LEFT_PAREN pathAsMap RIGHT_PAREN												# MapKeyPathRoot
-	| VALUE LEFT_PAREN collectionReference RIGHT_PAREN				   						# CollectionValuePathRoot
+	| KEY LEFT_PAREN pathAsMap RIGHT_PAREN													# MapKeyPathRoot
+	| (VALUE | ELEMENTS) LEFT_PAREN collectionReference RIGHT_PAREN				   			# CollectionValuePathRoot
 	;
 
 pathTerminal

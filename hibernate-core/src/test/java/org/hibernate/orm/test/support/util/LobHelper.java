@@ -15,9 +15,8 @@ import java.sql.Clob;
 import java.sql.SQLException;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.jdbc.ReaderInputStream;
 import org.hibernate.internal.util.StringHelper;
-
-import org.hsqldb.lib.StringInputStream;
 
 /**
  * @author Steve Ebersole
@@ -51,7 +50,7 @@ public class LobHelper {
 
 		@Override
 		public InputStream getAsciiStream() {
-			return new StringInputStream( data );
+			return new ReaderInputStream( new StringReader( data ) );
 		}
 
 		@Override

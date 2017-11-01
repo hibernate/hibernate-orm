@@ -6,10 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import java.util.Map;
+
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 
 /**
  * Represents the ENTRY() function for obtaining the map entries from a {@code Map}-typed association.
@@ -17,11 +19,15 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * @author Gunnar Morling
  * @author Steve Ebersole
  */
-public class SqmMapEntryBinding implements SqmExpression {
+public class SqmMapEntryBinding implements SqmExpression, ExpressableType {
 	private final SqmPluralAttributeReference attributeBinding;
+	private final BasicJavaDescriptor<Map.Entry> mapEntryTypeDescriptor;
 
-	public SqmMapEntryBinding(SqmPluralAttributeReference attributeBinding) {
+	public SqmMapEntryBinding(
+			SqmPluralAttributeReference attributeBinding,
+			BasicJavaDescriptor<Map.Entry> mapEntryTypeDescriptor) {
 		this.attributeBinding = attributeBinding;
+		this.mapEntryTypeDescriptor = mapEntryTypeDescriptor;
 	}
 
 	public SqmPluralAttributeReference getAttributeAttributeReference() {
@@ -29,18 +35,18 @@ public class SqmMapEntryBinding implements SqmExpression {
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return null;
+	public BasicJavaDescriptor getJavaTypeDescriptor() {
+		return mapEntryTypeDescriptor;
 	}
 
 	@Override
 	public ExpressableType getExpressableType() {
-		return null;
+		return this;
 	}
 
 	@Override
 	public ExpressableType getInferableType() {
-		return null;
+		return this;
 	}
 
 	@Override
@@ -50,6 +56,16 @@ public class SqmMapEntryBinding implements SqmExpression {
 
 	@Override
 	public String asLoggableText() {
-		return "ENTRY(" + attributeBinding.asLoggableText() + ")";
+		return "MAP_ENTRY(" + attributeBinding.asLoggableText() + ")";
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
+	@Override
+	public Class getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
 	}
 }

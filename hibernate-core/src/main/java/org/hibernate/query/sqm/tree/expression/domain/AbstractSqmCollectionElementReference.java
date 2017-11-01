@@ -57,7 +57,9 @@ public abstract class AbstractSqmCollectionElementReference extends AbstractSqmN
 
 	@Override
 	public ExpressableType getExpressableType() {
-		return getPluralAttributeBinding().getReferencedNavigable();
+		return getPluralAttributeBinding().getReferencedNavigable()
+				.getPersistentCollectionDescriptor()
+				.getElementDescriptor();
 	}
 
 	@Override

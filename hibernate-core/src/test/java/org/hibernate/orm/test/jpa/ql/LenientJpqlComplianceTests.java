@@ -12,9 +12,7 @@ import org.hibernate.orm.test.query.sqm.produce.domain.Person;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfLists;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 
-import org.hibernate.testing.junit5.FailureExpected;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.query.sqm.StrictJpaComplianceViolation.Type.ALIASED_FETCH_JOIN;
@@ -30,6 +28,7 @@ import static org.hibernate.query.sqm.StrictJpaComplianceViolation.Type.VALUE_FU
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 public class LenientJpqlComplianceTests extends BaseSqmUnitTest {
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {
@@ -109,7 +108,6 @@ public class LenientJpqlComplianceTests extends BaseSqmUnitTest {
 	}
 
 	@Test
-	@FailureExpected( "need to re-think path handling & NavigableBindingResolver - see notes in HqlParser.g #path" )
 	public void testCollectionValueFunctionNotSupportedInStrictMode() {
 		test(
 				"select value(b) from EntityOfLists e join e.listOfBasics b",

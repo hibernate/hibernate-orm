@@ -6,15 +6,17 @@
  */
 package org.hibernate.orm.test.query.sqm.produce;
 
+import java.util.Map;
+
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.collection.spi.CollectionClassification;
-import org.hibernate.metamodel.model.domain.spi.CollectionElement.ElementClassification;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex.IndexClassification;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.Person;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfLists;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfMaps;
+import org.hibernate.orm.test.support.domains.gambit.EntityOfSets;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
@@ -32,6 +34,7 @@ import org.hibernate.testing.junit5.FailureExpected;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
@@ -146,7 +149,6 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 	}
 
 	@Test
-	@FailureExpected( "same problem discussed on HqlParser.g `#path`" )
 	public void testMapKeyFunction() {
 		collectionIndexFunctionAssertions(
 				interpretSelect( "select key(m) from EntityOfMaps e join e.basicToBasicMap m" ),
@@ -177,91 +179,64 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		final PluralPersistentAttribute attribute = mapKeyPathExpression.getPluralAttributeBinding().getReferencedNavigable();
 		assertThat( attribute.getPersistentCollectionDescriptor().getCollectionClassification(), is( collectionClassification ) );
 		assertThat( attribute.getPersistentCollectionDescriptor().getIndexDescriptor().getClassification(), is( indexClassification) );
-		assertThat( mapKeyPathExpression.getExpressableType(), sameInstance( attribute ) );
+		assertThat( mapKeyPathExpression.getExpressableType(), sameInstance( attribute.getPersistentCollectionDescriptor().getIndexDescriptor() ) );
 	}
 
 	@Test
-	@FailureExpected( "same problem discussed on HqlParser.g `#path`" )
 	public void testMapValueFunction() {
 		collectionValueFunctionAssertions(
 				interpretSelect( "select value(m) from EntityOfMaps e join e.basicToBasicMap m" ),
-				CollectionClassification.MAP,
-				ElementClassification.BASIC,
 				"m"
 		);
 		collectionValueFunctionAssertions(
 				interpretSelect( "select value(m) from EntityOfMaps e join e.basicToComponentMap m" ),
-				CollectionClassification.MAP,
-				ElementClassification.EMBEDDABLE,
 				"m"
 		);
 		collectionValueFunctionAssertions(
 				interpretSelect( "select value(m) from EntityOfMaps e join e.basicToOneToMany m" ),
-				CollectionClassification.MAP,
-				ElementClassification.ONE_TO_MANY,
 				"m"
 		);
 	}
 
 	@Test
-	@FailureExpected( "same problem discussed on HqlParser.g `#path`" )
 	public void testCollectionValueFunction() {
 		collectionValueFunctionAssertions(
 				interpretSelect( "select value(b) from EntityOfLists e join e.listOfBasics b" ),
-				CollectionClassification.LIST,
-				ElementClassification.BASIC,
 				"b"
 		);
 		collectionValueFunctionAssertions(
 				interpretSelect( "select value(b) from EntityOfLists e join e.listOfComponents b" ),
-				CollectionClassification.LIST,
-				ElementClassification.EMBEDDABLE,
 				"b"
 		);
 		collectionValueFunctionAssertions(
 				interpretSelect( "select value(b) from EntityOfLists e join e.listOfOneToMany b" ),
-				CollectionClassification.LIST,
-				ElementClassification.ONE_TO_MANY,
 				"b"
 		);
-		// todo : ManyToMany not properly handled atm
 
 		collectionValueFunctionAssertions(
 				interpretSelect( "select value(b) from EntityOfSets e join e.setOfBasics b" ),
-				CollectionClassification.SET,
-				ElementClassification.BASIC,
 				"b"
 		);
 		collectionValueFunctionAssertions(
 				interpretSelect( "select value(b) from EntityOfSets e join e.setOfComponents b" ),
-				CollectionClassification.SET,
-				ElementClassification.EMBEDDABLE,
 				"b"
 		);
 		collectionValueFunctionAssertions(
 				interpretSelect( "select value(b) from EntityOfSets e join e.setOfOneToMany b" ),
-				CollectionClassification.SET,
-				ElementClassification.ONE_TO_MANY,
 				"b"
 		);
 		// todo : ManyToMany not properly handled atm
 
 		collectionValueFunctionAssertions(
 				interpretSelect( "select value(b) from EntityOfMaps e join e.basicToBasicMap b" ),
-				CollectionClassification.MAP,
-				ElementClassification.BASIC,
 				"b"
 		);
 		collectionValueFunctionAssertions(
 				interpretSelect( "select value(b) from EntityOfMaps e join e.basicToComponentMap b" ),
-				CollectionClassification.MAP,
-				ElementClassification.EMBEDDABLE,
 				"b"
 		);
 		collectionValueFunctionAssertions(
 				interpretSelect( "select value(b) from EntityOfMaps e join e.basicToOneToMany b" ),
-				CollectionClassification.MAP,
-				ElementClassification.ONE_TO_MANY,
 				"b"
 		);
 		// todo : ManyToMany not properly handled atm
@@ -269,8 +244,6 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 
 	private void collectionValueFunctionAssertions(
 			SqmSelectStatement statement,
-			CollectionClassification collectionClassification,
-			ElementClassification elementClassification,
 			String collectionIdentificationVariable) {
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 		assertThat(
@@ -281,14 +254,11 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		final SqmCollectionElementReference elementBinding = (SqmCollectionElementReference) statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode();
 		final SqmPluralAttributeReference attrRef = elementBinding.getSourceReference();
 
-		assertThat( attrRef.getReferencedNavigable().getPersistentCollectionDescriptor().getCollectionClassification(), is( collectionClassification) );
-//		assertThat( elementBinding.getSelectableNodeType(), sameInstance( attrRef.getElementDescriptor().getType() ) );
-		assertThat( attrRef.getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor().getClassification(), is( elementClassification ) );
+		assertThat( elementBinding.getExpressableType(), sameInstance( attrRef.getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor() ) );
 		assertThat( attrRef.getExportedFromElement().getIdentificationVariable(), is( collectionIdentificationVariable ) );
 	}
 
 	@Test
-	@FailureExpected( "same problem discussed on HqlParser.g `#path`" )
 	public void testMapEntryFunction() {
 		SqmSelectStatement statement = interpretSelect( "select entry(m) from EntityOfMaps e join e.basicToManyToMany m" );
 
@@ -302,17 +272,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		assertThat( mapEntryFunction.getAttributeAttributeReference().getExportedFromElement(), notNullValue() );
 		assertThat( mapEntryFunction.getAttributeAttributeReference().getExportedFromElement().getIdentificationVariable(), is( "m") );
 
-		final PluralPersistentAttribute attribute = mapEntryFunction.getAttributeAttributeReference().getReferencedNavigable();
-		assertThat( attribute.getPersistentCollectionDescriptor().getCollectionClassification(), is( CollectionClassification.MAP) );
-
-		// Key
-		assertThat( attribute.getPersistentCollectionDescriptor().getIndexDescriptor().getClassification(), is( IndexClassification.BASIC) );
-		assertEquals( String.class, attribute.getPersistentCollectionDescriptor().getIndexDescriptor().getJavaTypeDescriptor().getJavaType() );
-
-		// value/element
-		assertThat( attribute.getPersistentCollectionDescriptor().getElementDescriptor().getClassification(), is( ElementClassification.ONE_TO_MANY) );
-		assertThat( ( (SqmEntityReference) attribute.getPersistentCollectionDescriptor().getElementDescriptor() ).getExpressableType().getEntityName(), is( "org.hibernate.sqm.test.domain.EntityOfMaps" ) );
-		assertEquals( EntityOfMaps.class, attribute.getPersistentCollectionDescriptor().getElementDescriptor().getJavaTypeDescriptor().getJavaType() );
+		assertThat( mapEntryFunction.getJavaTypeDescriptor().getJavaType(), is( equalTo( Map.Entry.class ) ) );
 	}
 
 	@Override
@@ -322,6 +282,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		metadataSources.addAnnotatedClass( Person.class );
 		metadataSources.addAnnotatedClass( EntityOfLists.class );
 		metadataSources.addAnnotatedClass( EntityOfMaps.class );
+		metadataSources.addAnnotatedClass( EntityOfSets.class );
 	}
 
 }

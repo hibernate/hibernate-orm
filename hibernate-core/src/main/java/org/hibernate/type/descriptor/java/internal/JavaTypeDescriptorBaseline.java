@@ -78,6 +78,7 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( new CollectionJavaDescriptor( SortedSet.class ) );
 		target.addBaselineDescriptor( new CollectionJavaDescriptor( Map.class ) );
 		target.addBaselineDescriptor( new CollectionJavaDescriptor( SortedMap.class ) );
+		target.addBaselineDescriptor( MapEntryJavaDescriptor.INSTANCE );
 
 	}
 

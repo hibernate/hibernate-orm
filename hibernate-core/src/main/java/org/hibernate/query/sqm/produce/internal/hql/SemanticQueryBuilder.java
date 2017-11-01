@@ -184,6 +184,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.sql.ast.tree.spi.TrimSpecification;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -503,25 +504,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		return parsingContext.getImplicitAliasGenerator().buildUniqueImplicitAlias();
 	}
 
-	private String interpretAlias(HqlParser.IdentifierContext identifier) {
-		if ( identifier == null || identifier.getText() == null ) {
-			return parsingContext.getImplicitAliasGenerator().buildUniqueImplicitAlias();
-		}
-		return identifier.getText();
-	}
-
-	private String interpretAlias(TerminalNode aliasNode) {
-		if ( aliasNode == null ) {
-			return parsingContext.getImplicitAliasGenerator().buildUniqueImplicitAlias();
-		}
-
-		// todo : not sure I like asserts for this kind of thing.  They are generally disable in runtime environments.
-		// either the thing is important to check or it isn't.
-		assert aliasNode.getSymbol().getType() == HqlParser.IDENTIFIER;
-
-		return aliasNode.getText();
-	}
-
 	private JavaTypeDescriptor<List> listJavaTypeDescriptor;
 	private JavaTypeDescriptor<Map> mapJavaTypeDescriptor;
 
@@ -679,22 +661,23 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	}
 
 	@Override
-	public SqmNavigableReference visitPathExpression(HqlParser.PathExpressionContext ctx) {
-		final String pathText = ctx.path().getText();
-		final String[] pathSplits = PathHelper.split( pathText );
-		final SqmNavigableReference resolvedNavigableReference = pathResolverStack.getCurrent().resolvePath( pathSplits );
-
-		if ( resolvedNavigableReference != null ) {
-			return resolvedNavigableReference;
-		}
-
-		throw new SemanticException(
-				String.format(
-						Locale.ROOT,
-						"Unable to resolve path [%s]",
-						pathText
-				)
-		);
+	public Object visitPathExpression(HqlParser.PathExpressionContext ctx) {
+		return ctx.path().accept( this );
+//		final String pathText = ctx.path().getText();
+//		final String[] pathSplits = PathHelper.split( pathText );
+//		final SqmNavigableReference resolvedNavigableReference = pathResolverStack.getCurrent().resolvePath( pathSplits );
+//
+//		if ( resolvedNavigableReference != null ) {
+//			return resolvedNavigableReference;
+//		}
+//
+//		throw new SemanticException(
+//				String.format(
+//						Locale.ROOT,
+//						"Unable to resolve path [%s]",
+//						pathText
+//				)
+//		);
 	}
 
 	@Override
@@ -1496,6 +1479,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public SqmMapEntryBinding visitMapEntryPath(HqlParser.MapEntryPathContext ctx) {
 		if ( inWhereClause ) {
 			throw new SemanticException(
@@ -1505,7 +1489,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 
 		final SqmPluralAttributeReference pathResolution = asMap( (SqmNavigableReference) ctx.pathAsMap().path().accept( this ) );
 		resolveAttributeJoinIfNot( pathResolution );
-		return new SqmMapEntryBinding( pathResolution );
+		return new SqmMapEntryBinding(
+				pathResolution,
+				(BasicJavaDescriptor) getParsingContext().getSessionFactory().getTypeConfiguration()
+						.getJavaTypeDescriptorRegistry()
+						.getDescriptor( Map.Entry.class )
+		);
 	}
 
 	private void resolveAttributeJoinIfNot(SqmAttributeReference binding) {

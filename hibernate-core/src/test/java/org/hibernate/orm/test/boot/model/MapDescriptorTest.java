@@ -40,7 +40,7 @@ public class MapDescriptorTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	public void test() {
+	public void testBasicToBasic() {
 		final PluralPersistentAttribute basicToBasic = (PluralPersistentAttribute) entityDescriptor.findPersistentAttribute( "basicToBasicMap" );
 
 		assertThat(
@@ -58,6 +58,29 @@ public class MapDescriptorTest extends SessionFactoryBasedFunctionalTest {
 		);
 		assertEquals(
 				String.class,
+				basicToBasic.getPersistentCollectionDescriptor().getElementDescriptor().getJavaTypeDescriptor().getJavaType()
+		);
+	}
+
+	@Test
+	public void testBasicToManyToMany() {
+		final PluralPersistentAttribute basicToBasic = (PluralPersistentAttribute) entityDescriptor.findPersistentAttribute( "basicToManyToMany" );
+
+		assertThat(
+				basicToBasic.getPersistentCollectionDescriptor().getIndexDescriptor().getClassification(),
+				is( CollectionIndex.IndexClassification.BASIC )
+		);
+		assertEquals(
+				String.class,
+				basicToBasic.getPersistentCollectionDescriptor().getIndexDescriptor().getJavaTypeDescriptor().getJavaType()
+		);
+
+		assertThat(
+				basicToBasic.getPersistentCollectionDescriptor().getElementDescriptor().getClassification(),
+				is( CollectionElement.ElementClassification.MANY_TO_MANY )
+		);
+		assertEquals(
+				EntityOfMaps.class,
 				basicToBasic.getPersistentCollectionDescriptor().getElementDescriptor().getJavaTypeDescriptor().getJavaType()
 		);
 	}

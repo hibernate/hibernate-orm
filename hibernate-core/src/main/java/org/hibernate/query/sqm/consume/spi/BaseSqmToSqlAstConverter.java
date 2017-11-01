@@ -44,6 +44,7 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralTrue;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
+import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
@@ -151,6 +152,8 @@ import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
 import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.spi.expression.UpperFunction;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityIdentifierReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
@@ -172,6 +175,7 @@ import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
+import org.hibernate.sql.results.spi.QueryResultProducer;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
@@ -682,6 +686,15 @@ public abstract class BaseSqmToSqlAstConverter
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Expressions
+
+	@Override
+	public QueryResultProducer visitEntityIdentifierReference(SqmEntityIdentifierReference expression) {
+		return new EntityIdentifierReference(
+				(EntityReference) navigableReferenceStack.getCurrent(),
+				expression.getReferencedNavigable(),
+				expression.getNavigablePath()
+		);
+	}
 
 	@Override
 	public SingularAttributeReference visitBasicValuedSingularAttribute(SqmSingularAttributeReferenceBasic sqmAttributeReference) {

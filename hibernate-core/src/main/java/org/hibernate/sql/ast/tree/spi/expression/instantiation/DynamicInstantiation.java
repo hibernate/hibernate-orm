@@ -232,12 +232,14 @@ public class DynamicInstantiation<T> implements QueryResultProducer {
 
 
 			if ( ! areAllArgumentsAliased ) {
-				throw new IllegalStateException( "Bean-injection dynamic instantiation contained one or more arguments with no alias" );
+				throw new IllegalStateException(
+						"Could not determine appropriate instantiation strategy - no matching constructor found and one or more arguments did not define alias for bean-injection"
+				);
 			}
 			if ( !duplicatedAliases.isEmpty() ) {
 				throw new IllegalStateException(
-						"Bean-injection dynamic instantiation contained arguments with duplicated aliases [" + StringHelper
-								.join( ",", duplicatedAliases ) + "]"
+						"Could not determine appropriate instantiation strategy - no matching constructor found and arguments defined duplicated aliases [" +
+								StringHelper.join( ",", duplicatedAliases ) + "] for bean-injection"
 				);
 			}
 

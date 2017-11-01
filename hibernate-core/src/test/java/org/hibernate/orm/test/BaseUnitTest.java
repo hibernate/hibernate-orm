@@ -10,10 +10,19 @@ import org.hibernate.testing.junit5.ExpectedExceptionExtension;
 import org.hibernate.testing.junit5.FailureExpectedExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 /**
  * @author Steve Ebersole
  */
 @ExtendWith( FailureExpectedExtension.class )
 @ExtendWith( ExpectedExceptionExtension.class )
 public abstract class BaseUnitTest {
+
+	@SuppressWarnings("unchecked")
+	protected  <T> T cast(Object thing, Class<T> type) {
+		assertThat( thing, instanceOf( type ) );
+		return type.cast( thing );
+	}
 }

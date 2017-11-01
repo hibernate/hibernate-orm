@@ -7,6 +7,7 @@
 package org.hibernate.testing.junit5;
 
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -32,10 +33,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
  */
 @Retention( RetentionPolicy.RUNTIME )
 @Target(ElementType.TYPE)
+@Inherited
+@TestInstance( TestInstance.Lifecycle.PER_CLASS )
 @ExtendWith( SessionFactoryScopeExtension.class )
 @ExtendWith( DialectFilterExtension.class )
 @ExtendWith( FailureExpectedExtension.class )
-// as noted above, this particular annotation is not conveyed
-@TestInstance( TestInstance.Lifecycle.PER_CLASS )
 public @interface FunctionalSessionFactoryTesting {
 }

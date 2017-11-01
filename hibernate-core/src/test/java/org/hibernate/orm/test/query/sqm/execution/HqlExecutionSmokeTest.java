@@ -8,13 +8,11 @@ package org.hibernate.orm.test.query.sqm.execution;
 
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 
-import org.hibernate.LobHelper;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfBasics;
-import org.hibernate.type.descriptor.java.internal.LobStreamDataHelper;
 
 import org.hibernate.testing.junit5.StandardTags;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +20,12 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import static org.hibernate.orm.test.support.util.LobHelper.createClob;
+import org.hamcrest.CoreMatchers;
+
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 
 /**
  * @author Steve Ebersole
@@ -33,27 +36,32 @@ import static org.hibernate.orm.test.support.util.LobHelper.createClob;
 public class HqlExecutionSmokeTest extends SessionFactoryBasedFunctionalTest {
 	@BeforeEach
 	public void createData() {
-// currently a with EntityEntry -> PC
+// currently a problem with EntityEntry -> PC
+		sessionFactoryScope().inTransaction(
+				session -> {
+					session.doWork(
+							connection -> {
+								final Statement statement = connection.createStatement();
+								try {
+									statement.execute(
+											"insert into EntityOfBasics( id, gender, theInt ) values ( 1, 'M', -1 )" );
+								}
+								finally {
+									try {
+										statement.close();
+									}
+									catch (SQLException ignore) {
+									}
+								}
+							}
+					);
+				}
+		);
+
+// currently a problem saving entities
 //		sessionFactoryScope().inTransaction(
 //				session -> {
-//					session.doWork(
-//							connection -> {
-//								final Statement statement = connection.createStatement();
-//								try {
-//									statement.execute( "insert into EntityOfBasics( id, gender, theInt ) values ( 1, 'M', -1 )" );
-//								}
-//								finally {
-//									try {
-//										statement.close();
-//									}
-//									catch (SQLException ignore) {
-//									}
-//								}
-//							}
-//					);
 //
-//
-// currently a problem saving entities
 //					EntityOfBasics entity = new EntityOfBasics();
 //					entity.setGender( EntityOfBasics.Gender.FEMALE );
 //					entity.setTheInt( 5 );
@@ -70,7 +78,13 @@ public class HqlExecutionSmokeTest extends SessionFactoryBasedFunctionalTest {
 	@Test
 	public void testQueryExecution() {
 		sessionFactoryScope().inTransaction(
-				session -> session.createQuery( "select e from EntityOfBasics e" ).list()
+				session -> {
+					final List result = session.createQuery( "select e.id from EntityOfBasics e" ).list();
+					assertThat( result, hasSize( 1 ) );
+					final Object value = result.get( 0 );
+					assertThat( value, instanceOf( Integer.class ) );
+					assertThat( value, is( 1 ) );
+				}
 		);
 	}
 

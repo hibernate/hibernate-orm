@@ -16,7 +16,6 @@ import org.hibernate.testing.junit5.FunctionalSessionFactoryTesting;
 import org.hibernate.testing.junit5.SessionFactoryProducer;
 import org.hibernate.testing.junit5.SessionFactoryScope;
 import org.hibernate.testing.junit5.SessionFactoryScopeContainer;
-import org.junit.jupiter.api.TestInstance;
 
 import org.jboss.logging.Logger;
 
@@ -24,7 +23,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 @FunctionalSessionFactoryTesting
-@TestInstance( TestInstance.Lifecycle.PER_CLASS )
 public abstract class SessionFactoryBasedFunctionalTest
 		extends BaseUnitTest
 		implements SessionFactoryProducer, SessionFactoryScopeContainer {

@@ -32,9 +32,7 @@ public class DynamicInstantiationQueryResultImpl implements DynamicInstantiation
 
 	@Override
 	public void registerInitializers(InitializerCollector collector) {
-		// none to register specifically - although we need to be able to register
-		// initializers from any of the arguments
-		throw new NotYetImplementedFor6Exception(  );
+		// todo (6.0) : do we need to register initializers for any of the arguments?
 	}
 
 	@Override

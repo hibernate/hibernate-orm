@@ -33,19 +33,19 @@ public class SessionFactoryScope implements SessionFactoryAccess {
 	private SessionFactoryImplementor sessionFactory;
 
 	public SessionFactoryScope(SessionFactoryProducer producer) {
-		System.out.println( "SessionFactoryScope#<init>" );
+		log.trace( "SessionFactoryScope#<init>" );
 		this.producer = producer;
 	}
 
 	public void rebuild() {
-		System.out.println( "SessionFactoryScope#rebuild" );
+		log.trace( "SessionFactoryScope#rebuild" );
 		releaseSessionFactory();
 
 		sessionFactory = producer.produceSessionFactory();
 	}
 
 	public void releaseSessionFactory() {
-		System.out.println( "SessionFactoryScope#releaseSessionFactory" );
+		log.trace( "SessionFactoryScope#releaseSessionFactory" );
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
 		}
@@ -53,8 +53,8 @@ public class SessionFactoryScope implements SessionFactoryAccess {
 
 	@Override
 	public SessionFactoryImplementor getSessionFactory() {
-		System.out.println( "SessionFactoryScope#getSessionFactory" );
-		if ( sessionFactory == null ) {
+		log.trace( "SessionFactoryScope#getSessionFactory" );
+		if ( sessionFactory == null || sessionFactory.isClosed() ) {
 			sessionFactory = producer.produceSessionFactory();
 		}
 		return sessionFactory;

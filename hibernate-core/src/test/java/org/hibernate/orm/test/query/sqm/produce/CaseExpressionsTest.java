@@ -65,11 +65,6 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 		assertThat( caseStatement.getWhenFragments().size(), is(1) );
 	}
 
-	private <T> T cast(Object thing, Class<T> type) {
-		assertThat( thing, instanceOf( type ) );
-		return type.cast( thing );
-	}
-
 	@Test
 	public void testBasicSearchedCaseExpression() {
 		SqmSelectStatement select = interpretSelect(

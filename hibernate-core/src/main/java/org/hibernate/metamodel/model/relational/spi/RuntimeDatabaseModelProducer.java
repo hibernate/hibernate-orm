@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedNamespace;
@@ -94,6 +95,10 @@ public class RuntimeDatabaseModelProducer {
 						bootDatabaseModel.getJdbcEnvironment().getDialect() ) );
 			}
 
+			for ( InitCommand command : bootDatabaseModel.getInitCommands() ) {
+				runtimeDatabaseModel.addInitCommand( command );
+			}
+
 			return runtimeDatabaseModel;
 		}
 
@@ -125,53 +130,15 @@ public class RuntimeDatabaseModelProducer {
 				MappedNamespace bootModelNamespace,
 				NamespaceImpl runtimeModelNamespace) {
 			for ( MappedTable mappedTable : bootModelNamespace.getTables() ) {
-				final InflightTable runtimeTable = mappedTable.generateRuntimeTable(
-						namingStrategy,
-						jdbcEnvironment,
-						identifierGeneratorFactory
-				);
-				runtimeModelNamespace.addTable( runtimeTable );
-
-				final Map<MappedColumn,Column> tableColumnXref = new HashMap<>();
-
-				for ( MappedColumn mappedColumn : mappedTable.getMappedColumns() ) {
-					final Column column = mappedColumn.generateRuntimeColumn(
-							runtimeTable,
+				if ( mappedTable.isExportable() ) {
+					final InflightTable runtimeTable = mappedTable.generateRuntimeTable(
 							namingStrategy,
-							jdbcEnvironment
+							jdbcEnvironment,
+							identifierGeneratorFactory,
+							callback
 					);
-					runtimeTable.addColumn( column );
-					callback.columnBuilt( mappedColumn, column );
-					tableColumnXref.put( mappedColumn, column );
+					runtimeModelNamespace.addTable( runtimeTable );
 				}
-
-				final MappedPrimaryKey bootPk = mappedTable.getPrimaryKey();
-				if ( bootPk != null ) {
-					for ( org.hibernate.mapping.Column mappedColumn : bootPk.getColumns() ) {
-						final Column column = tableColumnXref.get( mappedColumn );
-						if ( !PhysicalColumn.class.isInstance( column ) ) {
-							throw new MappingException( "FK column must be a physical column" );
-						}
-						runtimeTable.getPrimaryKey().addColumn( (PhysicalColumn) column );
-					}
-					callback.primaryKeyBuilt( bootPk, runtimeTable.getPrimaryKey() );
-				}
-
-				final Iterator<org.hibernate.mapping.UniqueKey> bootUkIterator = mappedTable.getUniqueKeyIterator();
-				while ( bootUkIterator.hasNext() ) {
-					final org.hibernate.mapping.UniqueKey bootUk = bootUkIterator.next();
-					final UniqueKey runtimeUk = runtimeTable.createUniqueKey( bootUk.getName() );
-					for ( org.hibernate.mapping.Column mappedColumn : bootUk.getColumns() ) {
-						final Column column = tableColumnXref.get( mappedColumn );
-						if ( !PhysicalColumn.class.isInstance( column ) ) {
-							throw new MappingException( "UK column must be a physical column" );
-						}
-						runtimeUk.addColumn( (PhysicalColumn) column, bootUk.getColumnOrderMap().get( column ) );
-					}
-					callback.uniqueKeyBuilt( bootUk, runtimeUk );
-				}
-
-				callback.tableBuilt( mappedTable, runtimeTable );
 			}
 		}
 
@@ -214,16 +181,21 @@ public class RuntimeDatabaseModelProducer {
 							assert bootFk.isReferenceToPrimaryKey();
 
 							// use PK
-							final List<PhysicalColumn> runtimeTargetPkColumns = runtimeTargetTable.getPrimaryKey().getColumns();
-							assertSameNumberOfFkColumns( bootReferringColumns, runtimeTargetPkColumns );
+							if ( runtimeTargetTable.hasPrimaryKey() ) {
+								final List<PhysicalColumn> runtimeTargetPkColumns = runtimeTargetTable.getPrimaryKey()
+										.getColumns();
 
-							for ( int i = 0; i < runtimeTargetPkColumns.size(); i++ ) {
-								columnMappingList.add(
-										new ColumnMappingImpl(
-												(PhysicalColumn) dbObjectResolver.resolveColumn( bootReferringColumns.get( i ) ),
-												runtimeTargetPkColumns.get( i )
-										)
-								);
+								assertSameNumberOfFkColumns( bootReferringColumns, runtimeTargetPkColumns );
+
+								for ( int i = 0; i < runtimeTargetPkColumns.size(); i++ ) {
+									columnMappingList.add(
+											new ColumnMappingImpl(
+													(PhysicalColumn) dbObjectResolver.resolveColumn(
+															bootReferringColumns.get( i ) ),
+													runtimeTargetPkColumns.get( i )
+											)
+									);
+								}
 							}
 						}
 						else {

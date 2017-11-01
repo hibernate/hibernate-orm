@@ -122,7 +122,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		this.javaTypeDescriptorRegistry = new JavaTypeDescriptorRegistry( this );
 		this.sqlTypeDescriptorRegistry = new SqlTypeDescriptorRegistry( this );
 		this.basicTypeRegistry = new BasicTypeRegistry( this );
-
+		StandardBasicTypes.prime( this );
 		this.initialized = true;
 	}
 

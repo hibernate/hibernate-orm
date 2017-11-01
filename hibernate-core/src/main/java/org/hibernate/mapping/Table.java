@@ -9,6 +9,7 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -29,8 +30,11 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.relational.internal.InflightTable;
 import org.hibernate.metamodel.model.relational.spi.DerivedTable;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
+import org.hibernate.metamodel.model.relational.spi.PrimaryKey;
+import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
 import org.hibernate.naming.Identifier;
 import org.hibernate.naming.QualifiedTableName;
 
@@ -39,7 +43,7 @@ import org.jboss.logging.Logger;
 /**
  * A relational table
  *
- * @author Gavin King
+ * @author Gavin KingF
  */
 @SuppressWarnings("unchecked")
 public class Table implements MappedTable, Serializable {
@@ -81,9 +85,9 @@ public class Table implements MappedTable, Serializable {
 			MappedNamespace namespace,
 			Identifier tableName,
 			boolean isAbstract) {
+		this.name = tableName;
 		this.catalog = namespace.getCatalogName();
 		this.schema = namespace.getSchemaName();
-		this.name = tableName;
 		this.isAbstract = isAbstract;
 	}
 
@@ -742,33 +746,98 @@ public class Table implements MappedTable, Serializable {
 	public InflightTable generateRuntimeTable(
 			PhysicalNamingStrategy namingStrategy,
 			JdbcEnvironment jdbcEnvironment,
-			IdentifierGeneratorFactory identifierGeneratorFactory) {
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			RuntimeDatabaseModelProducer.Callback callback) {
 
+		InflightTable runtimeTable;
 		if ( getSubselect() != null ) {
-			return new DerivedTable( getSubselect(), isAbstract() );
+			runtimeTable = new DerivedTable( getSubselect(), isAbstract() );
+		}
+		else {
+			runtimeTable = createRuntimePhysicalTable( namingStrategy, jdbcEnvironment, identifierGeneratorFactory );
 		}
 
-		final PhysicalTable table = new PhysicalTable(
+		addColumnsToInflightTable( runtimeTable, namingStrategy, jdbcEnvironment, callback );
+		callback.tableBuilt( this, runtimeTable );
+		return runtimeTable;
+	}
+
+	private void addColumnsToInflightTable(
+			InflightTable runtimeTable,
+			PhysicalNamingStrategy namingStrategy,
+			JdbcEnvironment jdbcEnvironment,
+			RuntimeDatabaseModelProducer.Callback callback) {
+		final Map<MappedColumn, org.hibernate.metamodel.model.relational.spi.Column> tableColumnXref = new HashMap<>();
+
+		for ( MappedColumn mappedColumn : getMappedColumns() ) {
+			final org.hibernate.metamodel.model.relational.spi.Column column = mappedColumn.generateRuntimeColumn(
+					runtimeTable,
+					namingStrategy,
+					jdbcEnvironment
+			);
+			runtimeTable.addColumn( column );
+			callback.columnBuilt( mappedColumn, column );
+			tableColumnXref.put( mappedColumn, column );
+		}
+
+		if ( getPrimaryKey() != null ) {
+			PrimaryKey runtimeTablePrimaryKey = new PrimaryKey( runtimeTable );
+			for ( Column mappedColumn : getPrimaryKey().getColumns() ) {
+				final org.hibernate.metamodel.model.relational.spi.Column column = tableColumnXref.get( mappedColumn );
+				if ( !PhysicalColumn.class.isInstance( column ) ) {
+					throw new MappingException( "FK column must be a physical column" );
+				}
+				runtimeTablePrimaryKey.addColumn( (PhysicalColumn) column );
+				runtimeTable.addPrimaryKey( runtimeTablePrimaryKey );
+			}
+			callback.primaryKeyBuilt( primaryKey, runtimeTable.getPrimaryKey() );
+		}
+		getUniqueKeyIterator().forEachRemaining(  bootUk -> {
+			final org.hibernate.metamodel.model.relational.spi.UniqueKey runtimeUk = runtimeTable.createUniqueKey(
+					bootUk.getName() );
+			for ( Column mappedColumn : bootUk.getColumns() ) {
+				final org.hibernate.metamodel.model.relational.spi.Column column = tableColumnXref.get( mappedColumn );
+				if ( !PhysicalColumn.class.isInstance( column ) ) {
+					throw new MappingException( "UK column must be a physical column" );
+				}
+				runtimeUk.addColumn( (PhysicalColumn) column, bootUk.getColumnOrderMap().get( column ) );
+			}
+			callback.uniqueKeyBuilt( bootUk, runtimeUk );
+		} );
+	}
+
+	private InflightTable createRuntimePhysicalTable(
+			PhysicalNamingStrategy namingStrategy,
+			JdbcEnvironment jdbcEnvironment,
+			IdentifierGeneratorFactory identifierGeneratorFactory) {
+		final PhysicalTable runtimeTable = new PhysicalTable(
 				catalog,
 				schema,
 				name,
 				isAbstract(),
-				hasPrimaryKey(),
 				getComment(),
 				namingStrategy,
 				jdbcEnvironment
 		);
 
-		if ( hasPrimaryKey() && getIdentifierValue() != null && getIdentifierValue().isIdentityColumn(
-				identifierGeneratorFactory ) ) {
-			table.setPrimaryKeyIdentity( true );
+		if ( primaryKey != null && getIdentifierValue() != null
+				&& getIdentifierValue().isIdentityColumn( identifierGeneratorFactory ) ) {
+			runtimeTable.setPrimaryKeyIdentity( true );
 		}
-		table.setCheckConstraints( getCheckConstraints() );
+
+		runtimeTable.setCheckConstraints( getCheckConstraints() );
 
 		for ( MappedIndex index : indexes.values() ) {
-			table.addIndex( index.generateRuntimeIndex( table, namingStrategy, jdbcEnvironment ) );
+			runtimeTable.addIndex( index.generateRuntimeIndex(
+					runtimeTable,
+					namingStrategy,
+					jdbcEnvironment
+			) );
 		}
 
-		return table;
+		for ( InitCommand initCommand : getInitCommands() ) {
+			runtimeTable.addInitCommand( initCommand );
+		}
+		return runtimeTable;
 	}
 }

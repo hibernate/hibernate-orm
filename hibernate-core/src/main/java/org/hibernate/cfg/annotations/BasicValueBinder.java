@@ -29,6 +29,7 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.type.internal.BasicTypeResolverExplicitNamedImpl;
 import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -399,122 +400,7 @@ public class BasicValueBinder<T> {
 		LOG.debugf( "Starting fillSimpleValue for %s", propertyName );
 		basicValue.setBasicTypeResolver( basicTypeResolver );
 
-//		if ( converterDescriptor != null ) {
-//			if ( ! BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
-//				throw new AnnotationException(
-//						String.format(
-//								"AttributeConverter and explicit Type cannot be applied to same attribute [%s.%s];" +
-//										"remove @Type or specify @Convert(disableConversion = true)",
-//								persistentClassName,
-//								propertyName
-//						)
-//				);
-//			}
-//			LOG.debugf(
-//					"Applying JPA AttributeConverter [%s] to [%s:%s]",
-//					converterDescriptor,
-//					persistentClassName,
-//					propertyName
-//			);
-//
-//			basicTypeResolver = new
-//
-//			producer = buildingContext.getBootstrapContext().getBasicTypeResolverRegistry().makeUnregisteredProducer();
-//			((BasicValue)basicValue).setJpaAttributeConverterDescriptor( converterDescriptor );
-//		}
-//		else {
-//			if ( !BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
-//				producer = buildingContext.getBootstrapContext().getBasicTypeProducerRegistry().resolve( explicitType );
-//			}
-//			else {
-//				BasicTypeProducer test = buildingContext.getBootstrapContext().getBasicTypeProducerRegistry().resolve( returnedClassName );
-//				if ( test != null ) {
-//					producer = test;
-//				}
-//				else {
-//					test = buildingContext.getBootstrapContext().getBasicTypeProducerRegistry().resolve( defaultType );
-//
-//					if ( test != null ) {
-//						producer = test;
-//					}
-//					else {
-//						producer = buildingContext.getBootstrapContext().getBasicTypeProducerRegistry().makeUnregisteredProducer();
-//					}
-//				}
-//			}
-//		}
-//
-//		basicValue.setBasicTypeResolver( resolver );
-//
-//		if ( persistentClassName != null || converterDescriptor != null ) {
-//			try {
-//				basicValue.setTypeUsingReflection( persistentClassName, propertyName );
-//			}
-//			catch (Exception e) {
-//				throw new MappingException(
-//						String.format(
-//								Locale.ROOT,
-//								"Unable to determine basic type mapping via reflection [%s -> %s]",
-//								persistentClassName,
-//								propertyName
-//						),
-//						e
-//				);
-//			}
-//		}
-//
-//		if ( !basicValue.isTypeSpecified() && isVersion() ) {
-//			basicValue.setTypeName( "integer" );
-//		}
-//
-//		// HHH-5205
-//		if ( timeStampVersionType != null ) {
-//			basicValue.setTypeName( timeStampVersionType );
-//		}
-		
-//		if ( basicValue.getTypeName() != null && basicValue.getTypeName().length() > 0
-//				&& basicValue.getBuildingContext().basicType( basicValue.getTypeName() ) == null ) {
-//			try {
-//				Class typeClass = buildingContext.getBootstrapContext().getClassLoaderAccess().classForName( basicValue.getTypeName() );
-//
-//				if ( typeClass != null && DynamicParameterizedType.class.isAssignableFrom( typeClass ) ) {
-//					Properties parameters = basicValue.getTypeParameters();
-//					if ( parameters == null ) {
-//						parameters = new Properties();
-//					}
-//					parameters.put( DynamicParameterizedType.IS_DYNAMIC, Boolean.toString( true ) );
-//					parameters.put( DynamicParameterizedType.RETURNED_CLASS, returnedClassName );
-//					parameters.put( DynamicParameterizedType.IS_PRIMARY_KEY, Boolean.toString( key ) );
-//
-//					parameters.put( DynamicParameterizedType.ENTITY, persistentClassName );
-//					parameters.put( DynamicParameterizedType.XPROPERTY, xproperty );
-//					parameters.put( DynamicParameterizedType.PROPERTY, xproperty.getName() );
-//					parameters.put( DynamicParameterizedType.ACCESS_TYPE, accessType.getType() );
-//					basicValue.setTypeParameters( parameters );
-//				}
-//			}
-//			catch (ClassLoadingException e) {
-//				throw new MappingException( "Could not determine type for: " + basicValue.getTypeName(), e );
-//			}
-//		}
 
-	}
-
-	private static class BasicTypeResolverExplicitNamedImpl implements BasicTypeResolver {
-		private final MetadataBuildingContext buildingContext;
-		private final String name;
-
-		BasicTypeResolverExplicitNamedImpl(MetadataBuildingContext buildingContext, String typeName) {
-			this.buildingContext = buildingContext;
-			this.name = typeName;
-		}
-
-		@Override
-		public <T> BasicType<T> resolveBasicType() {
-			return buildingContext.getBootstrapContext().getTypeConfiguration()
-					.getBasicTypeRegistry()
-					.getBasicType( name );
-		}
 	}
 
 	private static class BasicTypeResolverExplicitImpl implements BasicTypeResolver {
@@ -580,7 +466,7 @@ public class BasicValueBinder<T> {
 
 	private static class BasicTypeResolverMapKeyImpl
 			extends BasicTypeResolverConvertibleSupport
-			implements BasicTypeResolver, JdbcRecommendedSqlTypeMappingContext, BasicTypeParameters {
+			implements JdbcRecommendedSqlTypeMappingContext, BasicTypeParameters {
 		private final XProperty mapAttribute;
 
 		private final BasicJavaDescriptor javaDescriptor;
@@ -682,7 +568,7 @@ public class BasicValueBinder<T> {
 
 	private static class BasicTypeResolverListIndexImpl
 			extends BasicTypeResolverSupport<Integer>
-			implements BasicTypeResolver, JdbcRecommendedSqlTypeMappingContext, BasicTypeParameters {
+			implements JdbcRecommendedSqlTypeMappingContext, BasicTypeParameters {
 		private final MetadataBuildingContext buildingContext;
 		private final XProperty listAttribute;
 
@@ -716,7 +602,7 @@ public class BasicValueBinder<T> {
 
 	private static class BasicTypeResolverAttributeImpl
 			extends BasicTypeResolverConvertibleSupport
-			implements BasicTypeResolver, JdbcRecommendedSqlTypeMappingContext, BasicTypeParameters {
+			implements JdbcRecommendedSqlTypeMappingContext, BasicTypeParameters {
 
 		private final BasicJavaDescriptor javaDescriptor;
 		private final TemporalType temporalPrecision;

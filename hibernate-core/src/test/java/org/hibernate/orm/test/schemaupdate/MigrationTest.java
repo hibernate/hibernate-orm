@@ -35,7 +35,7 @@ public class MigrationTest extends BaseSchemaUnitTestCase {
 		createSchemaExport().execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.BOTH );
 
 		// update the schema
-		createSchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ) );
+		createSchemaUpdate().setHaltOnError( true ).execute( EnumSet.of( TargetType.DATABASE ) );
 	}
 
 	@Entity

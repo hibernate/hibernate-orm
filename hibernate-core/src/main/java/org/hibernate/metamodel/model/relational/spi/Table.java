@@ -21,6 +21,8 @@ public interface Table {
 
 	PrimaryKey getPrimaryKey();
 
+	boolean hasPrimaryKey();
+
 	boolean isAbstract();
 
 	boolean isExportable();

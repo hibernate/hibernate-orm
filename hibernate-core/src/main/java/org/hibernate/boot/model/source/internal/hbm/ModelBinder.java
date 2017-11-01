@@ -39,6 +39,7 @@ import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.internal.SourceHelper;
+import org.hibernate.boot.model.source.spi.AnyDiscriminatorSource;
 import org.hibernate.boot.model.source.spi.AnyMappingSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.model.source.spi.AttributeRole;
@@ -86,6 +87,7 @@ import org.hibernate.boot.model.source.spi.SubclassEntitySource;
 import org.hibernate.boot.model.source.spi.TableSource;
 import org.hibernate.boot.model.source.spi.TableSpecificationSource;
 import org.hibernate.boot.model.source.spi.VersionAttributeSource;
+import org.hibernate.boot.model.type.internal.BasicTypeResolverExplicitNamedImpl;
 import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -1129,7 +1131,7 @@ public class ModelBinder {
 				sourceDocument,
 				rootEntityDescriptor.getTable()
 		);
-		rootEntityDescriptor.setDiscriminator( discriminatorValue );
+		rootEntityDescriptor.setDiscriminatorValueMapping( discriminatorValue );
 
 		String typeName = hierarchySource.getDiscriminatorSource().getExplicitHibernateTypeName();
 		if ( typeName == null ) {
@@ -2368,12 +2370,19 @@ public class ModelBinder {
 		final BasicTypeResolver identifierTypeResolver = new HbmBasicTypeResolverImpl( sourceDocument, anyMapping.getKeySource().getTypeSource() );
 		anyBinding.setIdentifierTypeResolver( identifierTypeResolver );
 
-		final BasicTypeResolver discriminatorTypeResolver = new HbmBasicTypeResolverImpl( sourceDocument, anyMapping.getDiscriminatorSource().getTypeSource() );
+		final AnyDiscriminatorSource discriminatorSource = anyMapping.getDiscriminatorSource();
+
+		String discriminatorTypeName = discriminatorSource.getTypeSource().getName();
+		final BasicTypeResolver discriminatorTypeResolver = new BasicTypeResolverExplicitNamedImpl(
+				sourceDocument,
+				discriminatorTypeName
+		);
 		anyBinding.setDiscriminatorTypeResolver( discriminatorTypeResolver );
 
 		final BasicType discriminatorType = discriminatorTypeResolver.resolveBasicType();
 
-		for ( Map.Entry<String,String> discriminatorValueMappings : anyMapping.getDiscriminatorSource().getValueMappings().entrySet() ) {
+		for ( Map.Entry<String,String> discriminatorValueMappings : discriminatorSource
+				.getValueMappings().entrySet() ) {
 			try {
 				final Object discriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( discriminatorValueMappings.getKey() );
 				final String mappedEntityName = sourceDocument.qualifyClassName( discriminatorValueMappings.getValue() );
@@ -2397,14 +2406,14 @@ public class ModelBinder {
 
 		relationalObjectBinder.bindColumnOrFormula(
 				sourceDocument,
-				anyMapping.getDiscriminatorSource().getRelationalValueSource(),
+				discriminatorSource.getRelationalValueSource(),
 				anyBinding,
 				true,
 				new RelationalObjectBinder.ColumnNamingDelegate() {
 					@Override
 					public Identifier determineImplicitName(LocalMetadataBuildingContext context) {
 						return implicitNamingStrategy.determineAnyDiscriminatorColumnName(
-								anyMapping.getDiscriminatorSource()
+								discriminatorSource
 						);
 					}
 				}
@@ -2781,9 +2790,9 @@ public class ModelBinder {
 
 			if ( !StringHelper.isEmpty( typeSource.getName() ) ) {
 				basicValue.setBasicTypeResolver(
-						new HbmBasicTypeResolverImpl(
+						new BasicTypeResolverExplicitNamedImpl(
 								mappingDocument,
-								typeSource
+								typeSource.getName()
 						)
 				);
 			}

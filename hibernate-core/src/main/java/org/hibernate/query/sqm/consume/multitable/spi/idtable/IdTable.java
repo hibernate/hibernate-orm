@@ -26,7 +26,6 @@ public class IdTable extends PhysicalTable {
 			QualifiedTableName physicalQualifiedName) {
 		super(
 				physicalQualifiedName,
-				false,
 				true,
 				"Table used to temporarily hold id values for the entity " + entityDescriptor.getEntityName()
 		);

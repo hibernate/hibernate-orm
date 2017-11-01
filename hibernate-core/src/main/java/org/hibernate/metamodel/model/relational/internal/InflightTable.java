@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.relational.internal;
 
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
+import org.hibernate.metamodel.model.relational.spi.PrimaryKey;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 
@@ -26,4 +27,6 @@ public interface InflightTable extends Table {
 			ForeignKey.ColumnMappings columnMappings);
 
 	UniqueKey createUniqueKey(String name);
+
+	void addPrimaryKey(PrimaryKey primaryKey);
 }

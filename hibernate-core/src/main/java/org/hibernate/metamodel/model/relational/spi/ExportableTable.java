@@ -27,8 +27,6 @@ public interface ExportableTable extends Table, Exportable {
 
 	Collection<PhysicalColumn> getPhysicalColumns();
 
-	boolean hasPrimaryKey();
-
 	String getComment();
 
 	Collection<UniqueKey> getUniqueKeys();

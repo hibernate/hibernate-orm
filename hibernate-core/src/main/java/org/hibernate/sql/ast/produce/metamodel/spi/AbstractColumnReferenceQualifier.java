@@ -13,7 +13,6 @@ import java.util.TreeMap;
 import org.hibernate.HibernateException;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.metamodel.model.relational.spi.UnionSubclassTable;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
@@ -49,11 +48,11 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 			return getPrimaryTableReference();
 		}
 
-		if ( getPrimaryTableReference().getTable() instanceof UnionSubclassTable ) {
-			if ( ( (UnionSubclassTable) getPrimaryTableReference().getTable() ).includes( table ) ) {
-				return getPrimaryTableReference();
-			}
-		}
+//		if ( getPrimaryTableReference().getTable() instanceof UnionSubclassTable ) {
+//			if ( ( (UnionSubclassTable) getPrimaryTableReference().getTable() ).includes( table ) ) {
+//				return getPrimaryTableReference();
+//			}
+//		}
 
 		for ( TableReferenceJoin tableJoin : getTableReferenceJoins() ) {
 			if ( tableJoin.getJoinedTableBinding().getTable() == table ) {

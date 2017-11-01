@@ -9,6 +9,7 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.Locale;
 
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
@@ -27,7 +28,7 @@ import static org.hibernate.mapping.SimpleValue.*;
  *
  * @author Gavin King
  */
-public class Column implements Selectable, Serializable, Cloneable {
+public class Column implements MappedColumn, Serializable, Cloneable {
 	private Identifier tableName;
 	private Identifier name;
 

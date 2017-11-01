@@ -38,6 +38,7 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 	private boolean isLob;
 	private AttributeConverterDescriptor attributeConverterDescriptor;
 	private BasicTypeResolver basicTypeResolver;
+	private BasicType basicType;
 
 	public BasicValue(MetadataBuildingContext buildingContext, MappedTable table) {
 		super( buildingContext, table );
@@ -140,7 +141,10 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 
 	@Override
 	public BasicType resolveType() {
-		return basicTypeResolver.resolveBasicType();
+		if ( basicType == null ) {
+			basicType = basicTypeResolver.resolveBasicType();
+		}
+		return basicType;
 	}
 
 	@Override
@@ -201,7 +205,6 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 				sqlTypeDescriptor = javaTypeDescriptor.getJdbcRecommendedSqlType(
 						buildingContext.getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry().getBaseJdbcRecommendedSqlTypeMappingContext()
 				);
-
 			}
 			else {
 				javaTypeDescriptor = converterDefinition.getDomainType();

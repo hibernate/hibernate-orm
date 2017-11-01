@@ -22,6 +22,7 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.metamodel.model.relational.internal.InflightTable;
 import org.hibernate.metamodel.model.relational.spi.Exportable;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
+import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
 import org.hibernate.naming.Identifier;
 import org.hibernate.naming.QualifiedTableName;
 
@@ -174,5 +175,7 @@ public interface MappedTable extends Loggable {
 	InflightTable generateRuntimeTable(
 			PhysicalNamingStrategy namingStrategy,
 			JdbcEnvironment jdbcEnvironment,
-			IdentifierGeneratorFactory identifierGeneratorFactory);
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			RuntimeDatabaseModelProducer.Callback callback
+	);
 }

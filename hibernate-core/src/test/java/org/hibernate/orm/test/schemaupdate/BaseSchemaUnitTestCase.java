@@ -12,6 +12,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -30,8 +31,9 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
-import org.hibernate.tool.schema.spi.SchemaCreator;
 import org.hibernate.tool.schema.spi.SchemaFilter;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
+import org.hibernate.tool.schema.spi.SchemaMigrator;
 
 import org.junit.After;
 import org.junit.Before;
@@ -48,7 +50,7 @@ public abstract class BaseSchemaUnitTestCase {
 	protected static final Class<?>[] NO_CLASSES = new Class[0];
 	protected static final String[] NO_MAPPINGS = new String[0];
 
-	@Parameterized.Parameters
+	@Parameterized.Parameters(name = "JdbcMetadaAccessStrategy : {0}")
 	public static Collection<String> parameters() {
 		return Arrays.asList(
 				new String[] {
@@ -63,6 +65,7 @@ public abstract class BaseSchemaUnitTestCase {
 
 	private StandardServiceRegistry standardServiceRegistry;
 	private DatabaseModel databaseModel;
+	private MetadataImplementor metadata;
 
 	private File output;
 
@@ -72,12 +75,14 @@ public abstract class BaseSchemaUnitTestCase {
 			createTempOutputFile();
 		}
 		catch (IOException e) {
-			fail("Fail creating temporary file" + e.getMessage());
+			fail( "Fail creating temporary file" + e.getMessage() );
 		}
 
 		standardServiceRegistry = buildServiceRegistry();
 
-		final MetadataImplementor metadata = buildMetadata();
+		metadata = buildMetadata();
+		metadata.validate();
+		afterMetadataCreation( metadata );
 
 		databaseModel = Helper.buildDatabaseModel( metadata );
 	}
@@ -102,6 +107,10 @@ public abstract class BaseSchemaUnitTestCase {
 		return databaseModel;
 	}
 
+	public MetadataImplementor getMetadata() {
+		return metadata;
+	}
+
 	public SchemaUpdate createSchemaUpdate() {
 		SchemaUpdate schemaUpdate = new SchemaUpdate( databaseModel, standardServiceRegistry );
 		if ( createSqlScriptTempOutputFile() ) {
@@ -120,6 +129,12 @@ public abstract class BaseSchemaUnitTestCase {
 
 	public SchemaValidator createSchemaValidator() {
 		return new SchemaValidator( databaseModel, standardServiceRegistry );
+	}
+
+	public SchemaMigrator createSchemaMigrator() {
+		return getStandardServiceRegistry()
+				.getService( SchemaManagementTool.class )
+				.getSchemaMigrator( getDatabaseModel(), Collections.emptyMap() );
 	}
 
 	public SchemaCreatorImpl createSchemaCreator(SchemaFilter filter) {
@@ -150,7 +165,7 @@ public abstract class BaseSchemaUnitTestCase {
 		return Files.readAllLines( output.toPath(), Charset.defaultCharset() );
 	}
 
-	public Dialect getDialect(){
+	public Dialect getDialect() {
 		return databaseModel.getJdbcEnvironment().getDialect();
 	}
 
@@ -176,6 +191,11 @@ public abstract class BaseSchemaUnitTestCase {
 
 	protected boolean dropSchemaAfterTest() {
 		return true;
+	}
+
+
+	protected void afterMetadataCreation(MetadataImplementor metadata){
+
 	}
 
 	private void createTempOutputFile() throws IOException {

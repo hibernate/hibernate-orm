@@ -24,12 +24,10 @@ import static java.util.stream.Collectors.toCollection;
  */
 public class PhysicalTable extends AbstractTable implements ExportableTable {
 	private final QualifiedTableName qualifiedTableName;
-	private boolean hasPrimaryKey;
 	private boolean primaryKeyIdentity;
 	private String comment;
 	private List<String> checkConstraints = new ArrayList<>();
 	private List<Index> indexes = new ArrayList<>();
-	private List<UniqueKey> uniqueKeys = new ArrayList<>();
 	private List<InitCommand> initCommands = new ArrayList<>();
 
 	public PhysicalTable(
@@ -37,7 +35,6 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 			Identifier logicalSchemaName,
 			Identifier logicalTableName,
 			boolean isAbstract,
-			boolean hasPrimaryKey,
 			String comment,
 			PhysicalNamingStrategy namingStrategy,
 			JdbcEnvironment jdbcEnvironment) {
@@ -48,26 +45,6 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 						namingStrategy.toPhysicalTableName( logicalTableName, jdbcEnvironment )
 				),
 				isAbstract,
-				hasPrimaryKey,
-				comment
-		);
-	}
-
-	public PhysicalTable(
-			QualifiedTableName logicalQualifiedName,
-			boolean isAbstract,
-			boolean hasPrimaryKey,
-			String comment,
-			PhysicalNamingStrategy namingStrategy,
-			JdbcEnvironment jdbcEnvironment) {
-		this(
-				new QualifiedTableName(
-						namingStrategy.toPhysicalCatalogName( logicalQualifiedName.getCatalogName(), jdbcEnvironment ),
-						namingStrategy.toPhysicalSchemaName( logicalQualifiedName.getSchemaName(), jdbcEnvironment ),
-						namingStrategy.toPhysicalTableName( logicalQualifiedName.getTableName(), jdbcEnvironment )
-				),
-				isAbstract,
-				hasPrimaryKey,
 				comment
 		);
 	}
@@ -75,11 +52,9 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 	public PhysicalTable(
 			QualifiedTableName physicalQualifiedName,
 			boolean isAbstract,
-			boolean hasPrimaryKey,
 			String comment) {
 		super( isAbstract );
 		this.qualifiedTableName = physicalQualifiedName;
-		this.hasPrimaryKey = hasPrimaryKey;
 		this.comment = comment;
 	}
 
@@ -152,11 +127,6 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 	}
 
 	@Override
-	public boolean hasPrimaryKey() {
-		return hasPrimaryKey;
-	}
-
-	@Override
 	public String getComment() {
 		return comment;
 	}
@@ -195,11 +165,6 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 
 	public void addIndex(Index index) {
 		this.indexes.add( index );
-	}
-
-	@Override
-	public Collection<UniqueKey> getUniqueKeys() {
-		return uniqueKeys;
 	}
 
 	private String render(Identifier identifier) {

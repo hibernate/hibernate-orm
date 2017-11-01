@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.relational;
 
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.metamodel.model.relational.spi.Table;
@@ -18,7 +19,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface MappedColumn {
+public interface MappedColumn extends Selectable {
 	/**
 	 * The column text.  For a physical column, this would be its name.  For
 	 * a derived columns, this would be the formula expression.

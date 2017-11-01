@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.schemaupdate;
 
-import java.io.IOException;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Map;

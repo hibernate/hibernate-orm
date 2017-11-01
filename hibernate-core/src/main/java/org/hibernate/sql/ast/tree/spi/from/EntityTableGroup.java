@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.metamodel.model.relational.spi.UnionSubclassTable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
@@ -70,11 +69,11 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 			return primaryTableReference;
 		}
 
-		if ( primaryTableReference.getTable() instanceof UnionSubclassTable ) {
-			if ( ( (UnionSubclassTable) primaryTableReference.getTable() ).includes( table ) ) {
-				return primaryTableReference;
-			}
-		}
+//		if ( primaryTableReference.getTable() instanceof UnionSubclassTable ) {
+//			if ( ( (UnionSubclassTable) primaryTableReference.getTable() ).includes( table ) ) {
+//				return primaryTableReference;
+//			}
+//		}
 
 		for ( TableReferenceJoin tableJoin : tableReferenceJoins ) {
 			if ( tableJoin.getJoinedTableBinding().getTable() == table ) {

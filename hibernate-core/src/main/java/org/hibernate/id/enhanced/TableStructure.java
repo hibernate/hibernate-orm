@@ -270,7 +270,7 @@ public class TableStructure implements DatabaseStructure {
 				" where " + valueColumnNameText + "=?";
 
 		ExportableColumn valueColumn = new ExportableColumn(
-				database,
+				dialect,
 				table,
 				valueColumnNameText,
 				StandardSpiBasicTypes.LONG

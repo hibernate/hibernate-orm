@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -21,7 +22,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  * A formula is a derived column value
  * @author Gavin King
  */
-public class Formula implements Selectable, Serializable {
+public class Formula implements MappedColumn, Serializable {
 	private static int formulaUniqueInteger;
 
 	private String formula;

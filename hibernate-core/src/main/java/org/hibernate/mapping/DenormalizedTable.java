@@ -7,19 +7,18 @@
 package org.hibernate.mapping;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.boot.model.relational.DenormalizedMappedTable;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.naming.Identifier;
-import org.hibernate.metamodel.model.relational.internal.InflightTable;
-import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 
 /**
  * @author Gavin King
@@ -28,12 +27,11 @@ import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 public class DenormalizedTable extends Table implements DenormalizedMappedTable {
 	private final MappedTable includedTable;
 
-	public DenormalizedTable(Table includedTable) {
-		this.includedTable = includedTable;
-		includedTable.setHasDenormalizedTables();
-	}
-
-	public DenormalizedTable(MappedNamespace namespace, Identifier tableName, boolean isAbstract, MappedTable includedTable) {
+	public DenormalizedTable(
+			MappedNamespace namespace,
+			Identifier tableName,
+			boolean isAbstract,
+			MappedTable includedTable) {
 		super( namespace, tableName, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
@@ -50,26 +48,20 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable 
 		includedTable.setHasDenormalizedTables();
 	}
 
-	public DenormalizedTable(MappedNamespace namespace, String subselect, boolean isAbstract, MappedTable includedTable) {
+	public DenormalizedTable(
+			MappedNamespace namespace,
+			String subselect,
+			boolean isAbstract,
+			MappedTable includedTable) {
 		super( namespace, subselect, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}
 
-
-	@Override
-	public InflightTable generateRuntimeTable(
-			PhysicalNamingStrategy namingStrategy,
-			JdbcEnvironment jdbcEnvironment,
-			IdentifierGeneratorFactory identifierGeneratorFactory) {
-		// todo (6.0) : build the UnionSubclassTable
-		throw new NotYetImplementedException();
-	}
-
 	@Override
 	public void createForeignKeys() {
 		includedTable.createForeignKeys();
-		for( ForeignKey fk :includedTable.getForeignKeys()){
+		for ( ForeignKey fk : includedTable.getForeignKeys() ) {
 			createForeignKey(
 					Constraint.generateName(
 							fk.generatedConstraintNamePrefix(),
@@ -95,6 +87,7 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable 
 		}
 	}
 
+	@Override
 	public Column getColumn(Identifier name) {
 		Column superColumn = super.getColumn( name );
 		if ( superColumn != null ) {
@@ -111,6 +104,14 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable 
 				includedTable.getColumnIterator(),
 				super.getColumnIterator()
 		);
+	}
+
+	@Override
+	public Set<MappedColumn> getMappedColumns() {
+		Set<MappedColumn> mappedColumns = new HashSet<>();
+		mappedColumns.addAll( includedTable.getMappedColumns() );
+		mappedColumns.addAll( super.getMappedColumns() );
+		return Collections.unmodifiableSet( mappedColumns );
 	}
 
 	@Override

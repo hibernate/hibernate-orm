@@ -19,7 +19,7 @@ import org.hibernate.naming.Identifier;
  * @author Steve Ebersole
  */
 public abstract class AbstractTable implements InflightTable {
-	private final PrimaryKey primaryKey = new PrimaryKey( this );
+	private PrimaryKey primaryKey = null;
 	private List<ForeignKey> foreignKeys = new ArrayList<>();
 	private List<UniqueKey> uniqueKeys = new ArrayList<>();
 	private final Map<String,Column> columnMap = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
@@ -90,5 +90,15 @@ public abstract class AbstractTable implements InflightTable {
 		final UniqueKey uniqueKey = new UniqueKey( Identifier.toIdentifier( name ), this );
 		uniqueKeys.add( uniqueKey );
 		return uniqueKey;
+	}
+
+	@Override
+	public void addPrimaryKey(PrimaryKey primaryKey) {
+		this.primaryKey = primaryKey;
+	}
+
+	@Override
+	public boolean hasPrimaryKey() {
+		return primaryKey != null;
 	}
 }

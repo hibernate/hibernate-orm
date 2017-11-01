@@ -6,6 +6,7 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -45,21 +46,23 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 		final String[] columnNames = new String[ numberOfColumns ];
 		final String[] targetColumnNames = new String[ numberOfColumns ];
 
-		final List<PhysicalColumn> targetColumns;
+		List<PhysicalColumn> targetColumns = new ArrayList<>(  );
 		if ( foreignKey.isReferenceToPrimaryKey() ) {
-			targetColumns = foreignKey.getTargetTable().getPrimaryKey().getColumns();
-			if ( numberOfColumns != targetColumns.size() ) {
-				throw new AssertionFailure(
-						String.format(
-								Locale.ENGLISH,
-								COLUMN_MISMATCH_MSG,
-								numberOfColumns,
-								targetColumns.size(),
-								foreignKey.getName(),
-								( (ExportableTable) foreignKey.getReferringTable() ).getTableName(),
-								( (ExportableTable) foreignKey.getTargetTable() ).getTableName()
-						)
-				);
+			if ( foreignKey.getTargetTable().hasPrimaryKey() ) {
+				targetColumns = foreignKey.getTargetTable().getPrimaryKey().getColumns();
+				if ( numberOfColumns != targetColumns.size() ) {
+					throw new AssertionFailure(
+							String.format(
+									Locale.ENGLISH,
+									COLUMN_MISMATCH_MSG,
+									numberOfColumns,
+									targetColumns.size(),
+									foreignKey.getName(),
+									( (ExportableTable) foreignKey.getReferringTable() ).getTableName(),
+									( (ExportableTable) foreignKey.getTargetTable() ).getTableName()
+							)
+					);
+				}
 			}
 		}
 		else {

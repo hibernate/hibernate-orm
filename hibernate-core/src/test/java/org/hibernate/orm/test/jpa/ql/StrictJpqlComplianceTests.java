@@ -8,6 +8,10 @@ package org.hibernate.orm.test.jpa.ql;
 
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 
+import org.hibernate.testing.junit5.FailureExpected;
+
+import org.junit.jupiter.api.Test;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -34,5 +38,12 @@ public class StrictJpqlComplianceTests extends LenientJpqlComplianceTests {
 	protected void validateViolation(StrictJpaComplianceViolation violation) {
 		assertThat( violation.getType(), notNullValue() );
 		assertThat( violation.getType(), is( getCurrentViolationBeingChecked() ) );
+	}
+
+	@Override
+	@Test
+	@FailureExpected( "Need to add strict-compliance checking for indexed element access" )
+	public void testIndexedElementReference() {
+		super.testIndexedElementReference();
 	}
 }

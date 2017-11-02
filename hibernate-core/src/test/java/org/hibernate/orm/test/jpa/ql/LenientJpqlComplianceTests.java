@@ -10,6 +10,8 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.Person;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfLists;
+import org.hibernate.orm.test.support.domains.gambit.EntityOfMaps;
+import org.hibernate.orm.test.support.domains.gambit.EntityOfSets;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 
 import org.junit.jupiter.api.AfterEach;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.hibernate.query.sqm.StrictJpaComplianceViolation.Type.ALIASED_FETCH_JOIN;
 import static org.hibernate.query.sqm.StrictJpaComplianceViolation.Type.FUNCTION_CALL;
 import static org.hibernate.query.sqm.StrictJpaComplianceViolation.Type.IMPLICIT_SELECT;
+import static org.hibernate.query.sqm.StrictJpaComplianceViolation.Type.INDEXED_ELEMENT_REFERENCE;
 import static org.hibernate.query.sqm.StrictJpaComplianceViolation.Type.LIMIT_OFFSET_CLAUSE;
 import static org.hibernate.query.sqm.StrictJpaComplianceViolation.Type.SUBQUERY_ORDER_BY;
 import static org.hibernate.query.sqm.StrictJpaComplianceViolation.Type.UNMAPPED_POLYMORPHISM;
@@ -35,6 +38,8 @@ public class LenientJpqlComplianceTests extends BaseSqmUnitTest {
 		super.applyMetadataSources( metadataSources );
 		metadataSources.addAnnotatedClass( Person.class );
 		metadataSources.addAnnotatedClass( EntityOfLists.class );
+		metadataSources.addAnnotatedClass( EntityOfSets.class );
+		metadataSources.addAnnotatedClass( EntityOfMaps.class );
 	}
 
 	private StrictJpaComplianceViolation.Type violationChecked;
@@ -108,10 +113,26 @@ public class LenientJpqlComplianceTests extends BaseSqmUnitTest {
 	}
 
 	@Test
-	public void testCollectionValueFunctionNotSupportedInStrictMode() {
+	public void testCollectionValueFunctionOnNonMap() {
 		test(
 				"select value(b) from EntityOfLists e join e.listOfBasics b",
 				VALUE_FUNCTION_ON_NON_MAP
+		);
+		test(
+				"select value(b) from EntityOfSets e join e.setOfBasics b",
+				VALUE_FUNCTION_ON_NON_MAP
+		);
+	}
+
+	@Test
+	public void testIndexedElementReference() {
+		test(
+				"select b[0] from EntityOfLists e join e.listOfBasics b",
+				INDEXED_ELEMENT_REFERENCE
+		);
+		test(
+				"select b['name'] from EntityOfMaps e join e.basicToBasicMap b",
+				INDEXED_ELEMENT_REFERENCE
 		);
 	}
 }

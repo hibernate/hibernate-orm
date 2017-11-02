@@ -2367,22 +2367,19 @@ public class ModelBinder {
 			final AttributeRole attributeRole,
 			AttributePath attributePath) {
 
-		final BasicTypeResolver identifierTypeResolver = new HbmBasicTypeResolverImpl( sourceDocument, anyMapping.getKeySource().getTypeSource() );
-		anyBinding.setIdentifierTypeResolver( identifierTypeResolver );
-
 		final AnyDiscriminatorSource discriminatorSource = anyMapping.getDiscriminatorSource();
 
-		String discriminatorTypeName = discriminatorSource.getTypeSource().getName();
+		final BasicTypeResolver identifierTypeResolver = new HbmBasicTypeResolverImpl( sourceDocument, anyMapping.getKeySource().getTypeSource() );
 		final BasicTypeResolver discriminatorTypeResolver = new BasicTypeResolverExplicitNamedImpl(
 				sourceDocument,
-				discriminatorTypeName
+				discriminatorSource.getTypeSource().getName()
 		);
 		anyBinding.setDiscriminatorTypeResolver( discriminatorTypeResolver );
+		anyBinding.setIdentifierTypeResolver( identifierTypeResolver );
 
 		final BasicType discriminatorType = discriminatorTypeResolver.resolveBasicType();
 
-		for ( Map.Entry<String,String> discriminatorValueMappings : discriminatorSource
-				.getValueMappings().entrySet() ) {
+		for ( Map.Entry<String,String> discriminatorValueMappings : discriminatorSource.getValueMappings().entrySet() ) {
 			try {
 				final Object discriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( discriminatorValueMappings.getKey() );
 				final String mappedEntityName = sourceDocument.qualifyClassName( discriminatorValueMappings.getValue() );

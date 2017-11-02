@@ -135,7 +135,6 @@ import org.hibernate.boot.model.type.internal.BasicTypeResolverExplicitNamedImpl
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.annotations.BasicValueBinder;
 import org.hibernate.cfg.annotations.CollectionBinder;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.HCANNHelper;

@@ -27,6 +27,11 @@ import org.hibernate.naming.Identifier;
 public class DenormalizedTable extends Table implements DenormalizedMappedTable {
 	private final MappedTable includedTable;
 
+	public DenormalizedTable(Table includedTable) {
+		this.includedTable = includedTable;
+		includedTable.setHasDenormalizedTables();
+	}
+
 	public DenormalizedTable(
 			MappedNamespace namespace,
 			Identifier tableName,

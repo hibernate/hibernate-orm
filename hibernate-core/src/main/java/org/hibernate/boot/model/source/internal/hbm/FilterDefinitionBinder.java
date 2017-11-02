@@ -74,9 +74,10 @@ public class FilterDefinitionBinder {
 					parameterMap = new HashMap<>();
 				}
 
-				final BasicTypeResolver basicTypeResolver = new BasicTypeResolverExplicitNamedImpl( context,
-																									jaxbParameterMapping
-																											.getParameterValueTypeName()
+				final BasicTypeResolver basicTypeResolver = new BasicTypeResolverExplicitNamedImpl(
+						context,
+						jaxbParameterMapping
+								.getParameterValueTypeName()
 				);
 
 				parameterMap.put( jaxbParameterMapping.getParameterName(), basicTypeResolver.resolveBasicType() );

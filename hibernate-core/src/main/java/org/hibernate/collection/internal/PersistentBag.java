@@ -11,9 +11,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -510,18 +512,57 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		return bag.toString();
 	}
 
-	/**
-	 * Bag does not respect the collection API and do an
-	 * JVM instance comparison to do the equals.
-	 * The semantic is broken not to have to initialize a
-	 * collection for a simple equals() operation.
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 *
-	 * {@inheritDoc}
-	 */
 	@Override
 	public boolean equals(Object obj) {
-		return super.equals( obj );
+		read();
+		
+		if (!obj.getClass().equals(PersistentBag.class))
+		{
+			return false;
+		}
+		
+		PersistentBag other = (PersistentBag)obj;
+		
+		if (this.bag.size() != other.bag.size())
+		{
+			return false;
+		}
+
+		Map<Object, Integer> elementCounts = new HashMap<>(this.bag.size());
+
+		for (Object element : this.bag)
+		{
+			if (!elementCounts.containsKey(element))
+			{
+				elementCounts.put(element, 1);
+			}
+			else
+			{
+				elementCounts.put(element, elementCounts.get(element) + 1);
+			}
+		}
+
+		for (Object element : other.bag)
+		{
+			if (!elementCounts.containsKey(element))
+			{
+				return false;
+			}
+			else
+			{
+				elementCounts.put(element, elementCounts.get(element) - 1);
+			}
+		}
+
+		for (Integer count : elementCounts.values())
+		{
+			if (count != 0)
+			{
+				return false;
+			}
+		}
+		
+		return true;
 	}
 
 	@Override

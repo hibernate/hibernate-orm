@@ -92,9 +92,12 @@ public class PersistentBagEqualsTest {
 		PersistentBag bag1 = createBag();
 		bag1.add( "item1" );
 		bag1.add( "item1" );
+		bag1.add( "item2" );
 
 		PersistentBag bag2 = createBag();
 		bag2.add( "item1" );
+		bag2.add( "item2" );
+		bag2.add( "item2" );
 
 		assertEquals( bag1.equals( bag2 ), false );
 	}

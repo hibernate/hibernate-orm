@@ -21,9 +21,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.hamcrest.CoreMatchers;
-
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -48,47 +45,43 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 	@BeforeEach
 	public void createData() {
 		sessionFactoryScope().inTransaction(
-				session -> {
-					session.doWork(
-							connection -> {
-								final Statement statement = connection.createStatement();
+				session -> session.doWork(
+						connection -> {
+							final Statement statement = connection.createStatement();
+							try {
+								statement.execute(
+										"insert into EntityOfBasics( id, theString, gender, theInt ) values ( 1, 'Some name', 'M', -1 )" );
+							}
+							finally {
 								try {
-									statement.execute(
-											"insert into EntityOfBasics( id, theString, gender, theInt ) values ( 1, 'Some name', 'M', -1 )" );
+									statement.close();
 								}
-								finally {
-									try {
-										statement.close();
-									}
-									catch (SQLException ignore) {
-									}
+								catch (SQLException ignore) {
 								}
 							}
-					);
-				}
+						}
+				)
 		);
 	}
 
 	@AfterEach
 	public void dropData() {
 		sessionFactoryScope().inTransaction(
-				session -> {
-					session.doWork(
-							connection -> {
-								final Statement statement = connection.createStatement();
+				session -> session.doWork(
+						connection -> {
+							final Statement statement = connection.createStatement();
+							try {
+								statement.execute( "delete from EntityOfBasics" );
+							}
+							finally {
 								try {
-									statement.execute( "delete from EntityOfBasics" );
+									statement.close();
 								}
-								finally {
-									try {
-										statement.close();
-									}
-									catch (SQLException ignore) {
-									}
+								catch (SQLException ignore) {
 								}
 							}
-					);
-				}
+						}
+				)
 		);
 	}
 

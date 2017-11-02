@@ -77,7 +77,7 @@ public class DynamicInstantiationSmokeTests extends BaseSqmUnitTest {
 							connection -> {
 								final Statement statement = connection.createStatement();
 								try {
-									statement.execute( "delete EntityOfBasics" );
+									statement.execute( "delete from EntityOfBasics" );
 								}
 								finally {
 									try {

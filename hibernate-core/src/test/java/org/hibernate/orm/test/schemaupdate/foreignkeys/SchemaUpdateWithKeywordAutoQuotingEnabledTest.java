@@ -17,6 +17,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.orm.test.schemaupdate.BaseSchemaUnitTestCase;
 import org.hibernate.tool.schema.TargetType;
 
@@ -24,11 +25,18 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-11061")
 public class SchemaUpdateWithKeywordAutoQuotingEnabledTest extends BaseSchemaUnitTestCase {
+
+	@Override
+	protected boolean createSqlScriptTempOutputFile() {
+		return true;
+	}
 
 	@Override
 	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
@@ -52,10 +60,11 @@ public class SchemaUpdateWithKeywordAutoQuotingEnabledTest extends BaseSchemaUni
 	}
 
 	@Test
-	public void testUpdate() {
+	public void testUpdate() throws Exception {
 		createSchemaUpdate().setHaltOnError( true )
 				.setFormat( false )
-				.execute( EnumSet.of( TargetType.DATABASE ) );
+				.execute( EnumSet.of( TargetType.SCRIPT, TargetType.DATABASE ) );
+		assertTrue( StringHelper.isEmpty( getSqlScriptOutputFileContent() ) );
 	}
 
 	@Entity(name = "Match")

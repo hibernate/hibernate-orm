@@ -53,7 +53,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseSchemaUnitTestCase 
 
 		final List<String> sqlLines = getSqlScriptOutputFileLines();
 		assertThat(
-				"Expected alter table SCHEMA1.Child add constraint but is : " + sqlLines.get( 4 ),
+				"Expected alter table SCHEMA1.Child add constraint but is : " + sqlLines.get( sqlLines.size() - 1 ),
 				sqlLines.get( sqlLines.size() - 1 ).startsWith( "alter table " ),
 				is( true )
 		);

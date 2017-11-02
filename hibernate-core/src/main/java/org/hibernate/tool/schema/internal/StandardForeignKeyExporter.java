@@ -136,7 +136,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final String sourceTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				( (ExportableTable) foreignKey.getTargetTable()).getQualifiedTableName(),
+				( (ExportableTable) foreignKey.getReferringTable()).getQualifiedTableName(),
 				dialect
 		);
 		return new String[] {

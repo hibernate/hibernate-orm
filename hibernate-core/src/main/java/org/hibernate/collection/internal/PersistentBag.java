@@ -515,67 +515,56 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	@Override
 	public boolean equals(Object obj) {
 		read();
-		
-		if (!obj.getClass().equals(PersistentBag.class))
-		{
-			return false;
-		}
-		
-		PersistentBag other = (PersistentBag)obj;
-		
-		if (this.bag.size() != other.bag.size())
-		{
+
+		if ( !obj.getClass().equals( PersistentBag.class ) ) {
 			return false;
 		}
 
-		Map<Object, Integer> elementCounts = new HashMap<>(this.bag.size());
+		PersistentBag other = (PersistentBag) obj;
 
-		for (Object element : this.bag)
-		{
-			if (!elementCounts.containsKey(element))
-			{
-				elementCounts.put(element, 1);
+		if ( this.bag.size() != other.bag.size() ) {
+			return false;
+		}
+
+		Map<Object, Integer> elementCounts = new HashMap<>( this.bag.size() );
+
+		for ( Object element : this.bag ) {
+			if ( !elementCounts.containsKey( element ) ) {
+				elementCounts.put( element, 1 );
 			}
-			else
-			{
-				elementCounts.put(element, elementCounts.get(element) + 1);
+			else {
+				elementCounts.put( element, elementCounts.get( element ) + 1 );
 			}
 		}
 
-		for (Object element : other.bag)
-		{
-			if (!elementCounts.containsKey(element))
-			{
+		for ( Object element : other.bag ) {
+			if ( !elementCounts.containsKey( element ) ) {
 				return false;
 			}
-			else
-			{
-				elementCounts.put(element, elementCounts.get(element) - 1);
+			else {
+				elementCounts.put( element, elementCounts.get( element ) - 1 );
 			}
 		}
 
-		for (Integer count : elementCounts.values())
-		{
-			if (count != 0)
-			{
+		for ( Integer count : elementCounts.values() ) {
+			if ( count != 0 ) {
 				return false;
 			}
 		}
-		
+
 		return true;
 	}
 
 	@Override
 	public int hashCode() {
-		
+
 		int code = 0;
-		
-		for (Object element : bag)
-		{
+
+		for ( Object element : bag ) {
 			// Any commutative operation will be order independent
 			code += element.hashCode();
 		}
-		
+
 		return code;
 	}
 

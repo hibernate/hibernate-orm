@@ -567,7 +567,16 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	@Override
 	public int hashCode() {
-		return super.hashCode();
+		
+		int code = 0;
+		
+		for (Object element : bag)
+		{
+			// Any commutative operation will be order independent
+			code += element.hashCode();
+		}
+		
+		return code;
 	}
 
 	final class Clear implements DelayedOperation {

@@ -11,9 +11,9 @@ import java.util.EnumSet;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit5.DialectFeatureChecks;
+import org.hibernate.testing.junit5.RequiresDialectFeature;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
 
@@ -42,7 +42,7 @@ public class MappingSchemaPropertyMigrationTest extends BaseSchemaUnitTestCase {
 
 	@SchemaTest
 	@TestForIssue(jiraKey = "HHH-10678")
-	@RequiresDialectFeature(value = DialectChecks.SupportSchemaCreation.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class)
 	public void testHibernateMappingSchemaPropertyIsNotIgnored(SchemaScope schemaScope) throws Exception {
 		schemaScope.withSchemaExport( schemaExport ->
 								  schemaExport.execute( EnumSet.of( TargetType.SCRIPT ), SchemaExport.Action.CREATE ) );

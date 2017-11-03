@@ -11,15 +11,15 @@ import java.util.EnumSet;
 import org.hibernate.orm.test.schemaupdate.BaseSchemaUnitTestCase;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit5.DialectFeatureChecks;
+import org.hibernate.testing.junit5.RequiresDialectFeature;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
 
 /**
  * @author Andrea Boriero
  */
-@RequiresDialectFeature(value = DialectChecks.SupportsIdentityColumns.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class InheritanceSchemaUpdateTest extends BaseSchemaUnitTestCase {
 
 	@Override

@@ -14,9 +14,9 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.schemaupdate.BaseSchemaUnitTestCase;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit5.DialectFeatureChecks;
+import org.hibernate.testing.junit5.RequiresDialectFeature;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
 
@@ -26,7 +26,7 @@ import static org.hamcrest.core.Is.is;
 /**
  * @author Andrea Boriero
  */
-@RequiresDialectFeature(value = DialectChecks.SupportSchemaCreation.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class)
 public class CrossSchemaForeignKeyGenerationTest extends BaseSchemaUnitTestCase {
 
 	@Override

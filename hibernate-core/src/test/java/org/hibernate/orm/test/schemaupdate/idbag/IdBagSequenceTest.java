@@ -13,9 +13,9 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.orm.test.schemaupdate.BaseSchemaUnitTestCase;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit5.DialectFeatureChecks;
+import org.hibernate.testing.junit5.RequiresDialectFeature;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
 
@@ -26,7 +26,7 @@ import static org.hamcrest.core.Is.is;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10373")
-@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
 public class IdBagSequenceTest extends BaseSchemaUnitTestCase {
 
 	@Override

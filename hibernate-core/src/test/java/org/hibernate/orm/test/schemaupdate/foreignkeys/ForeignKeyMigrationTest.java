@@ -16,16 +16,16 @@ import javax.persistence.Table;
 import org.hibernate.orm.test.schemaupdate.BaseSchemaUnitTestCase;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit5.DialectFeatureChecks;
+import org.hibernate.testing.junit5.RequiresDialectFeature;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
 
 /**
  * @author Steve Ebersole
  */
-@RequiresDialectFeature(value = { DialectChecks.SupportCatalogCreation.class })
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportCatalogCreation.class)
 public class ForeignKeyMigrationTest extends BaseSchemaUnitTestCase {
 
 	@Override

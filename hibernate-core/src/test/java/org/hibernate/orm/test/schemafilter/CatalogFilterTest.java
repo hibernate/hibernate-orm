@@ -18,8 +18,8 @@ import org.hibernate.orm.test.schemaupdate.BaseSchemaUnitTestCase;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit5.DialectFeatureChecks;
+import org.hibernate.testing.junit5.RequiresDialectFeature;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
 
@@ -32,7 +32,7 @@ import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.TABLE
 
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
-@RequiresDialectFeature(value = { DialectChecks.SupportCatalogCreation.class })
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportCatalogCreation.class)
 public class CatalogFilterTest extends BaseSchemaUnitTestCase {
 
 	@Override

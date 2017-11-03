@@ -16,7 +16,7 @@ public class ClassA {
     @OneToMany(cascade = CascadeType.ALL)
     private List<ClassB> subClasses = new ArrayList<>();
 
-    @OneToOne
+    @OneToOne(mappedBy = "parent")
     private ClassE additionalClass;
 
     public Long getId() {

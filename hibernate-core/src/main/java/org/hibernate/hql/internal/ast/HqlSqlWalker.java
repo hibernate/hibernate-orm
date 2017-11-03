@@ -557,7 +557,9 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				}
 				else {
 					referencedFromElement = fromElement;
-					joinAlias = extractAppliedAlias( dotNode );
+					if ( fromElement != null ) {
+						joinAlias = extractAppliedAlias( dotNode );
+					}
 					// TODO : temporary
 					//      needed because currently persister is the one that
 					// creates and renders the join fragments for inheritance

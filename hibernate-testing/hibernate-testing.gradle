@@ -10,6 +10,7 @@ dependencies {
     compile( libraries.junit )
     compile( libraries.junit5_api )
     compile( libraries.junit5_jupiter )
+    compile( libraries.junit5_params)
 
     runtime( libraries.junit5_vintage )
     runtime( libraries.junit5_jupiter )

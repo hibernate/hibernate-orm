@@ -165,6 +165,7 @@ subprojects { subProject ->
 		//		* the "vintage" engine - which runs JUnit 3 and 4 based tests
 		testCompile( libraries.junit5_api )
 		testRuntime( libraries.junit5_jupiter )
+		testCompile( libraries.junit5_params )
 		testCompile( libraries.junit )
 		testRuntime( libraries.junit5_vintage )
 

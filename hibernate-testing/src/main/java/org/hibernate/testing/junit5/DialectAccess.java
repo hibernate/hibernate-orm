@@ -8,11 +8,15 @@ package org.hibernate.testing.junit5;
 
 import org.hibernate.dialect.Dialect;
 
+import org.junit.jupiter.api.extension.ExtensionContext;
+
 /**
  * Contract for things that expose a Dialect
  *
  * @author Steve Ebersole
  */
 public interface DialectAccess {
+	ExtensionContext.Namespace NAMESPACE =  ExtensionContext.Namespace.create( DialectAccess.class.getName()  );
+
 	Dialect getDialect();
 }

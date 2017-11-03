@@ -39,12 +39,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 			);
 		}
 
-		final Optional<SessionFactoryScope> sfScope = SessionFactoryScopeExtension.findSessionFactoryScope( context );
-		if ( !sfScope.isPresent() ) {
-			throw new RuntimeException( "Could not locate SessionFactoryScope in JUnit ExtensionContext" );
-		}
-
-		final Dialect dialect = sfScope.get().getDialect();
+		final Dialect dialect = getDialect( context );
 		if ( dialect == null ) {
 			throw new RuntimeException( "#getDialect returned null" );
 		}
@@ -98,5 +93,21 @@ public class DialectFilterExtension implements ExecutionCondition {
 		}
 
 		return ConditionEvaluationResult.enabled( "Passed all @SkipForDialects" );
+	}
+
+	private Dialect getDialect(ExtensionContext context) {
+		final Optional<SessionFactoryScope> sfScope = SessionFactoryScopeExtension.findSessionFactoryScope( context );
+		if ( !sfScope.isPresent() ) {
+			final Optional<DialectAccess> dialectAccess = Optional.ofNullable(
+					(DialectAccess) context.getStore( DialectAccess.NAMESPACE )
+							.get( context.getRequiredTestInstance() ) );
+			if ( !dialectAccess.isPresent() ) {
+				throw new RuntimeException(
+						"Could not locate any DialectAccess implementation in JUnit ExtensionContext" );
+			}
+			return dialectAccess.get().getDialect();
+		}
+
+		return sfScope.get().getDialect();
 	}
 }

@@ -37,10 +37,11 @@ public class SessionFactoryScopeExtension
 	}
 
 	public static Optional<SessionFactoryScope> findSessionFactoryScope(ExtensionContext context) {
-		return Optional.of(
-				(SessionFactoryScope) context.getStore( namespace( context.getRequiredTestInstance() ) )
+		final Optional sessionFactoryScope = Optional.ofNullable(
+				context.getStore( namespace( context.getRequiredTestInstance() ) )
 						.get( SESSION_FACTORY_KEY )
 		);
+		return sessionFactoryScope;
 	}
 
 	public static final Object SESSION_FACTORY_KEY = "SESSION_FACTORY";

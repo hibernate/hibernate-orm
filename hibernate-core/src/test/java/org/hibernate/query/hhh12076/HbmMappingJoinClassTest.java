@@ -80,7 +80,6 @@ public class HbmMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-12076")
 	public void testClassExpressionInOnClause() {
 		doInHibernate( this::sessionFactory, session -> {
 			List<SettlementTask> results = session.createQuery(

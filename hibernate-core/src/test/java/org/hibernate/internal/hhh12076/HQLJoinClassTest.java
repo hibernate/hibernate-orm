@@ -62,7 +62,6 @@ public class HQLJoinClassTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
 
-		configuration.setProperty( AvailableSettings.DIALECT, "org.hibernate.dialect.H2Dialect" );
 		configuration.setProperty( AvailableSettings.SHOW_SQL, Boolean.TRUE.toString() );
 		configuration.setProperty( AvailableSettings.FORMAT_SQL, Boolean.TRUE.toString() );
 		//configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
@@ -78,15 +77,14 @@ public class HQLJoinClassTest extends BaseCoreFunctionalTestCase {
 
 		for (int i = 0; i < 10; i++) {
 			ClassA classA = new ClassA();
-			ClassE classE = new ClassE();
-			s.save(classE);
-			classA.setAdditionalClass(classE);
 			for (int j = 0; j < 2; j++) {
 				ClassC classC = new ClassC();
 				ClassD classD = new ClassD();
+				ClassE classE = new ClassE();
 
 				classA.getSubClasses().add(classC);
 				classA.getSubClasses().add(classD);
+				classA.getChildren().add(classE);
 			}
 
 			s.save(classA);

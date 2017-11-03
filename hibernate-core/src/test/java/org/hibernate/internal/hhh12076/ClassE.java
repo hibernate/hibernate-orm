@@ -13,10 +13,6 @@ public class ClassE {
     @Column
     private String name;
 
-    @OneToOne
-    @JoinColumn(name = "parent_id")
-    private ClassA parent;
-
     public Long getId() {
         return id;
     }

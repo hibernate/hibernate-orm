@@ -16,8 +16,8 @@ public class ClassA {
     @OneToMany(cascade = CascadeType.ALL)
     private List<ClassB> subClasses = new ArrayList<>();
 
-    @OneToOne(mappedBy = "parent")
-    private ClassE additionalClass;
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<ClassE> children = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -43,11 +43,11 @@ public class ClassA {
         this.subClasses = subClasses;
     }
 
-    public ClassE getAdditionalClass() {
-        return additionalClass;
+    public List<ClassE> getChildren() {
+        return children;
     }
 
-    public void setAdditionalClass(ClassE additionalClass) {
-        this.additionalClass = additionalClass;
+    public void setChildren(List<ClassE> children) {
+        this.children = children;
     }
 }

@@ -15,12 +15,12 @@ import javax.persistence.SecondaryTable;
 
 import org.hibernate.dialect.H2Dialect;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.junit5.RequiresDialect;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = H2Dialect.class)
+@RequiresDialect(dialectClass = H2Dialect.class)
 public class ForeignKeyDefinitionSecondaryTableTest
 		extends AbstractForeignKeyDefinitionTest {
 

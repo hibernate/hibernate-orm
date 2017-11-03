@@ -17,7 +17,9 @@ import javax.persistence.Table;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.tool.schema.TargetType;
 
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
+
 
 /**
  * @author Steve Ebersole
@@ -29,15 +31,16 @@ public class TestFkUpdating extends BaseSchemaUnitTestCase {
 		return new Class[] { User.class, Role.class };
 	}
 
-	@Override
-	public void setUp() {
-		super.setUp();
-		createSchemaExport().create( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ) );
-	}
+	@SchemaTest
+	public void testUpdate(SchemaScope schemaScope) {
+		//First create the schema
+		schemaScope.withSchemaExport( schemaExport ->
+								  schemaExport.create( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ) ) );
 
-	@Test
-	public void testUpdate() {
-		createSchemaUpdate().setHaltOnError( true ).execute( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ) );
+		//Then try to update the scgema
+		schemaScope.withSchemaUpdate( schemaUpdate ->
+								  schemaUpdate.setHaltOnError( true )
+										  .execute( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ) ) );
 	}
 
 	@Entity(name = "User")

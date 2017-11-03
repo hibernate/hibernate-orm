@@ -15,7 +15,8 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
 /**
  * @author Max Rydahl Andersen
@@ -25,17 +26,19 @@ public class MigrationTest extends BaseSchemaUnitTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{CustomerInfo.class, PersonInfo.class};
+		return new Class[] { CustomerInfo.class, PersonInfo.class };
 	}
 
-	@Test
+	@SchemaTest
 	@TestForIssue(jiraKey = "HHH-9550")
-	public void testSameTableNameDifferentExplicitSchemas() {
+	public void testSameTableNameDifferentExplicitSchemas(SchemaScope schemaScope) {
 		// drop and then create the schema
-		createSchemaExport().execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.BOTH );
+		schemaScope.withSchemaExport( schemaExport ->
+								  schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.BOTH ) );
 
 		// update the schema
-		createSchemaUpdate().setHaltOnError( true ).execute( EnumSet.of( TargetType.DATABASE ) );
+		schemaScope.withSchemaUpdate( schemaUpdate ->
+								  schemaUpdate.setHaltOnError( true ).execute( EnumSet.of( TargetType.DATABASE ) ) );
 	}
 
 	@Entity

@@ -15,11 +15,12 @@ import org.hibernate.annotations.Table;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
-import static junit.framework.TestCase.fail;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Andrea Boriero
@@ -37,10 +38,15 @@ public class CommentTableTest extends BaseSchemaUnitTestCase {
 		return true;
 	}
 
-	@Test
+	@Override
+	protected boolean dropSchemaAfterTest() {
+		return false;
+	}
+
+	@SchemaTest
 	@TestForIssue(jiraKey = "HHH-10451")
-	public void testCommentOnTableStatementIsGenerated() throws IOException {
-		createSchemaExport().create( EnumSet.of( TargetType.SCRIPT ) );
+	public void testCommentOnTableStatementIsGenerated(SchemaScope schemaScope) throws IOException {
+		schemaScope.withSchemaExport( schemaExport -> schemaExport.create( EnumSet.of( TargetType.SCRIPT ) ) );
 
 		boolean found = false;
 		for ( String sqlStatement : getSqlScriptOutputFileLines() ) {

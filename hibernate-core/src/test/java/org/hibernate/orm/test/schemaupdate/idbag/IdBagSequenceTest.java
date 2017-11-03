@@ -16,10 +16,11 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
@@ -40,7 +41,7 @@ public class IdBagSequenceTest extends BaseSchemaUnitTestCase {
 
 	@Override
 	protected String[] getHmbMappingFiles() {
-		return new String[]{"schemaupdate/idbag/Mappings.hbm.xml"};
+		return new String[] { "schemaupdate/idbag/Mappings.hbm.xml" };
 	}
 
 	@Override
@@ -48,14 +49,14 @@ public class IdBagSequenceTest extends BaseSchemaUnitTestCase {
 		return false;
 	}
 
-	@Test
-	public void testIdBagSequenceGeneratorIsCreated() throws Exception {
-
-		createSchemaUpdate()
-				.setHaltOnError( true )
-				.setDelimiter( ";" )
-				.setFormat( true )
-				.execute( EnumSet.of( TargetType.SCRIPT ) );
+	@SchemaTest
+	public void testIdBagSequenceGeneratorIsCreated(SchemaScope schemaScope) throws Exception {
+		schemaScope.withSchemaUpdate( schemaUpdate ->
+								  schemaUpdate
+										  .setHaltOnError( true )
+										  .setDelimiter( ";" )
+										  .setFormat( true )
+										  .execute( EnumSet.of( TargetType.SCRIPT ) ) );
 
 		final String fileContent = getSqlScriptOutputFileContent();
 		assertThat( fileContent.toLowerCase().contains( "create sequence seq_child_id" ), is( true ) );

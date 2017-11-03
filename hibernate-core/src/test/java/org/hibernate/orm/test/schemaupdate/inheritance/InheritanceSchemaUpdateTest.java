@@ -13,7 +13,8 @@ import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
 /**
  * @author Andrea Boriero
@@ -26,8 +27,9 @@ public class InheritanceSchemaUpdateTest extends BaseSchemaUnitTestCase {
 		return new Class[] { Step.class, GroupStep.class };
 	}
 
-	@Test
-	public void testBidirectionalOneToManyReferencingRootEntity() throws Exception {
-		createSchemaUpdate().setHaltOnError( true ).execute( EnumSet.of( TargetType.DATABASE ) );
+	@SchemaTest
+	public void testBidirectionalOneToManyReferencingRootEntity(SchemaScope schemaScope) {
+		schemaScope.withSchemaUpdate( schemaUpdate ->
+								  schemaUpdate.setHaltOnError( true ).execute( EnumSet.of( TargetType.DATABASE ) ) );
 	}
 }

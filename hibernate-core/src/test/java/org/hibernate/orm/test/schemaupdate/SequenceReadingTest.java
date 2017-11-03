@@ -19,7 +19,8 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNo
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
 /**
  * Regression test fr a bug in org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl
@@ -40,9 +41,10 @@ public class SequenceReadingTest extends BaseSchemaUnitTestCase {
 		serviceRegistryBuilder.applySetting( AvailableSettings.DIALECT, MyExtendedH2Dialect.class );
 	}
 
-	@Test
-	public void testSequenceReading() {
-		createSchemaUpdate().setHaltOnError( true ).execute( EnumSet.of( TargetType.DATABASE ) );
+	@SchemaTest
+	public void testSequenceReading(SchemaScope schemaScope) {
+		schemaScope.withSchemaUpdate( schemaUpdate ->
+								  schemaUpdate.setHaltOnError( true ).execute( EnumSet.of( TargetType.DATABASE ) ) );
 	}
 
 	/**

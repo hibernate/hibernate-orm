@@ -14,10 +14,11 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
@@ -39,11 +40,12 @@ public class MappingSchemaPropertyMigrationTest extends BaseSchemaUnitTestCase {
 		return false;
 	}
 
-	@Test
+	@SchemaTest
 	@TestForIssue(jiraKey = "HHH-10678")
 	@RequiresDialectFeature(value = DialectChecks.SupportSchemaCreation.class)
-	public void testHibernateMappingSchemaPropertyIsNotIgnored() throws Exception {
-		createSchemaExport().execute( EnumSet.of( TargetType.SCRIPT ), SchemaExport.Action.CREATE );
+	public void testHibernateMappingSchemaPropertyIsNotIgnored(SchemaScope schemaScope) throws Exception {
+		schemaScope.withSchemaExport( schemaExport ->
+								  schemaExport.execute( EnumSet.of( TargetType.SCRIPT ), SchemaExport.Action.CREATE ) );
 
 		final String fileContent = getSqlScriptOutputFileContent();
 		assertThat( fileContent, fileContent.toLowerCase().contains( "create table schema1.version" ), is( true ) );

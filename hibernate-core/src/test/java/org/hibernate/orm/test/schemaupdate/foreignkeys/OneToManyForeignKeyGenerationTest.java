@@ -12,7 +12,8 @@ import org.hibernate.orm.test.schemaupdate.BaseSchemaUnitTestCase;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
 /**
  * @author Andrea Boriero
@@ -33,13 +34,14 @@ public class OneToManyForeignKeyGenerationTest extends BaseSchemaUnitTestCase {
 		return false;
 	}
 
-	@Test
+	@SchemaTest
 	@TestForIssue(jiraKey = "HHH-10396")
-	public void oneToManyTest() throws Exception {
-		createSchemaExport()
-				.setHaltOnError( true )
-				.setFormat( false )
-				.create( EnumSet.of( TargetType.SCRIPT ) );
+	public void oneToManyTest(SchemaScope schemaScope) throws Exception {
+		schemaScope.withSchemaExport( schemaExport ->
+											  schemaExport
+													  .setHaltOnError( true )
+													  .setFormat( false )
+													  .create( EnumSet.of( TargetType.SCRIPT ) ) );
 		/*
 		The generated SQL for the foreign keys should be:
 		alter table GROUP add constraint FK_USER_GROUP foreign key (USER_ID) references USERS

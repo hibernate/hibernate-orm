@@ -16,7 +16,8 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.schema.TargetType;
 
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -40,13 +41,15 @@ public class ColumnNamesTest extends BaseSchemaUnitTestCase {
 		serviceRegistryBuilder.applySetting( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, "true" );
 	}
 
-	@Test
-	public void testSchemaUpdateWithQuotedColumnNames() throws Exception {
+	@SchemaTest
+	public void testSchemaUpdateWithQuotedColumnNames(SchemaScope schemaScope) throws Exception {
 		//first create the schema
-		createSchemaExport().create( EnumSet.of( TargetType.DATABASE ) );
+		schemaScope.withSchemaExport( schemaExport -> schemaExport.create( EnumSet.of( TargetType.DATABASE ) ) );
 
 		// try to update the schema
-		createSchemaUpdate().setHaltOnError( true ).execute( EnumSet.of( TargetType.SCRIPT ) );
+		schemaScope.withSchemaUpdate( schemaUpdate -> schemaUpdate.setHaltOnError( true )
+				.execute( EnumSet.of( TargetType.SCRIPT ) )
+		);
 
 		// the schema update script shouls be empty
 		final String fileContent = getSqlScriptOutputFileContent();

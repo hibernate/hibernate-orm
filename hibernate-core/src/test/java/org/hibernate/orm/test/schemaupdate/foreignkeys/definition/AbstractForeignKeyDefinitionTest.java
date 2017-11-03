@@ -6,26 +6,17 @@
  */
 package org.hibernate.orm.test.schemaupdate.foreignkeys.definition;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.EnumSet;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.orm.test.schemaupdate.BaseSchemaUnitTestCase;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 /**
  * @author Vlad MIhalcea
@@ -47,18 +38,17 @@ public abstract class AbstractForeignKeyDefinitionTest extends BaseSchemaUnitTes
 
 	protected abstract boolean validate(String fileContent);
 
-	@Test
+	@SchemaTest
 	@TestForIssue(jiraKey = "HHH-10643")
-	public void testForeignKeyDefinitionOverridesDefaultNamingStrategy()
+	public void testForeignKeyDefinitionOverridesDefaultNamingStrategy(SchemaScope schemaScope)
 			throws Exception {
-
-		createSchemaExport()
+		schemaScope.withSchemaExport( schemaExport -> schemaExport
 				.setHaltOnError( true )
 				.setFormat( false )
-				.create( EnumSet.of( TargetType.SCRIPT ) );
+				.create( EnumSet.of( TargetType.SCRIPT ) ) );
 
 		final String fileContent = getSqlScriptOutputFileContent();
-		assertTrue( "Script file : " + fileContent, validate( fileContent ) );
+		assertThat( "Script file : " + fileContent, validate( fileContent ), is( true ) );
 	}
 
 }

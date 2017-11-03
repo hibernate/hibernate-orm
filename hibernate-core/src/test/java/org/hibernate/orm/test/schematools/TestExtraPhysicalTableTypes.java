@@ -29,11 +29,12 @@ import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.After;
-import org.junit.Test;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
@@ -43,7 +44,7 @@ public class TestExtraPhysicalTableTypes {
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		StandardServiceRegistryBuilder.destroy( ssr );
 	}

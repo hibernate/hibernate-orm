@@ -18,11 +18,11 @@ import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.Helper;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Andrea Boriero
@@ -33,12 +33,12 @@ public class SimpleColumnAdditionMigrationTest {
 
 	private ServiceRegistry serviceRegistry;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		serviceRegistry = new StandardServiceRegistryBuilder().build();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		serviceRegistry = null;
@@ -55,12 +55,12 @@ public class SimpleColumnAdditionMigrationTest {
 		assertEquals( 0, v1schemaUpdate.getExceptions().size() );
 
 		final DatabaseModel v2DatabaseModel = createDatabaseModel( RESOURCE_2 );
-		final SchemaUpdate v2schemaUpdate = new SchemaUpdate( v2DatabaseModel, serviceRegistry);
-		v2schemaUpdate.execute(	EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ));
+		final SchemaUpdate v2schemaUpdate = new SchemaUpdate( v2DatabaseModel, serviceRegistry );
+		v2schemaUpdate.execute( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ) );
 
 		assertEquals( 0, v2schemaUpdate.getExceptions().size() );
 
-		new SchemaExport(v2DatabaseModel, serviceRegistry).drop( EnumSet.of( TargetType.DATABASE ) );
+		new SchemaExport( v2DatabaseModel, serviceRegistry ).drop( EnumSet.of( TargetType.DATABASE ) );
 	}
 
 	private DatabaseModel createDatabaseModel(String resource1) {

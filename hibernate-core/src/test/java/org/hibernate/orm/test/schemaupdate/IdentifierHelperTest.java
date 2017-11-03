@@ -15,23 +15,23 @@ import org.hibernate.naming.Identifier;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.boot.ServiceRegistryTestingImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * @author Steve Ebersole
  */
-public class IdentifierHelperTest extends BaseUnitTestCase {
+public class IdentifierHelperTest {
+
 	@Test
 	public void testAutoQuotingDisabled() {
 		boolean keyAutoquoitingEnabled = true;
 
 		ServiceRegistry sr = createServiceRegistry( keyAutoquoitingEnabled );
 		try {
-
 			Identifier identifier = sr.getService( JdbcEnvironment.class )
 					.getIdentifierHelper()
 					.toIdentifier( "select" );

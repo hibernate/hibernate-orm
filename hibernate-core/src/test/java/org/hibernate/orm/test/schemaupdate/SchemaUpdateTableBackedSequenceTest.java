@@ -25,7 +25,8 @@ import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -60,14 +61,14 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseSchemaUnitTestCase 
 		assertEquals( 1, table.getInitCommands().size() );
 	}
 
-	@Test
-	public void testCreateTableOnUpdate() {
+	@SchemaTest
+	public void testCreateTableOnUpdate(SchemaScope schemaScope) {
 		final TargetImpl target = new TargetImpl();
-
-		createSchemaMigrator().doMigration(
-				new TestExecutionOptions(),
-				new TestTargetDescriptor( target )
-		);
+		schemaScope.withSchemaMigrator( schemaMigrator ->
+									schemaMigrator.doMigration(
+											new TestExecutionOptions(),
+											new TestTargetDescriptor( target )
+									) );
 
 		assertTrue( target.found );
 	}

@@ -23,10 +23,11 @@ import org.hibernate.orm.test.schemaupdate.BaseSchemaUnitTestCase;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
@@ -41,7 +42,7 @@ public class JoinedInheritanceForeignKeyTest extends BaseSchemaUnitTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{Role.class, User.class, Person.class};
+		return new Class[] { Role.class, User.class, Person.class };
 	}
 
 	@Override
@@ -49,12 +50,12 @@ public class JoinedInheritanceForeignKeyTest extends BaseSchemaUnitTestCase {
 		return false;
 	}
 
-	@Test
-	public void testForeignKeyHasCorrectName() throws Exception {
-		createSchemaExport()
+	@SchemaTest
+	public void testForeignKeyHasCorrectName(SchemaScope schemaScope) throws Exception {
+		schemaScope.withSchemaExport( schemaExport -> schemaExport
 				.setHaltOnError( true )
 				.setFormat( false )
-				.create( EnumSet.of( TargetType.SCRIPT ) );
+				.create( EnumSet.of( TargetType.SCRIPT ) ) );
 
 		checkAlterTableStatement( expectedAlterTableStatement(
 				"User",

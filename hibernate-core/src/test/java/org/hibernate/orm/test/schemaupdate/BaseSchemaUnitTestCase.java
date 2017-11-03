@@ -10,11 +10,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -35,42 +34,62 @@ import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaMigrator;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.hibernate.testing.junit5.serviceregistry.ServiceRegistryAccess;
+import org.hibernate.testing.junit5.serviceregistry.ServiceRegistryContainer;
+import org.hibernate.testing.junit5.schema.FunctionalMetaModelTesting;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaScopeProducer;
+import org.hibernate.testing.junit5.template.TestParameter;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
+
 
 /**
  * @author Andrea Boriero
  */
-@RunWith(Parameterized.class)
-public abstract class BaseSchemaUnitTestCase {
+@FunctionalMetaModelTesting
+public abstract class BaseSchemaUnitTestCase
+		implements ServiceRegistryAccess, ServiceRegistryContainer, SchemaScopeProducer {
 	protected static final Class<?>[] NO_CLASSES = new Class[0];
 	protected static final String[] NO_MAPPINGS = new String[0];
-
-	@Parameterized.Parameters(name = "JdbcMetadaAccessStrategy : {0}")
-	public static Collection<String> parameters() {
-		return Arrays.asList(
-				new String[] {
-						JdbcMetadaAccessStrategy.GROUPED.toString()
-						, JdbcMetadaAccessStrategy.INDIVIDUALLY.toString()
-				}
-		);
-	}
-
-	@Parameterized.Parameter
-	public String jdbcMetadataExtractorStrategy;
 
 	private StandardServiceRegistry standardServiceRegistry;
 	private DatabaseModel databaseModel;
 	private MetadataImplementor metadata;
 
 	private File output;
+	private SchemaScope schemaScope;
 
-	@Before
-	public void setUp() {
+	@Override
+	public void clearTestScope() {
+		try {
+			try {
+				schemaScope.clearScope();
+			}
+			finally {
+				if ( createSqlScriptTempOutputFile() ) {
+					output.delete();
+				}
+			}
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( standardServiceRegistry );
+			schemaScope = null;
+		}
+	}
+
+	@Override
+	public void setStandardServiceRegistry(StandardServiceRegistry standardServiceRegistry) {
+		this.standardServiceRegistry = standardServiceRegistry;
+	}
+
+	@Override
+	public StandardServiceRegistry getStandardServiceRegistry() {
+		return standardServiceRegistry;
+	}
+
+	@Override
+	public SchemaScope produceTestScope(TestParameter<String> metadataExtractionStrategy) {
 		try {
 			createTempOutputFile();
 		}
@@ -78,29 +97,16 @@ public abstract class BaseSchemaUnitTestCase {
 			fail( "Fail creating temporary file" + e.getMessage() );
 		}
 
-		standardServiceRegistry = buildServiceRegistry();
-
-		metadata = buildMetadata();
+		final String metadataExtractionStrategyValue = metadataExtractionStrategy.getValue();
+		setStandardServiceRegistry( buildServiceRegistry( metadataExtractionStrategyValue ) );
+		afterServiceRegistryCreation( standardServiceRegistry );
+		metadata = buildMetadata( standardServiceRegistry );
 		metadata.validate();
 		afterMetadataCreation( metadata );
 
 		databaseModel = Helper.buildDatabaseModel( metadata );
-	}
-
-	@After
-	public void tearDown() {
-		try {
-			if ( dropSchemaAfterTest() ) {
-				createSchemaExport().drop( EnumSet.of( TargetType.DATABASE ) );
-			}
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( standardServiceRegistry );
-		}
-	}
-
-	public StandardServiceRegistry getStandardServiceRegistry() {
-		return standardServiceRegistry;
+		schemaScope = new SchemaScopeImpl( databaseModel, standardServiceRegistry, dropSchemaAfterTest() );
+		return schemaScope;
 	}
 
 	public DatabaseModel getDatabaseModel() {
@@ -111,45 +117,6 @@ public abstract class BaseSchemaUnitTestCase {
 		return metadata;
 	}
 
-	public SchemaUpdate createSchemaUpdate() {
-		SchemaUpdate schemaUpdate = new SchemaUpdate( databaseModel, standardServiceRegistry );
-		if ( createSqlScriptTempOutputFile() ) {
-			schemaUpdate.setOutputFile( output.getAbsolutePath() );
-		}
-		return schemaUpdate;
-	}
-
-	public SchemaExport createSchemaExport() {
-		SchemaExport schemaExport = new SchemaExport( databaseModel, standardServiceRegistry );
-		if ( createSqlScriptTempOutputFile() ) {
-			schemaExport.setOutputFile( output.getAbsolutePath() );
-		}
-		return schemaExport;
-	}
-
-	public SchemaValidator createSchemaValidator() {
-		return new SchemaValidator( databaseModel, standardServiceRegistry );
-	}
-
-	public SchemaMigrator createSchemaMigrator() {
-		return getStandardServiceRegistry()
-				.getService( SchemaManagementTool.class )
-				.getSchemaMigrator( getDatabaseModel(), Collections.emptyMap() );
-	}
-
-	public SchemaCreatorImpl createSchemaCreator(SchemaFilter filter) {
-		if ( filter != null ) {
-			return new SchemaCreatorImpl( databaseModel, standardServiceRegistry, filter );
-		}
-		return new SchemaCreatorImpl( databaseModel, standardServiceRegistry );
-	}
-
-	public SchemaDropperImpl createSchemaDropper(SchemaFilter filter) {
-		if ( filter != null ) {
-			return new SchemaDropperImpl( databaseModel, standardServiceRegistry, filter );
-		}
-		return new SchemaDropperImpl( databaseModel, standardServiceRegistry );
-	}
 
 	public String getSqlScriptOutputFileContent() throws IOException {
 		if ( createSqlScriptTempOutputFile() ) {
@@ -161,12 +128,27 @@ public abstract class BaseSchemaUnitTestCase {
 		}
 	}
 
+	protected void afterServiceRegistryCreation(StandardServiceRegistry standardServiceRegistry) {
+	}
+
 	public List<String> getSqlScriptOutputFileLines() throws IOException {
 		return Files.readAllLines( output.toPath(), Charset.defaultCharset() );
 	}
 
 	public Dialect getDialect() {
-		return databaseModel.getJdbcEnvironment().getDialect();
+		Dialect dialect;
+		if ( metadata == null ) {
+			StandardServiceRegistry standardServiceRegistry
+					= buildServiceRegistry( JdbcMetadaAccessStrategy.INDIVIDUALLY.toString() );
+			afterServiceRegistryCreation( standardServiceRegistry );
+			MetadataImplementor metadata = buildMetadata( standardServiceRegistry );
+			dialect = metadata.getDatabase().getDialect();
+			StandardServiceRegistryBuilder.destroy( standardServiceRegistry );
+		}
+		else {
+			dialect = metadata.getDatabase().getDialect();
+		}
+		return dialect;
 	}
 
 	protected String getBaseForMappings() {
@@ -194,29 +176,27 @@ public abstract class BaseSchemaUnitTestCase {
 	}
 
 
-	protected void afterMetadataCreation(MetadataImplementor metadata){
-
+	protected void afterMetadataCreation(MetadataImplementor metadata) {
 	}
 
 	private void createTempOutputFile() throws IOException {
 		if ( createSqlScriptTempOutputFile() ) {
 			output = File.createTempFile( getOutputTempScriptFileName(), ".sql" );
-			output.deleteOnExit();
 		}
 	}
 
-	private StandardServiceRegistry buildServiceRegistry() {
+	private StandardServiceRegistry buildServiceRegistry(String metadataExtractionStrategy) {
 		StandardServiceRegistryBuilder standardServiceRegistryBuilder = new StandardServiceRegistryBuilder();
 		applySettings( standardServiceRegistryBuilder );
 		return standardServiceRegistryBuilder
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
-						jdbcMetadataExtractorStrategy
+						metadataExtractionStrategy
 				)
 				.build();
 	}
 
-	private MetadataImplementor buildMetadata() {
+	private MetadataImplementor buildMetadata(StandardServiceRegistry standardServiceRegistry) {
 		final MetadataSources metadataSources = new MetadataSources( standardServiceRegistry );
 		addAnnotatedClass( metadataSources );
 		addResources( metadataSources );
@@ -242,6 +222,109 @@ public abstract class BaseSchemaUnitTestCase {
 		Class<?>[] annotatedClasses = getAnnotatedClasses();
 		for ( int i = 0; i < annotatedClasses.length; i++ ) {
 			metadataSources.addAnnotatedClass( annotatedClasses[i] );
+		}
+	}
+
+	public class SchemaScopeImpl implements SchemaScope {
+		private final DatabaseModel databaseModel;
+		private final StandardServiceRegistry standardServiceRegistry;
+		private final boolean dropSchemaAfterTest;
+
+		public SchemaScopeImpl(
+				DatabaseModel databaseModel,
+				StandardServiceRegistry standardServiceRegistry, boolean dropSchemaAfterTest) {
+			this.databaseModel = databaseModel;
+			this.standardServiceRegistry = standardServiceRegistry;
+			this.dropSchemaAfterTest = dropSchemaAfterTest;
+		}
+
+		@Override
+		public void withSchemaUpdate(Consumer<SchemaUpdate> counsumer) {
+			counsumer.accept( createSchemaUpdate() );
+		}
+
+		@Override
+		public void withSchemaValidator(Consumer<SchemaValidator> counsumer) {
+			counsumer.accept( createSchemaValidator() );
+		}
+
+		@Override
+		public void withSchemaMigrator(Consumer<SchemaMigrator> counsumer) {
+			counsumer.accept( createSchemaMigrator() );
+		}
+
+		@Override
+		public void withSchemaExport(Consumer<SchemaExport> counsumer) {
+			counsumer.accept( createSchemaExport() );
+		}
+
+		@Override
+		public void withSchemaCreator(Consumer<SchemaCreatorImpl> consumer) {
+			consumer.accept( createSchemaCreator( null ) );
+		}
+
+		@Override
+		public void withSchemaCreator(SchemaFilter filter, Consumer<SchemaCreatorImpl> consumer) {
+			consumer.accept( createSchemaCreator( filter ) );
+		}
+
+		@Override
+		public void withSchemaDropper(Consumer<SchemaDropperImpl> consumer) {
+			consumer.accept( createSchemaDropper( null ) );
+		}
+
+		@Override
+		public void withSchemaDropper(SchemaFilter filter, Consumer<SchemaDropperImpl> consumer) {
+			consumer.accept( createSchemaDropper( filter ) );
+		}
+
+		@Override
+		public void clearScope() {
+			if ( dropSchemaAfterTest ) {
+				createSchemaExport().drop( EnumSet.of( TargetType.DATABASE ) );
+			}
+		}
+
+		private SchemaUpdate createSchemaUpdate() {
+			SchemaUpdate schemaUpdate = new SchemaUpdate( databaseModel, standardServiceRegistry );
+			if ( createSqlScriptTempOutputFile() ) {
+				schemaUpdate.setOutputFile( output.getAbsolutePath() );
+			}
+			return schemaUpdate;
+		}
+
+		private SchemaExport createSchemaExport() {
+			SchemaExport schemaExport = new SchemaExport( databaseModel, standardServiceRegistry );
+			if ( createSqlScriptTempOutputFile() ) {
+				schemaExport.setOutputFile( output.getAbsolutePath() );
+			}
+			return schemaExport;
+		}
+
+		private SchemaValidator createSchemaValidator() {
+			return new SchemaValidator( databaseModel, standardServiceRegistry );
+		}
+
+		private SchemaMigrator createSchemaMigrator() {
+			return standardServiceRegistry
+					.getService( SchemaManagementTool.class )
+					.getSchemaMigrator( getDatabaseModel(), Collections.emptyMap() );
+		}
+
+		private SchemaCreatorImpl createSchemaCreator(SchemaFilter filter) {
+			if ( filter != null ) {
+				return new SchemaCreatorImpl( databaseModel, standardServiceRegistry, filter );
+			}
+			else {
+				return new SchemaCreatorImpl( databaseModel, standardServiceRegistry );
+			}
+		}
+
+		private SchemaDropperImpl createSchemaDropper(SchemaFilter filter) {
+			if ( filter != null ) {
+				return new SchemaDropperImpl( databaseModel, standardServiceRegistry, filter );
+			}
+			return new SchemaDropperImpl( databaseModel, standardServiceRegistry );
 		}
 	}
 

@@ -22,10 +22,13 @@ import org.hibernate.orm.test.schemaupdate.BaseSchemaUnitTestCase;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
+import org.junit.jupiter.api.BeforeEach;
 
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+
 
 /**
  * @author Andrea Boriero
@@ -48,23 +51,36 @@ public class SchemaUpdateWithKeywordAutoQuotingEnabledTest extends BaseSchemaUni
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{Match.class};
+		return new Class[] { Match.class };
 	}
 
-	@Before
+	@BeforeEach
 	public void setUp() {
-		super.setUp();
-		createSchemaExport().setHaltOnError( true )
-				.setFormat( false )
-				.createOnly( EnumSet.of( TargetType.DATABASE ) );
-	}
+		}
 
-	@Test
-	public void testUpdate() throws Exception {
-		createSchemaUpdate().setHaltOnError( true )
-				.setFormat( false )
-				.execute( EnumSet.of( TargetType.SCRIPT, TargetType.DATABASE ) );
-		assertTrue( StringHelper.isEmpty( getSqlScriptOutputFileContent() ) );
+
+	@SchemaTest
+	public void testUpdate(SchemaScope schemaScope) throws Exception {
+		//First create the schema
+		schemaScope.withSchemaExport( schemaExport ->
+								  schemaExport.setHaltOnError( true )
+										  .setFormat( false )
+										  .createOnly( EnumSet.of( TargetType.DATABASE ) ) );
+
+		//Then try to update the schema
+		schemaScope.withSchemaUpdate( schemaUpdate ->
+								  schemaUpdate
+										  .setHaltOnError( true )
+										  .setFormat( false )
+										  .execute( EnumSet.of( TargetType.SCRIPT, TargetType.DATABASE ) ) );
+
+		final String sqlScriptOutputFileContent = getSqlScriptOutputFileContent();
+		assertThat(
+				"The schema update script should be empty but is " + sqlScriptOutputFileContent,
+				StringHelper.isEmpty(
+						sqlScriptOutputFileContent ),
+				is( true )
+		);
 	}
 
 	@Entity(name = "Match")

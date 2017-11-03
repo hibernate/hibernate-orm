@@ -13,7 +13,8 @@ import org.hibernate.orm.test.schemaupdate.BaseSchemaUnitTestCase;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
 /**
  * @author Andrea Boriero
@@ -36,13 +37,13 @@ public class OneToOneForeignKeyGenerationTest extends BaseSchemaUnitTestCase {
 		return false;
 	}
 
-	@Test
+	@SchemaTest
 	@TestForIssue(jiraKey = "HHH-9591")
-	public void oneToOneTest() throws Exception {
-		createSchemaExport()
+	public void oneToOneTest(SchemaScope schemaScope) throws Exception {
+		schemaScope.withSchemaExport( schemaExport -> schemaExport
 				.setHaltOnError( true )
 				.setFormat( false )
-				.create( EnumSet.of( TargetType.SCRIPT ) );
+				.create( EnumSet.of( TargetType.SCRIPT ) ) );
 
 		/*
 		The generated SQL for the foreign keys should be:

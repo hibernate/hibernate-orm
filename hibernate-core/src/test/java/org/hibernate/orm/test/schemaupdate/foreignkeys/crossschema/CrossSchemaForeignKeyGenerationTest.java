@@ -17,10 +17,11 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
@@ -43,13 +44,15 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseSchemaUnitTestCase 
 		serviceRegistryBuilder.applySetting( AvailableSettings.HBM2DLL_CREATE_SCHEMAS, "true" );
 	}
 
-	@Test
+	@SchemaTest
 	@TestForIssue(jiraKey = "HHH-10420")
-	public void testSchemaExportForeignKeysAreGeneratedAfterAllTheTablesAreCreated() throws Exception {
-
-		createSchemaExport().setHaltOnError( true )
+	public void testSchemaExportForeignKeysAreGeneratedAfterAllTheTablesAreCreated(SchemaScope schemaScope)
+			throws Exception {
+		schemaScope.withSchemaExport( schemaExport -> schemaExport
+				.setHaltOnError( true )
 				.setFormat( false )
-				.createOnly( EnumSet.of( TargetType.SCRIPT, TargetType.DATABASE ) );
+				.createOnly( EnumSet.of( TargetType.SCRIPT, TargetType.DATABASE ) )
+		);
 
 		final List<String> sqlLines = getSqlScriptOutputFileLines();
 		assertThat(
@@ -59,16 +62,16 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseSchemaUnitTestCase 
 		);
 	}
 
-	@Test
+	@SchemaTest
 	@TestForIssue(jiraKey = "HHH-10802")
-	public void testSchemaUpdateDoesNotFailResolvingCrossSchemaForeignKey() {
-
-		createSchemaExport().setHaltOnError( true )
+	public void testSchemaUpdateDoesNotFailResolvingCrossSchemaForeignKey(SchemaScope schemaScope) {
+		schemaScope.withSchemaExport( schemaExport -> schemaExport
+				.setHaltOnError( true )
 				.setFormat( false )
-				.createOnly( EnumSet.of( TargetType.DATABASE ) );
-
-		createSchemaUpdate().setHaltOnError( true )
+				.createOnly( EnumSet.of( TargetType.DATABASE ) ) );
+		schemaScope.withSchemaUpdate( schemaUpdate -> schemaUpdate
+				.setHaltOnError( true )
 				.setFormat( false )
-				.execute( EnumSet.of( TargetType.DATABASE ) );
+				.execute( EnumSet.of( TargetType.DATABASE ) ) );
 	}
 }

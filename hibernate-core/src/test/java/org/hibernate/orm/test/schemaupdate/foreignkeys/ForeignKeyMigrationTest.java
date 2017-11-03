@@ -19,7 +19,8 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
 /**
  * @author Steve Ebersole
@@ -32,14 +33,15 @@ public class ForeignKeyMigrationTest extends BaseSchemaUnitTestCase {
 		return new Class[] { Box.class, Thing.class };
 	}
 
-	@Test
+	@SchemaTest
 	@TestForIssue(jiraKey = "HHH-9716")
-	public void testMigrationOfForeignKeys() {
+	public void testMigrationOfForeignKeys(SchemaScope schemaScope) {
 		// first create the schema...
-		createSchemaExport().create( EnumSet.of( TargetType.DATABASE ) );
+		schemaScope.withSchemaExport( schemaExport ->
+											  schemaExport.create( EnumSet.of( TargetType.DATABASE ) ) );
 
 		// try to update the just created schema
-		createSchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ) );
+		schemaScope.withSchemaUpdate( schemaUpdate -> schemaUpdate.execute( EnumSet.of( TargetType.DATABASE ) ) );
 	}
 
 	@Entity(name = "Box")

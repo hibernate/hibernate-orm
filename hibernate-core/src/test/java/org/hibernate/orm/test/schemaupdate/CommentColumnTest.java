@@ -14,10 +14,11 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
@@ -45,13 +46,12 @@ public class CommentColumnTest extends BaseSchemaUnitTestCase {
 		serviceRegistryBuilder.applySetting( Environment.DIALECT, SupportCommentDialect.class.getName() );
 	}
 
-	@Test
-	public void testSchemaUpdateScriptGeneration() throws Exception {
-		createSchemaUpdate()
-				.setHaltOnError( true )
+	@SchemaTest
+	public void testSchemaUpdateScriptGeneration(SchemaScope scope) throws Exception {
+		scope.withSchemaUpdate( schemaUpdate -> schemaUpdate.setHaltOnError( true )
 				.setDelimiter( ";" )
 				.setFormat( true )
-				.execute( EnumSet.of( TargetType.SCRIPT ) );
+				.execute( EnumSet.of( TargetType.SCRIPT ) ) );
 
 		final String fileContent = getSqlScriptOutputFileContent();
 		assertThat(

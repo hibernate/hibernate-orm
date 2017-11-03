@@ -16,7 +16,8 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
 /**
  * @author Andrea Boriero
@@ -25,17 +26,19 @@ public class IndexCreationSchemaUpdateTest extends BaseSchemaUnitTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{EntityWithIndex.class};
+		return new Class[] { EntityWithIndex.class };
 	}
 
-	@Test
+	@SchemaTest
 	@TestForIssue(jiraKey = "HHH-9713")
-	public void testIndexCreationViaSchemaUpdate() {
+	public void testIndexCreationViaSchemaUpdate(SchemaScope schemaScope) {
 		// drop and then create the schema
-		createSchemaExport().execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.BOTH );
+		schemaScope.withSchemaExport( schemaExport ->
+								  schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.BOTH ) );
 
 		// update the schema
-		createSchemaUpdate().setHaltOnError( true ).execute( EnumSet.of( TargetType.DATABASE ) );
+		schemaScope.withSchemaUpdate( schemaUpdate ->
+								  schemaUpdate.setHaltOnError( true ).execute( EnumSet.of( TargetType.DATABASE ) ) );
 	}
 
 	@Entity(name = "EntityWithIndex")

@@ -27,9 +27,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -37,17 +37,17 @@ import org.hibernate.naming.Identifier;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.SkipLog;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.hibernate.testing.junit5.SkipForDialect;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
  */
-@RunWith(Parameterized.class)
+@SkipForDialect(dialectClass = SQLServerDialect.class)
 public class SchemaUpdateTest extends BaseSchemaUnitTestCase {
 
 	private boolean skipTest;
@@ -77,20 +77,13 @@ public class SchemaUpdateTest extends BaseSchemaUnitTestCase {
 	}
 
 	@Override
-	public void setUp() {
-		super.setUp();
-		if ( SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() ) ) {
-			// SQLServerDialect stores case-insensitive quoted identifiers in mixed case,
-			// so the checks at the end of this method won't work.
-			skipTest = true;
-			return;
-		}
+	public void afterServiceRegistryCreation(StandardServiceRegistry standardServiceRegistry) {
 
 		// Databases that use case-insensitive quoted identifiers need to be skipped.
 		// The following checks will work for checking those dialects that store case-insensitive
 		// quoted identifiers as upper-case or lower-case. It does not work for dialects that
 		// store case-insensitive identifiers in mixed case (like SQL Server).
-		final IdentifierHelper identifierHelper = getStandardServiceRegistry().getService( JdbcEnvironment.class )
+		final IdentifierHelper identifierHelper = standardServiceRegistry.getService( JdbcEnvironment.class )
 				.getIdentifierHelper();
 		final String lowerCaseName = identifierHelper.toMetaDataObjectName( Identifier.toIdentifier(
 				"testentity",
@@ -107,34 +100,26 @@ public class SchemaUpdateTest extends BaseSchemaUnitTestCase {
 		if ( lowerCaseName.equals( upperCaseName ) ||
 				lowerCaseName.equals( mixedCaseName ) ||
 				upperCaseName.equals( mixedCaseName ) ) {
-			StandardServiceRegistryBuilder.destroy( getStandardServiceRegistry() );
 			skipTest = true;
 		}
 	}
 
-	@Override
-	public void tearDown() {
-		if ( skipTest ) {
-			return;
-		}
-		super.tearDown();
-	}
-
-	@Test
-	public void testSchemaUpdateAndValidation() throws Exception {
+	@SchemaTest
+	public void testSchemaUpdateAndValidation(SchemaScope schemaScope) throws Exception {
 		if ( skipTest ) {
 			SkipLog.reportSkip( "skipping test because quoted names are not case-sensitive." );
 			return;
 		}
 
-		createSchemaUpdate().setHaltOnError( true )
-				.execute( EnumSet.of( TargetType.DATABASE ) );
+		schemaScope.withSchemaUpdate( schemaUpdate ->
+								  schemaUpdate.setHaltOnError( true ).execute( EnumSet.of( TargetType.DATABASE ) ) );
 
-		createSchemaValidator().validate();
+		schemaScope.withSchemaValidator( schemaValidator -> schemaValidator.validate() );
 
-		createSchemaUpdate().setHaltOnError( true )
-				.setFormat( false )
-				.execute( EnumSet.of( TargetType.DATABASE, TargetType.SCRIPT ) );
+		schemaScope.withSchemaUpdate( schemaUpdate ->
+								  schemaUpdate.setHaltOnError( true )
+										  .setFormat( false )
+										  .execute( EnumSet.of( TargetType.DATABASE, TargetType.SCRIPT ) ) );
 
 		final String fileContent = getSqlScriptOutputFileContent();
 		assertThat( "The update output file should be empty", fileContent, is( "" ) );

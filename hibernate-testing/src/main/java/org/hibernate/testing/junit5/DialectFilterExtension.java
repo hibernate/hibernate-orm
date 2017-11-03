@@ -92,6 +92,30 @@ public class DialectFilterExtension implements ExecutionCondition {
 			}
 		}
 
+		List<RequiresDialectFeature> effectiveRequiresDialectFeatures = AnnotationUtil.findEffectiveRepeatingAnnotation(
+				context,
+				RequiresDialectFeature.class,
+				RequiresDialectFeatureGroup.class
+		);
+
+		for ( RequiresDialectFeature effectiveRequiresDialectFeature : effectiveRequiresDialectFeatures ) {
+			try {
+				final DialectFeatureCheck dialectFeatureCheck = effectiveRequiresDialectFeature.feature()
+						.newInstance();
+				if ( !dialectFeatureCheck.apply( getDialect( context ) ) ) {
+					return ConditionEvaluationResult.disabled(
+							String.format(
+									Locale.ROOT,
+									"Failed @RequiresDialectFeature [%s]",
+									effectiveRequiresDialectFeature.feature()
+							) );
+				}
+			}
+			catch (InstantiationException | IllegalAccessException e) {
+				throw new RuntimeException( "Unable to instantiate DialectFeatureCheck class", e );
+			}
+		}
+
 		return ConditionEvaluationResult.enabled( "Passed all @SkipForDialects" );
 	}
 

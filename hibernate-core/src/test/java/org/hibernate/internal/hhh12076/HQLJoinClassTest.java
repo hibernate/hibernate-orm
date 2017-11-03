@@ -27,76 +27,83 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @TestForIssue(jiraKey = "HHH-12076")
 public class HQLJoinClassTest extends BaseCoreFunctionalTestCase {
 
-	// Add your entities here.
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				ClassA.class,
-				ClassB.class,
-				ClassC.class,
-				ClassD.class,
-				ClassE.class
-		};
-	}
+    // Add your entities here.
+    @Override
+    protected Class[] getAnnotatedClasses() {
+        return new Class[]{
+                ClassA.class,
+                ClassB.class,
+                ClassC.class,
+                ClassD.class,
+                ClassE.class
+        };
+    }
 
-	// If you use *.hbm.xml mappings, instead of annotations, add the mappings here.
-	@Override
-	protected String[] getMappings() {
-		return new String[] {
+    // If you use *.hbm.xml mappings, instead of annotations, add the mappings here.
+    @Override
+    protected String[] getMappings() {
+        return new String[]{
 //				"Foo.hbm.xml",
 //				"Bar.hbm.xml"
-		};
-	}
-	// If those mappings reside somewhere other than resources/org/hibernate/test, change this.
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/test/";
-	}
+        };
+    }
 
-	// Add in any settings that are specific to your test.  See resources/hibernate.properties for the defaults.
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
+    // If those mappings reside somewhere other than resources/org/hibernate/test, change this.
+    @Override
+    protected String getBaseForMappings() {
+        return "org/hibernate/test/";
+    }
 
-		configuration.setProperty( AvailableSettings.SHOW_SQL, Boolean.TRUE.toString() );
-		configuration.setProperty( AvailableSettings.FORMAT_SQL, Boolean.TRUE.toString() );
-		//configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
+    // Add in any settings that are specific to your test.  See resources/hibernate.properties for the defaults.
+    @Override
+    protected void configure(Configuration configuration) {
+        super.configure(configuration);
 
-	// Add your tests, using standard JUnit.
-	@Test
-	public void hhh12076Test() throws Exception {
-		// BaseCoreFunctionalTestCase automatically creates the SessionFactory and provides the Session.
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		// Do stuff...
+        configuration.setProperty(AvailableSettings.SHOW_SQL, Boolean.TRUE.toString());
+        configuration.setProperty(AvailableSettings.FORMAT_SQL, Boolean.TRUE.toString());
+        //configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
+    }
 
-		for (int i = 0; i < 10; i++) {
-			ClassA classA = new ClassA();
-			for (int j = 0; j < 2; j++) {
-				ClassC classC = new ClassC();
-				ClassD classD = new ClassD();
-				ClassE classE = new ClassE();
+    // Add your tests, using standard JUnit.
+    @Test
+    public void hhh12076Test() throws Exception {
+        // BaseCoreFunctionalTestCase automatically creates the SessionFactory and provides the Session.
+        Session s = openSession();
+        Transaction tx = s.beginTransaction();
+        // Do stuff...
 
-				classA.getSubClasses().add(classC);
-				classA.getSubClasses().add(classD);
-				classA.getChildren().add(classE);
-			}
+        for (int i = 0; i < 10; i++) {
+            ClassA classA = new ClassA();
+            for (int j = 0; j < 2; j++) {
+                ClassC classC = new ClassC();
+                ClassD classD = new ClassD();
+                ClassE classE = new ClassE();
 
-			s.save(classA);
-		}
+                classA.getSubClasses().add(classC);
+                classA.getSubClasses().add(classD);
+                classA.getChildren().add(classE);
+            }
 
-		final String hql = "select c.id, c.name from ClassA as c join ClassE as e left join ClassB as sub with sub.class = ClassD";
+            s.save(classA);
+        }
 
-		Query<ClassA> query = session.createQuery(hql);
-		List<ClassA> results = query.getResultList();
-		assertNotNull(results);
+        // This works, but does not join on the type
+        //final String hql = "from ClassA as a join a.children as e left join a.subClasses as sub";
 
-		tx.commit();
-		s.close();
-	}
+        // This does not work
+        final String hql = "from ClassA as a join a.children as e left join a.subClasses as sub with sub.class = ClassD";
+
+        Query<ClassA> query = session.createQuery(hql);
+        List<ClassA> results = query.getResultList();
+        assertNotNull(results);
+        assertTrue(results.size() > 0);
+
+        tx.commit();
+        s.close();
+    }
 }

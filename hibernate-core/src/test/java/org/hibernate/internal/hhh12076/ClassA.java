@@ -1,5 +1,7 @@
 package org.hibernate.internal.hhh12076;
 
+import org.hibernate.annotations.Cascade;
+
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +19,7 @@ public class ClassA {
     private List<ClassB> subClasses = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL)
+    //@JoinColumn(name = "parent_id")
     private List<ClassE> children = new ArrayList<>();
 
     public Long getId() {

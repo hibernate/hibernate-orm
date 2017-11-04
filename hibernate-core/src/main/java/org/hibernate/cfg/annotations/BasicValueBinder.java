@@ -179,11 +179,6 @@ public class BasicValueBinder<T> {
 		if ( navigableJavaType == null ) {
 			throw new IllegalStateException( "BasicType requires Java type" );
 		}
-		final BasicJavaDescriptor javaDescriptor = (BasicJavaDescriptor) buildingContext.getBootstrapContext()
-				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( navigableJavaType );
-
 		Properties typeParameters = this.typeParameters;
 		typeParameters.clear();
 
@@ -192,8 +187,6 @@ public class BasicValueBinder<T> {
 						.getReflectionManager()
 						.toClass( navigableXProperty.getType() )
 		);
-
-
 
 		final boolean key = kind == Kind.COLLECTION_INDEX;
 

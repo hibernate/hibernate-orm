@@ -238,7 +238,7 @@ public class Column implements MappedColumn, Serializable, Cloneable {
 				.setScale( getScale() )
 				.build();
 		if ( size.getLength() == null
-				|| ( size.getScale() == null && size.getPrecision() == null ) ) {
+				&& size.getScale() == null && size.getPrecision() == null ) {
 			size = dialect.getDefaultSizeStrategy().resolveDefaultSize(
 					getSqlTypeDescriptor(),
 					getJavaTypeDescriptor()

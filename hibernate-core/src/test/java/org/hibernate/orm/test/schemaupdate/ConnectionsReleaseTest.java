@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.schemaupdate;
+package org.hibernate.orm.test.schemaupdate;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -14,7 +14,6 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -22,15 +21,11 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -39,7 +34,7 @@ import static org.hamcrest.core.Is.is;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10443")
-public class ConnectionsReleaseTest extends BaseUnitTestCase {
+public class ConnectionsReleaseTest extends BaseSchemaUnitTestCase {
 
 	public static Properties getConnectionProviderProperties() {
 		Properties props = new Properties();
@@ -50,39 +45,27 @@ public class ConnectionsReleaseTest extends BaseUnitTestCase {
 		return props;
 	}
 
-	private StandardServiceRegistry ssr;
-	private MetadataImplementor metadata;
 	private ConnectionProviderDecorator connectionProvider;
 
-	@Before
-	public void setUp() {
+	@Override
+	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		connectionProvider = new ConnectionProviderDecorator();
 		connectionProvider.configure( getConnectionProviderProperties() );
-
-		ssr = new StandardServiceRegistryBuilder()
-				.addService( ConnectionProvider.class, connectionProvider )
-				.applySetting(Environment.DIALECT, H2Dialect.class.getName())
-				.build();
-		metadata = (MetadataImplementor) new MetadataSources( ssr )
-				.addAnnotatedClass( Thing.class )
-				.buildMetadata();
-		metadata.validate();
+		serviceRegistryBuilder.addService( ConnectionProvider.class, connectionProvider )
+				.applySetting( Environment.DIALECT, H2Dialect.class.getName() );
 	}
 
-	@After
-	public void tearDown() {
-		StandardServiceRegistryBuilder.destroy( ssr );
-	}
-
-	@Test
-	public void testSchemaUpdateReleasesAllConnections() throws SQLException {
-		new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
+	@SchemaTest
+	public void testSchemaUpdateReleasesAllConnections(SchemaScope scope) {
+		scope.withSchemaUpdate( schemaUpdate ->
+										schemaUpdate.execute( EnumSet.of( TargetType.DATABASE ) ) );
 		assertThat( connectionProvider.getOpenConnection(), is( 0 ) );
 	}
 
-	@Test
-	public void testSchemaValidatorReleasesAllConnections() throws SQLException {
-		new SchemaValidator().validate( metadata );
+	@SchemaTest
+	public void testSchemaValidatorReleasesAllConnections(SchemaScope scope) {
+		scope.withSchemaValidator( schemaValidator ->
+										   schemaValidator.validate() );
 		assertThat( connectionProvider.getOpenConnection(), is( 0 ) );
 	}
 

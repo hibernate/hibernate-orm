@@ -93,7 +93,7 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 	}
 
 	private void addConstraintToColumn(final String columnName ) {
-		Column column = table.getColumn( new Column( columnName ) );
+		Column column = table.getColumn( new Column( columnName, false ) );
 		if ( column == null ) {
 			throw new AnnotationException(
 					"@Index references a unknown column: " + columnName

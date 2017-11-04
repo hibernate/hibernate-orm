@@ -115,12 +115,7 @@ public class RelationalObjectBinder {
 			logicalName = columnNamingDelegate.determineImplicitName( sourceDocument );
 		}
 
-		final Column column = new Column( logicalName );
-
-		if ( table != null ) {
-			table.addColumn( column );
-			column.setTableName( table.getNameIdentifier() );
-		}
+		final Column column = new Column( logicalName, columnSource.isUnique() );
 
 		if ( columnSource.getSizeSource() != null ) {
 			// UGH!
@@ -143,8 +138,6 @@ public class RelationalObjectBinder {
 
 		column.setNullable( interpretNullability( columnSource.isNullable(), areColumnsNullableByDefault ) );
 
-		column.setUnique( columnSource.isUnique() );
-
 		column.setCheckConstraint( columnSource.getCheckCondition() );
 		column.setDefaultValue( columnSource.getDefaultValue() );
 		column.setSqlType( columnSource.getSqlType() );
@@ -154,7 +147,14 @@ public class RelationalObjectBinder {
 		column.setCustomRead( columnSource.getReadFragment() );
 		column.setCustomWrite( columnSource.getWriteFragment() );
 
+
+		if ( table != null ) {
+			table.addColumn( column );
+			column.setTableName( table.getNameIdentifier() );
+		}
+
 		simpleValue.addColumn( column );
+
 
 		if ( table != null ) {
 			for ( String name : columnSource.getIndexConstraintNames() ) {

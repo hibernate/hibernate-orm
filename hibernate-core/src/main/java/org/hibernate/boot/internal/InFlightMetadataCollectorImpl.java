@@ -1734,7 +1734,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		for ( int index = 0; index < size; index++ ) {
 			final String logicalColumnName = columnNames[index];
 			try {
-				columns[index] = new Column( logicalColumnName );
+				columns[index] = new Column( logicalColumnName, unique );
 				unbound.add( columns[index] );
 				//column equals and hashcode is based on column name
 			}
@@ -1742,7 +1742,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				// If at least 1 columnName does exist, 'columns' will contain a mix of Columns and nulls.  In order
 				// to exhaustively report all of the unbound columns at once, w/o an NPE in
 				// Constraint#generateName's array sorting, simply create a fake Column.
-				columns[index] = new Column( logicalColumnName );
+				columns[index] = new Column( logicalColumnName, unique );
 				unboundNoLogical.add( columns[index] );
 			}
 		}

@@ -819,7 +819,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 					);
 				}
 				noReferencedColumn = false;
-				Column refCol = new Column( referencedColumnName.getName() );
+				Column refCol = new Column( referencedColumnName.getName(), false );
 				boolean contains = idColumns.contains( refCol );
 				if ( !contains ) {
 					isFkReferencedColumnName = true;

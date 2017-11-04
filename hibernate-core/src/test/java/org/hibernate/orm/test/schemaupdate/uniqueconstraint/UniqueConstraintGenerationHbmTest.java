@@ -8,19 +8,8 @@ package org.hibernate.orm.test.schemaupdate.uniqueconstraint;
 
 import java.io.IOException;
 import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.OrderColumn;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
@@ -38,7 +27,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-public class UniqueConstraintGenerationTest extends BaseSchemaUnitTestCase {
+public class UniqueConstraintGenerationHbmTest extends BaseSchemaUnitTestCase {
 
 	@Override
 	protected boolean createSqlScriptTempOutputFile() {
@@ -46,8 +35,8 @@ public class UniqueConstraintGenerationTest extends BaseSchemaUnitTestCase {
 	}
 
 	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { TestEntity.class };
+	protected String[] getHmbMappingFiles() {
+		return new String[] { "schemaupdate/uniqueconstraint/TestEntity.hbm.xml" };
 	}
 
 	@Override
@@ -82,8 +71,7 @@ public class UniqueConstraintGenerationTest extends BaseSchemaUnitTestCase {
 
 		assertThat(
 				"The test_entity_children table unique constraint has not been generated",
-				isRegexMatching( regex ), is( true )
-		);
+				isRegexMatching( regex ), is( true ) );
 	}
 
 	private void checkCreateUniqueIndexIsGenerated(String tableName, String columnName) throws IOException {
@@ -97,8 +85,7 @@ public class UniqueConstraintGenerationTest extends BaseSchemaUnitTestCase {
 
 	private boolean isRegexMatching(String regex) throws IOException {
 		boolean matches = false;
-		final String[] sqlGeneratedStatements = getSqlScriptOutputFileContent().toLowerCase()
-				.split( System.lineSeparator() );
+		final String[] sqlGeneratedStatements = getSqlScriptOutputFileContent().toLowerCase().split( System.lineSeparator() );
 		final Pattern p = Pattern.compile( regex );
 		for ( String statement : sqlGeneratedStatements ) {
 			final Matcher matcher = p.matcher( statement );
@@ -107,23 +94,5 @@ public class UniqueConstraintGenerationTest extends BaseSchemaUnitTestCase {
 			}
 		}
 		return matches;
-	}
-
-	@Entity(name = "TestEntity")
-	public static class TestEntity {
-		@Id
-		private Long id;
-
-		@ManyToMany()
-		@JoinTable(name = "test_entity_children",
-				joinColumns = @JoinColumn(name = "entity_id"),
-				inverseJoinColumns = @JoinColumn(name = "child", unique = true))
-		@OrderColumn(name = "order")
-		private List<TestEntity> children;
-
-		@ElementCollection
-		@CollectionTable(name = "test_entity_item")
-		@Column(name = "item", unique = true)
-		private Set<String> items;
 	}
 }

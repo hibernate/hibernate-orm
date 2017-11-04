@@ -227,7 +227,7 @@ public class Ejb3Column {
 			this.formula = new Formula(formulaString);
 		}
 		else {
-			this.mappingColumn = new Column(redefineColumnName( columnName, propertyName, applyNamingStrategy ));
+			this.mappingColumn = new Column(redefineColumnName( columnName, propertyName, applyNamingStrategy ), unique);
 			;
 			this.mappingColumn.setLength( length );
 			if ( precision != null && precision > 0 ) {  //revelent precision
@@ -236,7 +236,6 @@ public class Ejb3Column {
 			}
 			this.mappingColumn.setNullable( nullable );
 			this.mappingColumn.setSqlType( sqlType );
-			this.mappingColumn.setUnique( unique );
 
 			if(writeExpression != null && !writeExpression.matches("[^?]*\\?[^?]*")) {
 				throw new AnnotationException(

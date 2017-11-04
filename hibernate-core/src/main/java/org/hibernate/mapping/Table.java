@@ -287,6 +287,12 @@ public class Table implements MappedTable, Serializable {
 		else {
 			column.setUniqueInteger( old.getUniqueInteger() );
 		}
+
+		if ( column.isUnique() ) {
+			final ArrayList<Column> cols = new ArrayList<>();
+			cols.add( column );
+			createUniqueKey( cols );
+		}
 	}
 
 	public int getColumnSpan() {

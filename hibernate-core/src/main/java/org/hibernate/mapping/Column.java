@@ -53,12 +53,13 @@ public class Column implements MappedColumn, Serializable, Cloneable {
 	private String customWrite;
 	private String customRead;
 
-	public Column(String columnName) {
-		this( Identifier.toIdentifier( columnName ) );
+	public Column(String columnName, boolean isUnique) {
+		this( Identifier.toIdentifier( columnName ), isUnique );
 	}
 
-	public Column(Identifier columnName) {
+	public Column(Identifier columnName, boolean isUnique) {
 		setName( columnName );
+		setUnique( isUnique );
 	}
 
 	public Identifier getName() {
@@ -149,7 +150,7 @@ public class Column implements MappedColumn, Serializable, Cloneable {
 		this.sqlType = sqlType;
 	}
 
-	public void setUnique(boolean unique) {
+	private void setUnique(boolean unique) {
 		this.unique = unique;
 	}
 
@@ -321,13 +322,12 @@ public class Column implements MappedColumn, Serializable, Cloneable {
 	 */
 	@Override
 	public Column clone() {
-		Column copy = new Column( name );
+		Column copy = new Column( name, unique );
 		copy.setTableName( tableName );
 		copy.setLength( length );
 		copy.setScale( scale );
 		copy.setNullable( nullable );
 		copy.setPrecision( precision );
-		copy.setUnique( unique );
 		copy.setSqlType( sqlType );
 		copy.setUniqueInteger( uniqueInteger ); //usually useless
 		copy.setCheckConstraint( checkConstraint );

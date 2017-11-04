@@ -2676,7 +2676,7 @@ public class ModelBinder {
 		}
 
 		if ( embeddableSource.isUnique() ) {
-			final ArrayList<Column> cols = new ArrayList<Column>();
+			final ArrayList<Column> cols = new ArrayList<>();
 			final Iterator itr = componentBinding.getColumnIterator();
 			while ( itr.hasNext() ) {
 				final Object selectable = itr.next();

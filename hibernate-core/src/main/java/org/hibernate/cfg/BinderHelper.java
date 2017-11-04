@@ -379,7 +379,7 @@ public class BinderHelper {
 		}
 		//build the list of column names
 		for (Ejb3JoinColumn column1 : columns) {
-			Column column = new Column( column1.getReferencedColumn() );
+			Column column = new Column( column1.getReferencedColumn(), false );
 			orderedColumns.add( column );
 			columnsToProperty.put( column, new HashSet<>() );
 		}

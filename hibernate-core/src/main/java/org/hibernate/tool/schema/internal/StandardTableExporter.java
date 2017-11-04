@@ -79,7 +79,7 @@ public class StandardTableExporter implements Exporter<ExportableTable> {
 			if ( table.isPrimaryKeyIdentity() && colName.equals( pkColName ) ) {
 				// to support dialects that have their own identity data type
 				if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
-					buf.append( col.getSqlTypeDescriptor().getJdbcTypeCode() );
+					buf.append( dialect.getTypeName( col.getSqlTypeDescriptor().getJdbcTypeCode() ) );
 				}
 				buf.append( ' ' )
 						.append( dialect.getIdentityColumnSupport()

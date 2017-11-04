@@ -43,12 +43,16 @@ import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.SEQUE
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10937")
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class )
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class)
 public class SequenceFilterTest extends BaseSchemaUnitTestCase {
 
 	@Override
+	protected boolean dropSchemaAfterTest() {
+		return false;
+	}
+
+	@Override
 	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-		serviceRegistryBuilder.applySetting( AvailableSettings.DIALECT, H2Dialect.class.getName() );
 		serviceRegistryBuilder.applySetting( AvailableSettings.FORMAT_SQL, false );
 	}
 
@@ -88,7 +92,7 @@ public class SequenceFilterTest extends BaseSchemaUnitTestCase {
 
 	@SchemaTest
 	public void dropSchema_filtered(SchemaScope schemaScope) {
-		RecordingTarget target = doDrop(schemaScope, new TestSchemaFilter() );
+		RecordingTarget target = doDrop( schemaScope, new TestSchemaFilter() );
 
 		assertThat(
 				target.getActions( SEQUENCE_DROP ),

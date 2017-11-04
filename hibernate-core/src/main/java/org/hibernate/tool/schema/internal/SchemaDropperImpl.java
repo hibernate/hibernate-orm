@@ -103,7 +103,6 @@ public class SchemaDropperImpl implements SchemaDropper {
 		this.jdbcServices = tool.getServiceRegistry().getService( JdbcServices.class );
 	}
 
-
 	@Override
 	public void doDrop(
 			ExecutionOptions options,

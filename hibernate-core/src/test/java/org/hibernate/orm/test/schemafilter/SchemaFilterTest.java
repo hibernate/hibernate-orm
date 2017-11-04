@@ -39,8 +39,12 @@ import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.TABLE
 public class SchemaFilterTest extends BaseSchemaUnitTestCase {
 
 	@Override
+	protected boolean dropSchemaAfterTest() {
+		return false;
+	}
+
+	@Override
 	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-		serviceRegistryBuilder.applySetting( AvailableSettings.DIALECT, SQLServerDialect.class.getName() );
 		serviceRegistryBuilder.applySetting( AvailableSettings.FORMAT_SQL, false );
 	}
 
@@ -85,7 +89,7 @@ public class SchemaFilterTest extends BaseSchemaUnitTestCase {
 		RecordingTarget target = doDrop( schemaScope, new DefaultSchemaFilter() );
 
 		assertThat( target.getActions( SCHEMA_DROP ), containsExactly( "the_schema_1", "the_schema_2" ) );
-		assertThat( target.getActions( TABLE_DROP ), containsExactly(
+		assertThat( target.getTableDropAction( getDialect() ), containsExactly(
 				"the_entity_0",
 				"the_schema_1.the_entity_1",
 				"the_schema_1.the_entity_2",
@@ -100,7 +104,7 @@ public class SchemaFilterTest extends BaseSchemaUnitTestCase {
 
 		assertThat( target.getActions( SCHEMA_DROP ), containsExactly( "the_schema_1" ) );
 		assertThat(
-				target.getActions( TABLE_DROP ),
+				target.getTableDropAction( getDialect() ),
 				containsExactly( "the_entity_0", "the_schema_1.the_entity_1" )
 		);
 	}

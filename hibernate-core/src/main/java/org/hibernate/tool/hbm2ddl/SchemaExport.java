@@ -64,7 +64,7 @@ public class SchemaExport {
 	private final ServiceRegistry serviceRegistry;
 
 	public SchemaExport(DatabaseModel databaseModel, ServiceRegistry serviceRegistry) {
-		this.databaseModel =  databaseModel;
+		this.databaseModel = databaseModel;
 		this.serviceRegistry = serviceRegistry;
 	}
 
@@ -288,7 +288,7 @@ public class SchemaExport {
 
 		try {
 			if ( action.doDrop() ) {
-				tool.getSchemaDropper( databaseModel,config ).doDrop(
+				tool.getSchemaDropper( databaseModel, config ).doDrop(
 						executionOptions,
 						sourceDescriptor,
 						targetDescriptor
@@ -296,7 +296,7 @@ public class SchemaExport {
 			}
 
 			if ( action.doCreate() ) {
-				tool.getSchemaCreator( databaseModel,config ).doCreation(
+				tool.getSchemaCreator( databaseModel, config ).doCreation(
 						executionOptions,
 						sourceDescriptor,
 						targetDescriptor
@@ -321,12 +321,15 @@ public class SchemaExport {
 		final ScriptTargetOutput scriptTarget;
 		if ( targetTypes.contains( TargetType.SCRIPT ) ) {
 			if ( outputFile == null ) {
-				throw new SchemaManagementException( "Writing to script was requested, but no script file was specified" );
+				throw new SchemaManagementException(
+						"Writing to script was requested, but no script file was specified, test class should override createSqlScriptTempOutputFile method" );
 			}
 			scriptTarget = Helper.interpretScriptTargetSetting(
 					outputFile,
 					serviceRegistry.getService( ClassLoaderService.class ),
-					(String) serviceRegistry.getService( ConfigurationService.class ).getSettings().get( AvailableSettings.HBM2DDL_CHARSET_NAME )
+					(String) serviceRegistry.getService( ConfigurationService.class )
+							.getSettings()
+							.get( AvailableSettings.HBM2DDL_CHARSET_NAME )
 			);
 		}
 		else {
@@ -570,7 +573,11 @@ public class SchemaExport {
 			}
 
 			if ( targetText == null ) {
-				parsedArgs.targetTypes = TargetTypeHelper.parseLegacyCommandLineOptions( script, export, parsedArgs.outputFile );
+				parsedArgs.targetTypes = TargetTypeHelper.parseLegacyCommandLineOptions(
+						script,
+						export,
+						parsedArgs.outputFile
+				);
 			}
 			else {
 				if ( !script || !export ) {

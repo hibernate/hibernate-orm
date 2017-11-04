@@ -4,29 +4,22 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.schemaupdate.uniqueconstraint;
+package org.hibernate.orm.test.schemaupdate.uniqueconstraint;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.orm.test.schemaupdate.BaseSchemaUnitTestCase;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -34,47 +27,48 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-public class UniqueConstraintGenerationTest {
-	private File output;
-	private MetadataImplementor metadata;
-	StandardServiceRegistry ssr;
+public class UniqueConstraintGenerationTest extends BaseSchemaUnitTestCase {
 
-	@Before
-	public void setUp() throws Exception {
-		output = File.createTempFile( "update_script", ".sql" );
-		output.deleteOnExit();
-		ssr = new StandardServiceRegistryBuilder()
-				.applySetting( Environment.HBM2DDL_AUTO, "none" )
-				.build();
-		metadata = (MetadataImplementor) new MetadataSources( ssr )
-				.addResource( "org/hibernate/test/schemaupdate/uniqueconstraint/TestEntity.hbm.xml" )
-				.buildMetadata();
-		metadata.validate();
+	@Override
+	protected boolean createSqlScriptTempOutputFile() {
+		return true;
 	}
 
-	@After
-	public void tearDown() {
-		StandardServiceRegistryBuilder.destroy( ssr );
+	@Override
+	protected String[] getHmbMappingFiles() {
+		return new String[] { "schemaupdate/uniqueconstraint/TestEntity.hbm.xml" };
 	}
 
-	@Test
+	@Override
+	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.HBM2DDL_AUTO, "none" );
+	}
+
+	@Override
+	protected boolean dropSchemaAfterTest() {
+		return false;
+	}
+
+	@SchemaTest
 	@TestForIssue(jiraKey = "HHH-11101")
-	public void testUniqueConstraintIsGenerated() throws Exception {
-		new SchemaExport()
-				.setOutputFile( output.getAbsolutePath() )
-				.create( EnumSet.of( TargetType.SCRIPT ), metadata );
+	public void testUniqueConstraintIsGenerated(SchemaScope scope) throws Exception {
+		scope.withSchemaExport( schemaExport ->
+										schemaExport
+												.create( EnumSet.of( TargetType.SCRIPT ) ) );
 
-		if (ssr.getService(JdbcEnvironment.class).getDialect() instanceof DB2Dialect) {
+		if ( getDialect() instanceof DB2Dialect ) {
 			assertThat(
 					"The test_entity_item table unique constraint has not been generated",
-					isCreateUniqueIndexGenerated("test_entity_item", "item"),
-					is(true)
+					isCreateUniqueIndexGenerated( "test_entity_item", "item" ),
+					is( true )
 			);
-		} else {
+		}
+		else {
+
 			assertThat(
 					"The test_entity_item table unique constraint has not been generated",
-					isUniqueConstraintGenerated("test_entity_item", "item"),
-					is(true)
+					isUniqueConstraintGenerated( "test_entity_item", "item" ),
+					is( true )
 			);
 		}
 
@@ -89,7 +83,7 @@ public class UniqueConstraintGenerationTest {
 		boolean matches = false;
 		final String regex = "alter table " + tableName + " add constraint uk_(.)* unique \\(" + columnName + "\\)";
 
-		final String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase();
+		final String fileContent = getOutputTempScriptFileName().toLowerCase();
 		final String[] split = fileContent.split( System.lineSeparator() );
 		Pattern p = Pattern.compile( regex );
 		for ( String line : split ) {
@@ -105,7 +99,7 @@ public class UniqueConstraintGenerationTest {
 		boolean matches = false;
 		String regex = "create unique index uk_(.)* on " + tableName + " \\(" + columnName + "\\)";
 
-		final String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase();
+		final String fileContent = getOutputTempScriptFileName().toLowerCase();
 		final String[] split = fileContent.split( System.lineSeparator() );
 		Pattern p = Pattern.compile( regex );
 		for ( String line : split ) {

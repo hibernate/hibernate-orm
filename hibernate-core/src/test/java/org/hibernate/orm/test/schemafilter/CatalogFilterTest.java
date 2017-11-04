@@ -9,7 +9,6 @@ import javax.persistence.Table;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.Namespace;
 import org.hibernate.metamodel.model.relational.spi.Sequence;
@@ -29,6 +28,8 @@ import org.hamcrest.Description;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.TABLE_CREATE;
 import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.TABLE_DROP;
+import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.TABLE_DROP_WITH_IF_EXISTS_AFTER_TABLE;
+import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.TABLE_DROP_WITH_IF_EXISTS_BEFORE_TABLE;
 
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -36,8 +37,12 @@ import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.TABLE
 public class CatalogFilterTest extends BaseSchemaUnitTestCase {
 
 	@Override
+	protected boolean dropSchemaAfterTest() {
+		return false;
+	}
+
+	@Override
 	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-		serviceRegistryBuilder.applySetting( AvailableSettings.DIALECT, SQLServerDialect.class.getName() );
 		serviceRegistryBuilder.applySetting( AvailableSettings.FORMAT_SQL, false );
 	}
 
@@ -78,8 +83,7 @@ public class CatalogFilterTest extends BaseSchemaUnitTestCase {
 	@SchemaTest
 	public void dropCatalog_unfiltered(SchemaScope schemaScope) {
 		RecordingTarget target = doDrop( schemaScope, new DefaultSchemaFilter() );
-
-		assertThat( target.getActions( TABLE_DROP ), containsExactly(
+		assertThat( target.getTableDropAction( getDialect() ), containsExactly(
 				"the_entity_0",
 				"the_catalog_1.the_entity_1",
 				"the_catalog_1.the_entity_2",
@@ -93,7 +97,7 @@ public class CatalogFilterTest extends BaseSchemaUnitTestCase {
 		RecordingTarget target = doDrop( schemaScope, new TestSchemaFilter() );
 
 		assertThat(
-				target.getActions( TABLE_DROP ),
+				target.getTableDropAction( getDialect() ),
 				containsExactly( "the_entity_0", "the_catalog_1.the_entity_1" )
 		);
 	}

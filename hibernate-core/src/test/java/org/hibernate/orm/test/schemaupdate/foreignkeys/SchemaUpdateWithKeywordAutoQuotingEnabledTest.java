@@ -24,7 +24,6 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
-import org.junit.jupiter.api.BeforeEach;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -53,10 +52,6 @@ public class SchemaUpdateWithKeywordAutoQuotingEnabledTest extends BaseSchemaUni
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Match.class };
 	}
-
-	@BeforeEach
-	public void setUp() {
-		}
 
 
 	@SchemaTest

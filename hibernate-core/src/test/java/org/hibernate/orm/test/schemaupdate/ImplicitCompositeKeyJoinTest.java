@@ -45,7 +45,7 @@ public class ImplicitCompositeKeyJoinTest extends BaseSchemaUnitTestCase {
 
 	@SchemaTest
 	public void testSchemaCreationSQLCommandIsGeneratedWithTheCorrectColumnSizeValues(SchemaScope scope) {
-		scope.withSchemaCreator( schemaCreator -> {
+		scope.withSchemaCreator( null, schemaCreator -> {
 			boolean createTableEmployeeFound = false;
 			final List<String> commands = schemaCreator.generateCreationCommands(
 					getMetadata(),

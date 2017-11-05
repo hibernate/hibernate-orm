@@ -21,7 +21,10 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
@@ -30,16 +33,19 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
+import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaMigrator;
 
-import org.hibernate.testing.junit5.serviceregistry.ServiceRegistryAccess;
-import org.hibernate.testing.junit5.serviceregistry.ServiceRegistryContainer;
 import org.hibernate.testing.junit5.schema.FunctionalMetaModelTesting;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaScopeProducer;
+import org.hibernate.testing.junit5.serviceregistry.ServiceRegistryAccess;
+import org.hibernate.testing.junit5.serviceregistry.ServiceRegistryContainer;
 import org.hibernate.testing.junit5.template.TestParameter;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -59,12 +65,19 @@ public abstract class BaseSchemaUnitTestCase
 
 	private File output;
 	private SchemaScope schemaScope;
+	private Dialect dialect;
 
-	@Override
-	public void clearTestScope() {
+	@BeforeEach
+	public void setUp(SchemaScope scope) {
+		beforeEach( scope );
+	}
+
+	@AfterEach
+	public void tearDown(SchemaScope scope) {
 		try {
 			try {
-				schemaScope.clearScope();
+				scope.clearScope();
+				afterEach( scope );
 			}
 			finally {
 				if ( createSqlScriptTempOutputFile() ) {
@@ -136,19 +149,46 @@ public abstract class BaseSchemaUnitTestCase
 	}
 
 	public Dialect getDialect() {
-		Dialect dialect;
-		if ( metadata == null ) {
-			StandardServiceRegistry standardServiceRegistry
-					= buildServiceRegistry( JdbcMetadaAccessStrategy.INDIVIDUALLY.toString() );
-			afterServiceRegistryCreation( standardServiceRegistry );
-			MetadataImplementor metadata = buildMetadata( standardServiceRegistry );
-			dialect = metadata.getDatabase().getDialect();
-			StandardServiceRegistryBuilder.destroy( standardServiceRegistry );
-		}
-		else {
-			dialect = metadata.getDatabase().getDialect();
+		if ( dialect == null ) {
+			if ( metadata == null ) {
+				StandardServiceRegistry standardServiceRegistry
+						= buildServiceRegistry( JdbcMetadaAccessStrategy.INDIVIDUALLY.toString() );
+				try {
+					afterServiceRegistryCreation( standardServiceRegistry );
+					MetadataImplementor metadata = buildMetadata( standardServiceRegistry );
+					dialect = metadata.getDatabase().getDialect();
+				}
+				finally {
+					StandardServiceRegistryBuilder.destroy( standardServiceRegistry );
+				}
+			}
+			else {
+				dialect = metadata.getDatabase().getDialect();
+			}
 		}
 		return dialect;
+	}
+
+	public void executeSqlStatement(String statement) {
+		final ConnectionProvider connectionProvider = standardServiceRegistry.getService( ConnectionProvider.class );
+
+		DdlTransactionIsolator transactionIsolator = new DdlTransactionIsolatorTestingImpl(
+				standardServiceRegistry,
+				connectionProvider
+		);
+		GenerationTargetToDatabase targetToDatabase = new GenerationTargetToDatabase( transactionIsolator, true );
+		try {
+			targetToDatabase.accept( statement );
+		}
+		finally {
+			targetToDatabase.release();
+		}
+	}
+
+	protected void beforeEach(SchemaScope scope) {
+	}
+
+	protected void afterEach(SchemaScope scope) {
 	}
 
 	protected String getBaseForMappings() {
@@ -175,8 +215,10 @@ public abstract class BaseSchemaUnitTestCase
 		return true;
 	}
 
-
 	protected void afterMetadataCreation(MetadataImplementor metadata) {
+	}
+
+	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 	}
 
 	private void createTempOutputFile() throws IOException {
@@ -202,9 +244,6 @@ public abstract class BaseSchemaUnitTestCase
 		addResources( metadataSources );
 
 		return (MetadataImplementor) metadataSources.buildMetadata();
-	}
-
-	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 	}
 
 	private void addResources(MetadataSources metadataSources) {
@@ -259,18 +298,8 @@ public abstract class BaseSchemaUnitTestCase
 		}
 
 		@Override
-		public void withSchemaCreator(Consumer<SchemaCreatorImpl> consumer) {
-			consumer.accept( createSchemaCreator( null ) );
-		}
-
-		@Override
 		public void withSchemaCreator(SchemaFilter filter, Consumer<SchemaCreatorImpl> consumer) {
 			consumer.accept( createSchemaCreator( filter ) );
-		}
-
-		@Override
-		public void withSchemaDropper(Consumer<SchemaDropperImpl> consumer) {
-			consumer.accept( createSchemaDropper( null ) );
 		}
 
 		@Override

@@ -19,7 +19,7 @@ import org.hibernate.testing.junit5.RequiresDialect;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(dialectClass = H2Dialect.class)
+@RequiresDialect(dialectClass = H2Dialect.class, matchSubTypes = true)
 public class ForeignKeyDefinitionOneToOneTest
 		extends AbstractForeignKeyDefinitionTest {
 

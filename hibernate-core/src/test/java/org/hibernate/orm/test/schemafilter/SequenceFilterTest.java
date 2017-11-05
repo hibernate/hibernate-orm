@@ -18,7 +18,6 @@ import javax.persistence.Table;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.Namespace;
 import org.hibernate.orm.test.schemaupdate.BaseSchemaUnitTestCase;
@@ -35,9 +34,6 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.SEQUENCE_CREATE;
-import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.SEQUENCE_DROP;
-
 
 /**
  * @author Andrea Boriero
@@ -65,37 +61,39 @@ public class SequenceFilterTest extends BaseSchemaUnitTestCase {
 	public void createSchema_unfiltered(SchemaScope schemaScope) {
 		RecordingTarget target = doCreation( schemaScope, new DefaultSchemaFilter() );
 
-		assertThat( target.getActions( SEQUENCE_CREATE ), containsExactly(
-				"entity_1_seq_gen",
-				"entity_2_seq_gen"
-		) );
+		assertThat(
+				target.getActions( target.sequenceCreateActions() ),
+				containsExactly( "entity_1_seq_gen", "entity_2_seq_gen" )
+		);
 	}
 
 	@SchemaTest
 	public void createSchema_filtered(SchemaScope schemaScope) {
 		RecordingTarget target = doCreation( schemaScope, new TestSchemaFilter() );
 
-		assertThat( target.getActions( SEQUENCE_CREATE ), containsExactly(
-				"entity_1_seq_gen"
-		) );
+		assertThat(
+				target.getActions( target.sequenceCreateActions() ),
+				containsExactly( "entity_1_seq_gen" )
+		);
 	}
 
 	@SchemaTest
 	public void dropSchema_unfiltered(SchemaScope schemaScope) {
 		RecordingTarget target = doDrop( schemaScope, new DefaultSchemaFilter() );
 
-		assertThat( target.getActions( SEQUENCE_DROP ), containsExactly(
-				"entity_1_seq_gen",
-				"entity_2_seq_gen"
-		) );
+		assertThat(
+				target.getActions( target.sequenceDropActions() ),
+				containsExactly( "entity_1_seq_gen", "entity_2_seq_gen" )
+		);
 	}
 
 	@SchemaTest
 	public void dropSchema_filtered(SchemaScope schemaScope) {
 		RecordingTarget target = doDrop( schemaScope, new TestSchemaFilter() );
 
+		Set<String> actions = target.getActions( target.sequenceDropActions() );
 		assertThat(
-				target.getActions( SEQUENCE_DROP ),
+				actions,
 				containsExactly( "entity_1_seq_gen" )
 		);
 	}
@@ -153,13 +151,13 @@ public class SequenceFilterTest extends BaseSchemaUnitTestCase {
 	}
 
 	private RecordingTarget doCreation(SchemaScope schemaScope, SchemaFilter filter) {
-		RecordingTarget target = new RecordingTarget();
+		RecordingTarget target = new RecordingTarget( getDialect() );
 		schemaScope.withSchemaCreator( filter, schemaCreator -> schemaCreator.doCreation( true, target ) );
 		return target;
 	}
 
 	private RecordingTarget doDrop(SchemaScope schemaScope, SchemaFilter filter) {
-		RecordingTarget target = new RecordingTarget();
+		RecordingTarget target = new RecordingTarget( getDialect() );
 		schemaScope.withSchemaDropper( filter, schemaDropper -> schemaDropper.doDrop( true, target ) );
 		return target;
 	}

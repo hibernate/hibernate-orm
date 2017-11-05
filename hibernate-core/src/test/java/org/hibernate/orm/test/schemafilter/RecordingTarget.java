@@ -1,74 +1,68 @@
 package org.hibernate.orm.test.schemafilter;
 
-import java.util.EnumMap;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 
-import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.TABLE_DROP;
-import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.TABLE_DROP_WITH_IF_EXISTS_AFTER_TABLE;
-import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.TABLE_DROP_WITH_IF_EXISTS_BEFORE_TABLE;
-
 class RecordingTarget implements GenerationTarget {
-	public enum Category {
-		SCHEMA_CREATE( Pattern.compile( "create schema (.*)" ) ),
-		SCHEMA_DROP( Pattern.compile( "drop schema (.*)" ) ),
-		TABLE_CREATE( Pattern.compile( "create table (\\S+) .*" ) ),
-		TABLE_DROP( Pattern.compile( "drop table ^(if exists) (.*) ^(if exists)" ) ),
-		TABLE_DROP_WITH_IF_EXISTS_BEFORE_TABLE( Pattern.compile( "drop table if exists (.*)" )),
-		TABLE_DROP_WITH_IF_EXISTS_AFTER_TABLE( Pattern.compile( "drop table (.*) if exists" )),
-		SEQUENCE_CREATE(Pattern.compile( "create sequence (.*) start (.*)" )),
-		SEQUENCE_DROP(Pattern.compile( "drop sequence if exists (.*)" ));
+	private final Pattern schemaCreatePattern;
+	private final Pattern schemaDropPattern;
+	private final Pattern tableCreatePattern;
+	private final Pattern tableDropPattern;
+	private final Pattern sequenceCreatePattern;
+	private final Pattern sequenceDropPattern;
 
-		private final Pattern pattern;
+	List<String> actions = new ArrayList<>();
 
-		Category(Pattern pattern) {
-			this.pattern = pattern;
-		}
-
-		public Pattern getPattern() {
-			return pattern;
-		}
+	public RecordingTarget(Dialect dialect) {
+		schemaCreatePattern = Pattern.compile( "create schema (.*)" );
+		schemaDropPattern = Pattern.compile( "drop schema (.*)" );
+		tableCreatePattern = Pattern.compile( "create table (\\S+) .*" );
+		tableDropPattern = buildTableDropPattern( dialect );
+		sequenceCreatePattern = Pattern.compile( "create sequence (.*) start (.*)" );
+		sequenceDropPattern = Pattern.compile( "drop sequence if exists (.*)" );
 	}
 
-	private final EnumMap<Category, Set<String>> actionsByCategory = new EnumMap<>( Category.class );
+	public Pattern schemaCreateActions() {
+		return schemaCreatePattern;
+	}
 
-	public Set<String> getActions(Category category) {
-		Set<String> result = actionsByCategory.get( category );
-		if ( result == null ) {
-			result = new HashSet<>();
-			actionsByCategory.put( category, result );
-		}
-		return result;
+	public Pattern schemaDropActions() {
+		return schemaDropPattern;
+	}
+
+	public Pattern tableCreateActions() {
+		return tableCreatePattern;
+	}
+
+	public Pattern tableDropActions() {
+		return tableDropPattern;
+	}
+
+	public Pattern sequenceCreateActions() {
+		return sequenceCreatePattern;
+	}
+
+	public Pattern sequenceDropActions() {
+		return sequenceDropPattern;
+	}
+
+	public Set<String> getActions(Pattern pattern) {
+		return actions.stream()
+				.map( action -> pattern.matcher( action ) )
+				.filter( matcher -> matcher.matches() )
+				.map( matcher -> matcher.group( 1 ) )
+				.collect( Collectors.toSet() );
 	}
 
 	@Override
 	public void accept(String action) {
-		action = action.toLowerCase();
-
-		for ( Category category : Category.values() ) {
-			final Matcher matcher = category.getPattern().matcher( action );
-			if ( matcher.matches() ) {
-				getActions( category ).add( matcher.group( 1 ) );
-				return;
-			}
-		}
-	}
-
-	public Set<String> getTableDropAction(Dialect dialect) {
-		Set<String> action = getActions( TABLE_DROP );
-		if ( dialect.supportsIfExistsBeforeTableName() ) {
-			action = getActions( TABLE_DROP_WITH_IF_EXISTS_BEFORE_TABLE );
-		}
-		if ( dialect.supportsIfExistsAfterTableName() ) {
-			action = getActions( TABLE_DROP_WITH_IF_EXISTS_AFTER_TABLE );
-
-		}
-		return action;
+		actions.add( action.toLowerCase() );
 	}
 
 	@Override
@@ -79,5 +73,18 @@ class RecordingTarget implements GenerationTarget {
 	@Override
 	public void release() {
 		// nothing to do
+	}
+
+	private Pattern buildTableDropPattern(Dialect dialect) {
+		StringBuilder builder = new StringBuilder( "drop table " );
+		if ( dialect.supportsIfExistsBeforeTableName() ) {
+			builder.append( "if exists " );
+		}
+		builder.append( "(.*)" );
+		builder.append( dialect.getCascadeConstraintsString() );
+		if ( dialect.supportsIfExistsAfterTableName() ) {
+			builder.append( " if exists" );
+		}
+		return Pattern.compile( builder.toString() );
 	}
 }

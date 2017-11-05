@@ -9,7 +9,6 @@ import javax.persistence.Table;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.Namespace;
 import org.hibernate.metamodel.model.relational.spi.Sequence;
@@ -28,14 +27,10 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.SCHEMA_CREATE;
-import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.SCHEMA_DROP;
-import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.TABLE_CREATE;
-import static org.hibernate.orm.test.schemafilter.RecordingTarget.Category.TABLE_DROP;
 
 @TestForIssue(jiraKey = "HHH-9876")
 @SuppressWarnings({ "rawtypes", "unchecked" })
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class )
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class)
 public class SchemaFilterTest extends BaseSchemaUnitTestCase {
 
 	@Override
@@ -63,23 +58,30 @@ public class SchemaFilterTest extends BaseSchemaUnitTestCase {
 	public void createSchema_unfiltered(SchemaScope schemaScope) {
 		RecordingTarget target = doCreation( schemaScope, new DefaultSchemaFilter() );
 
-		assertThat( target.getActions( SCHEMA_CREATE ), containsExactly( "the_schema_1", "the_schema_2" ) );
-		assertThat( target.getActions( TABLE_CREATE ), containsExactly(
-				"the_entity_0",
-				"the_schema_1.the_entity_1",
-				"the_schema_1.the_entity_2",
-				"the_schema_2.the_entity_3",
-				"the_schema_2.the_entity_4"
-		) );
+		assertThat( target.getActions( target.schemaCreateActions() ), containsExactly( "the_schema_1", "the_schema_2" ) );
+		assertThat(
+				target.getActions( target.tableCreateActions() ),
+				containsExactly(
+						"the_entity_0",
+						"the_schema_1.the_entity_1",
+						"the_schema_1.the_entity_2",
+						"the_schema_2.the_entity_3",
+						"the_schema_2.the_entity_4"
+				)
+		);
 	}
 
 	@SchemaTest
 	public void createSchema_filtered(SchemaScope schemaScope) {
 		RecordingTarget target = doCreation( schemaScope, new TestSchemaFilter() );
 
-		assertThat( target.getActions( SCHEMA_CREATE ), containsExactly( "the_schema_1" ) );
 		assertThat(
-				target.getActions( TABLE_CREATE ),
+				target.getActions( target.schemaCreateActions() ),
+				containsExactly( "the_schema_1" )
+		);
+
+		assertThat(
+				target.getActions( target.tableCreateActions() ),
 				containsExactly( "the_entity_0", "the_schema_1.the_entity_1" )
 		);
 	}
@@ -88,35 +90,46 @@ public class SchemaFilterTest extends BaseSchemaUnitTestCase {
 	public void dropSchema_unfiltered(SchemaScope schemaScope) {
 		RecordingTarget target = doDrop( schemaScope, new DefaultSchemaFilter() );
 
-		assertThat( target.getActions( SCHEMA_DROP ), containsExactly( "the_schema_1", "the_schema_2" ) );
-		assertThat( target.getTableDropAction( getDialect() ), containsExactly(
-				"the_entity_0",
-				"the_schema_1.the_entity_1",
-				"the_schema_1.the_entity_2",
-				"the_schema_2.the_entity_3",
-				"the_schema_2.the_entity_4"
-		) );
+		assertThat(
+				target.getActions( target.schemaDropActions() ),
+				containsExactly( "the_schema_1", "the_schema_2" )
+		);
+
+		assertThat(
+				target.getActions( target.tableDropActions() ),
+				containsExactly(
+						"the_entity_0",
+						"the_schema_1.the_entity_1",
+						"the_schema_1.the_entity_2",
+						"the_schema_2.the_entity_3",
+						"the_schema_2.the_entity_4"
+				)
+		);
 	}
 
 	@SchemaTest
 	public void dropSchema_filtered(SchemaScope schemaScope) {
 		RecordingTarget target = doDrop( schemaScope, new TestSchemaFilter() );
 
-		assertThat( target.getActions( SCHEMA_DROP ), containsExactly( "the_schema_1" ) );
 		assertThat(
-				target.getTableDropAction( getDialect() ),
+				target.getActions( target.schemaDropActions() ),
+				containsExactly( "the_schema_1" )
+		);
+
+		assertThat(
+				target.getActions( target.tableDropActions() ),
 				containsExactly( "the_entity_0", "the_schema_1.the_entity_1" )
 		);
 	}
 
 	private RecordingTarget doCreation(SchemaScope schemaScope, SchemaFilter filter) {
-		RecordingTarget target = new RecordingTarget();
+		RecordingTarget target = new RecordingTarget( getDialect() );
 		schemaScope.withSchemaCreator( filter, schemaCreator -> schemaCreator.doCreation( true, target ) );
 		return target;
 	}
 
 	private RecordingTarget doDrop(SchemaScope schemaScope, SchemaFilter filter) {
-		RecordingTarget target = new RecordingTarget();
+		RecordingTarget target = new RecordingTarget( getDialect() );
 		schemaScope.withSchemaDropper( filter, schemaDropper -> schemaDropper.doDrop( true, target ) );
 		return target;
 	}

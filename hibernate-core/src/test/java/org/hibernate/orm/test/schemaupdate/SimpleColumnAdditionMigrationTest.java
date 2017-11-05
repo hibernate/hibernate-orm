@@ -9,62 +9,51 @@ package org.hibernate.orm.test.schemaupdate;
 import java.util.EnumSet;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.Helper;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Andrea Boriero
  */
-public class SimpleColumnAdditionMigrationTest {
-	private static final String RESOURCE_1 = "org/hibernate/orm/test/schemaupdate/1_Version.hbm.xml";
+public class SimpleColumnAdditionMigrationTest extends BaseSchemaUnitTestCase {
 	private static final String RESOURCE_2 = "org/hibernate/orm/test/schemaupdate/2_Version.hbm.xml";
 
-	private ServiceRegistry serviceRegistry;
-
-	@BeforeEach
-	public void setUp() {
-		serviceRegistry = new StandardServiceRegistryBuilder().build();
+	@Override
+	protected String[] getHmbMappingFiles() {
+		return new String[] { "schemaupdate/1_Version.hbm.xml" };
 	}
 
-	@AfterEach
-	public void tearDown() {
-		StandardServiceRegistryBuilder.destroy( serviceRegistry );
-		serviceRegistry = null;
+	@Override
+	protected boolean dropSchemaAfterTest() {
+		return false;
 	}
 
-	@Test
-	public void testSimpleColumnAddition() {
-		final DatabaseModel databaseModel = createDatabaseModel( RESOURCE_1 );
-		new SchemaExport( databaseModel, serviceRegistry ).drop( EnumSet.of( TargetType.DATABASE ) );
-
-		final SchemaUpdate v1schemaUpdate = new SchemaUpdate( databaseModel, serviceRegistry );
-		v1schemaUpdate.execute( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ) );
-
-		assertEquals( 0, v1schemaUpdate.getExceptions().size() );
+	@SchemaTest
+	public void testSimpleColumnAddition(SchemaScope scope) {
+		scope.withSchemaUpdate( schemaUpdate -> {
+			schemaUpdate.execute( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ) );
+			assertEquals( 0, schemaUpdate.getExceptions().size() );
+		} );
 
 		final DatabaseModel v2DatabaseModel = createDatabaseModel( RESOURCE_2 );
-		final SchemaUpdate v2schemaUpdate = new SchemaUpdate( v2DatabaseModel, serviceRegistry );
+		final SchemaUpdate v2schemaUpdate = new SchemaUpdate( v2DatabaseModel, getStandardServiceRegistry() );
 		v2schemaUpdate.execute( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ) );
-
 		assertEquals( 0, v2schemaUpdate.getExceptions().size() );
 
-		new SchemaExport( v2DatabaseModel, serviceRegistry ).drop( EnumSet.of( TargetType.DATABASE ) );
+		new SchemaExport( v2DatabaseModel, getStandardServiceRegistry() ).drop( EnumSet.of( TargetType.DATABASE ) );
 	}
 
 	private DatabaseModel createDatabaseModel(String resource1) {
-		final MetadataImplementor v1metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+		final MetadataImplementor v1metadata = (MetadataImplementor) new MetadataSources( getStandardServiceRegistry() )
 				.addResource( resource1 )
 				.buildMetadata();
 

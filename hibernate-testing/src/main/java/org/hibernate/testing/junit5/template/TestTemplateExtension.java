@@ -22,22 +22,14 @@ import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider;
  * @author Andrea Boriero
  */
 public abstract class TestTemplateExtension
-		implements TestTemplateInvocationContextProvider, AfterTestExecutionCallback {
-
-	@Override
-	public void afterTestExecution(ExtensionContext context) throws Exception {
-		final Object testInstance = context.getRequiredTestInstance();
-		if ( !TestScopeProducer.class.isInstance( testInstance ) ) {
-			throw new RuntimeException( "Test instance does not implement TestScope" );
-		}
-
-		( (TestScopeProducer) testInstance ).clearTestScope();
-	}
+		implements TestTemplateInvocationContextProvider {
 
 	public class CustomTestTemplateInvocationContext
 			implements TestTemplateInvocationContext {
 		private final TestParameter parameter;
 		private final Class<?> parameterClass;
+		private TestScope testScope;
+
 
 		public CustomTestTemplateInvocationContext(TestParameter parameter, Class<? extends TestScope> parameterClass) {
 			this.parameter = parameter;
@@ -69,8 +61,10 @@ public abstract class TestTemplateExtension
 					if ( !TestScopeProducer.class.isInstance( testInstance ) ) {
 						throw new RuntimeException( "Test instance does not implement TestScopeProducer" );
 					}
-
-					return ( (TestScopeProducer) testInstance ).produceTestScope( parameter );
+					if ( testScope == null ) {
+						testScope = ( (TestScopeProducer) testInstance ).produceTestScope( parameter );
+					}
+					return testScope;
 				}
 			} );
 		}

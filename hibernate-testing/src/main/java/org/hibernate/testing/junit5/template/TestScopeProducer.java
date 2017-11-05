@@ -11,6 +11,4 @@ package org.hibernate.testing.junit5.template;
  */
 public interface TestScopeProducer<T extends TestScope, U> {
 	T produceTestScope(TestParameter<U> parameter);
-
-	void clearTestScope();
 }

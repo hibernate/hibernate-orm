@@ -32,11 +32,7 @@ public interface SchemaScope extends TestScope {
 
 	void withSchemaExport(Consumer<SchemaExport> counsumer);
 
-	void withSchemaCreator(Consumer<SchemaCreatorImpl> consumer);
-
 	void withSchemaCreator(SchemaFilter filter, Consumer<SchemaCreatorImpl> consumer);
-
-	void withSchemaDropper(Consumer<SchemaDropperImpl> consumer);
 
 	void withSchemaDropper(SchemaFilter filter, Consumer<SchemaDropperImpl> consumer);
 }

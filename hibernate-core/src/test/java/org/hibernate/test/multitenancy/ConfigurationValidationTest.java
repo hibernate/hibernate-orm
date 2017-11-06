@@ -26,7 +26,6 @@ import org.junit.Test;
 @TestForIssue(jiraKey = "HHH-7311")
 public class ConfigurationValidationTest extends BaseUnitTestCase {
 
-
 	@Test(expected = ServiceException.class)
 	public void testInvalidConnectionProvider() {
 		ServiceRegistryImplementor serviceRegistry = null;

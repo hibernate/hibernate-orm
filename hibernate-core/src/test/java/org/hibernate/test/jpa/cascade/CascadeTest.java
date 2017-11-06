@@ -30,7 +30,6 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class CascadeTest extends AbstractJPATest {
-	private static final Logger log = Logger.getLogger( CascadeTest.class );
 
 	public String[] getMappings() {
 		return new String[] { "jpa/cascade/ParentChild.hbm.xml" };

@@ -23,8 +23,6 @@ import org.junit.Test;
 @RequiresDialect( Oracle8iDialect.class )
 @TestForIssue( jiraKey = "HHH-4635" )
 public class LobTest extends BaseCoreFunctionalTestCase {
-	
-	private static final Logger LOG = Logger.getLogger( LobTest.class );
 
 	@Test
 	public void hibernateTest() {
@@ -61,6 +59,6 @@ public class LobTest extends BaseCoreFunctionalTestCase {
 		Query query = session.createSQLQuery( sql );
 		
 		String s = (String) query.uniqueResult();
-		LOG.debug( "Using Oracle charset " + s );
+		log.debug( "Using Oracle charset " + s );
 	}
 }

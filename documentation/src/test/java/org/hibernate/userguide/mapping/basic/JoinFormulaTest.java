@@ -30,8 +30,6 @@ import static org.junit.Assert.assertEquals;
 @RequiresDialect(PostgreSQL82Dialect.class)
 public class JoinFormulaTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( JoinFormulaTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

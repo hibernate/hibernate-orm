@@ -15,6 +15,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class TransactionCoordinatorOwnerTestingImpl implements TransactionCoordinatorOwner {
+
 	private static final Logger log = Logger.getLogger( TransactionCoordinatorOwnerTestingImpl.class );
 
 	private boolean active;

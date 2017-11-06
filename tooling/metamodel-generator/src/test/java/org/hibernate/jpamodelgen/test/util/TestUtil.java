@@ -33,7 +33,9 @@ import static org.junit.Assert.fail;
  * @author Hardy Ferentschik
  */
 public class TestUtil {
+
 	private static final Logger log = Logger.getLogger( TestUtil.class );
+
 	private static final String PATH_SEPARATOR = File.separator;
 	public static final String RESOURCE_SEPARATOR = "/";
 	private static final String PACKAGE_SEPARATOR = ".";

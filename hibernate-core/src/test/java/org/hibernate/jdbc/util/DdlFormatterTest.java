@@ -23,8 +23,6 @@ import static org.junit.Assert.assertFalse;
  */
 public class DdlFormatterTest extends BaseUnitTestCase {
 
-	private static final Logger log = Logger.getLogger( DdlFormatterTest.class );
-
 	@Test
 	public void testNoLoss() {
 

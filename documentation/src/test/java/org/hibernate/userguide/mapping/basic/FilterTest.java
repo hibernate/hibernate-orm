@@ -39,8 +39,6 @@ import static org.junit.Assert.assertNull;
  */
 public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( FilterTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

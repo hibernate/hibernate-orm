@@ -41,7 +41,6 @@ import static org.junit.Assert.assertEquals;
  */
 @TestForIssue( jiraKey = "HHH-11089" )
 public class LongKeyNamingStrategyTest extends BaseUnitTestCase {
-	private static final Logger log = Logger.getLogger( LongKeyNamingStrategyTest.class );
 
 	private ServiceRegistry serviceRegistry;
 

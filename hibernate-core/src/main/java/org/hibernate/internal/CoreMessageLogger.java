@@ -1304,7 +1304,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToUnbindFactoryFromJndi(@Cause JndiException e);
 
 	@Message(value = "Could not update hi value in: %s", id = 375)
-	Object unableToUpdateHiValue(String tableName);
+	String unableToUpdateHiValue(String tableName);
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Could not updateQuery hi value in: %s", id = 376)

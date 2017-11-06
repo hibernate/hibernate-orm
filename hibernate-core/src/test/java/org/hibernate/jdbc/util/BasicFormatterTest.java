@@ -25,8 +25,6 @@ import static org.junit.Assert.assertFalse;
  */
 public class BasicFormatterTest extends BaseUnitTestCase {
 
-	private static final Logger log = Logger.getLogger( BasicFormatterTest.class );
-
 	@Test
 	public void testNoLoss() {
 		assertNoLoss( "insert into Address (city, state, zip, \"from\") values (?, ?, ?, 'insert value')" );

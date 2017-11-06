@@ -6,6 +6,8 @@
  */
 package org.hibernate.testing.junit5.schema;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
 
@@ -23,6 +25,8 @@ import org.junit.jupiter.api.extension.TestTemplateInvocationContext;
 public class SchemaTestExtension
 		extends TestTemplateExtension {
 
+	public static final List<String> METADATA_ACCESS_STRATEGIES = Arrays.asList( JdbcMetadaAccessStrategy.INDIVIDUALLY.toString(), JdbcMetadaAccessStrategy.GROUPED.toString());
+
 	@Override
 	public boolean supportsTestTemplate(ExtensionContext context) {
 		return true;
@@ -31,10 +35,7 @@ public class SchemaTestExtension
 	@Override
 	public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(
 			ExtensionContext context) {
-		return Stream.of(
-				invocationContext( new SchemaTestParameter( JdbcMetadaAccessStrategy.INDIVIDUALLY.toString() ) ),
-				invocationContext( new SchemaTestParameter( JdbcMetadaAccessStrategy.GROUPED.toString() ) )
-		);
+		return METADATA_ACCESS_STRATEGIES.stream().map( metadataAccessStrategy ->  invocationContext( new SchemaTestParameter( (metadataAccessStrategy))) );
 	}
 
 	private TestTemplateInvocationContext invocationContext(SchemaTestParameter parameter) {

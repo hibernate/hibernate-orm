@@ -12,7 +12,9 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.MetadataSources;
@@ -41,6 +43,7 @@ import org.hibernate.tool.schema.spi.SchemaMigrator;
 import org.hibernate.testing.junit5.schema.FunctionalMetaModelTesting;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaScopeProducer;
+import org.hibernate.testing.junit5.schema.SchemaTestExtension;
 import org.hibernate.testing.junit5.serviceregistry.ServiceRegistryAccess;
 import org.hibernate.testing.junit5.serviceregistry.ServiceRegistryContainer;
 import org.hibernate.testing.junit5.template.TestParameter;
@@ -88,6 +91,8 @@ public abstract class BaseSchemaUnitTestCase
 		finally {
 			StandardServiceRegistryBuilder.destroy( standardServiceRegistry );
 			schemaScope = null;
+			metadata = null;
+			databaseModel = null;
 		}
 	}
 
@@ -103,6 +108,14 @@ public abstract class BaseSchemaUnitTestCase
 
 	@Override
 	public SchemaScope produceTestScope(TestParameter<String> metadataExtractionStrategy) {
+		final String metadataExtractionStrategyValue = metadataExtractionStrategy.getValue();
+		if ( schemaScope == null ) {
+			schemaScope = produceSchemaScope( metadataExtractionStrategyValue );
+		}
+		return schemaScope;
+	}
+
+	private SchemaScope produceSchemaScope(String metadataExtractionStrategyValue) {
 		try {
 			createTempOutputFile();
 		}
@@ -110,11 +123,11 @@ public abstract class BaseSchemaUnitTestCase
 			fail( "Fail creating temporary file" + e.getMessage() );
 		}
 
-		final String metadataExtractionStrategyValue = metadataExtractionStrategy.getValue();
 		setStandardServiceRegistry( buildServiceRegistry( metadataExtractionStrategyValue ) );
 		afterServiceRegistryCreation( standardServiceRegistry );
 		metadata = buildMetadata( standardServiceRegistry );
 		metadata.validate();
+
 		afterMetadataCreation( metadata );
 
 		databaseModel = Helper.buildDatabaseModel( metadata );
@@ -129,7 +142,6 @@ public abstract class BaseSchemaUnitTestCase
 	public MetadataImplementor getMetadata() {
 		return metadata;
 	}
-
 
 	public String getSqlScriptOutputFileContent() throws IOException {
 		if ( createSqlScriptTempOutputFile() ) {
@@ -149,22 +161,17 @@ public abstract class BaseSchemaUnitTestCase
 	}
 
 	public Dialect getDialect() {
+		/**
+		 * This method is called before {@link #produceTestScope(TestParameter)}, but to have access to the Dialect value we need
+		 * to create an instance of {@link MetadataImplementor}, creating here an instance {@link SchemaScope}
+		 * with the value of the {@link TestParameter} passed to the {@link #produceTestScope(TestParameter)} when it
+		 * will be later called by {@link SchemaTestExtension} avoids the recreation of {@link MetadataImplementor}
+		 */
 		if ( dialect == null ) {
-			if ( metadata == null ) {
-				StandardServiceRegistry standardServiceRegistry
-						= buildServiceRegistry( JdbcMetadaAccessStrategy.INDIVIDUALLY.toString() );
-				try {
-					afterServiceRegistryCreation( standardServiceRegistry );
-					MetadataImplementor metadata = buildMetadata( standardServiceRegistry );
-					dialect = metadata.getDatabase().getDialect();
-				}
-				finally {
-					StandardServiceRegistryBuilder.destroy( standardServiceRegistry );
-				}
+			if ( schemaScope == null ) {
+				schemaScope = produceSchemaScope( SchemaTestExtension.METADATA_ACCESS_STRATEGIES.get( 0 ) );
 			}
-			else {
-				dialect = metadata.getDatabase().getDialect();
-			}
+			dialect = metadata.getDatabase().getDialect();
 		}
 		return dialect;
 	}
@@ -197,6 +204,10 @@ public abstract class BaseSchemaUnitTestCase
 
 	protected String getOutputTempScriptFileName() {
 		return "update_script";
+	}
+
+	protected String getOutputTempScriptFileAbsolutePath() {
+		return output.getAbsolutePath();
 	}
 
 	protected Class<?>[] getAnnotatedClasses() {

@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.schemaupdate;
+package org.hibernate.orm.test.schemaupdate;
 
 import java.sql.SQLException;
 import java.util.EnumSet;
@@ -32,72 +32,54 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.CustomRunner;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.junit5.RequiresDialect;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-9866")
-@RunWith(CustomRunner.class)
-@RequiresDialect(MySQLDialect.class)
-public class SchemaExportWithGlobalQuotingEnabledTest {
-	protected ServiceRegistry serviceRegistry;
-	protected MetadataImplementor metadata;
+@RequiresDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
+public class SchemaExportWithGlobalQuotingEnabledTest extends BaseSchemaUnitTestCase {
 
-	@Test
-	public void testSchemaExport() throws Exception {
-		SchemaExport schemaExport = new SchemaExport();
-		schemaExport.create( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
-
-		List<SQLException> exceptions = schemaExport.getExceptions();
-		for ( SQLException exception : exceptions ) {
-			assertThat( exception.getMessage(), exception.getSQLState(), not( "42000" ) );
-		}
+	@Override
+	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "true" );
 	}
 
-	@Before
-	public void setUp() {
-		serviceRegistry = new StandardServiceRegistryBuilder().applySetting(
-				Environment.GLOBALLY_QUOTED_IDENTIFIERS,
-				"true"
-		).build();
-		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( MyEntity.class )
-				.addAnnotatedClass( Role.class )
-				.buildMetadata();
-
-		System.out.println( "********* Starting SchemaExport for START-UP *************************" );
-		new SchemaExport().create( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
-		System.out.println( "********* Completed SchemaExport for START-UP *************************" );
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { MyEntity.class, Role.class };
 	}
 
-	@After
-	public void tearDown() {
-		System.out.println( "********* Starting SchemaExport (drop) for TEAR-DOWN *************************" );
-		new SchemaExport().drop( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
-		System.out.println( "********* Completed SchemaExport (drop) for TEAR-DOWN *************************" );
-
-		StandardServiceRegistryBuilder.destroy( serviceRegistry );
-		serviceRegistry = null;
+	@Override
+	protected void beforeEach(SchemaScope scope) {
+		scope.withSchemaExport( schemaExport ->
+										schemaExport.create( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ) ) );
 	}
+
+	@SchemaTest
+	public void testSchemaExport(SchemaScope scope) {
+		scope.withSchemaExport( schemaExport -> {
+			schemaExport.create( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ) );
+
+			List<SQLException> exceptions = schemaExport.getExceptions();
+			for ( SQLException exception : exceptions ) {
+				assertThat( exception.getMessage(), exception.getSQLState(), not( "42000" ) );
+			}
+		} );
+	}
+
 
 	@Entity
 	@Table(name = "MyEntity")

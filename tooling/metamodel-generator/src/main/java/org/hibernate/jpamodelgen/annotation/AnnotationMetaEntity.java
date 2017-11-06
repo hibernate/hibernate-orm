@@ -206,8 +206,8 @@ public class AnnotationMetaEntity implements MetaEntity {
 		}
 		else if(
 			( methodSimpleName.startsWith("get") || methodSimpleName.startsWith("is") ) &&
-		  	methodParameterTypes.isEmpty() &&
-		  	!"void".equalsIgnoreCase( returnType.toString() ) ) {
+			methodParameterTypes.isEmpty() &&
+			!"void".equalsIgnoreCase( returnType.toString() ) ) {
 			return true;
 		}
 		else {

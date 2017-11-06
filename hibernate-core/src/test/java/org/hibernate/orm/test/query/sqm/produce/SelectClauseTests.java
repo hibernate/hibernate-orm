@@ -67,7 +67,6 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 	}
 
 	@Test
-	@FailureExpected( "EmbeddedTypeDescriptor still does not initialize its attributes." )
 	public void testCompoundAttributeSelection() {
 		SqmSelectStatement statement = interpretSelect( "select p.nickName, p.name.first from Person p" );
 		assertEquals( 2, statement.getQuerySpec().getSelectClause().getSelections().size() );

@@ -18,10 +18,11 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  *
  * @author Gavin King
  */
-public class DependantValue extends BasicValue {
+public class DependantValue extends SimpleValue {
 	private KeyValue wrappedValue;
 	private boolean nullable;
 	private boolean updateable;
+	private boolean isNationalized;
 
 	public DependantValue(MetadataBuildingContext buildingContext, MappedTable table, KeyValue prototype) {
 		super( buildingContext, table );
@@ -76,5 +77,13 @@ public class DependantValue extends BasicValue {
 	
 	public void setUpdateable(boolean updateable) {
 		this.updateable = updateable;
+	}
+
+	public void makeNationalized() {
+		this.isNationalized = true;
+	}
+
+	public boolean isNationalized() {
+		return isNationalized;
 	}
 }

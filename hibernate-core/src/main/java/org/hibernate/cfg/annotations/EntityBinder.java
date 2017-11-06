@@ -87,7 +87,6 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
-import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.naming.Identifier;
 
 import org.jboss.logging.Logger;

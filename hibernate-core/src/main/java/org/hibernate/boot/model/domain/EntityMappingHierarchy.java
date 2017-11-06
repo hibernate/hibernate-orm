@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.model.domain;
 
-import org.hibernate.EntityMode;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.domain.RepresentationMode;

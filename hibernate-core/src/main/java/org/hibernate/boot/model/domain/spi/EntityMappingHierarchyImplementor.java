@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.model.domain.spi;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;

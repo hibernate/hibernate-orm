@@ -663,7 +663,7 @@ public class ModelBinder {
 		}
 
 		// KEY
-		final BasicValue keyBinding = new DependantValue(
+		final DependantValue keyBinding = new DependantValue(
 				mappingDocument.getMetadataCollector().getTypeConfiguration().getMetadataBuildingContext(),
 				primaryTable,
 				entityDescriptor.getIdentifier()
@@ -1863,7 +1863,7 @@ public class ModelBinder {
 			);
 		}
 
-		final BasicValue keyBinding = new DependantValue(
+		final DependantValue keyBinding = new DependantValue(
 				mappingDocument.getBootstrapContext().getTypeConfiguration().getMetadataBuildingContext(),
 				secondaryTable,
 				persistentClass.getIdentifier()

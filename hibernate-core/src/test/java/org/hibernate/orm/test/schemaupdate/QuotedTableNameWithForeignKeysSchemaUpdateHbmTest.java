@@ -21,7 +21,7 @@ import static org.hamcrest.core.Is.is;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10197")
-public class QuotedTableNameWithForeignKeysSchemaUpdateTest extends BaseSchemaUnitTestCase {
+public class QuotedTableNameWithForeignKeysSchemaUpdateHbmTest extends BaseSchemaUnitTestCase {
 
 	@Override
 	protected String[] getHmbMappingFiles() {

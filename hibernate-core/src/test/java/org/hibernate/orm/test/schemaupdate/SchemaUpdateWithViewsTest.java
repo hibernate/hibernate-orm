@@ -4,95 +4,60 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.schemaupdate;
+package org.hibernate.orm.test.schemaupdate;
 
-import java.io.IOException;
 import java.util.EnumSet;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.Table;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.query.Query;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.junit5.RequiresDialect;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
 /**
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-1872")
-@RequiresDialect(PostgreSQL81Dialect.class)
-public class SchemaUpdateWithViewsTest extends BaseNonConfigCoreFunctionalTestCase {
+@RequiresDialect(dialectClass = PostgreSQL81Dialect.class, matchSubTypes = true)
+public class SchemaUpdateWithViewsTest extends BaseSchemaUnitTestCase {
 
-	protected ServiceRegistry serviceRegistry;
-	protected MetadataImplementor metadata;
-
-	@Test
-	public void testUpdateSchema() {
-		new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );
+	@Override
+	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "false" )
+				.applySetting( Environment.DEFAULT_SCHEMA, "public" );
 	}
 
-	@Before
-	public void setUp() throws IOException {
-		createViewWithSameNameOfEntityTable();
-		serviceRegistry = new StandardServiceRegistryBuilder()
-				.applySetting( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "false" )
-				.applySetting( Environment.DEFAULT_SCHEMA, "public" )
-				.build();
-		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( MyEntity.class )
-				.buildMetadata();
-		metadata.validate();
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { MyEntity.class };
 	}
 
-	private void createViewWithSameNameOfEntityTable() {
-		Session session = openSession();
-		Transaction transaction = session.beginTransaction();
-		Query query = session.createNativeQuery( "CREATE OR REPLACE VIEW MyEntity AS SELECT 'Hello World' " );
-		query.executeUpdate();
-		transaction.commit();
-		session.close();
+	@Override
+	protected void beforeEach(SchemaScope scope) {
+		executeSqlStatement( "CREATE OR REPLACE VIEW MyEntity AS SELECT 'Hello World'" );
 	}
 
-	@After
-	public void tearDown() {
-		dropView();
-		System.out.println( "********* Starting SchemaExport (drop) for TEAR-DOWN *************************" );
-		new SchemaExport().drop( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
-		System.out.println( "********* Completed SchemaExport (drop) for TEAR-DOWN *************************" );
-
-		StandardServiceRegistryBuilder.destroy( serviceRegistry );
-		serviceRegistry = null;
+	@Override
+	protected void afterEach(SchemaScope scope) {
+		executeSqlStatement( "DROP VIEW IF EXISTS MyEntity " );
 	}
 
-	private void dropView() {
-		Session session = openSession();
-		Transaction transaction = session.beginTransaction();
-		Query query = session.createNativeQuery( "DROP VIEW IF EXISTS MyEntity " );
-		query.executeUpdate();
-		transaction.commit();
-		session.close();
+	@SchemaTest
+	public void testUpdateSchema(SchemaScope scope) {
+		scope.withSchemaUpdate( schemaUpdate ->
+										schemaUpdate.execute( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ) ) );
 	}
-
 
 	@Entity
-	@Table(name = "MyEntity", indexes = {@Index(columnList = "id", name = "user_id_hidx")})
+	@Table(name = "MyEntity", indexes = { @Index(columnList = "id", name = "user_id_hidx") })
 	public static class MyEntity {
 		private int id;
 

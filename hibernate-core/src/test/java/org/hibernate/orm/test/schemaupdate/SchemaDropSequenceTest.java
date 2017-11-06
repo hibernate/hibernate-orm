@@ -34,8 +34,8 @@ import org.hibernate.testing.junit5.schema.SchemaTest;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10605")
-//@RequiresDialect(dialectClass = HSQLDialect.class, matchSubTypes = true)
-public class SchemaDropTest
+@RequiresDialect(dialectClass = HSQLDialect.class, matchSubTypes = true)
+public class SchemaDropSequenceTest
 		extends BaseSchemaUnitTestCase
 		implements ExecutionOptions, ExceptionHandler {
 
@@ -44,11 +44,17 @@ public class SchemaDropTest
 		return new Class[] { MyEntity.class };
 	}
 
-
 	@SchemaTest
 	public void testDropSequence(SchemaScope scope) {
 		scope.withSchemaDropper( null, schemaDropper ->
 				schemaDropper.doDrop( this, getSourceDescriptor(), getTargetDescriptor() ) );
+	}
+
+	@Entity(name = "MyEntity")
+	public static class MyEntity {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE)
+		Long id;
 	}
 
 	private TargetDescriptor getTargetDescriptor() {
@@ -97,12 +103,5 @@ public class SchemaDropTest
 	@Override
 	public void handleException(CommandAcceptanceException exception) {
 		throw exception;
-	}
-
-	@Entity(name = "MyEntity")
-	public static class MyEntity {
-		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE)
-		Long id;
 	}
 }

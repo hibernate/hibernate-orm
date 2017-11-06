@@ -85,9 +85,6 @@ public abstract class PersistentClass
 	private Boolean isAbstract;
 	private boolean hasSubselectLoadableCollections;
 	private EmbeddedValueMapping identifierEmbeddedValueMapping;
-	private RepresentationMode explicitRepresentation;
-
-
 
 	// Custom SQL
 	private String customSQLInsert;
@@ -1071,7 +1068,12 @@ public abstract class PersistentClass
 
 	@Override
 	public RepresentationMode getExplicitRepresentationMode() {
-		return explicitRepresentation;
+		if ( className != null ) {
+			return RepresentationMode.POJO;
+		}
+		else {
+			return RepresentationMode.MAP;
+		}
 	}
 
 	@Override

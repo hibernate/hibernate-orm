@@ -40,6 +40,7 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 
 /**
  * The mapping for a component, composite element,
@@ -48,7 +49,8 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Component extends SimpleValue implements EmbeddedValueMappingImplementor, PropertyContainer, MetaAttributable {
+public class Component extends SimpleValue
+		implements EmbeddedValueMappingImplementor, PropertyContainer, MetaAttributable {
 	private List<PersistentAttributeMapping> properties = new ArrayList<>();
 	private String componentClassName;
 	private boolean embedded;
@@ -84,6 +86,9 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 	@Override
 	@SuppressWarnings("unchecked")
 	public EmbeddableJavaDescriptor getJavaTypeDescriptor() {
+		if ( javaTypeDescriptor == null ) {
+			javaTypeDescriptor = resolveJavaTypeDescriptor( getMetadataBuildingContext(), componentClassName );
+		}
 		return javaTypeDescriptor;
 	}
 
@@ -103,7 +108,8 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 
 	@Override
 	public void setExplicitRepresentationMode(RepresentationMode mode) {
-		throw new UnsupportedOperationException( "Support for ManagedType-specific explicit RepresentationMode not yet implemented" );
+		throw new UnsupportedOperationException(
+				"Support for ManagedType-specific explicit RepresentationMode not yet implemented" );
 	}
 
 	public int getPropertySpan() {
@@ -120,21 +126,21 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 
 	@Override
 	public void addColumn(Column column) {
-		throw new UnsupportedOperationException("Cant add a column to a component");
+		throw new UnsupportedOperationException( "Cant add a column to a component" );
 	}
 
 	@Override
 	protected void setTypeDescriptorResolver(Column column) {
-		throw new UnsupportedOperationException("Cant add a column to a component");
+		throw new UnsupportedOperationException( "Cant add a column to a component" );
 	}
 
 	@Override
 	public int getColumnSpan() {
-		int n=0;
+		int n = 0;
 		Iterator iter = getPropertyIterator();
 		while ( iter.hasNext() ) {
 			Property p = (Property) iter.next();
-			n+= p.getColumnSpan();
+			n += p.getColumnSpan();
 		}
 		return n;
 	}
@@ -142,9 +148,9 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 	@Override
 	@SuppressWarnings("unchecked")
 	public Iterator<Selectable> getColumnIterator() {
-		Iterator[] iters = new Iterator[ getPropertySpan() ];
+		Iterator[] iters = new Iterator[getPropertySpan()];
 		Iterator iter = getPropertyIterator();
-		int i=0;
+		int i = 0;
 		while ( iter.hasNext() ) {
 			iters[i++] = ( (Property) iter.next() ).getColumnIterator();
 		}
@@ -176,7 +182,7 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 			return classLoaderService.classForName( componentClassName );
 		}
 		catch (ClassLoadingException e) {
-			throw new MappingException("component class not found: " + componentClassName, e);
+			throw new MappingException( "component class not found: " + componentClassName, e );
 		}
 	}
 
@@ -190,9 +196,6 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 
 	public void setComponentClassName(String componentClass) {
 		this.componentClassName = componentClass;
-		if ( componentClass == null ) {
-			javaTypeDescriptor = resolveJavaTypeDescriptor( getMetadataBuildingContext(), componentClassName );
-		}
 	}
 
 	public void setEmbedded(boolean embedded) {
@@ -242,7 +245,7 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 
 	@Override
 	public MetaAttribute getMetaAttribute(String attributeName) {
-		return metaAttributes==null?null:(MetaAttribute) metaAttributes.get(attributeName);
+		return metaAttributes == null ? null : (MetaAttribute) metaAttributes.get( attributeName );
 	}
 
 	@Override
@@ -252,37 +255,37 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 
 	@Override
 	public Object accept(ValueVisitor visitor) {
-		return visitor.accept(this);
+		return visitor.accept( this );
 	}
 
 	@Override
 	public boolean[] getColumnInsertability() {
-		boolean[] result = new boolean[ getColumnSpan() ];
+		boolean[] result = new boolean[getColumnSpan()];
 		Iterator iter = getPropertyIterator();
-		int i=0;
+		int i = 0;
 		while ( iter.hasNext() ) {
 			Property prop = (Property) iter.next();
 			boolean[] chunk = prop.getValue().getColumnInsertability();
 			if ( prop.isInsertable() ) {
-				System.arraycopy(chunk, 0, result, i, chunk.length);
+				System.arraycopy( chunk, 0, result, i, chunk.length );
 			}
-			i+=chunk.length;
+			i += chunk.length;
 		}
 		return result;
 	}
 
 	@Override
 	public boolean[] getColumnUpdateability() {
-		boolean[] result = new boolean[ getColumnSpan() ];
+		boolean[] result = new boolean[getColumnSpan()];
 		Iterator iter = getPropertyIterator();
-		int i=0;
+		int i = 0;
 		while ( iter.hasNext() ) {
 			Property prop = (Property) iter.next();
 			boolean[] chunk = prop.getValue().getColumnUpdateability();
 			if ( prop.isUpdateable() ) {
-				System.arraycopy(chunk, 0, result, i, chunk.length);
+				System.arraycopy( chunk, 0, result, i, chunk.length );
 			}
-			i+=chunk.length;
+			i += chunk.length;
 		}
 		return result;
 	}
@@ -312,11 +315,11 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 		Iterator iter = getPropertyIterator();
 		while ( iter.hasNext() ) {
 			Property prop = (Property) iter.next();
-			if ( prop.getName().equals(propertyName) ) {
+			if ( prop.getName().equals( propertyName ) ) {
 				return prop;
 			}
 		}
-		throw new MappingException("component property not found: " + propertyName);
+		throw new MappingException( "component property not found: " + propertyName );
 	}
 
 	public String getRoleName() {
@@ -365,7 +368,7 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 			String defaultCatalog,
 			String defaultSchema,
 			RootClass rootClass) throws MappingException {
-		final boolean hasCustomGenerator = ! DEFAULT_ID_GEN_STRATEGY.equals( getIdentifierGeneratorStrategy() );
+		final boolean hasCustomGenerator = !DEFAULT_ID_GEN_STRATEGY.equals( getIdentifierGeneratorStrategy() );
 		if ( hasCustomGenerator ) {
 			return super.createIdentifierGenerator(
 					identifierGeneratorFactory, dialect, defaultCatalog, defaultSchema, rootClass
@@ -434,7 +437,7 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 		try {
 			return getComponentClass();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			return null;
 		}
 	}
@@ -555,8 +558,9 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 		final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry = metadata.getMetadataCollector()
 				.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry();
-		EmbeddableJavaDescriptor typeDescriptor = (EmbeddableJavaDescriptor) javaTypeDescriptorRegistry
+		ManagedJavaDescriptor typeDescriptor = (ManagedJavaDescriptor) javaTypeDescriptorRegistry
 				.getDescriptor( componentClassName );
+
 		if ( typeDescriptor == null ) {
 			final Class javaType;
 			if ( StringHelper.isEmpty( componentClassName ) ) {
@@ -570,7 +574,18 @@ public class Component extends SimpleValue implements EmbeddedValueMappingImplem
 			typeDescriptor = new EmbeddableJavaDescriptorImpl( componentClassName, javaType, null );
 			javaTypeDescriptorRegistry.addDescriptor( typeDescriptor );
 		}
-
-		return typeDescriptor;
+		else if ( !typeDescriptor.isInstance( EmbeddableJavaDescriptor.class ) ) {
+			/*
+				This may happen with hbm mapping:
+				<class name="Entity"...>
+					<composite-id>
+					 </composite-id>
+				</class>
+				in such a case the componentClassName is the "Entity" so javaTypeDescriptorRegistry
+				.getDescriptor( componentClassName ); is not returning an EmbeddableJavaDescriptor
+			 */
+			typeDescriptor = new EmbeddableJavaDescriptorImpl( componentClassName, typeDescriptor.getJavaType(), null );
+		}
+		return (EmbeddableJavaDescriptor) typeDescriptor;
 	}
 }

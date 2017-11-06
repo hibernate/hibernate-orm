@@ -4,66 +4,51 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.schemaupdate;
+package org.hibernate.orm.test.schemaupdate;
 
+import java.util.EnumSet;
+import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import java.util.EnumSet;
-import java.util.Map;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaDropper;
-import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.junit5.RequiresDialect;
+import org.hibernate.testing.junit5.schema.SchemaScope;
+import org.hibernate.testing.junit5.schema.SchemaTest;
 
 /**
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10605")
-@RequiresDialect(value = HSQLDialect.class)
-public class SchemaDropTest extends BaseUnitTestCase implements ExecutionOptions, ExceptionHandler {
-	protected ServiceRegistry serviceRegistry;
-	protected MetadataImplementor metadata;
+//@RequiresDialect(dialectClass = HSQLDialect.class, matchSubTypes = true)
+public class SchemaDropTest
+		extends BaseSchemaUnitTestCase
+		implements ExecutionOptions, ExceptionHandler {
 
-	@Before
-	public void setUp() {
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
-		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( MyEntity.class ).buildMetadata();
-		metadata.validate();
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { MyEntity.class };
 	}
 
-	@Test
-	public void testDropSequence() {
-		getSchemaDropper()
-				.doDrop( metadata, this, getSourceDescriptor(), getTargetDescriptor() );
-	}
 
-	private SchemaDropper getSchemaDropper() {
-		return serviceRegistry.getService( SchemaManagementTool.class ).getSchemaDropper( null );
+	@SchemaTest
+	public void testDropSequence(SchemaScope scope) {
+		scope.withSchemaDropper( null, schemaDropper ->
+				schemaDropper.doDrop( this, getSourceDescriptor(), getTargetDescriptor() ) );
 	}
 
 	private TargetDescriptor getTargetDescriptor() {
@@ -96,7 +81,7 @@ public class SchemaDropTest extends BaseUnitTestCase implements ExecutionOptions
 
 	@Override
 	public Map getConfigurationValues() {
-		return serviceRegistry.getService( ConfigurationService.class ).getSettings();
+		return getStandardServiceRegistry().getService( ConfigurationService.class ).getSettings();
 	}
 
 	@Override

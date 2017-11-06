@@ -9,7 +9,6 @@ package org.hibernate.testing.junit5.template;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.Extension;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
@@ -26,47 +25,55 @@ public abstract class TestTemplateExtension
 
 	public class CustomTestTemplateInvocationContext
 			implements TestTemplateInvocationContext {
-		private final TestParameter parameter;
-		private final Class<?> parameterClass;
-		private TestScope testScope;
-
+		private final String displayName;
+		private final ParameterResolver parameterResolver;
 
 		public CustomTestTemplateInvocationContext(TestParameter parameter, Class<? extends TestScope> parameterClass) {
+			this.displayName = parameter.getValue().toString();
+			this.parameterResolver = new TestScopeParameterResolver( parameter, parameterClass );
+		}
+
+		@Override
+		public String getDisplayName(int invocationIndex) {
+			return displayName;
+		}
+
+		@Override
+		public List<Extension> getAdditionalExtensions() {
+			return Collections.singletonList( parameterResolver );
+		}
+	}
+
+	public class TestScopeParameterResolver implements ParameterResolver {
+		private final Class<?> parameterClass;
+		private final TestParameter parameter;
+		private TestScope testScope;
+
+		public TestScopeParameterResolver(TestParameter parameter, Class<?> parameterClass) {
 			this.parameter = parameter;
 			this.parameterClass = parameterClass;
 		}
 
 		@Override
-		public String getDisplayName(int invocationIndex) {
-			return parameter.getValue().toString();
+		public boolean supportsParameter(
+				ParameterContext parameterContext,
+				ExtensionContext extensionContext)
+				throws ParameterResolutionException {
+			return parameterContext.getParameter().getType().equals( parameterClass );
 		}
 
 		@Override
-		public List<Extension> getAdditionalExtensions() {
-			return Collections.singletonList( new ParameterResolver() {
-
-				@Override
-				public boolean supportsParameter(
-						ParameterContext parameterContext,
-						ExtensionContext extensionContext)
-						throws ParameterResolutionException {
-					return parameterContext.getParameter().getType().equals( parameterClass );
-				}
-
-				@Override
-				public TestScope resolveParameter(
-						ParameterContext parameterContext,
-						ExtensionContext extensionContext) {
-					final Object testInstance = extensionContext.getRequiredTestInstance();
-					if ( !TestScopeProducer.class.isInstance( testInstance ) ) {
-						throw new RuntimeException( "Test instance does not implement TestScopeProducer" );
-					}
-					if ( testScope == null ) {
-						testScope = ( (TestScopeProducer) testInstance ).produceTestScope( parameter );
-					}
-					return testScope;
-				}
-			} );
+		public TestScope resolveParameter(
+				ParameterContext parameterContext,
+				ExtensionContext extensionContext) {
+			final Object testInstance = extensionContext.getRequiredTestInstance();
+			if ( !TestScopeProducer.class.isInstance( testInstance ) ) {
+				throw new RuntimeException( "Test instance does not implement TestScopeProducer" );
+			}
+			if ( testScope == null ) {
+				testScope = ( (TestScopeProducer) testInstance ).produceTestScope( parameter );
+			}
+			return testScope;
 		}
 	}
 }

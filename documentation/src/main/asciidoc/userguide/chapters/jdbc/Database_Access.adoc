@@ -121,7 +121,7 @@ Note that Hikari only supports JDBC standard isolation levels (apparently).
 
 [IMPORTANT]
 ====
-The built-in connection pool is not supported supported for use.
+The built-in connection pool is not supported for use in a production system.
 ====
 
 This section is here just for completeness.

@@ -162,11 +162,16 @@ See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hi
 It defines a single method, `currentSession()`, by which the implementation is responsible for tracking the current contextual session.
 Out-of-the-box, Hibernate comes with three implementations of this interface:
 
-`org.hibernate.context.internal.JTASessionContext`:: current sessions are tracked and scoped by a `JTA` transaction.
-The processing here is exactly the same as in the older JTA-only approach. See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/internal/JTASessionContext.html[Javadocs] for more details.
-* `org.hibernate.context.internal.ThreadLocalSessionContext`:current sessions are tracked by thread of execution. See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/internal/ThreadLocalSessionContext.html[Javadocs] for more details.
-* `org.hibernate.context.internal.ManagedSessionContext`: current sessions are tracked by thread of execution.
-However, you are responsible to bind and unbind a `Session` instance with static methods on this class: it does not open, flush, or close a `Session`. See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/internal/ManagedSessionContext.html[Javadocs] for details.
+`org.hibernate.context.internal.JTASessionContext`::
+current sessions are tracked and scoped by a `JTA` transaction.
+The processing here is exactly the same as in the older JTA-only approach.
+See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/internal/JTASessionContext.html[Javadocs] for more details.
+`org.hibernate.context.internal.ThreadLocalSessionContext`::
+current sessions are tracked by thread of execution. See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/internal/ThreadLocalSessionContext.html[Javadocs] for more details.
+`org.hibernate.context.internal.ManagedSessionContext`::
+current sessions are tracked by thread of execution.
+However, you are responsible to bind and unbind a `Session` instance with static methods on this class; it does not open, flush, or close a `Session`.
+See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/internal/ManagedSessionContext.html[Javadocs] for details.
 
 Typically, the value of this parameter would just name the implementation class to use.
 For the three out-of-the-box implementations, however, there are three corresponding short names: _jta_, _thread_, and _managed_.

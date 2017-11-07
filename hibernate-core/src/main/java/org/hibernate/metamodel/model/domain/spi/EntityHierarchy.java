@@ -11,6 +11,7 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
+import org.hibernate.type.descriptor.java.spi.EntityMutabilityPlan;
 
 /**
  * Defines access to information across the entire entity hierarchy
@@ -85,7 +86,11 @@ public interface EntityHierarchy {
 
 	String getWhere();
 
-	boolean isMutable();
+	// todo (6.0) : would love to override `EntityJavaDescriptor#getMutabilityPlan` to return `EntityMutabilityPlan` as a covariant
+	//		however that requires planned changes to boot model binding to not generate JavaTypeDescriptor -
+	//		these should be created in `org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationProcess`
+	EntityMutabilityPlan getMutabilityPlan();
+
 	boolean isImplicitPolymorphismEnabled();
 
 	void finishInitialization(RuntimeModelCreationContext creationContext, RootClass mappingType);

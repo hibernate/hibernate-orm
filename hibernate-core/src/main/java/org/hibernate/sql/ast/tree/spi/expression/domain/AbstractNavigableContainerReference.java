@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.NavigablePath;
 
@@ -19,6 +20,7 @@ import org.hibernate.query.NavigablePath;
 public abstract class AbstractNavigableContainerReference implements NavigableContainerReference {
 	private final NavigableContainerReference ourContainerReference;
 	private final NavigableContainer navigable;
+	private final LockMode lockMode;
 
 	private final NavigablePath navigablePath;
 
@@ -26,10 +28,12 @@ public abstract class AbstractNavigableContainerReference implements NavigableCo
 
 	public AbstractNavigableContainerReference(
 			NavigableContainerReference ourContainerReference,
-			NavigableContainer navigable) {
+			NavigableContainer navigable,
+			LockMode lockMode) {
 		this(
 				ourContainerReference,
 				navigable,
+				lockMode,
 				ourContainerReference.getNavigablePath().append( navigable.getNavigableName() )
 	  	);
 	}
@@ -37,9 +41,11 @@ public abstract class AbstractNavigableContainerReference implements NavigableCo
 	public AbstractNavigableContainerReference(
 			NavigableContainerReference ourContainerReference,
 			NavigableContainer navigable,
+			LockMode lockMode,
 			NavigablePath navigablePath) {
 		this.ourContainerReference = ourContainerReference;
 		this.navigable = navigable;
+		this.lockMode = lockMode;
 
 		this.navigablePath = navigablePath;
 	}
@@ -52,6 +58,11 @@ public abstract class AbstractNavigableContainerReference implements NavigableCo
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
+	}
+
+	@Override
+	public LockMode getLockMode() {
+		return lockMode;
 	}
 
 	@Override

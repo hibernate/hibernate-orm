@@ -146,13 +146,6 @@ public class EmbeddedTypeDescriptorImpl<T>
 
 
 
-
-
-	@Override
-	public void setPropertyValues(Object object, Object[] values) {
-		throw new NotYetImplementedFor6Exception(  );
-	}
-
 	@Override
 	public void setPropertyValue(Object object, int i, Object value) {
 		getPersistentAttributes().get( i ).getPropertyAccess().getSetter().set( object, value, getTypeConfiguration().getSessionFactory() );

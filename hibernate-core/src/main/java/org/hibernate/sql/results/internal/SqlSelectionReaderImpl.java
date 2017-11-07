@@ -283,8 +283,8 @@ public class SqlSelectionReaderImpl implements SqlSelectionReader {
 	@SuppressWarnings("unchecked")
 	private static <T> BasicJavaDescriptor<T> determineJavaTypeDescriptor(BasicValuedExpressableType expressableType) {
 		if ( expressableType instanceof ConvertibleNavigable
-				&& ( (ConvertibleNavigable) expressableType ).getAttributeConverter() != null ) {
-			return ( (ConvertibleNavigable) expressableType ).getAttributeConverter().getJdbcType();
+				&& ( (ConvertibleNavigable) expressableType ).getAttributeConverterDefinition() != null ) {
+			return ( (ConvertibleNavigable) expressableType ).getAttributeConverterDefinition().getJdbcType();
 		}
 
 		return expressableType.getJavaTypeDescriptor();

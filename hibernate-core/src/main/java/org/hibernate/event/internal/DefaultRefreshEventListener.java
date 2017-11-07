@@ -134,7 +134,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		if ( e != null ) {
 			final EntityKey key = source.generateEntityKey( id, persister );
 			source.getPersistenceContext().removeEntity( key );
-			if ( persister.getHierarchy().isMutable() ) {
+			if ( persister.getHierarchy().getMutabilityPlan().isMutable() ) {
 				new EvictVisitor( source ).process( object, persister );
 			}
 		}
@@ -179,7 +179,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		// Keep the same read-only/modifiable setting for the entity that it had before refreshing;
 		// If it was transient, then set it to the default for the source.
 		if ( result != null ) {
-			if ( !persister.getHierarchy().isMutable() ) {
+			if ( !persister.getHierarchy().getMutabilityPlan().isMutable() ) {
 				// this is probably redundant; it should already be read-only
 				source.setReadOnly( result, true );
 			}

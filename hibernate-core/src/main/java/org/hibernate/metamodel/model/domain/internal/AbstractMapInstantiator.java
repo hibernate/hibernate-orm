@@ -9,9 +9,10 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.spi.Instantiator;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.Instantiator;
 
 /**
  * @author Steve Ebersole
@@ -42,7 +43,7 @@ public abstract class AbstractMapInstantiator<J> implements Instantiator<J> {
 	}
 
 	@Override
-	public boolean isInstance(Object object, SharedSessionContractImplementor session) {
+	public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
 		if ( !Map.class.isInstance( object ) ) {
 			return false;
 		}

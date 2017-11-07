@@ -516,6 +516,11 @@ public abstract class BaseSqmToSqlAstConverter
 						// inside the producers)
 						return JoinType.INNER;
 					}
+
+					@Override
+					public QueryOptions getQueryOptions() {
+						return queryOptions;
+					}
 				}
 		);
 
@@ -594,6 +599,11 @@ public abstract class BaseSqmToSqlAstConverter
 					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
 						return BaseSqmToSqlAstConverter.this.getSqlAliasBaseManager();
 					}
+
+					@Override
+					public QueryOptions getQueryOptions() {
+						return queryOptions;
+					}
 				}
 		);
 
@@ -648,6 +658,11 @@ public abstract class BaseSqmToSqlAstConverter
 								joinedFromElement.getNavigableReference()
 						);
 						querySpec.addRestriction( predicate );
+					}
+
+					@Override
+					public QueryOptions getQueryOptions() {
+						return queryOptions;
 					}
 				}
 		);

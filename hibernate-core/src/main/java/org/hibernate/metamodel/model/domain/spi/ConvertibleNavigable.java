@@ -17,5 +17,6 @@ import org.hibernate.type.converter.spi.AttributeConverterDefinition;
  * @author Steve Ebersole
  */
 public interface ConvertibleNavigable<T> extends Navigable<T> {
-	AttributeConverterDefinition getAttributeConverter();
+	// todo (6.0) : find usages of this and consider removing or replacing with BasicValueConverter
+	AttributeConverterDefinition getAttributeConverterDefinition();
 }

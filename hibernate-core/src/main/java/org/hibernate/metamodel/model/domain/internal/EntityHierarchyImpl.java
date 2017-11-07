@@ -15,6 +15,8 @@ import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.internal.ImmutableEntityEntry;
+import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
@@ -33,6 +35,8 @@ import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
+import org.hibernate.type.descriptor.java.internal.EntityMutabilityPlanImpl;
+import org.hibernate.type.descriptor.java.spi.EntityMutabilityPlan;
 
 import org.jboss.logging.Logger;
 
@@ -55,11 +59,13 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	private final RowIdDescriptor rowIdDescriptor;
 	private final TenantDiscrimination tenantDiscrimination;
 
-	private final String whereFragment;
-	private final boolean mutable;
+	private EntityDataAccess caching;
+
+	private final EntityMutabilityPlan mutabilityPlan;
+
 	private final boolean implicitPolymorphismEnabled;
 
-	private EntityDataAccess caching;
+	private final String whereFragment;
 
 	public EntityHierarchyImpl(
 			EntityDescriptor rootRuntimeDescriptor,
@@ -109,13 +115,33 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 				creationContext
 		);
 
-		this.optimisticLockStyle = rootBootDescriptor.getEntityMappingHierarchy().getOptimisticLockStyle();
-		this.whereFragment = rootBootDescriptor.getWhere();
-		this.mutable = rootBootDescriptor.isMutable();
 		this.implicitPolymorphismEnabled = !rootBootDescriptor.isExplicitPolymorphism();
+		this.optimisticLockStyle = rootBootDescriptor.getEntityMappingHierarchy().getOptimisticLockStyle();
+		this.mutabilityPlan = determineMutabilityPlan( rootBootDescriptor, rootRuntimeDescriptor, creationContext );
+		this.whereFragment = rootBootDescriptor.getWhere();
 	}
 
-	private RepresentationMode determineRepresentationMode(
+	private static EntityMutabilityPlan determineMutabilityPlan(
+			RootClass rootBootDescriptor,
+			EntityDescriptor rootRuntimeDescriptor,
+			RuntimeModelCreationContext creationContext) {
+		if ( rootBootDescriptor.isMutable() ) {
+			return new EntityMutabilityPlanImpl(
+					rootRuntimeDescriptor,
+					MutableEntityEntryFactory.INSTANCE,
+					true
+			);
+		}
+		else {
+			return new EntityMutabilityPlanImpl(
+					rootRuntimeDescriptor,
+					ImmutableEntityEntry::new,
+					false
+			);
+		}
+	}
+
+	private static RepresentationMode determineRepresentationMode(
 			RootClass rootEntityBinding,
 			EntityDescriptor rootEntityPersister,
 			RuntimeModelCreationContext creationContext) {
@@ -355,8 +381,8 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	}
 
 	@Override
-	public boolean isMutable() {
-		return mutable;
+	public EntityMutabilityPlan getMutabilityPlan() {
+		return mutabilityPlan;
 	}
 
 	@Override

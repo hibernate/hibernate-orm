@@ -60,37 +60,43 @@ public class SessionFactoryScope implements SessionFactoryAccess {
 		return sessionFactory;
 	}
 
-	public void inSession(Consumer<SessionImplementor> action) {
-		log.trace( "  >> SessionFactoryScope#inSession" );
+	public void inSession(SessionFactoryImplementor sfi, Consumer<SessionImplementor> action) {
+		log.trace( "  >> SessionFactoryScope#inSession(SF,action)" );
 
-		final SessionImplementor session = (SessionImplementor) getSessionFactory().openSession();
 		log.trace( "  >> SessionFactoryScope - Session opened" );
 
-		try {
+		try (SessionImplementor session = (SessionImplementor) sfi.openSession()) {
 			log.trace( "    >> SessionFactoryScope - calling action" );
 			action.accept( session );
 			log.trace( "    >> SessionFactoryScope - called action" );
 		}
 		finally {
 			log.trace( "  >> SessionFactoryScope - closing Session" );
-			session.close();
 		}
 	}
 
-	public void inTransaction(Consumer<SessionImplementor> action) {
-		log.trace( "  >> SessionFactoryScope#inTransaction[not-passed-session]" );
+	public void inSession(Consumer<SessionImplementor> action) {
+		log.trace( "  >> SessionFactoryScope#inSession(action)" );
+		inSession( getSessionFactory(), action );
+	}
 
-		final SessionImplementor session = (SessionImplementor) getSessionFactory().openSession();
+	public void inTransaction(Consumer<SessionImplementor> action) {
+		log.trace( "  >> SessionFactoryScope#inTransaction(action)" );
+		inTransaction( getSessionFactory(), action );
+	}
+
+	public void inTransaction(SessionFactoryImplementor factory, Consumer<SessionImplementor> action) {
+		log.trace( "  >> SessionFactoryScope#inTransaction(factory, action)");
+
 		log.trace( "  >> SessionFactoryScope - Session opened" );
 
-		try {
+		try (SessionImplementor session = (SessionImplementor) factory.openSession()) {
 			log.trace( "    >> SessionFactoryScope - calling action" );
 			inTransaction( session, action );
 			log.trace( "    >> SessionFactoryScope - called action" );
 		}
 		finally {
 			log.trace( "  >> SessionFactoryScope - closing Session" );
-			session.close();
 		}
 	}
 

@@ -23,10 +23,14 @@ import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Steve Ebersole
  */
 public class StandardPojoRepresentationStrategy implements ManagedTypeRepresentationStrategy {
+	private static final Logger log = Logger.getLogger( StandardPojoRepresentationStrategy.class );
+
 	private final ReflectionOptimizer reflectionOptimizer;
 
 	public StandardPojoRepresentationStrategy(
@@ -40,6 +44,7 @@ public class StandardPojoRepresentationStrategy implements ManagedTypeRepresenta
 				Environment.getBytecodeProvider()
 		);
 
+		log.tracef( "StandardPojoRepresentationStrategy created for [%s] with ReflectionOptimizer `%s`", runtimeDescriptor, reflectionOptimizer );
 	}
 
 	private static ReflectionOptimizer resolveReflectionOptimizer(
@@ -56,12 +61,17 @@ public class StandardPojoRepresentationStrategy implements ManagedTypeRepresenta
 		final String[] setterNames = null;
 		final Class[] types = null;
 
-		return bytecodeProvider.getReflectionOptimizer(
-				runtimeDescriptor.getJavaTypeDescriptor().getJavaType(),
-				getterNames,
-				setterNames,
-				types
-		);
+		try {
+			return bytecodeProvider.getReflectionOptimizer(
+					runtimeDescriptor.getJavaTypeDescriptor().getJavaType(),
+					getterNames,
+					setterNames,
+					types
+			);
+		}
+		catch (Exception e) {
+			throw e;
+		}
 	}
 
 	@Override
@@ -75,7 +85,7 @@ public class StandardPojoRepresentationStrategy implements ManagedTypeRepresenta
 			ManagedTypeMapping bootModel,
 			ManagedTypeDescriptor runtimeModel,
 			BytecodeProvider bytecodeProvider) {
-		if ( reflectionOptimizer.getInstantiationOptimizer() != null ) {
+		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
 			return new OptimizedPojoInstantiatorImpl<>( runtimeModel.getJavaTypeDescriptor(), reflectionOptimizer );
 		}
 		else {

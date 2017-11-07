@@ -24,7 +24,6 @@ import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -48,12 +47,6 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 	private final Set<InheritanceCapable<? extends J>> subclassTypes = ConcurrentHashMap.newKeySet();
 	private final Set<String> subClassEntityNames = ConcurrentHashMap.newKeySet();
 
-	// todo (6.0) : I think we can just drop the mutabilityPlan and comparator for managed types
-
-	private final MutabilityPlan<J> mutabilityPlan;
-	private final Comparator<J> comparator;
-
-
 
 	// todo (6.0) : we need some kind of callback after all Navigables have been added to all containers
 	//		use that callback to build these 2 lists - they are cached resolutions
@@ -70,33 +63,14 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 	// a cache to more easily find the PersistentAttribute by name
 	private Map<String,NonIdPersistentAttribute> declaredAttributesByName;
 
-	public AbstractManagedType(
-			ManagedTypeMapping bootMapping,
-			InheritanceCapable<? super J> superTypeDescriptor,
-			ManagedJavaDescriptor<J> javaTypeDescriptor,
-			RuntimeModelCreationContext creationContext) {
-		this(
-				bootMapping,
-				superTypeDescriptor,
-				javaTypeDescriptor,
-				javaTypeDescriptor.getMutabilityPlan(),
-				javaTypeDescriptor.getComparator(),
-				creationContext
-		);
-	}
-
 	@SuppressWarnings("WeakerAccess")
 	public AbstractManagedType(
 			ManagedTypeMapping managedTypeMapping,
 			InheritanceCapable<? super J> superTypeDescriptor,
 			ManagedJavaDescriptor<J> javaTypeDescriptor,
-			MutabilityPlan<J> mutabilityPlan,
-			Comparator<J> comparator,
 			RuntimeModelCreationContext creationContext) {
 		this.superTypeDescriptor = superTypeDescriptor;
 		this.javaTypeDescriptor = javaTypeDescriptor;
-		this.mutabilityPlan = mutabilityPlan;
-		this.comparator = comparator;
 
 		this.typeConfiguration = creationContext.getTypeConfiguration();
 

@@ -31,7 +31,6 @@ import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
  * @author Steve Ebersole
  */
 @SuppressWarnings("WeakerAccess")
-@TestInstance( TestInstance.Lifecycle.PER_CLASS )
 @Tag(StandardTags.SQM )
 public class HqlExecutionSmokeTest extends SessionFactoryBasedFunctionalTest {
 	@BeforeEach

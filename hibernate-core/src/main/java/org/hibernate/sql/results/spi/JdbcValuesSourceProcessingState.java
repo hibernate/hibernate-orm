@@ -10,6 +10,8 @@ import java.util.function.Function;
 
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.PostLoadEvent;
+import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.query.spi.QueryOptions;
 
 /**
@@ -37,7 +39,10 @@ public interface JdbcValuesSourceProcessingState {
 
 	JdbcValuesSourceProcessingOptions getProcessingOptions();
 
-	void registerLoadingEntity(
+	PreLoadEvent getPreLoadEvent();
+	PostLoadEvent getPostLoadEvent();
+
+	LoadingEntityEntry registerLoadingEntity(
 			EntityKey entityKey,
 			Function<EntityKey,LoadingEntityEntry> entryProducer);
 

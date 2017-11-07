@@ -228,6 +228,7 @@ public class SingularPersistentAttributeEntity<O,J>
 				fetchParent,
 				qualifier,
 				this,
+				creationContext.getQueryOptions().getLockOptions().getEffectiveLockMode( resultVariable ),
 				fetchParent.getNavigablePath().append( getNavigableName() ),
 				fetchStrategy,
 				creationContext

@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.internal;
 
+import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
@@ -26,6 +27,7 @@ public class EntityFetchImpl extends AbstractFetchParent implements EntityFetch 
 	private final FetchParent fetchParent;
 	private final ColumnReferenceQualifier qualifier;
 	private final FetchStrategy fetchStrategy;
+	private final LockMode lockMode;
 
 	private final EntitySqlSelectionMappings sqlSelectionMappings;
 
@@ -33,12 +35,14 @@ public class EntityFetchImpl extends AbstractFetchParent implements EntityFetch 
 			FetchParent fetchParent,
 			ColumnReferenceQualifier qualifier,
 			EntityValuedNavigable fetchedNavigable,
+			LockMode lockMode,
 			NavigablePath navigablePath,
 			FetchStrategy fetchStrategy,
 			QueryResultCreationContext creationContext) {
 		super( fetchedNavigable, navigablePath );
 		this.fetchParent = fetchParent;
 		this.qualifier = qualifier;
+		this.lockMode = lockMode;
 		this.sqlSelectionMappings = EntitySqlSelectionMappingsBuilder.buildSqlSelectionMappings(
 				getEntityDescriptor(),
 				qualifier,
@@ -88,6 +92,7 @@ public class EntityFetchImpl extends AbstractFetchParent implements EntityFetch 
 				parentAccess,
 				this,
 				sqlSelectionMappings,
+				lockMode,
 				false
 		);
 

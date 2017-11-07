@@ -45,7 +45,9 @@ import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.EntityMutabilityPlan;
 
 /**
  * Contract describing mapping information and persistence logic for a particular strategy of entity mapping.  A given

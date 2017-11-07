@@ -146,6 +146,11 @@ public class SqmUpdateToSqlAstConverterMultiTable
 					public JoinType getTableReferenceJoinType() {
 						return JoinType.INNER;
 					}
+
+					@Override
+					public QueryOptions getQueryOptions() {
+						return queryOptions;
+					}
 				}
 		);
 

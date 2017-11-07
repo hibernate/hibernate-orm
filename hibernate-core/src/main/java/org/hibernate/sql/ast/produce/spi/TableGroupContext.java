@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.spi;
 
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
@@ -34,4 +35,6 @@ public interface TableGroupContext {
 	 * LEFT join type if it is mapped as optional.
 	 */
 	JoinType getTableReferenceJoinType();
+
+	QueryOptions getQueryOptions();
 }

@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.spi;
 
+import org.hibernate.query.spi.QueryOptions;
+
 /**
  * Contextual information useful when creating a QueryResult.
  *
@@ -14,4 +16,5 @@ package org.hibernate.sql.results.spi;
  * @author Steve Ebersole
  */
 public interface QueryResultCreationContext extends SqlSelectionGroupResolutionContext {
+	QueryOptions getQueryOptions();
 }

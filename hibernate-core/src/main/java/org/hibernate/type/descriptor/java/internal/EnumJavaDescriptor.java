@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  */
 public class EnumJavaDescriptor<T extends Enum> extends AbstractBasicJavaDescriptor<T> {
 	@SuppressWarnings("unchecked")
-	protected EnumJavaDescriptor(Class<T> type) {
+	public EnumJavaDescriptor(Class<T> type) {
 		super( type, ImmutableMutabilityPlan.INSTANCE );
 	}
 
@@ -60,5 +60,35 @@ public class EnumJavaDescriptor<T extends Enum> extends AbstractBasicJavaDescrip
 	@SuppressWarnings("unchecked")
 	public <X> T wrap(X value, WrapperOptions options) {
 		return (T) value;
+	}
+
+	public <E extends Enum> Integer toOrdinal(E domainForm) {
+		if ( domainForm == null ) {
+			return null;
+		}
+		return domainForm.ordinal();
+	}
+
+	@SuppressWarnings("unchecked")
+	public <E extends Enum> E fromOrdinal(Integer relationalForm) {
+		if ( relationalForm == null ) {
+			return null;
+		}
+		return (E) getJavaType().getEnumConstants()[ relationalForm ];
+	}
+
+	@SuppressWarnings("unchecked")
+	public T fromName(String relationalForm) {
+		if ( relationalForm == null ) {
+			return null;
+		}
+		return (T) Enum.valueOf( getJavaType(), relationalForm );
+	}
+
+	public String toName(T domainForm) {
+		if ( domainForm == null ) {
+			return null;
+		}
+		return domainForm.name();
 	}
 }

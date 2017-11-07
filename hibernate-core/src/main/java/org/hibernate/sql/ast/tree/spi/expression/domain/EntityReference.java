@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression.domain;
 
+import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
@@ -29,10 +30,11 @@ public class EntityReference extends AbstractNavigableContainerReference {
 	public EntityReference(
 			ColumnReferenceQualifier columnReferenceSource,
 			EntityValuedExpressableType expressionType,
+			LockMode lockMode,
 			NavigablePath navigablePath,
 			NavigableContainerReference containerReference,
 			boolean isShallow) {
-		super( containerReference, expressionType, navigablePath );
+		super( containerReference, expressionType, lockMode, navigablePath );
 		this.columnReferenceSource = columnReferenceSource;
 		this.expressionType = expressionType;
 	}

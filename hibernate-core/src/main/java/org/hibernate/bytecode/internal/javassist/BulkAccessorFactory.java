@@ -29,6 +29,8 @@ import javassist.util.proxy.RuntimeSupport;
  * @author modified by Shigeru Chiba
  */
 class BulkAccessorFactory {
+	private static final String[] EMPTY = new String[0];
+
 	private static final String PACKAGE_NAME_PREFIX = "org.javassist.tmp.";
 	private static final String BULKACESSOR_CLASS_NAME = BulkAccessor.class.getName();
 	private static final String OBJECT_CLASS_NAME = Object.class.getName();
@@ -52,8 +54,10 @@ class BulkAccessorFactory {
 			String[] setterNames,
 			Class[] types) {
 		this.targetBean = target;
-		this.getterNames = getterNames;
-		this.setterNames = setterNames;
+		// todo (6.0) : these should be checked to not allow nulls (throw exception)
+		// 		being null is not valid long term, but for initial wip dev i allow
+		this.getterNames = getterNames == null ? EMPTY : getterNames;
+		this.setterNames = setterNames == null ? EMPTY : setterNames;
 		this.types = types;
 		this.writeDirectory = null;
 	}

@@ -6,14 +6,17 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import javax.persistence.EnumType;
+
 import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractNonIdSingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -27,6 +30,7 @@ import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
+import org.hibernate.type.descriptor.java.internal.EnumJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
@@ -37,12 +41,14 @@ import org.hibernate.type.spi.BasicType;
  */
 public class BasicSingularPersistentAttribute<O,J>
 		extends AbstractNonIdSingularPersistentAttribute<O, J>
-		implements BasicValuedNavigable<J>, ConvertibleNavigable<J> {
+		implements BasicValuedNavigable<J>, ConvertibleNavigable<J>, BasicValueConverter {
 
 	private final Column boundColumn;
 	private final BasicType<J> basicType;
+	private final BasicValueConverter valueConverter;
 	private final AttributeConverterDefinition converterDefinition;
 
+	@SuppressWarnings("unchecked")
 	public BasicSingularPersistentAttribute(
 			ManagedTypeDescriptor<O> runtimeContainer,
 			PersistentAttributeMapping bootAttribute,
@@ -60,6 +66,40 @@ public class BasicSingularPersistentAttribute<O,J>
 		this.boundColumn = context.getDatabaseObjectResolver().resolveColumn( basicValueMapping.getMappedColumn() );
 		this.basicType = basicValueMapping.resolveType();
 		this.converterDefinition = basicValueMapping.getAttributeConverterDefinition();
+
+		this.valueConverter = resolveValueConverter( basicValueMapping, context );
+	}
+
+	@SuppressWarnings({"unchecked", "unused"})
+	private BasicValueConverter resolveValueConverter(
+			BasicValueMapping<J> basicValueMapping,
+			RuntimeModelCreationContext context) {
+		if ( converterDefinition != null ) {
+			return converterDefinition;
+		}
+
+		if ( getJavaType().isEnum() ) {
+			assert basicType.getJavaTypeDescriptor() instanceof EnumJavaDescriptor;
+			final EnumJavaDescriptor enumJavaDescriptor = (EnumJavaDescriptor) basicType.getJavaTypeDescriptor();
+
+			EnumType enumType = basicValueMapping.getEnumType();
+			if ( enumType == null ) {
+				// todo (6.0) : found where in the hell I left that be configured per-SF and use that
+				//		for now, use the JPA default
+				enumType = EnumType.ORDINAL;
+			}
+
+			if ( enumType == EnumType.STRING ) {
+				return new NamedEnumValueConverter( enumJavaDescriptor );
+			}
+			else {
+				return new OrdinalEnumValueConverter<>( enumJavaDescriptor );
+			}
+		}
+
+		// todo (6.0) : temporals?
+
+		return this;
 	}
 
 	@Override
@@ -113,7 +153,7 @@ public class BasicSingularPersistentAttribute<O,J>
 	}
 
 	@Override
-	public AttributeConverterDefinition getAttributeConverter() {
+	public AttributeConverterDefinition getAttributeConverterDefinition() {
 		return converterDefinition;
 	}
 
@@ -142,4 +182,26 @@ public class BasicSingularPersistentAttribute<O,J>
 		return basicType.getValueExtractor();
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
+	public Object resolveHydratedState(
+			Object hydratedForm,
+			SharedSessionContractImplementor session,
+			Object containerInstance) {
+		return valueConverter.toDomainValue( hydratedForm, session );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// "standard" BasicValueConverter - a pass-through
+
+	@Override
+	public Object toDomainValue(Object relationalForm, SharedSessionContractImplementor session) {
+		return relationalForm;
+	}
+
+	@Override
+	public Object toRelationalValue(Object domainForm, SharedSessionContractImplementor session) {
+		return domainForm;
+	}
 }

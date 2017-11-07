@@ -95,6 +95,11 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 					public JoinType getTableReferenceJoinType() {
 						return JoinType.INNER;
 					}
+
+					@Override
+					public QueryOptions getQueryOptions() {
+						return queryOptions;
+					}
 				}
 		);
 
@@ -103,6 +108,11 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 		final List sqlSelectionGroup = entityDescriptor.getIdentifierDescriptor().resolveSqlSelectionGroup(
 				rootTableGroup,
 				new QueryResultCreationContext() {
+					@Override
+					public QueryOptions getQueryOptions() {
+						return queryOptions;
+					}
+
 					final NavigablePath path = new NavigablePath();
 
 					@Override

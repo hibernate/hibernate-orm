@@ -17,6 +17,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.EntityGraphQueryHint;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
@@ -204,6 +205,11 @@ public class FetchGraphBuilder {
 							@Override
 							public JoinType getTableReferenceJoinType() {
 								return JoinType.INNER;
+							}
+
+							@Override
+							public QueryOptions getQueryOptions() {
+								return builder.getQueryOptions();
 							}
 						}
 				);

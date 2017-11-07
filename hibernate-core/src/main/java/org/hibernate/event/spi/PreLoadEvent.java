@@ -23,7 +23,14 @@ public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntity
 	private EntityDescriptor descriptor;
 
 	public PreLoadEvent(EventSource session) {
-		super(session);
+		super( session );
+	}
+
+	public void reset() {
+		entity = null;
+		state = null;
+		id = null;
+		descriptor = null;
 	}
 
 	@Override

@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.type.descriptor.java.internal.EnumJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.JavaTypeDescriptorBaseline;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
@@ -76,6 +77,10 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 
 	@SuppressWarnings("unchecked")
 	private <T> BasicJavaDescriptor<T> makeOnTheFlyJavaTypeDescriptor(Class<T> javaType) {
+		if ( javaType.isEnum() ) {
+			return new EnumJavaDescriptor( javaType );
+		}
+
 		if ( Serializable.class.isInstance( javaType ) ) {
 			log.debugf(
 					"Could not find matching JavaTypeDescriptor for requested Java class [%s]; using fallback via its Serializable interface.  " +

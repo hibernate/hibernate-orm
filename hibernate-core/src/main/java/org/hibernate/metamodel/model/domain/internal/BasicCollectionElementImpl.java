@@ -67,7 +67,7 @@ public class BasicCollectionElementImpl<J>
 	}
 
 	@Override
-	public AttributeConverterDefinition getAttributeConverter() {
+	public AttributeConverterDefinition getAttributeConverterDefinition() {
 		return attributeConverter;
 	}
 

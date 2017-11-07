@@ -8,6 +8,8 @@ package org.hibernate.type.converter.spi;
 
 import javax.persistence.AttributeConverter;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 
 /**
@@ -16,7 +18,7 @@ import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface AttributeConverterDefinition<O,R> {
+public interface AttributeConverterDefinition<O,R> extends BasicValueConverter<O,R> {
 	/**
 	 * Access to the AttributeConverter instance to be used by the built BasicType.
 	 *
@@ -39,4 +41,14 @@ public interface AttributeConverterDefinition<O,R> {
 	 * @return The "intermediate" JDBC/SQL Java type.
 	 */
 	BasicJavaDescriptor<R> getJdbcType();
+
+	@Override
+	default O toDomainValue(R relationalForm, SharedSessionContractImplementor session) {
+		return getAttributeConverter().convertToEntityAttribute( relationalForm );
+	}
+
+	@Override
+	default R toRelationalValue(O domainForm, SharedSessionContractImplementor session) {
+		return getAttributeConverter().convertToDatabaseColumn( domainForm );
+	}
 }

@@ -7,42 +7,27 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Map;
 
-import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.domain.EntityMapping;
-import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.internal.FilterAliasGenerator;
-import org.hibernate.loader.spi.MultiLoadOptions;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractEntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
-import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
-import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
-import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.results.internal.EntityQueryResultImpl;
-import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
-import org.hibernate.sql.results.spi.QueryResult;
-import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -358,70 +343,8 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 	}
 
 	@Override
-	public void setPropertyValues(Object object, Object[] values) {
-
-	}
-
-	@Override
-	public void setPropertyValue(Object object, int i, Object value) {
-
-	}
-
-	@Override
-	public Object[] getPropertyValues(Object object) {
-		return new Object[0];
-	}
-
-	@Override
-	public Object getPropertyValue(Object object, int i) throws HibernateException {
-		return null;
-	}
-
-	@Override
-	public Object getPropertyValue(Object object, String propertyName) {
-		return null;
-	}
-
-	@Override
-	public Serializable getIdentifier(Object object) throws HibernateException {
-		return null;
-	}
-
-	@Override
-	public Serializable getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return null;
-	}
-
-	@Override
-	public void setIdentifier(
-			Object entity, Serializable id, SharedSessionContractImplementor session) {
-
-	}
-
-	@Override
-	public Object getVersion(Object object) throws HibernateException {
-		return null;
-	}
-
-	@Override
-	public Object instantiate(Serializable id, SharedSessionContractImplementor session) {
-		return null;
-	}
-
-	@Override
-	public boolean isInstance(Object object) {
-		return false;
-	}
-
-	@Override
 	public boolean hasUninitializedLazyProperties(Object object) {
 		return false;
-	}
-
-	@Override
-	public void resetIdentifier(
-			Object entity, Serializable currentId, Object currentVersion, SharedSessionContractImplementor session) {
-
 	}
 
 	@Override

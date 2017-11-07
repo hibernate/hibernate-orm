@@ -11,6 +11,8 @@ import java.sql.Clob;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 
 /**
@@ -18,6 +20,12 @@ import javax.persistence.Id;
  */
 @Entity
 public class EntityOfBasics {
+
+	public enum Gender {
+		MALE,
+		FEMALE
+	}
+
 	private Integer id;
 	private String theString;
 	private Integer theInteger;
@@ -25,6 +33,7 @@ public class EntityOfBasics {
 	private URL theUrl;
 	private Clob theClob;
 	private Gender gender;
+	private Gender convertedGender;
 
 	@Id
 	public Integer getId() {
@@ -75,7 +84,7 @@ public class EntityOfBasics {
 		this.theClob = theClob;
 	}
 
-	@Convert( converter = GenderConverter.class )
+	@Enumerated( EnumType.STRING )
 	public Gender getGender() {
 		return gender;
 	}
@@ -84,9 +93,13 @@ public class EntityOfBasics {
 		this.gender = gender;
 	}
 
-	public enum Gender {
-		MALE,
-		FEMALE
+	@Convert( converter = GenderConverter.class )
+	public Gender getConvertedGender() {
+		return convertedGender;
+	}
+
+	public void setConvertedGender(Gender convertedGender) {
+		this.convertedGender = convertedGender;
 	}
 
 	public static class GenderConverter implements AttributeConverter<Gender,Character> {

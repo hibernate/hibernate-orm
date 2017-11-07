@@ -73,23 +73,21 @@ public interface ManagedTypeDescriptor<T>
 		return (NonIdPersistentAttribute<? super T, R>) findDeclaredPersistentAttribute( name );
 	}
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// todo (6.0) : both would be pre-built during the process of creating the runtime model
-	//		this proved to be the best solution by far based on JMH testing
-	default List<NonIdPersistentAttribute> getPersistentAttributes() {
-		throw new NotYetImplementedFor6Exception();
+	List<NonIdPersistentAttribute> getPersistentAttributes();
+
+	List<NonIdPersistentAttribute> getDeclaredPersistentAttributes();
+
+	default void visitAttributes(Consumer<NonIdPersistentAttribute> consumer) {
+		for ( NonIdPersistentAttribute attribute : getPersistentAttributes() ) {
+			consumer.accept( attribute );
+		}
 	}
 
-	default List<NonIdPersistentAttribute> getDeclaredPersistentAttributes() {
-		throw new NotYetImplementedFor6Exception();
+	default void visitStateArrayNavigables(Consumer<StateArrayContributor<?>> consumer) {
+		for ( StateArrayContributor contributor : getStateArrayContributors() ) {
+			consumer.accept( contributor );
+		}
 	}
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	default void visitAttributes(Consumer<? extends NonIdPersistentAttribute> consumer) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	void visitStateArrayNavigables(Consumer<StateArrayContributor<?>> consumer);
 
 
 	/**
@@ -176,7 +174,16 @@ public interface ManagedTypeDescriptor<T>
 	 * Set the given values to the mapped properties of the given object
 	 */
 	default void setPropertyValues(Object object, Object[] values) {
-		throw new NotYetImplementedFor6Exception();
+		visitStateArrayNavigables(
+				contributor -> {
+					if ( PersistentAttribute.class.isInstance( contributor ) ) {
+						final Object value = values[ contributor.getStateArrayPosition() ];
+						PersistentAttribute.class.cast( contributor ).getPropertyAccess()
+								.getSetter()
+								.set( object, value, getTypeConfiguration().getSessionFactory() );
+					}
+				}
+		);
 	}
 
 	/**

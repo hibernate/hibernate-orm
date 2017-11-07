@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.Instantiator;
@@ -39,7 +40,7 @@ public class DynamicMapInstantiator implements Instantiator<Map> {
 	}
 
 	@Override
-	public boolean isInstance(Object object, SharedSessionContractImplementor session) {
+	public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
 		return false;
 	}
 }

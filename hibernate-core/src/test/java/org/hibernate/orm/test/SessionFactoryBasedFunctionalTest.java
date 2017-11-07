@@ -51,12 +51,17 @@ public abstract class SessionFactoryBasedFunctionalTest
 			MetadataSources metadataSources = new MetadataSources( ssr );
 			applyMetadataSources( metadataSources );
 
-			return (SessionFactoryImplementor) metadataSources.buildMetadata().buildSessionFactory();
+			final SessionFactoryImplementor factory = (SessionFactoryImplementor) metadataSources.buildMetadata().buildSessionFactory();
+			sessionFactoryBuilt( factory );
+			return factory;
 		}
 		catch (Exception e) {
 			StandardServiceRegistryBuilder.destroy( ssr );
 			throw e;
 		}
+	}
+
+	protected void sessionFactoryBuilt(SessionFactoryImplementor factory) {
 	}
 
 	protected void applySettings(StandardServiceRegistryBuilder builer) {

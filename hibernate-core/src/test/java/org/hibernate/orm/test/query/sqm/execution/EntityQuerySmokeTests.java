@@ -1,0 +1,88 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.orm.test.query.sqm.execution;
+
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.List;
+
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
+import org.hibernate.orm.test.support.domains.gambit.EntityOfBasics;
+
+import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
+
+/**
+ * @author Steve Ebersole
+ */
+public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
+	@Override
+	public SessionFactoryImplementor produceSessionFactory() {
+		final SessionFactoryImplementor factory = super.produceSessionFactory();
+
+		// currently a problem with EntityEntry -> PC
+		sessionFactoryScope().inTransaction(
+				factory,
+				session -> session.doWork(
+						connection -> {
+							final Statement statement = connection.createStatement();
+							try {
+								statement.execute(
+										"insert into EntityOfBasics( id, gender, theInt ) values ( 1, 'MALE', -1 )" );
+							}
+							finally {
+								try {
+									statement.close();
+								}
+								catch (SQLException ignore) {
+								}
+							}
+						}
+				)
+		);
+
+		return factory;
+	}
+
+	@Test
+	public void testQueryExecution() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final List result = session.createQuery( "select e from EntityOfBasics e" ).list();
+					assertThat( result, hasSize( 1 ) );
+					final Object value = result.get( 0 );
+					assertThat( value, notNullValue() );
+					final EntityOfBasics entity = cast(
+							value,
+							EntityOfBasics.class
+					);
+					assertThat( entity.getId(), is( 1 ) );
+					assertThat( entity.getGender(), is( EntityOfBasics.Gender.MALE ) );
+					assertThat( entity.getTheInt(), is( -1 ) );
+					assertThat( entity.getTheInteger(), nullValue() );
+				}
+		);
+	}
+
+	@Override
+	protected boolean exportSchema() {
+		return true;
+	}
+
+	@Override
+	protected void applyMetadataSources(MetadataSources metadataSources) {
+		super.applyMetadataSources( metadataSources );
+		metadataSources.addAnnotatedClass( EntityOfBasics.class );
+	}
+}

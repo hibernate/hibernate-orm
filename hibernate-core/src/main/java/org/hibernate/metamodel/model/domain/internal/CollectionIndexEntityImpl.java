@@ -112,6 +112,7 @@ public class CollectionIndexEntityImpl<J>
 						entityReference.getSqlExpressionQualifier(),
 						creationContext
 				),
+				entityReference.getLockMode(),
 				entityReference.getNavigablePath(),
 				creationContext
 		);

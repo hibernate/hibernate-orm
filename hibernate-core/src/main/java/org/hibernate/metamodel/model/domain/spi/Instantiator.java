@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -23,5 +24,5 @@ public interface Instantiator<J> {
 	 * Performs and "instance of" check to see if the given object is an
 	 * instance of managed structure
 	 */
-	boolean isInstance(Object object, SharedSessionContractImplementor session);
+	boolean isInstance(Object object, SessionFactoryImplementor sessionFactory);
 }

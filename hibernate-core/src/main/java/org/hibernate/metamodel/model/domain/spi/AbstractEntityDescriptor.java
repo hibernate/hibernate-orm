@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,13 +33,14 @@ import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.LoadQueryInfluencers.InternalFetchProfileType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
@@ -71,6 +73,7 @@ import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
@@ -89,9 +92,9 @@ import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractEntityDescriptor<T>
-		extends AbstractIdentifiableType<T>
-		implements Lockable<T> {
+public abstract class AbstractEntityDescriptor<J>
+		extends AbstractIdentifiableType<J>
+		implements Lockable<J> {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractEntityDescriptor.class );
 
 	private final SessionFactoryImplementor factory;
@@ -103,6 +106,7 @@ public abstract class AbstractEntityDescriptor<T>
 	private final List<JoinedTableBinding> secondaryTableBindings;
 
 	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
+	private final Instantiator<J> instantiator;
 
 	private final String sqlAliasStem;
 
@@ -111,7 +115,7 @@ public abstract class AbstractEntityDescriptor<T>
 	@SuppressWarnings("UnnecessaryBoxing")
 	public AbstractEntityDescriptor(
 			EntityMapping bootMapping,
-			IdentifiableTypeDescriptor<? super T> superTypeDescriptor,
+			IdentifiableTypeDescriptor<? super J> superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) throws HibernateException {
 		super(
 				bootMapping,
@@ -136,6 +140,12 @@ public abstract class AbstractEntityDescriptor<T>
 		else {
 			this.bytecodeEnhancementMetadata = new BytecodeEnhancementMetadataNonPojoImpl( bootMapping.getEntityName() );
 		}
+
+		this.instantiator = getRepresentationStrategy().resolveInstantiator(
+				bootMapping,
+				this,
+				Environment.getBytecodeProvider()
+		);
 
 		log.debugf(
 				"Instantiated persister [%s] for entity [%s (%s)]",
@@ -249,8 +259,8 @@ public abstract class AbstractEntityDescriptor<T>
 	}
 
 	@Override
-	public EntityJavaDescriptor<T> getJavaTypeDescriptor() {
-		return (EntityJavaDescriptor<T>) super.getJavaTypeDescriptor();
+	public EntityJavaDescriptor<J> getJavaTypeDescriptor() {
+		return (EntityJavaDescriptor<J>) super.getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -284,7 +294,7 @@ public abstract class AbstractEntityDescriptor<T>
 	}
 
 	@Override
-	public Class<T> getBindableJavaType() {
+	public Class<J> getBindableJavaType() {
 		return getJavaType();
 	}
 
@@ -304,14 +314,13 @@ public abstract class AbstractEntityDescriptor<T>
 	}
 
 	@Override
-	public EntityDescriptor<T> getEntityDescriptor() {
+	public EntityDescriptor<J> getEntityDescriptor() {
 		return this;
 	}
 
 	@Override
 	public EntityEntryFactory getEntityEntryFactory() {
-		// todo (6.0) : allow plugging in the EntityEntryFactory to use
-		return MutableEntityEntryFactory.INSTANCE;
+		return getHierarchy().getMutabilityPlan().getEntityEntryFactory();
 	}
 
 	@Override
@@ -321,23 +330,23 @@ public abstract class AbstractEntityDescriptor<T>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <Y> SingularAttribute<? super T, Y> getId(Class<Y> type) {
-		return (SingularAttribute<? super T, Y>) getHierarchy().getIdentifierDescriptor().asAttribute( type );
+	public <Y> SingularAttribute<? super J, Y> getId(Class<Y> type) {
+		return (SingularAttribute<? super J, Y>) getHierarchy().getIdentifierDescriptor().asAttribute( type );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <Y> SingularAttribute<T, Y> getDeclaredId(Class<Y> type) {
-		return (SingularAttribute<T, Y>) getHierarchy().getIdentifierDescriptor().asAttribute( type );
+	public <Y> SingularAttribute<J, Y> getDeclaredId(Class<Y> type) {
+		return (SingularAttribute<J, Y>) getHierarchy().getIdentifierDescriptor().asAttribute( type );
 	}
 
 	@Override
-	public <Y> SingularAttribute<? super T, Y> getVersion(Class<Y> type) {
+	public <Y> SingularAttribute<? super J, Y> getVersion(Class<Y> type) {
 		return getHierarchy().getVersionDescriptor();
 	}
 
 	@Override
-	public <Y> SingularAttribute<T, Y> getDeclaredVersion(Class<Y> type) {
+	public <Y> SingularAttribute<J, Y> getDeclaredVersion(Class<Y> type) {
 		return getHierarchy().getVersionDescriptor();
 	}
 
@@ -353,7 +362,7 @@ public abstract class AbstractEntityDescriptor<T>
 	}
 
 	@Override
-	public Set<SingularAttribute<? super T, ?>> getIdClassAttributes() {
+	public Set<SingularAttribute<? super J, ?>> getIdClassAttributes() {
 		throw new NotYetImplementedFor6Exception(  );
 	}
 
@@ -582,6 +591,7 @@ public abstract class AbstractEntityDescriptor<T>
 				tableGroupContext.getTableSpace(),
 				this,
 				this,
+				tableGroupContext.getQueryOptions().getLockOptions().getEffectiveLockMode( info.getIdentificationVariable() ),
 				new NavigablePath( getEntityName() ),
 				primaryTableReference,
 				joins
@@ -669,12 +679,16 @@ public abstract class AbstractEntityDescriptor<T>
 			NavigableReference navigableReference,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
+		assert navigableReference instanceof EntityReference;
 		assert navigableReference.getNavigable() instanceof EntityValuedNavigable;
+
+		final EntityReference entityReference = (EntityReference) navigableReference;
 
 		return new EntityQueryResultImpl(
 				(EntityValuedNavigable) navigableReference.getNavigable(),
 				resultVariable,
 				buildSqlSelectionMappings( navigableReference, creationContext ),
+				entityReference.getLockMode(),
 				navigableReference.getNavigablePath(),
 				creationContext
 		);
@@ -772,5 +786,65 @@ public abstract class AbstractEntityDescriptor<T>
 	@Override
 	public boolean hasNaturalIdentifier() {
 		return getHierarchy().getNaturalIdDescriptor() != null;
+	}
+
+	@Override
+	public Object instantiate(Serializable id, SharedSessionContractImplementor session) {
+		final J instance = instantiator.instantiate( session );
+		setIdentifier( instance, id, session );
+		return instance;
+	}
+
+	@Override
+	public boolean isInstance(Object object) {
+		return instantiator.isInstance( object, getFactory() );
+	}
+
+	@Override
+	public void setPropertyValues(Object object, Object[] values) {
+		// todo (6.0) : hook in ReflectionOptimizer.AccessOptimizer
+		super.setPropertyValues( object, values );
+	}
+
+	@Override
+	public Serializable getIdentifier(Object entity) throws HibernateException {
+		// todo (6.0) : for now we assume a basic identifier or aggregated composite
+		//		one with a single attribute
+		return (Serializable) ( (SingularPersistentAttribute) getHierarchy().getIdentifierDescriptor() )
+				.getPropertyAccess()
+				.getGetter()
+				.get( entity );
+	}
+
+	@Override
+	public Serializable getIdentifier(Object entity, SharedSessionContractImplementor session) {
+		return getIdentifier( entity );
+	}
+
+	@Override
+	public void setIdentifier(
+			Object entity,
+			Serializable id,
+			SharedSessionContractImplementor session) {
+		// todo (6.0) : for now we assume a basic identifier or aggregated composite
+		//		one with a single attribute
+		( (SingularPersistentAttribute) getHierarchy().getIdentifierDescriptor() )
+				.getPropertyAccess()
+				.getSetter()
+				.set( entity, id, session.getFactory() );
+	}
+
+	@Override
+	public void resetIdentifier(
+			Object entity,
+			Serializable currentId,
+			Object currentVersion,
+			SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public Object getVersion(Object object) throws HibernateException {
+		return null;
 	}
 }

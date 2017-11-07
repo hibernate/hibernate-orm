@@ -32,11 +32,13 @@ public class ScalarQueryResultImpl implements ScalarQueryResult {
 		this.resultVariable = resultVariable;
 		this.expressableType = expressableType;
 
+		// todo (6.0) : consider using `org.hibernate.metamodel.model.domain.spi.BasicValueConverter` instead
+		//		I'd like to get rid of exposing the AttributeConverter from the model
 		AttributeConverter attributeConverter = null;
 		if ( expressableType instanceof ConvertibleNavigable ) {
 			final ConvertibleNavigable navigable = (ConvertibleNavigable) expressableType;
-			if ( navigable.getAttributeConverter() != null ) {
-				attributeConverter = navigable.getAttributeConverter().getAttributeConverter();
+			if ( navigable.getAttributeConverterDefinition() != null ) {
+				attributeConverter = navigable.getAttributeConverterDefinition().getAttributeConverter();
 			}
 		}
 

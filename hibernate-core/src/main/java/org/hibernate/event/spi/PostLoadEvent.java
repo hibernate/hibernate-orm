@@ -24,6 +24,12 @@ public class PostLoadEvent extends AbstractEvent {
 		super(session);
 	}
 
+	public void reset() {
+		entity = null;
+		id = null;
+		descriptor = null;
+	}
+
 	public Object getEntity() {
 		return entity;
 	}
@@ -69,5 +75,4 @@ public class PostLoadEvent extends AbstractEvent {
 		this.descriptor = descriptor;
 		return this;
 	}
-	
 }

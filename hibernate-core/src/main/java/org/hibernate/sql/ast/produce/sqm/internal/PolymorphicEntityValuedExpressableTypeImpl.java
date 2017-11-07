@@ -48,11 +48,11 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationStrategy;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationStrategy;
 import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
@@ -69,7 +69,6 @@ import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.internal.EntityJavaDescriptorImpl;
@@ -310,6 +309,16 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements EntityDesc
 
 	@Override
 	public NonIdPersistentAttribute findDeclaredPersistentAttribute(String name) {
+		throw new UnsupportedOperationException(  );
+	}
+
+	@Override
+	public List<NonIdPersistentAttribute> getPersistentAttributes() {
+		throw new UnsupportedOperationException(  );
+	}
+
+	@Override
+	public List<NonIdPersistentAttribute> getDeclaredPersistentAttributes() {
 		throw new UnsupportedOperationException(  );
 	}
 

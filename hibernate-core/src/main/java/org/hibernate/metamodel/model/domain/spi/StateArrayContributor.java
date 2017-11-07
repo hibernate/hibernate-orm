@@ -12,6 +12,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.MutabilityPlan;

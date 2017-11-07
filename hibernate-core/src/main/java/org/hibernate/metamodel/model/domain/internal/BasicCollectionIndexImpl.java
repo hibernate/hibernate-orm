@@ -55,7 +55,7 @@ public class BasicCollectionIndexImpl<J>
 	}
 
 	@Override
-	public AttributeConverterDefinition getAttributeConverter() {
+	public AttributeConverterDefinition getAttributeConverterDefinition() {
 		return attributeConverter;
 	}
 

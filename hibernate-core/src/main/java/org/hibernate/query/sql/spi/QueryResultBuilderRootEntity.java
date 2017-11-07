@@ -136,6 +136,7 @@ public class QueryResultBuilderRootEntity
 				idColumnAliases,
 				discriminatorColumnAlias,
 				propertyMappings,
+				lockMode,
 				resolutionContext
 		);
 	}
@@ -174,11 +175,13 @@ public class QueryResultBuilderRootEntity
 				List<String> explicitIdColumnAliases,
 				String explicitDiscriminatorColumnAlias,
 				Map<String, AttributeMapping> explicitAttributeMapping,
+				LockMode lockMode,
 				NodeResolutionContext resolutionContext) {
 			super( null, new NavigablePath( entityDescriptor.getEntityName() ) );
 
 			this.entityDescriptor = entityDescriptor;
 			this.queryResultVariable = queryResultVariable;
+
 
 			this.initializer = new EntityRootInitializer(
 					entityDescriptor,
@@ -194,6 +197,7 @@ public class QueryResultBuilderRootEntity
 							explicitAttributeMapping,
 							resolutionContext
 					),
+					lockMode,
 					false
 			);
 

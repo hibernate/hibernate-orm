@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.tree.spi.from;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.NavigablePath;
@@ -36,6 +37,7 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 			TableSpace tableSpace,
 			EntityDescriptor entityDescriptor,
 			EntityValuedExpressableType entityValuedExpressableType,
+			LockMode lockMode,
 			NavigablePath navigablePath,
 			TableReference primaryTableReference,
 			List<TableReferenceJoin> joins) {
@@ -48,6 +50,7 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 		this.expression = new EntityReference(
 				this,
 				entityDescriptor,
+				lockMode,
 				navigablePath,
 				null,
 				false

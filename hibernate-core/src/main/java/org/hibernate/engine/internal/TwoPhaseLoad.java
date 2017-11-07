@@ -48,6 +48,9 @@ import org.jboss.logging.Logger;
  */
 @Deprecated
 public final class TwoPhaseLoad {
+
+	// todo (6.0) : remove this class
+
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			TwoPhaseLoad.class.getName()
@@ -119,6 +122,9 @@ public final class TwoPhaseLoad {
 			final boolean readOnly,
 			final SharedSessionContractImplementor session,
 			final PreLoadEvent preLoadEvent) {
+
+		// todo (6.0) : see org.hibernate.sql.results.internal.AbstractEntityInitializer#resolveEntityState
+
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
 		if ( entityEntry == null ) {

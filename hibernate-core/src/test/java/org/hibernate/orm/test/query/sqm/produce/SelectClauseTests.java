@@ -14,6 +14,7 @@ import org.hibernate.metamodel.model.domain.spi.CollectionIndex.IndexClassificat
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.Person;
+import org.hibernate.orm.test.support.domains.gambit.EntityOfBasics;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfLists;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfMaps;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfSets;
@@ -262,16 +263,29 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		SqmSelectStatement statement = interpretSelect( "select entry(m) from EntityOfMaps e join e.basicToManyToMany m" );
 
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
-		assertThat(
+
+		final SqmMapEntryBinding sqmMapEntryBinding = cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				instanceOf( SqmMapEntryBinding.class )
+				SqmMapEntryBinding.class
 		);
 
-		final SqmMapEntryBinding mapEntryFunction = (SqmMapEntryBinding) statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode();
-		assertThat( mapEntryFunction.getAttributeAttributeReference().getExportedFromElement(), notNullValue() );
-		assertThat( mapEntryFunction.getAttributeAttributeReference().getExportedFromElement().getIdentificationVariable(), is( "m") );
+		assertThat( sqmMapEntryBinding.getAttributeAttributeReference().getExportedFromElement(), notNullValue() );
+		assertThat( sqmMapEntryBinding.getAttributeAttributeReference().getExportedFromElement().getIdentificationVariable(), is( "m") );
 
-		assertThat( mapEntryFunction.getJavaTypeDescriptor().getJavaType(), is( equalTo( Map.Entry.class ) ) );
+		assertThat( sqmMapEntryBinding.getJavaTypeDescriptor().getJavaType(), is( equalTo( Map.Entry.class ) ) );
+	}
+
+	@Test
+	public void testSimpleRootEntitySelection() {
+		SqmSelectStatement statement = interpretSelect( "select e from EntityOfBasics e" );
+
+		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
+		final SqmEntityReference sqmEntityReference = cast(
+				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
+				SqmEntityReference.class
+		);
+
+		assertThat( sqmEntityReference.getJavaTypeDescriptor().getJavaType(), equalTo( EntityOfBasics.class ));
 	}
 
 	@Override
@@ -279,6 +293,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		super.applyMetadataSources( metadataSources );
 
 		metadataSources.addAnnotatedClass( Person.class );
+		metadataSources.addAnnotatedClass( EntityOfBasics.class );
 		metadataSources.addAnnotatedClass( EntityOfLists.class );
 		metadataSources.addAnnotatedClass( EntityOfMaps.class );
 		metadataSources.addAnnotatedClass( EntityOfSets.class );

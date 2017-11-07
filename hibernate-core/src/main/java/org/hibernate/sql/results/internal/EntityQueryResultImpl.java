@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.internal;
 
+import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.NavigablePath;
@@ -30,6 +31,7 @@ public class EntityQueryResultImpl extends AbstractFetchParent implements Entity
 			EntityValuedNavigable navigable,
 			String resultVariable,
 			EntitySqlSelectionMappings sqlSelectionMappings,
+			LockMode lockMode,
 			NavigablePath navigablePath,
 			QueryResultCreationContext creationContext) {
 		super( navigable, navigablePath );
@@ -40,6 +42,7 @@ public class EntityQueryResultImpl extends AbstractFetchParent implements Entity
 		this.initializer = new EntityRootInitializer(
 				navigable.getEntityDescriptor(),
 				sqlSelectionMappings,
+				lockMode,
 				creationContext.shouldCreateShallowEntityResult()
 		);
 

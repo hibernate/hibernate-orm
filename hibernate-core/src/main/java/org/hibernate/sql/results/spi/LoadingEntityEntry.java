@@ -6,6 +6,10 @@
  */
 package org.hibernate.sql.results.spi;
 
+import java.util.Locale;
+import java.util.concurrent.Callable;
+
+import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
@@ -53,5 +57,16 @@ public class LoadingEntityEntry {
 
 	public Object[] getHydratedEntityState() {
 		return hydratedEntityState;
+	}
+
+	@Override
+	public String toString() {
+		return String.format(
+				Locale.ROOT,
+				"LoadingEntityEntry(type=%s, id=%s)@%s",
+				getDescriptor().getEntityName(),
+				getEntityKey().getIdentifier(),
+				System.identityHashCode( this )
+		);
 	}
 }

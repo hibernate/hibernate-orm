@@ -10,26 +10,51 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.WrongClassException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.entry.CacheEntry;
+import org.hibernate.engine.internal.Versioning;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.SessionEventListenerManager;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.Status;
+import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventType;
+import org.hibernate.event.spi.PostLoadEvent;
+import org.hibernate.event.spi.PostLoadEventListener;
+import org.hibernate.event.spi.PreLoadEvent;
+import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.StateArrayContributor;
+import org.hibernate.pretty.MessageHelper;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.results.spi.EntityInitializer;
 import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 import org.hibernate.sql.results.spi.LoadingEntityEntry;
 import org.hibernate.sql.results.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.type.internal.TypeHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractEntityInitializer implements EntityInitializer {
+	private static final Logger log = Logger.getLogger( AbstractEntityInitializer.class );
+	private static final boolean debugEnabled = log.isDebugEnabled();
+
 
 	// NOTE : even though we only keep the EntityDescriptor here, rather than EntityReference
 	//		the "scope" of this initializer is a specific EntityReference.
@@ -38,22 +63,27 @@ public abstract class AbstractEntityInitializer implements EntityInitializer {
 	//		the EntityDescriptor here to avoid chicken/egg issues in the coe creating
 	// 		these
 
-	private final EntityDescriptor entityDescriptor;
+	private final EntityDescriptor<?> entityDescriptor;
 	private final EntitySqlSelectionMappings sqlSelectionMappings;
+	private final LockMode lockMode;
 	private final boolean isShallow;
 
 	// in-flight processing state.  reset after each row
 	private Object identifierHydratedState;
 	private EntityDescriptor concretePersister;
 	private EntityKey entityKey;
+	private Object[] hydratedEntityState;
 	private Object entityInstance;
+	private LoadingEntityEntry loadingEntityEntry;
 
 	public AbstractEntityInitializer(
 			EntityDescriptor entityDescriptor,
 			EntitySqlSelectionMappings sqlSelectionMappings,
+			LockMode lockMode,
 			boolean isShallow) {
 		this.entityDescriptor = entityDescriptor;
 		this.sqlSelectionMappings = sqlSelectionMappings;
+		this.lockMode = lockMode;
 		this.isShallow = isShallow;
 	}
 
@@ -182,7 +212,7 @@ public abstract class AbstractEntityInitializer implements EntityInitializer {
 			rowId = null;
 		}
 
-		final Object[] hydratedState = new Object[ numberOfNonIdentifierAttributes ];
+		hydratedEntityState = new Object[ numberOfNonIdentifierAttributes ];
 		int i = 0;
 		for ( PersistentAttribute<?,?> persistentAttribute : ( (EntityDescriptor<?>) concretePersister ).getPersistentAttributes() ) {
 			// todo : need to account for non-eager entities by calling something other than Type#resolve (which loads the entity)
@@ -221,7 +251,7 @@ public abstract class AbstractEntityInitializer implements EntityInitializer {
 			}
 
 
-			hydratedState[i] = hydratedValue;
+			hydratedEntityState[i] = hydratedValue;
 			i++;
 		}
 
@@ -234,13 +264,20 @@ public abstract class AbstractEntityInitializer implements EntityInitializer {
 				entityInstance = rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions().getEffectiveOptionalObject();
 			}
 		}
+
 		if ( entityInstance == null ) {
 			entityInstance = persistenceContext.instantiate( concretePersister.getEntityName(), entityKey.getIdentifier() );
 		}
 
-		rowProcessingState.getJdbcValuesSourceProcessingState().registerLoadingEntity(
+		loadingEntityEntry = rowProcessingState.getJdbcValuesSourceProcessingState().registerLoadingEntity(
 				entityKey,
-				entityKey1 -> new LoadingEntityEntry( entityKey, concretePersister, entityInstance, rowId, hydratedState )
+				key -> new LoadingEntityEntry(
+						entityKey,
+						concretePersister,
+						entityInstance,
+						rowId,
+						hydratedEntityState
+				)
 		);
 	}
 
@@ -287,7 +324,208 @@ public abstract class AbstractEntityInitializer implements EntityInitializer {
 	private boolean isReadOnly(
 			RowProcessingState rowProcessingState,
 			SharedSessionContractImplementor persistenceContext) {
-		return rowProcessingState.getJdbcValuesSourceProcessingState().getQueryOptions().isReadOnly()
-				|| persistenceContext.isDefaultReadOnly();
+		if ( persistenceContext.isDefaultReadOnly() ) {
+			return true;
+		}
+
+
+		final Boolean queryOption = rowProcessingState.getJdbcValuesSourceProcessingState().getQueryOptions().isReadOnly();
+
+		return queryOption == null ? false : queryOption;
+	}
+
+	@Override
+	public void resolveEntityState(RowProcessingState rowProcessingState) {
+		final Serializable entityIdentifier = entityKey.getIdentifier();
+
+		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState()
+				.getPersistenceContext();
+
+
+		preLoad( rowProcessingState );
+
+		// apply wrapping and conversions
+
+		for ( StateArrayContributor<?> contributor : entityDescriptor.getStateArrayContributors() ) {
+			final int position = contributor.getStateArrayPosition();
+			final Object value = hydratedEntityState[ position ];
+
+			hydratedEntityState[ position ] = contributor.resolveHydratedState(
+					value,
+					session,
+					// the container ("owner")... for now just pass null.
+					// ultimately we need to account for fetch parent if the
+					// current sub-contributor is a fetch
+					null
+			);
+		}
+
+		entityDescriptor.setIdentifier( entityInstance, entityIdentifier, session );
+		entityDescriptor.setPropertyValues( entityInstance, hydratedEntityState );
+
+		final Object version = Versioning.getVersion( hydratedEntityState, entityDescriptor );
+		session.getPersistenceContext().addEntity(
+				entityKey,
+				entityInstance
+		);
+		final EntityEntry entityEntry = session.getPersistenceContext().addEntry(
+				entityInstance,
+				Status.LOADING,
+				hydratedEntityState,
+				loadingEntityEntry.getRowId(),
+				entityKey.getIdentifier(),
+				version,
+				lockMode,
+				true,
+				entityDescriptor,
+				false
+		);
+
+		final SessionFactoryImplementor factory = session.getFactory();
+		final EntityDataAccess cacheAccess = factory.getCache().getEntityRegionAccess( entityDescriptor.getHierarchy() );
+		if ( cacheAccess != null && session.getCacheMode().isPutEnabled() ) {
+
+			if ( debugEnabled ) {
+				log.debugf(
+						"Adding entityInstance to second-level cache: %s",
+						MessageHelper.infoString( entityDescriptor, entityIdentifier, session.getFactory() )
+				);
+			}
+
+			final CacheEntry entry = entityDescriptor.buildCacheEntry( entityInstance, hydratedEntityState, version, session );
+			final Object cacheKey = cacheAccess.generateCacheKey( entityIdentifier, entityDescriptor.getHierarchy(), factory, session.getTenantIdentifier() );
+
+			// explicit handling of caching for rows just inserted and then somehow forced to be read
+			// from the database *within the same transaction*.  usually this is done by
+			// 		1) Session#refresh, or
+			// 		2) Session#clear + some form of load
+			//
+			// we need to be careful not to clobber the lock here in the cache so that it can be rolled back if need be
+			if ( session.getPersistenceContext().wasInsertedDuringTransaction( entityDescriptor, entityIdentifier ) ) {
+				cacheAccess.update(
+						session,
+						cacheKey,
+						entityDescriptor.getCacheEntryStructure().structure( entry ),
+						version,
+						version
+				);
+			}
+			else {
+				final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+				try {
+					eventListenerManager.cachePutStart();
+					final boolean put = cacheAccess.putFromLoad(
+							session,
+							cacheKey,
+							entityDescriptor.getCacheEntryStructure().structure( entry ),
+							version,
+							//useMinimalPuts( session, entityEntry )
+							false
+					);
+
+					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+						factory.getStatistics().secondLevelCachePut( cacheAccess.getRegion().getName() );
+					}
+				}
+				finally {
+					eventListenerManager.cachePutEnd();
+				}
+			}
+		}
+
+		if ( entityDescriptor.getHierarchy().getNaturalIdDescriptor() != null ) {
+			session.getPersistenceContext().getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
+					entityDescriptor,
+					entityIdentifier,
+					session.getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues( hydratedEntityState, entityDescriptor )
+			);
+		}
+
+		boolean isReallyReadOnly = isReadOnly( rowProcessingState, session );
+		if ( !entityDescriptor.getHierarchy().getMutabilityPlan().isMutable() ) {
+			isReallyReadOnly = true;
+		}
+		else {
+			final Object proxy = session.getPersistenceContext().getProxy( loadingEntityEntry.getEntityKey() );
+			if ( proxy != null ) {
+				// there is already a proxy for this impl
+				// only set the status to read-only if the proxy is read-only
+				isReallyReadOnly = ( (HibernateProxy) proxy ).getHibernateLazyInitializer().isReadOnly();
+			}
+		}
+		if ( isReallyReadOnly ) {
+			//no need to take a snapshot - this is a
+			//performance optimization, but not really
+			//important, except for entities with huge
+			//mutable property values
+			session.getPersistenceContext().setEntryStatus( entityEntry, Status.READ_ONLY );
+		}
+		else {
+			//take a snapshot
+			TypeHelper.deepCopy(
+					entityDescriptor,
+					hydratedEntityState,
+					hydratedEntityState,
+					StateArrayContributor::isUpdatable
+			);
+			session.getPersistenceContext().setEntryStatus( entityEntry, Status.MANAGED );
+		}
+
+		entityDescriptor.afterInitialize( entityInstance, session );
+
+		if ( debugEnabled ) {
+			log.debugf(
+					"Done materializing entityInstance %s",
+					MessageHelper.infoString( entityDescriptor, entityIdentifier, session.getFactory() )
+			);
+		}
+
+		if ( factory.getStatistics().isStatisticsEnabled() ) {
+			factory.getStatistics().loadEntity( entityDescriptor.getEntityName() );
+		}
+
+
+		postLoad( rowProcessingState );
+	}
+
+	private void preLoad(RowProcessingState rowProcessingState) {
+		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState()
+				.getPersistenceContext();
+
+		final PreLoadEvent preLoadEvent = rowProcessingState.getJdbcValuesSourceProcessingState().getPreLoadEvent();
+		preLoadEvent.reset();
+
+		// Must occur after resolving identifiers!
+		if ( session.isEventSource() ) {
+			preLoadEvent.setEntity( entityInstance )
+					.setState( hydratedEntityState )
+					.setId( entityKey.getIdentifier() )
+					.setDescriptor( entityDescriptor );
+
+			final EventListenerGroup<PreLoadEventListener> listenerGroup = session.getFactory()
+					.getServiceRegistry()
+					.getService( EventListenerRegistry.class )
+					.getEventListenerGroup( EventType.PRE_LOAD );
+			for ( PreLoadEventListener listener : listenerGroup.listeners() ) {
+				listener.onPreLoad( preLoadEvent );
+			}
+		}
+	}
+
+	private void postLoad(RowProcessingState rowProcessingState) {
+		final PostLoadEvent postLoadEvent = rowProcessingState.getJdbcValuesSourceProcessingState().getPostLoadEvent();
+		postLoadEvent.reset();
+
+		postLoadEvent.setEntity( loadingEntityEntry.getEntityInstance() )
+				.setId( loadingEntityEntry.getEntityKey().getIdentifier() )
+				.setDescriptor( loadingEntityEntry.getDescriptor() );
+
+		final EventListenerGroup<PostLoadEventListener> listenerGroup = entityDescriptor.getFactory()
+				.getServiceRegistry()
+				.getService( EventListenerRegistry.class )
+				.getEventListenerGroup( EventType.POST_LOAD );
+		for ( PostLoadEventListener listener : listenerGroup.listeners() ) {
+			listener.onPostLoad( postLoadEvent );
+		}
 	}
 }

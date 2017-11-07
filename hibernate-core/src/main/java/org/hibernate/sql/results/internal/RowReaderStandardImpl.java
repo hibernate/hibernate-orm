@@ -62,9 +62,17 @@ public class RowReaderStandardImpl<T> implements RowReader<T> {
 			result[i] = resultAssemblers.get( i ).assemble( rowProcessingState, options );
 		}
 
-		// todo : add AfterLoadActions handling here via Callback
+		afterRow( rowProcessingState, options );
 
 		return rowTransformer.transformRow( result );
+	}
+
+	private void afterRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+		// todo : add AfterLoadActions handling here via Callback
+
+		for ( Initializer initializer : initializers ) {
+			initializer.finishUpRow( rowProcessingState );
+		}
 	}
 
 	private void coordinateInitializers(
@@ -96,10 +104,6 @@ public class RowReaderStandardImpl<T> implements RowReader<T> {
 			if ( initializer instanceof EntityInitializer ) {
 				( (EntityInitializer) initializer ).resolveEntityState( rowProcessingState );
 			}
-		}
-
-		for ( Initializer initializer : initializers ) {
-			initializer.finishUpRow( rowProcessingState );
 		}
 
 	}

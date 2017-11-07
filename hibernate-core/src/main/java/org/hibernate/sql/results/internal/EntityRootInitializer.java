@@ -6,12 +6,10 @@
  */
 package org.hibernate.sql.results.internal;
 
-import java.util.List;
-
+import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.sql.results.spi.EntityInitializer;
 import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
-import org.hibernate.sql.results.spi.Fetch;
 
 /**
  * InitializerEntity for root
@@ -23,8 +21,9 @@ public class EntityRootInitializer
 	public EntityRootInitializer(
 			EntityDescriptor entityDescriptor,
 			EntitySqlSelectionMappings sqlSelectionMappings,
+			LockMode lockMode,
 			boolean isShallow) {
-		super( entityDescriptor, sqlSelectionMappings, isShallow );
+		super( entityDescriptor, sqlSelectionMappings, lockMode, isShallow );
 	}
 
 	@Override

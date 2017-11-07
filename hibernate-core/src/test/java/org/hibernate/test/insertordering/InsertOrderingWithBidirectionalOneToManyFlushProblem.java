@@ -135,7 +135,7 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
 		}
 	}
 
-	@Entity(name = "Top")
+	@Entity(name = "`Top`")
 	public static class Top {
 
 		@Column(nullable = false)

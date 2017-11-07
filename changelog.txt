@@ -3,6 +3,13 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.0.16.Final (November 6, 2017)
+------------------------------------------------------------------------------------------------------------------------
+
+    [JBEAP-13436 / HHH-11364] Unable to populate an ElementCollection (of an embeddable type) of an audited entity when the collection has a null value for a property with JoinColumn
+
+    [JBEAP-12907 / HHH-11957] : DB2 substring method needs to be exposed in DB297Dialect
+
 Changes in 5.0.15.Final (August 18, 2017)
 ------------------------------------------------------------------------------------------------------------------------
     [JBEAP-11657 / HHH-9199] - ValidityAuditStrategy: Collection of embeddables is not audited correctly

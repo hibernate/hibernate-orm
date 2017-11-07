@@ -225,7 +225,7 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 			//tag::pc-managed-state-native-example[]
 			Person person = session.byId( Person.class ).load( personId );
 			person.setName("John Doe");
-			entityManager.flush();
+			session.flush();
 			//end::pc-managed-state-native-example[]
 		} );
 

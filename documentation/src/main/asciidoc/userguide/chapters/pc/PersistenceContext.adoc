@@ -326,7 +326,7 @@ include::{extrasdir}/pc-managed-state-dynamic-update-example.sql[]
 ----
 ====
 
-The dynamic update allows you to set just the columns sthat were modified in the associated entity.
+The dynamic update allows you to set just the columns that were modified in the associated entity.
 
 [[pc-refresh]]
 === Refresh entity state

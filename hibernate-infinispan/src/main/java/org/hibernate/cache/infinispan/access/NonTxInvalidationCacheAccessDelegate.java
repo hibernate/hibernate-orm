@@ -77,4 +77,17 @@ public class NonTxInvalidationCacheAccessDelegate extends InvalidationCacheAcces
 		// endInvalidatingKeys is called from NonTxInvalidationInterceptor, from the synchronization callback
 		return false;
 	}
+
+	@Override
+	public void removeAll() throws CacheException {
+		try {
+			if (!putValidator.beginInvalidatingRegion()) {
+				log.failedInvalidateRegion(region.getName());
+			}
+			cache.clear();
+		}
+		finally {
+			putValidator.endInvalidatingRegion();
+		}
+	}
 }

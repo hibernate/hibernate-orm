@@ -37,7 +37,6 @@ public class ConversationalPersistenceContextExtendedTest {
 				.addClass( Event.class )
 				.addClass( ConversationalEventManager.class )
 				.addAsManifestResource( EmptyAsset.INSTANCE, "beans.xml" )
-				.addAsManifestResource( "jboss-deployment-structure.xml" )
 				.addAsManifestResource( new StringAsset( persistenceXml().exportAsString() ), "persistence.xml" );
 	}
 

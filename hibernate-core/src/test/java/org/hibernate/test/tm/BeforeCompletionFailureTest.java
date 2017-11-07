@@ -35,7 +35,6 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class BeforeCompletionFailureTest extends BaseNonConfigCoreFunctionalTestCase {
-	private static final Logger log = Logger.getLogger( BeforeCompletionFailureTest.class );
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

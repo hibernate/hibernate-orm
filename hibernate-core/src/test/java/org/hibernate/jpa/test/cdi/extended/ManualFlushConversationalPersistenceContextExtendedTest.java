@@ -38,7 +38,6 @@ public class ManualFlushConversationalPersistenceContextExtendedTest {
 				.addClass( Event.class )
 				.addClass( ManualFlushConversationalEventManager.class )
 				.addAsManifestResource( EmptyAsset.INSTANCE, "beans.xml" )
-				.addAsManifestResource( "jboss-deployment-structure.xml" )
 				.addAsManifestResource( new StringAsset( persistenceXml().exportAsString() ), "persistence.xml" );
 	}
 

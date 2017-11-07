@@ -43,8 +43,6 @@ import static org.junit.Assert.assertSame;
 @RequiresDialect(H2Dialect.class)
 public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( GraphFetchingTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

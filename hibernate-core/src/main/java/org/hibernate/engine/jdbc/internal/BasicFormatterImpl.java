@@ -356,6 +356,10 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private static boolean isFunctionName(String tok) {
+			if ( tok == null || tok.length() == 0 ) {
+				return false;
+			}
+
 			final char begin = tok.charAt( 0 );
 			final boolean isIdentifier = Character.isJavaIdentifierStart( begin ) || '"' == begin;
 			return isIdentifier &&

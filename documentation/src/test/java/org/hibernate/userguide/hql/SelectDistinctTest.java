@@ -37,8 +37,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class SelectDistinctTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( SelectDistinctTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

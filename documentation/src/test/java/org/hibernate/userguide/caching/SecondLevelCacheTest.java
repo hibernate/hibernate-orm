@@ -42,8 +42,6 @@ import static org.junit.Assert.assertNotNull;
  */
 public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( SecondLevelCacheTest.class );
-
     @Override
     protected Class<?>[] getAnnotatedClasses() {
         return new Class<?>[] {

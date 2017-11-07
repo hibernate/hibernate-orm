@@ -20,7 +20,6 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
  * @author Emmanuel Bernard
  */
 public class RemoveTest extends BaseEntityManagerFunctionalTestCase {
-	private static final Logger log = Logger.getLogger( RemoveTest.class );
 
 	@Test
 	public void testRemove() {

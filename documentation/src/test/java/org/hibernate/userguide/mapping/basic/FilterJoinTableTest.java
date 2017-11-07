@@ -35,8 +35,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( FilterJoinTableTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

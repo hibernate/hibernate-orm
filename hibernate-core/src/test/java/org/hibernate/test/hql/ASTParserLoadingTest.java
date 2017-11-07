@@ -107,7 +107,6 @@ import static org.junit.Assert.fail;
                 "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
 )
 public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
-	private static final Logger log = Logger.getLogger( ASTParserLoadingTest.class );
 
 	private List<Long> createdAnimalIds = new ArrayList<>();
 

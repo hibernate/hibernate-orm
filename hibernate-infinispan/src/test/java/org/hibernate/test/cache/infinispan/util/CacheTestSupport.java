@@ -21,7 +21,6 @@ import org.hibernate.cache.spi.RegionFactory;
  * @author <a href="brian.stansberry@jboss.com">Brian Stansberry</a>
  */
 public class CacheTestSupport {
-	private static final Logger log = Logger.getLogger( CacheTestSupport.class );
 
 	private static final String PREFER_IPV4STACK = "java.net.preferIPv4Stack";
 

@@ -778,11 +778,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 					true
 			);
 
-			this.criteriaLiteralHandlingMode = strategySelector.resolveStrategy(
-					LiteralHandlingMode.class,
-					configurationSettings.get( CRITERIA_LITERAL_HANDLING_MODE ),
-					LiteralHandlingMode.AUTO,
-					(clazz) -> LiteralHandlingMode.AUTO
+			this.criteriaLiteralHandlingMode = LiteralHandlingMode.interpret(
+				configurationSettings.get( CRITERIA_LITERAL_HANDLING_MODE )
 			);
 		}
 

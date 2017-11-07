@@ -37,7 +37,6 @@ ext {
             minorSlot: minorSlot,
             version: rootProject.hibernateTargetVersion,
             wildflyVersion: wildflyVersion,
-            javassistVersion: javassistVersion,
             byteBuddyVersion: byteBuddyVersion
     ];
 }
@@ -53,15 +52,12 @@ configurations {
     }
 
     wildflyDist
-
-    javassist
     byteBuddy
 }
 
 dependencies {
     jipijapa "org.wildfly:jipijapa-hibernate5:${wildflyVersion}"
     wildflyDist "org.wildfly:wildfly-dist:${wildflyVersion}@zip"
-    javassist libraries.javassist
     byteBuddy libraries.byteBuddy
 
     testCompile project( ":hibernate-core" )
@@ -144,9 +140,6 @@ task createModulesZip(type: Zip, dependsOn: [copyAndExpandModuleXml]) {
     into( 'org/hibernate/' + slot ) {
         from parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
         from parent.project( 'hibernate-envers' ).configurations.archives.allArtifacts.files
-
-        // also need Javassist's jar
-        from configurations.javassist
         // also need Byte Buddy's jar
         from configurations.byteBuddy
     }

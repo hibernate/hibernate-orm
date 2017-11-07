@@ -32,8 +32,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class FetchModeSelectTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( FetchModeSelectTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

@@ -29,8 +29,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  */
 public class OneToOneBidirectionalTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( OneToOneBidirectionalTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

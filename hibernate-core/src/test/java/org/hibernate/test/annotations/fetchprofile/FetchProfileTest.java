@@ -37,7 +37,6 @@ import static org.junit.Assert.fail;
  */
 @TestForIssue( jiraKey = "HHH-4812" )
 public class FetchProfileTest extends BaseUnitTestCase {
-	private static final Logger log = Logger.getLogger( FetchProfileTest.class );
 
 	private ServiceRegistry serviceRegistry;
 

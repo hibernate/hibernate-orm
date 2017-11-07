@@ -33,8 +33,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  */
 public class UnidirectionalComparatorSortedSetTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( UnidirectionalComparatorSortedSetTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

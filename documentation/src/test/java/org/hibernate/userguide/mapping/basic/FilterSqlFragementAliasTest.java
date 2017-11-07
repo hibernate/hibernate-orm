@@ -45,8 +45,6 @@ import static org.junit.Assert.assertNotNull;
 @RequiresDialect(H2Dialect.class)
 public class FilterSqlFragementAliasTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( FilterSqlFragementAliasTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

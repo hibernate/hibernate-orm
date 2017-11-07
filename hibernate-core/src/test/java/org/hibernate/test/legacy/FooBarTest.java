@@ -90,7 +90,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class FooBarTest extends LegacyTestCase {
-	private static final Logger log = Logger.getLogger( FooBarTest.class );
 
 	@Override
 	public String[] getMappings() {

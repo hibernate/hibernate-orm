@@ -15,6 +15,8 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 
@@ -171,9 +173,46 @@ public class AnnotationMetaEntity implements MetaEntity {
 		addPersistentMembers( fieldsOfClass, AccessType.FIELD );
 
 		List<? extends Element> methodsOfClass = ElementFilter.methodsIn( element.getEnclosedElements() );
-		addPersistentMembers( methodsOfClass, AccessType.PROPERTY );
+		List<Element> gettersAndSettersOfClass = new ArrayList<>();
+
+		for (Element rawMethodOfClass: methodsOfClass) {
+			if ( isGetterOrSetter( rawMethodOfClass)) {
+				gettersAndSettersOfClass.add(rawMethodOfClass);
+			}
+		}
+		addPersistentMembers( gettersAndSettersOfClass, AccessType.PROPERTY );
 
 		initialized = true;
+	}
+
+	/**
+	 * Check if method respects Java Bean conventions for getter and setters.
+	 *
+	 * @param methodOfClass method element
+	 *
+	 * @return whether method respects Java Bean conventions.
+	 */
+	private boolean isGetterOrSetter(Element methodOfClass) {
+		ExecutableType methodType = (ExecutableType) methodOfClass.asType();
+		String methodSimpleName = methodOfClass.getSimpleName().toString();
+		List<? extends TypeMirror> methodParameterTypes = methodType.getParameterTypes();
+		TypeMirror returnType = methodType.getReturnType();
+
+		if(
+			methodSimpleName.startsWith("set") &&
+			methodParameterTypes.size() == 1 &&
+			"void".equalsIgnoreCase( returnType.toString() ) ) {
+			return true;
+		}
+		else if(
+			( methodSimpleName.startsWith("get") || methodSimpleName.startsWith("is") ) &&
+			methodParameterTypes.isEmpty() &&
+			!"void".equalsIgnoreCase( returnType.toString() ) ) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 	private void addPersistentMembers(List<? extends Element> membersOfClass, AccessType membersKind) {

@@ -48,7 +48,6 @@ import org.junit.Test;
 @TestForIssue( jiraKey = "HHH-10549" )
 public class ConversionAutoApplyTest extends BaseEntityManagerFunctionalTestCase {
 
-
 	@Test
 	public void testConverterIsNotIncorrectlyApplied() {
 		Widget w = new Widget();

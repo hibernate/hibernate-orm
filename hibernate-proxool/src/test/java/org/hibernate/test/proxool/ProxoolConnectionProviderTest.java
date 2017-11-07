@@ -29,8 +29,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class ProxoolConnectionProviderTest extends BaseUnitTestCase {
 
-
-
 	@Test
 	public void testPoolsClosed() {
 		assertDefinedPools(); // zero-length-vararg used as parameter
@@ -57,7 +55,6 @@ public class ProxoolConnectionProviderTest extends BaseUnitTestCase {
 			assertTrue( "pool named " + poolName + " missing", aliases.contains( poolName ) );
 		}
 	}
-
 
 	private StandardServiceRegistry buildServiceRegistry(String poolName){
 

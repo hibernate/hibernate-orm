@@ -1026,11 +1026,6 @@ public abstract class AbstractSqlAstWalker
 	}
 
 	@Override
-	public EnumType getEnumeratedType() {
-		return EnumType.ORDINAL;
-	}
-
-	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return getSessionFactory().getTypeConfiguration();
 	}

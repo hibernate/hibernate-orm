@@ -24,7 +24,7 @@ public class CharSqlDescriptor extends VarcharSqlDescriptor {
 
 	@Override
 	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-		return super.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
+		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Character.class );
 	}
 
 	@Override

@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import javax.persistence.EnumType;
-
 import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -39,7 +37,7 @@ import org.hibernate.type.spi.BasicType;
 /**
  * @author Steve Ebersole
  */
-public class BasicSingularPersistentAttribute<O,J>
+public class BasicSingularPersistentAttribute<O, J>
 		extends AbstractNonIdSingularPersistentAttribute<O, J>
 		implements BasicValuedNavigable<J>, ConvertibleNavigable<J>, BasicValueConverter {
 
@@ -70,7 +68,7 @@ public class BasicSingularPersistentAttribute<O,J>
 		this.valueConverter = resolveValueConverter( basicValueMapping, context );
 	}
 
-	@SuppressWarnings({"unchecked", "unused"})
+	@SuppressWarnings({ "unchecked", "unused" })
 	private BasicValueConverter resolveValueConverter(
 			BasicValueMapping<J> basicValueMapping,
 			RuntimeModelCreationContext context) {
@@ -82,18 +80,11 @@ public class BasicSingularPersistentAttribute<O,J>
 			assert basicType.getJavaTypeDescriptor() instanceof EnumJavaDescriptor;
 			final EnumJavaDescriptor enumJavaDescriptor = (EnumJavaDescriptor) basicType.getJavaTypeDescriptor();
 
-			EnumType enumType = basicValueMapping.getEnumType();
-			if ( enumType == null ) {
-				// todo (6.0) : found where in the hell I left that be configured per-SF and use that
-				//		for now, use the JPA default
-				enumType = EnumType.ORDINAL;
-			}
-
-			if ( enumType == EnumType.STRING ) {
-				return new NamedEnumValueConverter( enumJavaDescriptor );
+			if ( basicType.getSqlTypeDescriptor().getJdbcTypeCode() == EnumJavaDescriptor.ORDINAL_JDBC_TYPE_CODE ) {
+				return new OrdinalEnumValueConverter<>( enumJavaDescriptor );
 			}
 			else {
-				return new OrdinalEnumValueConverter<>( enumJavaDescriptor );
+				return new NamedEnumValueConverter( enumJavaDescriptor );
 			}
 		}
 
@@ -139,7 +130,7 @@ public class BasicSingularPersistentAttribute<O,J>
 						)
 				),
 				getType()
-	  	);
+		);
 	}
 
 	@Override

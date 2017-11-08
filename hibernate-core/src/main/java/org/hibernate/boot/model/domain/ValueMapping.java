@@ -22,6 +22,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  */
 public interface ValueMapping<J> {
 	MappedTable getMappedTable();
+
 	List<MappedColumn> getMappedColumns();
 
 	FetchMode getFetchMode();

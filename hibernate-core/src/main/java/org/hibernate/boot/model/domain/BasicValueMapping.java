@@ -8,8 +8,6 @@ package org.hibernate.boot.model.domain;
 
 import java.util.List;
 
-import javax.persistence.EnumType;
-
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.model.relational.MappedColumn;
@@ -50,10 +48,4 @@ public interface BasicValueMapping<J> extends ValueMapping<J> {
 
 	// todo (6.0) : this always returns null - needs fixed
 	AttributeConverterDefinition getAttributeConverterDefinition();
-
-	default EnumType getEnumType() {
-		// todo (6.0) : implement this
-		//		this is the return I need for test, so using that temporarily
-		return EnumType.STRING;
-	}
 }

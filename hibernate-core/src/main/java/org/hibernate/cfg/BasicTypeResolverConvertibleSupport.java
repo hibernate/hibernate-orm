@@ -21,7 +21,7 @@ import org.hibernate.type.spi.BasicTypeParameters;
  */
 public abstract class BasicTypeResolverConvertibleSupport
 		extends BasicTypeResolverSupport
-		implements JdbcRecommendedSqlTypeMappingContext, BasicTypeParameters {
+		implements JdbcRecommendedSqlTypeMappingContext {
 	private final AttributeConverterDescriptor converterDescriptor;
 
 	public BasicTypeResolverConvertibleSupport(

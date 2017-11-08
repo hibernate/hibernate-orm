@@ -72,11 +72,6 @@ public abstract class BasicTypeResolverSupport<T>
 	}
 
 	@Override
-	public javax.persistence.EnumType getEnumeratedType() {
-		return null;
-	}
-
-	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return buildingContext.getPreferredSqlTypeCodeForBoolean();
 	}

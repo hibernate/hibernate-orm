@@ -53,11 +53,6 @@ public class BasicTypeRegistry {
 			}
 
 			@Override
-			public EnumType getEnumeratedType() {
-				return EnumType.STRING;
-			}
-
-			@Override
 			public TypeConfiguration getTypeConfiguration() {
 				return typeConfiguration;
 			}
@@ -121,11 +116,6 @@ public class BasicTypeRegistry {
 					}
 
 					@Override
-					public EnumType getEnumeratedType() {
-						return EnumType.ORDINAL;
-					}
-
-					@Override
 					public TypeConfiguration getTypeConfiguration() {
 						return typeConfiguration;
 					}
@@ -177,7 +167,8 @@ public class BasicTypeRegistry {
 				}
 			}
 
-			final SqlTypeDescriptor resolvedConverterHintedSqlTypeDescriptor = parameters.getAttributeConverterDefinition().getJdbcType()
+			final SqlTypeDescriptor resolvedConverterHintedSqlTypeDescriptor = parameters.getAttributeConverterDefinition()
+					.getJdbcType()
 					.getJdbcRecommendedSqlType( jdbcTypeResolutionContext );
 			if ( sqlTypeDescriptor == null ) {
 				sqlTypeDescriptor = resolvedConverterHintedSqlTypeDescriptor;

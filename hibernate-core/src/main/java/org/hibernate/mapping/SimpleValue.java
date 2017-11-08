@@ -395,11 +395,6 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		@Override
-		public EnumType getEnumeratedType() {
-			return EnumType.STRING;
-		}
-
-		@Override
 		public TypeConfiguration getTypeConfiguration() {
 			return typeConfiguration;
 		}

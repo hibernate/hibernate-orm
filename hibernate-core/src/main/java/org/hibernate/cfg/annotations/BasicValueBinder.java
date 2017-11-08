@@ -392,8 +392,7 @@ public class BasicValueBinder<T> {
 	public void fillSimpleValue() {
 		LOG.debugf( "Starting fillSimpleValue for %s", propertyName );
 		basicValue.setBasicTypeResolver( basicTypeResolver );
-
-
+		basicValue.setJpaAttributeConverterDescriptor( converterDescriptor );
 	}
 
 	private static class BasicTypeResolverExplicitImpl implements BasicTypeResolver {
@@ -448,7 +447,7 @@ public class BasicValueBinder<T> {
 
 		@Override
 		public BasicJavaDescriptor getJavaTypeDescriptor() {
-			throw new NotYetImplementedException(  );
+			throw new NotYetImplementedFor6Exception(  );
 		}
 
 		@Override
@@ -618,6 +617,7 @@ public class BasicValueBinder<T> {
 			final Class javaType = buildingContext.getBootstrapContext()
 					.getReflectionManager()
 					.toClass( elementJavaType );
+
 			javaDescriptor = (BasicJavaDescriptor) buildingContext.getBootstrapContext()
 					.getTypeConfiguration()
 					.getJavaTypeDescriptorRegistry()

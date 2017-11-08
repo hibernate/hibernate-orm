@@ -201,16 +201,28 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 						propertyName,
 						buildingContext.getBootstrapContext().getServiceRegistry().getService( ClassLoaderService.class )
 				);
-				javaTypeDescriptor = buildingContext.getBootstrapContext().getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( attributeType );
-				sqlTypeDescriptor = javaTypeDescriptor.getJdbcRecommendedSqlType(
-						buildingContext.getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry().getBaseJdbcRecommendedSqlTypeMappingContext()
-				);
+				javaTypeDescriptor = buildingContext.getBootstrapContext()
+						.getTypeConfiguration()
+						.getJavaTypeDescriptorRegistry()
+						.getDescriptor( attributeType );
+				sqlTypeDescriptor = javaTypeDescriptor
+						.getJdbcRecommendedSqlType(
+								buildingContext.getBootstrapContext()
+										.getTypeConfiguration()
+										.getBasicTypeRegistry()
+										.getBaseJdbcRecommendedSqlTypeMappingContext()
+						);
 			}
 			else {
 				javaTypeDescriptor = converterDefinition.getDomainType();
-				sqlTypeDescriptor = converterDefinition.getJdbcType().getJdbcRecommendedSqlType(
-						buildingContext.getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry().getBaseJdbcRecommendedSqlTypeMappingContext()
-				);
+				sqlTypeDescriptor = converterDefinition
+						.getJdbcType()
+						.getJdbcRecommendedSqlType(
+								buildingContext.getBootstrapContext()
+										.getTypeConfiguration()
+										.getBasicTypeRegistry()
+										.getBaseJdbcRecommendedSqlTypeMappingContext()
+						);
 			}
 		}
 
@@ -236,9 +248,10 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 
 		@Override
 		public int getPreferredSqlTypeCodeForBoolean() {
-			return ConfigurationHelper.getPreferredSqlTypeCodeForBoolean(
-					getBuildingContext().getBootstrapContext().getServiceRegistry()
-			);
+			return ConfigurationHelper
+					.getPreferredSqlTypeCodeForBoolean(
+							getBuildingContext().getBootstrapContext().getServiceRegistry()
+					);
 		}
 	}
 

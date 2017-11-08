@@ -9,6 +9,7 @@ package org.hibernate.orm.test.support.domains.gambit;
 import java.net.URL;
 import java.sql.Clob;
 import javax.persistence.AttributeConverter;
+import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -34,6 +35,7 @@ public class EntityOfBasics {
 	private Clob theClob;
 	private Gender gender;
 	private Gender convertedGender;
+	private Gender ordinalGender;
 
 	@Id
 	public Integer getId() {
@@ -94,12 +96,22 @@ public class EntityOfBasics {
 	}
 
 	@Convert( converter = GenderConverter.class )
+	@Column(name = "converted_gender")
 	public Gender getConvertedGender() {
 		return convertedGender;
 	}
 
 	public void setConvertedGender(Gender convertedGender) {
 		this.convertedGender = convertedGender;
+	}
+
+	@Column(name = "ordinal_gender")
+	public Gender getOrdinalGender() {
+		return ordinalGender;
+	}
+
+	public void setOrdinalGender(Gender ordinalGender) {
+		this.ordinalGender = ordinalGender;
 	}
 
 	public static class GenderConverter implements AttributeConverter<Gender,Character> {

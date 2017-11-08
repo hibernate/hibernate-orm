@@ -39,7 +39,7 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 							final Statement statement = connection.createStatement();
 							try {
 								statement.execute(
-										"insert into EntityOfBasics( id, gender, theInt ) values ( 1, 'MALE', -1 )" );
+										"insert into EntityOfBasics( id, gender, theInt, ordinal_gender, converted_gender ) values ( 1, 'MALE', -1, 1, 'M' )" );
 							}
 							finally {
 								try {
@@ -71,6 +71,8 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 					assertThat( entity.getGender(), is( EntityOfBasics.Gender.MALE ) );
 					assertThat( entity.getTheInt(), is( -1 ) );
 					assertThat( entity.getTheInteger(), nullValue() );
+					assertThat( entity.getOrdinalGender(), is( EntityOfBasics.Gender.FEMALE ) );
+					assertThat( entity.getConvertedGender(), is( EntityOfBasics.Gender.MALE ) );
 				}
 		);
 	}

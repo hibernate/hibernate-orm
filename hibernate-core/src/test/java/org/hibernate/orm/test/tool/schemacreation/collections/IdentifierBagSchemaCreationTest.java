@@ -8,7 +8,6 @@ package org.hibernate.orm.test.tool.schemacreation.collections;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.regex.Pattern;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -20,74 +19,31 @@ import javax.persistence.Table;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.orm.test.tool.BaseSchemaUnitTestCase;
-import org.hibernate.orm.test.tool.util.RecordingTarget;
-import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
+import org.hibernate.orm.test.tool.schemacreation.BaseSchemaCreationTestCase;
 
-import org.hibernate.testing.junit5.RequiresDialect;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Andrea Boriero
  */
-@RequiresDialect(dialectClass = H2Dialect.class, matchSubTypes = true)
-public class IdentifierBagSchemaCreationTest extends BaseSchemaUnitTestCase {
-	@Override
-	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-		serviceRegistryBuilder.applySetting( AvailableSettings.FORMAT_SQL, false );
-	}
-
+public class IdentifierBagSchemaCreationTest extends BaseSchemaCreationTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Item.class };
 	}
 
-	@Override
-	protected boolean createSqlScriptTempOutputFile() {
-		return true;
-	}
-
-	@Override
-	protected boolean dropSchemaAfterTest() {
-		return false;
-	}
-
 	@SchemaTest
 	public void testElementAndCollectionTableAreCreated(SchemaScope scope) {
-		final RecordingTarget target = new RecordingTarget( getDialect() );
-		scope.withSchemaCreator(
-				null,
-				schemaCreator -> schemaCreator.doCreation(
-						true,
-						target,
-						new GenerationTargetToStdout()
-				)
+		assertThatTablesAreCreated(
+				"item (id bigint not null, primary key (id))",
+				"image (image_id bigint not null, image_name varchar(255), item_id bigint not null, primary key (image_id))"
 		);
 
-		assertThat(
-				target.getActions( target.tableCreateActions() ),
-				target.containsExactly(
-						"item (id bigint not null, primary key (id))",
-						"image (image_id bigint not null, image_name varchar(255), item_id bigint not null, primary key (image_id))"
-				)
-		);
-
-		assertTrue(
-				target.containsAction(
-						Pattern.compile(
-								"alter table image add constraint (.*) foreign key \\(item_id\\) references item \\(id\\)" )
-				),
-				"The expected foreign key has not been generated"
+		assertThatActionIsGenerated(
+				"alter table image add constraint (.*) foreign key \\(item_id\\) references item \\(id\\)"
 		);
 	}
-
 
 	@Entity(name = "Item")
 	@Table(name = "ITEM")

@@ -4,18 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.tool.schemacreation.collections;
+package org.hibernate.orm.test.tool.schemacreation.collections.components;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.CollectionTable;
-import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OrderColumn;
-import javax.persistence.Table;
 
 import org.hibernate.orm.test.tool.schemacreation.BaseSchemaCreationTestCase;
 
@@ -25,11 +21,11 @@ import org.hibernate.testing.junit5.schema.SchemaTest;
 /**
  * @author Andrea Boriero
  */
-public class OrderListSchemaCreationTest extends BaseSchemaCreationTestCase {
+public class SetOfComponentClassSchemaCreationTest extends BaseSchemaCreationTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Item.class };
+		return new Class[]{Item.class};
 	}
 
 	@SchemaTest
@@ -37,7 +33,7 @@ public class OrderListSchemaCreationTest extends BaseSchemaCreationTestCase {
 
 		assertThatTablesAreCreated(
 				"item (id bigint not null, primary key (id))",
-				"image (image_name varchar(255), images_order integer not null, item_id bigint not null, primary key (item_id, images_order))"
+				"image (item_id bigint not null, name varchar(255) not null, size varchar(255) not null, primary key (item_id, name, size))"
 		);
 
 		assertThatActionIsGenerated(
@@ -46,16 +42,12 @@ public class OrderListSchemaCreationTest extends BaseSchemaCreationTestCase {
 	}
 
 	@Entity(name = "Item")
-	@Table(name = "ITEM")
-	public static class Item {
+	public static class Item{
 		@Id
 		private Long id;
 
 		@ElementCollection
-		@CollectionTable(name = "IMAGE", joinColumns = @JoinColumn(name = "ITEM_ID"))
-		@OrderColumn
-		@Column(name = "IMAGE_NAME")
-		private List<String> images = new ArrayList<>();
-
+		@CollectionTable(name = "IMAGE")
+		private Set<Image> images = new HashSet<>(  );
 	}
 }

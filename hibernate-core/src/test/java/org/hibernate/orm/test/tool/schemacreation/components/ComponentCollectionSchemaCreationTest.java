@@ -4,11 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.tool.schemacreation.enums;
+package org.hibernate.orm.test.tool.schemacreation.components;
 
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -20,35 +20,38 @@ import org.hibernate.testing.junit5.schema.SchemaTest;
 /**
  * @author Andrea Boriero
  */
-public class StringSchemaCreation extends BaseSchemaCreationTestCase {
-
+public class ComponentCollectionSchemaCreationTest extends BaseSchemaCreationTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Person.class };
+		return new Class[] { Item.class };
 	}
 
 	@SchemaTest
 	public void testTableIsCreated(SchemaScope scope) {
 
 		assertThatTablesAreCreated(
-				"person (gender varchar(255), id bigint not null, name varchar(255), primary key (id))"
+				"item (filename varchar(255) not null, format varchar(255), id bigint not null, size integer, primary key (id))"
 		);
 	}
 
-	@Entity(name = "Person")
-	@Table(name = "person")
-	public static class Person {
+	@Entity(name = "Item")
+	@Table(name = "ITEM")
+	public static class Item {
 		@Id
-		public long id;
+		private Long id;
 
-		String name;
-
-		@Enumerated(EnumType.STRING)
-		OrdinalSchemaCreation.Gender gender;
+		Image image;
 	}
 
-	public enum Gender {
-		MALE,
-		FEMALE
+	@Embeddable
+	public class Image {
+		@Column(nullable = false, name = "filename")
+		String filename;
+
+		@Column(name = "size")
+		int size;
+
+		@Column(name = "format")
+		String format;
 	}
 }

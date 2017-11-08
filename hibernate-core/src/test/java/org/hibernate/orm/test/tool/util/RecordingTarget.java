@@ -128,4 +128,8 @@ public class RecordingTarget implements GenerationTarget {
 		}
 		return Pattern.compile( builder.toString() );
 	}
+
+	public void clear() {
+		actions.clear();
+	}
 }

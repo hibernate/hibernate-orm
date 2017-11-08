@@ -4,12 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.tool.schemaupdate.collections;
+package org.hibernate.orm.test.tool.schemacreation.collections;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.Collection;
 import java.util.regex.Pattern;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -17,9 +15,11 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
@@ -38,8 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Andrea Boriero
  */
 @RequiresDialect(dialectClass = H2Dialect.class, matchSubTypes = true)
-public class OrderListSchemaCreationTest extends BaseSchemaUnitTestCase {
-
+public class IdentifierBagSchemaCreationTest extends BaseSchemaUnitTestCase {
 	@Override
 	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( AvailableSettings.FORMAT_SQL, false );
@@ -61,13 +60,14 @@ public class OrderListSchemaCreationTest extends BaseSchemaUnitTestCase {
 	}
 
 	@SchemaTest
-	public void testElementAndCollectionTableAreCreated(SchemaScope scope) throws Exception {
+	public void testElementAndCollectionTableAreCreated(SchemaScope scope) {
 		final RecordingTarget target = new RecordingTarget( getDialect() );
 		scope.withSchemaCreator(
 				null,
-				schemaCreator -> schemaCreator.doCreation( true,
-														   target,
-														   new GenerationTargetToStdout()
+				schemaCreator -> schemaCreator.doCreation(
+						true,
+						target,
+						new GenerationTargetToStdout()
 				)
 		);
 
@@ -75,7 +75,7 @@ public class OrderListSchemaCreationTest extends BaseSchemaUnitTestCase {
 				target.getActions( target.tableCreateActions() ),
 				target.containsExactly(
 						"item (id bigint not null, primary key (id))",
-						"image (image_name varchar(255), images_order integer not null, item_id bigint not null, primary key (item_id, images_order))"
+						"image (image_id bigint not null, image_name varchar(255), item_id bigint not null, primary key (image_id))"
 				)
 		);
 
@@ -88,17 +88,19 @@ public class OrderListSchemaCreationTest extends BaseSchemaUnitTestCase {
 		);
 	}
 
+
 	@Entity(name = "Item")
 	@Table(name = "ITEM")
+	@GenericGenerator(name = "increment", strategy = "increment")
 	public static class Item {
 		@Id
 		private Long id;
 
 		@ElementCollection
 		@CollectionTable(name = "IMAGE", joinColumns = @JoinColumn(name = "ITEM_ID"))
-		@OrderColumn
 		@Column(name = "IMAGE_NAME")
-		private List<String> images = new ArrayList<>();
-
+		@CollectionId(columns = @Column(name = "IMAGE_ID"),
+				type = @Type(type = "long"), generator = "increment")
+		private Collection<String> images = new ArrayList<>();
 	}
 }

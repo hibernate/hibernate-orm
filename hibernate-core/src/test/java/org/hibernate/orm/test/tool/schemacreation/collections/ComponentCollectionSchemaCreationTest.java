@@ -4,17 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.tool.schemaupdate.collections;
+package org.hibernate.orm.test.tool.schemacreation.collections;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Pattern;
-import javax.persistence.CollectionTable;
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.Table;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -31,13 +26,11 @@ import org.hibernate.testing.junit5.schema.SchemaTest;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-
 /**
  * @author Andrea Boriero
  */
 @RequiresDialect(dialectClass = H2Dialect.class, matchSubTypes = true)
-public class SetSchemaCreationTest extends BaseSchemaUnitTestCase {
-
+public class ComponentCollectionSchemaCreationTest extends BaseSchemaUnitTestCase {
 	@Override
 	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( AvailableSettings.FORMAT_SQL, false );
@@ -70,20 +63,12 @@ public class SetSchemaCreationTest extends BaseSchemaUnitTestCase {
 				)
 		);
 
+
 		assertThat(
 				target.getActions( target.tableCreateActions() ),
 				target.containsExactly(
-						"item (id bigint not null, primary key (id))",
-						"image (image_name varchar(255), item_id bigint not null)"
+						"item (filename varchar(255) not null, format varchar(255), id bigint not null, size integer, primary key (id))"
 				)
-		);
-
-		assertTrue(
-				target.containsAction(
-						Pattern.compile(
-								"alter table image add constraint (.*) foreign key \\(item_id\\) references item \\(id\\)" )
-				),
-				"The expected foreign key has not been generated"
 		);
 	}
 
@@ -93,9 +78,18 @@ public class SetSchemaCreationTest extends BaseSchemaUnitTestCase {
 		@Id
 		private Long id;
 
-		@ElementCollection
-		@CollectionTable(name = "IMAGE", joinColumns = @JoinColumn(name = "ITEM_ID"))
-		@Column(name = "IMAGE_NAME")
-		private Set<String> images = new HashSet<>();
+		Image image;
+	}
+
+	@Embeddable
+	public class Image {
+		@Column(nullable = false, name = "filename")
+		String filename;
+
+		@Column(name = "size")
+		int size;
+
+		@Column(name = "format")
+		String format;
 	}
 }

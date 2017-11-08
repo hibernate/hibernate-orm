@@ -4,10 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.tool.schemaupdate.collections;
+package org.hibernate.orm.test.tool.schemacreation.collections;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -15,10 +15,8 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
@@ -33,11 +31,13 @@ import org.hibernate.testing.junit5.schema.SchemaTest;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+
 /**
  * @author Andrea Boriero
  */
 @RequiresDialect(dialectClass = H2Dialect.class, matchSubTypes = true)
-public class MapSchemaCreationTest extends BaseSchemaUnitTestCase {
+public class SetSchemaCreationTest extends BaseSchemaUnitTestCase {
+
 	@Override
 	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( AvailableSettings.FORMAT_SQL, false );
@@ -74,7 +74,7 @@ public class MapSchemaCreationTest extends BaseSchemaUnitTestCase {
 				target.getActions( target.tableCreateActions() ),
 				target.containsExactly(
 						"item (id bigint not null, primary key (id))",
-						"image (filename varchar(255) not null, image_name varchar(255), item_id bigint not null, primary key (item_id, filename))"
+						"image (image_name varchar(255), item_id bigint not null)"
 				)
 		);
 
@@ -87,10 +87,8 @@ public class MapSchemaCreationTest extends BaseSchemaUnitTestCase {
 		);
 	}
 
-
 	@Entity(name = "Item")
 	@Table(name = "ITEM")
-	@GenericGenerator(name = "increment", strategy = "increment")
 	public static class Item {
 		@Id
 		private Long id;
@@ -98,7 +96,6 @@ public class MapSchemaCreationTest extends BaseSchemaUnitTestCase {
 		@ElementCollection
 		@CollectionTable(name = "IMAGE", joinColumns = @JoinColumn(name = "ITEM_ID"))
 		@Column(name = "IMAGE_NAME")
-		@MapKeyColumn(name = "FILENAME")
-		private Map<String, String> images = new HashMap<>();
+		private Set<String> images = new HashSet<>();
 	}
 }

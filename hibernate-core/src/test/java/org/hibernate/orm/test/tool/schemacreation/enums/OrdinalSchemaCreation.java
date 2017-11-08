@@ -4,11 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.tool.schemaupdate.collections;
+package org.hibernate.orm.test.tool.schemacreation.enums;
 
 import java.util.regex.Pattern;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -27,11 +25,13 @@ import org.hibernate.testing.junit5.schema.SchemaTest;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+
 /**
  * @author Andrea Boriero
  */
 @RequiresDialect(dialectClass = H2Dialect.class, matchSubTypes = true)
-public class ComponentCollectionSchemaCreationTest extends BaseSchemaUnitTestCase {
+public class OrdinalSchemaCreation extends BaseSchemaUnitTestCase {
+
 	@Override
 	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( AvailableSettings.FORMAT_SQL, false );
@@ -39,7 +39,7 @@ public class ComponentCollectionSchemaCreationTest extends BaseSchemaUnitTestCas
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Item.class };
+		return new Class[] { Person.class };
 	}
 
 	@Override
@@ -64,33 +64,29 @@ public class ComponentCollectionSchemaCreationTest extends BaseSchemaUnitTestCas
 				)
 		);
 
-
 		assertThat(
 				target.getActions( target.tableCreateActions() ),
 				target.containsExactly(
-						"item (filename varchar(255) not null, format varchar(255), id bigint not null, size integer, primary key (id))"
+						"person (gender integer, id bigint not null, name varchar(255), primary key (id))"
 				)
 		);
+
 	}
 
-	@Entity(name = "Item")
-	@Table(name = "ITEM")
-	public static class Item {
+
+	@Entity(name = "Person")
+	@Table( name = "person")
+	public static class Person{
 		@Id
-		private Long id;
+		public long id;
 
-		Image image;
+		String name;
+
+		Gender gender;
 	}
 
-	@Embeddable
-	public class Image {
-		@Column(nullable = false, name = "filename")
-		String filename;
-
-		@Column(name = "size")
-		int size;
-
-		@Column(name = "format")
-		String format;
+	public enum Gender{
+		MALE,
+		FEMALE
 	}
 }

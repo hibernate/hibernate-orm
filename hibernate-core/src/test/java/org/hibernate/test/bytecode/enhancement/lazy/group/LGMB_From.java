@@ -11,6 +11,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.LazyToOne;
@@ -22,6 +23,7 @@ import org.hibernate.annotations.LazyToOneOption;
  * @author Jan-Oliver Lustig, Sebastian Viefhaus
  */
 @Entity
+@Table(name = "LGMB_FROM")
 @Access(AccessType.FIELD)
 public class LGMB_From {
 

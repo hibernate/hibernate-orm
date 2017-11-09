@@ -6,6 +6,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.AccessType;
 
@@ -15,6 +16,7 @@ import org.hibernate.annotations.AccessType;
  * @author Jan-Oliver Lustig, Sebastian Viefhaus
  */
 @Entity
+@Table(name = "LGMB_TO")
 public class LGMB_To {
 	@Id
 	private static final long serialVersionUID = 1L;

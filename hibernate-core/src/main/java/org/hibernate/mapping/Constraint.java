@@ -17,6 +17,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.dialect.Dialect;
 
@@ -41,7 +42,6 @@ public abstract class Constraint implements Serializable {
 	public void setName(String name) {
 		this.name = name;
 	}
-
 	public void disableCreation() {
 		creationEnabled = false;
 	}
@@ -49,7 +49,6 @@ public abstract class Constraint implements Serializable {
 	public boolean isCreationEnabled() {
 		return creationEnabled;
 	}
-	
 	/**
 	 * If a constraint is not explicitly named, this is called to generate
 	 * a unique hash using the table and column names.
@@ -91,9 +90,9 @@ public abstract class Constraint implements Serializable {
 	 * (full alphanumeric), guaranteeing
 	 * that the length of the name will always be smaller than the 30
 	 * character identifier restriction enforced by a few dialects.
-	 * 
-	 * @param s
-	 *            The name to be hashed.
+	 *
+	 * @param s The name to be hashed.
+	 *
 	 * @return String The hased name.
 	 */
 	public static String hashedName(String s) {
@@ -108,7 +107,7 @@ public abstract class Constraint implements Serializable {
 			// character identifier restriction enforced by a few dialects.
 			return bigInt.toString( 35 );
 		}
-		catch ( NoSuchAlgorithmException e ) {
+		catch (NoSuchAlgorithmException e) {
 			throw new HibernateException( "Unable to generate a hashed Constraint name!", e );
 		}
 	}
@@ -141,11 +140,20 @@ public abstract class Constraint implements Serializable {
 		}
 	}
 
-	public void addColumns(Iterator columnIterator) {
+	/**
+	 * @deprecated since 6.0, use {@link #addColumns(List)} )}.
+	 */
+	@Deprecated	public void addColumns(Iterator columnIterator) {
 		while ( columnIterator.hasNext() ) {
 			Selectable col = (Selectable) columnIterator.next();
 			addColumn( col );
 		}
+	}
+
+	public void addColumns(List<MappedColumn> columns) {
+		columns.stream()
+				.filter( mappedColumn -> !mappedColumn.isFormula() )
+				.forEach( column -> addColumn( (Column) column ) );
 	}
 
 	/**
@@ -160,11 +168,10 @@ public abstract class Constraint implements Serializable {
 	}
 
 	public Column getColumn(int i) {
-		return (Column) columns.get( i );
+		return  (Column)columns.get( i );
 	}
-
 	/**
-	 * todo (6.0) : remove this
+	 *todo (6.0) : remove this
 	 *
 	 * @deprecated Try to remove in 6.0
 	 */
@@ -219,9 +226,9 @@ public abstract class Constraint implements Serializable {
 
 
 	public String toString() {
-		return getClass().getName() + '(' + getTable().getName() + getColumns() + ") as " + name;
+		return getClass().getName() + '(' + getMappedTable().getName() + getColumns() + ") as " + name;
 	}
-	
+
 	/**
 	 * @return String The prefix to use in generated constraint names.  Examples:
 	 * "UK_", "FK_", and "PK_".

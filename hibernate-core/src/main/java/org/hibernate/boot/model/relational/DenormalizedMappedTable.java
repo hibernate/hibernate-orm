@@ -9,6 +9,6 @@ package org.hibernate.boot.model.relational;
 /**
  * @author Steve Ebersole
  */
-public interface DenormalizedMappedTable extends MappedTable {
+public interface DenormalizedMappedTable<T extends MappedColumn> extends MappedTable<T> {
 	MappedTable getIncludedTable();
 }

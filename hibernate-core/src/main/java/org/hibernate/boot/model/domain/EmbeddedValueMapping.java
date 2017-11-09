@@ -32,4 +32,6 @@ public interface EmbeddedValueMapping extends ValueMapping, ManagedTypeMapping {
 	}
 
 	String getEmbeddableClassName();
+
+
 }

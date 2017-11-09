@@ -154,7 +154,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 		//property.setOptional( property.isOptional() );
 		property.setPersistentClass( component.getOwner() );
 		property.setPropertyAccessorName( referencedProperty.getPropertyAccessorName() );
-		BasicValue value = new BasicValue( buildingContext, component.getTable() );
+		BasicValue value = new BasicValue( buildingContext, component.getMappedTable() );
 		property.setValue( value );
 		final BasicValue referencedValue = (BasicValue) referencedProperty.getValue();
 		value.setTypeName( referencedValue.getTypeName() );
@@ -200,8 +200,8 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 				if ( joinColumn != null ) {
 					joinColumn.linkWithValue( value );
 				}
-				if ( value.getTable() != null ) {
-					column.setTableName( value.getTable().getNameIdentifier() );
+				if ( value.getMappedTable() != null ) {
+					column.setTableName( value.getMappedTable().getNameIdentifier() );
 				}
 			}
 		}

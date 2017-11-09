@@ -261,7 +261,15 @@ public abstract class PersistentClass
 		p.setPersistentClass( this );
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getMappedTable()}.
+	 */
+	@Deprecated
 	public abstract Table getTable();
+
+	public MappedTable getMappedTable(){
+		return getTable();
+	}
 
 	@Override
 	public String getEntityName() {

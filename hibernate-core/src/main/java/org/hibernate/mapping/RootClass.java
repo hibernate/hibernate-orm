@@ -78,6 +78,11 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	@Override
+	public MappedTable getMappedTable() {
+		return table;
+	}
+
+	@Override
 	public Property getIdentifierProperty() {
 		return (Property) getIdentifierAttributeMapping();
 	}

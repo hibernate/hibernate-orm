@@ -155,7 +155,7 @@ public class RuntimeDatabaseModelProducer {
 
 		private void processForeignKeys(Database bootDatabaseModel, DatabaseModelImpl runtimeDatabaseModel) {
 			for ( MappedNamespace bootModelNamespace : bootDatabaseModel.getNamespaces() ) {
-				for ( MappedTable bootTable : bootModelNamespace.getTables() ) {
+				for ( MappedTable<MappedColumn> bootTable : bootModelNamespace.getTables() ) {
 					log.tracef( "Processing FKs for table : %s", bootTable );
 
 					for ( org.hibernate.mapping.ForeignKey bootFk : bootTable.getForeignKeys() ) {

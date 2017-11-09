@@ -44,6 +44,7 @@ import org.hibernate.boot.model.query.spi.NamedNativeQueryDefinition;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.resultset.spi.ResultSetMappingDefinition;
@@ -1195,7 +1196,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			}
 
 			if ( secondaryTableJoin != null ) {
-				return secondaryTableJoin.getTable();
+				return secondaryTableJoin.getMappedTable();
 			}
 
 			if ( superEntityTableXref != null ) {
@@ -1461,7 +1462,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			if ( sp.isInPrimaryKey() ) {
 				final String referenceEntityName = sp.getReferencedEntityName();
 				final PersistentClass classMapping = getEntityBinding( referenceEntityName );
-				final String dependentTable = classMapping.getTable().getQualifiedTableName().render();
+				final String dependentTable = classMapping.getMappedTable().getQualifiedTableName().render();
 				if ( !isADependencyOf.containsKey( dependentTable ) ) {
 					isADependencyOf.put( dependentTable, new HashSet<>() );
 				}
@@ -1515,7 +1516,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		for ( FkSecondPass sp : dependencies ) {
-			String dependentTable = sp.getValue().getTable().getQualifiedTableName().render();
+			String dependentTable = sp.getValue().getMappedTable().getQualifiedTableName().render();
 			if ( dependentTable.compareTo( startTable ) == 0 ) {
 				throw new AnnotationException( "Foreign key circularity dependency involving the following tables: " + startTable + ", " + dependentTable );
 			}
@@ -1566,7 +1567,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	protected void secondPassCompileForeignKeys(
-			final MappedTable table,
+			final MappedTable<MappedColumn> table,
 			Set<ForeignKey> done,
 			final MetadataBuildingContext buildingContext) throws MappingException {
 		table.createForeignKeys();
@@ -1578,7 +1579,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				if ( referencedEntityName == null ) {
 					throw new MappingException(
 							"An association from the table " +
-									fk.getTable().getName() +
+									fk.getMappedTable().getName() +
 									" does not specify the referenced entity"
 					);
 				}
@@ -1588,16 +1589,16 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				if ( referencedClass == null ) {
 					throw new MappingException(
 							"An association from the table " +
-									fk.getTable().getName() +
+									fk.getMappedTable().getName() +
 									" refers to an unmapped class: " +
 									referencedEntityName
 					);
 				}
 				if ( referencedClass.isJoinedSubclass() ) {
-					secondPassCompileForeignKeys( referencedClass.getSuperclass().getTable(), done, buildingContext );
+					secondPassCompileForeignKeys( referencedClass.getSuperclass().getMappedTable(), done, buildingContext );
 				}
 
-				fk.setReferencedTable( referencedClass.getTable() );
+				fk.setReferencedTable( referencedClass.getMappedTable() );
 
 				// todo : should we apply a physical naming too?
 				if ( fk.getName() == null && fk.isCreationEnabled() ) {
@@ -1782,7 +1783,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				final Column column = columns[i];
 				final String order = orderings != null ? orderings[i] : null;
 				if ( table.containsColumn( column ) ) {
-					uk.addColumn( table.getColumn( column ), order );
+					uk.addColumn( (Column) table.getColumn( column ), order );
 					unbound.remove( column );
 				}
 			}
@@ -1822,7 +1823,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				final Column column = columns[i];
 				final String order = orderings != null ? orderings[i] : null;
 				if ( table.containsColumn( column ) ) {
-					index.addColumn( table.getColumn( column ), order );
+					index.addColumn( (Column) table.getColumn( column ), order );
 					unbound.remove( column );
 				}
 			}

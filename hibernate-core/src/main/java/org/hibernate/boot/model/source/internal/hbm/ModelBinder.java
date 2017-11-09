@@ -888,7 +888,7 @@ public class ModelBinder {
 			identifierValue.setIdentifierGeneratorProperties( params );
 		}
 
-		identifierValue.getTable().setIdentifierValue( identifierValue );
+		identifierValue.getMappedTable().setIdentifierValue( identifierValue );
 
 		if ( StringHelper.isNotEmpty( unsavedValue ) ) {
 			identifierValue.setNullValue( unsavedValue );
@@ -1217,14 +1217,14 @@ public class ModelBinder {
 					final SingularAttributeSourceBasic basicAttributeSource = (SingularAttributeSourceBasic) attributeSource;
 					final Identifier tableName = determineTable( mappingDocument, basicAttributeSource.getName(), basicAttributeSource );
 					final AttributeContainer attributeContainer;
-					final Table table;
+					final MappedTable table;
 					final Join secondaryTableJoin = entityTableXref.locateJoin( tableName );
 					if ( secondaryTableJoin == null ) {
 						table = entityDescriptor.getTable();
 						attributeContainer = entityDescriptor;
 					}
 					else {
-						table = secondaryTableJoin.getTable();
+						table = secondaryTableJoin.getMappedTable();
 						attributeContainer = secondaryTableJoin;
 					}
 
@@ -1252,14 +1252,14 @@ public class ModelBinder {
 					final SingularAttributeSourceEmbedded embeddedAttributeSource = (SingularAttributeSourceEmbedded) attributeSource;
 					final Identifier tableName = determineTable( mappingDocument, embeddedAttributeSource );
 					final AttributeContainer attributeContainer;
-					final Table table;
+					final MappedTable table;
 					final Join secondaryTableJoin = entityTableXref.locateJoin( tableName );
 					if ( secondaryTableJoin == null ) {
 						table = entityDescriptor.getTable();
 						attributeContainer = entityDescriptor;
 					}
 					else {
-						table = secondaryTableJoin.getTable();
+						table = secondaryTableJoin.getMappedTable();
 						attributeContainer = secondaryTableJoin;
 					}
 
@@ -1287,14 +1287,14 @@ public class ModelBinder {
 					final SingularAttributeSourceManyToOne manyToOneAttributeSource = (SingularAttributeSourceManyToOne) attributeSource;
 					final Identifier tableName = determineTable( mappingDocument, manyToOneAttributeSource.getName(), manyToOneAttributeSource );
 					final AttributeContainer attributeContainer;
-					final Table table;
+					final MappedTable table;
 					final Join secondaryTableJoin = entityTableXref.locateJoin( tableName );
 					if ( secondaryTableJoin == null ) {
 						table = entityDescriptor.getTable();
 						attributeContainer = entityDescriptor;
 					}
 					else {
-						table = secondaryTableJoin.getTable();
+						table = secondaryTableJoin.getMappedTable();
 						attributeContainer = secondaryTableJoin;
 					}
 
@@ -2724,8 +2724,8 @@ public class ModelBinder {
 				attribute = createBasicAttribute(
 						sourceDocument,
 						(SingularAttributeSourceBasic) attributeSource,
-						new BasicValue( sourceDocument, component.getTable() ),
-						component.getComponentClassName()
+						new BasicValue( sourceDocument, component.getMappedTable() ),
+						component.getEmbeddableClassName()
 				);
 			}
 			else if ( SingularAttributeSourceEmbedded.class.isInstance( attributeSource ) ) {
@@ -2733,31 +2733,31 @@ public class ModelBinder {
 						sourceDocument,
 						(SingularAttributeSourceEmbedded) attributeSource,
 						new Component( sourceDocument, component ),
-						component.getComponentClassName()
+						component.getEmbeddableClassName()
 				);
 			}
 			else if ( SingularAttributeSourceManyToOne.class.isInstance( attributeSource ) ) {
 				attribute = createManyToOneAttribute(
 						sourceDocument,
 						(SingularAttributeSourceManyToOne) attributeSource,
-						new ManyToOne( sourceDocument, component.getTable() ),
-						component.getComponentClassName()
+						new ManyToOne( sourceDocument, component.getMappedTable() ),
+						component.getEmbeddableClassName()
 				);
 			}
 			else if ( SingularAttributeSourceOneToOne.class.isInstance( attributeSource ) ) {
 				attribute = createOneToOneAttribute(
 						sourceDocument,
 						(SingularAttributeSourceOneToOne) attributeSource,
-						new OneToOne( sourceDocument, component.getTable(), component.getOwner() ),
-						component.getComponentClassName()
+						new OneToOne( sourceDocument, component.getMappedTable(), component.getOwner() ),
+						component.getEmbeddableClassName()
 				);
 			}
 			else if ( SingularAttributeSourceAny.class.isInstance( attributeSource ) ) {
 				attribute = createAnyAssociationAttribute(
 						sourceDocument,
 						(SingularAttributeSourceAny) attributeSource,
-						new Any( sourceDocument, component.getTable() ),
-						component.getComponentClassName()
+						new Any( sourceDocument, component.getMappedTable() ),
+						component.getEmbeddableClassName()
 				);
 			}
 			else if ( PluralAttributeSource.class.isInstance( attributeSource ) ) {
@@ -3089,7 +3089,7 @@ public class ModelBinder {
 
 			if ( debugEnabled ) {
 				log.debugf( "Mapped collection : " + getPluralAttributeSource().getAttributeRole().getFullPath() );
-				log.debugf( "   + table -> " + getCollectionBinding().getTable().getName() );
+				log.debugf( "   + table -> " + getCollectionBinding().getMappedTable().getName() );
 				log.debugf( "   + key -> " + columns( getCollectionBinding().getKey() ) );
 				if ( getCollectionBinding().isIndexed() ) {
 					log.debugf( "   + index -> " + columns( ( (IndexedCollection) getCollectionBinding() ).getIndex() ) );
@@ -3415,7 +3415,7 @@ public class ModelBinder {
 						(PluralAttributeElementSourceManyToMany) getPluralAttributeSource().getElementSource();
 				final ManyToOne elementBinding = new ManyToOne(
 						getMappingDocument(),
-						getCollectionBinding().getCollectionTable()
+						getCollectionBinding().getMappedTable()
 				);
 
 				relationalObjectBinder.bindColumnsAndFormulas(
@@ -3832,7 +3832,7 @@ public class ModelBinder {
 					(PluralAttributeMapKeyManyToManySource) pluralAttributeSource.getIndexSource();
 			final ManyToOne mapKeyBinding = new ManyToOne(
 					mappingDocument,
-					collectionBinding.getCollectionTable()
+					collectionBinding.getMappedTable()
 			);
 
 			mapKeyBinding.setReferencedEntityName( mapKeySource.getReferencedEntityName() );

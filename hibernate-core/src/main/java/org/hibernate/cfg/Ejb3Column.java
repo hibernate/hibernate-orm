@@ -19,6 +19,7 @@ import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.Nullability;
@@ -62,13 +63,22 @@ public class Ejb3Column {
 	private boolean nullable = true;
 	private String formulaString;
 	private Formula formula;
-	private Table table;
+	private MappedTable table;
 	private String readExpression;
 	private String writeExpression;
 
 	private String defaultValue;
 
+
+	/**
+	 * @deprecated since 6.0, use {@link #setTable(MappedTable)} instead.
+	 */
+	@Deprecated
 	public void setTable(Table table) {
+		this.table = table;
+	}
+
+	public void setTable(MappedTable table) {
 		this.table = table;
 	}
 
@@ -357,7 +367,7 @@ public class Ejb3Column {
 			value.addFormula( formula );
 		}
 		else {
-			table = value.getTable();
+			table = value.getMappedTable();
 			final Column mappingColumn = getMappingColumn();
 			if ( table != null ) {
 				mappingColumn.setTableName( table.getNameIdentifier() );
@@ -373,14 +383,20 @@ public class Ejb3Column {
 	 *
 	 * @return appropriate table
 	 * @throws AnnotationException missing secondary table
+	 *
+	 * @deprecated since 6.0, use {@link #getMappedTable()} instead
 	 */
 	public Table getTable() {
+		return (Table) getMappedTable();
+	}
+
+	public MappedTable getMappedTable() {
 		if ( table != null ){
 			return table;
 		}
 
 		if ( isSecondary() ) {
-			return getJoin().getTable();
+			return getJoin().getMappedTable();
 		}
 		else {
 			return propertyHolder.getTable();

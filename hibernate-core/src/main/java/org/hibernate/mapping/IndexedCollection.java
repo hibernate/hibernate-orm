@@ -6,8 +6,9 @@
  */
 package org.hibernate.mapping;
 
-import java.util.Iterator;
+import java.util.List;
 
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
 /**
@@ -37,25 +38,24 @@ public abstract class IndexedCollection extends Collection {
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			MappedPrimaryKey pk = new MappedPrimaryKey( getCollectionTable() );
-			pk.addColumns( getKey().getColumnIterator() );
+			final MappedPrimaryKey pk = new MappedPrimaryKey( getMappedTable() );
+			pk.addColumns( getKey().getMappedColumns() );
 			
 			// index should be last column listed
 			boolean isFormula = false;
-			Iterator iter = getIndex().getColumnIterator();
-			while ( iter.hasNext() ) {
-				if ( ( (Selectable) iter.next() ).isFormula() ) {
-					isFormula=true;
+			for( MappedColumn selectable : (List<MappedColumn>) getIndex().getMappedColumns() ){
+				if(selectable.isFormula()){
+					isFormula = true;
 				}
 			}
 			if (isFormula) {
 				//if it is a formula index, use the element columns in the PK
-				pk.addColumns( getElement().getColumnIterator() );
+				pk.addColumns( getElement().getMappedColumns() );
 			}
 			else {
-				pk.addColumns( getIndex().getColumnIterator() ); 
+				pk.addColumns( getIndex().getMappedColumns() );
 			}
-			getCollectionTable().setPrimaryKey(pk);
+			getMappedTable().setPrimaryKey(pk);
 		}
 		else {
 			// don't create a unique key, 'cos some
@@ -67,23 +67,7 @@ public abstract class IndexedCollection extends Collection {
 			getCollectionTable().createUniqueKey(list);*/
 		}
 	}
-//
-//	public void validate() throws MappingException {
-//		super.validate();
-//
-//		assert getElement() != null : "IndexedCollection index not bound : " + getRole();
-//
-//		if ( !getIndex().isValid() ) {
-//			throw new MappingException(
-//				"collection index mapping has wrong number of columns: " +
-//				getRole() +
-//				" type: " +
-//				getIndex().getType().getName()
-//			);
-//		}
-//	}
 
-	
 	public boolean isList() {
 		return false;
 	}

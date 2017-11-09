@@ -25,13 +25,13 @@ public interface Value<J> extends ValueMapping<J>, Serializable {
 	int getColumnSpan();
 
 	/**
-	 * @deprecated since 6.0, use {@link #getMappedColumns()}.
+	 * @deprecated since 6.0, use {@link #getMappedColumns()} instead.
 	 */
 	@Deprecated
 	Iterator<Selectable> getColumnIterator();
 
 	/**
-	 * @deprecated since 6.0, use {@link #getMappedTable()}.
+	 * @deprecated since 6.0, use {@link #getMappedTable()} instead.
 	 */
 	@Deprecated
 	Table getTable();

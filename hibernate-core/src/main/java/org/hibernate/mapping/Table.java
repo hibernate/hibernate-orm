@@ -46,7 +46,7 @@ import org.jboss.logging.Logger;
  * @author Gavin KingF
  */
 @SuppressWarnings("unchecked")
-public class Table implements MappedTable, Serializable {
+public class Table implements MappedTable<Column>, Serializable {
 	private static final Logger log = Logger.getLogger( Table.class );
 
 	private Identifier catalog;
@@ -56,7 +56,7 @@ public class Table implements MappedTable, Serializable {
 	/**
 	 * contains all columns, including the primary key
 	 */
-	private Map<String, MappedColumn> columns = new LinkedHashMap();
+	private Map<String, Column> columns = new LinkedHashMap();
 	private KeyValue idValue;
 	private MappedPrimaryKey primaryKey;
 	private Map<ForeignKeyKey, ForeignKey> foreignKeyMap = new LinkedHashMap<>();
@@ -205,11 +205,6 @@ public class Table implements MappedTable, Serializable {
 		return schema == null ? null : schema.render( dialect );
 	}
 
-	@Override
-	public boolean isSchemaQuoted() {
-		return schema != null && schema.isQuoted();
-	}
-
 	public void setCatalog(String catalog) {
 		this.catalog = Identifier.toIdentifier( catalog );
 	}
@@ -221,11 +216,6 @@ public class Table implements MappedTable, Serializable {
 
 	public String getQuotedCatalog(Dialect dialect) {
 		return catalog == null ? null : catalog.render( dialect );
-	}
-
-	@Override
-	public boolean isCatalogQuoted() {
-		return catalog != null && catalog.isQuoted();
 	}
 
 	/**
@@ -241,7 +231,7 @@ public class Table implements MappedTable, Serializable {
 			return null;
 		}
 
-		Column myColumn = (Column) columns.get( column.getCanonicalName() );
+		Column myColumn = columns.get( column.getCanonicalName() );
 
 		return column.equals( myColumn ) ?
 				myColumn :
@@ -254,7 +244,7 @@ public class Table implements MappedTable, Serializable {
 			return null;
 		}
 
-		return (Column) columns.get( name.getCanonicalName() );
+		return columns.get( name.getCanonicalName() );
 	}
 
 	@Override
@@ -436,7 +426,6 @@ public class Table implements MappedTable, Serializable {
 				&& Identifier.areEqual( catalog, table.catalog );
 	}
 
-	@Override
 	public boolean hasPrimaryKey() {
 		return getPrimaryKey() != null;
 	}
@@ -479,7 +468,7 @@ public class Table implements MappedTable, Serializable {
 		return uniqueKey;
 	}
 
-	public UniqueKey createUniqueKey(List keyColumns) {
+	public UniqueKey createUniqueKey(List<Column> keyColumns) {
 		String keyName = Constraint.generateName( "UK_", this, keyColumns );
 		UniqueKey uk = getOrCreateUniqueKey( keyName );
 		uk.addColumns( keyColumns.iterator() );
@@ -740,7 +729,7 @@ public class Table implements MappedTable, Serializable {
 	}
 
 	@Override
-	public Set<MappedColumn> getMappedColumns() {
+	public Set<Column> getMappedColumns() {
 		return Collections.unmodifiableSet( new HashSet<>( columns.values() ) );
 	}
 

@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
@@ -93,17 +94,17 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 	}
 
 	private void addConstraintToColumn(final String columnName ) {
-		Column column = table.getColumn( new Column( table.getNameIdentifier(), columnName, false ) );
+		MappedColumn column = table.getColumn( new Column( table.getNameIdentifier(), columnName, false ) );
 		if ( column == null ) {
 			throw new AnnotationException(
 					"@Index references a unknown column: " + columnName
 			);
 		}
 		if ( unique ) {
-			table.getOrCreateUniqueKey( indexName ).addColumn( column );
+			table.getOrCreateUniqueKey( indexName ).addColumn( (Column) column );
 		}
 		else {
-			table.getOrCreateIndex( indexName ).addColumn( column );
+			table.getOrCreateIndex( indexName ).addColumn( (Column) column );
 		}
 	}
 

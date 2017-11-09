@@ -28,15 +28,12 @@ public class UnionSubclass extends Subclass implements TableOwner {
 		super( superclass, javaTypeDescriptor, metadataBuildingContext );
 	}
 
-	/**
-	 * @deprecated since 6.0, use {@link #getMappedTable}.
-	 */
-	@Deprecated
 	@Override
 	public Table getTable() {
 		return (Table) table;
 	}
 
+	@Override
 	public MappedTable getMappedTable() {
 		return table;
 	}

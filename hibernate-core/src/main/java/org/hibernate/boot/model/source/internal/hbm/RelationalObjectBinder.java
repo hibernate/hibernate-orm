@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.source.spi.ColumnSource;
 import org.hibernate.boot.model.source.spi.DerivedValueSource;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
@@ -21,7 +22,6 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Table;
 import org.hibernate.naming.Identifier;
 
 /**
@@ -38,7 +38,6 @@ public class RelationalObjectBinder {
 
 	public RelationalObjectBinder(MetadataBuildingContext buildingContext) {
 		this.database = buildingContext.getMetadataCollector().getDatabase();
-//		this.physicalNamingStrategy = buildingContext.getBuildingOptions().getPhysicalNamingStrategy();
 	}
 
 	public void bindColumnOrFormula(
@@ -104,7 +103,7 @@ public class RelationalObjectBinder {
 			SimpleValue simpleValue,
 			boolean areColumnsNullableByDefault,
 			ColumnNamingDelegate columnNamingDelegate) {
-		Table table = simpleValue.getTable();
+		MappedTable table = simpleValue.getMappedTable();
 
 		// resolve column name
 		final Identifier logicalName;

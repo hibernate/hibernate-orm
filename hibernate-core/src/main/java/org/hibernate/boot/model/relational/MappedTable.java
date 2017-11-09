@@ -13,7 +13,6 @@ import java.util.Set;
 
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedIndex;
@@ -32,7 +31,7 @@ import org.hibernate.naming.QualifiedTableName;
  *
  * @author Steve Ebersole
  */
-public interface MappedTable extends Loggable {
+public interface MappedTable<T extends MappedColumn> extends Loggable {
 	/**
 	 * Get an identifier for this MappedTable that is unique across all
 	 * MappedTable references in a given {@link Database}.
@@ -56,7 +55,7 @@ public interface MappedTable extends Loggable {
 	 * an iteration order defined as the order that columns are encountered
 	 * while processing the application's mappings.
 	 */
-	Set<MappedColumn> getMappedColumns();
+	Set<T> getMappedColumns();
 
 	// todo (6.0) : others as deemed appropriate - see o.h.mapping.Table
 
@@ -78,8 +77,6 @@ public interface MappedTable extends Loggable {
 	 */
 	String getSchema();
 
-	boolean isSchemaQuoted();
-
 	/**
 	 * Get the catalog associated to the mapped table.
 	 */
@@ -98,9 +95,10 @@ public interface MappedTable extends Loggable {
 	 * @param keyColumns the columns to be associated with the foreign key.
 	 * @param referencedEntityName the referenced entity name.
 	 * @param keyDefinition foreign key definition
+	 *
 	 * @return the constructed foreign key.
 	 */
-	ForeignKey createForeignKey(String keyName, List keyColumns, String referencedEntityName, String keyDefinition);
+	ForeignKey createForeignKey(String keyName, List<T> keyColumns, String referencedEntityName, String keyDefinition);
 
 	ForeignKey createForeignKey(
 			String keyName,
@@ -118,7 +116,7 @@ public interface MappedTable extends Loggable {
 
 	void addCheckConstraint(String constraint);
 
-	boolean containsColumn(Column column);
+	boolean containsColumn(T column);
 
 	String getRowId();
 
@@ -134,6 +132,7 @@ public interface MappedTable extends Loggable {
 
 	/**
 	 * Set whether the mapped table is abstract.
+	 *
 	 * @param isAbstract
 	 */
 	void setAbstract(boolean isAbstract);
@@ -152,19 +151,18 @@ public interface MappedTable extends Loggable {
 
 	/**
 	 * Set a comment on the mapped table.
+	 *
 	 * @param comment
 	 */
 	void setComment(String comment);
 
-	boolean isCatalogQuoted();
+	T getColumn(T column);
 
-	Column getColumn(Column column);
+	T getColumn(Identifier name);
 
-	Column getColumn(Identifier name);
+	T getColumn(int n);
 
-	Column getColumn(int n);
-
-	void addColumn(Column column);
+	void addColumn(T column);
 
 	Iterator getColumnIterator();
 
@@ -174,13 +172,18 @@ public interface MappedTable extends Loggable {
 
 	Iterator<UniqueKey> getUniqueKeyIterator();
 
-	boolean hasPrimaryKey();
-
 	MappedPrimaryKey getPrimaryKey();
 
 	void setPrimaryKey(MappedPrimaryKey primaryKey);
 
 	void addInitCommand(InitCommand command);
+
+	default boolean hasDenormalizedTables() {
+		return false;
+	}
+
+	default void setIdentifierValue(KeyValue idValue) {
+	}
 
 	InflightTable generateRuntimeTable(
 			PhysicalNamingStrategy namingStrategy,
@@ -188,4 +191,8 @@ public interface MappedTable extends Loggable {
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			RuntimeDatabaseModelProducer.Callback callback
 	);
+
+	default UniqueKey createUniqueKey(List<T> columns){
+		return null;
+	}
 }

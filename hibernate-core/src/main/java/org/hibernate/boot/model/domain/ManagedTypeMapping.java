@@ -9,6 +9,7 @@ package org.hibernate.boot.model.domain;
 import java.util.List;
 import javax.persistence.metamodel.Type.PersistenceType;
 
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -69,4 +70,5 @@ public interface ManagedTypeMapping {
 	 * Get all super managed type mappings associated with this managed type or empty list.
 	 */
 	List<ManagedTypeMapping> getSuperManagedTypeMappings();
+
 }

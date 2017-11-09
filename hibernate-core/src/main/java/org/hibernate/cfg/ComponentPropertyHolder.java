@@ -19,6 +19,7 @@ import javax.persistence.JoinTable;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Component;
@@ -280,7 +281,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		 * if a property is set already the core cannot support that
 		 */
 		if (columns != null) {
-			Table table = columns[0].getTable();
+			MappedTable table = columns[0].getMappedTable();
 			if ( !table.equals( component.getTable() ) ) {
 				if ( component.getPropertySpan() == 0 ) {
 					component.setTable( table );
@@ -309,8 +310,16 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		return component.getOwner().getClassName();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getMappedTable()} instead.
+	 */
+	@Deprecated
 	public Table getTable() {
 		return component.getTable();
+	}
+
+	public MappedTable getMappedTable() {
+		return component.getMappedTable();
 	}
 
 	public void addProperty(Property prop, XClass declaringClass) {

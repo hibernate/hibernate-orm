@@ -7,9 +7,10 @@
 package org.hibernate.mapping;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -27,7 +28,18 @@ public class OneToOne extends ToOne {
 	private String propertyName;
 	private String entityName;
 
+	/**
+	 *
+	 * @deprecated since 6.0, use {@link #OneToOne(MetadataBuildingContext, MappedTable, PersistentClass)} instead
+	 */
+	@Deprecated
 	public OneToOne(MetadataBuildingContext metadata, Table table, PersistentClass owner) throws MappingException {
+		super( metadata, table );
+		this.identifier = owner.getKey();
+		this.entityName = owner.getEntityName();
+	}
+
+	public OneToOne(MetadataBuildingContext metadata, MappedTable table, PersistentClass owner) throws MappingException {
 		super( metadata, table );
 		this.identifier = owner.getKey();
 		this.entityName = owner.getEntityName();
@@ -82,25 +94,25 @@ public class OneToOne extends ToOne {
 
 		@Override
 		public SqlTypeDescriptor resolveSqlTypeDescriptor() {
-			if ( getColumnIterator().hasNext() ) {
-				final PersistentClass referencedPersistentClass = getMetadataBuildingContext()
-						.getMetadataCollector()
-						.getEntityBinding( getReferencedEntityName() );
+			final List<Selectable> mappedColumns = getMappedColumns();
+			if ( mappedColumns.size() == 0 ) {
+				throw new IllegalStateException( "No SqlType code to resolve for " + entityName );
 
-				if ( referenceToPrimaryKey || referencedPropertyName == null ) {
-					return ( (Column) referencedPersistentClass.getIdentifier()
-							.getMappedColumns()
-							.get( index ) ).getSqlTypeDescriptor();
-				}
-				else {
-					final Property referencedProperty = referencedPersistentClass.getReferencedProperty(
-							getReferencedPropertyName() );
-					return ( (Column) referencedProperty.getValue()
-							.getMappedColumns().get( index ) ).getSqlTypeDescriptor();
-				}
+			}
+			final PersistentClass referencedPersistentClass = getMetadataBuildingContext()
+					.getMetadataCollector()
+					.getEntityBinding( getReferencedEntityName() );
+
+			if ( referenceToPrimaryKey || referencedPropertyName == null ) {
+				return ( (Column) referencedPersistentClass.getIdentifier()
+						.getMappedColumns()
+						.get( index ) ).getSqlTypeDescriptor();
 			}
 			else {
-				throw new IllegalStateException( "No SqlType code to resolve for " + entityName );
+				final Property referencedProperty = referencedPersistentClass.getReferencedProperty(
+						getReferencedPropertyName() );
+				return ( (Column) referencedProperty.getValue()
+						.getMappedColumns().get( index ) ).getSqlTypeDescriptor();
 			}
 		}
 
@@ -110,12 +122,9 @@ public class OneToOne extends ToOne {
 		}
 	}
 
-	public java.util.List getConstraintColumns() {
-		ArrayList list = new ArrayList();
-		Iterator iter = identifier.getColumnIterator();
-		while ( iter.hasNext() ) {
-			list.add( iter.next() );
-		}
+	public java.util.List<Selectable> getConstraintColumns() {
+		final ArrayList<Selectable> list = new ArrayList();
+		identifier.getMappedColumns().forEach( o -> list.add( (Selectable) o ) );
 		return list;
 	}
 	/**

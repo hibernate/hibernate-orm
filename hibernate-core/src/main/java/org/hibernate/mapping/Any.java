@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -30,7 +31,16 @@ public class Any extends SimpleValue {
 
 	private Map<Object,String> discriminatorMap;
 
+	/**
+	 *
+	 * @deprecated since 6.0, use {@link #Any(MetadataBuildingContext, MappedTable)} instead
+	 */
+	@Deprecated
 	public Any(MetadataBuildingContext metadata, Table table) {
+		super( metadata, table );
+	}
+
+	public Any(MetadataBuildingContext metadata, MappedTable table) {
 		super( metadata, table );
 	}
 

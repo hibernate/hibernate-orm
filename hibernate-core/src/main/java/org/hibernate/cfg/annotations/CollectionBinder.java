@@ -9,6 +9,7 @@ package org.hibernate.cfg.annotations;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -65,6 +66,8 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
@@ -1275,14 +1278,14 @@ public abstract class CollectionBinder {
 								+ collValue.getOwnerEntityName() + "." + joinColumns[0].getPropertyName()
 				);
 			}
-			Table table;
+			MappedTable table;
 			if ( otherSideProperty.getValue() instanceof Collection ) {
 				//this is a collection on the other side
-				table = ( (Collection) otherSideProperty.getValue() ).getCollectionTable();
+				table = otherSideProperty.getValue().getMappedTable();
 			}
 			else {
 				//This is a ToOne with a @JoinTable or a regular property
-				table = otherSideProperty.getValue().getTable();
+				table = otherSideProperty.getValue().getMappedTable();
 			}
 			collValue.setCollectionTable( table );
 			String entityName = collectionEntity.getEntityName();
@@ -1298,7 +1301,7 @@ public abstract class CollectionBinder {
 				String mappedByProperty = buildingContext.getMetadataCollector().getFromMappedBy(
 						collValue.getOwnerEntityName(), column.getPropertyName()
 				);
-				Table ownerTable = collValue.getOwner().getTable();
+				MappedTable ownerTable = collValue.getOwner().getMappedTable();
 				column.setMappedBy(
 						collValue.getOwner().getEntityName(),
 						collValue.getOwner().getJpaEntityName(),
@@ -1314,11 +1317,11 @@ public abstract class CollectionBinder {
 						collValue.getOwner().getClassName(),
 						collValue.getOwner().getEntityName(),
 						collValue.getOwner().getJpaEntityName(),
-						collValue.getOwner().getTable().getName(),
+						collValue.getOwner().getMappedTable().getName(),
 						collectionEntity != null ? collectionEntity.getClassName() : null,
 						collectionEntity != null ? collectionEntity.getEntityName() : null,
 						collectionEntity != null ? collectionEntity.getJpaEntityName() : null,
-						collectionEntity != null ? collectionEntity.getTable().getName() : null,
+						collectionEntity != null ? collectionEntity.getMappedTable().getName() : null,
 						joinColumns[0].getPropertyName()
 				);
 			}
@@ -1330,7 +1333,7 @@ public abstract class CollectionBinder {
 
 		ManyToOne element = null;
 		if ( isCollectionOfEntities ) {
-			element = new ManyToOne( buildingContext, collValue.getCollectionTable() );
+			element = new ManyToOne( buildingContext, collValue.getMappedTable() );
 			collValue.setElement( element );
 			element.setReferencedEntityName( collType.getName() );
 			//element.setFetchMode( fetchMode );
@@ -1382,7 +1385,7 @@ public abstract class CollectionBinder {
 			PropertyData inferredData = new PropertyInferredData(null, property, "unsupported", buildingContext.getBootstrapContext().getReflectionManager() );
 			//override the table
 			for (Ejb3Column column : inverseJoinColumns) {
-				column.setTable( collValue.getCollectionTable() );
+				column.setTable( collValue.getMappedTable() );
 			}
 			Any any = BinderHelper.buildAnyValue(
 					anyAnn.metaDef(),
@@ -1451,12 +1454,15 @@ public abstract class CollectionBinder {
 				boolean isPropertyAnnotated;
 				//FIXME support @Access for collection of elements
 				//String accessType = access != null ? access.value() : null;
-				if ( owner.getIdentifierProperty() != null ) {
-					isPropertyAnnotated = owner.getIdentifierProperty().getPropertyAccessorName().equals( "property" );
+				if ( owner.getIdentifierAttributeMapping() != null ) {
+					isPropertyAnnotated = owner.getIdentifierAttributeMapping().getPropertyAccessorName().equals( "property" );
 				}
-				else if ( owner.getIdentifierMapper() != null && owner.getIdentifierMapper().getPropertySpan() > 0 ) {
-					Property prop = (Property) owner.getIdentifierMapper().getPropertyIterator().next();
-					isPropertyAnnotated = prop.getPropertyAccessorName().equals( "property" );
+				else if ( owner.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping() != null
+						&& owner.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping().getDeclaredPersistentAttributes().size() > 0 ) {
+					final List<PersistentAttributeMapping> declaredPersistentAttributes = owner.getEntityMappingHierarchy()
+							.getIdentifierEmbeddedValueMapping()
+							.getDeclaredPersistentAttributes();
+					isPropertyAnnotated = declaredPersistentAttributes.get( 0 ).getPropertyAccessorName().equals( "property" );
 				}
 				else {
 					throw new AssertionFailure( "Unable to guess collection property accessor name" );
@@ -1499,7 +1505,6 @@ public abstract class CollectionBinder {
 				collValue.setElement( component );
 
 				if ( StringHelper.isNotEmpty( hqlOrderBy ) ) {
-					String path = collValue.getOwnerEntityName() + "." + joinColumns[0].getPropertyName();
 					String orderBy = adjustUserSuppliedValueCollectionOrderingFragment( hqlOrderBy );
 					if ( orderBy != null ) {
 						collValue.setOrderBy( orderBy );
@@ -1529,7 +1534,7 @@ public abstract class CollectionBinder {
 				}
 				//override the table
 				for (Ejb3Column column : elementColumns) {
-					column.setTable( collValue.getCollectionTable() );
+					column.setTable( collValue.getMappedTable() );
 				}
 				elementBinder.setColumns( elementColumns );
 				elementBinder.setType(

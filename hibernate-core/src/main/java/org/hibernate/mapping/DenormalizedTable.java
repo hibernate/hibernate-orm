@@ -24,13 +24,8 @@ import org.hibernate.naming.Identifier;
  * @author Gavin King
  */
 @SuppressWarnings("unchecked")
-public class DenormalizedTable extends Table implements DenormalizedMappedTable {
-	private final MappedTable includedTable;
-
-	public DenormalizedTable(Table includedTable) {
-		this.includedTable = includedTable;
-		includedTable.setHasDenormalizedTables();
-	}
+public class DenormalizedTable extends Table implements DenormalizedMappedTable<Column> {
+	private final MappedTable<Column> includedTable;
 
 	public DenormalizedTable(
 			MappedNamespace namespace,
@@ -112,8 +107,8 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable 
 	}
 
 	@Override
-	public Set<MappedColumn> getMappedColumns() {
-		Set<MappedColumn> mappedColumns = new HashSet<>();
+	public Set<Column> getMappedColumns() {
+		Set<Column> mappedColumns = new HashSet<>();
 		mappedColumns.addAll( includedTable.getMappedColumns() );
 		mappedColumns.addAll( super.getMappedColumns() );
 		return Collections.unmodifiableSet( mappedColumns );

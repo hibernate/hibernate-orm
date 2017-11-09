@@ -31,7 +31,7 @@ public class MappedPrimaryKey extends Constraint {
 	}
 	@Override
 	public void addColumn(Column column) {
-		final Iterator<Column> columnIterator = getTable().getColumnIterator();
+		final Iterator<Column> columnIterator = getMappedTable().getColumnIterator();
 		while ( columnIterator.hasNext() ) {
 			final Column next = columnIterator.next();
 			if ( next.getCanonicalName().equals( column.getCanonicalName() ) ) {
@@ -47,9 +47,9 @@ public class MappedPrimaryKey extends Constraint {
 	}
 
 	protected String getTableNameForLogging(Column column) {
-		if ( getTable() != null ) {
-			if ( getTable().getNameIdentifier() != null ) {
-				return getTable().getNameIdentifier().getCanonicalName();
+		if ( getMappedTable() != null ) {
+			if ( getMappedTable().getNameIdentifier() != null ) {
+				return getMappedTable().getNameIdentifier().getCanonicalName();
 			}
 			else {
 				return "<unknown>";

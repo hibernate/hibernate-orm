@@ -734,7 +734,7 @@ public class TableBinder {
 		while ( iter.hasNext() ) {
 			cols.add( iter.next() );
 		}
-		value.getTable().createUniqueKey( cols );
+		value.getMappedTable().createUniqueKey( cols );
 	}
 
 	public static void addIndexes(MappedTable hibTable, Index[] indexes, MetadataBuildingContext buildingContext) {

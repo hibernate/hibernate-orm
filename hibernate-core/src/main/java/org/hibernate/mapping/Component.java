@@ -21,6 +21,7 @@ import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -78,7 +79,7 @@ public class Component extends SimpleValue
 		this( metadata, collection.getCollectionTable(), collection.getOwner() );
 	}
 
-	public Component(MetadataBuildingContext metadata, Table table, PersistentClass owner) throws MappingException {
+	public Component(MetadataBuildingContext metadata, MappedTable table, PersistentClass owner) throws MappingException {
 		super( metadata, table );
 		this.owner = owner;
 	}

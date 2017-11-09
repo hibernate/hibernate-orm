@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.hibernate.HibernateError;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -24,8 +25,16 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 public class ManyToOne extends ToOne {
 	private boolean ignoreNotFound;
 	private boolean isLogicalOneToOne;
-	
+
+	/**
+	 * @deprecated since 6.0, use {@link #ManyToOne(MetadataBuildingContext, MappedTable)}
+	 */
+	@Deprecated
 	public ManyToOne(MetadataBuildingContext metadata, Table table) {
+		super( metadata, table );
+	}
+
+	public ManyToOne(MetadataBuildingContext metadata, MappedTable table) {
 		super( metadata, table );
 	}
 

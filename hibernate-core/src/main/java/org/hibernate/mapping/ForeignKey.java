@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.JavaTypeHelper;
 
@@ -21,7 +22,7 @@ import org.hibernate.internal.util.JavaTypeHelper;
  * @author Gavin King
  */
 public class ForeignKey extends Constraint {
-	private Table referencedTable;
+	private MappedTable referencedTable;
 	private String referencedEntityName;
 	private String keyDefinition;
 	private boolean cascadeDeleteEnabled;
@@ -40,7 +41,9 @@ public class ForeignKey extends Constraint {
 		}
 	}
 
-	public Table getReferencedTable() {
+
+
+	public MappedTable getReferencedTable() {
 		return referencedTable;
 	}
 
@@ -58,9 +61,7 @@ public class ForeignKey extends Constraint {
 		}
 	}
 
-	public void setReferencedTable(Table referencedTable) throws MappingException {
-		//if( isReferenceToPrimaryKey() ) alignColumns(referencedTable); // TODO: possibly remove to allow more piecemal building of a foreignkey.  
-
+	public void setReferencedTable(MappedTable referencedTable) throws MappingException {
 		this.referencedTable = referencedTable;
 	}
 
@@ -75,7 +76,7 @@ public class ForeignKey extends Constraint {
 		}
 	}
 
-	private void alignColumns(Table referencedTable) {
+	private void alignColumns(MappedTable referencedTable) {
 		final List<Selectable> columns = JavaTypeHelper.cast( getColumns() );
 		final List<Selectable> targetColumns = JavaTypeHelper.cast( referencedTable.getPrimaryKey().getColumns() );
 
@@ -132,7 +133,7 @@ public class ForeignKey extends Constraint {
 	public boolean isPhysicalConstraint() {
 		return isCreationEnabled()
 				&& referencedTable.isPhysicalTable()
-				&& getTable().isPhysicalTable()
+				&& getMappedTable().isPhysicalTable()
 				&& !referencedTable.hasDenormalizedTables();
 	}
 
@@ -212,12 +213,12 @@ public class ForeignKey extends Constraint {
 			referencedColumnNames[i] = targetColumns.get( i ).getName().render( dialect );
 		}
 
-		final String result = keyDefinition != null ?
-				dialect.getAddForeignKeyConstraintString(
+		final String result = keyDefinition != null
+				? dialect.getAddForeignKeyConstraintString(
 						constraintName,
 						keyDefinition
-				) :
-				dialect.getAddForeignKeyConstraintString(
+				)
+				: dialect.getAddForeignKeyConstraintString(
 						constraintName,
 						columnNames,
 						referencedTable.getQualifiedName(

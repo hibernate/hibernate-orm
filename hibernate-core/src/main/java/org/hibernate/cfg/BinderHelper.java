@@ -18,6 +18,7 @@ import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XPackage;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.Nullability;
@@ -618,7 +619,7 @@ public class BinderHelper {
 			String generatorName,
 			MetadataBuildingContext buildingContext,
 			Map<String, IdentifierGeneratorDefinition> localGenerators) {
-		Table table = id.getTable();
+		MappedTable table = id.getMappedTable();
 		table.setIdentifierValue( id );
 		//generator settings
 		id.setIdentifierGeneratorStrategy( generatorType );
@@ -711,7 +712,7 @@ public class BinderHelper {
 			boolean optional,
 			MetadataBuildingContext context) {
 		//All FK columns should be in the same table
-		Any value = new Any( context, columns[0].getTable() );
+		Any value = new Any( context, columns[0].getMappedTable() );
 		AnyMetaDef metaAnnDef = inferredData.getProperty().getAnnotation( AnyMetaDef.class );
 
 		if ( metaAnnDef != null ) {
@@ -772,7 +773,7 @@ public class BinderHelper {
 
 		//set metaColumn to the right table
 		for (Ejb3Column column : metaColumns) {
-			column.setTable( value.getTable() );
+			column.setTable( value.getMappedTable() );
 		}
 		//meta column
 		for (Ejb3Column column : metaColumns) {
@@ -887,7 +888,7 @@ public class BinderHelper {
 	}
 	
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
-		Map<String,String> ret = new HashMap<String,String>();
+		Map<String,String> ret = new HashMap<>();
 		for ( int i = 0; i < aliases.length; i++ ){
 			if ( StringHelper.isNotEmpty( aliases[i].table() ) ){
 				ret.put( aliases[i].alias(), aliases[i].table() );
@@ -897,7 +898,7 @@ public class BinderHelper {
 	}
 	
 	public static Map<String,String> toAliasEntityMap(SqlFragmentAlias[] aliases){
-		Map<String,String> ret = new HashMap<String,String>();
+		Map<String,String> ret = new HashMap<>();
 		for (int i = 0; i < aliases.length; i++){
 			if (aliases[i].entity() != void.class){
 				ret.put( aliases[i].alias(), aliases[i].entity().getName() );

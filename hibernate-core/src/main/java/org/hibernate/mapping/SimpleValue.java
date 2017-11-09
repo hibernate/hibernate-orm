@@ -75,6 +75,7 @@ public abstract class SimpleValue implements KeyValue {
 	/**
 	 * @deprecated Use {@link #getMetadataBuildingContext()} instead
 	 */
+	@Deprecated
 	public MetadataBuildingContext getBuildingContext() {
 		return getMetadataBuildingContext();
 	}
@@ -151,6 +152,14 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public void setTable(Table table) {
+		this.table = table;
+	}
+
+	/**
+	 * @deprecated since 6.0, use {@link #setTable(MappedTable)} instead.
+	 */
+	@Deprecated
+	public void setTable(MappedTable table) {
 		this.table = table;
 	}
 

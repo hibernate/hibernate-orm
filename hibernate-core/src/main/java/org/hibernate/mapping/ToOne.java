@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.ReflectHelper;
@@ -24,7 +25,16 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	protected boolean unwrapProxy;
 	protected boolean referenceToPrimaryKey = true;
 
+	/**
+	 *
+	 * @deprecated since 6.0, use {@link #ToOne(MetadataBuildingContext, MappedTable)} instead
+	 */
+	@Deprecated
 	protected ToOne(MetadataBuildingContext metadata, Table table) {
+		super( metadata, table );
+	}
+
+	protected ToOne(MetadataBuildingContext metadata, MappedTable table) {
 		super( metadata, table );
 	}
 

@@ -36,11 +36,6 @@ public class HQLJoinClassTest extends BaseCoreFunctionalTestCase {
     @Override
     protected Class[] getAnnotatedClasses() {
         return new Class[]{
-                ClassA.class,
-                ClassB.class,
-                ClassC.class,
-                ClassD.class,
-                ClassE.class
         };
     }
 
@@ -48,15 +43,22 @@ public class HQLJoinClassTest extends BaseCoreFunctionalTestCase {
     @Override
     protected String[] getMappings() {
         return new String[]{
-//				"Foo.hbm.xml",
-//				"Bar.hbm.xml"
+                "Claim.hbm.xml",
+                "EwtAssessmentExtension.hbm.xml",
+                "Extension.hbm.xml",
+                "GapAssessmentExtension.hbm.xml",
+                "Settlement.hbm.xml",
+                "SettlementExtension.hbm.xml",
+                "SettlementTask.hbm.xml",
+                "Task.hbm.xml",
+                "TaskStatus.hbm.xml",
         };
     }
 
     // If those mappings reside somewhere other than resources/org/hibernate/test, change this.
     @Override
     protected String getBaseForMappings() {
-        return "org/hibernate/test/";
+        return "org/hibernate/internal/hhh12076/";
     }
 
     // Add in any settings that are specific to your test.  See resources/hibernate.properties for the defaults.
@@ -77,29 +79,42 @@ public class HQLJoinClassTest extends BaseCoreFunctionalTestCase {
         Transaction tx = s.beginTransaction();
         // Do stuff...
 
-        for (int i = 0; i < 10; i++) {
-            ClassA classA = new ClassA();
+        TaskStatus taskStatus = new TaskStatus();
+        taskStatus.setName("Enabled");
+        taskStatus.setDisplayName("Enabled");
+        s.save(taskStatus);
+
+        for (long i = 0; i < 10; i++) {
+            SettlementTask settlementTask = new SettlementTask();
+            settlementTask.setId(i);
+            Settlement settlement = new Settlement();
+            settlementTask.setLinked(settlement);
+            settlementTask.setStatus(taskStatus);
+
+            Claim claim = new Claim();
+            claim.setId(i);
+            settlement.setClaim(claim);
+
             for (int j = 0; j < 2; j++) {
-                ClassC classC = new ClassC();
-                ClassD classD = new ClassD();
-                ClassE classE = new ClassE();
+                GapAssessmentExtension gapAssessmentExtension = new GapAssessmentExtension();
+                gapAssessmentExtension.setSettlement(settlement);
+                EwtAssessmentExtension ewtAssessmentExtension = new EwtAssessmentExtension();
+                ewtAssessmentExtension.setSettlement(settlement);
 
-                classA.getSubClasses().add(classC);
-                classA.getSubClasses().add(classD);
-                classA.getChildren().add(classE);
+                settlement.getExtensions().add(gapAssessmentExtension);
+                settlement.getExtensions().add(ewtAssessmentExtension);
             }
-
-            s.save(classA);
+            s.save(claim);
+            s.save(settlement);
+            s.save(settlementTask);
         }
 
-        // This works, but does not join on the type
-        //final String hql = "from ClassA as a join a.children as e left join a.subClasses as sub";
+        final String hql = "select rootAlias.id, linked.id, extensions.id from SettlementTask as rootAlias join rootAlias.linked as linked left join linked.extensions as extensions with extensions.class = org.hibernate.internal.hhh12076.EwtAssessmentExtension where linked.id = :claimId";
 
-        // This does not work
-        final String hql = "from ClassA as a join a.children as e left join a.subClasses as sub with sub.class = ClassD";
+        Query<SettlementTask> query = session.createQuery(hql);
+        query.setParameter("claimId", 1L);
 
-        Query<ClassA> query = session.createQuery(hql);
-        List<ClassA> results = query.getResultList();
+        List<SettlementTask> results = query.getResultList();
         assertNotNull(results);
         assertTrue(results.size() > 0);
 

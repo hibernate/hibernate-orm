@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <joined-subclass 
+    	name="org.hibernate.internal.hhh12076.GapAssessmentExtension"
+    	extends="org.hibernate.internal.hhh12076.SettlementExtension"
+    	table="claim_settlement_ext_gap"
+    	lazy="false">
+    	
+        <key>
+            <column name="extension_id" not-null="true" />
+        </key>
+
+        <property name="eligibleAmount" type="java.lang.Double">
+            <column name="eligible_amount" not-null="true" />
+        </property>
+        <property name="assessedAmount" type="java.lang.Double">
+            <column name="assessed_amount" not-null="true" />
+        </property>
+        <property name="underinsuredAmount" type="java.lang.Double">
+            <column name="underinsured_amount" not-null="true" />
+        </property>
+		<property name="insuredsObligation" type="java.lang.Double">
+			<column name="insureds_obligation_amount" not-null="true" />
+		</property>
+
+    </joined-subclass>
+</hibernate-mapping>

@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.Locale;
+import java.util.Objects;
 
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.dialect.Dialect;
@@ -55,6 +56,11 @@ public class Column implements MappedColumn, Serializable, Cloneable {
 
 	public Column(String columnName, boolean isUnique) {
 		this( Identifier.toIdentifier( columnName ), isUnique );
+	}
+
+	public Column(Identifier tableName, String columnName, boolean isUnique) {
+		this( Identifier.toIdentifier( columnName ), isUnique );
+		this.tableName = tableName;
 	}
 
 	public Column(Identifier columnName, boolean isUnique) {
@@ -117,12 +123,18 @@ public class Column implements MappedColumn, Serializable, Cloneable {
 		return unique;
 	}
 
+//	@Override
+//	public int hashCode() {
+//		//used also for generation of FK names!
+//		return isQuoted() ?
+//				name.hashCode() :
+//				name.getText().toLowerCase( Locale.ROOT ).hashCode();
+//	}
+
+
 	@Override
 	public int hashCode() {
-		//used also for generation of FK names!
-		return isQuoted() ?
-				name.hashCode() :
-				name.getText().toLowerCase( Locale.ROOT ).hashCode();
+		return Objects.hash( tableName, name );
 	}
 
 	@Override
@@ -139,7 +151,7 @@ public class Column implements MappedColumn, Serializable, Cloneable {
 			return true;
 		}
 
-		return name.equals( column.name );
+		return tableName.equals( column.tableName ) && name.equals( column.name );
 	}
 
 	public String getSqlType() {

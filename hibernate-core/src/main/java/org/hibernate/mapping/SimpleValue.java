@@ -93,11 +93,11 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public void addColumn(Column column) {
-		if ( !columns.contains( column ) ) {
-			columns.add( column );
-		}
 		if ( getTable() != null ) {
 			column.setTableName( getTable().getNameIdentifier() );
+		}
+		if ( !columns.contains( column ) ) {
+			columns.add( column );
 		}
 		setTypeDescriptorResolver(column);
 	}

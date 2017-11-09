@@ -149,8 +149,8 @@ public class RelationalObjectBinder {
 
 
 		if ( table != null ) {
-			table.addColumn( column );
 			column.setTableName( table.getNameIdentifier() );
+			table.addColumn( column );
 		}
 
 		simpleValue.addColumn( column );

@@ -362,8 +362,8 @@ public class Ejb3Column {
 			if ( table != null ) {
 				mappingColumn.setTableName( table.getNameIdentifier() );
 			}
-			value.addColumn( mappingColumn );
 			table.addColumn( mappingColumn );
+			value.addColumn( mappingColumn );
 		}
 	}
 

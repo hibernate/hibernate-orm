@@ -24,17 +24,8 @@ public class ForeignKey extends Constraint {
 	private String keyDefinition;
 	private boolean cascadeDeleteEnabled;
 	private List<Column> referencedColumns = new ArrayList<>();
-	private boolean creationEnabled = true;
 
 	public ForeignKey() {
-	}
-
-	public void disableCreation() {
-		creationEnabled = false;
-	}
-
-	public boolean isCreationEnabled() {
-		return creationEnabled;
 	}
 
 	@Override
@@ -47,63 +38,21 @@ public class ForeignKey extends Constraint {
 		}
 	}
 
-	public String sqlConstraintString(
-			Dialect dialect,
-			String constraintName,
-			String defaultCatalog,
-			String defaultSchema) {
-		String[] columnNames = new String[getColumnSpan()];
-		String[] referencedColumnNames = new String[getColumnSpan()];
-
-		final Iterator<Column> referencedColumnItr;
-		if ( isReferenceToPrimaryKey() ) {
-			referencedColumnItr = referencedTable.getPrimaryKey().getColumnIterator();
-		}
-		else {
-			referencedColumnItr = referencedColumns.iterator();
-		}
-
-		Iterator columnItr = getColumnIterator();
-		int i = 0;
-		while ( columnItr.hasNext() ) {
-			columnNames[i] = ( (Column) columnItr.next() ).getName().render( dialect );
-			referencedColumnNames[i] = referencedColumnItr.next().getName().render( dialect );
-			i++;
-		}
-
-		final String result = keyDefinition != null ?
-				dialect.getAddForeignKeyConstraintString(
-						constraintName,
-						keyDefinition
-				) :
-				dialect.getAddForeignKeyConstraintString(
-						constraintName,
-						columnNames,
-						referencedTable.getQualifiedName(
-								dialect,
-								defaultCatalog,
-								defaultSchema
-						),
-						referencedColumnNames,
-						isReferenceToPrimaryKey()
-				);
-		
-		return cascadeDeleteEnabled && dialect.supportsCascadeDelete()
-				? result + " on delete cascade"
-				: result;
-	}
-
 	public Table getReferencedTable() {
 		return referencedTable;
 	}
 
-	private void appendColumns(StringBuilder buf, Iterator columns) {
-		while ( columns.hasNext() ) {
-			Column column = (Column) columns.next();
-			buf.append( column.getName() );
-			if ( columns.hasNext() ) {
-				buf.append( "," );
+	private void appendColumns(StringBuilder buf, List<Column> columns) {
+		boolean firstPass = true;
+
+		for ( Column column : columns ) {
+			if ( firstPass ) {
+				firstPass = false;
 			}
+			else {
+				buf.append( ',' );
+			}
+			buf.append( column.getName() );
 		}
 	}
 
@@ -125,28 +74,29 @@ public class ForeignKey extends Constraint {
 	}
 
 	private void alignColumns(Table referencedTable) {
-		final int referencedPkColumnSpan = referencedTable.getPrimaryKey().getColumnSpan();
-		if ( referencedPkColumnSpan != getColumnSpan() ) {
+		final List<Column> columns = getColumns();
+		final List<Column> targetColumns = referencedTable.getPrimaryKey().getColumns();
+
+		final int referencedPkColumnSpan = targetColumns.size();
+
+		if ( referencedPkColumnSpan != columns.size() ) {
 			StringBuilder sb = new StringBuilder();
 			sb.append( "Foreign key (" ).append( getName() ).append( ":" )
-					.append( getTable().getName() )
+					.append( getMappedTable().getName() )
 					.append( " [" );
-			appendColumns( sb, getColumnIterator() );
+			appendColumns( sb, columns );
 			sb.append( "])" )
 					.append( ") must have same number of columns as the referenced primary key (" )
 					.append( referencedTable.getName() )
 					.append( " [" );
-			appendColumns( sb, referencedTable.getPrimaryKey().getColumnIterator() );
+			appendColumns( sb, targetColumns );
 			sb.append( "])" );
 			throw new MappingException( sb.toString() );
 		}
 
-		Iterator fkCols = getColumnIterator();
-		Iterator pkCols = referencedTable.getPrimaryKey().getColumnIterator();
-		while ( pkCols.hasNext() ) {
-			( (Column) fkCols.next() ).setLength( ( (Column) pkCols.next() ).getLength() );
+		for ( int i = 0; i < columns.size(); i++ ) {
+			columns.get( i ).setLength( targetColumns.get( i ).getLength() );
 		}
-
 	}
 
 	public String getReferencedEntityName() {
@@ -164,20 +114,6 @@ public class ForeignKey extends Constraint {
 	public void setKeyDefinition(String keyDefinition) {
 		this.keyDefinition = keyDefinition;
 	}
-	
-	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		final StringBuilder buf = new StringBuilder( "alter table " );
-		buf.append( getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema ) );
-		buf.append( dialect.getDropForeignKeyString() );
-		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
-			buf.append( "if exists " );
-		}
-		buf.append( dialect.quote( getName() ) );
-		if ( dialect.supportsIfExistsAfterConstraintName() ) {
-			buf.append( " if exists" );
-		}
-		return buf.toString();
-	}
 
 	public boolean isCascadeDeleteEnabled() {
 		return cascadeDeleteEnabled;
@@ -188,7 +124,8 @@ public class ForeignKey extends Constraint {
 	}
 
 	public boolean isPhysicalConstraint() {
-		return referencedTable.isPhysicalTable()
+		return isCreationEnabled()
+				&& referencedTable.isPhysicalTable()
 				&& getTable().isPhysicalTable()
 				&& !referencedTable.hasDenormalizedTables();
 	}
@@ -198,6 +135,15 @@ public class ForeignKey extends Constraint {
 	 */
 	public List getReferencedColumns() {
 		return referencedColumns;
+	}
+
+	public List<Column> getTargetColumns() {
+		if ( referencedColumns != null && !referencedColumns.isEmpty() ) {
+			return referencedColumns;
+		}
+		else {
+			return getReferencedTable().getPrimaryKey().getColumns();
+		}
 	}
 
 	/**
@@ -222,6 +168,10 @@ public class ForeignKey extends Constraint {
 		}
 	}
 
+	public String generatedConstraintNamePrefix() {
+		return "FK_";
+	}
+
 	public String toString() {
 		if ( !isReferenceToPrimaryKey() ) {
 			return getClass().getName()
@@ -234,7 +184,71 @@ public class ForeignKey extends Constraint {
 
 	}
 
-	public String generatedConstraintNamePrefix() {
-		return "FK_";
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * All schema management is managed though exporters
+	 *
+	 * @deprecated
+	 */
+	@Deprecated
+	public String sqlConstraintString(
+			Dialect dialect,
+			String constraintName,
+			String defaultCatalog,
+			String defaultSchema) {
+		String[] columnNames = new String[getColumnSpan()];
+		String[] referencedColumnNames = new String[getColumnSpan()];
+
+		final List<Column> targetColumns = getTargetColumns();
+
+		final List<Column> referencingColumns = getColumns();
+		for ( int i = 0; i < referencingColumns.size(); i++ ) {
+			columnNames[i] = referencingColumns.get( i ).getName().render( dialect );
+			referencedColumnNames[i] = targetColumns.get( i ).getName().render( dialect );
+		}
+
+		final String result = keyDefinition != null ?
+				dialect.getAddForeignKeyConstraintString(
+						constraintName,
+						keyDefinition
+				) :
+				dialect.getAddForeignKeyConstraintString(
+						constraintName,
+						columnNames,
+						referencedTable.getQualifiedName(
+								dialect,
+								defaultCatalog,
+								defaultSchema
+						),
+						referencedColumnNames,
+						isReferenceToPrimaryKey()
+				);
+
+		return cascadeDeleteEnabled && dialect.supportsCascadeDelete()
+				? result + " on delete cascade"
+				: result;
+	}
+
+
+	/**
+	 * All schema management is managed though exporters
+	 *
+	 * @deprecated
+	 */
+	@Deprecated
+	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
+		final StringBuilder buf = new StringBuilder( "alter table " );
+		buf.append( getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema ) );
+		buf.append( dialect.getDropForeignKeyString() );
+		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
+			buf.append( "if exists " );
+		}
+		buf.append( dialect.quote( getName() ) );
+		if ( dialect.supportsIfExistsAfterConstraintName() ) {
+			buf.append( " if exists" );
+		}
+		return buf.toString();
 	}
 }

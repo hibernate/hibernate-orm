@@ -14,13 +14,6 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
  * @author Steve Ebersole
  */
 public interface TableGroupJoinProducer extends TableGroupProducer {
-
-	// todo (6.0) : this should only be applied to "joinable Navigables"
-	//		atm it is applied to EntityPersister e.g. which is wrong.  It
-	//		should be applied to things like:
-	//			1) SingularPersistentAttributeEntity
-	//			2) ...
-
 	/**
 	 * Create the TableGroupJoin as defined for this producer and given
 	 * arguments, being sure to add the created TableGroupJoin to the

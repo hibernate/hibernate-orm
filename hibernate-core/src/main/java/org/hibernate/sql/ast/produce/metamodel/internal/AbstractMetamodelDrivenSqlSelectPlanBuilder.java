@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.LockOptions;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
@@ -32,13 +33,13 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKey;
 import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKeyProducer;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.MetamodelDrivenSqlSelectPlanBuilder;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.NavigablePathStack;
@@ -49,15 +50,12 @@ import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
-import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
@@ -289,11 +287,11 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 		navigableContainerInfoStack.push( navigableRefInfo );
 
 		try {
-			final NavigableReference navigableReference = new SingularAttributeReference(
-					fetchParentNavigableContainerReferenceMap.get( fetchParentStack.getCurrent() ),
-					attribute,
-					currentNavigablePath()
-			);
+//			final NavigableReference navigableReference = new SingularAttributeReference(
+//					fetchParentNavigableContainerReferenceMap.get( fetchParentStack.getCurrent() ),
+//					attribute,
+//					currentNavigablePath()
+//			);
 
 
 			if ( attribute instanceof TableGroupJoinProducer ) {

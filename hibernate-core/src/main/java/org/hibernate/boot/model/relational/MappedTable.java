@@ -102,6 +102,14 @@ public interface MappedTable extends Loggable {
 	 */
 	ForeignKey createForeignKey(String keyName, List keyColumns, String referencedEntityName, String keyDefinition);
 
+	ForeignKey createForeignKey(
+			String keyName,
+			List keyColumns,
+			String referencedEntityName,
+			String keyDefinition,
+			List referencedColumns);
+
+
 	// This must be done outside of Table, rather than statically, to ensure
 	// deterministic alias names.  See HHH-2448.
 	void setUniqueInteger(int uniqueInteger);

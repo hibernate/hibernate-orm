@@ -36,7 +36,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 		this.fetchMode=fetchMode;
 	}
 
-	public abstract void createForeignKey() throws MappingException;
+	public abstract ForeignKey createForeignKey() throws MappingException;
 
 	public String getReferencedPropertyName() {
 		return referencedPropertyName;
@@ -99,5 +99,4 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	public void setReferenceToPrimaryKey(boolean referenceToPrimaryKey) {
 		this.referenceToPrimaryKey = referenceToPrimaryKey;
 	}
-	
 }

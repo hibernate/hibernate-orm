@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.TableGroupProducer;
 
 /**

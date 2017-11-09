@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.ForeignKeyExporter;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -24,7 +25,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *
  * @author Gavin King
  */
-public class OneToMany implements Value {
+public class OneToMany implements ForeignKeyExporter, Value {
 	private final MetadataBuildingContext buildingContext;
 	private final MappedTable referencingTable;
 
@@ -56,13 +57,8 @@ public class OneToMany implements Value {
 	}
 
 	@Override
-	public void createForeignKey() {
-		// no foreign key element of for a one-to-many
-	}
-
-	@Override
 	public Iterator<Selectable> getColumnIterator() {
-		return associatedClass.getKey().getColumnIterator();
+		return associatedClass.getKey().getMappedColumns().iterator();
 	}
 
 	@Override

@@ -73,7 +73,7 @@ import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
@@ -590,7 +590,6 @@ public abstract class AbstractEntityDescriptor<J>
 				info.getUniqueIdentifier(),
 				tableGroupContext.getTableSpace(),
 				this,
-				this,
 				tableGroupContext.getQueryOptions().getLockOptions().getEffectiveLockMode( info.getIdentificationVariable() ),
 				new NavigablePath( getEntityName() ),
 				primaryTableReference,
@@ -649,7 +648,7 @@ public abstract class AbstractEntityDescriptor<J>
 
 		final Junction conjunction = new Junction( Junction.Nature.CONJUNCTION );
 
-		for ( ForeignKey.ColumnMapping columnMapping : joinPredicateColumnMappings.getColumnMappings() ) {
+		for ( ForeignKey.ColumnMappings.ColumnMapping columnMapping : joinPredicateColumnMappings.getColumnMappings() ) {
 			conjunction.add(
 					new RelationalPredicate(
 							RelationalPredicate.Operator.EQUAL,
@@ -679,16 +678,13 @@ public abstract class AbstractEntityDescriptor<J>
 			NavigableReference navigableReference,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
-		assert navigableReference instanceof EntityReference;
-		assert navigableReference.getNavigable() instanceof EntityValuedNavigable;
-
-		final EntityReference entityReference = (EntityReference) navigableReference;
+		assert navigableReference instanceof EntityValuedNavigableReference;
 
 		return new EntityQueryResultImpl(
 				(EntityValuedNavigable) navigableReference.getNavigable(),
 				resultVariable,
 				buildSqlSelectionMappings( navigableReference, creationContext ),
-				entityReference.getLockMode(),
+				( (EntityValuedNavigableReference) navigableReference ).getLockMode(),
 				navigableReference.getNavigablePath(),
 				creationContext
 		);

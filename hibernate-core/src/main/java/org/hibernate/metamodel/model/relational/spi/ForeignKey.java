@@ -7,7 +7,9 @@
 package org.hibernate.metamodel.model.relational.spi;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -114,15 +116,27 @@ public class ForeignKey implements Exportable {
 	public interface ColumnMappings {
 		Table getReferringTable();
 		Table getTargetTable();
+
 		List<ColumnMapping> getColumnMappings();
-		List<PhysicalColumn> getTargetColumns();
-		List<PhysicalColumn> getReferringColumns();
 
-		// todo (6.0) : consider exposing org.hibernate.type.ForeignKeyDirection here
+		default List<Column> getReferringColumns() {
+			return getColumnMappings()
+					.stream()
+					.map( ColumnMapping::getReferringColumn )
+					.collect( Collectors.toList() );
+		}
+
+		default List<Column> getTargetColumns() {
+			return getColumnMappings()
+					.stream()
+					.map( ColumnMapping::getTargetColumn )
+					.collect( Collectors.toList() );
+		}
+
+		interface ColumnMapping {
+			Column getReferringColumn();
+			Column getTargetColumn();
+		}
 	}
 
-	public interface ColumnMapping {
-		PhysicalColumn getReferringColumn();
-		PhysicalColumn getTargetColumn();
-	}
 }

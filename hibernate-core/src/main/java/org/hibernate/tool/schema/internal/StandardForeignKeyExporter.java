@@ -11,9 +11,11 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
@@ -32,6 +34,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 		this.dialect = dialect;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public String[] getSqlCreateStrings(ForeignKey foreignKey, JdbcServices jdbcServices) {
 		if ( ! dialect.hasAlterTable() ) {
@@ -46,27 +49,40 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 		final String[] columnNames = new String[ numberOfColumns ];
 		final String[] targetColumnNames = new String[ numberOfColumns ];
 
-		List<PhysicalColumn> targetColumns = new ArrayList<>(  );
+		List<PhysicalColumn> targetColumns;
 		if ( foreignKey.isReferenceToPrimaryKey() ) {
-			if ( foreignKey.getTargetTable().hasPrimaryKey() ) {
-				targetColumns = foreignKey.getTargetTable().getPrimaryKey().getColumns();
-				if ( numberOfColumns != targetColumns.size() ) {
-					throw new AssertionFailure(
-							String.format(
-									Locale.ENGLISH,
-									COLUMN_MISMATCH_MSG,
-									numberOfColumns,
-									targetColumns.size(),
-									foreignKey.getName(),
-									( (ExportableTable) foreignKey.getReferringTable() ).getTableName(),
-									( (ExportableTable) foreignKey.getTargetTable() ).getTableName()
-							)
-					);
-				}
+
+			if ( foreignKey.getTargetTable().getPrimaryKey() == null
+					|| foreignKey.getTargetTable().getPrimaryKey().getColumns().isEmpty() ) {
+				throw new NotYetImplementedFor6Exception();
+			}
+
+			targetColumns = foreignKey.getTargetTable().getPrimaryKey().getColumns();
+			if ( numberOfColumns != targetColumns.size() ) {
+				throw new AssertionFailure(
+						String.format(
+								Locale.ENGLISH,
+								COLUMN_MISMATCH_MSG,
+								numberOfColumns,
+								targetColumns.size(),
+								foreignKey.getName(),
+								( (ExportableTable) foreignKey.getReferringTable() ).getTableName(),
+								( (ExportableTable) foreignKey.getTargetTable() ).getTableName()
+						)
+				);
 			}
 		}
 		else {
-			targetColumns = foreignKey.getColumnMappings().getTargetColumns();
+			targetColumns = new ArrayList<>();
+			for ( Column column : foreignKey.getColumnMappings().getTargetColumns() ) {
+				if ( !PhysicalColumn.class.isInstance( column ) ) {
+					// Fks with non-PhysicalColumn columns are not exportable
+					return NO_COMMANDS;
+				}
+
+				targetColumns.add( (PhysicalColumn) column );
+			}
+
 			if ( numberOfColumns != targetColumns.size() ) {
 				throw new AssertionFailure(
 						String.format(
@@ -82,10 +98,15 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 			}
 		}
 
-		final List<PhysicalColumn> referringColumns = foreignKey.getColumnMappings().getReferringColumns();
-		for ( int i = 0; i < referringColumns.size(); i++ ) {
-			columnNames[i] = referringColumns.get( i ).getName().render( dialect );
-			targetColumnNames[i] = targetColumns.get( i ).getName().render( dialect );
+		int i = 0;
+		for ( ForeignKey.ColumnMappings.ColumnMapping columnMapping : foreignKey.getColumnMappings().getColumnMappings() ) {
+			assert columnMapping.getReferringColumn() != null;
+			assert columnMapping.getTargetColumn() != null;
+
+			columnNames[i] = ( (PhysicalColumn) columnMapping.getReferringColumn() ).getName().render( dialect );
+			targetColumnNames[i] = ( (PhysicalColumn) columnMapping.getTargetColumn() ).getName().render( dialect );
+
+			i++;
 		}
 
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
@@ -101,12 +122,12 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 		final StringBuilder buffer = new StringBuilder( "alter table " )
 				.append( sourceTableName )
 				.append(
-						foreignKey.getKeyDefinition() != null ?
-								dialect.getAddForeignKeyConstraintString(
+						foreignKey.getKeyDefinition() != null
+								? dialect.getAddForeignKeyConstraintString(
 										foreignKey.getName(),
 										foreignKey.getKeyDefinition()
-								) :
-								dialect.getAddForeignKeyConstraintString(
+								)
+								: dialect.getAddForeignKeyConstraintString(
 										foreignKey.getName(),
 										columnNames,
 										targetTableName,

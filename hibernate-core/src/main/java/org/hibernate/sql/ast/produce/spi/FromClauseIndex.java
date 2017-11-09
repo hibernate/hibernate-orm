@@ -77,7 +77,7 @@ public class FromClauseIndex implements TableGroupResolver {
 			}
 		}
 
-		uidBySourceNavigableReference.put( tableGroup.asExpression(), tableGroup.getUniqueIdentifier() );
+		uidBySourceNavigableReference.put( tableGroup.getNavigableReference(), tableGroup.getUniqueIdentifier() );
 
 		TableGroup old = tableGroupBySqmFromXref.put( fromElement, tableGroup );
 		if ( old != null ) {

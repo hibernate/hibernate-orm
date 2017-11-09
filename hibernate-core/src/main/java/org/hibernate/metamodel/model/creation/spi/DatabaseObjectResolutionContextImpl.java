@@ -6,17 +6,18 @@
  */
 package org.hibernate.metamodel.model.creation.spi;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
+import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
 import org.hibernate.metamodel.model.relational.spi.Table;
 
 /**
@@ -25,13 +26,17 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 public class DatabaseObjectResolutionContextImpl
 		implements DatabaseObjectResolver, RuntimeDatabaseModelProducer.Callback {
 
-	private final Map<MappedTable, Table> tableMap = new HashMap<>();
+	private final Map<MappedTable, Table> runtimeTableByBootTable = new HashMap<>();
 	private final Map<MappedColumn, Column> columnMap = new HashMap<>();
-	private final Map<ColumnMapping,ForeignKey> foreignKeyMap = new HashMap<>();
+
+	private final Map<org.hibernate.mapping.ForeignKey,ForeignKey> foreignKeyMap = new IdentityHashMap<>();
+	// Product.vendor
+	//		or T_PRODUCT->VENDOR
+	// T_PRODUCT->PRODUCT_SUPP
 
 	@Override
 	public void tableBuilt(MappedTable mappedTable, Table table) {
-		tableMap.put( mappedTable, table );
+		runtimeTableByBootTable.put( mappedTable, table );
 	}
 
 	@Override
@@ -41,12 +46,12 @@ public class DatabaseObjectResolutionContextImpl
 
 	@Override
 	public void foreignKeyBuilt(org.hibernate.mapping.ForeignKey mappedFk, ForeignKey runtimeFk) {
-
+		foreignKeyMap.put( mappedFk, runtimeFk );
 	}
 
 	@Override
 	public Table resolveTable(MappedTable mappedTable) {
-		return tableMap.get( mappedTable );
+		return runtimeTableByBootTable.get( mappedTable );
 	}
 
 	@Override
@@ -55,15 +60,78 @@ public class DatabaseObjectResolutionContextImpl
 	}
 
 	@Override
-	public ForeignKey.ColumnMappings resolveColumnMappings(
-			List<Selectable> columns, List<Selectable> otherColumns) {
-		//throw new NotYetImplementedException(  );
-		// todo (6.0) : implement
-		return null;
+	public ForeignKey resolveForeignKey(org.hibernate.mapping.ForeignKey bootForeignKey) {
+		return foreignKeyMap.get( bootForeignKey );
 	}
 
-	private static class ColumnMapping {
-		List<MappedColumn> referringColumns;
-		List<MappedColumn> referencedColumns;
+	@Override
+	public ForeignKey.ColumnMappings resolveColumnMappings(
+			List<Selectable> columns,
+			List<Selectable> otherColumns) {
+		if ( columns == null || columns.isEmpty() ) {
+			throw new IllegalArgumentException( "`columns` was null or empty" );
+		}
+
+		if ( otherColumns == null || otherColumns.isEmpty() ) {
+			throw new IllegalArgumentException( "`otherColumns` was null or empty" );
+		}
+
+		if ( columns.size() != otherColumns.size() ) {
+			throw new IllegalArgumentException( "`columns` and `otherColumns` had different sizes" );
+		}
+
+		Table referencingTable = null;
+		Table targetTable = null;
+
+		final ArrayList<Column> referencingColumns = new ArrayList<>();
+		final ArrayList<Column> targetColumns = new ArrayList<>();
+
+		for ( int i = 0; i < columns.size(); i++ ) {
+			final MappedColumn bootReferencingColumn = (MappedColumn) columns.get( i );
+			final MappedColumn bootTargetColumn = (MappedColumn) otherColumns.get( i );
+
+			final Column referencingColumn = resolveColumn( bootReferencingColumn );
+			final Column targetColumn = resolveColumn( bootTargetColumn );
+
+			if ( referencingTable == null ) {
+				assert targetTable == null;
+
+				referencingTable = referencingColumn.getSourceTable();
+				targetTable = targetColumn.getSourceTable();
+			}
+
+			referencingColumns.add( referencingColumn );
+			targetColumns.add( targetColumn );
+		}
+
+		ForeignKey matchedFk = null;
+		fk_loop: for ( ForeignKey foreignKey : referencingTable.getForeignKeys() ) {
+			final ForeignKey.ColumnMappings mappings = foreignKey.getColumnMappings();
+			for ( ForeignKey.ColumnMappings.ColumnMapping columnMapping : mappings.getColumnMappings() ) {
+				final int matchedPosition = referencingColumns.indexOf( columnMapping.getReferringColumn() );
+				if ( matchedPosition == -1 ) {
+					continue fk_loop;
+				}
+
+				final Column correspondingTargetColumn = targetColumns.get( matchedPosition );
+				if ( !columnMapping.getTargetColumn().equals( correspondingTargetColumn ) ) {
+					continue fk_loop;
+				}
+			}
+
+			matchedFk = foreignKey;
+			break;
+		}
+
+		if ( matchedFk == null ) {
+			// todo (6.0) : how to best handle this situation
+			//		for now, the very hacky way
+//			matchedFk = ( (InflightTable) referencingTable ).createForeignKey(
+//
+//			)
+		}
+
+		return matchedFk.getColumnMappings();
 	}
+
 }

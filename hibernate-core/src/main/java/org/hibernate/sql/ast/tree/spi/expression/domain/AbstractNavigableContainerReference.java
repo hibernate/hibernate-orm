@@ -13,61 +13,34 @@ import java.util.Map;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractNavigableContainerReference implements NavigableContainerReference {
-	private final NavigableContainerReference ourContainerReference;
-	private final NavigableContainer navigable;
+public abstract class AbstractNavigableContainerReference extends AbstractNavigableReference implements NavigableContainerReference {
 	private final LockMode lockMode;
-
-	private final NavigablePath navigablePath;
 
 	private Map<String,NavigableReference> navigableReferenceMap;
 
 	public AbstractNavigableContainerReference(
 			NavigableContainerReference ourContainerReference,
 			NavigableContainer navigable,
+			NavigablePath navigablePath,
+			ColumnReferenceQualifier columnReferenceQualifier,
 			LockMode lockMode) {
-		this(
-				ourContainerReference,
-				navigable,
-				lockMode,
-				ourContainerReference.getNavigablePath().append( navigable.getNavigableName() )
-	  	);
-	}
-
-	public AbstractNavigableContainerReference(
-			NavigableContainerReference ourContainerReference,
-			NavigableContainer navigable,
-			LockMode lockMode,
-			NavigablePath navigablePath) {
-		this.ourContainerReference = ourContainerReference;
-		this.navigable = navigable;
+		super( ourContainerReference, navigable, navigablePath, columnReferenceQualifier );
 		this.lockMode = lockMode;
-
-		this.navigablePath = navigablePath;
 	}
 
 	@Override
 	public NavigableContainer getNavigable() {
-		return navigable;
-	}
-
-	@Override
-	public NavigablePath getNavigablePath() {
-		return navigablePath;
+		return (NavigableContainer) super.getNavigable();
 	}
 
 	@Override
 	public LockMode getLockMode() {
 		return lockMode;
-	}
-
-	@Override
-	public NavigableContainerReference getNavigableContainerReference() {
-		return ourContainerReference;
 	}
 
 	@Override

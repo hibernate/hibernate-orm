@@ -6,42 +6,34 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression.domain;
 
-import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 
 /**
  * @author Steve Ebersole
  */
-public class PluralAttributeIndexReference implements NavigableReference {
+public abstract class AbstractNavigableReference implements NavigableReference {
 	private final NavigableContainerReference containerReference;
-	private final ColumnReferenceQualifier columnReferenceSource;
+	private final Navigable navigable;
 	private final NavigablePath navigablePath;
 
-	private final PersistentCollectionDescriptor collectionPersister;
+	private final ColumnReferenceQualifier columnReferenceQualifier;
 
-
-	public PluralAttributeIndexReference(
+	public AbstractNavigableReference(
 			NavigableContainerReference containerReference,
-			PersistentCollectionDescriptor collectionPersister,
-			ColumnReferenceQualifier columnReferenceSource,
-			NavigablePath navigablePath) {
+			Navigable navigable,
+			NavigablePath navigablePath,
+			ColumnReferenceQualifier columnReferenceQualifier) {
 		this.containerReference = containerReference;
-		this.collectionPersister = collectionPersister;
-		this.columnReferenceSource = columnReferenceSource;
+		this.navigable = navigable;
 		this.navigablePath = navigablePath;
-	}
-
-
-	@Override
-	public CollectionIndex getNavigable() {
-		return collectionPersister.getIndexDescriptor();
+		this.columnReferenceQualifier = columnReferenceQualifier;
 	}
 
 	@Override
-	public ColumnReferenceQualifier getSqlExpressionQualifier() {
-		return columnReferenceSource;
+	public Navigable getNavigable() {
+		return navigable;
 	}
 
 	@Override
@@ -52,5 +44,10 @@ public class PluralAttributeIndexReference implements NavigableReference {
 	@Override
 	public NavigableContainerReference getNavigableContainerReference() {
 		return containerReference;
+	}
+
+	@Override
+	public ColumnReferenceQualifier getSqlExpressionQualifier() {
+		return columnReferenceQualifier;
 	}
 }

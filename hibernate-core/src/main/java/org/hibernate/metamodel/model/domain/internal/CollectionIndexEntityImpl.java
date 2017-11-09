@@ -23,7 +23,7 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.EntityQueryResultImpl;
 import org.hibernate.sql.results.internal.EntitySqlSelectionMappingsBuilder;
@@ -101,8 +101,8 @@ public class CollectionIndexEntityImpl<J>
 			NavigableReference navigableReference,
 			String resultVariable,
 			QueryResultCreationContext creationContext) {
-		assert navigableReference instanceof EntityReference;
-		final EntityReference entityReference = (EntityReference) navigableReference;
+		assert navigableReference instanceof EntityValuedNavigableReference;
+		final EntityValuedNavigableReference entityReference = (EntityValuedNavigableReference) navigableReference;
 
 		return new EntityQueryResultImpl(
 				entityReference.getNavigable(),

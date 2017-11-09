@@ -10,6 +10,7 @@ import java.util.Map;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 
@@ -63,6 +64,7 @@ public class EntityOfMaps {
 	}
 
 	@OneToMany
+	@JoinColumn
 	public Map<String, EntityOfMaps> getBasicToOneToMany() {
 		return basicToOneToMany;
 	}

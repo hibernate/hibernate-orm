@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
@@ -47,7 +48,6 @@ import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceAny;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceBasic;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEmbedded;
@@ -98,7 +98,6 @@ import org.hibernate.query.sqm.tree.predicate.RelationalPredicateOperator;
 import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
-import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
@@ -152,12 +151,14 @@ import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
 import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.spi.expression.UpperFunction;
+import org.hibernate.sql.ast.tree.spi.expression.domain.AnyValuedNavigableReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.BasicValuedNavigableReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EmbeddableValuedNavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityIdentifierReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReference;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.FromClause;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
@@ -530,7 +531,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		group.applyAffectedTableNames( affectedTableNames::add );
 
-		navigableReferenceStack.push( group.asExpression() );
+		navigableReferenceStack.push( group.getNavigableReference() );
 
 		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, group );
 
@@ -540,7 +541,7 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public NavigableReference visitRootEntityReference(SqmEntityReference sqmEntityReference) {
 		return fromClauseIndex.findResolvedTableGroup( sqmEntityReference.getExportedFromElement() )
-				.asExpression();
+				.getNavigableReference();
 	}
 
 	@Override
@@ -705,39 +706,59 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public QueryResultProducer visitEntityIdentifierReference(SqmEntityIdentifierReference expression) {
 		return new EntityIdentifierReference(
-				(EntityReference) navigableReferenceStack.getCurrent(),
+				(EntityValuedNavigableReference) navigableReferenceStack.getCurrent(),
 				expression.getReferencedNavigable(),
 				expression.getNavigablePath()
 		);
 	}
 
 	@Override
-	public SingularAttributeReference visitBasicValuedSingularAttribute(SqmSingularAttributeReferenceBasic sqmAttributeReference) {
-		return buildSingularAttributeReference( sqmAttributeReference );
-	}
-
-	protected SingularAttributeReference buildSingularAttributeReference(SqmSingularAttributeReference sqmAttributeReference) {
-		final NavigableContainerReference containerReference = (NavigableContainerReference) navigableReferenceStack.getCurrent();
-		return new SingularAttributeReference(
-				containerReference,
+	public BasicValuedNavigableReference visitBasicValuedSingularAttribute(SqmSingularAttributeReferenceBasic sqmAttributeReference) {
+		return new BasicValuedNavigableReference(
+				(NavigableContainerReference) navigableReferenceStack.getCurrent(),
 				sqmAttributeReference.getReferencedNavigable(),
 				sqmAttributeReference.getNavigablePath()
 		);
 	}
 
 	@Override
-	public SingularAttributeReference visitEntityValuedSingularAttribute(SqmSingularAttributeReferenceEntity sqmAttributeReference) {
-		return buildSingularAttributeReference( sqmAttributeReference );
+	public EntityValuedNavigableReference visitEntityValuedSingularAttribute(SqmSingularAttributeReferenceEntity sqmAttributeReference) {
+		final TableGroup resolvedTableGroup = fromClauseIndex.findResolvedTableGroup( sqmAttributeReference.getExportedFromElement() );
+		if ( resolvedTableGroup != null ) {
+			return (EntityValuedNavigableReference) resolvedTableGroup.getNavigableReference();
+		}
+
+		final NavigableContainerReference containerReference = (NavigableContainerReference) navigableReferenceStack.getCurrent();
+		return new EntityValuedNavigableReference(
+				containerReference,
+				sqmAttributeReference.getReferencedNavigable(),
+				sqmAttributeReference.getNavigablePath(),
+				// todo (6.0) : need the qualifier covering both FK tables
+				containerReference.getSqlExpressionQualifier(),
+				queryOptions.getLockOptions().getEffectiveLockMode( sqmAttributeReference.getIdentificationVariable() )
+		);
 	}
 
 	@Override
-	public SingularAttributeReference visitEmbeddableValuedSingularAttribute(SqmSingularAttributeReferenceEmbedded sqmAttributeReference) {
-		return buildSingularAttributeReference( sqmAttributeReference );
+	public EmbeddableValuedNavigableReference visitEmbeddableValuedSingularAttribute(SqmSingularAttributeReferenceEmbedded sqmAttributeReference) {
+		final NavigableContainerReference containerReference = (NavigableContainerReference) navigableReferenceStack.getCurrent();
+		return new EmbeddableValuedNavigableReference(
+				containerReference,
+				sqmAttributeReference.getReferencedNavigable(),
+				sqmAttributeReference.getNavigablePath(),
+				LockMode.READ
+		);
 	}
 
 	@Override
-	public SingularAttributeReference visitAnyValuedSingularAttribute(SqmSingularAttributeReferenceAny sqmAttributeReference) {
-		return buildSingularAttributeReference( sqmAttributeReference );
+	public AnyValuedNavigableReference visitAnyValuedSingularAttribute(SqmSingularAttributeReferenceAny sqmAttributeReference) {
+		final NavigableContainerReference containerReference = (NavigableContainerReference) navigableReferenceStack.getCurrent();
+		return new AnyValuedNavigableReference(
+				containerReference,
+				sqmAttributeReference.getReferencedNavigable(),
+				sqmAttributeReference.getNavigablePath(),
+				containerReference.getSqlExpressionQualifier()
+		);
 	}
 
 	@Override

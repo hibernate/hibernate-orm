@@ -67,14 +67,13 @@ public class MapDescriptorTest extends SessionFactoryBasedFunctionalTest {
 				String.class
 		);
 
-		// todo (6.0) : ONE_TO_MANY is not resolved properly
-//		testMapComponents(
-//				(PluralPersistentAttribute) entityDescriptor.findPersistentAttribute( "basicToOneToMany" ),
-//				CollectionIndex.IndexClassification.BASIC,
-//				String.class,
-//				CollectionElement.ElementClassification.ONE_TO_MANY,
-//				EntityOfMaps.class
-//		);
+		testMapComponents(
+				(PluralPersistentAttribute) entityDescriptor.findPersistentAttribute( "basicToOneToMany" ),
+				CollectionIndex.IndexClassification.BASIC,
+				String.class,
+				CollectionElement.ElementClassification.ONE_TO_MANY,
+				EntityOfMaps.class
+		);
 
 		testMapComponents(
 				(PluralPersistentAttribute) entityDescriptor.findPersistentAttribute( "basicToManyToMany" ),

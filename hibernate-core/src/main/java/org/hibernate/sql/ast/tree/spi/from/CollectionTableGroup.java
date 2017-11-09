@@ -22,6 +22,7 @@ import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
 
 /**
  * A TableSpecificationGroup for a collection reference
@@ -29,7 +30,8 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
  * @author Steve Ebersole
  */
 public class CollectionTableGroup implements TableGroup {
-	private final PersistentCollectionDescriptor persister;
+	private final PluralAttributeReference navigableReference;
+	private final PersistentCollectionDescriptor descriptor;
 
 	private final TableSpace tableSpace;
 	private final String uniqueIdentifier;
@@ -37,20 +39,22 @@ public class CollectionTableGroup implements TableGroup {
 	private final TableReference indexTableReference;
 
 	public CollectionTableGroup(
-			PersistentCollectionDescriptor persister,
+			PluralAttributeReference navigableReference,
+			PersistentCollectionDescriptor descriptor,
 			TableSpace tableSpace,
 			String uniqueIdentifier,
 			TableReference elementTableReference,
 			TableReference indexTableReference) {
-		this.persister = persister;
+		this.navigableReference = navigableReference;
+		this.descriptor = navigableReference.getNavigable().getPersistentCollectionDescriptor();
 		this.tableSpace = tableSpace;
 		this.uniqueIdentifier = uniqueIdentifier;
 		this.elementTableReference = elementTableReference;
 		this.indexTableReference = indexTableReference;
 	}
 
-	public PersistentCollectionDescriptor getPersister() {
-		return persister;
+	public PersistentCollectionDescriptor getDescriptor() {
+		return descriptor;
 	}
 
 	@Override
@@ -64,8 +68,8 @@ public class CollectionTableGroup implements TableGroup {
 	}
 
 	@Override
-	public NavigableReference asExpression() {
-		throw new NotYetImplementedFor6Exception(  );
+	public NavigableReference getNavigableReference() {
+		return navigableReference;
 	}
 
 	@Override

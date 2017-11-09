@@ -6,11 +6,17 @@
  */
 package org.hibernate.mapping;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.ForeignKeyExporter;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -19,7 +25,6 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -27,7 +32,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *
  * @author Gavin King
  */
-public abstract class Collection implements Fetchable, Value, Filterable {
+public abstract class Collection implements Fetchable, Value, ForeignKeyExporter, Filterable {
 
 	public static final String DEFAULT_ELEMENT_COLUMN_NAME = "elt";
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";
@@ -81,6 +86,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private ExecuteUpdateResultCheckStyle deleteAllCheckStyle;
 
 	private String loaderName;
+	private ForeignKey foreignKey;
 
 	protected Collection(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		this.buildingContext = buildingContext;
@@ -108,6 +114,15 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	public boolean isIndexed() {
 		return false;
+	}
+
+	@Override
+	public ForeignKey getForeignKey() {
+		return foreignKey;
+	}
+
+	public void setForeignKey(ForeignKey foreignKey) {
+		this.foreignKey = foreignKey;
 	}
 
 	/**
@@ -395,9 +410,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	public Table getTable() {
 		return owner.getTable();
-	}
-
-	public void createForeignKey() {
 	}
 
 	public boolean isSimpleValue() {

@@ -6,9 +6,11 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import java.util.List;
+import java.util.Locale;
 
+import org.hibernate.HibernateException;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionElement;
@@ -18,8 +20,6 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
-import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
@@ -39,15 +39,38 @@ public class CollectionElementEntityImpl<J>
 	private final EntityDescriptor<J> entityDescriptor;
 
 	public CollectionElementEntityImpl(
-			PersistentCollectionDescriptor persister,
+			PersistentCollectionDescriptor collectionDescriptor,
 			Collection mappingBinding,
 			ElementClassification elementClassification,
 			RuntimeModelCreationContext creationContext) {
-		super( persister );
+		super( collectionDescriptor );
 		this.elementClassification = elementClassification;
 
-		final ToOne value = (ToOne) mappingBinding.getElement();
-		this.entityDescriptor = creationContext.getTypeConfiguration().findEntityDescriptor( value.getReferencedEntityName() );
+		this.entityDescriptor = resolveEntityDescriptor( elementClassification, mappingBinding, creationContext );
+	}
+
+	private EntityDescriptor<J> resolveEntityDescriptor(
+			ElementClassification elementClassification,
+			Collection mappingBinding,
+			RuntimeModelCreationContext creationContext) {
+		final String elementEntityName;
+		if ( elementClassification == ElementClassification.MANY_TO_MANY ) {
+			elementEntityName = ( (ToOne) mappingBinding.getElement() ).getReferencedEntityName();
+		}
+		else if ( elementClassification == ElementClassification.ONE_TO_MANY ) {
+			elementEntityName = ( (OneToMany) mappingBinding.getElement() ).getReferencedEntityName();
+		}
+		else {
+			throw new HibernateException(
+					String.format(
+							Locale.ROOT,
+							"Unexpected collection element classification [%s] for an entity-valued element",
+							elementClassification.name()
+					)
+			);
+		}
+
+		return creationContext.getTypeConfiguration().findEntityDescriptor( elementEntityName );
 	}
 
 	@Override

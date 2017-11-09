@@ -6,12 +6,13 @@
  */
 package org.hibernate.mapping;
 import org.hibernate.FetchMode;
+import org.hibernate.boot.model.relational.ForeignKeyExporter;
 
 /**
  * Any mapping with an outer-join attribute
  * @author Gavin King
  */
-public interface Fetchable {
+public interface Fetchable extends ForeignKeyExporter {
 	FetchMode getFetchMode();
 	void setFetchMode(FetchMode joinedFetch);
 	boolean isLazy();

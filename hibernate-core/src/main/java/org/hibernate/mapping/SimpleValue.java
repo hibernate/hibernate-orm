@@ -39,6 +39,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * Any value that maps to columns.
  * @author Gavin King
  */
+@SuppressWarnings({"WeakerAccess", "unused"})
 public abstract class SimpleValue implements KeyValue {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( SimpleValue.class );
 
@@ -110,10 +111,8 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public boolean hasFormula() {
-		Iterator iter = getColumnIterator();
-		while ( iter.hasNext() ) {
-			Object o = iter.next();
-			if (o instanceof Formula) {
+		for ( Selectable selectable : getMappedColumns() ) {
+			if ( selectable.isFormula() ) {
 				return true;
 			}
 		}
@@ -156,14 +155,18 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
-	public void createForeignKey() throws MappingException {}
+	public ForeignKey createForeignKeyOfEntity(String entityName) {
+		// the plan here is to generate all logical ForeignKeys, but disable it for export
+		// 		if it has formulas
 
-	@Override
-	public void createForeignKeyOfEntity(String entityName) {
-		if ( !hasFormula() && !"none".equals(getForeignKeyName())) {
-			final ForeignKey fk = table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName, getForeignKeyDefinition() );
-			fk.setCascadeDeleteEnabled(cascadeDeleteEnabled);
+		final ForeignKey fk = table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName, getForeignKeyDefinition() );
+		fk.setCascadeDeleteEnabled( cascadeDeleteEnabled );
+
+		if ( hasFormula() || "none".equals( getForeignKeyName() ) ) {
+			fk.disableCreation();
 		}
+
+		return fk;
 	}
 
 	@Override

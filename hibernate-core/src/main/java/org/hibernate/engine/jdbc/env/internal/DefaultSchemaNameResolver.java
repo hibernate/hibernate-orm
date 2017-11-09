@@ -21,6 +21,9 @@ import org.jboss.logging.Logger;
 /**
  * Default implementation
  *
+ * todo (6.0) : consider removing the 1.7 support here and make it easier to follow.
+ * 		- we baseline on Java 8 anyway
+ *
  * @author Steve Ebersole
  */
 public class DefaultSchemaNameResolver implements SchemaNameResolver {

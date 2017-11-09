@@ -35,6 +35,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
@@ -118,6 +119,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.DependantValue;
+import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexBackref;
@@ -1319,10 +1321,11 @@ public class ModelBinder {
 				else if ( SingularAttributeSourceOneToOne.class.isInstance( attributeSource ) ) {
 					final SingularAttributeSourceOneToOne oneToOneAttributeSource = (SingularAttributeSourceOneToOne) attributeSource;
 					final Table table = entityDescriptor.getTable();
+					final OneToOne oneToOneValue = new OneToOne( mappingDocument, table, entityDescriptor );
 					final Property attribute = createOneToOneAttribute(
 							mappingDocument,
 							oneToOneAttributeSource,
-							new OneToOne( mappingDocument, table, entityDescriptor ),
+							oneToOneValue,
 							entityDescriptor.getClassName()
 					);
 					entityDescriptor.addProperty( attribute );
@@ -1353,10 +1356,11 @@ public class ModelBinder {
 						attributeContainer = secondaryTableJoin;
 					}
 
+					final Any anyValue = new Any( mappingDocument, table );
 					final Property attribute = createAnyAssociationAttribute(
 							mappingDocument,
 							anyAttributeSource,
-							new Any( mappingDocument, table ),
+							anyValue,
 							entityDescriptor.getEntityName()
 					);
 
@@ -2347,6 +2351,7 @@ public class ModelBinder {
 
 		prepareValueTypeViaReflection( sourceDocument, anyBinding, entityName, attributeName, anyMapping.getAttributeRole() );
 
+		// An ANY mapping does not use a FK
 		anyBinding.createForeignKey();
 
 		Property prop = new Property();
@@ -3257,7 +3262,7 @@ public class ModelBinder {
 			}
 			final DependantValue key = new DependantValue(
 					mappingDocument.getBootstrapContext().getTypeConfiguration().getMetadataBuildingContext(),
-					getCollectionBinding().getCollectionTable(),
+					getCollectionBinding().getMappedTable(),
 					keyVal
 			);
 			key.setForeignKeyName( keySource.getExplicitForeignKeyName() );
@@ -3268,17 +3273,39 @@ public class ModelBinder {
 					getPluralAttributeSource().getKeySource().getRelationalValueSources(),
 					key,
 					getPluralAttributeSource().getKeySource().areValuesNullableByDefault(),
-					new RelationalObjectBinder.ColumnNamingDelegate() {
-						@Override
-						public Identifier determineImplicitName(final LocalMetadataBuildingContext context) {
-							// another case where HbmBinder was not adjusted to make use of NamingStrategy#foreignKeyColumnName
-							// when that was added in developing annotation binding :(
-							return context.getMetadataCollector().getDatabase().toIdentifier( Collection.DEFAULT_KEY_COLUMN_NAME );
-						}
+					context -> {
+						// another case where HbmBinder was not adjusted to make use of NamingStrategy#foreignKeyColumnName
+						// when that was added in developing annotation binding :(
+						return context.getMetadataCollector().getDatabase().toIdentifier( Collection.DEFAULT_KEY_COLUMN_NAME );
 					}
 			);
 
-			key.createForeignKey();
+			final List<MappedColumn> targetColumns;
+
+			if ( StringHelper.isEmpty( keySource.getReferencedPropertyName() ) ) {
+				targetColumns = cast(
+						getCollectionBinding().getOwner().getRootTable().getPrimaryKey().getColumns()
+				);
+			}
+			else {
+				final PersistentClass ownerDescriptor = mappingDocument.getBootstrapContext()
+						.getTypeConfiguration()
+						.getMetadataBuildingContext()
+						.getMetadataCollector()
+						.getEntityBinding( getCollectionBinding().getOwnerEntityName() );
+				final Property referencedProperty = ownerDescriptor.getProperty( keySource.getReferencedPropertyName() );
+				targetColumns = referencedProperty.getValueMapping().getMappedColumns();
+			}
+
+			getCollectionBinding().setForeignKey(
+					getCollectionBinding().getMappedTable().createForeignKey(
+							keySource.getExplicitForeignKeyName(),
+							key.getMappedColumns(),
+							getCollectionBinding().getOwner().getEntityName(),
+							keySource.getReferencedPropertyName(),
+							targetColumns
+					)
+			);
 			getCollectionBinding().setKey( key );
 
 			key.setNullable( getPluralAttributeSource().getKeySource().areValuesNullableByDefault() );
@@ -3342,14 +3369,9 @@ public class ModelBinder {
 						elementSource.getRelationalValueSources(),
 						elementBinding,
 						elementSource.areValuesNullableByDefault(),
-						new RelationalObjectBinder.ColumnNamingDelegate() {
-							@Override
-							public Identifier determineImplicitName(LocalMetadataBuildingContext context) {
-								return context.getMetadataCollector()
-										.getDatabase()
-										.toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME );
-							}
-						}
+						context -> context.getMetadataCollector()
+								.getDatabase()
+								.toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME )
 				);
 
 				getCollectionBinding().setElement( elementBinding );
@@ -3401,12 +3423,9 @@ public class ModelBinder {
 						elementSource.getRelationalValueSources(),
 						elementBinding,
 						false,
-						new RelationalObjectBinder.ColumnNamingDelegate() {
-							@Override
-							public Identifier determineImplicitName(final LocalMetadataBuildingContext context) {
-								return context.getMetadataCollector().getDatabase().toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME );
-							}
-						}
+						context -> context.getMetadataCollector()
+								.getDatabase()
+								.toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME )
 				);
 
 				elementBinding.setLazy( elementSource.getFetchCharacteristics().getFetchTiming() != FetchTiming.IMMEDIATE );
@@ -4103,5 +4122,10 @@ public class ModelBinder {
 			entityBinding.getTable().addUniqueKey( uk );
 		}
 
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> T cast(Object value) {
+		return (T) value;
 	}
 }

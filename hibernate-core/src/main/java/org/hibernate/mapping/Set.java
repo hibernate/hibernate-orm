@@ -41,7 +41,7 @@ public class Set extends Collection {
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			MappedPrimaryKey pk = new MappedPrimaryKey( getCollectionTable() );
+			MappedPrimaryKey pk = new MappedPrimaryKey( getMappedTable() );
 			pk.addColumns( getKey().getColumnIterator() );
 			Iterator iter = getElement().getColumnIterator();
 			while ( iter.hasNext() ) {

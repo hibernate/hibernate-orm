@@ -12,7 +12,7 @@ import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.metamodel.model.relational.spi.ForeignKey.ColumnMappings;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Table;
 
 /**
@@ -23,5 +23,7 @@ public interface DatabaseObjectResolver {
 
 	Column resolveColumn(MappedColumn mappedColumn);
 
-	ColumnMappings resolveColumnMappings(List<Selectable> columns, List<Selectable> otherColumns);
+	ForeignKey.ColumnMappings resolveColumnMappings(List<Selectable> columns, List<Selectable> otherColumns);
+
+	ForeignKey resolveForeignKey(org.hibernate.mapping.ForeignKey bootForeignKey);
 }

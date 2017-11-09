@@ -16,7 +16,6 @@ import java.util.Map;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
-import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 
 /**
  * JDBC foreign key metadata
@@ -49,14 +48,10 @@ public class ForeignKeyMetadata {
 		references.put( rs.getString("FKCOLUMN_NAME").toLowerCase(Locale.ROOT), rs.getString("PKCOLUMN_NAME") );
 	}
 
-	private boolean hasReference(PhysicalColumn column, PhysicalColumn ref) {
-		return ref.getName().equals( references.get( column.getName() ) );
-	}
-
 	public boolean matches(ForeignKey fk) {
 		if ( refTable.equalsIgnoreCase( ( (ExportableTable) fk.getReferringTable() ).getTableName().getText() ) ) {
 			if ( fk.getColumnMappings().getColumnMappings().size() == references.size() ) {
-				List<PhysicalColumn> fkRefs;
+				List fkRefs;
 				if ( fk.isReferenceToPrimaryKey() ) {
 					fkRefs = fk.getTargetTable().getPrimaryKey().getColumns();
 				}
@@ -66,7 +61,7 @@ public class ForeignKeyMetadata {
 				int i = 0;
 				for ( Column column : fk.getColumnMappings().getReferringColumns() ) {
 					Column ref = (Column) fkRefs.get( i );
-					if ( !hasReference( (PhysicalColumn) column, (PhysicalColumn) ref ) ) {
+					if ( ! column.equals( ref ) ) {
 						return false;
 					}
 					i++;

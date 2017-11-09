@@ -11,7 +11,6 @@ import java.util.Iterator;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.ValueMapping;
-import org.hibernate.service.ServiceRegistry;
 
 /**
  * A value is anything that is persisted by value, instead of
@@ -42,11 +41,12 @@ public interface Value<J> extends ValueMapping<J>, Serializable {
 	boolean isNullable();
 	boolean[] getColumnUpdateability();
 	boolean[] getColumnInsertability();
-	void createForeignKey() throws MappingException;
 	boolean isSimpleValue();
 	boolean isValid() throws MappingException;
 	void setTypeUsingReflection(String className, String propertyName) throws MappingException;
 	Object accept(ValueVisitor visitor);
 
-	ServiceRegistry getServiceRegistry();
+	default ForeignKey createForeignKey() throws MappingException {
+		return null;
+	}
 }

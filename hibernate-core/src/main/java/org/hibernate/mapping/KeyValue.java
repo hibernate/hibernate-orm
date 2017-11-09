@@ -28,7 +28,7 @@ public interface KeyValue extends Value {
 
 	boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory);
 	
-	void createForeignKeyOfEntity(String entityName);
+	ForeignKey createForeignKeyOfEntity(String entityName);
 	
 	boolean isCascadeDeleteEnabled();
 	

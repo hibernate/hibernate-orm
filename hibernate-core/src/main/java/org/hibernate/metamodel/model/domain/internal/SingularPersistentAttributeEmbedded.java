@@ -149,11 +149,6 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	}
 
 	@Override
-	public ForeignKey.ColumnMappings getJoinColumnMappings() {
-		throw new NotYetImplementedFor6Exception(  );
-	}
-
-	@Override
 	public String toString() {
 		return String.format(
 				Locale.ROOT,

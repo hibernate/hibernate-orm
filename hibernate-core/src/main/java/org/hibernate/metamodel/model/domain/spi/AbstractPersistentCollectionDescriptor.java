@@ -330,9 +330,16 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 			return new CollectionElementEntityImpl(
 					collectionPersister,
 					bootCollectionDescriptor,
-					separateCollectionTable == null
-							? CollectionElement.ElementClassification.MANY_TO_MANY
-							: CollectionElement.ElementClassification.ONE_TO_MANY,
+					CollectionElement.ElementClassification.MANY_TO_MANY,
+					creationContext
+			);
+		}
+
+		if ( bootCollectionDescriptor.getElement() instanceof OneToMany ) {
+			return new CollectionElementEntityImpl(
+					collectionPersister,
+					bootCollectionDescriptor,
+					CollectionElement.ElementClassification.ONE_TO_MANY,
 					creationContext
 			);
 		}

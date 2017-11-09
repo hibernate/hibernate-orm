@@ -123,7 +123,7 @@ public class FetchGraphBuilder {
 			assert tableGroup != null;
 
 			final AttributeNodeImplementor attributeNode = attributeNodeContainer.findAttributeNode( fetchedAttributeName );
-			final NavigableReference fetchedNavigableReference = tableGroup.asExpression();
+			final NavigableReference fetchedNavigableReference = tableGroup.getNavigableReference();
 
 			processedAttributeNames.add( fetchedNavigableReference.getNavigable().getNavigableName() );
 
@@ -215,8 +215,8 @@ public class FetchGraphBuilder {
 				);
 				parentTableGroup.getTableSpace().addJoinedTableGroup( fetchTableGroupJoin );
 
-				navigableReference = fetchTableGroupJoin.getJoinedGroup().asExpression();
-				( (NavigableContainerReference) parentTableGroup.asExpression() ).addNavigableReference( navigableReference );
+				navigableReference = fetchTableGroupJoin.getJoinedGroup().getNavigableReference();
+				( (NavigableContainerReference) parentTableGroup.getNavigableReference() ).addNavigableReference( navigableReference );
 			}
 
 			final Fetch fetch = ( (Fetchable) persistentAttribute ).generateFetch(

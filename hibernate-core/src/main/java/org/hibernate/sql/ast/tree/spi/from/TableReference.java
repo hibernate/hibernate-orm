@@ -14,9 +14,9 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
+import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 
 /**
  * Represents a reference to a table (derived or physical) in a query's from clause.

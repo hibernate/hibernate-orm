@@ -17,29 +17,18 @@ import org.hibernate.sql.results.spi.QueryResultProducer;
  * Models the QueryResultProducer generated as part of walking an SQM AST
  * to generate an SQL AST.
  *
- * @todo (6.0) : might be better to move this to o.h.query.sqm / o.h.query.sqm.consume
- * 		regardless, this is not a SQL expression.  make sure the SQM-to-SQL
- * 		generation is defined in terms of QueryResultProducer for its
- * 		selection handling
- *
  * @see org.hibernate.query.sqm.tree.select.SqmSelectableNode#accept
  *
  * @author Steve Ebersole
  */
 public interface NavigableReference extends QueryResultProducer {
 
-	@Override
-	default QueryResult createQueryResult(
-			String resultVariable,
-			QueryResultCreationContext creationContext) {
-		return getNavigable().createQueryResult(
-				this,
-				resultVariable,
-				creationContext
-		);
-	}
-
-	ColumnReferenceQualifier getSqlExpressionQualifier();
+	// todo (6.0) : I think it might be better to distinguish NavigableReference based on "classification".
+	//		E.g.:
+	//			* BasicValuedNavigableReference (basic attributes, simple ids, "element collection" elements, etc)
+	//			* EntityValuedNavigableReference (root reference, many-to-one, one-to-one, elements of one-to-many, etc)
+	//			* CompositeValuedNavigableReference (embedded, composite ids, etc)
+	//			* AnyValuedNavigableReference (any, many-to-any, etc)
 
 	/**
 	 * Get the Navigable referenced by this expression
@@ -54,4 +43,18 @@ public interface NavigableReference extends QueryResultProducer {
 	 * Corollary to {@link Navigable#getContainer()} on the reference/expression side
 	 */
 	NavigableContainerReference getNavigableContainerReference();
+
+	ColumnReferenceQualifier getSqlExpressionQualifier();
+
+	@Override
+	default QueryResult createQueryResult(
+			String resultVariable,
+			QueryResultCreationContext creationContext) {
+		return getNavigable().createQueryResult(
+				this,
+				resultVariable,
+				creationContext
+		);
+	}
+
 }

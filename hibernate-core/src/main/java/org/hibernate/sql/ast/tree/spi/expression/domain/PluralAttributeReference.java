@@ -6,48 +6,33 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression.domain;
 
-import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 
 /**
  * @author Steve Ebersole
  */
-public class PluralAttributeReference implements NavigableReference {
-	private final NavigableContainerReference containerReference;
-	private final PluralPersistentAttribute referencedAttribute;
-	private final NavigablePath navigablePath;
-
+public class PluralAttributeReference extends AbstractNavigableReference {
 	public PluralAttributeReference(
 			NavigableContainerReference containerReference,
 			PluralPersistentAttribute referencedAttribute,
 			NavigablePath navigablePath) {
-		this.containerReference = containerReference;
-		this.referencedAttribute = referencedAttribute;
-		this.navigablePath = navigablePath;
+		// todo (6.0) : need a ColumnReferenceQualifer covering the owner table, the "collection table" and any element/index table
+		super( containerReference, referencedAttribute, navigablePath, containerReference.getSqlExpressionQualifier() );
+	}
+
+	@Override
+	public PluralPersistentAttribute getNavigable() {
+		return (PluralPersistentAttribute) super.getNavigable();
 	}
 
 	@Override
 	public ColumnReferenceQualifier getSqlExpressionQualifier() {
-		// todo (6.0) : we need a combined TableSpace to act as the qualifier
+		// todo (6.0) : this really needs a composite ColumnReferenceQualifier
 		//		combining collection-table, element table and index table
-		throw new NotYetImplementedFor6Exception(  );
-	}
-
-	@Override
-	public Navigable getNavigable() {
-		return referencedAttribute;
-	}
-
-	@Override
-	public NavigablePath getNavigablePath() {
-		return navigablePath;
-	}
-
-	@Override
-	public NavigableContainerReference getNavigableContainerReference() {
-		return containerReference;
+		//
+		throw new NotYetImplementedFor6Exception();
 	}
 }

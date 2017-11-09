@@ -516,6 +516,7 @@ public class Table implements MappedTable, Serializable {
 		return createForeignKey( keyName, keyColumns, referencedEntityName, keyDefinition, null );
 	}
 
+	@Override
 	public ForeignKey createForeignKey(
 			String keyName,
 			List keyColumns,

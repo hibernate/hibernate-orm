@@ -6,11 +6,12 @@
  */
 package org.hibernate.boot.model.relational;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -19,12 +20,21 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface MappedColumn extends Selectable {
+public interface MappedColumn {
 	/**
 	 * The column text.  For a physical column, this would be its name.  For
 	 * a derived columns, this would be the formula expression.
 	 */
 	String getText();
+
+	/**
+	 * todo (6.0) : investigate this vv
+	 * @deprecated Why would we need this?  Perhaps it is related
+	 * to the old scheme of performing schema-tooling based on the boot
+	 * relational model.
+	 */
+	@Deprecated
+	String getText(Dialect dialect);
 
 	SqlTypeDescriptor getSqlTypeDescriptor();
 
@@ -33,5 +43,8 @@ public interface MappedColumn extends Selectable {
 			PhysicalNamingStrategy namingStrategy,
 			JdbcEnvironment jdbcEnvironment);
 
-	// todo (6.0) : others as deemed appropriate - see o.h.mapping.Selectable
+	boolean isFormula();
+
+	String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry);
+
 }

@@ -6,9 +6,6 @@
  */
 package org.hibernate.sql.results.spi;
 
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-
 /**
  * Represents something that can produce a {@link QueryResultProducer}
  * instances which can be used as selection items and
@@ -17,10 +14,6 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface QueryResultProducer {
-	default JavaTypeDescriptor getProducedJavaTypeDescriptor() {
-		throw new NotYetImplementedFor6Exception(  );
-	}
-
 	QueryResult createQueryResult(
 			String resultVariable,
 			QueryResultCreationContext creationContext);

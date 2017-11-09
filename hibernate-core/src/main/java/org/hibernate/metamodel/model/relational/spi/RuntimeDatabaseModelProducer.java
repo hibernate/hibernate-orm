@@ -7,14 +7,10 @@
 package org.hibernate.metamodel.model.relational.spi;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
@@ -30,6 +26,8 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.mapping.MappedPrimaryKey;
 import org.hibernate.metamodel.model.creation.spi.DatabaseObjectResolver;
+import org.hibernate.metamodel.model.relational.internal.ColumnMappingImpl;
+import org.hibernate.metamodel.model.relational.internal.ColumnMappingsImpl;
 import org.hibernate.metamodel.model.relational.internal.DatabaseModelImpl;
 import org.hibernate.metamodel.model.relational.internal.InflightTable;
 import org.hibernate.metamodel.model.relational.internal.NamespaceImpl;
@@ -172,45 +170,69 @@ public class RuntimeDatabaseModelProducer {
 						final Table runtimeTargetTable = dbObjectResolver.resolveTable( bootFk.getReferencedTable() );
 
 
+						final List<ForeignKey.ColumnMappings.ColumnMapping> columnMappingList = new ArrayList<>();
+
 						final List<org.hibernate.mapping.Column> bootReferringColumns = bootFk.getColumns();
-						final List<org.hibernate.mapping.Column> bootTargetColumns = bootFk.getReferencedColumns();
+						final List<org.hibernate.mapping.Column> bootTargetColumns = bootFk.getTargetColumns();
+						assertSameNumberOfFkColumns( bootReferringColumns, bootTargetColumns );
 
-						final List<ForeignKey.ColumnMapping> columnMappingList = new ArrayList<>();
+						for ( int i = 0, end = bootReferringColumns.size(); i < end; i++ ) {
+							final PhysicalColumn runtimeReferringColumn = resolveRuntimeColumn( bootReferringColumns.get( i ) );
+							PhysicalColumn runtimeTargetColumn = resolveRuntimeColumn( bootTargetColumns.get( i ) );
 
-						if ( bootTargetColumns == null || bootTargetColumns.isEmpty() ) {
-							assert bootFk.isReferenceToPrimaryKey();
+							if ( runtimeTargetColumn == null ) {
+								final PrimaryKey targetPk = runtimeTargetTable.getPrimaryKey();
+								assert  targetPk != null;
+								assert  !targetPk.getColumns().isEmpty();
 
-							// use PK
-							if ( runtimeTargetTable.hasPrimaryKey() ) {
-								final List<PhysicalColumn> runtimeTargetPkColumns = runtimeTargetTable.getPrimaryKey()
-										.getColumns();
-
-								assertSameNumberOfFkColumns( bootReferringColumns, runtimeTargetPkColumns );
-
-								for ( int i = 0; i < runtimeTargetPkColumns.size(); i++ ) {
-									columnMappingList.add(
-											new ColumnMappingImpl(
-													(PhysicalColumn) dbObjectResolver.resolveColumn(
-															bootReferringColumns.get( i ) ),
-													runtimeTargetPkColumns.get( i )
-											)
-									);
-								}
+								runtimeTargetColumn = targetPk.getColumns().get( i );
 							}
-						}
-						else {
-							assert !bootFk.isReferenceToPrimaryKey();
-							assertSameNumberOfFkColumns( bootReferringColumns, bootTargetColumns );
+							assert runtimeReferringColumn != null;
+							assert runtimeTargetColumn != null;
 
-							for ( int i = 0; i < bootReferringColumns.size(); i++ ) {
-								columnMappingList.add(
-										new ColumnMappingImpl(
-												(PhysicalColumn) dbObjectResolver.resolveColumn( bootReferringColumns.get( i ) ),
-												(PhysicalColumn) dbObjectResolver.resolveColumn( bootTargetColumns.get( i ) )
-										)
-								);
-							}
+							columnMappingList.add(
+									new ColumnMappingImpl( runtimeReferringColumn, runtimeTargetColumn )
+							);
 						}
+
+//						if ( bootTargetColumns == null || bootTargetColumns.isEmpty() ) {
+//							assert bootFk.isReferenceToPrimaryKey();
+//
+//							if ( !runtimeTargetTable.hasPrimaryKey() ) {
+//								// todo (6.0) : not acceptable based on discussions of creating all logical constraints.
+//								throw new NotYetImplementedFor6Exception();
+//							}
+//
+//							// use PK
+//							if ( runtimeTargetTable.hasPrimaryKey() ) {
+//								final List<PhysicalColumn> runtimeTargetPkColumns = runtimeTargetTable.getPrimaryKey()
+//										.getColumns();
+//
+//								assertSameNumberOfFkColumns( bootReferringColumns, runtimeTargetPkColumns );
+//
+//								for ( int i = 0; i < runtimeTargetPkColumns.size(); i++ ) {
+//									columnMappingList.add(
+//											new ColumnMappingImpl(
+//													dbObjectResolver.resolveColumn( bootReferringColumns.get( i ) ),
+//													runtimeTargetPkColumns.get( i )
+//											)
+//									);
+//								}
+//							}
+//						}
+//						else {
+//							assert !bootFk.isReferenceToPrimaryKey();
+//							assertSameNumberOfFkColumns( bootReferringColumns, bootTargetColumns );
+//
+//							for ( int i = 0; i < bootReferringColumns.size(); i++ ) {
+//								columnMappingList.add(
+//										new ColumnMappingImpl(
+//												dbObjectResolver.resolveColumn( bootReferringColumns.get( i ) ),
+//												dbObjectResolver.resolveColumn( bootTargetColumns.get( i ) )
+//										)
+//								);
+//							}
+//						}
 
 						// todo (6.0) : handle implicit fk names
 						final ForeignKey runtimeFk = ( (InflightTable) runtimeReferringTable ).createForeignKey(
@@ -232,6 +254,10 @@ public class RuntimeDatabaseModelProducer {
 			}
 		}
 
+		private PhysicalColumn resolveRuntimeColumn(org.hibernate.mapping.Column bootReferringColumn) {
+			return (PhysicalColumn) dbObjectResolver.resolveColumn( bootReferringColumn );
+		}
+
 		private void assertSameNumberOfFkColumns(List referringColumns, List targetColumns) {
 			assert referringColumns != null;
 			assert targetColumns != null;
@@ -241,72 +267,6 @@ public class RuntimeDatabaseModelProducer {
 			}
 		}
 
-		private class ColumnMappingsImpl implements ForeignKey.ColumnMappings {
-			private final Table referringTable;
-			private final Table targetTable;
-			private final List<ForeignKey.ColumnMapping> columnMappings;
-
-			public ColumnMappingsImpl(
-					Table referringTable,
-					Table targetTable,
-					List<ForeignKey.ColumnMapping> columnMappings) {
-				this.referringTable = referringTable;
-				this.targetTable = targetTable;
-				this.columnMappings = columnMappings;
-			}
-
-			@Override
-			public Table getReferringTable() {
-				return referringTable;
-			}
-
-			@Override
-			public Table getTargetTable() {
-				return targetTable;
-			}
-
-			@Override
-			public List<ForeignKey.ColumnMapping> getColumnMappings() {
-				return columnMappings;
-			}
-
-			@Override
-			public List<PhysicalColumn> getTargetColumns() {
-				return getColumns( columnMapping -> columnMapping.getTargetColumn() );
-			}
-
-			@Override
-			public List<PhysicalColumn> getReferringColumns() {
-				return getColumns( columnMapping -> columnMapping.getReferringColumn() );
-			}
-
-			private List<PhysicalColumn> getColumns(Function<ForeignKey.ColumnMapping, PhysicalColumn> mapper) {
-				return columnMappings
-						.stream()
-						.map( mapper )
-						.collect( Collectors.toList() );
-			}
-		}
-
-		private class ColumnMappingImpl implements ForeignKey.ColumnMapping {
-			private final PhysicalColumn referringColumn;
-			private final PhysicalColumn targetColumn;
-
-			public ColumnMappingImpl(PhysicalColumn referringColumn, PhysicalColumn targetColumn) {
-				this.referringColumn = referringColumn;
-				this.targetColumn = targetColumn;
-			}
-
-			@Override
-			public PhysicalColumn getReferringColumn() {
-				return referringColumn;
-			}
-
-			@Override
-			public PhysicalColumn getTargetColumn() {
-				return targetColumn;
-			}
-		}
 	}
 
 	public interface Callback {
@@ -331,4 +291,5 @@ public class RuntimeDatabaseModelProducer {
 		default void sequenceBuilt(Sequence sequence) {
 		}
 	}
+
 }

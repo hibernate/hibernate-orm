@@ -10,7 +10,7 @@ import java.time.Instant;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
+import javax.persistence.ManyToOne;
 
 /**
  * @author Steve Ebersole
@@ -39,7 +39,7 @@ public class Order {
 		this.transacted = transacted;
 	}
 
-	@OneToMany
+	@ManyToOne
 	@JoinColumn( name = "customer_id" )
 	public Customer getCustomer() {
 		return customer;

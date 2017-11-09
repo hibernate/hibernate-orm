@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.Locale;
 import java.util.Objects;
 
-import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
@@ -22,14 +21,14 @@ import org.hibernate.sql.Template;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
-import static org.hibernate.mapping.SimpleValue.*;
+import static org.hibernate.mapping.SimpleValue.TypeDescriptorResolver;
 
 /**
  * A column of a relational database table
  *
  * @author Gavin King
  */
-public class Column implements MappedColumn, Serializable, Cloneable {
+public class Column implements Selectable, Serializable, Cloneable {
 	private Identifier tableName;
 	private Identifier name;
 

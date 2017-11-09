@@ -12,7 +12,6 @@ import javax.persistence.metamodel.Type;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
@@ -23,7 +22,6 @@ import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
@@ -168,11 +166,6 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 	@Override
 	public ManagedTypeDescriptor<C> getFetchedManagedType() {
 		throw new NotYetImplementedFor6Exception(  );
-	}
-
-	@Override
-	public ForeignKey.ColumnMappings getJoinColumnMappings() {
-		return getPersistentCollectionDescriptor().getForeignKeyDescriptor().getJoinColumnMappings();
 	}
 
 	@Override

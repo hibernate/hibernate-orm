@@ -49,11 +49,22 @@ public class OneToOne extends ToOne {
 		this.entityName = entityName==null ? null : entityName.intern();
 	}
 
-	public void createForeignKey() throws MappingException {
-		if ( constrained && referencedPropertyName==null) {
-			//TODO: handle the case of a foreign key to something other than the pk
-			createForeignKeyOfEntity( getReferencedEntityName() );
+	private ForeignKey foreignKey;
+
+	@Override
+	public ForeignKey getForeignKey() {
+		return foreignKey;
+	}
+
+	public ForeignKey createForeignKey() throws MappingException {
+		if ( constrained ) {
+			this.foreignKey = createForeignKeyOfEntity( getReferencedEntityName() );
+			if ( this.referencedPropertyName == null ) {
+				foreignKey.disableCreation();
+			}
 		}
+
+		return foreignKey;
 	}
 
 	@Override

@@ -29,8 +29,10 @@ import org.hibernate.dialect.Dialect;
 public abstract class Constraint implements Serializable {
 
 	private String name;
-	private final ArrayList<Column> columns = new ArrayList<>();
+	private final ArrayList<Selectable> columns = new ArrayList<>();
 	private MappedTable table;
+
+	private boolean creationEnabled = true;
 
 	public String getName() {
 		return name;
@@ -38,6 +40,14 @@ public abstract class Constraint implements Serializable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public void disableCreation() {
+		creationEnabled = false;
+	}
+
+	public boolean isCreationEnabled() {
+		return creationEnabled;
 	}
 	
 	/**
@@ -120,8 +130,10 @@ public abstract class Constraint implements Serializable {
 	public void addColumns(Iterator columnIterator) {
 		while ( columnIterator.hasNext() ) {
 			Selectable col = (Selectable) columnIterator.next();
-			if ( !col.isFormula() ) {
-				addColumn( (Column) col );
+			addColumn( (Column) col );
+
+			if (col.isFormula() ) {
+				disableCreation();
 			}
 		}
 	}
@@ -138,15 +150,32 @@ public abstract class Constraint implements Serializable {
 	}
 
 	public Column getColumn(int i) {
-		return  columns.get( i );
-	}
-	//todo duplicated method, remove one
-	public Iterator<Column> getColumnIterator() {
-		return columns.iterator();
+		return (Column) columns.get( i );
 	}
 
+	/**
+	 * todo (6.0) : remove this
+	 *
+	 * @deprecated Try to remove in 6.0
+	 */
+	@Deprecated
+	public Iterator<Column> getColumnIterator() {
+		return cast( columns.iterator() );
+	}
+
+	@SuppressWarnings("unchecked")
+	<T> Iterator<T> cast(Iterator itr) {
+		return itr;
+	}
+
+	/**
+	 * todo (6.0) : remove this
+	 *
+	 * @deprecated Try to remove in 6.0
+	 */
+	@Deprecated
 	public Iterator<Column> columnIterator() {
-		return columns.iterator();
+		return getColumnIterator();
 	}
 
 	/**
@@ -170,8 +199,14 @@ public abstract class Constraint implements Serializable {
 	}
 
 	public List<Column> getColumns() {
-		return columns;
+		return cast( columns );
 	}
+
+	@SuppressWarnings("unchecked")
+	private <T> List<T> cast(List values) {
+		return values;
+	}
+
 
 	public String toString() {
 		return getClass().getName() + '(' + getTable().getName() + getColumns() + ") as " + name;

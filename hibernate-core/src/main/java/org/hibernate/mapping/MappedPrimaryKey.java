@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import java.util.Iterator;
 
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 
 import org.jboss.logging.Logger;
@@ -25,6 +26,9 @@ public class MappedPrimaryKey extends Constraint {
 		setTable( table );
 	}
 
+	public void addColumn(MappedColumn column) {
+
+	}
 	@Override
 	public void addColumn(Column column) {
 		final Iterator<Column> columnIterator = getTable().getColumnIterator();

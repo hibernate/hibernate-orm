@@ -8,8 +8,10 @@ package org.hibernate.mapping;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 
+import org.hibernate.HibernateError;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -64,48 +66,77 @@ public class ManyToOne extends ToOne {
 		}
 	}
 
-	public void createForeignKey() throws MappingException {
-		// the case of a foreign key to something other than the pk is handled in createPropertyRefConstraints
-		if (referencedPropertyName==null && !hasFormula() ) {
-			createForeignKeyOfEntity( getReferencedEntityName() );
-		} 
+	private ForeignKey foreignKey;
+
+	@Override
+	public ForeignKey getForeignKey() {
+		return foreignKey;
 	}
 
-	public void createPropertyRefConstraints(Map persistentClasses) {
-		if (referencedPropertyName!=null) {
-			PersistentClass pc = (PersistentClass) persistentClasses.get(getReferencedEntityName() );
-			
-			Property property = pc.getReferencedProperty( getReferencedPropertyName() );
-			
-			if (property==null) {
-				throw new MappingException(
-						"Could not find property " + 
-						getReferencedPropertyName() + 
-						" on " + 
-						getReferencedEntityName() 
-					);
-			} 
-			else {
-				// todo : if "none" another option is to create the ForeignKey object still	but to set its #disableCreation flag
-				if ( !hasFormula() && !"none".equals( getForeignKeyName() ) ) {
-					java.util.List refColumns = new ArrayList();
-					Iterator iter = property.getColumnIterator();
-					while ( iter.hasNext() ) {
-						Column col = (Column) iter.next();
-						refColumns.add( col );							
-					}
-					
-					ForeignKey fk = getTable().createForeignKey( 
-							getForeignKeyName(), 
-							getConstraintColumns(),
-							getReferencedEntityName(),
-							getForeignKeyDefinition(), 
-							refColumns
-					);
-					fk.setCascadeDeleteEnabled(isCascadeDeleteEnabled() );
+	public ForeignKey createForeignKey() throws MappingException {
+		if ( foreignKey == null ) {
+			// the case of a foreign key to something other than the pk is handled in createPropertyRefConstraints
+			if ( referencedPropertyName == null ) {
+				foreignKey = getTable().createForeignKey(
+						getForeignKeyName(),
+						getConstraintColumns(),
+						getReferencedEntityName(),
+						getForeignKeyDefinition(),
+						null
+				);
+				if ( hasFormula() ) {
+					foreignKey.disableCreation();
 				}
 			}
 		}
+
+		return foreignKey;
+	}
+
+	public ForeignKey createPropertyRefConstraints(Map persistentClasses) {
+		if ( foreignKey != null ) {
+			return foreignKey;
+		}
+
+		if ( referencedPropertyName == null ) {
+			throw new HibernateError( "#createForeignKey should have created ForeignKey, but none was found" );
+		}
+
+		final PersistentClass pc = (PersistentClass) persistentClasses.get( getReferencedEntityName() );
+		final Property property = pc.getReferencedProperty( getReferencedPropertyName() );
+
+		if ( property == null ) {
+			throw new MappingException(
+					String.format(
+							Locale.ROOT,
+							"Could not find property `%s` on `%s : cannot create foreign-key (selectable mappings)",
+							getReferencedPropertyName(),
+							getReferencedEntityName()
+					)
+			);
+		}
+
+		java.util.List refColumns = new ArrayList();
+		Iterator iter = property.getColumnIterator();
+		while ( iter.hasNext() ) {
+			Column col = (Column) iter.next();
+			refColumns.add( col );
+		}
+
+		ForeignKey fk = getTable().createForeignKey(
+				getForeignKeyName(),
+				getConstraintColumns(),
+				getReferencedEntityName(),
+				getForeignKeyDefinition(),
+				refColumns
+		);
+		fk.setCascadeDeleteEnabled( isCascadeDeleteEnabled() );
+
+		if ( !hasFormula() && !"none".equals( getForeignKeyName() ) ) {
+			fk.disableCreation();
+		}
+
+		return fk;
 	}
 	
 	public Object accept(ValueVisitor visitor) {

@@ -34,6 +34,7 @@ import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.QualifiableSqlExpressable;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.results.internal.AbstractFetchParent;
 import org.hibernate.sql.results.internal.EntityQueryResultAssembler;
@@ -148,12 +149,12 @@ public class QueryResultBuilderRootEntity
 
 	@Override
 	public TableReference locateTableReference(Table table) {
-		return null;
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
 	public ColumnReference resolveColumnReference(Column column) {
-		return null;
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override

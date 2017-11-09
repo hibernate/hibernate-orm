@@ -12,7 +12,6 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 
 import org.jboss.logging.Logger;
 

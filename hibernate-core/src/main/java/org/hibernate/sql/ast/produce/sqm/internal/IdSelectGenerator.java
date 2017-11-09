@@ -233,7 +233,7 @@ public class IdSelectGenerator extends SqmSelectToSqlAstConverter {
 		this.sessionFactory = sessionFactory;
 
 		primeQuerySpecStack( idSelectQuerySpec );
-		primeNavigableReferenceStack( idSelectTableSpace.getRootTableGroup().asExpression() );
+		primeNavigableReferenceStack( idSelectTableSpace.getRootTableGroup().getNavigableReference() );
 
 		// this allows where-clause restrictions from the source query to
 		// 	resolve to this TableGroup for the entity for the id select

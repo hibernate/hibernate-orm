@@ -33,7 +33,6 @@ import org.hibernate.sql.ast.tree.spi.UpdateStatement.UpdateStatementBuilder;
 import org.hibernate.sql.ast.tree.spi.assign.Assignment;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReference;
 import org.hibernate.sql.ast.tree.spi.from.AbstractTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
@@ -167,7 +166,7 @@ public class SqmUpdateToSqlAstConverterMultiTable
 		currentAssignmentContext = new AssignmentContext( sqmAssignment );
 
 		try {
-			final SingularAttributeReference stateField = (SingularAttributeReference) sqmAssignment.getStateField().accept( this );
+			final NavigableReference stateField = (NavigableReference) sqmAssignment.getStateField().accept( this );
 			currentAssignmentContext.endStateFieldProcessing();
 			final Expression assignedValue = (Expression) sqmAssignment.getStateField().accept( this );
 
@@ -245,8 +244,9 @@ public class SqmUpdateToSqlAstConverterMultiTable
 		}
 
 		@Override
-		public NavigableReference asExpression() {
-			return null;
+		public NavigableReference getNavigableReference() {
+			// todo (6.0) : is this proper?
+			return entityTableGroup.getNavigableReference();
 		}
 
 		@Override
@@ -256,7 +256,7 @@ public class SqmUpdateToSqlAstConverterMultiTable
 
 		@Override
 		protected TableReference getPrimaryTableReference() {
-			return entityTableGroup.locateTableReference( entityTableGroup.getEntityDescriptor().getPrimaryTable() );
+			return entityTableGroup.locateTableReference( entityTableGroup.getNavigable().getEntityDescriptor().getPrimaryTable() );
 		}
 
 		@Override

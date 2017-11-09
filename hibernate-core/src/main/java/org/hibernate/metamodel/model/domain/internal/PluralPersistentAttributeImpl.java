@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Property;
@@ -20,7 +19,6 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
@@ -31,7 +29,6 @@ import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -193,11 +190,6 @@ public class PluralPersistentAttributeImpl implements PluralPersistentAttribute 
 
 	@Override
 	public ManagedTypeDescriptor getFetchedManagedType() {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public ForeignKey.ColumnMappings getJoinColumnMappings() {
 		throw new NotYetImplementedFor6Exception();
 	}
 

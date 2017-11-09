@@ -10,14 +10,14 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.produce.internal.CompositeColumnReferenceQualifier;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityValuedNavigableReference;
 import org.hibernate.sql.results.spi.Selectable;
 
 /**
@@ -29,41 +29,69 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 	private final TableReference primaryTableReference;
 	private final List<TableReferenceJoin> tableReferenceJoins;
 
-	private final EntityReference expression;
-	private final EntityDescriptor entityDescriptor;
+	private final EntityValuedNavigable navigable;
+	private final EntityValuedNavigableReference entityReference;
 
-	public <T> EntityTableGroup(
+
+	/**
+	 * Constructor form for an entity table group that is used as a query root
+	 */
+	public EntityTableGroup(
 			String uid,
 			TableSpace tableSpace,
-			EntityDescriptor entityDescriptor,
-			EntityValuedExpressableType entityValuedExpressableType,
+			EntityValuedNavigable navigable,
 			LockMode lockMode,
 			NavigablePath navigablePath,
 			TableReference primaryTableReference,
 			List<TableReferenceJoin> joins) {
+		this( uid, tableSpace, navigable, lockMode, navigablePath, primaryTableReference, joins, null );
+	}
+
+	/**
+	 * Constructor form for an entity table group that is related to a join (e.g., a many-to-one)
+	 */
+	public EntityTableGroup(
+			String uid,
+			TableSpace tableSpace,
+			EntityValuedNavigable navigable,
+			LockMode lockMode,
+			NavigablePath navigablePath,
+			TableReference primaryTableReference,
+			List<TableReferenceJoin> joins,
+			ColumnReferenceQualifier additionalQualifier) {
 		super( tableSpace, uid );
 
-		this.entityDescriptor = entityDescriptor;
+		this.navigable = navigable;
 		this.primaryTableReference = primaryTableReference;
 		this.tableReferenceJoins = joins;
 
-		this.expression = new EntityReference(
-				this,
-				entityDescriptor,
-				lockMode,
-				navigablePath,
+		final ColumnReferenceQualifier qualifier;
+		if ( additionalQualifier == null ) {
+			qualifier = this;
+		}
+		else {
+			qualifier = new CompositeColumnReferenceQualifier(
+					uid,
+					additionalQualifier,
+					this
+			);
+		}
+		this.entityReference = new EntityValuedNavigableReference(
 				null,
-				false
+				navigable,
+				navigablePath,
+				qualifier,
+				lockMode
 		);
 	}
 
-	public EntityDescriptor getEntityDescriptor() {
-		return entityDescriptor;
+	public EntityValuedNavigable getNavigable() {
+		return navigable;
 	}
 
 	@Override
-	public NavigableReference asExpression() {
-		return expression;
+	public EntityValuedNavigableReference getNavigableReference() {
+		return entityReference;
 	}
 
 	@Override
@@ -89,11 +117,11 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 
 //	@Override
 //	public QueryResult createQueryResult(
-//			Expression expression,
+//			Expression entityReference,
 //			String resultVariable,
 //			QueryResultCreationContext creationContext) {
 //		return getEntityDescriptor().createQueryResult(
-//				expression,
+//				entityReference,
 //				resultVariable,
 //				creationContext
 //		);
@@ -103,14 +131,16 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 	public void render(SqlAppender sqlAppender, SqlAstWalker walker) {
 		renderTableReference( primaryTableReference, sqlAppender, walker );
 
-		for ( TableReferenceJoin tableJoin : tableReferenceJoins ) {
-			sqlAppender.appendSql( " " );
-			sqlAppender.appendSql( tableJoin.getJoinType().getText() );
-			sqlAppender.appendSql( " join " );
-			renderTableReference( tableJoin.getJoinedTableBinding(), sqlAppender, walker );
-			if ( tableJoin.getJoinPredicate() != null && !tableJoin.getJoinPredicate().isEmpty() ) {
-				sqlAppender.appendSql( " on " );
-				tableJoin.getJoinPredicate().accept( walker );
+		if ( tableReferenceJoins != null ) {
+			for ( TableReferenceJoin tableJoin : tableReferenceJoins ) {
+				sqlAppender.appendSql( " " );
+				sqlAppender.appendSql( tableJoin.getJoinType().getText() );
+				sqlAppender.appendSql( " join " );
+				renderTableReference( tableJoin.getJoinedTableBinding(), sqlAppender, walker );
+				if ( tableJoin.getJoinPredicate() != null && !tableJoin.getJoinPredicate().isEmpty() ) {
+					sqlAppender.appendSql( " on " );
+					tableJoin.getJoinPredicate().accept( walker );
+				}
 			}
 		}
 	}

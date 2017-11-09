@@ -15,6 +15,7 @@ import javax.persistence.Id;
 @Entity
 public class Vendor {
 	private Integer id;
+	private String name;
 
 	@Id
 	public Integer getId() {
@@ -23,5 +24,13 @@ public class Vendor {
 
 	public void setId(Integer id) {
 		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }

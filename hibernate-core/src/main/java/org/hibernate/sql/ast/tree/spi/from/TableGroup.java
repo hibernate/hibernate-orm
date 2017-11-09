@@ -7,17 +7,14 @@
 package org.hibernate.sql.ast.tree.spi.from;
 
 import java.util.function.Consumer;
-import java.util.stream.Collector;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
+import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.SqlAstNode;
 
 /**
  * Group together related {@link TableReference} references (generally related by EntityPersister or CollectionPersister),
@@ -31,12 +28,7 @@ public interface TableGroup extends ColumnReferenceQualifier, SqlAstNode {
 	 */
 	TableSpace getTableSpace();
 
-	/**
-	 * Retrieve the Expression representation of this TableGroup.  This
-	 * Expression can then be used in other clauses to refer to this
-	 * TableGroup
-	 */
-	NavigableReference asExpression();
+	NavigableReference getNavigableReference();
 
 	/**
 	 * Perform rendering of this group into the passed SQL appender.

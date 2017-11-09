@@ -275,7 +275,7 @@ public abstract class AbstractTableBasedHandler implements Handler {
 		}
 
 		@Override
-		public NavigableReference asExpression() {
+		public NavigableReference getNavigableReference() {
 			throw new UnsupportedOperationException( "IdTable cannot be used as an Expression" );
 		}
 

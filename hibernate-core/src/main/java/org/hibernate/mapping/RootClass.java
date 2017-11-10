@@ -82,13 +82,17 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return table;
 	}
 
+	public PersistentAttributeMapping getIdentifierAttributeMapping() {
+		return getEntityMappingHierarchy().getIdentifierAttributeMapping();
+	}
+
+	/**
+	 * @deprecated since 6.0 use {@link #getIdentifierAttributeMapping()}.
+	 */
+	@Deprecated
 	@Override
 	public Property getIdentifierProperty() {
 		return (Property) getIdentifierAttributeMapping();
-	}
-
-	public PersistentAttributeMapping getIdentifierAttributeMapping() {
-		return getEntityMappingHierarchy().getIdentifierAttributeMapping();
 	}
 
 	@Override
@@ -300,43 +304,6 @@ public class RootClass extends PersistentClass implements TableOwner {
 	public void setWhere(String string) {
 		where = string;
 	}
-
-//	@Override
-//	public void validate(Mapping mapping) throws MappingException {
-//		super.validate( mapping );
-//		if ( !getIdentifier().isValid( mapping ) ) {
-//			throw new MappingException(
-//					"identifier mapping has wrong number of columns: " +
-//							getEntityName() +
-//							" type: " +
-//							getIdentifier().getType().getName()
-//			);
-//		}
-//		checkCompositeIdentifier();
-//	}
-//
-//	private void checkCompositeIdentifier() {
-//		if ( getIdentifier() instanceof Component ) {
-//			Component id = (Component) getIdentifier();
-//			if ( !id.isDynamic() ) {
-//				final Class idClass = id.getComponentClass();
-//				if ( idClass != null ) {
-//					final String idComponentClassName = idClass.getName();
-//					if ( !ReflectHelper.overridesEquals( idClass ) ) {
-//						LOG.compositeIdClassDoesNotOverrideEquals( idComponentClassName );
-//					}
-//					if ( !ReflectHelper.overridesHashCode( idClass ) ) {
-//						LOG.compositeIdClassDoesNotOverrideHashCode( idComponentClassName );
-//					}
-//					if ( !Serializable.class.isAssignableFrom( idClass ) ) {
-//						throw new MappingException(
-//								"Composite-id class must implement Serializable: " + idComponentClassName
-//						);
-//					}
-//				}
-//			}
-//		}
-//	}
 
 	@Override
 	public String getCacheConcurrencyStrategy() {

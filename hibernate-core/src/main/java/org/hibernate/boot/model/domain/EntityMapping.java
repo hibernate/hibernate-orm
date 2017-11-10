@@ -15,9 +15,11 @@ import org.hibernate.boot.model.relational.MappedTable;
  */
 public interface EntityMapping extends IdentifiableTypeMapping {
 	String getEntityName();
+
 	String getJpaEntityName();
 
 	Class getRuntimeEntityDescriptorClass();
+
 	void setEntityPersisterClass(Class entityPersisterClass);
 
 	@Override
@@ -26,4 +28,6 @@ public interface EntityMapping extends IdentifiableTypeMapping {
 	}
 
 	MappedTable getRootTable();
+
+	void validate();
 }

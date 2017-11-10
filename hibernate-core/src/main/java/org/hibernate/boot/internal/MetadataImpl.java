@@ -23,6 +23,7 @@ import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.query.spi.NamedHqlQueryDefinition;
 import org.hibernate.boot.model.query.spi.NamedNativeQueryDefinition;
@@ -388,7 +389,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public void validate() throws MappingException {
-		for ( PersistentClass entityBinding : this.getEntityBindings() ) {
+		for ( EntityMapping entityBinding : getEntityMappings() ) {
 			entityBinding.validate();
 		}
 

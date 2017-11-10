@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -2543,19 +2544,22 @@ public class ModelBinder {
 		property.setMetaAttributes( propertySource.getToolingHintContext().getMetaAttributeMap() );
 
 		if ( log.isDebugEnabled() ) {
-			final StringBuilder message = new StringBuilder()
-					.append( "Mapped property: " )
-					.append( propertySource.getName() )
-					.append( " -> [" );
-			final Iterator itr = property.getValue().getColumnIterator();
-			while ( itr.hasNext() ) {
-				message.append( ( (Selectable) itr.next() ).getText() );
-				if ( itr.hasNext() ) {
+			final List<MappedColumn> mappedColumns = property.getValue().getMappedColumns();
+			final int numberOfColumns = mappedColumns.size();
+			if ( numberOfColumns > 0 ) {
+				final StringBuilder message = new StringBuilder()
+						.append( "Mapped property: " )
+						.append( propertySource.getName() )
+						.append( " -> [" );
+
+				for ( int i = 0; i < numberOfColumns - 1; i++ ) {
+					message.append( ( mappedColumns.get( i ) ).getText() );
 					message.append( ", " );
 				}
+				message.append( mappedColumns.get( numberOfColumns - 1 ).getText() );
+				message.append( "]" );
+				log.debug( message.toString() );
 			}
-			message.append( "]" );
-			log.debug( message.toString() );
 		}
 	}
 
@@ -2681,18 +2685,13 @@ public class ModelBinder {
 		}
 
 		if ( embeddableSource.isUnique() ) {
-			final ArrayList<Column> cols = new ArrayList<>();
-			final Iterator itr = componentBinding.getColumnIterator();
-			while ( itr.hasNext() ) {
-				final Object selectable = itr.next();
-				// skip formulas.  ugh, yes terrible naming of these methods :(
-				if ( !Column.class.isInstance( selectable ) ) {
-					continue;
-				}
-				cols.add( (Column) selectable );
-			}
+			final List<Column> cols = componentBinding.getMappedColumns()
+					.stream()
+					.filter( Column.class::isInstance )
+					.map( Column.class::cast )
+					.collect( Collectors.toList() );
 			// todo : we may need to delay this
-			componentBinding.getOwner().getTable().createUniqueKey( cols );
+			componentBinding.getOwner().getMappedTable().createUniqueKey( cols );
 		}
 
 		// todo (6.0) : Like above, we need to expose setting an explicit RepresentationMode

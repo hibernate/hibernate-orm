@@ -81,6 +81,11 @@ public abstract class AbstractManagedTypeMapping implements ManagedTypeMappingIm
 	}
 
 	@Override
+	public PersistentAttributeMapping getDeclaredPersistentAttribute(String attributeName){
+		return declaredAttributeMappings.get( attributeName );
+	}
+
+	@Override
 	public boolean hasDeclaredPersistentAttribute(String name) {
 		return declaredAttributeMappings.containsKey( name );
 	}

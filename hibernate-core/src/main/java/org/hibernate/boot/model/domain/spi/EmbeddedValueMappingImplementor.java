@@ -11,5 +11,5 @@ import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 /**
  * @author Steve Ebersole
  */
-public interface EmbeddedValueMappingImplementor extends ManagedTypeMappingImplementor, EmbeddedValueMapping {
+public interface EmbeddedValueMappingImplementor  extends ManagedTypeMappingImplementor, EmbeddedValueMapping {
 }

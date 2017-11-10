@@ -94,7 +94,8 @@ public class RuntimeModelCreationProcess {
 		generateBootModelForeignKeys( mappingMetadata );
 
 		final DatabaseObjectResolutionContextImpl dbObjectResolver = new DatabaseObjectResolutionContextImpl();
-		final DatabaseModel databaseModel = new RuntimeDatabaseModelProducer( metadataBuildingContext.getBootstrapContext() ).produceDatabaseModel(
+		final DatabaseModel databaseModel = new RuntimeDatabaseModelProducer( metadataBuildingContext.getBootstrapContext() )
+				.produceDatabaseModel(
 				mappingMetadata.getDatabase(),
 				dbObjectResolver,
 				dbObjectResolver

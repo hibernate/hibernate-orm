@@ -144,7 +144,7 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 
 	@Override
 	public List<MappedColumn> getMappedColumns() {
-		return Collections.unmodifiableList( new ArrayList<>( getMappedTable().getMappedColumns() ) );
+		return Collections.emptyList();
 	}
 
 	public boolean isSorted() {

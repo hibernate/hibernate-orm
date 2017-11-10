@@ -51,6 +51,8 @@ public interface ManagedTypeMapping {
 	 */
 	List<PersistentAttributeMapping> getPersistentAttributes();
 
+	PersistentAttributeMapping getDeclaredPersistentAttribute(String attributeName);
+
 	boolean hasDeclaredPersistentAttribute(String name);
 
 	/**

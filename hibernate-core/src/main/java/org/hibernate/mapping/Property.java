@@ -16,6 +16,7 @@ import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.model.domain.BasicValueMapping;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.ValueMapping;
@@ -311,7 +312,16 @@ public class Property implements Serializable, PersistentAttributeMapping {
 		this.optional = optional;
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getIdentifiableTypeMapping()}
+	 */
+	@Deprecated
 	public PersistentClass getPersistentClass() {
+		return persistentClass;
+	}
+
+	@Override
+	public IdentifiableTypeMapping getIdentifiableTypeMapping(){
 		return persistentClass;
 	}
 
@@ -370,8 +380,8 @@ public class Property implements Serializable, PersistentAttributeMapping {
 	}
 
 	protected ServiceRegistry resolveServiceRegistry() {
-		if ( getPersistentClass() != null ) {
-			return getPersistentClass().getServiceRegistry();
+		if ( persistentClass != null ) {
+			return persistentClass.getServiceRegistry();
 		}
 		if ( getValue() != null ) {
 			return getValue().getServiceRegistry();

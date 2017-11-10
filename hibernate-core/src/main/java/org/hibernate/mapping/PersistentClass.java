@@ -118,6 +118,7 @@ public abstract class PersistentClass
 		return metadataBuildingContext.getBuildingOptions().getServiceRegistry();
 	}
 
+	@Override
 	public String getClassName() {
 		return className;
 	}

@@ -12,4 +12,7 @@ import org.hibernate.boot.model.domain.EntityMapping;
  * @author Steve Ebersole
  */
 public interface EntityMappingImplementor extends EntityMapping, IdentifiableTypeMappingImplementor {
+	void validate();
+
+	String getClassName();
 }

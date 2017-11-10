@@ -8,10 +8,12 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import javax.persistence.metamodel.Type.PersistenceType;
 
@@ -52,19 +54,19 @@ import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
  */
 public class Component extends SimpleValue
 		implements EmbeddedValueMappingImplementor, PropertyContainer, MetaAttributable {
-	private List<PersistentAttributeMapping> properties = new ArrayList<>();
+	TreeMap<String, PersistentAttributeMapping> declaredAttributeMappings;
 	private String componentClassName;
 	private boolean embedded;
 	private String parentProperty;
 	private PersistentClass owner;
 	private boolean dynamic;
-	private Map metaAttributes;
+	private Map<String, MetaAttribute> metaAttributes;
 	private boolean isKey;
 	private String roleName;
 	private EmbeddableJavaDescriptor javaTypeDescriptor;
 
 	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
-		this( metadata, owner.getTable(), owner );
+		this( metadata, owner.getMappedTable(), owner );
 	}
 
 	public Component(MetadataBuildingContext metadata, Component component) throws MappingException {
@@ -72,11 +74,11 @@ public class Component extends SimpleValue
 	}
 
 	public Component(MetadataBuildingContext metadata, Join join) throws MappingException {
-		this( metadata, join.getTable(), join.getPersistentClass() );
+		this( metadata, join.getMappedTable(), join.getPersistentClass() );
 	}
 
 	public Component(MetadataBuildingContext metadata, Collection collection) throws MappingException {
-		this( metadata, collection.getCollectionTable(), collection.getOwner() );
+		this( metadata, collection.getMappedTable(), collection.getOwner() );
 	}
 
 	public Component(MetadataBuildingContext metadata, MappedTable table, PersistentClass owner) throws MappingException {
@@ -113,16 +115,29 @@ public class Component extends SimpleValue
 				"Support for ManagedType-specific explicit RepresentationMode not yet implemented" );
 	}
 
+	/**
+	 * @deprecated since 6.0 , use {@link #getDeclaredPersistentAttributes().size()} instead.
+	 */
+	@Deprecated
 	public int getPropertySpan() {
-		return properties.size();
+		return getDeclaredPersistentAttributes().size();
 	}
 
+
+	/**
+	 * @deprecated since 6.0 , use {@link #getDeclaredPersistentAttributes()} instead.
+	 */
+	@Deprecated
 	public Iterator getPropertyIterator() {
-		return properties.iterator();
+		return getDeclaredPersistentAttributes().iterator();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #addDeclaredPersistentAttribute(PersistentAttributeMapping)} instead.
+	 */
+	@Deprecated
 	public void addProperty(Property p) {
-		properties.add( p );
+		addDeclaredPersistentAttribute( p );
 	}
 
 	@Override
@@ -137,13 +152,7 @@ public class Component extends SimpleValue
 
 	@Override
 	public int getColumnSpan() {
-		int n = 0;
-		Iterator iter = getPropertyIterator();
-		while ( iter.hasNext() ) {
-			Property p = (Property) iter.next();
-			n += p.getColumnSpan();
-		}
-		return n;
+		return getDeclaredPersistentAttributes().size();
 	}
 
 	@Override
@@ -240,17 +249,17 @@ public class Component extends SimpleValue
 	}
 
 	@Override
-	public java.util.Map getMetaAttributes() {
+	public java.util.Map<String, MetaAttribute> getMetaAttributes() {
 		return metaAttributes;
 	}
 
 	@Override
 	public MetaAttribute getMetaAttribute(String attributeName) {
-		return metaAttributes == null ? null : (MetaAttribute) metaAttributes.get( attributeName );
+		return metaAttributes == null ? null : metaAttributes.get( attributeName );
 	}
 
 	@Override
-	public void setMetaAttributes(java.util.Map metas) {
+	public void setMetaAttributes(java.util.Map<String, MetaAttribute> metas) {
 		this.metaAttributes = metas;
 	}
 
@@ -294,7 +303,7 @@ public class Component extends SimpleValue
 	@Override
 	public java.util.List<Selectable> getMappedColumns() {
 		final java.util.List<Selectable> columns = new ArrayList<>();
-		for ( PersistentAttributeMapping p : properties ) {
+		for ( PersistentAttributeMapping p : declaredAttributeMappings.values() ) {
 			columns.addAll( p.getValueMapping().getMappedColumns() );
 		}
 		return columns;
@@ -312,6 +321,10 @@ public class Component extends SimpleValue
 		return componentClassName != null;
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getDeclaredPersistentAttribute(String)} instead.
+	 */
+	@Deprecated
 	public Property getProperty(String propertyName) throws MappingException {
 		Iterator iter = getPropertyIterator();
 		while ( iter.hasNext() ) {
@@ -382,11 +395,11 @@ public class Component extends SimpleValue
 
 		// IMPL NOTE : See the javadoc discussion on CompositeNestedGeneratedValueGenerator wrt the
 		//		various scenarios for which we need to account here
-		if ( rootClass.getIdentifierMapper() != null ) {
+		if ( rootClass.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping() != null ) {
 			// we have the @IdClass / <composite-id mapped="true"/> case
 			attributeDeclarer = resolveComponentClass();
 		}
-		else if ( rootClass.getIdentifierProperty() != null ) {
+		else if ( rootClass.getIdentifierAttributeMapping() != null ) {
 			// we have the "@EmbeddedId" / <composite-id name="idName"/> case
 			attributeDeclarer = resolveComponentClass();
 		}
@@ -445,7 +458,14 @@ public class Component extends SimpleValue
 
 	@Override
 	public void addDeclaredPersistentAttribute(PersistentAttributeMapping attribute) {
-		properties.add( attribute );
+		if ( declaredAttributeMappings == null ) {
+			declaredAttributeMappings = new TreeMap<>();
+		}
+		else {
+			assert !declaredAttributeMappings.containsKey( attribute.getName() );
+		}
+
+		declaredAttributeMappings.put( attribute.getName(), attribute );
 	}
 
 	@Override
@@ -492,20 +512,25 @@ public class Component extends SimpleValue
 		}
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getDeclaredPersistentAttributes()} instead.
+	 */
+	@Deprecated
 	@Override
 	public List<Property> getDeclaredProperties() {
-		return properties.stream().map( p -> (Property) p ).collect( Collectors.toList() );
+		return declaredAttributeMappings.values().stream().map( p -> (Property) p ).collect( Collectors.toList() );
 	}
 
 	@Override
 	public List<PersistentAttributeMapping> getDeclaredPersistentAttributes() {
-		return properties;
-	}
+		return declaredAttributeMappings == null
+				? Collections.emptyList()
+				: new ArrayList<>( declaredAttributeMappings.values() );	}
 
 	@Override
 	public List<PersistentAttributeMapping> getPersistentAttributes() {
 		List<PersistentAttributeMapping> attributes = new ArrayList<>();
-		attributes.addAll( properties );
+		attributes.addAll( getDeclaredPersistentAttributes() );
 		ManagedTypeMapping superTypeMapping = getSuperManagedTypeMapping();
 		while ( superTypeMapping != null ) {
 			attributes.addAll( superTypeMapping.getPersistentAttributes() );
@@ -514,9 +539,18 @@ public class Component extends SimpleValue
 		return attributes;
 	}
 
+	@Override
+	public PersistentAttributeMapping getDeclaredPersistentAttribute(String attributeName) {
+		return null;
+	}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// atm components/embeddables are not (yet) hierarchical
 
+	/**
+	 * @deprecated since 6.0, use, use {@link #getSuperManagedTypeMapping()} instead.
+	 */
+	@Deprecated
 	@Override
 	public PropertyContainer getSuperPropertyContainer() {
 		return null;

@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.domain;
 
+import org.hibernate.boot.model.domain.internal.AbstractIdentifiableTypeMapping;
 import org.hibernate.mapping.MetaAttributable;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
@@ -37,6 +38,8 @@ public interface PersistentAttributeMapping extends MetaAttributable {
 	String getCascade();
 
 	boolean isSelectable();
+
+	IdentifiableTypeMapping getIdentifiableTypeMapping();
 
 	/**
 	 * @todo (6.0) : different from `#isNullable`

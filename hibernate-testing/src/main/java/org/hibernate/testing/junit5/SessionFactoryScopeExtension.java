@@ -86,10 +86,12 @@ public class SessionFactoryScopeExtension
 
 	@Override
 	public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
-		final SessionFactoryScope scope = (SessionFactoryScope) context.getStore( namespace( context.getRequiredTestInstance() ) )
-				.get( context.getRequiredTestInstance() );
-		if ( scope != null ) {
-			scope.releaseSessionFactory();
+		final Optional<SessionFactoryScope> scopeOptional = findSessionFactoryScope( context );
+		if ( ! scopeOptional.isPresent() ) {
+			log.debug( "Could not locate SessionFactoryScope on exception" );
+		}
+		else {
+			scopeOptional.get().releaseSessionFactory();
 		}
 
 		throw throwable;

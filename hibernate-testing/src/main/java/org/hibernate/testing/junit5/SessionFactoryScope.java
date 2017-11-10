@@ -60,60 +60,63 @@ public class SessionFactoryScope implements SessionFactoryAccess {
 		return sessionFactory;
 	}
 
-	public void inSession(SessionFactoryImplementor sfi, Consumer<SessionImplementor> action) {
-		log.trace( "  >> SessionFactoryScope#inSession(SF,action)" );
 
-		log.trace( "  >> SessionFactoryScope - Session opened" );
-
-		try (SessionImplementor session = (SessionImplementor) sfi.openSession()) {
-			log.trace( "    >> SessionFactoryScope - calling action" );
-			action.accept( session );
-			log.trace( "    >> SessionFactoryScope - called action" );
-		}
-		finally {
-			log.trace( "  >> SessionFactoryScope - closing Session" );
-		}
-	}
 
 	public void inSession(Consumer<SessionImplementor> action) {
-		log.trace( "  >> SessionFactoryScope#inSession(action)" );
+		log.trace( "#inSession(action)" );
 		inSession( getSessionFactory(), action );
 	}
 
 	public void inTransaction(Consumer<SessionImplementor> action) {
-		log.trace( "  >> SessionFactoryScope#inTransaction(action)" );
+		log.trace( "#inTransaction(action)" );
 		inTransaction( getSessionFactory(), action );
 	}
 
-	public void inTransaction(SessionFactoryImplementor factory, Consumer<SessionImplementor> action) {
-		log.trace( "  >> SessionFactoryScope#inTransaction(factory, action)");
+	public void inSession(SessionFactoryImplementor sfi, Consumer<SessionImplementor> action) {
+		log.trace( "##inSession(SF,action)" );
 
-		log.trace( "  >> SessionFactoryScope - Session opened" );
-
-		try (SessionImplementor session = (SessionImplementor) factory.openSession()) {
-			log.trace( "    >> SessionFactoryScope - calling action" );
-			inTransaction( session, action );
-			log.trace( "    >> SessionFactoryScope - called action" );
+		try (SessionImplementor session = (SessionImplementor) sfi.openSession()) {
+			log.trace( "Session opened, calling action" );
+			action.accept( session );
+			log.trace( "called action" );
 		}
 		finally {
-			log.trace( "  >> SessionFactoryScope - closing Session" );
+			log.trace( "Session close - auto-close lock" );
+		}
+	}
+
+	public void inTransaction(SessionFactoryImplementor factory, Consumer<SessionImplementor> action) {
+		log.trace( "#inTransaction(factory, action)");
+
+
+		try (SessionImplementor session = (SessionImplementor) factory.openSession()) {
+			log.trace( "Session opened, calling action" );
+			inTransaction( session, action );
+			log.trace( "called action" );
+		}
+		finally {
+			log.trace( "Session close - auto-close lock" );
 		}
 	}
 
 	public void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action) {
-		log.trace( "  >> SessionFactoryScope#inTransaction[passed-session]" );
+		log.trace( "inTransaction(session,action)" );
 
 		final Transaction txn = session.beginTransaction();
-		log.trace( "  >> SessionFactoryScope - Began transaction" );
+		log.trace( "Started transaction" );
 
 		try {
-			log.trace( "    >> SessionFactoryScope - calling action (in txn)" );
+			log.trace( "Calling action in txn" );
 			action.accept( session );
-			log.trace( "    >> SessionFactoryScope - called action (in txn)" );
+			log.trace( "Called action - in txn" );
+
+			log.trace( "Committing transaction" );
+			txn.commit();
+			log.trace( "Committed transaction" );
 		}
 		catch (Exception e) {
 			log.tracef(
-					"    >> SessionFactoryScope - error calling action: %s (%s)",
+					"Error calling action: %s (%s) - rolling back",
 					e.getClass().getName(),
 					e.getMessage()
 			);
@@ -128,16 +131,6 @@ public class SessionFactoryScope implements SessionFactoryAccess {
 			}
 
 			throw e;
-		}
-		finally {
-			try {
-				log.trace( "  >> SessionFactoryScope - committing transaction" );
-				txn.commit();
-				log.trace( "  >> SessionFactoryScope - committing transaction" );
-			}
-			catch (Exception ignore) {
-				// by definition a failed commit should rollback, so nothing more to do here
-			}
 		}
 	}
 }

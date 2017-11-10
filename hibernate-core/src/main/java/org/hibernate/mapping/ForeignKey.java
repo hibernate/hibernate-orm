@@ -221,7 +221,11 @@ public class ForeignKey extends Constraint {
 				: dialect.getAddForeignKeyConstraintString(
 						constraintName,
 						columnNames,
-						referencedTable.getQualifiedName(
+						// Don't pull this `#getQualifiedName` up to MappedTable - it is only
+						// 		used from legacy schema-management tooling using the boot-model.
+						//
+						//		1) it
+						( (Table) referencedTable ).getQualifiedName(
 								dialect,
 								defaultCatalog,
 								defaultSchema

@@ -17,6 +17,12 @@ import org.hibernate.mapping.PersistentClass;
  * @author Rob Worsnop
  */
 public class FilterConfiguration {
+
+	// todo (6.0) : this needs re-write to be based on runtime model rather than the boot mode
+	//		the only real issue here is the `#getAliasTableMap` code.  That code
+	// 		just needs to not be here.  It should be part of creating the runtime model
+	//
+
 	private final String name;
 	private final String condition;
 	private final boolean autoAliasInjection;

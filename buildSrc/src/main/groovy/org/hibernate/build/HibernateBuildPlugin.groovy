@@ -76,7 +76,7 @@ class HibernateBuildPlugin implements Plugin<Project> {
 			if ( project.version.endsWith( 'SNAPSHOT' ) ) {
 				gradlePublishingExtension.repositories.maven {
 					name 'jboss-snapshots-repository'
-					url 'http://artifactory.electric-cloud.com/artifactory/thirdparty'
+					url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
 				}
 			}
 			else {

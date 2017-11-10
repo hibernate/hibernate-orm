@@ -3104,12 +3104,14 @@ public class ModelBinder {
 
 		private String columns(Value value) {
 			final StringBuilder builder = new StringBuilder();
-			final Iterator<Selectable> selectableItr = value.getColumnIterator();
-			while ( selectableItr.hasNext() ) {
-				builder.append( selectableItr.next().getText() );
-				if ( selectableItr.hasNext() ) {
+			final List<MappedColumn> mappedColumns = value.getMappedColumns();
+			final int numberOfColumns = mappedColumns.size();
+			if ( numberOfColumns > 0 ) {
+				for ( int i = 0; i < numberOfColumns - 2; i++ ) {
+					builder.append( mappedColumns.get( i ).getText() );
 					builder.append( ", " );
 				}
+				builder.append( mappedColumns.get( numberOfColumns - 1 ).getText() );
 			}
 			return builder.toString();
 		}
@@ -3605,9 +3607,9 @@ public class ModelBinder {
 			super.createBackReferences();
 
 			boolean indexIsFormula = false;
-			Iterator itr = getCollectionBinding().getIndex().getColumnIterator();
-			while ( itr.hasNext() ) {
-				if ( ( (Selectable) itr.next() ).isFormula() ) {
+			final List<MappedColumn> mappedColumns = getCollectionBinding().getIndex().getMappedColumns();
+			for ( MappedColumn mappedColumn : mappedColumns ) {
+				if ( mappedColumn.isFormula() ) {
 					indexIsFormula = true;
 				}
 			}

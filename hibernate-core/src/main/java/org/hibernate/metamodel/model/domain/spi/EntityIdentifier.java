@@ -6,10 +6,15 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 
 /**
  * Descriptor for an entity's identifier
@@ -60,6 +65,27 @@ public interface EntityIdentifier<O,J> extends Navigable<J>, AllowableParameterT
 	 * Retrieve the columns making up the identifier
 	 */
 	List<Column> getColumns();
+
+	@Override
+	default int getNumberOfJdbcParametersToBind() {
+		return getColumns().size();
+	}
+
+	@Override
+	default List<ColumnReference> resolveColumnReferences(
+			ColumnReferenceQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext) {
+		final ArrayList<ColumnReference> columnRefs = new ArrayList<>();
+		for ( Column column : getColumns() ) {
+			columnRefs.add(
+					(ColumnReference) resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
+							qualifier,
+							column
+					)
+			);
+		}
+		return columnRefs;
+	}
 
 	boolean matchesNavigableName(String navigableName);
 }

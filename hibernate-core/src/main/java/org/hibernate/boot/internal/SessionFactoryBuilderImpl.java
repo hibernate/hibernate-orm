@@ -701,6 +701,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			);
 			this.useOfJdbcNamedParametersEnabled = cfgService.getSetting( AvailableSettings.CALLABLE_NAMED_PARAMS_ENABLED, BOOLEAN, true );
 
+			this.queryLiteralRendering = cfgService.getSetting(
+					AvailableSettings.QUERY_LITERAL_RENDERING,
+					QueryLiteralRendering::fromExternalForm,
+					QueryLiteralRendering.AS_LITERAL
+			);
+
 			this.secondLevelCacheEnabled = cfgService.getSetting( USE_SECOND_LEVEL_CACHE, BOOLEAN, true );
 			this.queryCacheEnabled = cfgService.getSetting( USE_QUERY_CACHE, BOOLEAN, false );
 			this.timestampsCacheFactory = strategySelector.resolveDefaultableStrategy(

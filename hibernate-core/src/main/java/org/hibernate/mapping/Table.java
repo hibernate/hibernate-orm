@@ -618,6 +618,7 @@ public class Table implements MappedTable, Serializable {
 		this.subselect = subselect;
 	}
 
+	@Override
 	public boolean isSubselect() {
 		return subselect != null;
 	}

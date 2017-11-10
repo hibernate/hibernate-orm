@@ -15,4 +15,9 @@ public interface EntityIdentifierCompositeAggregated<O,J>
 	default void visitNavigable(NavigableVisitationStrategy visitor) {
 		visitor.visitAggregateCompositeIdentifier( this );
 	}
+
+	@Override
+	default int getNumberOfJdbcParametersToBind() {
+		return getColumns().size();
+	}
 }

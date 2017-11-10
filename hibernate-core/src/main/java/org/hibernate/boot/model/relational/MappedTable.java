@@ -128,6 +128,8 @@ public interface MappedTable extends Loggable {
 
 	void setSubselect(String subselect);
 
+	boolean isSubselect();
+
 	void setHasDenormalizedTables();
 
 	/**

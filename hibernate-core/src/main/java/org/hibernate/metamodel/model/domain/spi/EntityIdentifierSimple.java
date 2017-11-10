@@ -49,4 +49,9 @@ public interface EntityIdentifierSimple<O,J>
 				this
 		);
 	}
+
+	@Override
+	default int getNumberOfJdbcParametersToBind() {
+		return getColumns().size();
+	}
 }

@@ -121,20 +121,30 @@ public abstract class Constraint implements Serializable {
 		}
 	}
 
+	/**
+	 * @deprecated Use {@link Constraint#addColumn(org.hibernate.mapping.Selectable)}
+	 * instead.  We want to create "logical constraints", regardless of whether they
+	 * are "exportable" (a real, physical constraint).  So we open up the type of
+	 * "columns" we accept here.
+	 */
 	public void addColumn(Column column) {
+		addColumn( (Selectable) column );
+	}
+
+	public void addColumn(Selectable column) {
 		if ( !columns.contains( column ) ) {
 			columns.add( column );
+
+			if ( column.isFormula() ) {
+				disableCreation();
+			}
 		}
 	}
 
 	public void addColumns(Iterator columnIterator) {
 		while ( columnIterator.hasNext() ) {
 			Selectable col = (Selectable) columnIterator.next();
-			addColumn( (Column) col );
-
-			if (col.isFormula() ) {
-				disableCreation();
-			}
+			addColumn( col );
 		}
 	}
 

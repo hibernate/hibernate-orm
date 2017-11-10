@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -57,6 +58,10 @@ public class AbstractSqlAstToJdbcOperationConverter
 		affectedTableNames.add( tableExpression );
 	}
 
+	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return persistenceContext.getSessionFactory();
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// ParameterBindingContext

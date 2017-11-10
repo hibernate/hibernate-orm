@@ -1600,7 +1600,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				fk.setReferencedTable( referencedClass.getTable() );
 
 				// todo : should we apply a physical naming too?
-				if ( fk.getName() == null ) {
+				if ( fk.getName() == null && fk.isCreationEnabled() ) {
 					final Identifier nameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy()
 							.determineForeignKeyName(
 									new ImplicitForeignKeyNameSource() {

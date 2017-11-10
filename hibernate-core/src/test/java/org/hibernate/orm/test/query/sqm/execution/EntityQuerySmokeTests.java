@@ -88,7 +88,64 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	public void testRootEntityAttributeSelection() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final List result = session.createQuery( "select e.id from EntityOfBasics e" ).list();
+					assertThat( result, hasSize( 1 ) );
+					final Object value = result.get( 0 );
+					assertThat( value, notNullValue() );
+					Integer id = cast(
+							value,
+							Integer.class
+					);
+					assertThat( id, is( 1 ) );
+				}
+		);
+	}
+
+	@Test
+	public void testRootEntityAttributeReference() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final List result = session.createQuery( "select e from EntityOfBasics e where id = 1" ).list();
+					assertThat( result, hasSize( 1 ) );
+					final Object value = result.get( 0 );
+					assertThat( value, notNullValue() );
+					final EntityOfBasics entity = cast(
+							value,
+							EntityOfBasics.class
+					);
+					assertThat( entity.getId(), is( 1 ) );
+					assertThat( entity.getGender(), is( EntityOfBasics.Gender.MALE ) );
+					assertThat( entity.getTheInt(), is( -1 ) );
+					assertThat( entity.getTheInteger(), nullValue() );
+					assertThat( entity.getOrdinalGender(), is( EntityOfBasics.Gender.FEMALE ) );
+					assertThat( entity.getConvertedGender(), is( EntityOfBasics.Gender.MALE ) );
+				}
+		);
+	}
+
+	@Test
 	public void testRootEntityManyToOneSelection() {
+		sessionFactoryScope().inTransaction(
+				session -> {
+					final List result = session.createQuery( "select p.vendor from Product p" ).list();
+					assertThat( result, hasSize( 1 ) );
+					final Object value = result.get( 0 );
+					assertThat( value, notNullValue() );
+					final Vendor entity = cast(
+							value,
+							Vendor.class
+					);
+					assertThat( entity.getId(), is( 1 ) );
+					assertThat( entity.getName(), is( "Acme Corp") );
+				}
+		);
+	}
+
+	@Test
+	public void testRootEntityManyToOneAttributeReference() {
 		sessionFactoryScope().inTransaction(
 				session -> {
 					final List result = session.createQuery( "select p.vendor from Product p" ).list();

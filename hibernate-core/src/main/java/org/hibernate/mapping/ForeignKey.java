@@ -9,9 +9,11 @@ package org.hibernate.mapping;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.JavaTypeHelper;
 
 /**
  * A foreign key constraint
@@ -42,17 +44,17 @@ public class ForeignKey extends Constraint {
 		return referencedTable;
 	}
 
-	private void appendColumns(StringBuilder buf, List<Column> columns) {
+	private void appendColumns(StringBuilder buf, List<Selectable> columns) {
 		boolean firstPass = true;
 
-		for ( Column column : columns ) {
+		for ( Selectable column : columns ) {
 			if ( firstPass ) {
 				firstPass = false;
 			}
 			else {
 				buf.append( ',' );
 			}
-			buf.append( column.getName() );
+			buf.append( column.getText() );
 		}
 	}
 
@@ -74,8 +76,8 @@ public class ForeignKey extends Constraint {
 	}
 
 	private void alignColumns(Table referencedTable) {
-		final List<Column> columns = getColumns();
-		final List<Column> targetColumns = referencedTable.getPrimaryKey().getColumns();
+		final List<Selectable> columns = JavaTypeHelper.cast( getColumns() );
+		final List<Selectable> targetColumns = JavaTypeHelper.cast( referencedTable.getPrimaryKey().getColumns() );
 
 		final int referencedPkColumnSpan = targetColumns.size();
 
@@ -95,7 +97,11 @@ public class ForeignKey extends Constraint {
 		}
 
 		for ( int i = 0; i < columns.size(); i++ ) {
-			columns.get( i ).setLength( targetColumns.get( i ).getLength() );
+			if ( columns.get( i ) instanceof Column && targetColumns.get( i ) instanceof Column ) {
+				( (Column) columns.get( i ) ).setLength(
+						( (Column) targetColumns.get( i ) ).getLength()
+				);
+			}
 		}
 	}
 
@@ -173,15 +179,12 @@ public class ForeignKey extends Constraint {
 	}
 
 	public String toString() {
-		if ( !isReferenceToPrimaryKey() ) {
-			return getClass().getName()
-					+ '(' + getTable().getName() + getColumns()
-					+ " ref-columns:" + '(' + getReferencedColumns() + ") as " + getName() + ")";
-		}
-		else {
-			return super.toString();
-		}
-
+		return String.format(
+				Locale.ROOT,
+				"Boot-model ForeignKey[ (%s) => (%s) ]",
+				getColumns(),
+				getReferencedColumns()
+		);
 	}
 
 

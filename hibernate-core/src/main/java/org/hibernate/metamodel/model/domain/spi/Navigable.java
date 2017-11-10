@@ -15,11 +15,11 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
 import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.sql.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 
 /**
@@ -86,7 +86,12 @@ public interface Navigable<T> extends DomainType<T> {
 		throw new NotYetImplementedFor6Exception(  );
 	}
 
-	// todo (6.0) : Consider instead to resolve just the `List<SqlSelection>` and avoid the extra allocations here
+	default List<ColumnReference> resolveColumnReferences(
+			ColumnReferenceQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
 	List<SqlSelection> resolveSqlSelectionGroup(
 			ColumnReferenceQualifier qualifier,
 			SqlSelectionGroupResolutionContext resolutionContext);

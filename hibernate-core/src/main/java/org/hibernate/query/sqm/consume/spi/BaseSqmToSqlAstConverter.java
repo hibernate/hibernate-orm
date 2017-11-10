@@ -147,6 +147,7 @@ import org.hibernate.sql.ast.tree.spi.expression.NonStandardFunction;
 import org.hibernate.sql.ast.tree.spi.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.spi.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
 import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
@@ -178,6 +179,7 @@ import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
 import org.hibernate.sql.results.spi.QueryResultProducer;
 import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -188,7 +190,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class BaseSqmToSqlAstConverter
 		extends BaseSemanticQueryWalker
-		implements SqmToSqlAstConverter, SqlExpressionResolver {
+		implements SqmToSqlAstConverter, SqlExpressionResolver, SqlSelectionGroupResolutionContext {
 
 	private static final Logger log = Logger.getLogger( BaseSqmToSqlAstConverter.class );
 
@@ -337,6 +339,16 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public Expression resolveSqlExpression(NonQualifiableSqlExpressable sqlSelectable) {
 		return normalizeSqlExpression( sqlSelectable.createExpression() );
+	}
+
+	@Override
+	public SqlExpressionResolver getSqlSelectionResolver() {
+		return this;
+	}
+
+	@Override
+	public boolean shouldCreateShallowEntityResult() {
+		throw new UnsupportedOperationException(  );
 	}
 
 	@Override
@@ -1440,11 +1452,34 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public RelationalPredicate visitRelationalPredicate(RelationalSqmPredicate predicate) {
+		final Expression lhs = toExpression( predicate.getLeftHandExpression().accept( this ) );
+		final Expression rhs = toExpression( predicate.getRightHandExpression().accept( this ) );
+
 		return new RelationalPredicate(
 				interpret( predicate.getOperator() ),
-				(Expression) predicate.getLeftHandExpression().accept( this ),
-				(Expression) predicate.getRightHandExpression().accept( this )
+				lhs,
+				rhs
 		);
+	}
+
+	@SuppressWarnings("unchecked")
+	private Expression toExpression(Object value) {
+		if ( value instanceof NavigableReference ) {
+			final NavigableReference navigableReference = (NavigableReference) value;
+			final List list = navigableReference.getNavigable().resolveColumnReferences(
+					navigableReference.getSqlExpressionQualifier(),
+					this
+			);
+			if ( list.size() == 1 ) {
+				assert list.get( 0 ) instanceof Expression;
+				return (Expression) list.get( 0 );
+			}
+			return new SqlTuple( list );
+		}
+
+		// any other special cases?
+
+		return (Expression) value;
 	}
 
 	private RelationalPredicate.Operator interpret(RelationalPredicateOperator operator) {

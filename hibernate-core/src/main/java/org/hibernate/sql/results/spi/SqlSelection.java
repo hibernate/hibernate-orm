@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.spi;
 
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 
 /**
  * @author Steve Ebersole

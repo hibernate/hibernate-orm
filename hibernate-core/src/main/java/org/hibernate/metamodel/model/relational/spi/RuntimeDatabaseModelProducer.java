@@ -177,9 +177,14 @@ public class RuntimeDatabaseModelProducer {
 						assertSameNumberOfFkColumns( bootReferringColumns, bootTargetColumns );
 
 						for ( int i = 0, end = bootReferringColumns.size(); i < end; i++ ) {
-							final PhysicalColumn runtimeReferringColumn = resolveRuntimeColumn( bootReferringColumns.get( i ) );
-							PhysicalColumn runtimeTargetColumn = resolveRuntimeColumn( bootTargetColumns.get( i ) );
+							Column runtimeReferringColumn = resolveRuntimeColumn( bootReferringColumns.get( i ) );
+							if ( runtimeReferringColumn == null ) {
+								runtimeReferringColumn = runtimeReferringTable.getPrimaryKey().getColumns().get( i );
+							}
 
+							assert runtimeReferringColumn != null;
+
+							Column runtimeTargetColumn = resolveRuntimeColumn( bootTargetColumns.get( i ) );
 							if ( runtimeTargetColumn == null ) {
 								final PrimaryKey targetPk = runtimeTargetTable.getPrimaryKey();
 								assert  targetPk != null;
@@ -187,7 +192,7 @@ public class RuntimeDatabaseModelProducer {
 
 								runtimeTargetColumn = targetPk.getColumns().get( i );
 							}
-							assert runtimeReferringColumn != null;
+
 							assert runtimeTargetColumn != null;
 
 							columnMappingList.add(
@@ -254,8 +259,8 @@ public class RuntimeDatabaseModelProducer {
 			}
 		}
 
-		private PhysicalColumn resolveRuntimeColumn(org.hibernate.mapping.Column bootReferringColumn) {
-			return (PhysicalColumn) dbObjectResolver.resolveColumn( bootReferringColumn );
+		private Column resolveRuntimeColumn(org.hibernate.mapping.Selectable bootColumn) {
+			return dbObjectResolver.resolveColumn( bootColumn );
 		}
 
 		private void assertSameNumberOfFkColumns(List referringColumns, List targetColumns) {

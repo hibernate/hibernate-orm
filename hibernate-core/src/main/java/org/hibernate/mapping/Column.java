@@ -171,7 +171,12 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	@Override
 	public String toString() {
-		return getClass().getName() + '(' + getName() + ')';
+		return String.format(
+				Locale.ROOT,
+				"Boot-model (Physical)Column : %s.%s",
+				getTableName(),
+				getName()
+		);
 	}
 
 	public String getCheckConstraint() {

@@ -77,6 +77,55 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
 		session.close();
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-12086")
+	public void testBatchingWithFlush2() {
+		doInHibernate(
+			this::sessionFactory,
+			session -> {
+				TopEntity top1 = new TopEntity();
+
+				session.persist( top1 );
+
+				// InsertActionSorter#sort is invoked during this flush.
+				//
+				// input: [top1]
+				// output: [top1]
+				session.flush();
+
+				MiddleEntity middle1 = new MiddleEntity();
+
+				middle1.addBottom( new BottomEntity() );
+				middle1.addBottom2( new BottomEntity2() );
+				top1.addMiddle( middle1 );
+				session.persist( middle1 );
+
+				TopEntity top2 = new TopEntity();
+
+				session.persist( top2 );
+
+				MiddleEntity middle2 = new MiddleEntity();
+
+				middle2.addBottom( new BottomEntity() );
+				middle2.addBottom2( new BottomEntity2() );
+				top2.addMiddle( middle2 );
+				session.persist( middle2 );
+
+				session.persist(new TopEntity());
+
+				// InsertActionSorter#sort is invoked during this flush
+				//
+				// input: [middle1,bottom1,top2,middle2,bottom2] output:
+				// [middle1,middle2,bottom1,bottom2,top2]
+				//
+				// This ordering causes a constraint violation during the flush
+				// when the attempt to insert middle2 before top2 is made.
+				//
+				// correct ordering is: [top2,middle1,middle2,bottom1,bottom2]
+			}
+		);
+	}
+
 	@Override
 	protected void addSettings(Map settings) {
 		settings.put( ORDER_INSERTS, "true" );
@@ -85,7 +134,7 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] { TopEntity.class, MiddleEntity.class, BottomEntity.class };
+		return new Class[] { TopEntity.class, MiddleEntity.class, BottomEntity.class, BottomEntity2.class };
 	}
 
 	@Entity(name = "BottomEntity")
@@ -100,6 +149,25 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
 		@SequenceGenerator(
 				name = "ID",
 				sequenceName = "BOTTOM_SEQ"
+		)
+		private Long id;
+
+		@ManyToOne(optional = false)
+		private MiddleEntity middle;
+	}
+
+	@Entity(name = "BottomEntity2")
+	public static class BottomEntity2 {
+
+		@Column(nullable = false)
+		@GeneratedValue(
+				strategy = SEQUENCE,
+				generator = "ID"
+		)
+		@Id
+		@SequenceGenerator(
+				name = "ID",
+				sequenceName = "BOTTOM2_SEQ"
 		)
 		private Long id;
 
@@ -131,9 +199,20 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
 		)
 		private List<BottomEntity> bottoms = new ArrayList<>();
 
+		@OneToMany(
+				cascade = PERSIST,
+				mappedBy = "middle"
+		)
+		private List<BottomEntity2> bottom2s = new ArrayList<>();
+
 		private void addBottom(BottomEntity bottom) {
 			bottoms.add( bottom );
 			bottom.middle = this;
+		}
+
+		private void addBottom2(BottomEntity2 bottom2) {
+			bottom2s.add( bottom2 );
+			bottom2.middle = this;
 		}
 	}
 

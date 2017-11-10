@@ -1161,36 +1161,47 @@ public class ActionQueue {
 				}
 			}
 
-			// Examine each entry in the batch list, sorting them based on parent/child association
-			// as depicted by the dependency graph.
-			for ( int i = 0; i < latestBatches.size(); i++ ) {
-				BatchIdentifier batchIdentifier = latestBatches.get( i );
+			boolean stored = false;
 
-				// Iterate previous batches and make sure that parent types are before children
-				// Since the outer loop looks at each batch entry individually, we need to verify that any
-				// prior batches in the list are not considered children (or have a parent) of the current
-				// batch.  If so, we reordered them.
-				for ( int j = i - 1; j >= 0; j-- ) {
-					BatchIdentifier prevBatchIdentifier = latestBatches.get( j );
-					if ( prevBatchIdentifier.hasParent( batchIdentifier ) ) {
-						latestBatches.remove( batchIdentifier );
-						latestBatches.add( j, batchIdentifier );
+			sort:
+			do {
+				// Examine each entry in the batch list, sorting them based on parent/child association
+				// as depicted by the dependency graph.
+				for ( int i = 0; i < latestBatches.size(); i++ ) {
+					BatchIdentifier batchIdentifier = latestBatches.get( i );
+
+					// Iterate previous batches and make sure that parent types are before children
+					// Since the outer loop looks at each batch entry individually, we need to verify that any
+					// prior batches in the list are not considered children (or have a parent) of the current
+					// batch.  If so, we reordered them.
+					for ( int j = i - 1; j >= 0; j-- ) {
+						BatchIdentifier prevBatchIdentifier = latestBatches.get( j );
+						if ( prevBatchIdentifier.hasParent( batchIdentifier ) && !batchIdentifier.hasParent( prevBatchIdentifier ) ) {
+							latestBatches.remove( batchIdentifier );
+							latestBatches.add( j, batchIdentifier );
+
+							continue sort;
+						}
+					}
+
+					// Iterate next batches and make sure that children types are after parents.
+					// Since the outer loop looks at each batch entry individually and the prior loop will reorder
+					// entries as well, we need to look and verify if the current batch is a child of the next
+					// batch or if the current batch is seen as a parent or child of the next batch.
+					for ( int j = i + 1; j < latestBatches.size(); j++ ) {
+						BatchIdentifier nextBatchIdentifier = latestBatches.get( j );
+
+						if ( batchIdentifier.hasParent( nextBatchIdentifier ) && !nextBatchIdentifier.hasParent( batchIdentifier ) ) {
+							latestBatches.remove( batchIdentifier );
+							latestBatches.add( j, batchIdentifier );
+
+							continue sort;
+						}
 					}
 				}
 
-				// Iterate next batches and make sure that children types are after parents.
-				// Since the outer loop looks at each batch entry individually and the prior loop will reorder
-				// entries as well, we need to look and verify if the current batch is a child of the next
-				// batch or if the current batch is seen as a parent or child of the next batch.
-				for ( int j = i + 1; j < latestBatches.size(); j++ ) {
-					BatchIdentifier nextBatchIdentifier = latestBatches.get( j );
-
-					if ( batchIdentifier.hasParent( nextBatchIdentifier ) ) {
-						latestBatches.remove( batchIdentifier );
-						latestBatches.add( j, batchIdentifier );
-					}
-				}
-			}
+				stored = true;
+			} while ( !stored );
 
 			// Now, rebuild the insertions list. There is a batch for each entry in the name list.
 			for ( BatchIdentifier rootIdentifier : latestBatches ) {

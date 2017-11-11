@@ -211,19 +211,21 @@ public abstract class AbstractEntityDescriptor<J>
 		// todo (6.0) : resolve "join predicate" as ForeignKey.ColumnMappings
 		//		see note on MappedTableJoin regarding what to expose there
 
+
 		return new JoinedTableBinding(
+				// NOTE : for secondary tables, it is the secondary table that is
+				//		the referring table
 				joinedTable,
 				getPrimaryTable(),
-				resolveJoinedTableForeignKey( joinedTable, creationContext ),
+				resolveJoinedTableForeignKey( mappedTableJoin, creationContext ),
 				mappedTableJoin.isOptional()
 		);
 	}
 
-	private ForeignKey.ColumnMappings resolveJoinedTableForeignKey(
-			Table joinedTable,
+	private ForeignKey resolveJoinedTableForeignKey(
+			MappedTableJoin bootJoinTable,
 			RuntimeModelCreationContext creationContext) {
-
-		return null;
+		return creationContext.getDatabaseObjectResolver().resolveForeignKey( bootJoinTable.getJoinMapping() );
 	}
 
 	private static <T> IdentifiableJavaDescriptor<T> resolveJavaTypeDescriptor(
@@ -625,7 +627,7 @@ public abstract class AbstractEntityDescriptor<J>
 			SqlAliasBase sqlAliasBase,
 			TableGroupContext context) {
 		final TableReference joinedTableReference = new TableReference(
-				joinedTableBinding.getTargetTable(),
+				joinedTableBinding.getReferringTable(),
 				sqlAliasBase.generateNewAlias()
 		);
 
@@ -634,21 +636,21 @@ public abstract class AbstractEntityDescriptor<J>
 						? JoinType.LEFT
 						: context.getTableReferenceJoinType(),
 				joinedTableReference,
-				generateJoinPredicate( rootTableReference, joinedTableReference, joinedTableBinding.getJoinPredicateColumnMappings() )
+				generateJoinPredicate( rootTableReference, joinedTableReference, joinedTableBinding.getJoinForeignKey() )
 		);
 	}
 
 	private Predicate generateJoinPredicate(
 			TableReference rootTableReference,
 			TableReference joinedTableReference,
-			ForeignKey.ColumnMappings joinPredicateColumnMappings) {
-		assert rootTableReference.getTable() == joinPredicateColumnMappings.getTargetTable();
-		assert joinedTableReference.getTable() == joinPredicateColumnMappings.getReferringTable();
-		assert !joinPredicateColumnMappings.getColumnMappings().isEmpty();
+			ForeignKey joinForeignKey) {
+		assert rootTableReference.getTable() == joinForeignKey.getTargetTable();
+		assert joinedTableReference.getTable() == joinForeignKey.getReferringTable();
+		assert !joinForeignKey.getColumnMappings().getColumnMappings().isEmpty();
 
 		final Junction conjunction = new Junction( Junction.Nature.CONJUNCTION );
 
-		for ( ForeignKey.ColumnMappings.ColumnMapping columnMapping : joinPredicateColumnMappings.getColumnMappings() ) {
+		for ( ForeignKey.ColumnMappings.ColumnMapping columnMapping : joinForeignKey.getColumnMappings().getColumnMappings() ) {
 			conjunction.add(
 					new RelationalPredicate(
 							RelationalPredicate.Operator.EQUAL,

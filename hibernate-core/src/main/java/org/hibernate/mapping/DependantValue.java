@@ -86,4 +86,6 @@ public class DependantValue extends SimpleValue {
 	public boolean isNationalized() {
 		return isNationalized;
 	}
+
+
 }

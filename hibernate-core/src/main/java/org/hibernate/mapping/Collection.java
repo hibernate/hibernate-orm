@@ -425,7 +425,7 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 		// if ( !isInverse() ) { // for inverse collections, let the "other end" handle it
 		if ( referencedPropertyName == null ) {
 			getElement().createForeignKey();
-			key.createForeignKeyOfEntity( getOwner().getEntityName() );
+			foreignKey = key.createForeignKeyOfEntity( getOwner().getEntityName() );
 		}
 		// }
 	}

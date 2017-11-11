@@ -14,18 +14,18 @@ package org.hibernate.metamodel.model.relational.spi;
 public class JoinedTableBinding {
 	private final Table referringTable;
 	private final Table targetTable;
-	private final ForeignKey.ColumnMappings joinPredicateColumnMappings;
+	private final ForeignKey joinForeignKey;
 
 	private final boolean optional;
 
 	public JoinedTableBinding(
 			Table referringTable,
 			Table targetTable,
-			ForeignKey.ColumnMappings joinPredicateColumnMappings,
+			ForeignKey joinForeignKey,
 			boolean optional) {
 		this.referringTable = referringTable;
 		this.targetTable = targetTable;
-		this.joinPredicateColumnMappings = joinPredicateColumnMappings;
+		this.joinForeignKey = joinForeignKey;
 		this.optional = optional;
 	}
 
@@ -37,8 +37,8 @@ public class JoinedTableBinding {
 		return targetTable;
 	}
 
-	public ForeignKey.ColumnMappings getJoinPredicateColumnMappings() {
-		return joinPredicateColumnMappings;
+	public ForeignKey getJoinForeignKey() {
+		return joinForeignKey;
 	}
 
 	public boolean isOptional() {

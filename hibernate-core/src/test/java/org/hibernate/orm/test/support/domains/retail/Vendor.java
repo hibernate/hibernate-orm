@@ -8,14 +8,17 @@ package org.hibernate.orm.test.support.domains.retail;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.SecondaryTable;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
+@SecondaryTable(name = "vendor_supp")
 public class Vendor {
 	private Integer id;
 	private String name;
+	private String billingEntity;
 
 	@Id
 	public Integer getId() {

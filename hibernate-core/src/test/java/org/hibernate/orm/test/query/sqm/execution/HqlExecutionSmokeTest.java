@@ -11,20 +11,21 @@ import java.sql.Statement;
 import java.util.List;
 
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfBasics;
 
 import org.hibernate.testing.junit5.StandardTags;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-
-import org.hamcrest.CoreMatchers;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.orm.test.support.domains.retail.ModelClasses.applyRetailModel;
+import static org.hibernate.orm.test.support.util.LobHelper.createClob;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 
 /**
@@ -56,22 +57,19 @@ public class HqlExecutionSmokeTest extends SessionFactoryBasedFunctionalTest {
 					);
 				}
 		);
+	}
 
-// currently a problem saving entities
-//		sessionFactoryScope().inTransaction(
-//				session -> {
-//
-//					EntityOfBasics entity = new EntityOfBasics();
-//					entity.setGender( EntityOfBasics.Gender.FEMALE );
-//					entity.setTheInt( 5 );
-//					entity.setTheInteger( null );
-//					entity.setTheString( StringHelper.repeat( 'x', 250 ) );
-//					entity.setTheUrl( null );
-//					entity.setTheClob( createClob( 'c', 5000 ) );
-//
-//					session.save( entity );
-//				}
-//		);
+	@AfterEach
+	public void dropData() {
+		sessionFactoryScope().inTransaction(
+				session -> session.doWork(
+						connection -> {
+							try (Statement statement = connection.createStatement() ) {
+								statement.execute( "delete from EntityOfBasics" );
+							}
+						}
+				)
+		);
 	}
 
 	@Test
@@ -87,6 +85,13 @@ public class HqlExecutionSmokeTest extends SessionFactoryBasedFunctionalTest {
 		);
 	}
 
+	@Test
+	public void testEntityWithSecondaryTable() {
+		sessionFactoryScope().inTransaction(
+				session -> session.createQuery( "from Vendor" ).list()
+		);
+	}
+
 	@Override
 	protected boolean exportSchema() {
 		return true;
@@ -96,5 +101,6 @@ public class HqlExecutionSmokeTest extends SessionFactoryBasedFunctionalTest {
 	protected void applyMetadataSources(MetadataSources metadataSources) {
 		super.applyMetadataSources( metadataSources );
 		metadataSources.addAnnotatedClass( EntityOfBasics.class );
+		applyRetailModel( metadataSources );
 	}
 }

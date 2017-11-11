@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -19,12 +21,14 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
@@ -195,7 +199,32 @@ public class PluralPersistentAttributeImpl implements PluralPersistentAttribute 
 
 	@Override
 	public List<SqlSelection> resolveSqlSelectionGroup(
-			ColumnReferenceQualifier qualifier, SqlSelectionGroupResolutionContext resolutionContext) {
-		throw new NotYetImplementedFor6Exception();
+			ColumnReferenceQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext) {
+		final List<ForeignKey.ColumnMappings.ColumnMapping> columnMappings = getPersistentCollectionDescriptor().getCollectionKeyDescriptor()
+				.getJoinForeignKey()
+				.getColumnMappings()
+				.getColumnMappings();
+
+		if ( columnMappings.size() == 1 ) {
+			return Collections.singletonList( resolveSqlSelection( qualifier, resolutionContext, columnMappings.get( 0 ) ) );
+		}
+
+		final List<SqlSelection> sqlSelections = new ArrayList<>();
+		for ( ForeignKey.ColumnMappings.ColumnMapping columnMapping : columnMappings ) {
+			sqlSelections.add( resolveSqlSelection( qualifier, resolutionContext, columnMapping ) );
+		}
+		return sqlSelections;
+	}
+
+	private SqlSelection resolveSqlSelection(
+			ColumnReferenceQualifier qualifier,
+			SqlSelectionGroupResolutionContext resolutionContext,
+			ForeignKey.ColumnMappings.ColumnMapping columnMapping) {
+		final Expression expression = resolutionContext.getSqlSelectionResolver().resolveSqlExpression(
+				qualifier,
+				columnMapping.getReferringColumn()
+		);
+		return resolutionContext.getSqlSelectionResolver().resolveSqlSelection( expression );
 	}
 }

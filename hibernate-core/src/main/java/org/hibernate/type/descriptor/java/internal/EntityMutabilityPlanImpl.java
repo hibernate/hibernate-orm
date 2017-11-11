@@ -23,7 +23,8 @@ public class EntityMutabilityPlanImpl implements EntityMutabilityPlan {
 
 	public EntityMutabilityPlanImpl(
 			EntityDescriptor entityDescriptor,
-			EntityEntryFactory entityEntryFactory, boolean isMutable) {
+			EntityEntryFactory entityEntryFactory,
+			boolean isMutable) {
 		this.entityDescriptor = entityDescriptor;
 		this.entityEntryFactory = entityEntryFactory;
 		this.isMutable = isMutable;
@@ -47,6 +48,7 @@ public class EntityMutabilityPlanImpl implements EntityMutabilityPlan {
 	@Override
 	public Serializable disassemble(Object value) {
 		// todo (6.0) : this requires some capability to ask the EntityIdentifier to extract the id value from an entity instance.
+		//		however, I'm not sure deepCopy, disassemble and assemble make sense here
 		throw new NotYetImplementedFor6Exception();
 	}
 

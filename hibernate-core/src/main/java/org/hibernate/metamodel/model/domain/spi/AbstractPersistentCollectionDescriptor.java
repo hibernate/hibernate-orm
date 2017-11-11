@@ -133,7 +133,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 				creationContext
 		);
 
-		this.foreignKeyDescriptor = new CollectionKey( this, collectionBinding );
+		this.foreignKeyDescriptor = new CollectionKey( this, collectionBinding, creationContext );
 
 		if ( sessionFactory.getSessionFactoryOptions().isStructuredCacheEntriesEnabled() ) {
 			cacheEntryStructure = collectionBinding.isMap()
@@ -594,7 +594,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 	}
 
 	@Override
-	public CollectionKey getForeignKeyDescriptor() {
+	public CollectionKey getCollectionKeyDescriptor() {
 		return foreignKeyDescriptor;
 	}
 

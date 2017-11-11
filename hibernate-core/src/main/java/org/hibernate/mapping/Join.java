@@ -96,8 +96,14 @@ public class Join implements AttributeContainer, Serializable, MappedTableJoin {
 		this.persistentClass = persistentClass;
 	}
 
+	private ForeignKey joinMapping;
 	public void createForeignKey() {
-		getKey().createForeignKeyOfEntity( persistentClass.getEntityName() );
+		joinMapping = getKey().createForeignKeyOfEntity( persistentClass.getEntityName() );
+	}
+
+	@Override
+	public ForeignKey getJoinMapping() {
+		return joinMapping;
 	}
 
 	public void createPrimaryKey() {

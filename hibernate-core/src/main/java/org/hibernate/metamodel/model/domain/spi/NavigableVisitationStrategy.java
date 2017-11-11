@@ -83,7 +83,7 @@ public interface NavigableVisitationStrategy {
 	}
 
 	default void visitPluralAttribute(PluralPersistentAttribute attribute) {
-		visitCollectionForeignKey( attribute.getPersistentCollectionDescriptor().getForeignKeyDescriptor() );
+		visitCollectionForeignKey( attribute.getPersistentCollectionDescriptor().getCollectionKeyDescriptor() );
 
 		final CollectionIdentifier idDescriptor = attribute.getPersistentCollectionDescriptor().getIdDescriptor();
 		if ( idDescriptor != null ) {

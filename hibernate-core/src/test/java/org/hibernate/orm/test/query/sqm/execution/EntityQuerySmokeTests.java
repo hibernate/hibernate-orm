@@ -14,7 +14,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.SessionFactoryBasedFunctionalTest;
 import org.hibernate.orm.test.support.domains.gambit.EntityOfBasics;
-import org.hibernate.orm.test.support.domains.retail.AnnotatedClasses;
 import org.hibernate.orm.test.support.domains.retail.Vendor;
 
 import org.junit.jupiter.api.Test;
@@ -23,6 +22,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.orm.test.support.domains.retail.ModelClasses.applyRetailModel;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 
 /**
@@ -67,7 +67,7 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testRootEntitySelection() {
-		sessionFactoryScope().inTransaction(
+		sessionFactoryScope().inSession(
 				session -> {
 					final List result = session.createQuery( "select e from EntityOfBasics e" ).list();
 					assertThat( result, hasSize( 1 ) );
@@ -89,7 +89,7 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testRootEntityAttributeSelection() {
-		sessionFactoryScope().inTransaction(
+		sessionFactoryScope().inSession(
 				session -> {
 					final List result = session.createQuery( "select e.id from EntityOfBasics e" ).list();
 					assertThat( result, hasSize( 1 ) );
@@ -106,7 +106,7 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testRootEntityAttributeReference() {
-		sessionFactoryScope().inTransaction(
+		sessionFactoryScope().inSession(
 				session -> {
 					final List result = session.createQuery( "select e from EntityOfBasics e where id = 1" ).list();
 					assertThat( result, hasSize( 1 ) );
@@ -128,7 +128,7 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testRootEntityManyToOneSelection() {
-		sessionFactoryScope().inTransaction(
+		sessionFactoryScope().inSession(
 				session -> {
 					final List result = session.createQuery( "select p.vendor from Product p" ).list();
 					assertThat( result, hasSize( 1 ) );
@@ -146,7 +146,7 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	public void testRootEntityManyToOneAttributeReference() {
-		sessionFactoryScope().inTransaction(
+		sessionFactoryScope().inSession(
 				session -> {
 					final List result = session.createQuery( "select p.vendor from Product p" ).list();
 					assertThat( result, hasSize( 1 ) );
@@ -171,6 +171,6 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 	protected void applyMetadataSources(MetadataSources metadataSources) {
 		super.applyMetadataSources( metadataSources );
 		metadataSources.addAnnotatedClass( EntityOfBasics.class );
-		AnnotatedClasses.applyRetailModel( metadataSources );
+		applyRetailModel( metadataSources );
 	}
 }

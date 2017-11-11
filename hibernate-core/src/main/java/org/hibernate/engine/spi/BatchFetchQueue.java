@@ -314,7 +314,7 @@ public class BatchFetchQueue {
 					return keys; //the first key found afterQuery the given key
 				}
 
-				final boolean isEqual = persistentCollectionDescriptor.getForeignKeyDescriptor()
+				final boolean isEqual = persistentCollectionDescriptor.getCollectionKeyDescriptor()
 						.getJavaTypeDescriptor()
 						.areEqual(
 								id,

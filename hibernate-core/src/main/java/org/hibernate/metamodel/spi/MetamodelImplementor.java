@@ -13,16 +13,26 @@ import java.util.Set;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Metamodel;
 import org.hibernate.internal.util.collections.streams.StreamUtils;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * @deprecated Was designed as an SPI extension to the JPA {@link javax.persistence.metamodel.Metamodel}
- * however, most of that functionality has been moved to {@link TypeConfiguration} instead.
+ * An SPI extension to the JPA {@link javax.persistence.metamodel.Metamodel}
+ * via ({@link org.hibernate.Metamodel}
+ *
+ * @apiNote Most of that functionality has been moved to {@link TypeConfiguration} instead,
+ * accessible via {@link #getTypeConfiguration()}
  */
-@Deprecated
 public interface MetamodelImplementor extends Metamodel {
+	// todo (6.0) : would be awesome to expose the runtime database model here
+	//		however that has some drawbacks that we need to discuss, namely
+	//		that DatabaseModel holds state that we do not need beyond
+	//		schema-management tooling - init-commands and aux-db-objects
+
+	/**
+	 * Close the Metamodel
+	 */
 	void close();
 
 	/**

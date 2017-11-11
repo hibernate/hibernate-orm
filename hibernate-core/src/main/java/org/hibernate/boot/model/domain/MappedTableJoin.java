@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.domain;
 
 import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.mapping.ForeignKey;
 
 /**
  * Common representation of both SecondaryTable and joined-tables
@@ -17,5 +18,6 @@ import org.hibernate.boot.model.relational.MappedTable;
 public interface MappedTableJoin {
 	MappedTable getMappedTable();
 	boolean isOptional();
-	// todo (6.0) : access of some sort to column mappings to be able to generate "join predicate" in persisters
+
+	ForeignKey getJoinMapping();
 }

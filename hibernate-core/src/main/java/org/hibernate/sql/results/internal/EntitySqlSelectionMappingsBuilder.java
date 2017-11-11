@@ -19,6 +19,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggr
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.sql.ast.produce.internal.CompositeColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.results.spi.EntitySqlSelectionMappings;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
@@ -139,6 +140,20 @@ public class EntitySqlSelectionMappingsBuilder implements NavigableVisitationStr
 
 	@Override
 	public void visitPluralAttribute(PluralPersistentAttribute attribute) {
+		// determine the table that is the source of the FK - this will either
+		//		be the "collection table" or the "element table"
+		final CompositeColumnReferenceQualifier extendedQulifier;
+
+		// todo (6.0) : we need some way here to resolve or create a TableReference
+		//		we may also need the ability to create new TableGroups and TableReferences
+		//		on the fly.
+		//
+		// we need this here because we need to build an expanded "qualifier" to
+		//		cover the "collection table"
+		//
+		// Might be a good place to hook in fetch processing as well, provided we
+		//		solve the need to create TableGroups on the fly
+
 		sqlSelectionMappingsBuilder.applyAttributeSqlSelectionGroup(
 				attribute,
 				attribute.resolveSqlSelectionGroup( qualifier, creationContext )

@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.mapping.Collection;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -17,15 +18,21 @@ public class CollectionKey {
 	private final AbstractPersistentCollectionDescriptor collectionDescriptor;
 	private final JavaTypeDescriptor javaTypeDescriptor;
 
-	private ForeignKey.ColumnMappings joinColumnMappings;
+	private ForeignKey joinForeignKey;
 
-	public CollectionKey(AbstractPersistentCollectionDescriptor<?,?,?> collectionDescriptor, Collection mappingBinding) {
+	public CollectionKey(
+			AbstractPersistentCollectionDescriptor<?, ?, ?> collectionDescriptor,
+			Collection bootCollectionValue,
+			RuntimeModelCreationContext creationContext) {
 		this.collectionDescriptor = collectionDescriptor;
-		javaTypeDescriptor = mappingBinding.getJavaTypeDescriptor();
+		this.javaTypeDescriptor = bootCollectionValue.getJavaTypeDescriptor();
+		this.joinForeignKey = creationContext.getDatabaseObjectResolver().resolveForeignKey(
+				bootCollectionValue.getForeignKey()
+		);
 	}
 
-	public ForeignKey.ColumnMappings getJoinColumnMappings() {
-		return joinColumnMappings;
+	public ForeignKey getJoinForeignKey() {
+		return joinForeignKey;
 	}
 
 	public JavaTypeDescriptor getJavaTypeDescriptor() {

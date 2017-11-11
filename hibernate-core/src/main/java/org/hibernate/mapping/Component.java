@@ -150,9 +150,18 @@ public class Component extends SimpleValue
 		throw new UnsupportedOperationException( "Cant add a column to a component" );
 	}
 
+	Integer columnSpan;
 	@Override
 	public int getColumnSpan() {
-		return getDeclaredPersistentAttributes().size();
+		if ( columnSpan == null ) {
+			int i = 0;
+			for ( PersistentAttributeMapping persistentAttributeMapping : getDeclaredPersistentAttributes() ) {
+				i += persistentAttributeMapping.getValueMapping().getMappedColumns().size();
+			}
+			columnSpan = i;
+		}
+
+		return columnSpan;
 	}
 
 	@Override

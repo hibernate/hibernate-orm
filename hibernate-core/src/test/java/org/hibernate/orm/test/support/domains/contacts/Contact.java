@@ -9,11 +9,13 @@ package org.hibernate.orm.test.support.domains.contacts;
 import java.time.LocalDate;
 import java.util.List;
 import javax.persistence.CollectionTable;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OrderColumn;
+import javax.persistence.SecondaryTable;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -21,6 +23,7 @@ import javax.persistence.TemporalType;
  * @author Steve Ebersole
  */
 @Entity
+@SecondaryTable( name="contact_supp" )
 public class Contact {
 	private Integer id;
 	private Name name;
@@ -60,6 +63,7 @@ public class Contact {
 	}
 
 	@Temporal( TemporalType.DATE )
+	@Column( table = "contact_supp" )
 	public LocalDate getBirthDay() {
 		return birthDay;
 	}

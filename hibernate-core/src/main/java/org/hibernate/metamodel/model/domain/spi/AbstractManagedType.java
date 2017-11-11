@@ -18,7 +18,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
@@ -255,9 +254,38 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 		);
 	}
 
+
+
+	// todo (6.0) : make sure we are only iterating the attributes once to do all of these kinds of initialization
+
+	Boolean hasMutableProperties;
+
 	@Override
 	public boolean hasMutableProperties() {
-		throw new NotYetImplementedFor6Exception(  );
+		if ( hasMutableProperties == null ) {
+			hasMutableProperties = lookForMutableAttributes();
+		}
+
+		return hasMutableProperties;
+	}
+
+	private Boolean lookForMutableAttributes() {
+		if ( superTypeDescriptor != null ) {
+			if ( superTypeDescriptor.hasMutableProperties() ) {
+				return true;
+			}
+		}
+
+		for ( NonIdPersistentAttribute attribute : declaredAttributes ) {
+			if ( attribute.isUpdatable() ) {
+				return true;
+			}
+		}
+
+		// sub-types?
+
+		return false;
+
 	}
 
 	@SuppressWarnings({"unchecked", "WeakerAccess"})

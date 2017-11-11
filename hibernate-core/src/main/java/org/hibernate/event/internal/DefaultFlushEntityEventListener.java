@@ -60,7 +60,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	/**
 	 * make sure user didn't mangle the id
 	 */
-	public void checkId(Object object, EntityDescriptor persister, Serializable id, SessionImplementor session)
+	public void checkId(Object object, EntityDescriptor entityDescriptor, Serializable id, SessionImplementor session)
 			throws HibernateException {
 
 		if ( id != null && id instanceof DelayedPostInsertIdentifier ) {
@@ -71,14 +71,14 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		// todo (6.0) : iirc we removed the ability to define an entity whose class does not contain the id
 		//		so `canExtractIdOutOfEntity` should always be true
-		//if ( persister.canExtractIdOutOfEntity() ) {
-			Serializable oid = persister.getIdentifier( object, session );
+		//if ( entityDescriptor.canExtractIdOutOfEntity() ) {
+			Serializable oid = entityDescriptor.getIdentifier( object, session );
 			if ( id == null ) {
-				throw new AssertionFailure( "null id in " + persister.getEntityName() + " entry (don't flush the Session afterQuery an exception occurs)" );
+				throw new AssertionFailure( "null id in " + entityDescriptor.getEntityName() + " entry (don't flush the Session afterQuery an exception occurs)" );
 			}
-			if ( !persister.getIdentifierType().getJavaTypeDescriptor().areEqual( id, oid ) ) {
+			if ( !entityDescriptor.getIdentifierDescriptor().getJavaTypeDescriptor().areEqual( id, oid ) ) {
 				throw new HibernateException(
-						"identifier of an instance of " + persister.getEntityName() + " was altered from "
+						"identifier of an instance of " + entityDescriptor.getEntityName() + " was altered from "
 								+ id + " to " + oid
 				);
 			}

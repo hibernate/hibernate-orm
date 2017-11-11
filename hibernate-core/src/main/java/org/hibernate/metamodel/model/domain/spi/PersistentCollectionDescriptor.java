@@ -85,7 +85,7 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	/**
 	 * Access information about the FK mapping to the "owner" of this collection
 	 */
-	CollectionKey getForeignKeyDescriptor();
+	CollectionKey getCollectionKeyDescriptor();
 
 	/**
 	 * Access to the collection identifier, if it has one (idbag).  If not, will

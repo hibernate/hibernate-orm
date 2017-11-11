@@ -253,7 +253,7 @@ public final class MessageHelper {
 			s.append( collectionDescriptor.getNavigableRole().getFullPath() );
 			s.append( '#' );
 
-			JavaTypeDescriptor ownerIdentifierJavaTypeDescriptor = collectionDescriptor.getForeignKeyDescriptor()
+			JavaTypeDescriptor ownerIdentifierJavaTypeDescriptor = collectionDescriptor.getCollectionKeyDescriptor()
 					.getJavaTypeDescriptor();
 			Serializable ownerKey;
 			// TODO: Is it redundant to attempt to use the collectionKey,
@@ -352,7 +352,7 @@ public final class MessageHelper {
 		// Also need to check that the expected identifier type matches
 		// the given ID.  Due to property-ref keys, the collection key
 		// may not be the owner key.
-		JavaTypeDescriptor ownerIdentifierJavaTypeDescriptor = collectionDescriptor.getForeignKeyDescriptor()
+		JavaTypeDescriptor ownerIdentifierJavaTypeDescriptor = collectionDescriptor.getCollectionKeyDescriptor()
 				.getJavaTypeDescriptor();
 		if ( id.getClass().isAssignableFrom( 
 				ownerIdentifierJavaTypeDescriptor.getJavaType() ) ) {

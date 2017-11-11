@@ -6,62 +6,36 @@
  */
 package org.hibernate.test.naturalid.inheritance;
 
-import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.NaturalIdCache;
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-12085" )
+@FailureExpected( jiraKey = "HHH-12085" )
 public class MappedSuperclassOverrideTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
-	public void test() {
-		createTestData();
-
-		try {
-			inTransaction(
-					session -> session.createQuery( "select e from MyEntity e" ).list()
-			);
-		}
-		finally {
-			dropTestData();
-		}
-	}
-
-	private void createTestData() {
-		inTransaction(
-				session -> {
-					session.save( new MyEntity( 1, "first" ) );
-				}
-		);
-	}
-
-	private void dropTestData() {
-		inTransaction(
-				session -> {
-					session.createQuery( "delete MyEntity" ).executeUpdate();
-				}
+	public void testModel() {
+		assertTrue(
+				sessionFactory().getMetamodel().entityPersister( MyEntity.class )
+						.hasNaturalIdentifier()
 		);
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
-		super.addSettings( settings );
-		settings.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
+	protected boolean createSchema() {
+		return false;
 	}
 
 	@Override
@@ -104,8 +78,6 @@ public class MappedSuperclassOverrideTest extends BaseNonConfigCoreFunctionalTes
 
 	@Entity( name = "MyEntity" )
 	@Table( name = "the_entity" )
-	@NaturalIdCache
-	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 	public static class MyEntity extends MyMappedSuperclass {
 		public MyEntity() {
 			super();
@@ -117,6 +89,7 @@ public class MappedSuperclassOverrideTest extends BaseNonConfigCoreFunctionalTes
 
 		// this should not be allowed, and supposedly fails anyway...
 		@Override
+		@NaturalId
 		public String getName() {
 			return super.getName();
 		}

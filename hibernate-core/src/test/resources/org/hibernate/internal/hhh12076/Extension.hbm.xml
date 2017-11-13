@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated 19-Aug-2010 2:56:24 PM by Hibernate Tools 3.3.0.GA -->
+<hibernate-mapping>
+    <class 
+    	name="org.hibernate.internal.hhh12076.Extension"
+    	table="claim_ext"
+    	lazy="false">
+    	
+        <id name="id" type="java.lang.Long">
+            <column name="id" />
+            <generator class="native" />
+        </id>
+        <version name="version" unsaved-value="null" type="java.lang.Integer"/>
+		<property name="creationDate" type="timestamp" insert="false" update="false" generated="always">
+			<column name="creation_date" />
+		</property>
+		<property name="modifiedDate" type="timestamp" insert="false" update="false" generated="always">
+			<column name="modified_date" />
+		</property>
+		
+        <property name="type" type="java.lang.String">
+            <column name="type" length="128" not-null="true" />
+        </property>		
+		
+        <many-to-one name="claim" class="org.hibernate.internal.hhh12076.Claim" fetch="select">
+            <column name="claim_id" not-null="true" />
+        </many-to-one>
+    </class>
+</hibernate-mapping>

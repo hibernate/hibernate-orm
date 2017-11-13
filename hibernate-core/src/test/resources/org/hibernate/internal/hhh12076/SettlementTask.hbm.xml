@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated 8-Nov-2010 8:08:00 PM by Hibernate Tools 3.4.0.Beta1 -->
+<hibernate-mapping>
+	<subclass 
+		name="org.hibernate.internal.hhh12076.SettlementTask"
+		extends="org.hibernate.internal.hhh12076.Task"
+		discriminator-value="org.hibernate.internal.hhh12076.SettlementTask"
+		lazy="false">
+
+		<many-to-one 
+			name="linked" 
+			class="org.hibernate.internal.hhh12076.Settlement"
+			fetch="join">
+			<column name="linked_id" not-null="true" />
+		</many-to-one>
+				
+	</subclass>
+</hibernate-mapping>

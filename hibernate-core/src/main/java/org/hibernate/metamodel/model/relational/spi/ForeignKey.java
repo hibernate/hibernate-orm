@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.relational.spi;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.hibernate.internal.util.StringHelper;
@@ -138,4 +139,22 @@ public class ForeignKey implements Exportable {
 		}
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		ForeignKey that = (ForeignKey) o;
+		return Objects.equals( name, that.name ) &&
+				Objects.equals( referringTable, that.referringTable );
+	}
+
+	@Override
+	public int hashCode() {
+
+		return Objects.hash( name, referringTable );
+	}
 }

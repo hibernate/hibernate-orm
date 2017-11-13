@@ -8,8 +8,10 @@ package org.hibernate.metamodel.model.relational.spi;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.hibernate.metamodel.model.relational.internal.InflightTable;
@@ -20,8 +22,8 @@ import org.hibernate.naming.Identifier;
  */
 public abstract class AbstractTable implements InflightTable {
 	private PrimaryKey primaryKey = null;
-	private List<ForeignKey> foreignKeys = new ArrayList<>();
-	private List<UniqueKey> uniqueKeys = new ArrayList<>();
+	private Set<ForeignKey> foreignKeys = new HashSet<>();
+	private Set<UniqueKey> uniqueKeys = new HashSet<>();
 	private final Map<String,Column> columnMap = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
 	private final boolean isAbstract;
 

@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.relational.spi;
 
+import java.util.Objects;
+
 import org.hibernate.naming.Identifier;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
@@ -127,5 +129,24 @@ public class PhysicalColumn implements Column {
 
 	public String getCheckConstraint() {
 		return checkConstraint;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		PhysicalColumn that = (PhysicalColumn) o;
+		return Objects.equals( table, that.table ) &&
+				Objects.equals( name, that.name );
+	}
+
+	@Override
+	public int hashCode() {
+
+		return Objects.hash( table, name );
 	}
 }

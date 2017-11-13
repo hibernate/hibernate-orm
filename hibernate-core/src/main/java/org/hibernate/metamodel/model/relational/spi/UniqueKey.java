@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.naming.Identifier;
@@ -56,5 +57,24 @@ public class UniqueKey implements Exportable {
 	@Override
 	public String getExportIdentifier() {
 		return StringHelper.qualify( ( (ExportableTable) getTable() ).getTableName().getText(), "IDX-" + getName().getText() );
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		UniqueKey uniqueKey = (UniqueKey) o;
+		return Objects.equals( table, uniqueKey.table ) &&
+				Objects.equals( name, uniqueKey.name );
+	}
+
+	@Override
+	public int hashCode() {
+
+		return Objects.hash( table, name );
 	}
 }

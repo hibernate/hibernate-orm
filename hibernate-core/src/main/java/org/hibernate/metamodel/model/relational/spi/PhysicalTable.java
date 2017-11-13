@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.relational.spi;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -169,5 +170,23 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 
 	private String render(Identifier identifier) {
 		return identifier == null ? null : identifier.render();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		PhysicalTable that = (PhysicalTable) o;
+		return Objects.equals( qualifiedTableName, that.qualifiedTableName );
+	}
+
+	@Override
+	public int hashCode() {
+
+		return Objects.hash( qualifiedTableName );
 	}
 }

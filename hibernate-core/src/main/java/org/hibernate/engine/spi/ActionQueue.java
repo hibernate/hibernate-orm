@@ -1161,12 +1161,17 @@ public class ActionQueue {
 				}
 			}
 
-			boolean stored = false;
+			boolean sorted = false;
+
+			long maxIterations = latestBatches.size() * 2;
+			long iterations = 0;
 
 			sort:
 			do {
 				// Examine each entry in the batch list, sorting them based on parent/child association
 				// as depicted by the dependency graph.
+				iterations++;
+
 				for ( int i = 0; i < latestBatches.size(); i++ ) {
 					BatchIdentifier batchIdentifier = latestBatches.get( i );
 
@@ -1199,9 +1204,14 @@ public class ActionQueue {
 						}
 					}
 				}
-				stored = true;
+				sorted = true;
 			}
-			while ( !stored );
+			while ( !sorted && iterations <= maxIterations);
+
+			if ( iterations > maxIterations ) {
+				LOG.warn( "The batch containing " + latestBatches.size() + " statements could not be sorted after " + maxIterations + " iterations. " +
+						   "This might indicate a bug in Hibernate!" );
+			}
 
 			// Now, rebuild the insertions list. There is a batch for each entry in the name list.
 			for ( BatchIdentifier rootIdentifier : latestBatches ) {

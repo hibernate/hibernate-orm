@@ -63,11 +63,7 @@ public class FilterConfiguration {
 			return mergedAliasTableMap;
 		}
 		else if ( persistentClass != null ) {
-			String table = persistentClass.getTable().getQualifiedName(
-					factory.getDialect(),
-					factory.getSettings().getDefaultCatalogName(),
-					factory.getSettings().getDefaultSchemaName()
-			);
+			String table = persistentClass.getMappedTable().getQualifiedTableName().render();
 			return Collections.singletonMap( null, table );
 		}
 		else {

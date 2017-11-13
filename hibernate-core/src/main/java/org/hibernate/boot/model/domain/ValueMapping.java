@@ -41,4 +41,5 @@ public interface ValueMapping<J> {
 	JavaTypeDescriptor<J> getJavaTypeDescriptor();
 
 	ServiceRegistry getServiceRegistry();
+
 }

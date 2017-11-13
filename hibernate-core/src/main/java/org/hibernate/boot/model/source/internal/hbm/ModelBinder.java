@@ -4086,25 +4086,28 @@ public class ModelBinder {
 			final UniqueKey uk = new UniqueKey();
 			uk.setTable( entityBinding.getTable() );
 			for ( Property attributeBinding : attributeBindings ) {
-				final Iterator itr = attributeBinding.getColumnIterator();
-				while ( itr.hasNext() ) {
-					final Object selectable = itr.next();
-					if ( Column.class.isInstance( selectable ) ) {
-						final Column column = (Column) selectable;
-						uk.addColumn( column );
-						columnNames.add(
-								mappingDocument.getMetadataCollector().getDatabase().toIdentifier( column.getQuotedName() )
-						);
-					}
-				}
-				uk.addColumns( attributeBinding.getColumnIterator() );
+				final List<MappedColumn> mappedColumns = attributeBinding.getMappedColumns();
+				mappedColumns.stream()
+						.filter( Selectable.class::isInstance )
+						.map( Selectable.class::cast )
+						.forEach( column -> {
+							uk.addColumn( column );
+							if ( Column.class.isInstance( column ) ) {
+								columnNames.add(
+										mappingDocument.getMetadataCollector()
+												.getDatabase()
+												.toIdentifier( ( (Column) column ).getQuotedName() )
+								);
+							}
+						} );
+				uk.addColumns( attributeBinding.getMappedColumns() );
 			}
 
 			final Identifier ukName = mappingDocument.getBuildingOptions().getImplicitNamingStrategy().determineUniqueKeyName(
 					new ImplicitUniqueKeyNameSource() {
 						@Override
 						public Identifier getTableName() {
-							return entityBinding.getTable().getNameIdentifier();
+							return entityBinding.getMappedTable().getNameIdentifier();
 						}
 
 						@Override
@@ -4120,7 +4123,7 @@ public class ModelBinder {
 			);
 			uk.setName( ukName.render( mappingDocument.getMetadataCollector().getDatabase().getDialect() ) );
 
-			entityBinding.getTable().addUniqueKey( uk );
+			entityBinding.getMappedTable().addUniqueKey( uk );
 		}
 
 	}

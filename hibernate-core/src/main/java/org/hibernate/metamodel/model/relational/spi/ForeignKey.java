@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.relational.spi;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.internal.util.StringHelper;
 
 /**

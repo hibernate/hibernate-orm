@@ -28,6 +28,4 @@ public interface EntityMapping extends IdentifiableTypeMapping {
 	}
 
 	MappedTable getRootTable();
-
-	void validate();
 }

@@ -7,6 +7,7 @@
 package org.hibernate.mapping;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -126,12 +127,13 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable<
 
 	@Override
 	public Iterator getUniqueKeyIterator() {
-		Iterator iter = includedTable.getUniqueKeyIterator();
-		while ( iter.hasNext() ) {
-			UniqueKey uk = (UniqueKey) iter.next();
-			createUniqueKey( uk.getColumns() );
-		}
-		return getUniqueKeys().values().iterator();
+		return getUniqueKeys().iterator();
+	}
+
+	@Override
+	public Collection<UniqueKey> getUniqueKeys() {
+		includedTable.getUniqueKeys().forEach( uniqueKey -> createUniqueKey( uniqueKey.getColumns() ) );
+		return super.getUniqueKeys();
 	}
 
 	@Override

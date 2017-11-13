@@ -86,6 +86,12 @@ public interface MappedTable<T extends MappedColumn> extends Loggable {
 
 	UniqueKey getOrCreateUniqueKey(String keyName);
 
+	default UniqueKey createUniqueKey(List<T> columns){
+		return null;
+	}
+
+	void addUniqueKey(UniqueKey uk);
+
 	void createForeignKeys();
 
 	/**
@@ -170,7 +176,7 @@ public interface MappedTable<T extends MappedColumn> extends Loggable {
 
 	Collection<ForeignKey> getForeignKeys();
 
-	Iterator<UniqueKey> getUniqueKeyIterator();
+	Collection<UniqueKey> getUniqueKeys();
 
 	MappedPrimaryKey getPrimaryKey();
 
@@ -191,8 +197,4 @@ public interface MappedTable<T extends MappedColumn> extends Loggable {
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			RuntimeDatabaseModelProducer.Callback callback
 	);
-
-	default UniqueKey createUniqueKey(List<T> columns){
-		return null;
-	}
 }

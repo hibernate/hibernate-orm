@@ -40,7 +40,14 @@ public class QuotedTableNameWithForeignKeysSchemaUpdateAnnottationTest extends B
 	@Override
 	protected void beforeEach(SchemaScope scope) {
 		scope.withSchemaUpdate( schemaUpdate ->
-										schemaUpdate.execute( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ) ) );
+								{
+									schemaUpdate.execute( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ) );
+									assertThat(
+											"An unexpected Exception occurred during the database schema update",
+											schemaUpdate.getExceptions().size(),
+											is( 0 )
+									);
+								} );
 	}
 
 	@SchemaTest

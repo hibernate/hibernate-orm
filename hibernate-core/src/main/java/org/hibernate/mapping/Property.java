@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import org.hibernate.EntityMode;
@@ -16,10 +17,11 @@ import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.model.domain.BasicValueMapping;
-import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.ValueMapping;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.cfg.Environment;
 import org.hibernate.collection.spi.PersistentCollectionRepresentation;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -92,8 +94,16 @@ public class Property implements Serializable, PersistentAttributeMapping {
 		return value.getColumnSpan();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getMappedColumns()}
+	 */
+	@Deprecated
 	public Iterator getColumnIterator() {
 		return value.getColumnIterator();
+	}
+
+	public List<MappedColumn> getMappedColumns(){
+		return value.getMappedColumns();
 	}
 
 	public String getName() {
@@ -313,15 +323,10 @@ public class Property implements Serializable, PersistentAttributeMapping {
 	}
 
 	/**
-	 * @deprecated since 6.0, use {@link #getIdentifiableTypeMapping()}
+	 * @deprecated since 6.0 use {@link #getEntity()} instead.
 	 */
 	@Deprecated
 	public PersistentClass getPersistentClass() {
-		return persistentClass;
-	}
-
-	@Override
-	public IdentifiableTypeMapping getIdentifiableTypeMapping(){
 		return persistentClass;
 	}
 
@@ -331,6 +336,11 @@ public class Property implements Serializable, PersistentAttributeMapping {
 
 	public boolean isSelectable() {
 		return selectable;
+	}
+
+	@Override
+	public EntityMapping getEntity(){
+		return getEntity();
 	}
 
 	@Override

@@ -150,7 +150,7 @@ public abstract class Constraint implements Serializable {
 		}
 	}
 
-	public void addColumns(List<MappedColumn> columns) {
+	public void addColumns(List<? extends MappedColumn> columns) {
 		columns.stream()
 				.filter( mappedColumn -> !mappedColumn.isFormula() )
 				.forEach( column -> addColumn( (Column) column ) );

@@ -395,7 +395,7 @@ public class MapBinder extends CollectionBinder {
 				newProperty.setNaturalIdentifier( false );
 				//newProperty.setOptimisticLocked( false );
 				newProperty.setOptional( false );
-				newProperty.setPersistentClass( current.getPersistentClass() );
+				newProperty.setPersistentClass( (PersistentClass) current.getEntity() );
 				newProperty.setPropertyAccessorName( current.getPropertyAccessorName() );
 				newProperty.setSelectable( current.isSelectable() );
 				newProperty.setValue(

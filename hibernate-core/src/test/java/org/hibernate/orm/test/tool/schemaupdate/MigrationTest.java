@@ -11,11 +11,15 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.tool.BaseSchemaUnitTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit5.DialectFeatureChecks;
+import org.hibernate.testing.junit5.RequiresDialectFeature;
 import org.hibernate.testing.junit5.schema.SchemaScope;
 import org.hibernate.testing.junit5.schema.SchemaTest;
 
@@ -23,7 +27,13 @@ import org.hibernate.testing.junit5.schema.SchemaTest;
  * @author Max Rydahl Andersen
  * @author Brett Meyer
  */
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportSchemaCreation.class)
 public class MigrationTest extends BaseSchemaUnitTestCase {
+
+	@Override
+	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( AvailableSettings.HBM2DLL_CREATE_SCHEMAS, "true" );
+	}
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

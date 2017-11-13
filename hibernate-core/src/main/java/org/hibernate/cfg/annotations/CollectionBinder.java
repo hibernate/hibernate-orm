@@ -66,7 +66,10 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.domain.KeyValueMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.domain.spi.EntityMappingImplementor;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
@@ -100,7 +103,6 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.naming.Identifier;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
@@ -1637,9 +1639,9 @@ public abstract class CollectionBinder {
 		final String mappedBy = columns[0].getMappedBy();
 		if ( StringHelper.isNotEmpty( mappedBy ) ) {
 			final Property property = referencedEntity.getRecursiveProperty( mappedBy );
-			Iterator mappedByColumns;
+			List<MappedColumn> mappedByColumns;
 			if ( property.getValue() instanceof Collection ) {
-				mappedByColumns = ( (Collection) property.getValue() ).getKey().getColumnIterator();
+				mappedByColumns = ( (Collection) property.getValue() ).getKey().getMappedColumns();
 			}
 			else {
 				//find the appropriate reference key, can be in a join
@@ -1652,13 +1654,12 @@ public abstract class CollectionBinder {
 						break;
 					}
 				}
-				if ( key == null ) key = property.getPersistentClass().getIdentifier();
-				mappedByColumns = key.getColumnIterator();
+				if ( key == null ) key = (KeyValue) ((EntityMappingImplementor)property.getEntity()).getIdentifierValueMapping();
+				mappedByColumns = key.getMappedColumns();
 			}
-			while ( mappedByColumns.hasNext() ) {
-				Column column = (Column) mappedByColumns.next();
-				columns[0].linkValueUsingAColumnCopy( column, value );
-			}
+			mappedByColumns.forEach( mappedColumn -> {
+				columns[0].linkValueUsingAColumnCopy( (Column) mappedColumn, value );
+			} );
 			String referencedPropertyName =
 					buildingContext.getMetadataCollector().getPropertyReferencedAssociation(
 							"inverse__" + referencedEntity.getEntityName(), mappedBy

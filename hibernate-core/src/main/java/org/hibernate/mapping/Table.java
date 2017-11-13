@@ -70,8 +70,6 @@ public class Table implements MappedTable<Column>, Serializable {
 	private boolean hasDenormalizedTables;
 	private String comment;
 
-	private boolean isPhysicalTable;
-
 	private List<InitCommand> initCommands;
 
 	public Table() {
@@ -312,14 +310,16 @@ public class Table implements MappedTable<Column>, Serializable {
 		return Collections.unmodifiableCollection( foreignKeyMap.values() );
 	}
 
-	@Override
+	/**
+	 * @deprecated since 6.0, use {@link #getUniqueKeys()} instead.
+	 */
 	public Iterator<UniqueKey> getUniqueKeyIterator() {
-		return getUniqueKeys().values().iterator();
+		return getUniqueKeys().iterator();
 	}
 
-	Map<String, UniqueKey> getUniqueKeys() {
+	public java.util.Collection<UniqueKey> getUniqueKeys() {
 		cleanseUniqueKeyMapIfNeeded();
-		return uniqueKeys;
+		return uniqueKeys.values();
 	}
 
 	private int sizeOfUniqueKeyMapOnLastCleanse;
@@ -459,19 +459,18 @@ public class Table implements MappedTable<Column>, Serializable {
 		return indexes.get( indexName );
 	}
 
-	public UniqueKey addUniqueKey(UniqueKey uniqueKey) {
+	public void addUniqueKey(UniqueKey uniqueKey) {
 		UniqueKey current = uniqueKeys.get( uniqueKey.getName() );
 		if ( current != null ) {
 			throw new MappingException( "UniqueKey " + uniqueKey.getName() + " already exists!" );
 		}
 		uniqueKeys.put( uniqueKey.getName(), uniqueKey );
-		return uniqueKey;
 	}
 
 	public UniqueKey createUniqueKey(List<Column> keyColumns) {
 		String keyName = Constraint.generateName( "UK_", this, keyColumns );
 		UniqueKey uk = getOrCreateUniqueKey( keyName );
-		uk.addColumns( keyColumns.iterator() );
+		uk.addColumns( keyColumns );
 		return uk;
 	}
 
@@ -668,11 +667,6 @@ public class Table implements MappedTable<Column>, Serializable {
 		return isPhysicalTable();
 	}
 
-	private String render(Identifier identifier) {
-		return identifier == null ? null : identifier.render();
-	}
-
-
 	public static class ForeignKeyKey implements Serializable {
 		String referencedClassName;
 		List columns;
@@ -692,7 +686,8 @@ public class Table implements MappedTable<Column>, Serializable {
 		}
 
 		public int hashCode() {
-			return columns.hashCode() + referencedColumns.hashCode();
+			int i = columns.hashCode() + referencedColumns.hashCode();
+			return i;
 		}
 
 		public boolean equals(Object other) {
@@ -789,7 +784,7 @@ public class Table implements MappedTable<Column>, Serializable {
 			}
 			callback.primaryKeyBuilt( primaryKey, runtimeTable.getPrimaryKey() );
 		}
-		getUniqueKeyIterator().forEachRemaining( bootUk -> {
+		getUniqueKeys().forEach( bootUk -> {
 			final org.hibernate.metamodel.model.relational.spi.UniqueKey runtimeUk = runtimeTable.createUniqueKey(
 					bootUk.getName() );
 			for ( Column mappedColumn : bootUk.getColumns() ) {

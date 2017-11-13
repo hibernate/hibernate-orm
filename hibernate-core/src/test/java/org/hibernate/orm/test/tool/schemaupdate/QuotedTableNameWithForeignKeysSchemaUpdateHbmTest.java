@@ -31,8 +31,14 @@ public class QuotedTableNameWithForeignKeysSchemaUpdateHbmTest extends BaseSchem
 
 	@Override
 	protected void beforeEach(SchemaScope scope) {
-		scope.withSchemaUpdate( schemaUpdate ->
-										schemaUpdate.execute( EnumSet.of( TargetType.DATABASE ) ) );
+		scope.withSchemaUpdate( schemaUpdate -> {
+			schemaUpdate.execute( EnumSet.of( TargetType.DATABASE ) );
+			assertThat(
+					"An unexpected Exception occurred during the database schema update",
+					schemaUpdate.getExceptions().size(),
+					is( 0 )
+			);
+		} );
 	}
 
 	@SchemaTest

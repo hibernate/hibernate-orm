@@ -315,7 +315,7 @@ class TypeSafeActivator {
 		boolean hasNotNull = false;
 		if ( NotNull.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			// single table inheritance should not be forced to null due to shared state
-			if ( !( property.getIdentifiableTypeMapping() instanceof SingleTableSubclass ) ) {
+			if ( !( property.getEntity() instanceof SingleTableSubclass ) ) {
 				//composite should not add not-null on all columns
 				if ( !isComposite( property ) ) {
 					List<MappedColumn> mappedColumns = property.getValueMapping().getMappedColumns();

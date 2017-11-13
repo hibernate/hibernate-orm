@@ -20,6 +20,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.KeyValueMapping;
 import org.hibernate.boot.model.domain.MappedTableJoin;
 import org.hibernate.boot.model.domain.internal.AbstractIdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
@@ -292,12 +293,21 @@ public abstract class PersistentClass
 	public abstract Property getIdentifierProperty();
 
 	/**
-	 * @deprecated since 6.0 use {@link #getDeclaredIdentifierAttributeMapping()}.
+	 * @deprecated since 6.0 use {@link #getDeclaredIdentifierAttributeMapping()} instead.
 	 */
 	@Deprecated
 	public abstract Property getDeclaredIdentifierProperty();
 
+	/**
+	 *
+	 * @deprecated since 6.0 use {@link #getIdentifierValueMapping()} instead.
+	 */
 	public abstract KeyValue getIdentifier();
+
+	@Override
+	public KeyValueMapping getIdentifierValueMapping() {
+		return getIdentifier();
+	}
 
 	/**
 	 * @deprecated since 6.0, use {@link #getVersionAttributeMapping()}.

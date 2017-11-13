@@ -124,7 +124,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( tableName, name );
+		return tableName.hashCode() + name.hashCode();
 	}
 
 	@Override

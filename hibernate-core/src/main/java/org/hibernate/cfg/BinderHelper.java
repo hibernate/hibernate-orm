@@ -95,7 +95,7 @@ public class BinderHelper {
 		clone.setNaturalIdentifier( property.isNaturalIdentifier() );
 		clone.setOptimisticLocked( property.isOptimisticLocked() );
 		clone.setOptional( property.isOptional() );
-		clone.setPersistentClass( property.getPersistentClass() );
+		clone.setPersistentClass( (PersistentClass) property.getEntity() );
 		clone.setPropertyAccessorName( property.getPropertyAccessorName() );
 		clone.setSelectable( property.isSelectable() );
 		clone.setUpdateable( property.isUpdateable() );

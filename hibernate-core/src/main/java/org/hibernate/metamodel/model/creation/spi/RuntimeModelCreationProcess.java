@@ -35,6 +35,7 @@ import org.hibernate.graph.internal.AbstractAttributeNodeContainer;
 import org.hibernate.graph.internal.AttributeNodeImpl;
 import org.hibernate.graph.internal.EntityGraphImpl;
 import org.hibernate.graph.internal.SubgraphImpl;
+import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
@@ -48,6 +49,7 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -99,6 +101,12 @@ public class RuntimeModelCreationProcess {
 				mappingMetadata.getDatabase(),
 				dbObjectResolver,
 				dbObjectResolver
+		);
+
+		SchemaManagementToolCoordinator.process(
+				databaseModel,
+				sessionFactory.getServiceRegistry(),
+				action -> sessionFactory.addObserver( action )
 		);
 
 		final JpaStaticMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting(

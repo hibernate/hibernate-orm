@@ -98,6 +98,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.internal.MetamodelImpl;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxyHelper;
@@ -171,7 +172,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	// todo : org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor too?
 
 	private final transient TypeConfiguration typeConfiguration;
-	private final transient MetamodelImpl metamodel;
+	private final transient MetamodelImplementor metamodel;
 	private final transient PersistenceUnitUtil jpaPersistenceUnitUtil;
 	private final transient CacheImplementor cacheEngine;
 
@@ -290,12 +291,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			LOG.debug( "Instantiated session factory" );
 
 			this.typeConfiguration = metadata.getTypeConfiguration();
-			this.typeConfiguration.scope( this, bootstrapContext );
-
-			this.metamodel = new MetamodelImpl(
-					this,
-					metadata.getTypeConfiguration()
-			);
+			this.metamodel = typeConfiguration.scope( this, bootstrapContext );
 
 			this.sqmFunctionRegistry = new SqmFunctionRegistry();
 			jdbcServices.getDialect().initializeFunctionRegistry( sqmFunctionRegistry );
@@ -311,13 +307,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 					metamodel,
 					sessionFactoryOptions,
 					buildLocalConnectionAccess()
-			);
-
-			SchemaManagementToolCoordinator.process(
-					metadata,
-					serviceRegistry,
-					properties,
-					action -> SessionFactoryImpl.this.delayedDropAction = action
 			);
 
 			currentSessionContext = buildCurrentSessionContext();

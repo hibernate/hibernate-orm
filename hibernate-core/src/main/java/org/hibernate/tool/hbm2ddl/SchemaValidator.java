@@ -9,9 +9,7 @@ package org.hibernate.tool.hbm2ddl;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.boot.MetadataBuilder;
@@ -30,7 +28,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
 import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
@@ -57,17 +54,12 @@ public class SchemaValidator {
 	public void validate() {
 		LOG.runningSchemaValidator();
 
-		Map config = new HashMap();
-		config.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
-
+		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
 
-		final ExecutionOptions executionOptions = SchemaManagementToolCoordinator.buildExecutionOptions(
-				config,
-				ExceptionHandlerHaltImpl.INSTANCE
-		);
+		final ExecutionOptions executionOptions = SchemaManagementToolCoordinator.buildExecutionOptions( cfgService.getSettings() );
 
-		tool.getSchemaValidator( databaseModel, config ).doValidation( executionOptions );
+		tool.getSchemaValidator( databaseModel, cfgService.getSettings() ).doValidation( executionOptions );
 	}
 
 	public static void main(String[] args) {

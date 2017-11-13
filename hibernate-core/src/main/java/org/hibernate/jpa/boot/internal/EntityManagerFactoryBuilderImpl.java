@@ -73,7 +73,7 @@ import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.tool.schema.spi.DelayedDropRegistryNotAvailableImpl;
+import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 import org.jboss.jandex.Index;
@@ -855,7 +855,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			populate( sfBuilder, standardServiceRegistry );
 
 			SchemaManagementToolCoordinator.process(
-					metadata, standardServiceRegistry, configurationValues, DelayedDropRegistryNotAvailableImpl.INSTANCE
+					Helper.buildDatabaseModel( metadata ),
+					standardServiceRegistry,
+					action -> {}
 			);
 		}
 		catch (Exception e) {

@@ -36,19 +36,23 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.SessionFactoryRegistry;
+import org.hibernate.metamodel.internal.MetamodelImpl;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationProcess;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.sqm.internal.PolymorphicEntityValuedExpressableTypeImpl;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
@@ -490,7 +494,8 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		return scope.getSessionFactory();
 	}
 
-	public void scope(SessionFactoryImplementor factory, BootstrapContext bootstrapContext) {
+
+	public MetamodelImplementor scope(SessionFactoryImplementor factory, BootstrapContext bootstrapContext) {
 		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactory [%s]", this, factory );
 
 		for ( Map.Entry<String, String> importEntry : scope.metadataBuildingContext.getMetadataCollector().getImports().entrySet() ) {
@@ -505,6 +510,8 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		factory.addObserver( this );
 
 		new RuntimeModelCreationProcess( factory, bootstrapContext, getMetadataBuildingContext() ).execute();
+
+		return new MetamodelImpl( factory, this );
 	}
 
 	@Override

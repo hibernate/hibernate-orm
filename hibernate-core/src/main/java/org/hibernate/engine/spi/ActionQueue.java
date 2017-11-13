@@ -1199,9 +1199,9 @@ public class ActionQueue {
 						}
 					}
 				}
-
 				stored = true;
-			} while ( !stored );
+			}
+			while ( !stored );
 
 			// Now, rebuild the insertions list. There is a batch for each entry in the name list.
 			for ( BatchIdentifier rootIdentifier : latestBatches ) {

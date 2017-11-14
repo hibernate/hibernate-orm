@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
@@ -20,11 +21,11 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
-import org.hibernate.boot.model.domain.KeyValueMapping;
 import org.hibernate.boot.model.domain.MappedTableJoin;
 import org.hibernate.boot.model.domain.internal.AbstractIdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
 import org.hibernate.boot.model.domain.spi.EntityMappingImplementor;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -78,7 +79,7 @@ public abstract class PersistentClass
 	private int batchSize = -1;
 	private boolean selectBeforeUpdate;
 	private java.util.Map metaAttributes;
-	private ArrayList<Join> joins = new ArrayList<>();
+	private java.util.List<Join> joins = new ArrayList<>();
 	private final ArrayList subclassJoins = new ArrayList();
 	private final java.util.List filters = new ArrayList();
 	protected final java.util.Set synchronizedTables = new HashSet();
@@ -297,15 +298,7 @@ public abstract class PersistentClass
 	@Deprecated
 	public abstract Property getDeclaredIdentifierProperty();
 
-	/**
-	 *
-	 * @deprecated since 6.0 use {@link #getIdentifierValueMapping()} instead.
-	 */
 	public abstract KeyValue getIdentifier();
-
-	public KeyValue getIdentifierValueMapping() {
-		return getIdentifier();
-	}
 
 	/**
 	 * @deprecated since 6.0, use {@link #getVersionAttributeMapping()}.
@@ -406,7 +399,7 @@ public abstract class PersistentClass
 
 	public abstract Table getRootTable();
 
-	protected Collection<Join> getJoins() {
+	public Collection<Join> getJoins() {
 		return joins;
 	}
 
@@ -439,12 +432,12 @@ public abstract class PersistentClass
 
 	public void createPrimaryKey() {
 		//Primary key constraint
-		final Table table = getTable();
+		final MappedTable table = getMappedTable();
 		MappedPrimaryKey pk = new MappedPrimaryKey( table );
 		pk.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		table.setPrimaryKey( pk );
 
-		pk.addColumns( getKey().getColumnIterator() );
+		pk.addColumns( getKey().getMappedColumns() );
 	}
 
 	public abstract String getWhere();
@@ -573,7 +566,7 @@ public abstract class PersistentClass
 
 	public Property getProperty(String propertyName) throws MappingException {
 		Iterator iter = getPropertyClosureIterator();
-		Property identifierProperty = getIdentifierProperty();
+		Property identifierProperty = (Property) getIdentifierAttributeMapping();
 		if ( identifierProperty != null
 				&& identifierProperty.getName().equals( StringHelper.root( propertyName ) ) ) {
 			return identifierProperty;
@@ -741,6 +734,10 @@ public abstract class PersistentClass
 		return getClass().getName() + '(' + getEntityName() + ')';
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getJoins()}
+	 */
+	@Deprecated
 	public Iterator getJoinIterator() {
 		return joins.iterator();
 	}
@@ -917,6 +914,10 @@ public abstract class PersistentClass
 		this.isAbstract = isAbstract;
 	}
 
+	/**
+	 * @deprecate since 6.0, use {@link #checkColumnDuplication(Set, List)} instead.
+	 */
+	@Deprecated
 	protected void checkColumnDuplication(Set distinctColumns, Iterator columns)
 			throws MappingException {
 		while ( columns.hasNext() ) {
@@ -936,6 +937,21 @@ public abstract class PersistentClass
 		}
 	}
 
+	protected void checkColumnDuplication(Set distinctColumns, java.util.List<MappedColumn> columns)
+			throws MappingException {
+		columns.stream().filter( column -> !column.isFormula() ).map( Column.class::cast ).forEach( column -> {
+			if ( !distinctColumns.add( column.getName() ) ) {
+				throw new MappingException(
+						"Repeated column in mapping for entity: " +
+								getEntityName() +
+								" column: " +
+								column.getName() +
+								" (should be mapped with insert=\"false\" update=\"false\")"
+				);
+			}
+		} );
+	}
+
 	protected void checkPropertyColumnDuplication(Set distinctColumns, Iterator properties)
 			throws MappingException {
 		while ( properties.hasNext() ) {
@@ -946,7 +962,7 @@ public abstract class PersistentClass
 			}
 			else {
 				if ( prop.isUpdateable() || prop.isInsertable() ) {
-					checkColumnDuplication( distinctColumns, prop.getColumnIterator() );
+					checkColumnDuplication( distinctColumns, prop.getMappedColumns() );
 				}
 			}
 		}
@@ -962,20 +978,18 @@ public abstract class PersistentClass
 
 	protected void checkColumnDuplication() {
 		HashSet cols = new HashSet();
-		if ( getIdentifierMapper() == null ) {
+		if ( getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping() == null ) {
 			//an identifier mapper => getKey will be included in the getNonDuplicatedPropertyIterator()
 			//and checked later, so it needs to be excluded
-			checkColumnDuplication( cols, getKey().getColumnIterator() );
+			checkColumnDuplication( cols, getKey().getMappedColumns() );
 		}
 		checkColumnDuplication( cols, getDiscriminatorColumnIterator() );
 		checkPropertyColumnDuplication( cols, getNonDuplicatedPropertyIterator() );
-		Iterator iter = getJoinIterator();
-		while ( iter.hasNext() ) {
+		joins.forEach( join -> {
 			cols.clear();
-			Join join = (Join) iter.next();
-			checkColumnDuplication( cols, join.getKey().getColumnIterator() );
+			checkColumnDuplication( cols, join.getKey().getMappedColumns() );
 			checkPropertyColumnDuplication( cols, join.getPropertyIterator() );
-		}
+		} );
 	}
 
 	public abstract Object accept(PersistentClassVisitor mv);

@@ -1313,7 +1313,7 @@ public final class AnnotationBinder {
 					inheritanceJoinedColumns[colIndex] = Ejb3JoinColumn.buildJoinColumn(
 							jcAnn,
 							null,
-							superEntity.getIdentifierValueMapping(),
+							superEntity.getIdentifier(),
 							null,
 							null,
 							context
@@ -1326,7 +1326,7 @@ public final class AnnotationBinder {
 				inheritanceJoinedColumns[0] = Ejb3JoinColumn.buildJoinColumn(
 						jcAnn,
 						null,
-						superEntity.getIdentifierValueMapping(),
+						superEntity.getIdentifier(),
 						null,
 						null,
 						context
@@ -2606,7 +2606,7 @@ public final class AnnotationBinder {
 		}
 		if ( isId ) {
 			comp.setKey( true );
-			if ( propertyHolder.getPersistentClass().getIdentifierValueMapping() != null ) {
+			if ( propertyHolder.getPersistentClass().getIdentifier() != null ) {
 				throw new AnnotationException(
 						comp.getEmbeddableClassName()
 								+ " must not have @Id properties when used as an @EmbeddedId: "

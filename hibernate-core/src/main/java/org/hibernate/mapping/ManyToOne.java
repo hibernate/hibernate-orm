@@ -125,19 +125,12 @@ public class ManyToOne extends ToOne {
 			);
 		}
 
-		java.util.List refColumns = new ArrayList();
-		Iterator iter = property.getColumnIterator();
-		while ( iter.hasNext() ) {
-			Column col = (Column) iter.next();
-			refColumns.add( col );
-		}
-
 		ForeignKey fk = getTable().createForeignKey(
 				getForeignKeyName(),
 				getConstraintColumns(),
 				getReferencedEntityName(),
 				getForeignKeyDefinition(),
-				refColumns
+				property.getMappedColumns()
 		);
 		fk.setCascadeDeleteEnabled( isCascadeDeleteEnabled() );
 

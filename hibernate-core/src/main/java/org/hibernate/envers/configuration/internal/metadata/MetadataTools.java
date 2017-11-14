@@ -7,8 +7,10 @@
 package org.hibernate.envers.configuration.internal.metadata;
 
 import java.util.Iterator;
+import java.util.List;
 import javax.persistence.JoinColumn;
 
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -281,6 +283,9 @@ public final class MetadataTools {
 		return joinMapping;
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #addColumns(Element, List)}
+	 */
 	public static void addColumns(Element anyMapping, Iterator selectables) {
 		while ( selectables.hasNext() ) {
 			final Selectable selectable = (Selectable) selectables.next();
@@ -289,6 +294,15 @@ public final class MetadataTools {
 			}
 			addColumn( anyMapping, (Column) selectable );
 		}
+	}
+
+	public static void addColumns(Element anyMapping, List<MappedColumn> mappedColumns) {
+		mappedColumns.forEach( column -> {
+			if ( column.isFormula() ) {
+				throw new FormulaNotSupportedException();
+			}
+			addColumn( anyMapping, (Column) column );
+		} );
 	}
 
 	/**
@@ -375,6 +389,8 @@ public final class MetadataTools {
 	 * @param element Parent element.
 	 * @param columnIterator Iterator pointing at {@link org.hibernate.mapping.Column} and/or
 	 * {@link org.hibernate.mapping.Formula} objects.
+	 *
+	 * @deprecated since 6.0, use {@link #addColumnsOrFormulas(Element, List)} instead.
 	 */
 	public static void addColumnsOrFormulas(Element element, Iterator columnIterator) {
 		while ( columnIterator.hasNext() ) {
@@ -386,6 +402,17 @@ public final class MetadataTools {
 				addFormula( element, (Formula) o );
 			}
 		}
+	}
+
+	public static void addColumnsOrFormulas(Element element, List<MappedColumn> columns) {
+		columns.forEach( column -> {
+			if ( column instanceof Column ) {
+				addColumn( element, (Column) column );
+			}
+			else if ( column instanceof Formula ) {
+				addFormula( element, (Formula) column );
+			}
+		} );
 	}
 
 	/**

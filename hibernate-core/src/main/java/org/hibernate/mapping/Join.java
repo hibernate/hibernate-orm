@@ -112,7 +112,7 @@ public class Join implements AttributeContainer, Serializable, MappedTableJoin {
 		pk.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		table.setPrimaryKey(pk);
 
-		pk.addColumns( getKey().getColumnIterator() );
+		pk.addColumns( getKey().getMappedColumns() );
 	}
 
 	public int getPropertySpan() {

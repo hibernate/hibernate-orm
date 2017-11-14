@@ -9,7 +9,6 @@ package org.hibernate.boot.model.domain;
 import java.util.List;
 
 import org.hibernate.FetchMode;
-import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.ForeignKey;

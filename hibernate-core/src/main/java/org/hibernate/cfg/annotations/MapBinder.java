@@ -7,7 +7,7 @@
 package org.hibernate.cfg.annotations;
 
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import javax.persistence.AttributeOverride;
@@ -22,6 +22,8 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
@@ -48,7 +50,6 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
@@ -161,7 +162,7 @@ public class MapBinder extends CollectionBinder {
 			ManyToOne element = null;
 			org.hibernate.mapping.Map mapValue = (org.hibernate.mapping.Map) this.collection;
 			if ( isIndexOfEntities ) {
-				element = new ManyToOne( buildingContext, mapValue.getCollectionTable() );
+				element = new ManyToOne( buildingContext, mapValue.getMappedTable() );
 				mapValue.setIndex( element );
 				element.setReferencedEntityName( mapKeyType );
 				//element.setFetchMode( fetchMode );
@@ -208,17 +209,21 @@ public class MapBinder extends CollectionBinder {
 				propertyHolder.startingProperty( property );
 				holder.prepare( property );
 
-				PersistentClass owner = mapValue.getOwner();
+				final PersistentClass owner = mapValue.getOwner();
 				AccessType accessType;
 				// FIXME support @Access for collection of elements
 				// String accessType = access != null ? access.value() : null;
-				if ( owner.getIdentifierProperty() != null ) {
-					accessType = owner.getIdentifierProperty().getPropertyAccessorName().equals( "property" )
+				if ( owner.getIdentifierAttributeMapping() != null ) {
+					accessType = owner.getIdentifierAttributeMapping().getPropertyAccessorName().equals( "property" )
 							? AccessType.PROPERTY
 							: AccessType.FIELD;
 				}
-				else if ( owner.getIdentifierMapper() != null && owner.getIdentifierMapper().getPropertySpan() > 0 ) {
-					Property prop = (Property) owner.getIdentifierMapper().getPropertyIterator().next();
+				else if ( owner.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping() != null
+						&& owner.getEntityMappingHierarchy().hasEmbeddedIdentifier() ) {
+					final PersistentAttributeMapping prop = owner.getEntityMappingHierarchy()
+							.getIdentifierEmbeddedValueMapping()
+							.getDeclaredPersistentAttributes()
+							.get( 0 );
 					accessType = prop.getPropertyAccessorName().equals( "property" ) ? AccessType.PROPERTY
 							: AccessType.FIELD;
 				}
@@ -275,7 +280,7 @@ public class MapBinder extends CollectionBinder {
 					}
 					//override the table
 					for (Ejb3Column column : elementColumns) {
-						column.setTable( mapValue.getCollectionTable() );
+						column.setTable( mapValue.getMappedTable() );
 					}
 					elementBinder.setColumns( elementColumns );
 					//do not call setType as it extract the type from @Type
@@ -335,7 +340,7 @@ public class MapBinder extends CollectionBinder {
 			Collection collection,
 			PersistentClass associatedClass,
 			PersistentClass targetPropertyPersistentClass) {
-		Value element = collection.getElement();
+		final Value element = collection.getElement();
 		String fromAndWhere = null;
 		if ( !( element instanceof OneToMany ) ) {
 			String referencedPropertyName = null;
@@ -351,17 +356,17 @@ public class MapBinder extends CollectionBinder {
 					throw new AnnotationException( "SecondaryTable JoinColumn cannot reference a non primary key" );
 				}
 			}
-			Iterator<Selectable> referencedEntityColumns;
+			List<MappedColumn> referencedEntityColumns;
 			if ( referencedPropertyName == null ) {
-				referencedEntityColumns = associatedClass.getIdentifier().getColumnIterator();
+				referencedEntityColumns = associatedClass.getIdentifier().getMappedColumns();
 			}
 			else {
-				Property referencedProperty = associatedClass.getRecursiveProperty( referencedPropertyName );
-				referencedEntityColumns = referencedProperty.getColumnIterator();
+				final Property referencedProperty = associatedClass.getRecursiveProperty( referencedPropertyName );
+				referencedEntityColumns = referencedProperty.getMappedColumns();
 			}
 			fromAndWhere = getFromAndWhereFormula(
-					associatedClass.getTable().getName(),
-					element.getColumnIterator(),
+					associatedClass.getMappedTable().getName(),
+					element.getMappedColumns(),
 					referencedEntityColumns
 			);
 		}
@@ -369,49 +374,49 @@ public class MapBinder extends CollectionBinder {
 			// HHH-11005 - only if we are OneToMany and location of map key property is at a different level, need to add a select
 			if ( !associatedClass.equals( targetPropertyPersistentClass ) ) {
 				fromAndWhere = getFromAndWhereFormula(
-						targetPropertyPersistentClass.getTable()
-								.getQualifiedTableName()
-								.toString(),
-						element.getColumnIterator(),
-						associatedClass.getIdentifier().getColumnIterator()
+						targetPropertyPersistentClass.getMappedTable().getQualifiedTableName().toString(),
+						element.getMappedColumns(),
+						associatedClass.getIdentifier().getMappedColumns()
 				);
 			}
 		}
 
 		if ( value instanceof Component ) {
-			Component component = (Component) value;
-			Iterator properties = component.getPropertyIterator();
+			final Component component = (Component) value;
+			List<PersistentAttributeMapping> attributes = component.getDeclaredPersistentAttributes();
+
 			Component indexComponent = new Component( getBuildingContext(), collection );
-			indexComponent.setComponentClassName( component.getComponentClassName() );
-			while ( properties.hasNext() ) {
-				Property current = (Property) properties.next();
-				Property newProperty = new Property();
-				newProperty.setCascade( current.getCascade() );
-				newProperty.setValueGenerationStrategy( current.getValueGenerationStrategy() );
-				newProperty.setInsertable( false );
-				newProperty.setUpdateable( false );
-				newProperty.setMetaAttributes( current.getMetaAttributes() );
-				newProperty.setName( current.getName() );
-				newProperty.setNaturalIdentifier( false );
-				//newProperty.setOptimisticLocked( false );
-				newProperty.setOptional( false );
-				newProperty.setPersistentClass( (PersistentClass) current.getEntity() );
-				newProperty.setPropertyAccessorName( current.getPropertyAccessorName() );
-				newProperty.setSelectable( current.isSelectable() );
-				newProperty.setValue(
-						createFormulatedValue(
-								current.getValue(), collection, associatedClass, associatedClass )
-				);
-				indexComponent.addProperty( newProperty );
-			}
+			indexComponent.setComponentClassName( component.getEmbeddableClassName() );
+			attributes.stream()
+					.map( Property.class::cast )
+					.forEach( current -> {
+						Property newProperty = new Property();
+						newProperty.setCascade( current.getCascade() );
+						newProperty.setValueGenerationStrategy( current.getValueGenerationStrategy() );
+						newProperty.setInsertable( false );
+						newProperty.setUpdateable( false );
+						newProperty.setMetaAttributes( current.getMetaAttributes() );
+						newProperty.setName( current.getName() );
+						newProperty.setNaturalIdentifier( false );
+						//newProperty.setOptimisticLocked( false );
+						newProperty.setOptional( false );
+						newProperty.setPersistentClass( (PersistentClass) current.getEntity() );
+						newProperty.setPropertyAccessorName( current.getPropertyAccessorName() );
+						newProperty.setSelectable( current.isSelectable() );
+						newProperty.setValue(
+								createFormulatedValue(
+										current.getValue(), collection, associatedClass, associatedClass )
+						);
+						indexComponent.addDeclaredPersistentAttribute( newProperty );
+					} );
 			return indexComponent;
 		}
 		else if ( value instanceof SimpleValue ) {
-			SimpleValue sourceValue = (SimpleValue) value;
+			final SimpleValue sourceValue = (SimpleValue) value;
 			SimpleValue targetValue;
 			if ( value instanceof ManyToOne ) {
-				ManyToOne sourceManyToOne = (ManyToOne) sourceValue;
-				ManyToOne targetManyToOne = new ManyToOne( getBuildingContext(), collection.getCollectionTable() );
+				final ManyToOne sourceManyToOne = (ManyToOne) sourceValue;
+				final ManyToOne targetManyToOne = new ManyToOne( getBuildingContext(), collection.getMappedTable() );
 				targetManyToOne.setFetchMode( FetchMode.DEFAULT );
 				targetManyToOne.setLazy( true );
 				//targetValue.setIgnoreNotFound( ); does not make sense for a map key
@@ -419,16 +424,14 @@ public class MapBinder extends CollectionBinder {
 				targetValue = targetManyToOne;
 			}
 			else if ( value instanceof BasicValue ) {
-				targetValue = new BasicValue( getBuildingContext(), collection.getCollectionTable() );
+				targetValue = new BasicValue( getBuildingContext(), collection.getMappedTable() );
 				targetValue.copyTypeFrom( sourceValue );
 			}
 			else {
 				throw new AssertionFailure( "Unknown type encounters for map key: " + value.getClass() );
 			}
-			Iterator columns = sourceValue.getColumnIterator();
-			Random random = new Random();
-			while ( columns.hasNext() ) {
-				Object current = columns.next();
+			final Random random = new Random();
+			for ( MappedColumn current : sourceValue.getMappedColumns() ) {
 				String formulaString;
 				if ( current instanceof Column ) {
 					formulaString = ( (Column) current ).getQuotedName();
@@ -439,7 +442,7 @@ public class MapBinder extends CollectionBinder {
 				else {
 					throw new AssertionFailure( "Unknown element in column iterator: " + current.getClass() );
 				}
-				Formula formula = new Formula(formulaString);
+				final Formula formula = new Formula( formulaString );
 				if ( fromAndWhere != null ) {
 					formulaString = Template.renderWhereStringTemplate( formulaString, "$alias$", new HSQLDialect() );
 					formulaString = "(select " + formulaString + fromAndWhere + ")";
@@ -462,17 +465,17 @@ public class MapBinder extends CollectionBinder {
 
 	private String getFromAndWhereFormula(
 			String tableName,
-			Iterator<Selectable> collectionTableColumns,
-			Iterator<Selectable> referencedEntityColumns) {
+			List<MappedColumn> collectionTableColumns,
+			List<MappedColumn> referencedEntityColumns) {
 		String alias = "$alias$";
 		StringBuilder fromAndWhereSb = new StringBuilder( " from " )
 				.append( tableName )
 				//.append(" as ") //Oracle doesn't support it in subqueries
 				.append( " " )
 				.append( alias ).append( " where " );
-		while ( collectionTableColumns.hasNext() ) {
-			Column colColumn = (Column) collectionTableColumns.next();
-			Column refColumn = (Column) referencedEntityColumns.next();
+		for ( int i = 0; i < collectionTableColumns.size(); i++ ) {
+			Column colColumn = (Column) collectionTableColumns.get( i );
+			Column refColumn = (Column) referencedEntityColumns.get( i );
 			fromAndWhereSb.append( alias )
 					.append( '.' )
 					.append( refColumn.getQuotedName() )

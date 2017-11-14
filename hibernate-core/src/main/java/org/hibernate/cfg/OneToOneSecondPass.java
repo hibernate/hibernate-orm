@@ -6,8 +6,8 @@
  */
 package org.hibernate.cfg;
 
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import javax.persistence.ConstraintMode;
 
 import org.hibernate.AnnotationException;
@@ -78,12 +78,12 @@ public class OneToOneSecondPass implements SecondPass {
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		org.hibernate.mapping.OneToOne value = new org.hibernate.mapping.OneToOne(
 				buildingContext,
-				propertyHolder.getTable(),
+				propertyHolder.getMappedTable(),
 				propertyHolder.getPersistentClass()
 		);
 		final String propertyName = inferredData.getPropertyName();
 		value.setPropertyName( propertyName );
-		String referencedEntityName = ToOneBinder.getReferenceEntityName( inferredData, targetEntity, buildingContext );
+		final String referencedEntityName = ToOneBinder.getReferenceEntityName( inferredData, targetEntity, buildingContext );
 		value.setReferencedEntityName( referencedEntityName );  
 		AnnotationBinder.defineFetchingStrategy( value, inferredData.getProperty() );
 		//value.setFetchMode( fetchMode );
@@ -96,12 +96,12 @@ public class OneToOneSecondPass implements SecondPass {
 						? ForeignKeyDirection.FROM_PARENT
 						: ForeignKeyDirection.TO_PARENT
 		);
-		PropertyBinder binder = new PropertyBinder();
+		final PropertyBinder binder = new PropertyBinder();
 		binder.setName( propertyName );
 		binder.setValue( value );
 		binder.setCascade( cascadeStrategy );
 		binder.setAccessType( inferredData.getDefaultAccess() );
-		Property prop = binder.makeProperty();
+		final Property prop = binder.makeProperty();
 		if ( BinderHelper.isEmptyAnnotationValue( mappedBy ) ) {
 			/*
 			 * we need to check if the columns are in the right order
@@ -131,7 +131,7 @@ public class OneToOneSecondPass implements SecondPass {
 			}
 		}
 		else {
-			PersistentClass otherSide = (PersistentClass) persistentClasses.get( value.getReferencedEntityName() );
+			final PersistentClass otherSide = (PersistentClass) persistentClasses.get( value.getReferencedEntityName() );
 			Property otherSideProperty;
 			try {
 				if ( otherSide == null ) {
@@ -157,21 +157,17 @@ public class OneToOneSecondPass implements SecondPass {
 				propertyHolder.addProperty( prop, inferredData.getDeclaringClass() );
 			}
 			else if ( otherSideProperty.getValue() instanceof ManyToOne ) {
-				Iterator it = otherSide.getJoinIterator();
-				Join otherSideJoin = null;
-				while ( it.hasNext() ) {
-					Join otherSideJoinValue = (Join) it.next();
-					if ( otherSideJoinValue.containsProperty( otherSideProperty ) ) {
-						otherSideJoin = otherSideJoinValue;
-						break;
-					}
-				}
-				if ( otherSideJoin != null ) {
+				final Optional<Join> otherSideJoin = otherSide.getJoins().stream()
+						.filter( otherSideJoinValue -> otherSideJoinValue.containsProperty( otherSideProperty ) )
+						.findFirst();
+				if ( otherSideJoin.isPresent() ) {
 					//@OneToOne @JoinTable
 					Join mappedByJoin = buildJoinFromMappedBySide(
-							(PersistentClass) persistentClasses.get( ownerEntity ), otherSideProperty, otherSideJoin
+							(PersistentClass) persistentClasses.get( ownerEntity ),
+							otherSideProperty,
+							otherSideJoin.get()
 					);
-					ManyToOne manyToOne = new ManyToOne( buildingContext, mappedByJoin.getTable() );
+					ManyToOne manyToOne = new ManyToOne( buildingContext, mappedByJoin.getMappedTable() );
 					//FIXME use ignore not found here
 					manyToOne.setIgnoreNotFound( ignoreNotFound );
 					manyToOne.setCascadeDeleteEnabled( value.isCascadeDeleteEnabled() );
@@ -180,10 +176,8 @@ public class OneToOneSecondPass implements SecondPass {
 					manyToOne.setReferencedEntityName( value.getReferencedEntityName() );
 					manyToOne.setUnwrapProxy( value.isUnwrapProxy() );
 					prop.setValue( manyToOne );
-					Iterator otherSideJoinKeyColumns = otherSideJoin.getKey().getColumnIterator();
-					while ( otherSideJoinKeyColumns.hasNext() ) {
-						manyToOne.addColumn( ((Column) otherSideJoinKeyColumns.next()).clone() );
-					}
+					otherSideJoin.get().getKey().getMappedColumns()
+							.forEach( column -> manyToOne.addColumn( ( (Column) column ).clone() ) );
 					mappedByJoin.addProperty( prop );
 				}
 				else {
@@ -198,7 +192,7 @@ public class OneToOneSecondPass implements SecondPass {
 				boolean referencesDerivedId = false;
 				try {
 					referencesDerivedId = otherSide.getIdentifier() instanceof Component
-							&& ( (Component) otherSide.getIdentifier() ).getProperty( mappedBy ) != null;
+							&& ( (Component) otherSide.getIdentifier() ).getDeclaredPersistentAttribute( mappedBy ) != null;
 				}
 				catch ( MappingException e ) {
 					// ignore
@@ -265,13 +259,13 @@ public class OneToOneSecondPass implements SecondPass {
 		join.setPersistentClass( persistentClass );
 
 		//no check constraints available on joins
-		join.setTable( originalJoin.getTable() );
+		join.setTable( originalJoin.getMappedTable() );
 		join.setInverse( true );
 		SimpleValue key = new DependantValue(
 				buildingContext.getBootstrapContext()
 						.getTypeConfiguration()
 						.getMetadataBuildingContext(),
-				join.getTable(),
+				join.getMappedTable(),
 				persistentClass.getIdentifier()
 		);
 		//TODO support @ForeignKey
@@ -280,10 +274,9 @@ public class OneToOneSecondPass implements SecondPass {
 		//TODO support for inverse and optional
 		join.setOptional( true ); //perhaps not quite per-spec, but a Good Thing anyway
 		key.setCascadeDeleteEnabled( false );
-		Iterator mappedByColumns = otherSideProperty.getValue().getColumnIterator();
-		while ( mappedByColumns.hasNext() ) {
-			key.addColumn( ((Column) mappedByColumns.next()).clone() );
-		}
+		otherSideProperty.getValue()
+				.getMappedColumns()
+				.forEach( column -> key.addColumn( ( (Column) column ).clone() ) );
 		persistentClass.addJoin( join );
 		return join;
 	}

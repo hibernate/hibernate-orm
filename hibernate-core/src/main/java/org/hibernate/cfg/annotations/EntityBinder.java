@@ -728,7 +728,7 @@ public class EntityBinder {
 			ejb3JoinColumns[0] = Ejb3JoinColumn.buildJoinColumn(
 					null,
 					null,
-					persistentClass.getIdentifierValueMapping(),
+					persistentClass.getIdentifier(),
 					secondaryTables,
 					propertyHolder,
 					context
@@ -743,7 +743,7 @@ public class EntityBinder {
 				ejb3JoinColumns[0] = Ejb3JoinColumn.buildJoinColumn(
 						null,
 						null,
-						persistentClass.getIdentifierValueMapping(),
+						persistentClass.getIdentifier(),
 						secondaryTables,
 						propertyHolder,
 						context
@@ -756,7 +756,7 @@ public class EntityBinder {
 						ejb3JoinColumns[colIndex] = Ejb3JoinColumn.buildJoinColumn(
 								pkColumnsAnn[colIndex],
 								null,
-								persistentClass.getIdentifierValueMapping(),
+								persistentClass.getIdentifier(),
 								secondaryTables,
 								propertyHolder,
 								context
@@ -768,7 +768,7 @@ public class EntityBinder {
 						ejb3JoinColumns[colIndex] = Ejb3JoinColumn.buildJoinColumn(
 								null,
 								joinColumnsAnn[colIndex],
-								persistentClass.getIdentifierValueMapping(),
+								persistentClass.getIdentifier(),
 								secondaryTables,
 								propertyHolder,
 								context

@@ -351,10 +351,9 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 			throws MappingException {
 		final boolean[] insertability = value.getColumnInsertability();
 		final boolean[] updatability = value.getColumnUpdateability();
-		final Iterator<Selectable> iterator = value.getColumnIterator();
-		int i = 0;
-		while ( iterator.hasNext() ) {
-			Selectable s = iterator.next();
+		List<MappedColumn> mappedColumns = value.getMappedColumns();
+		for ( int i = 0; i < mappedColumns.size(); i++ ) {
+			MappedColumn s = mappedColumns.get( i );
 			// exclude formulas and coluns that are not insertable or updatable
 			// since these values can be be repeated (HHH-5393)
 			if ( !s.isFormula() && ( insertability[i] || updatability[i] ) ) {
@@ -368,7 +367,6 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 					);
 				}
 			}
-			i++;
 		}
 	}
 

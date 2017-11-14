@@ -346,14 +346,14 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	public static Ejb3JoinColumn buildJoinColumn(
 			PrimaryKeyJoinColumn pkJoinAnn,
 			JoinColumn joinAnn,
-			Value identifier,
+			Value<?> identifier,
 			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
 			MetadataBuildingContext context) {
 
 		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
 
-		Column col = (Column) identifier.getColumnIterator().next();
+		Column col = (Column) identifier.getMappedColumns().get( 0 );
 		String defaultName = col.getQuotedName();
 
 		if ( pkJoinAnn != null || joinAnn != null ) {
@@ -797,11 +797,9 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			PersistentClass referencedEntity,
 			MetadataBuildingContext context) {
 		//convenient container to find whether a column is an id one or not
-		Set<Column> idColumns = new HashSet<>();
-		Iterator idColumnsIt = referencedEntity.getKey().getColumnIterator();
-		while ( idColumnsIt.hasNext() ) {
-			idColumns.add( (Column) idColumnsIt.next() );
-		}
+		final Set<MappedColumn> idColumns = new HashSet<>();
+		List<MappedColumn> mappedColumns = referencedEntity.getKey().getMappedColumns();
+		mappedColumns.forEach( column -> idColumns.add( column ));
 
 		boolean isFkReferencedColumnName = false;
 		boolean noReferencedColumn = true;

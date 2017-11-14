@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.envers.RelationTargetAuditMode;
@@ -513,7 +514,7 @@ public final class AuditMetadataGenerator {
 			}
 
 			final Element joinKey = joinElement.addElement( "key" );
-			MetadataTools.addColumns( joinKey, join.getKey().getColumnIterator() );
+			MetadataTools.addColumns( joinKey, join.getKey().getMappedColumns() );
 			MetadataTools.addColumn( joinKey, options.getRevisionFieldName(), null, null, null, null, null, null );
 		}
 	}
@@ -559,11 +560,12 @@ public final class AuditMetadataGenerator {
 		final ExtendedPropertyMapper propertyMapper = new MultiPropertyMapper();
 
 		// Checking if there is a discriminator column
-		if ( pc.getDiscriminator() != null ) {
+		final ValueMapping discriminatorMapping = pc.getEntityMappingHierarchy().getDiscriminatorMapping();
+		if ( discriminatorMapping != null ) {
 			final Element discriminatorElement = classMapping.addElement( "discriminator" );
 			// Database column or SQL formula allowed to distinguish entity types
-			MetadataTools.addColumnsOrFormulas( discriminatorElement, pc.getDiscriminator().getColumnIterator() );
-			discriminatorElement.addAttribute( "type", pc.getDiscriminator().getJavaTypeDescriptor().getTypeName() );
+			MetadataTools.addColumnsOrFormulas( discriminatorElement, discriminatorMapping.getMappedColumns() );
+			discriminatorElement.addAttribute( "type", discriminatorMapping.getJavaTypeDescriptor().getTypeName() );
 		}
 
 		// Adding the id mapping

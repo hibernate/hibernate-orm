@@ -55,6 +55,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -575,18 +576,16 @@ public class BinderHelper {
 		boolean found = false;
 		do {
 			result = current;
-			MappedTable currentTable = current.getMappedTable();
+			final MappedTable currentTable = current.getMappedTable();
 			final Identifier columnNameIdentifier = Identifier.toIdentifier( columnName );
 			if ( currentTable.getColumn( columnNameIdentifier ) != null ) {
 				found = true;
 			}
-			Iterator joins = current.getJoinIterator();
-			while ( !found && joins.hasNext() ) {
-				result = joins.next();
-				currentTable = ( (Join) result ).getMappedTable();
-				if ( currentTable.getColumn( columnNameIdentifier ) != null ) {
-					found = true;
-				}
+			if ( !found ) {
+				Optional<Join> foundJoin = current.getJoins().stream()
+						.filter( join -> join.getMappedTable().getColumn( columnNameIdentifier ) != null )
+						.findFirst();
+				found = foundJoin.isPresent();
 			}
 			current = current.getSuperclass();
 		}

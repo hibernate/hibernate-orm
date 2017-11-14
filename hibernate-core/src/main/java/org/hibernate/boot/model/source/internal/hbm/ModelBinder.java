@@ -1874,7 +1874,7 @@ public class ModelBinder {
 		final DependantValue keyBinding = new DependantValue(
 				mappingDocument.getBootstrapContext().getTypeConfiguration().getMetadataBuildingContext(),
 				secondaryTable,
-				persistentClass.getIdentifierValueMapping()
+				persistentClass.getIdentifier()
 		);
 		if ( mappingDocument.getBuildingOptions().useNationalizedCharacterData() ) {
 			keyBinding.makeNationalized();

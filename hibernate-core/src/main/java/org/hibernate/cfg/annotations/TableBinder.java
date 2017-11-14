@@ -15,6 +15,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.Index;
 import org.hibernate.boot.model.naming.EntityNaming;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitCollectionTableNameSource;
 import org.hibernate.boot.model.naming.ImplicitJoinTableNameSource;
@@ -40,7 +41,6 @@ import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 
@@ -138,7 +138,6 @@ public class TableBinder {
 	// only bind association table currently
 	public MappedTable bind() {
 		final Identifier ownerEntityTableNameIdentifier = toIdentifier( ownerEntityTable );
-		final Identifier associatedEntityTableNameIdentifier = toIdentifier( associatedEntityTable );
 
 		//logicalName only accurate for assoc table...
 		final String unquotedOwnerTable = StringHelper.unquote( ownerEntityTable );
@@ -564,7 +563,7 @@ public class TableBinder {
 			LOG.debugf( "Retrieving property %s.%s", associatedClass.getEntityName(), mappedByProperty );
 
 			final Property property = associatedClass.getRecursiveProperty( columns[0].getMappedBy() );
-			Iterator mappedByColumns;
+			List<MappedColumn> mappedByColumns;
 			if ( property.getValue() instanceof Collection ) {
 				Collection collection = ( (Collection) property.getValue() );
 				Value element = collection.getElement();
@@ -574,34 +573,32 @@ public class TableBinder {
 									+ associatedClass.getEntityName() + "." + mappedByProperty
 					);
 				}
-				mappedByColumns = element.getColumnIterator();
+				mappedByColumns = element.getMappedColumns();
 			}
 			else {
-				mappedByColumns = property.getValue().getColumnIterator();
+				mappedByColumns = property.getValue().getMappedColumns();
 			}
-			while ( mappedByColumns.hasNext() ) {
-				Column column = (Column) mappedByColumns.next();
+			mappedByColumns.stream().map( Column.class::cast ).forEach( column -> {
 				columns[0].overrideFromReferencedColumnIfNecessary( column );
 				columns[0].linkValueUsingAColumnCopy( column, value );
-			}
+			} );
 		}
 		else if ( columns[0].isImplicit() ) {
 			/**
 			 * if columns are implicit, then create the columns based on the
 			 * referenced entity id columns
 			 */
-			Iterator idColumns;
+			List<MappedColumn> idColumns;
 			if ( referencedEntity instanceof JoinedSubclass ) {
-				idColumns = referencedEntity.getKey().getColumnIterator();
+				idColumns = referencedEntity.getKey().getMappedColumns();
 			}
 			else {
-				idColumns = referencedEntity.getIdentifier().getColumnIterator();
+				idColumns = referencedEntity.getIdentifier().getMappedColumns();
 			}
-			while ( idColumns.hasNext() ) {
-				Column column = (Column) idColumns.next();
+			idColumns.stream().map( Column.class::cast ).forEach( column -> {
 				columns[0].linkValueUsingDefaultColumnNaming( column, referencedEntity, value );
 				columns[0].overrideFromReferencedColumnIfNecessary( column );
-			}
+			} );
 		}
 		else {
 			int fkEnum = Ejb3JoinColumn.checkReferencedColumnsType( columns, referencedEntity, buildingContext );
@@ -641,41 +638,40 @@ public class TableBinder {
 					);
 				}
 				linkJoinColumnWithValueOverridingNameIfImplicit(
-						referencedEntity, synthProp.getColumnIterator(), columns, value
+						referencedEntity, synthProp.getMappedColumns(), columns, value
 				);
 
 			}
 			else {
 				if ( Ejb3JoinColumn.NO_REFERENCE == fkEnum ) {
 					//implicit case, we hope PK and FK columns are in the same order
-					if ( columns.length != referencedEntity.getIdentifier().getColumnSpan() ) {
+					if ( columns.length != referencedEntity.getIdentifier().getMappedColumns().size() ) {
 						throw new AnnotationException(
 								"A Foreign key refering " + referencedEntity.getEntityName()
 										+ " from " + associatedClass.getEntityName()
-										+ " has the wrong number of column. should be " + referencedEntity.getIdentifier()
-										.getColumnSpan()
+										+ " has the wrong number of column. should be "
+										+ referencedEntity.getIdentifier().getMappedColumns().size()
 						);
 					}
 					linkJoinColumnWithValueOverridingNameIfImplicit(
 							referencedEntity,
-							referencedEntity.getIdentifier().getColumnIterator(),
+							referencedEntity.getIdentifier().getMappedColumns(),
 							columns,
 							value
 					);
 				}
 				else {
 					//explicit referencedColumnName
-					Iterator idColItr = referencedEntity.getKey().getColumnIterator();
-					org.hibernate.mapping.Column col;
+					List<MappedColumn> idMappedColumns = referencedEntity.getKey().getMappedColumns();
 					//works cause the pk has to be on the primary table
-					Table table = referencedEntity.getTable();
-					if ( !idColItr.hasNext() ) {
+					if ( idMappedColumns.size() == 0 ) {
 						LOG.debug( "No column in the identifier!" );
 					}
-					while ( idColItr.hasNext() ) {
+					idMappedColumns.stream()
+							.map( Column.class::cast )
+							.forEach( col -> {
 						boolean match = false;
 						//for each PK column, find the associated FK column.
-						col = (org.hibernate.mapping.Column) idColItr.next();
 						for (Ejb3JoinColumn joinCol : columns) {
 							final Identifier referencedColumn = Identifier.toIdentifier( joinCol.getReferencedColumn());
 							//In JPA 2 referencedColumnName is case insensitive
@@ -700,7 +696,7 @@ public class TableBinder {
 											+ referencedEntity.getEntityName() + " not found in JoinColumns.referencedColumnName"
 							);
 						}
-					}
+					});
 				}
 			}
 		}
@@ -710,6 +706,30 @@ public class TableBinder {
 		}
 	}
 
+	public static void linkJoinColumnWithValueOverridingNameIfImplicit(
+			PersistentClass referencedEntity,
+			List<MappedColumn> mappedColumns,
+			Ejb3JoinColumn[] columns,
+			SimpleValue value) {
+		for(int i = 0; i < columns.length; i++){
+			Ejb3JoinColumn joinCol = columns[i];
+			Column synthCol = (Column)  mappedColumns.get(i);
+			if ( joinCol.isNameDeferred() ) {
+				//this has to be the default value
+				joinCol.linkValueUsingDefaultColumnNaming( synthCol, referencedEntity, value );
+			}
+			else {
+				joinCol.linkWithValue( value );
+				joinCol.overrideFromReferencedColumnIfNecessary( synthCol );
+			}
+		}
+	}
+
+	/**
+	 * @deprecated since 6.0,
+	 * 		use {@link #linkJoinColumnWithValueOverridingNameIfImplicit(PersistentClass, List, Ejb3JoinColumn[], SimpleValue)} instead.
+	 */
+	@Deprecated
 	public static void linkJoinColumnWithValueOverridingNameIfImplicit(
 			PersistentClass referencedEntity,
 			Iterator columnIterator,
@@ -729,12 +749,7 @@ public class TableBinder {
 	}
 
 	public static void createUniqueConstraint(Value value) {
-		Iterator iter = value.getColumnIterator();
-		ArrayList cols = new ArrayList();
-		while ( iter.hasNext() ) {
-			cols.add( iter.next() );
-		}
-		value.getMappedTable().createUniqueKey( cols );
+		value.getMappedTable().createUniqueKey( value.getMappedColumns() );
 	}
 
 	public static void addIndexes(MappedTable hibTable, Index[] indexes, MetadataBuildingContext buildingContext) {

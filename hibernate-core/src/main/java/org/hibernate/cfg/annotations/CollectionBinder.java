@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
@@ -66,9 +67,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
-import org.hibernate.boot.model.domain.KeyValueMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
-import org.hibernate.boot.model.domain.spi.EntityMappingImplementor;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -1645,16 +1644,17 @@ public abstract class CollectionBinder {
 			}
 			else {
 				//find the appropriate reference key, can be in a join
-				Iterator joinsIt = referencedEntity.getJoinIterator();
 				KeyValue key = null;
-				while ( joinsIt.hasNext() ) {
-					Join join = (Join) joinsIt.next();
-					if ( join.containsProperty( property ) ) {
-						key = join.getKey();
-						break;
-					}
+				Optional<Join> join = referencedEntity.getJoins()
+						.stream()
+						.filter( j -> j.containsProperty( property ) )
+						.findFirst();
+				if ( join.isPresent() ) {
+					key = join.get().getKey();
 				}
-				if ( key == null ) key = property.getPersistentClass().getIdentifierValueMapping();
+				if ( key == null ) {
+					key = property.getPersistentClass().getIdentifier();
+				}
 				mappedByColumns = key.getMappedColumns();
 			}
 			mappedByColumns.forEach( mappedColumn -> {

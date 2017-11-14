@@ -7,7 +7,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.domain.KeyValueMapping;
+import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
@@ -18,7 +18,15 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
  * joined subclass table.
  * @author Gavin King
  */
-public interface KeyValue extends Value, KeyValueMapping {
+public interface KeyValue extends Value, ValueMapping {
+
+	boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory);
+
+	boolean isCascadeDeleteEnabled();
+
+	String getNullValue();
+
+	boolean isUpdateable();
 
 	ForeignKey createForeignKeyOfEntity(String entityName);
 

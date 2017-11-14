@@ -284,7 +284,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 					.filter( entityMapping ->  entityMapping.getSuperManagedTypeMapping() != null )
 					.map( RootClass.class::cast )
 					.forEach( rootClass -> {
-						IdentifierGenerator generator =  rootClass.getIdentifierValueMapping()
+						IdentifierGenerator generator =  rootClass.getIdentifier()
 								.createIdentifierGenerator(
 										identifierGeneratorFactory,
 										jdbcServices.getJdbcEnvironment().getDialect(),

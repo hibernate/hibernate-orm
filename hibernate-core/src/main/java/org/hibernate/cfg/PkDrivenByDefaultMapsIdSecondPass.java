@@ -36,7 +36,7 @@ public class PkDrivenByDefaultMapsIdSecondPass implements SecondPass {
 		}
 		TableBinder.linkJoinColumnWithValueOverridingNameIfImplicit(
 				referencedEntity,
-				referencedEntity.getKey().getColumnIterator(),
+				referencedEntity.getKey().getMappedColumns(),
 				columns,
 				value);
 	}

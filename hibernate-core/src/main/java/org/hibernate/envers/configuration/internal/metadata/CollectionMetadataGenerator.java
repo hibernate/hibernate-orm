@@ -21,6 +21,8 @@ import javax.persistence.JoinColumn;
 import org.dom4j.Element;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.internal.metadata.reader.AuditedPropertiesReader;
@@ -921,13 +923,11 @@ public final class CollectionMetadataGenerator {
 			// make sure its a 'Component' because IdClass is registered as this type.
 			if ( value instanceof Component ) {
 				final Component component = (Component) value;
-				final Iterator<Property> componentPropertyIterator = component.getPropertyIterator();
-				while ( componentPropertyIterator.hasNext() ) {
-					final Property property = componentPropertyIterator.next();
-					final Iterator<Selectable> propertySelectables = property.getValue().getColumnIterator();
-					final Iterator<Selectable> collectionSelectables = collectionValue.getKey().getColumnIterator();
-					if ( Tools.iteratorsContentEqual( propertySelectables, collectionSelectables ) ) {
-						return property.getName();
+				List<PersistentAttributeMapping> declaredPersistentAttributes = component.getDeclaredPersistentAttributes();
+				for ( PersistentAttributeMapping attribute : declaredPersistentAttributes ) {
+					if ( ( (List<MappedColumn>) attribute.getValueMapping().getMappedColumns() )
+							.equals( collectionValue.getKey().getMappedColumns() ) ) {
+						return attribute.getName();
 					}
 				}
 			}

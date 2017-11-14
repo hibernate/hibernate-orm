@@ -280,11 +280,10 @@ public class Component extends SimpleValue
 	@Override
 	public boolean[] getColumnInsertability() {
 		boolean[] result = new boolean[getColumnSpan()];
-		Iterator iter = getPropertyIterator();
-		int i = 0;
-		while ( iter.hasNext() ) {
-			Property prop = (Property) iter.next();
-			boolean[] chunk = prop.getValue().getColumnInsertability();
+		final List<PersistentAttributeMapping> declaredPersistentAttributes = getDeclaredPersistentAttributes();
+		for ( int i = 0; i < declaredPersistentAttributes.size(); i++ ) {
+			final PersistentAttributeMapping prop = declaredPersistentAttributes.get( i );
+			boolean[] chunk = ( (Property) prop ).getValue().getColumnInsertability();
 			if ( prop.isInsertable() ) {
 				System.arraycopy( chunk, 0, result, i, chunk.length );
 			}
@@ -296,11 +295,11 @@ public class Component extends SimpleValue
 	@Override
 	public boolean[] getColumnUpdateability() {
 		boolean[] result = new boolean[getColumnSpan()];
-		Iterator iter = getPropertyIterator();
-		int i = 0;
-		while ( iter.hasNext() ) {
-			Property prop = (Property) iter.next();
-			boolean[] chunk = prop.getValue().getColumnUpdateability();
+		final List<PersistentAttributeMapping> attributes = getDeclaredPersistentAttributes();
+
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			PersistentAttributeMapping prop = attributes.get( i );
+			boolean[] chunk = ( (Property) prop ).getValue().getColumnUpdateability();
 			if ( prop.isUpdateable() ) {
 				System.arraycopy( chunk, 0, result, i, chunk.length );
 			}
@@ -419,34 +418,30 @@ public class Component extends SimpleValue
 
 		locator = new StandardGenerationContextLocator( rootClass.getEntityName() );
 		final CompositeNestedGeneratedValueGenerator generator = new CompositeNestedGeneratedValueGenerator( locator );
+		List<PersistentAttributeMapping> declaredPersistentAttributes = getDeclaredPersistentAttributes();
+		declaredPersistentAttributes.stream()
+				.filter( attribute -> SimpleValue.class.isInstance( attribute.getValueMapping()) )
+				.forEach( attribute -> {
+				final SimpleValue value = (SimpleValue) attribute.getValueMapping();
 
-		Iterator itr = getPropertyIterator();
-		while ( itr.hasNext() ) {
-			final Property property = (Property) itr.next();
-			if ( property.getValue().isSimpleValue() ) {
-				final SimpleValue value = (SimpleValue) property.getValue();
-
-				if ( DEFAULT_ID_GEN_STRATEGY.equals( value.getIdentifierGeneratorStrategy() ) ) {
-					// skip any 'assigned' generators, they would have been handled by
-					// the StandardGenerationContextLocator
-					continue;
+				// skip any 'assigned' generators, they would have been handled by
+				// the StandardGenerationContextLocator
+				if ( !DEFAULT_ID_GEN_STRATEGY.equals( value.getIdentifierGeneratorStrategy() ) ) {
+					final IdentifierGenerator valueGenerator = value.createIdentifierGenerator(
+							identifierGeneratorFactory,
+							dialect,
+							defaultCatalog,
+							defaultSchema,
+							rootClass
+					);
+					generator.addGeneratedValuePlan(
+							new ValueGenerationPlan(
+									valueGenerator,
+									injector( (Property) attribute, attributeDeclarer )
+							)
+					);
 				}
-
-				final IdentifierGenerator valueGenerator = value.createIdentifierGenerator(
-						identifierGeneratorFactory,
-						dialect,
-						defaultCatalog,
-						defaultSchema,
-						rootClass
-				);
-				generator.addGeneratedValuePlan(
-						new ValueGenerationPlan(
-								valueGenerator,
-								injector( property, attributeDeclarer )
-						)
-				);
-			}
-		}
+		} );
 		return generator;
 	}
 

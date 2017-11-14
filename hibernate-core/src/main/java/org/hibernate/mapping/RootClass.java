@@ -174,6 +174,10 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return explicitPolymorphism;
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getVersionAttributeMapping()}.
+	 */
+	@Deprecated
 	@Override
 	public Property getVersion() {
 		return (Property) getVersionAttributeMapping();

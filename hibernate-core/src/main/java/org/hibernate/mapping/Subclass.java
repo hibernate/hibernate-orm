@@ -170,6 +170,10 @@ public class Subclass extends PersistentClass {
 		return getSuperclass().isVersioned();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getVersionAttributeMapping()}.
+	 */
+	@Deprecated
 	@Override
 	public Property getVersion() {
 		return getSuperclass().getVersion();

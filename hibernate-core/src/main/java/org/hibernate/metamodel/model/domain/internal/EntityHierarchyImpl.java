@@ -263,7 +263,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			EntityHierarchyImpl hierarchy,
 			RootClass rootEntityBinding,
 			RuntimeModelCreationContext creationContext) {
-		if ( rootEntityBinding.getVersion() == null ) {
+		if ( rootEntityBinding.getVersionAttributeMapping() == null ) {
 			return null;
 		}
 

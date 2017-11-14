@@ -1553,7 +1553,7 @@ public final class AnnotationBinder {
 			Map<String, Join> secondaryTables,
 			PropertyHolder propertyHolder,
 			MetadataBuildingContext context) {
-		if ( rootClass.getDiscriminator() == null ) {
+		if ( rootClass.getEntityMappingHierarchy().getDiscriminatorMapping() == null ) {
 			if ( discriminatorColumn == null ) {
 				throw new AssertionFailure( "discriminator column should have been built" );
 			}
@@ -1838,8 +1838,8 @@ public final class AnnotationBinder {
 			simpleValue.setNullValue( "undefined" );
 			rootClass.getEntityMappingHierarchy().setOptimisticLockStyle( OptimisticLockStyle.VERSION );
 			if ( traceEnabled ) {
-				LOG.tracev( "Version name: {0}, unsavedValue: {1}", rootClass.getVersion().getName(),
-							( (SimpleValue) rootClass.getVersion().getValue() ).getNullValue()
+				LOG.tracev( "Version name: {0}, unsavedValue: {1}", rootClass.getVersionAttributeMapping().getName(),
+							( (SimpleValue) rootClass.getVersionAttributeMapping().getValueMapping() ).getNullValue()
 				);
 			}
 		}

@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import org.hibernate.HibernateException;
@@ -21,13 +19,10 @@ import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.VersionSupport;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
-import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.sql.results.spi.SqlSelectionGroupResolutionContext;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
@@ -53,17 +48,17 @@ public class VersionDescriptorImpl<O,J>
 			RuntimeModelCreationContext creationContext) {
 		super(
 				runtimeModelHierarchy.getRootEntityType(),
-				bootModelRootEntity.getVersion(),
+				bootModelRootEntity.getVersionAttributeMapping(),
 				runtimeModelHierarchy.getRootEntityType().getRepresentationStrategy().generatePropertyAccess(
 						bootModelRootEntity,
-						bootModelRootEntity.getVersion(),
+						bootModelRootEntity.getVersionAttributeMapping(),
 						runtimeModelHierarchy.getRootEntityType(),
 						Environment.getBytecodeProvider()
 				),
 				Disposition.VERSION
 		);
 
-		final BasicValueMapping<J> basicValueMapping = (BasicValueMapping<J>) bootModelRootEntity.getVersion().getValue();
+		final BasicValueMapping<J> basicValueMapping = (BasicValueMapping<J>) bootModelRootEntity.getVersionAttributeMapping().getValueMapping();
 
 		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( basicValueMapping.getMappedColumn() );
 		this.unsavedValue =( (KeyValue) basicValueMapping ).getNullValue();

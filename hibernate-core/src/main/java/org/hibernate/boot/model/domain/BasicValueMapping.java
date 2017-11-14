@@ -27,7 +27,7 @@ public interface BasicValueMapping<J> extends ValueMapping<J> {
 	 * Get the single column associated with this basic mapping
 	 */
 	default MappedColumn getMappedColumn() {
-		final List<Selectable> mappedColumns = getMappedColumns();
+		final List<MappedColumn> mappedColumns = getMappedColumns();
 		if ( mappedColumns.isEmpty() ) {
 			return null;
 		}

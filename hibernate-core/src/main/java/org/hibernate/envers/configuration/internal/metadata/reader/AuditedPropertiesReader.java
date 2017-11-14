@@ -733,7 +733,7 @@ public class AuditedPropertiesReader {
 
 		public ComponentPropertiesSource(ReflectionManager reflectionManager, Component component) {
 			try {
-				this.xclass = reflectionManager.classForName( component.getComponentClassName() );
+				this.xclass = reflectionManager.classForName( component.getEmbeddableClassName() );
 			}
 			catch ( ClassLoadingException e ) {
 				throw new MappingException( e );
@@ -750,7 +750,7 @@ public class AuditedPropertiesReader {
 
 		@Override
 		public Property getProperty(String propertyName) {
-			return component.getProperty( propertyName );
+			return (Property) component.getDeclaredPersistentAttribute( propertyName );
 		}
 
 		@Override

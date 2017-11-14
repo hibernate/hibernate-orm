@@ -550,7 +550,7 @@ public class Component extends SimpleValue
 
 	@Override
 	public PersistentAttributeMapping getDeclaredPersistentAttribute(String attributeName) {
-		return null;
+		return declaredAttributeMappings.get( attributeName );
 	}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

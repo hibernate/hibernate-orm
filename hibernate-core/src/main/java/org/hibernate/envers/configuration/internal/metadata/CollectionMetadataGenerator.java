@@ -569,7 +569,7 @@ public final class CollectionMetadataGenerator {
 			// Collection of embeddable elements.
 			final Component component = (Component) value;
 			final Class componentClass = ReflectionTools.loadClass(
-					component.getComponentClassName(),
+					component.getEmbeddableClassName(),
 					mainGenerator.getClassLoaderService()
 			);
 			final MiddleEmbeddableComponentMapper componentMapper = new MiddleEmbeddableComponentMapper(

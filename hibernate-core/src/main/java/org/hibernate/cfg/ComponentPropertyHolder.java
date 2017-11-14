@@ -270,7 +270,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	public String getEntityName() {
-		return component.getComponentClassName();
+		return component.getEmbeddableClassName();
 	}
 
 	public void addProperty(Property prop, Ejb3Column[] columns, XClass declaringClass) {
@@ -303,7 +303,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	public String getClassName() {
-		return component.getComponentClassName();
+		return component.getEmbeddableClassName();
 	}
 
 	public String getEntityOwnerClassName() {

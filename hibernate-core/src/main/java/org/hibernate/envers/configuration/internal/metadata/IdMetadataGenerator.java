@@ -107,7 +107,7 @@ public final class IdMetadataGenerator {
 		if ( idMapper != null ) {
 			// Multiple id
 			final Class componentClass = ReflectionTools.loadClass(
-					( (Component) pc.getIdentifier() ).getComponentClassName(),
+					( (Component) pc.getIdentifier() ).getEmbeddableClassName(),
 					mainGenerator.getClassLoaderService()
 			);
 			mapper = new MultipleIdMapper( componentClass, pc.getServiceRegistry() );

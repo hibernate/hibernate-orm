@@ -527,10 +527,7 @@ public final class AuditMetadataGenerator {
 			String entityName,
 			EntityXmlMappingData xmlMappingData,
 			boolean firstPass) {
-		final Iterator<Join> joins = pc.getJoinIterator();
-
-		while ( joins.hasNext() ) {
-			final Join join = joins.next();
+		pc.getJoins().forEach( join -> {
 			final Element joinElement = entitiesJoins.get( entityName ).get( join );
 
 			if ( joinElement != null ) {
@@ -544,7 +541,7 @@ public final class AuditMetadataGenerator {
 						firstPass
 				);
 			}
-		}
+		} );
 	}
 
 	@SuppressWarnings({"unchecked"})

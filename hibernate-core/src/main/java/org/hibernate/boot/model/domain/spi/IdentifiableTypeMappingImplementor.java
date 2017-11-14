@@ -37,8 +37,8 @@ public interface IdentifiableTypeMappingImplementor extends IdentifiableTypeMapp
 		getEntityMappingHierarchy().setIdentifierAttributeMapping( identifierAttributeMapping );
 	}
 
-	default void setIdentifierEmbeddeedValueMapping(EmbeddedValueMapping embeddeedValueMapping) {
-		getEntityMappingHierarchy().setIdentifierEmbeddedValueMapping( embeddeedValueMapping );
+	default void setIdentifierEmbeddedValueMapping(EmbeddedValueMapping embeddedValueMapping) {
+		getEntityMappingHierarchy().setIdentifierEmbeddedValueMapping( embeddedValueMapping );
 	}
 
 	default void setVersionAttributeMapping(PersistentAttributeMapping versionAttributeMapping) {

@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -26,6 +25,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.NativeQueryNonScalarRootReturn;
 import org.hibernate.boot.jaxb.hbm.spi.ResultSetMappingBindingDefinition;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.resultset.internal.EntityResultDefinitionImpl;
 import org.hibernate.boot.model.resultset.internal.FetchDefinitionImpl;
 import org.hibernate.boot.model.resultset.internal.PersistentCollectionResultDefinitionImpl;
@@ -36,7 +36,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 
@@ -255,7 +254,7 @@ public abstract class ResultSetMappingBinder {
 
 		if ( rtnSource.getReturnDiscriminator() != null ) {
 			if ( results == null ) {
-				results = new HashMap<String, String[]>();
+				results = new HashMap<>();
 			}
 
 			final String column = rtnSource.getReturnDiscriminator().getColumn();
@@ -289,8 +288,8 @@ public abstract class ResultSetMappingBinder {
 
 		final HashMap results = new HashMap();
 
-		List<JaxbHbmNativeQueryPropertyReturnType> propertyReturnSources = new ArrayList<JaxbHbmNativeQueryPropertyReturnType>();
-		List<String> propertyNames = new ArrayList<String>();
+		List<JaxbHbmNativeQueryPropertyReturnType> propertyReturnSources = new ArrayList<>();
+		List<String> propertyNames = new ArrayList<>();
 
 
 		for ( JaxbHbmNativeQueryPropertyReturnType propertyReturnSource : rtnSource.getReturnProperty() ) {
@@ -303,10 +302,10 @@ public abstract class ResultSetMappingBinder {
 				final String reducedName = propertyReturnSource.getName().substring( 0, dotPosition );
 				final Value value = pc.getRecursiveProperty( reducedName ).getValue();
 
-				Iterator parentPropItr;
+				List<PersistentAttributeMapping> parentAttributes;
 				if ( value instanceof Component ) {
 					final Component comp = (Component) value;
-					parentPropItr = comp.getPropertyIterator();
+					parentAttributes = comp.getDeclaredPersistentAttributes();
 				}
 				else if ( value instanceof ToOne ) {
 					final ToOne toOne = (ToOne) value;
@@ -314,8 +313,8 @@ public abstract class ResultSetMappingBinder {
 							.getEntityBinding( toOne.getReferencedEntityName() );
 					if ( toOne.getReferencedPropertyName() != null ) {
 						try {
-							parentPropItr = ( (Component) referencedPc.getRecursiveProperty( toOne.getReferencedPropertyName() )
-									.getValue() ).getPropertyIterator();
+							parentAttributes = ( (Component) referencedPc.getRecursiveProperty( toOne.getReferencedPropertyName() )
+									.getValue() ).getDeclaredPersistentAttributes();
 						}
 						catch (ClassCastException e) {
 							throw new MappingException(
@@ -327,12 +326,15 @@ public abstract class ResultSetMappingBinder {
 					}
 					else {
 						try {
-							if ( referencedPc.getIdentifierMapper() == null ) {
-								parentPropItr = ( (Component) referencedPc.getIdentifierProperty()
-										.getValue() ).getPropertyIterator();
+							if ( referencedPc.getEntityMappingHierarchy()
+									.getIdentifierEmbeddedValueMapping() == null ) {
+								parentAttributes = ( (Component) referencedPc.getIdentifierAttributeMapping()
+										.getValueMapping() ).getDeclaredPersistentAttributes();
 							}
 							else {
-								parentPropItr = referencedPc.getIdentifierMapper().getPropertyIterator();
+								parentAttributes = referencedPc.getEntityMappingHierarchy()
+										.getIdentifierEmbeddedValueMapping()
+										.getDeclaredPersistentAttributes();
 							}
 						}
 						catch (ClassCastException e) {
@@ -352,10 +354,9 @@ public abstract class ResultSetMappingBinder {
 				}
 
 				boolean hasFollowers = false;
-				List<String> followers = new ArrayList<String>();
-				while ( parentPropItr.hasNext() ) {
-					final Property parentProperty = (Property) parentPropItr.next();
-					final String currentPropertyName = parentProperty.getName();
+				List<String> followers = new ArrayList<>();
+				for(PersistentAttributeMapping parentAttribute : parentAttributes){
+					final String currentPropertyName = parentAttribute.getName();
 					final String currentName = reducedName + '.' + currentPropertyName;
 					if ( hasFollowers ) {
 						followers.add( currentName );
@@ -375,7 +376,7 @@ public abstract class ResultSetMappingBinder {
 			}
 		}
 
-		Set<String> uniqueReturnProperty = new HashSet<String>();
+		Set<String> uniqueReturnProperty = new HashSet<>();
 		for ( JaxbHbmNativeQueryPropertyReturnType propertyReturnBinding : propertyReturnSources ) {
 			final String name = propertyReturnBinding.getName();
 			if ( "class".equals( name ) ) {
@@ -463,7 +464,7 @@ public abstract class ResultSetMappingBinder {
 
 	private static ArrayList<String> extractResultColumns(JaxbHbmNativeQueryPropertyReturnType propertyReturnSource) {
 		final String column = unquote( propertyReturnSource.getColumn() );
-		ArrayList<String> allResultColumns = new ArrayList<String>();
+		ArrayList<String> allResultColumns = new ArrayList<>();
 		if ( column != null ) {
 			allResultColumns.add( column );
 		}

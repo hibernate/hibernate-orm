@@ -49,7 +49,7 @@ public final class ComponentMetadataGenerator {
 		}
 		else {
 			componentClass = ReflectionTools.loadClass(
-					propComponent.getComponentClassName(),
+					propComponent.getEmbeddableClassName(),
 					mainGenerator.getClassLoaderService()
 			);
 		}

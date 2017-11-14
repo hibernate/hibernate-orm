@@ -27,15 +27,6 @@ public interface MappedColumn {
 	 */
 	String getText();
 
-	/**
-	 * todo (6.0) : investigate this vv
-	 * @deprecated Why would we need this?  Perhaps it is related
-	 * to the old scheme of performing schema-tooling based on the boot
-	 * relational model.
-	 */
-	@Deprecated
-	String getText(Dialect dialect);
-
 	SqlTypeDescriptor getSqlTypeDescriptor();
 
 	Column generateRuntimeColumn(
@@ -46,5 +37,4 @@ public interface MappedColumn {
 	boolean isFormula();
 
 	String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry);
-
 }

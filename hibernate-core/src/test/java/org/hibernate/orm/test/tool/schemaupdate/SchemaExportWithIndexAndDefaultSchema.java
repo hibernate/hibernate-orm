@@ -26,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Andrea Boriero
@@ -34,6 +35,10 @@ import static org.hamcrest.core.Is.is;
 @RequiresDialect(dialectClass = PostgreSQL81Dialect.class, matchSubTypes = true)
 public class SchemaExportWithIndexAndDefaultSchema extends BaseSchemaUnitTestCase {
 
+	@Override
+	protected boolean createSqlScriptTempOutputFile() {
+		return true;
+	}
 
 	@Override
 	protected void applySettings(StandardServiceRegistryBuilder serviceRegistryBuilder) {
@@ -53,11 +58,20 @@ public class SchemaExportWithIndexAndDefaultSchema extends BaseSchemaUnitTestCas
 	}
 
 	@SchemaTest
-	public void shouldCreateIndex(SchemaScope scope) {
+	public void shouldCreateIndex(SchemaScope scope) throws Exception {
 		scope.withSchemaExport( schemaExport -> {
-			schemaExport.create( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ) );
+			schemaExport.create( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT, TargetType.SCRIPT ) );
 			assertThat( schemaExport.getExceptions().size(), is( 0 ) );
+
 		} );
+		boolean isIndexCreated = false;
+		for ( String s : getSqlScriptOutputFileLines() ) {
+			if ( s.contains( "create index user_id_hidx" ) ) {
+				;
+			}
+			isIndexCreated = true;
+		}
+		assertTrue( isIndexCreated, "The index user_id_hidx has not been created" );
 	}
 
 	@Entity

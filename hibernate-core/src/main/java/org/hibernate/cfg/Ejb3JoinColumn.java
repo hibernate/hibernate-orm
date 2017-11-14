@@ -8,6 +8,7 @@ package org.hibernate.cfg;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -20,7 +21,10 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.boot.model.naming.EntityNaming;
+import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -36,7 +40,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 
 /**
@@ -450,7 +453,10 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	}
 
 
-
+	/**
+	 * @deprecated since 6.0, use {@link #copyReferencedStructureAndCreateDefaultJoinColumns(PersistentClass, List, SimpleValue)} instead.
+	 */
+	@Deprecated
 	public void copyReferencedStructureAndCreateDefaultJoinColumns(
 			PersistentClass referencedEntity,
 			Iterator columnIterator,
@@ -462,6 +468,21 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			Column synthCol = (Column) columnIterator.next();
 			this.linkValueUsingDefaultColumnNaming( synthCol, referencedEntity, value );
 		}
+		//reset for the future
+		setMappingColumn( null );
+	}
+
+	public void copyReferencedStructureAndCreateDefaultJoinColumns(
+			PersistentClass referencedEntity,
+			List<Selectable> columnIterator,
+			SimpleValue value) {
+		if ( !isNameDeferred() ) {
+			throw new AssertionFailure( "Building implicit column but the column is not implicit" );
+		}
+		columnIterator.stream().filter( Column.class::isInstance ).map( Column.class::cast ).forEach( column -> {
+			this.linkValueUsingDefaultColumnNaming( column, referencedEntity, value );
+
+		} );
 		//reset for the future
 		setMappingColumn( null );
 	}
@@ -582,12 +603,12 @@ public class Ejb3JoinColumn extends Ejb3Column {
 								return null;
 							}
 
-							final PersistentClass mappedByEntityBinding = getBuildingContext().getMetadataCollector()
+							final PersistentClass mappedByEntityBinding = getBuildingContext()
+									.getMetadataCollector()
 									.getEntityBinding( mappedByEntityName );
 							final Property mappedByProperty = mappedByEntityBinding.getProperty( mappedByPropertyName );
-							final SimpleValue value = (SimpleValue) mappedByProperty.getValue();
-							final Iterator<Selectable> selectableValues = value.getColumnIterator();
-							if ( !selectableValues.hasNext() ) {
+							final List<Selectable> mappedColumns = mappedByProperty.getValue().getMappedColumns();
+							if ( mappedColumns.size() == 0 ) {
 								throw new AnnotationException(
 										String.format(
 												Locale.ENGLISH,
@@ -597,7 +618,17 @@ public class Ejb3JoinColumn extends Ejb3Column {
 										)
 								);
 							}
-							final Selectable selectable = selectableValues.next();
+							else if ( mappedColumns.size() > 1 ) {
+								throw new AnnotationException(
+										String.format(
+												Locale.ENGLISH,
+												"mapped-by [%s] defined for attribute [%s] referenced an invalid property (multiple columns)",
+												mappedByPropertyName,
+												propertyHolder.getPath()
+										)
+								);
+							}
+							final MappedColumn selectable = mappedColumns.get( 0 );
 							if ( !Column.class.isInstance( selectable ) ) {
 								throw new AnnotationException(
 										String.format(
@@ -608,16 +639,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 										)
 								);
 							}
-							if ( selectableValues.hasNext() ) {
-								throw new AnnotationException(
-										String.format(
-												Locale.ENGLISH,
-												"mapped-by [%s] defined for attribute [%s] referenced an invalid property (multiple columns)",
-												mappedByPropertyName,
-												propertyHolder.getPath()
-										)
-								);
-							}
+
 							return getBuildingContext().getMetadataCollector()
 									.getDatabase()
 									.toIdentifier( ( (Column) selectable ).getQuotedName() );
@@ -636,7 +658,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			}
 		}
 		else if ( ownerSide ) {
-			final String logicalTableName = referencedEntity.getTable().getName();
+			final String logicalTableName = referencedEntity.getMappedTable().getName();
 
 			final ImplicitJoinColumnNameSource.Nature implicitNamingNature;
 			if ( JPA2ElementCollection ) {
@@ -714,7 +736,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			}
 		}
 		else {
-			final Identifier logicalTableName = referencedEntity.getTable().getNameIdentifier();
+			final Identifier logicalTableName = referencedEntity.getMappedTable().getNameIdentifier();
 
 			// is an intra-entity hierarchy table join so copy the name by default
 			columnIdentifier = implicitNamingStrategy.determinePrimaryKeyJoinColumnName(
@@ -775,7 +797,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			PersistentClass referencedEntity,
 			MetadataBuildingContext context) {
 		//convenient container to find whether a column is an id one or not
-		Set<Column> idColumns = new HashSet<Column>();
+		Set<Column> idColumns = new HashSet<>();
 		Iterator idColumnsIt = referencedEntity.getKey().getColumnIterator();
 		while ( idColumnsIt.hasNext() ) {
 			idColumns.add( (Column) idColumnsIt.next() );
@@ -794,7 +816,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			try {
 				throw new MappingException(
 						"Unable to find column with logical name: "
-								+ columns[0].getReferencedColumn() + " in " + referencedEntity.getTable() + " and its related "
+								+ columns[0].getReferencedColumn() + " in " + referencedEntity.getMappedTable() + " and its related "
 								+ "supertables and secondary tables"
 				);
 			}
@@ -802,14 +824,14 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				throw new RecoverableException( e.getMessage(), e );
 			}
 		}
-		Table matchingTable = columnOwner instanceof PersistentClass ?
-				( (PersistentClass) columnOwner ).getTable() :
-				( (Join) columnOwner ).getTable();
+		MappedTable matchingTable = columnOwner instanceof PersistentClass ?
+				( (PersistentClass) columnOwner ).getMappedTable() :
+				( (Join) columnOwner ).getMappedTable();
 		//check each referenced column
 		for (Ejb3JoinColumn ejb3Column : columns) {
 			String logicalReferencedColumnName = ejb3Column.getReferencedColumn();
 			if ( StringHelper.isNotEmpty( logicalReferencedColumnName ) ) {
-				Column referencedColumnName = matchingTable.getColumn( Identifier.toIdentifier(logicalReferencedColumnName  ) );
+				Column referencedColumnName = (Column) matchingTable.getColumn( Identifier.toIdentifier(logicalReferencedColumnName  ) );
 				if(referencedColumnName == null){
 
 					//rewrite the exception

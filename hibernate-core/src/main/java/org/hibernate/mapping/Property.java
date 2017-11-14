@@ -322,10 +322,6 @@ public class Property implements Serializable, PersistentAttributeMapping {
 		this.optional = optional;
 	}
 
-	/**
-	 * @deprecated since 6.0 use {@link #getEntity()} instead.
-	 */
-	@Deprecated
 	public PersistentClass getPersistentClass() {
 		return persistentClass;
 	}

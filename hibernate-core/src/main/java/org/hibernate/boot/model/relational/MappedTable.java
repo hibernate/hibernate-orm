@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedIndex;
@@ -170,9 +171,7 @@ public interface MappedTable<T extends MappedColumn> extends Loggable {
 
 	void addColumn(T column);
 
-	Iterator getColumnIterator();
-
-	Iterator<MappedIndex> getIndexIterator();
+	Collection<MappedIndex> getIndexes();
 
 	Collection<ForeignKey> getForeignKeys();
 

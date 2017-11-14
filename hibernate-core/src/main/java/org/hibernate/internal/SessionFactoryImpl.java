@@ -51,6 +51,7 @@ import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
+import org.hibernate.boot.model.domain.spi.EntityMappingImplementor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -94,6 +95,7 @@ import org.hibernate.jpa.internal.AfterCompletionActionLegacyJpaImpl;
 import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
 import org.hibernate.jpa.internal.ManagedFlushCheckerLegacyJpaImpl;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.internal.MetamodelImpl;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
@@ -277,16 +279,21 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			//Generators:
 			this.identifierGenerators = new HashMap<>();
-			metadata.getEntityBindings().stream().filter( model -> !model.isInherited() ).forEach( model -> {
-				IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
-						identifierGeneratorFactory,
-						jdbcServices.getJdbcEnvironment().getDialect(),
-						settings.getDefaultCatalogName(),
-						settings.getDefaultSchemaName(),
-						(RootClass) model
-				);
-				identifierGenerators.put( model.getEntityName(), generator );
-			} );
+
+			metadata.getEntityMappings().stream()
+					.filter( entityMapping ->  entityMapping.getSuperManagedTypeMapping() != null )
+					.map( RootClass.class::cast )
+					.forEach( rootClass -> {
+						IdentifierGenerator generator =  rootClass.getIdentifierValueMapping()
+								.createIdentifierGenerator(
+										identifierGeneratorFactory,
+										jdbcServices.getJdbcEnvironment().getDialect(),
+										settings.getDefaultCatalogName(),
+										settings.getDefaultSchemaName(),
+										rootClass
+								);
+						identifierGenerators.put( rootClass.getEntityName(), generator );
+					} );
 
 			LOG.debug( "Instantiated session factory" );
 

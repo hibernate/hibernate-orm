@@ -8,6 +8,7 @@ package org.hibernate.cfg;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
@@ -159,51 +161,54 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 		final BasicValue referencedValue = (BasicValue) referencedProperty.getValue();
 		value.setTypeName( referencedValue.getTypeName() );
 		value.setTypeParameters( referencedValue.getTypeParameters() );
-		final Iterator<Selectable> columns = referencedValue.getColumnIterator();
-
+		List<Selectable> mappedColumns = referencedValue.getMappedColumns();
 		if ( joinColumns[0].isNameDeferred() ) {
 			joinColumns[0].copyReferencedStructureAndCreateDefaultJoinColumns(
 				referencedPersistentClass,
-				columns,
+				mappedColumns,
 				value);
 		}
 		else {
-			//FIXME take care of Formula
-			while ( columns.hasNext() ) {
-				final Selectable selectable = columns.next();
-				if ( ! Column.class.isInstance( selectable ) ) {
-					log.debug( "Encountered formula definition; skipping" );
-					continue;
-				}
-				final Column column = (Column) selectable;
-				final Ejb3JoinColumn joinColumn;
-				String logicalColumnName = null;
-				if ( isExplicitReference ) {
-					final String columnName = column.getText();
-					//JPA 2 requires referencedColumnNames to be case insensitive
-					joinColumn = columnByReferencedName.get( columnName.toLowerCase(Locale.ROOT ) );
-				}
-				else {
-					joinColumn = columnByReferencedName.get( "" + index.get() );
-					index.getAndIncrement();
-				}
-				if ( joinColumn == null && ! joinColumns[0].isNameDeferred() ) {
-					throw new AnnotationException(
-							isExplicitReference ?
-									"Unable to find column reference in the @MapsId mapping: " + logicalColumnName :
-									"Implicit column reference in the @MapsId mapping fails, try to use explicit referenceColumnNames: " + referencedEntityName
-					);
-				}
-				final String columnName = joinColumn == null || joinColumn.isNameDeferred() ? "tata_" + column.getName() : joinColumn
-						.getName();
-				value.addColumn( new Column( columnName, false ) );
-				if ( joinColumn != null ) {
-					joinColumn.linkWithValue( value );
-				}
-				if ( value.getMappedTable() != null ) {
-					column.setTableName( value.getMappedTable().getNameIdentifier() );
-				}
-			}
+			mappedColumns.forEach(
+					selectable -> {
+						//FIXME take care of Formula
+						if ( Column.class.isInstance( selectable ) ) {
+							final Column column = (Column) selectable;
+							final Ejb3JoinColumn joinColumn;
+							String logicalColumnName = null;
+							if ( isExplicitReference ) {
+								final String columnName = column.getText();
+								//JPA 2 requires referencedColumnNames to be case insensitive
+								joinColumn = columnByReferencedName.get( columnName.toLowerCase( Locale.ROOT ) );
+							}
+							else {
+								joinColumn = columnByReferencedName.get( "" + index.get() );
+								index.getAndIncrement();
+							}
+							if ( joinColumn == null && !joinColumns[0].isNameDeferred() ) {
+								throw new AnnotationException(
+										isExplicitReference ?
+												"Unable to find column reference in the @MapsId mapping: " + logicalColumnName :
+												"Implicit column reference in the @MapsId mapping fails, try to use explicit referenceColumnNames: " + referencedEntityName
+								);
+							}
+							final String columnName = joinColumn == null || joinColumn.isNameDeferred() ?
+									"tata_" + column.getName() :
+									joinColumn
+											.getName();
+							value.addColumn( new Column( columnName, false ) );
+							if ( joinColumn != null ) {
+								joinColumn.linkWithValue( value );
+							}
+							if ( value.getMappedTable() != null ) {
+								column.setTableName( value.getMappedTable().getNameIdentifier() );
+							}
+						}
+						else {
+							log.debug( "Encountered formula definition; skipping" );
+						}
+					}
+			);
 		}
 		return property;
 	}

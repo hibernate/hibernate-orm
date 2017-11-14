@@ -21,6 +21,7 @@ import javax.persistence.JoinColumn;
 import org.dom4j.Element;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.internal.metadata.reader.AuditedPropertiesReader;
 import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAuditedPropertiesReader;
@@ -71,7 +72,6 @@ import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 
 import org.jboss.logging.Logger;
@@ -319,7 +319,7 @@ public final class CollectionMetadataGenerator {
 			);
 		}
 		// Hibernate uses a middle table for mapping this relation, so we get it's name directly.
-		return value.getCollectionTable().getName();
+		return value.getMappedTable().getName();
 	}
 
 	@SuppressWarnings({"unchecked"})
@@ -382,7 +382,7 @@ public final class CollectionMetadataGenerator {
 		if ( propertyValue.isInverse() ) {
 			// If the relation is inverse, then referencedEntityName is not null.
 			mappedBy = getMappedBy(
-					propertyValue.getCollectionTable(),
+					propertyValue.getMappedTable(),
 					mainGenerator.getMetadata().getEntityBinding( referencedEntityName )
 			);
 
@@ -833,7 +833,7 @@ public final class CollectionMetadataGenerator {
 		return getMappedBy( referencedClass, valueHolder );
 	}
 
-	private String getMappedBy(Table collectionTable, PersistentClass referencedClass) {
+	private String getMappedBy(MappedTable collectionTable, PersistentClass referencedClass) {
 		return getMappedBy( referencedClass, new ValueHolder( collectionTable ) );
 	}
 
@@ -898,14 +898,14 @@ public final class CollectionMetadataGenerator {
 	}
 
 	@SuppressWarnings({"unchecked"})
-	private String searchMappedBy(PersistentClass referencedClass, Table collectionTable) {
+	private String searchMappedBy(PersistentClass referencedClass, MappedTable collectionTable) {
 		final Iterator<Property> properties = referencedClass.getPropertyIterator();
 		while ( properties.hasNext() ) {
 			final Property property = properties.next();
 			if ( property.getValue() instanceof Collection ) {
 				// The equality is intentional. We want to find a collection property with the same collection table.
 				//noinspection ObjectEquality
-				if ( ( (Collection) property.getValue() ).getCollectionTable() == collectionTable ) {
+				if ( property.getValue().getMappedTable() == collectionTable ) {
 					return property.getName();
 				}
 			}
@@ -944,7 +944,7 @@ public final class CollectionMetadataGenerator {
 		else if ( collectionValue.getElement() instanceof ManyToOne ) {
 			// Case for bi-directional relation with @JoinTable on the owning @ManyToOne side.
 			final ManyToOne manyToOneValue = (ManyToOne) collectionValue.getElement();
-			referencedClass = manyToOneValue.getBuildingContext().getMetadataCollector().getEntityBinding(
+			referencedClass = manyToOneValue.getMetadataBuildingContext().getMetadataCollector().getEntityBinding(
 					manyToOneValue.getReferencedEntityName()
 			);
 		}
@@ -962,13 +962,13 @@ public final class CollectionMetadataGenerator {
 
 	private class ValueHolder {
 		private Collection collection;
-		private Table table;
+		private MappedTable table;
 
 		public ValueHolder(Collection collection) {
 			this.collection = collection;
 		}
 
-		public ValueHolder(Table table) {
+		public ValueHolder(MappedTable table) {
 			this.table = table;
 		}
 
@@ -976,7 +976,7 @@ public final class CollectionMetadataGenerator {
 			return collection;
 		}
 
-		public Table getTable() {
+		public MappedTable getTable() {
 			return table;
 		}
 	}

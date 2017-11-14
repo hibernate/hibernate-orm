@@ -7,6 +7,7 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -73,6 +74,24 @@ public class Formula implements Selectable, Serializable {
 	@Override
 	public boolean isFormula() {
 		return true;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		Formula formula1 = (Formula) o;
+		return Objects.equals( formula, formula1.formula );
+	}
+
+	@Override
+	public int hashCode() {
+
+		return Objects.hash( formula );
 	}
 
 	@Override

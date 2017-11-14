@@ -288,20 +288,32 @@ public class Table implements MappedTable<Column>, Serializable {
 		return columns.size();
 	}
 
-	@Override
+	/**
+	 * @deprecated since 6.0, use {@link #getMappedColumns()} instead.
+	 */
 	public Iterator getColumnIterator() {
 		return columns.values().iterator();
 	}
 
-	@Override
+	/**
+	 * @deprecated since 6.0, use {@link #getIndexes()} instead.
+	 */
 	public Iterator<MappedIndex> getIndexIterator() {
 		return indexes.values().iterator();
+	}
+
+	@Override
+	public java.util.Collection<MappedIndex> getIndexes(){
+		return indexes.values();
 	}
 
 	public Map<ForeignKeyKey, ForeignKey> getForeignKeyMap() {
 		return Collections.unmodifiableMap( foreignKeyMap );
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getForeignKeys()} instead.
+	 */
 	public Iterator getForeignKeyIterator() {
 		return foreignKeyMap.values().iterator();
 	}
@@ -317,6 +329,7 @@ public class Table implements MappedTable<Column>, Serializable {
 		return getUniqueKeys().iterator();
 	}
 
+	@Override
 	public java.util.Collection<UniqueKey> getUniqueKeys() {
 		cleanseUniqueKeyMapIfNeeded();
 		return uniqueKeys.values();
@@ -686,8 +699,7 @@ public class Table implements MappedTable<Column>, Serializable {
 		}
 
 		public int hashCode() {
-			int i = columns.hashCode() + referencedColumns.hashCode();
-			return i;
+			return columns.hashCode() + referencedColumns.hashCode();
 		}
 
 		public boolean equals(Object other) {
@@ -819,7 +831,7 @@ public class Table implements MappedTable<Column>, Serializable {
 
 		runtimeTable.setCheckConstraints( getCheckConstraints() );
 
-		for ( MappedIndex index : indexes.values() ) {
+		for ( MappedIndex index : getIndexes() ) {
 			runtimeTable.addIndex( index.generateRuntimeIndex(
 					runtimeTable,
 					namingStrategy,

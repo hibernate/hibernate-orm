@@ -1321,8 +1321,11 @@ public class ModelBinder {
 				}
 				else if ( SingularAttributeSourceOneToOne.class.isInstance( attributeSource ) ) {
 					final SingularAttributeSourceOneToOne oneToOneAttributeSource = (SingularAttributeSourceOneToOne) attributeSource;
-					final Table table = entityDescriptor.getTable();
-					final OneToOne oneToOneValue = new OneToOne( mappingDocument, table, entityDescriptor );
+					final OneToOne oneToOneValue = new OneToOne(
+							mappingDocument,
+							entityDescriptor.getMappedTable(),
+							entityDescriptor
+					);
 					final Property attribute = createOneToOneAttribute(
 							mappingDocument,
 							oneToOneAttributeSource,
@@ -1346,14 +1349,14 @@ public class ModelBinder {
 							anyAttributeSource.getKeySource().getRelationalValueSources()
 					);
 					final AttributeContainer attributeContainer;
-					final Table table;
+					final MappedTable table;
 					final Join secondaryTableJoin = entityTableXref.locateJoin( tableName );
 					if ( secondaryTableJoin == null ) {
-						table = entityDescriptor.getTable();
+						table = entityDescriptor.getMappedTable();
 						attributeContainer = entityDescriptor;
 					}
 					else {
-						table = secondaryTableJoin.getTable();
+						table = secondaryTableJoin.getMappedTable();
 						attributeContainer = secondaryTableJoin;
 					}
 
@@ -1871,7 +1874,7 @@ public class ModelBinder {
 		final DependantValue keyBinding = new DependantValue(
 				mappingDocument.getBootstrapContext().getTypeConfiguration().getMetadataBuildingContext(),
 				secondaryTable,
-				persistentClass.getIdentifier()
+				persistentClass.getIdentifierValueMapping()
 		);
 		if ( mappingDocument.getBuildingOptions().useNationalizedCharacterData() ) {
 			keyBinding.makeNationalized();
@@ -1926,7 +1929,7 @@ public class ModelBinder {
 		prepareValueTypeViaReflection(
 				sourceDocument,
 				componentBinding,
-				componentBinding.getComponentClassName(),
+				componentBinding.getEmbeddableClassName(),
 				attributeName,
 				embeddedSource.getAttributeRole()
 		);

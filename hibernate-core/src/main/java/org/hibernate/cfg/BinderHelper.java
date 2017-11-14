@@ -18,6 +18,9 @@ import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XPackage;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.EntityBinder;
@@ -35,9 +38,9 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SyntheticProperty;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.naming.Identifier;
@@ -278,7 +281,7 @@ public class BinderHelper {
 					clone.setUpdateable( false );
 					clone.setNaturalIdentifier( false );
 					clone.setValueGenerationStrategy( property.getValueGenerationStrategy() );
-					embeddedComp.addProperty( clone );
+					embeddedComp.addDeclaredPersistentAttribute( clone );
 				}
 				synthProp = new SyntheticProperty();
 				synthProp.setName( syntheticPropertyName );
@@ -362,22 +365,8 @@ public class BinderHelper {
 			Object columnOwner,
 			Ejb3JoinColumn[] columns,
 			MetadataBuildingContext context) {
-		Map<Column, Set<Property>> columnsToProperty = new HashMap<>();
+		Map<Column, Set<PersistentAttributeMapping>> columnsToProperty = new HashMap<>();
 		List<Column> orderedColumns = new ArrayList<>( columns.length );
-		Table referencedTable = null;
-		if ( columnOwner instanceof PersistentClass ) {
-			referencedTable = ( (PersistentClass) columnOwner ).getTable();
-		}
-		else if ( columnOwner instanceof Join ) {
-			referencedTable = ( (Join) columnOwner ).getTable();
-		}
-		else {
-			throw new AssertionFailure(
-					columnOwner == null ?
-							"columnOwner is null" :
-							"columnOwner neither PersistentClass nor Join: " + columnOwner.getClass()
-			);
-		}
 		//build the list of column names
 		for (Ejb3JoinColumn column1 : columns) {
 			Column column = new Column( column1.getReferencedColumn(), false );
@@ -392,18 +381,18 @@ public class BinderHelper {
 			matchColumnsByProperty( (Property) it.next(), columnsToProperty );
 		}
 		if ( isPersistentClass ) {
-			matchColumnsByProperty( ( (PersistentClass) columnOwner ).getIdentifierProperty(), columnsToProperty );
+			matchColumnsByProperty( (Property) ( (PersistentClass) columnOwner ).getIdentifierAttributeMapping(), columnsToProperty );
 		}
 
 		//first naive implementation
 		//only check 1 columns properties
 		//TODO make it smarter by checking correctly ordered multi column properties
-		List<Property> orderedProperties = new ArrayList<Property>();
+		List<Property> orderedProperties = new ArrayList<>();
 		for (Column column : orderedColumns) {
 			boolean found = false;
-			for (Property property : columnsToProperty.get( column ) ) {
-				if ( property.getColumnSpan() == 1 ) {
-					orderedProperties.add( property );
+			for (PersistentAttributeMapping property : columnsToProperty.get( column ) ) {
+				if ( property.getValueMapping().getMappedColumns().size() == 1 ) {
+					orderedProperties.add( (Property) property );
 					found = true;
 					break;
 				}
@@ -416,7 +405,7 @@ public class BinderHelper {
 		return orderedProperties;
 	}
 
-	private static void matchColumnsByProperty(Property property, Map<Column, Set<Property>> columnsToProperty) {
+	private static void matchColumnsByProperty(PersistentAttributeMapping property, Map<Column, Set<PersistentAttributeMapping>> columnsToProperty) {
 		if ( property == null ) {
 			return;
 		}
@@ -432,15 +421,10 @@ public class BinderHelper {
 //			}
 //		}
 		else {
-			Iterator columnIt = property.getColumnIterator();
-			while ( columnIt.hasNext() ) {
-				//can be a Formula so we don't cast
-				Object column = columnIt.next();
-				//noinspection SuspiciousMethodCalls
-				if ( columnsToProperty.containsKey( column ) ) {
-					columnsToProperty.get( column ).add( property );
-				}
-			}
+			List<MappedColumn> mappedColumns = property.getValueMapping().getMappedColumns();
+			mappedColumns.stream()
+					.filter( column ->columnsToProperty.containsKey( column )  ).
+					forEach( column -> columnsToProperty.get( column ).add( property ) );
 		}
 	}
 
@@ -449,8 +433,8 @@ public class BinderHelper {
 	 * If propertyName is null or empty, the IdentifierProperty is returned
 	 */
 	public static Property findPropertyByName(PersistentClass associatedClass, String propertyName) {
-		Property property = null;
-		Property idProperty = associatedClass.getIdentifierProperty();
+		PersistentAttributeMapping property = null;
+		PersistentAttributeMapping idProperty = associatedClass.getIdentifierAttributeMapping();
 		String idName = idProperty != null ? idProperty.getName() : null;
 		try {
 			if ( propertyName == null
@@ -471,10 +455,10 @@ public class BinderHelper {
 						property = associatedClass.getProperty( element );
 					}
 					else {
-						if ( !property.isComposite() ) {
+						if ( !property.getClass().isInstance( EmbeddedValueMapping.class )) {
 							return null;
 						}
-						property = ( (Component) property.getValue() ).getProperty( element );
+						property = ( (EmbeddedValueMapping) property.getValueMapping() ).getDeclaredPersistentAttribute( element );
 					}
 				}
 			}
@@ -482,20 +466,20 @@ public class BinderHelper {
 		catch (MappingException e) {
 			try {
 				//if we do not find it try to check the identifier mapper
-				if ( associatedClass.getIdentifierMapper() == null ) {
+				if ( associatedClass.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping() == null ) {
 					return null;
 				}
 				StringTokenizer st = new StringTokenizer( propertyName, ".", false );
 				while ( st.hasMoreElements() ) {
 					String element = (String) st.nextElement();
 					if ( property == null ) {
-						property = associatedClass.getIdentifierMapper().getProperty( element );
+						property = associatedClass.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping().getDeclaredPersistentAttribute( element );
 					}
 					else {
-						if ( !property.isComposite() ) {
+						if ( !property.getClass().isInstance( EmbeddedValueMapping.class )) {
 							return null;
 						}
-						property = ( (Component) property.getValue() ).getProperty( element );
+						property = ( (EmbeddedValueMapping) property.getValueMapping() ).getDeclaredPersistentAttribute( element );
 					}
 				}
 			}
@@ -503,7 +487,7 @@ public class BinderHelper {
 				return null;
 			}
 		}
-		return property;
+		return (Property) property;
 	}
 
 	/**
@@ -591,7 +575,7 @@ public class BinderHelper {
 		boolean found = false;
 		do {
 			result = current;
-			Table currentTable = current.getTable();
+			MappedTable currentTable = current.getMappedTable();
 			final Identifier columnNameIdentifier = Identifier.toIdentifier( columnName );
 			if ( currentTable.getColumn( columnNameIdentifier ) != null ) {
 				found = true;
@@ -599,7 +583,7 @@ public class BinderHelper {
 			Iterator joins = current.getJoinIterator();
 			while ( !found && joins.hasNext() ) {
 				result = joins.next();
-				currentTable = ( (Join) result ).getTable();
+				currentTable = ( (Join) result ).getMappedTable();
 				if ( currentTable.getColumn( columnNameIdentifier ) != null ) {
 					found = true;
 				}
@@ -640,10 +624,11 @@ public class BinderHelper {
 			params.put( PersistentIdentifierGenerator.SCHEMA, implicitSchemaName );
 		}
 
-		if ( id.getColumnSpan() == 1 ) {
+		final List<Selectable> idColumns = id.getMappedColumns();
+		if ( idColumns.size() == 1 ) {
 			params.setProperty(
 					PersistentIdentifierGenerator.PK,
-					( (org.hibernate.mapping.Column) id.getColumnIterator().next() ).getName().getText()
+					idColumns.get( 0 ).getText()
 			);
 		}
 		// YUCK!  but cannot think of a clean way to do this given the string-config based scheme

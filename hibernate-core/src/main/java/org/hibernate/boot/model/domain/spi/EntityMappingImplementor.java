@@ -7,15 +7,10 @@
 package org.hibernate.boot.model.domain.spi;
 
 import org.hibernate.boot.model.domain.EntityMapping;
-import org.hibernate.boot.model.domain.KeyValueMapping;
 
 /**
  * @author Steve Ebersole
  */
 public interface EntityMappingImplementor extends EntityMapping, IdentifiableTypeMappingImplementor {
 	void validate();
-
-	String getClassName();
-
-	KeyValueMapping getIdentifierValueMapping();
 }

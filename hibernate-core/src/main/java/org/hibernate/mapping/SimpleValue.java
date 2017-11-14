@@ -11,10 +11,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
-import javax.persistence.EnumType;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -112,7 +112,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public boolean hasFormula() {
-		for ( Selectable selectable : getMappedColumns() ) {
+		for ( MappedColumn selectable : getMappedColumns() ) {
 			if ( selectable.isFormula() ) {
 				return true;
 			}
@@ -151,14 +151,14 @@ public abstract class SimpleValue implements KeyValue {
 		this.typeName = typeName;
 	}
 
-	public void setTable(Table table) {
-		this.table = table;
-	}
-
 	/**
 	 * @deprecated since 6.0, use {@link #setTable(MappedTable)} instead.
 	 */
 	@Deprecated
+	public void setTable(Table table) {
+		this.table = table;
+	}
+
 	public void setTable(MappedTable table) {
 		this.table = table;
 	}
@@ -457,7 +457,7 @@ public abstract class SimpleValue implements KeyValue {
 	public boolean[] getColumnInsertability() {
 		final boolean[] columnInsertability = new boolean[ getColumnSpan() ];
 		int i = 0;
-		for(Selectable column : columns){
+		for(MappedColumn column : columns){
 			columnInsertability[i++] = !column.isFormula();
 		}
 		return columnInsertability;

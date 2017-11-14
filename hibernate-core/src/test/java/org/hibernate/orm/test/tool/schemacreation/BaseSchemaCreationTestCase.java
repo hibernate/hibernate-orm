@@ -63,7 +63,7 @@ public class BaseSchemaCreationTestCase extends BaseSchemaUnitTestCase {
 		return false;
 	}
 
-	protected void assertThatTablesAreCreated(Object... expected) {
+	protected void assertThatTablesAreCreated(String... expected) {
 		assertThat(
 				target.getActions( target.tableCreateActions() ),
 				target.containsExactly( expected )
@@ -74,7 +74,7 @@ public class BaseSchemaCreationTestCase extends BaseSchemaUnitTestCase {
 		assertTrue(
 				target.containsAction(
 						Pattern.compile(
-								action )
+								action.toLowerCase() )
 				),
 				"The expected action has not been generated : " + action
 		);

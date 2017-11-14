@@ -119,7 +119,6 @@ public abstract class PersistentClass
 		return metadataBuildingContext.getBuildingOptions().getServiceRegistry();
 	}
 
-	@Override
 	public String getClassName() {
 		return className;
 	}
@@ -304,8 +303,7 @@ public abstract class PersistentClass
 	 */
 	public abstract KeyValue getIdentifier();
 
-	@Override
-	public KeyValueMapping getIdentifierValueMapping() {
+	public KeyValue getIdentifierValueMapping() {
 		return getIdentifier();
 	}
 
@@ -684,6 +682,7 @@ public abstract class PersistentClass
 		getEntityMappingHierarchy().setOptimisticLockStyle( optimisticLockStyle );
 	}
 
+	@Override
 	public void validate() throws MappingException {
 		Iterator iter = getPropertyIterator();
 		while ( iter.hasNext() ) {

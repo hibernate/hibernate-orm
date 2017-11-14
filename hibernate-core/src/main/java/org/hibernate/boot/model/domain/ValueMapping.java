@@ -13,6 +13,7 @@ import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.ForeignKey;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -25,7 +26,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 public interface ValueMapping<J> {
 	MappedTable getMappedTable();
 
-	List<MappedColumn> getMappedColumns();
+	List<Selectable> getMappedColumns();
 
 	/**
 	 * The foreign key this value represents.

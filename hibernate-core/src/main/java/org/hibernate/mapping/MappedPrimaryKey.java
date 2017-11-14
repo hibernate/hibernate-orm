@@ -6,6 +6,7 @@
  */
 package org.hibernate.mapping;
 
+import java.util.Collection;
 import java.util.Iterator;
 
 import org.hibernate.boot.model.relational.MappedColumn;
@@ -29,20 +30,19 @@ public class MappedPrimaryKey extends Constraint {
 	public void addColumn(MappedColumn column) {
 
 	}
+
 	@Override
 	public void addColumn(Column column) {
-		final Iterator<Column> columnIterator = getMappedTable().getColumnIterator();
-		while ( columnIterator.hasNext() ) {
-			final Column next = columnIterator.next();
-			if ( next.getCanonicalName().equals( column.getCanonicalName() ) ) {
-				next.setNullable( false );
-				log.debugf(
-						"Forcing column [%s] to be non-null as it is part of the primary key for table [%s]",
-						column.getCanonicalName(),
-						getTableNameForLogging( column )
-				);
-			}
-		}
+		final Collection<Column> columns = getMappedTable().getMappedColumns();
+		columns.stream().filter( c -> c.getCanonicalName().equals( column.getCanonicalName() ) )
+				.forEach( c -> {
+					c.setNullable( false );
+					log.debugf(
+							"Forcing column [%s] to be non-null as it is part of the primary key for table [%s]",
+							column.getCanonicalName(),
+							getTableNameForLogging( column )
+					);
+				} );
 		super.addColumn( column );
 	}
 

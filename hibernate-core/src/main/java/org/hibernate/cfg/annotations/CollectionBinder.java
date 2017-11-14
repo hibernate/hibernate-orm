@@ -1654,7 +1654,7 @@ public abstract class CollectionBinder {
 						break;
 					}
 				}
-				if ( key == null ) key = (KeyValue) ((EntityMappingImplementor)property.getEntity()).getIdentifierValueMapping();
+				if ( key == null ) key = property.getPersistentClass().getIdentifierValueMapping();
 				mappedByColumns = key.getMappedColumns();
 			}
 			mappedByColumns.forEach( mappedColumn -> {

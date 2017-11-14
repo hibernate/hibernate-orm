@@ -6,7 +6,11 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.KeyValueMapping;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 
 /**
  * Represents an identifying key of a table: the value for primary key
@@ -14,5 +18,14 @@ import org.hibernate.boot.model.domain.KeyValueMapping;
  * joined subclass table.
  * @author Gavin King
  */
-public interface KeyValue extends KeyValueMapping, Value {
+public interface KeyValue extends Value, KeyValueMapping {
+
+	ForeignKey createForeignKeyOfEntity(String entityName);
+
+	IdentifierGenerator createIdentifierGenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Dialect dialect,
+			String defaultCatalog,
+			String defaultSchema,
+			RootClass rootClass) throws MappingException;
 }

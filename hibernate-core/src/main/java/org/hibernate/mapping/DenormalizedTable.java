@@ -101,10 +101,7 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable<
 
 	@Override
 	public Iterator getColumnIterator() {
-		return new JoinedIterator(
-				includedTable.getColumnIterator(),
-				super.getColumnIterator()
-		);
+		return getMappedColumns().iterator();
 	}
 
 	@Override
@@ -138,20 +135,15 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable<
 
 	@Override
 	public Iterator getIndexIterator() {
-		List indexes = new ArrayList();
-		Iterator iter = includedTable.getIndexIterator();
-		while ( iter.hasNext() ) {
-			MappedIndex parentIndex = (MappedIndex) iter.next();
-			MappedIndex index = new MappedIndex();
-			index.setName( getName() + parentIndex.getName() );
-			index.setTable( this );
-			index.addColumns( parentIndex.getColumnIterator() );
-			indexes.add( index );
-		}
-		return new JoinedIterator(
-				indexes.iterator(),
-				super.getIndexIterator()
-		);
+		return getIndexes().iterator();
+	}
+
+	@Override
+	public Collection<MappedIndex> getIndexes() {
+		final List<MappedIndex> indexes = new ArrayList<>(  );
+		indexes.addAll(includedTable.getIndexes()  );
+		indexes.addAll( super.getIndexes() );
+		return indexes;
 	}
 
 	/**

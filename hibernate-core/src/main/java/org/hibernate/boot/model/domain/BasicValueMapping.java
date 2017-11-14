@@ -12,6 +12,7 @@ import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.BasicType;
 
@@ -26,7 +27,7 @@ public interface BasicValueMapping<J> extends ValueMapping<J> {
 	 * Get the single column associated with this basic mapping
 	 */
 	default MappedColumn getMappedColumn() {
-		final List<MappedColumn> mappedColumns = getMappedColumns();
+		final List<Selectable> mappedColumns = getMappedColumns();
 		if ( mappedColumns.isEmpty() ) {
 			return null;
 		}

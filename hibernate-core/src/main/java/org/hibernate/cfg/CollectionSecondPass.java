@@ -8,9 +8,11 @@ package org.hibernate.cfg;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
@@ -72,13 +74,15 @@ public abstract class CollectionSecondPass implements SecondPass {
 	abstract public void secondPass(java.util.Map persistentClasses, java.util.Map inheritedMetas)
 			throws MappingException;
 
-	private static String columns(Value val) {
-		StringBuilder columns = new StringBuilder();
-		Iterator iter = val.getColumnIterator();
-		while ( iter.hasNext() ) {
-			columns.append( ( (Selectable) iter.next() ).getText() );
-			if ( iter.hasNext() ) columns.append( ", " );
+	private static String columns(Value<?> val) {
+		final StringBuilder columns = new StringBuilder();
+		List<Selectable> mappedColumns = val.getMappedColumns();
+		final int numberOfColumns = mappedColumns.size();
+		for ( int i = 0; i < numberOfColumns - 2; i++ ) {
+			columns.append( mappedColumns.get( i ).getText() );
+			columns.append( ", " );
 		}
+		columns.append( mappedColumns.get( numberOfColumns - 1 ).getText() );
 		return columns.toString();
 	}
 }

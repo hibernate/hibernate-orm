@@ -96,8 +96,12 @@ public class RecordingTarget implements GenerationTarget {
 		return collect.size() == 1;
 	}
 
-	public static BaseMatcher<Set<String>> containsExactly(Object... expected) {
-		return containsExactly( new HashSet( Arrays.asList( expected ) ) );
+	public static BaseMatcher<Set<String>> containsExactly(String... expected) {
+		Set<String> exps = new HashSet<>();
+		for ( String exp : expected ) {
+			exps.add( exp.toLowerCase() );
+		}
+		return containsExactly( exps );
 	}
 
 	private static BaseMatcher<Set<String>> containsExactly(final Set expected) {

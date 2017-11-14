@@ -95,8 +95,8 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public void addColumn(Column column) {
-		if ( getTable() != null ) {
-			column.setTableName( getTable().getNameIdentifier() );
+		if ( getMappedColumns() != null ) {
+			column.setTableName( getMappedTable().getNameIdentifier() );
 		}
 		if ( !columns.contains( column ) ) {
 			columns.add( column );
@@ -135,7 +135,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
-	public List<Selectable> getMappedColumns() {
+	public List<MappedColumn> getMappedColumns() {
 		return Collections.unmodifiableList( columns );
 	}
 
@@ -212,11 +212,11 @@ public abstract class SimpleValue implements KeyValue {
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name, instead of
 		//      splitting it up into schema/catalog/table names
-		String tableName = getTable().getQuotedName(dialect);
+		String tableName = getMappedTable().getQuotedName(dialect);
 		params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
 
 		//pass the column name (a generated id almost always has a single column)
-		String columnName = ( (Column) getColumnIterator().next() ).getQuotedName(dialect);
+		String columnName = ( (Column) getMappedColumns().get( 0 ) ).getQuotedName(dialect);
 		params.setProperty( PersistentIdentifierGenerator.PK, columnName );
 
 		if (rootClass!=null) {

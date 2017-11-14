@@ -3515,7 +3515,7 @@ public class ModelBinder {
 						(PluralAttributeElementSourceManyToAny) getPluralAttributeSource().getElementSource();
 				final Any elementBinding = new Any(
 						getMappingDocument(),
-						getCollectionBinding().getCollectionTable()
+						getCollectionBinding().getMappedTable()
 				);
 				bindAny(
 						mappingDocument,
@@ -3870,7 +3870,7 @@ public class ModelBinder {
 		else if ( pluralAttributeSource.getIndexSource() instanceof PluralAttributeMapKeyManyToAnySource ) {
 			final PluralAttributeMapKeyManyToAnySource mapKeySource =
 					(PluralAttributeMapKeyManyToAnySource) pluralAttributeSource.getIndexSource();
-			final Any mapKeyBinding = new Any( mappingDocument, collectionBinding.getCollectionTable() );
+			final Any mapKeyBinding = new Any( mappingDocument, collectionBinding.getMappedTable() );
 			bindAny(
 					mappingDocument,
 					mapKeySource,

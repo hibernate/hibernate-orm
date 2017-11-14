@@ -6,9 +6,11 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.IdMappingData;
@@ -44,19 +46,18 @@ public final class IdMetadataGenerator {
 	@SuppressWarnings({"unchecked"})
 	private boolean addIdProperties(
 			Element parent,
-			Iterator<Property> properties,
+			List<PersistentAttributeMapping> attributes,
 			SimpleMapperBuilder mapper,
 			boolean key,
 			boolean audited) {
-		while ( properties.hasNext() ) {
-			final Property property = properties.next();
-			if ( !NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( property.getName() ) ) {
+		for(PersistentAttributeMapping attribute : attributes){
+			if ( !NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( attribute.getName() ) ) {
 				boolean added = false;
-				if ( property.getValue() instanceof ManyToOne ) {
+				if ( attribute.getValueMapping() instanceof ManyToOne ) {
 					added = mainGenerator.getBasicMetadataGenerator().addManyToOne(
 							parent,
-							getIdPersistentPropertyAuditingData( property ),
-							property.getValue(),
+							getIdPersistentPropertyAuditingData( attribute ),
+							attribute.getValueMapping(),
 							mapper
 					);
 				}
@@ -64,8 +65,8 @@ public final class IdMetadataGenerator {
 					// Last but one parameter: ids are always insertable
 					added = mainGenerator.getBasicMetadataGenerator().addBasic(
 							parent,
-							getIdPersistentPropertyAuditingData( property ),
-							property.getValue(),
+							getIdPersistentPropertyAuditingData( attribute ),
+							attribute.getValueMapping(),
 							mapper,
 							true,
 							key
@@ -76,7 +77,7 @@ public final class IdMetadataGenerator {
 					// If the entity is not audited, then we simply don't support this entity, even in
 					// target relation mode not audited.
 					if ( audited ) {
-						throw new MappingException( "Property [" + property.getName() + " uses an unsupported type." );
+						throw new MappingException( "Property [" + attribute.getName() + " uses an unsupported type." );
 					}
 					else {
 						return false;
@@ -95,8 +96,8 @@ public final class IdMetadataGenerator {
 		// Xml mapping which will be used for the primary key of the versions table
 		final Element origIdMapping = new DefaultElement( "composite-id" );
 
-		final Property idProp = pc.getIdentifierProperty();
-		final Component idMapper = pc.getIdentifierMapper();
+		final PersistentAttributeMapping idProp = pc.getIdentifierAttributeMapping();
+		final EmbeddedValueMapping idMapper = pc.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping();
 
 		// Checking if the id mapping is supported
 		if ( idMapper == null && idProp == null ) {
@@ -113,7 +114,7 @@ public final class IdMetadataGenerator {
 			mapper = new MultipleIdMapper( componentClass, pc.getServiceRegistry() );
 			if ( !addIdProperties(
 					relIdMapping,
-					(Iterator<Property>) idMapper.getPropertyIterator(),
+					idMapper.getDeclaredPersistentAttributes(),
 					mapper,
 					false,
 					audited
@@ -124,7 +125,7 @@ public final class IdMetadataGenerator {
 			// null mapper - the mapping where already added the first time, now we only want to generate the xml
 			if ( !addIdProperties(
 					origIdMapping,
-					(Iterator<Property>) idMapper.getPropertyIterator(),
+					idMapper.getDeclaredPersistentAttributes(),
 					null,
 					true,
 					audited
@@ -132,17 +133,17 @@ public final class IdMetadataGenerator {
 				return null;
 			}
 		}
-		else if ( idProp.isComposite() ) {
+		else if ( Component.class.isInstance( idProp ) ) {
 			// Embedded id
-			final Component idComponent = (Component) idProp.getValue();
+			final Component idComponent = (Component) idProp.getValueMapping();
 			final Class embeddableClass = ReflectionTools.loadClass(
-					idComponent.getComponentClassName(),
+					idComponent.getEmbeddableClassName(),
 					mainGenerator.getClassLoaderService()
 			);
-			mapper = new EmbeddedIdMapper( getIdPropertyData( idProp ), embeddableClass, pc.getServiceRegistry() );
+			mapper = new EmbeddedIdMapper( getIdPropertyData( (Property) idProp ), embeddableClass, pc.getServiceRegistry() );
 			if ( !addIdProperties(
 					relIdMapping,
-					(Iterator<Property>) idComponent.getPropertyIterator(),
+					idComponent.getDeclaredPersistentAttributes(),
 					mapper,
 					false,
 					audited
@@ -153,7 +154,7 @@ public final class IdMetadataGenerator {
 			// null mapper - the mapping where already added the first time, now we only want to generate the xml
 			if ( !addIdProperties(
 					origIdMapping,
-					(Iterator<Property>) idComponent.getPropertyIterator(),
+					idComponent.getDeclaredPersistentAttributes(),
 					null,
 					true,
 					audited
@@ -169,7 +170,7 @@ public final class IdMetadataGenerator {
 			mainGenerator.getBasicMetadataGenerator().addBasic(
 					relIdMapping,
 					getIdPersistentPropertyAuditingData( idProp ),
-					idProp.getValue(),
+					idProp.getValueMapping(),
 					mapper,
 					true,
 					false
@@ -179,7 +180,7 @@ public final class IdMetadataGenerator {
 			mainGenerator.getBasicMetadataGenerator().addBasic(
 					origIdMapping,
 					getIdPersistentPropertyAuditingData( idProp ),
-					idProp.getValue(),
+					idProp.getValueMapping(),
 					null,
 					true,
 					true
@@ -198,10 +199,10 @@ public final class IdMetadataGenerator {
 		return new PropertyData( property.getName(), property.getName(), property.getPropertyAccessorName() );
 	}
 
-	private PropertyAuditingData getIdPersistentPropertyAuditingData(Property property) {
+	private PropertyAuditingData getIdPersistentPropertyAuditingData(PersistentAttributeMapping attributeMapping) {
 		return new PropertyAuditingData(
-				property.getName(),
-				property.getPropertyAccessorName(),
+				attributeMapping.getName(),
+				attributeMapping.getPropertyAccessorName(),
 				RelationTargetAuditMode.AUDITED,
 				null,
 				null,

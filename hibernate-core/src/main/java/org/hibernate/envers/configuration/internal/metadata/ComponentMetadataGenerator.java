@@ -7,8 +7,11 @@
 package org.hibernate.envers.configuration.internal.metadata;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.mapper.CompositeMapperBuilder;
@@ -35,7 +38,7 @@ public final class ComponentMetadataGenerator {
 	@SuppressWarnings({"unchecked"})
 	public void addComponent(
 			Element parent, PropertyAuditingData propertyAuditingData,
-			Value value, CompositeMapperBuilder mapper, String entityName,
+			ValueMapping value, CompositeMapperBuilder mapper, String entityName,
 			EntityXmlMappingData xmlMappingData, boolean firstPass) {
 		final Component propComponent = (Component) value;
 
@@ -62,20 +65,18 @@ public final class ComponentMetadataGenerator {
 		final ComponentAuditingData componentAuditingData = (ComponentAuditingData) propertyAuditingData;
 
 		// Adding all properties of the component
-		final Iterator<Property> properties = (Iterator<Property>) propComponent.getPropertyIterator();
-		while ( properties.hasNext() ) {
-			final Property property = properties.next();
-
+		List<PersistentAttributeMapping> declaredPersistentAttributes = propComponent.getDeclaredPersistentAttributes();
+		declaredPersistentAttributes.forEach( attribute -> {
 			final PropertyAuditingData componentPropertyAuditingData =
-					componentAuditingData.getPropertyAuditingData( property.getName() );
+					componentAuditingData.getPropertyAuditingData( attribute.getName() );
 
 			// Checking if that property is audited
 			if ( componentPropertyAuditingData != null ) {
 				mainGenerator.addValue(
-						parent, property.getValue(), componentMapper, entityName, xmlMappingData,
-						componentPropertyAuditingData, property.isInsertable(), firstPass, false
+						parent, attribute.getValueMapping(), componentMapper, entityName, xmlMappingData,
+						componentPropertyAuditingData, attribute.isInsertable(), firstPass, false
 				);
 			}
-		}
+		} );
 	}
 }

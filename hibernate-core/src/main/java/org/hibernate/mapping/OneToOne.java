@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.ForeignKeyDirection;
@@ -94,7 +95,7 @@ public class OneToOne extends ToOne {
 
 		@Override
 		public SqlTypeDescriptor resolveSqlTypeDescriptor() {
-			final List<Selectable> mappedColumns = getMappedColumns();
+			final List<MappedColumn> mappedColumns = getMappedColumns();
 			if ( mappedColumns.size() == 0 ) {
 				throw new IllegalStateException( "No SqlType code to resolve for " + entityName );
 

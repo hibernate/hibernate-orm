@@ -6,9 +6,10 @@
  */
 package org.hibernate.mapping;
 
-import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -41,25 +42,21 @@ public class Set extends Collection {
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			MappedPrimaryKey pk = new MappedPrimaryKey( getMappedTable() );
-			pk.addColumns( getKey().getColumnIterator() );
-			Iterator iter = getElement().getColumnIterator();
-			while ( iter.hasNext() ) {
-				Object selectable = iter.next();
-				if ( selectable instanceof Column ) {
-					Column col = (Column) selectable;
-					if ( !col.isNullable() ) {
-						pk.addColumn(col);
-					}
-				}
-			}
-			if ( pk.getColumnSpan()==getKey().getColumnSpan() ) { 
+			final MappedPrimaryKey pk = new MappedPrimaryKey( getMappedTable() );
+			pk.addColumns( getKey().getMappedColumns() );
+			((List<MappedColumn>) getElement().getMappedColumns()).stream()
+					.filter( Column.class::isInstance )
+					.map( Column.class::cast )
+					.filter( mappedColumn -> !mappedColumn.isNullable() )
+					.forEach( column -> pk.addColumn( column ) );
+
+			if ( pk.getColumnSpan() == getKey().getColumnSpan() ) {
 				//for backward compatibility, allow a set with no not-null 
 				//element columns, using all columns in the row locater SQL
 				//TODO: create an implicit not null constraint on all cols?
 			}
 			else {
-				getCollectionTable().setPrimaryKey(pk);
+				getMappedTable().setPrimaryKey( pk );
 			}
 		}
 		else {

@@ -623,7 +623,7 @@ public class BinderHelper {
 			params.put( PersistentIdentifierGenerator.SCHEMA, implicitSchemaName );
 		}
 
-		final List<Selectable> idColumns = id.getMappedColumns();
+		final List<MappedColumn> idColumns = id.getMappedColumns();
 		if ( idColumns.size() == 1 ) {
 			params.setProperty(
 					PersistentIdentifierGenerator.PK,

@@ -7,6 +7,7 @@
 package org.hibernate.envers.configuration.internal.metadata;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.envers.RelationTargetNotFoundAction;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
@@ -42,7 +43,7 @@ public final class ToOneRelationMetadataGenerator {
 	void addToOne(
 			Element parent,
 			PropertyAuditingData propertyAuditingData,
-			Value value,
+			ValueMapping value,
 			CompositeMapperBuilder mapper,
 			String entityName,
 			boolean insertable) {
@@ -92,7 +93,7 @@ public final class ToOneRelationMetadataGenerator {
 		MetadataTools.prefixNamesInPropertyElement(
 				properties,
 				lastPropertyPrefix,
-				MetadataTools.getColumnNameIterator( value.getColumnIterator() ),
+				MetadataTools.getColumnNameIterator( value.getMappedColumns() ),
 				false,
 				insertable
 		);
@@ -115,7 +116,7 @@ public final class ToOneRelationMetadataGenerator {
 	@SuppressWarnings({"unchecked"})
 	void addOneToOneNotOwning(
 			PropertyAuditingData propertyAuditingData,
-			Value value,
+			ValueMapping value,
 			CompositeMapperBuilder mapper,
 			String entityName) {
 		final OneToOne propertyValue = (OneToOne) value;
@@ -164,7 +165,7 @@ public final class ToOneRelationMetadataGenerator {
 	@SuppressWarnings({"unchecked"})
 	void addOneToOnePrimaryKeyJoinColumn(
 			PropertyAuditingData propertyAuditingData,
-			Value value,
+			ValueMapping value,
 			CompositeMapperBuilder mapper,
 			String entityName,
 			boolean insertable) {
@@ -204,7 +205,7 @@ public final class ToOneRelationMetadataGenerator {
 		);
 	}
 
-	private boolean shouldIgnoreNotFoundRelation(PropertyAuditingData propertyAuditingData, Value value) {
+	private boolean shouldIgnoreNotFoundRelation(PropertyAuditingData propertyAuditingData, ValueMapping value) {
 		final RelationTargetNotFoundAction action = propertyAuditingData.getRelationTargetNotFoundAction();
 		if ( mainGenerator.getOptions().isGlobalLegacyRelationTargetNotFoundEnabled() ) {
 			// When legacy is enabled, the user must explicitly specify IGNORE for it to be ignored or

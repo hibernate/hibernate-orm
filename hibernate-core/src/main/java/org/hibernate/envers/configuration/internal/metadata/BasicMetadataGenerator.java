@@ -9,6 +9,7 @@ package org.hibernate.envers.configuration.internal.metadata;
 import java.util.Properties;
 import javax.persistence.EnumType;
 
+import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.mapping.BasicValue;
@@ -33,7 +34,7 @@ public final class BasicMetadataGenerator {
 	boolean addBasic(
 			Element parent,
 			PropertyAuditingData propertyAuditingData,
-			Value value,
+			ValueMapping value,
 			SimpleMapperBuilder mapper,
 			boolean insertable,
 			boolean key) {
@@ -89,7 +90,7 @@ public final class BasicMetadataGenerator {
 	boolean addManyToOne(
 			Element parent,
 			PropertyAuditingData propertyAuditingData,
-			Value value,
+			ValueMapping value,
 			SimpleMapperBuilder mapper) {
 
 		// A null mapper occurs when adding to composite-id element
@@ -104,7 +105,7 @@ public final class BasicMetadataGenerator {
 			manyToOneElement.addAttribute( "foreign-key", "none" );
 		}
 
-		MetadataTools.addColumns( manyToOneElement, value.getColumnIterator() );
+		MetadataTools.addColumns( manyToOneElement, value.getMappedColumns() );
 
 		// A null mapper means that we only want to add xml mappings
 		if ( mapper != null ) {
@@ -132,7 +133,7 @@ public final class BasicMetadataGenerator {
 				key
 		);
 
-		MetadataTools.addColumns( propMapping, value.getColumnIterator() );
+		MetadataTools.addColumns( propMapping, value.getMappedColumns() );
 
 		return propMapping;
 	}

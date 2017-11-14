@@ -16,6 +16,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
@@ -172,7 +173,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 		final BasicValue referencedValue = (BasicValue) referencedProperty.getValueMapping();
 		value.setTypeName( referencedValue.getTypeName() );
 		value.setTypeParameters( referencedValue.getTypeParameters() );
-		final List<Selectable> mappedColumns = referencedValue.getMappedColumns();
+		final List<MappedColumn> mappedColumns = referencedValue.getMappedColumns();
 		if ( joinColumns[0].isNameDeferred() ) {
 			joinColumns[0].copyReferencedStructureAndCreateDefaultJoinColumns(
 				referencedPersistentClass,

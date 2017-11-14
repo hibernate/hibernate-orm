@@ -474,7 +474,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 
 	public void copyReferencedStructureAndCreateDefaultJoinColumns(
 			PersistentClass referencedEntity,
-			List<Selectable> columnIterator,
+			List<MappedColumn> columnIterator,
 			SimpleValue value) {
 		if ( !isNameDeferred() ) {
 			throw new AssertionFailure( "Building implicit column but the column is not implicit" );

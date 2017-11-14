@@ -8,6 +8,8 @@ package org.hibernate.envers.configuration.internal.metadata;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import javax.persistence.JoinColumn;
 
 import org.hibernate.boot.model.relational.MappedColumn;
@@ -421,6 +423,10 @@ public final class MetadataTools {
 	public abstract static class ColumnNameIterator implements Iterator<String> {
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getColumnNameIterator(List)} instead.
+	 */
+	@Deprecated
 	public static ColumnNameIterator getColumnNameIterator(final Iterator<Selectable> selectableIterator) {
 		return new ColumnNameIterator() {
 			public boolean hasNext() {
@@ -429,6 +435,28 @@ public final class MetadataTools {
 
 			public String next() {
 				final Selectable next = selectableIterator.next();
+				if ( next.isFormula() ) {
+					throw new FormulaNotSupportedException();
+				}
+				return ( (Column) next ).getName().getText();
+			}
+
+			public void remove() {
+				selectableIterator.remove();
+			}
+		};
+	}
+
+	public static ColumnNameIterator getColumnNameIterator(final List<MappedColumn> columns) {
+		return new ColumnNameIterator() {
+			private Iterator<MappedColumn> selectableIterator = columns.iterator();
+
+			public boolean hasNext() {
+				return selectableIterator.hasNext();
+			}
+
+			public String next() {
+				final MappedColumn next = selectableIterator.next();
 				if ( next.isFormula() ) {
 					throw new FormulaNotSupportedException();
 				}

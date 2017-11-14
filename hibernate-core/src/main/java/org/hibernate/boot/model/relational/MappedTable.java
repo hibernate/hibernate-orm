@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.mapping.Column;
@@ -70,6 +71,8 @@ public interface MappedTable<T extends MappedColumn> extends Loggable {
 	Identifier getNameIdentifier();
 
 	String getQuotedName();
+
+	String getQuotedName(Dialect dialect);
 
 	QualifiedTableName getQualifiedTableName();
 

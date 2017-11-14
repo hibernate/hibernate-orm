@@ -235,7 +235,7 @@ public final class AuditMetadataGenerator {
 
 	private void addValueInFirstPass(
 			Element parent,
-			Value value,
+			ValueMapping value,
 			CompositeMapperBuilder currentMapper,
 			String entityName,
 			EntityXmlMappingData xmlMappingData,
@@ -271,7 +271,7 @@ public final class AuditMetadataGenerator {
 		addModifiedFlagIfNeeded( parent, propertyAuditingData, processModifiedFlag );
 	}
 
-	private boolean processedInSecondPass(Value value) {
+	private boolean processedInSecondPass(ValueMapping value) {
 		return value instanceof Component ||
 				value instanceof ManyToOne ||
 				value instanceof OneToOne ||
@@ -280,7 +280,7 @@ public final class AuditMetadataGenerator {
 
 	private void addValueInSecondPass(
 			Element parent,
-			Value value,
+			ValueMapping value,
 			CompositeMapperBuilder currentMapper,
 			String entityName,
 			EntityXmlMappingData xmlMappingData,
@@ -363,7 +363,7 @@ public final class AuditMetadataGenerator {
 	}
 
 	void addValue(
-			Element parent, Value value, CompositeMapperBuilder currentMapper, String entityName,
+			Element parent, ValueMapping value, CompositeMapperBuilder currentMapper, String entityName,
 			EntityXmlMappingData xmlMappingData, PropertyAuditingData propertyAuditingData,
 			boolean insertable, boolean firstPass, boolean processModifiedFlag) {
 		if ( firstPass ) {
@@ -776,7 +776,7 @@ public final class AuditMetadataGenerator {
 		return auditEntityNameRegister;
 	}
 
-	void throwUnsupportedTypeException(Value value, String entityName, String propertyName) {
+	void throwUnsupportedTypeException(ValueMapping value, String entityName, String propertyName) {
 		final String message = "Type not supported for auditing: " + value.getJavaTypeDescriptor().getTypeName() +
 				", on entity " + entityName + ", property '" + propertyName + "'.";
 

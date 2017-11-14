@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.internal.tools;
 
+import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
@@ -52,7 +53,7 @@ public abstract class MappingTools {
 	 * @param value Persistent property.
 	 * @return {@code false} if lack of associated entity shall raise an exception, {@code true} otherwise.
 	 */
-	public static boolean ignoreNotFound(Value value) {
+	public static boolean ignoreNotFound(ValueMapping value) {
 		if ( value instanceof ManyToOne ) {
 			return ( (ManyToOne) value ).isIgnoreNotFound();
 		}

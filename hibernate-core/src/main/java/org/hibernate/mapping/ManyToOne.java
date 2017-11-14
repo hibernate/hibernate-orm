@@ -86,7 +86,7 @@ public class ManyToOne extends ToOne {
 		if ( foreignKey == null ) {
 			// the case of a foreign key to something other than the pk is handled in createPropertyRefConstraints
 			if ( referencedPropertyName == null ) {
-				foreignKey = getTable().createForeignKey(
+				foreignKey = getMappedTable().createForeignKey(
 						getForeignKeyName(),
 						getConstraintColumns(),
 						getReferencedEntityName(),
@@ -125,7 +125,7 @@ public class ManyToOne extends ToOne {
 			);
 		}
 
-		ForeignKey fk = getTable().createForeignKey(
+		ForeignKey fk = getMappedTable().createForeignKey(
 				getForeignKeyName(),
 				getConstraintColumns(),
 				getReferencedEntityName(),

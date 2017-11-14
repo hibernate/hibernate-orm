@@ -170,6 +170,7 @@ public class Table implements MappedTable<Column>, Serializable {
 		return name == null ? null : name.toString();
 	}
 
+	@Override
 	public String getQuotedName(Dialect dialect) {
 		return name == null ? null : name.render( dialect );
 	}

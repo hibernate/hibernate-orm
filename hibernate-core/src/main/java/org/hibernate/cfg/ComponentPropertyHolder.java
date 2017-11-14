@@ -117,7 +117,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	 * @param embeddedXProperty The property that is the composite being described by this ComponentPropertyHolder
 	 */
 	private Map<String,AttributeConversionInfo> processAttributeConversions(XProperty embeddedXProperty) {
-		final Map<String,AttributeConversionInfo> infoMap = new HashMap<String, AttributeConversionInfo>();
+		final Map<String,AttributeConversionInfo> infoMap = new HashMap<>();
 
 		final XClass embeddableXClass = embeddedXProperty.getType();
 
@@ -184,7 +184,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	private Map<String,AttributeConversionInfo> processAttributeConversions(XClass embeddableXClass) {
-		final Map<String,AttributeConversionInfo> infoMap = new HashMap<String, AttributeConversionInfo>();
+		final Map<String,AttributeConversionInfo> infoMap = new HashMap<>();
 		processAttributeConversions( embeddableXClass, infoMap );
 		return infoMap;
 	}
@@ -282,8 +282,8 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		 */
 		if (columns != null) {
 			MappedTable table = columns[0].getMappedTable();
-			if ( !table.equals( component.getTable() ) ) {
-				if ( component.getPropertySpan() == 0 ) {
+			if ( !table.equals( component.getMappedTable() ) ) {
+				if ( component.getDeclaredPersistentAttributes().size() == 0 ) {
 					component.setTable( table );
 				}
 				else {

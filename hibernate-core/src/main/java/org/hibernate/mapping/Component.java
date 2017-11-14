@@ -23,6 +23,7 @@ import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -70,7 +71,7 @@ public class Component extends SimpleValue
 	}
 
 	public Component(MetadataBuildingContext metadata, Component component) throws MappingException {
-		this( metadata, component.getTable(), component.getOwner() );
+		this( metadata, component.getMappedTable(), component.getOwner() );
 	}
 
 	public Component(MetadataBuildingContext metadata, Join join) throws MappingException {
@@ -122,7 +123,6 @@ public class Component extends SimpleValue
 	public int getPropertySpan() {
 		return getDeclaredPersistentAttributes().size();
 	}
-
 
 	/**
 	 * @deprecated since 6.0 , use {@link #getDeclaredPersistentAttributes()} instead.
@@ -309,8 +309,8 @@ public class Component extends SimpleValue
 	}
 
 	@Override
-	public java.util.List<Selectable> getMappedColumns() {
-		final java.util.List<Selectable> columns = new ArrayList<>();
+	public java.util.List<MappedColumn> getMappedColumns() {
+		final java.util.List<MappedColumn> columns = new ArrayList<>();
 		for ( PersistentAttributeMapping p : declaredAttributeMappings.values() ) {
 			columns.addAll( p.getValueMapping().getMappedColumns() );
 		}

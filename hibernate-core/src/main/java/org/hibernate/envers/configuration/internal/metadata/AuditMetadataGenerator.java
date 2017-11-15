@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.ValueMapping;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.envers.RelationTargetAuditMode;
@@ -443,7 +444,7 @@ public final class AuditMetadataGenerator {
 		return true;
 	}
 
-	protected String getSchema(String schemaFromAnnotation, Table table) {
+	protected String getSchema(String schemaFromAnnotation, MappedTable table) {
 		// Get the schema from the annotation ...
 		String schema = schemaFromAnnotation;
 		// ... if empty, try using the default ...
@@ -459,7 +460,7 @@ public final class AuditMetadataGenerator {
 		return schema;
 	}
 
-	protected String getCatalog(String catalogFromAnnotation, Table table) {
+	protected String getCatalog(String catalogFromAnnotation, MappedTable table) {
 		// Get the catalog from the annotation ...
 		String catalog = catalogFromAnnotation;
 		// ... if empty, try using the default ...

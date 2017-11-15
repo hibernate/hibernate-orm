@@ -23,6 +23,6 @@ public interface SaveOrUpdateEventListener extends Serializable {
      * @param event The update event to be handled.
      * @throws HibernateException
      */
-	public void onSaveOrUpdate(SaveOrUpdateEvent event) throws HibernateException;
+	void onSaveOrUpdate(SaveOrUpdateEvent event) throws HibernateException;
 
 }

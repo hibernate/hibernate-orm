@@ -24,51 +24,51 @@ public interface LoadEventListener extends Serializable {
 	 *
 	 * @throws HibernateException
 	 */
-	public void onLoad(LoadEvent event, LoadType loadType) throws HibernateException;
+	void onLoad(LoadEvent event, LoadType loadType) throws HibernateException;
 
-	public static final LoadType RELOAD = new LoadType( "RELOAD" )
+	LoadType RELOAD = new LoadType( "RELOAD" )
 			.setAllowNulls( false )
 			.setAllowProxyCreation( false )
 			.setCheckDeleted( true )
 			.setNakedEntityReturned( false );
 
-	public static final LoadType GET = new LoadType( "GET" )
+	LoadType GET = new LoadType( "GET" )
 			.setAllowNulls( true )
 			.setAllowProxyCreation( false )
 			.setCheckDeleted( true )
 			.setNakedEntityReturned( false );
 
-	public static final LoadType LOAD = new LoadType( "LOAD" )
+	LoadType LOAD = new LoadType( "LOAD" )
 			.setAllowNulls( false )
 			.setAllowProxyCreation( true )
 			.setCheckDeleted( true )
 			.setNakedEntityReturned( false );
 
-	public static final LoadType IMMEDIATE_LOAD = new LoadType( "IMMEDIATE_LOAD" )
+	LoadType IMMEDIATE_LOAD = new LoadType( "IMMEDIATE_LOAD" )
 			.setAllowNulls( true )
 			.setAllowProxyCreation( false )
 			.setCheckDeleted( false )
 			.setNakedEntityReturned( true );
 
-	public static final LoadType INTERNAL_LOAD_EAGER = new LoadType( "INTERNAL_LOAD_EAGER" )
+	LoadType INTERNAL_LOAD_EAGER = new LoadType( "INTERNAL_LOAD_EAGER" )
 			.setAllowNulls( false )
 			.setAllowProxyCreation( false )
 			.setCheckDeleted( false )
 			.setNakedEntityReturned( false );
 
-	public static final LoadType INTERNAL_LOAD_LAZY = new LoadType( "INTERNAL_LOAD_LAZY" )
+	LoadType INTERNAL_LOAD_LAZY = new LoadType( "INTERNAL_LOAD_LAZY" )
 			.setAllowNulls( false )
 			.setAllowProxyCreation( true )
 			.setCheckDeleted( false )
 			.setNakedEntityReturned( false );
 
-	public static final LoadType INTERNAL_LOAD_NULLABLE = new LoadType( "INTERNAL_LOAD_NULLABLE" )
+	LoadType INTERNAL_LOAD_NULLABLE = new LoadType( "INTERNAL_LOAD_NULLABLE" )
 			.setAllowNulls( true )
 			.setAllowProxyCreation( false )
 			.setCheckDeleted( false )
 			.setNakedEntityReturned( false );
 
-	public static final class LoadType {
+	final class LoadType {
 		private String name;
 
 		private boolean nakedEntityReturned;

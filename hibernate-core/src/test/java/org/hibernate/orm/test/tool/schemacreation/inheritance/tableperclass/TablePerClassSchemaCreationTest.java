@@ -15,8 +15,6 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.Table;
 
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.orm.test.tool.schemacreation.BaseSchemaCreationTestCase;
 
 import org.hibernate.testing.junit5.schema.SchemaScope;
@@ -29,31 +27,32 @@ public class TablePerClassSchemaCreationTest extends BaseSchemaCreationTestCase 
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { AbstractParent.class, Child.class };
+		return new Class[] { AbstractParent.class, Child.class, SecondChild.class };
 	}
 
 	@SchemaTest
 	public void testTableIsCreated(SchemaScope scope) {
 
 		assertThatTablesAreCreated(
-				"child (firstindex varchar(255), id bigint not null, secondindex varchar(255), seconduniquefield varchar(255), uniquefield varchar(255), primary key (id))"
+				"child (childIndex varchar(255), childUniqueField varchar(255), id bigint not null, parentIndex varchar(255), uniqueField varchar(255), primary key (id))",
+				"second_child (id bigint not null, parentIndex varchar(255), secondChildIndex varchar(255), secondChildUniqueField varchar(255), uniqueField varchar(255), primary key (id))"
 		);
 
-		if ( getStandardServiceRegistry().getService( JdbcEnvironment.class ).getDialect() instanceof DB2Dialect ) {
-			assertThatActionIsGenerated( "create unique index (.*) on table child \\(uniquefield\\)" );
-			assertThatActionIsGenerated( "create unique index (.*) on table child \\(secondUniqueField\\)" );
-		}
-		else {
-			assertThatActionIsGenerated( "alter table child add constraint (.*) unique \\(uniquefield\\)" );
-			assertThatActionIsGenerated( "alter table child add constraint (.*) unique \\(secondUniqueField\\)" );
-		}
+		assertThatActionIsGenerated( "alter table child add constraint (.*) unique \\(uniquefield\\)" );
+		assertThatActionIsGenerated( "alter table child add constraint (.*) unique \\(childUniqueField\\)" );
 
-		assertThatActionIsGenerated( "create index index_1 on child \\(firstindex\\)" );
-		assertThatActionIsGenerated( "create index index_2 on child \\(secondindex\\)" );
+		assertThatActionIsGenerated( "alter table second_child add constraint (.*) unique \\(uniquefield\\)" );
+		assertThatActionIsGenerated( "alter table second_child add constraint (.*) unique \\(secondChildUniqueField\\)" );
+
+		assertThatActionIsGenerated( "create index index_1 on child \\(parentIndex\\)" );
+		assertThatActionIsGenerated( "create index index_2 on child \\(childIndex\\)" );
+
+		assertThatActionIsGenerated( "create index index_1 on second_child \\(parentIndex\\)" );
+		assertThatActionIsGenerated( "create index index_2 on second_child \\(secondChildIndex\\)" );
 	}
 
 	@Entity
-	@Table(name = "entity", indexes = @Index(columnList = "firstIndex", name = "index_1"))
+	@Table(name = "entity", indexes = @Index(columnList = "parentIndex", name = "index_1"))
 	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 	public abstract class AbstractParent {
 		@Id
@@ -63,15 +62,24 @@ public class TablePerClassSchemaCreationTest extends BaseSchemaCreationTestCase 
 		@Column(unique = true)
 		private String uniqueField;
 
-		private String firstIndex;
+		private String parentIndex;
 	}
 
 	@Entity
-	@Table(name = "child", indexes = @Index(columnList = "secondIndex", name = "index_2"))
+	@Table(name = "child", indexes = @Index(columnList = "childIndex", name = "index_2"))
 	public class Child extends AbstractParent {
 		@Column(unique = true)
-		private String secondUniqueField;
+		private String childUniqueField;
 
-		private String secondIndex;
+		private String childIndex;
+	}
+
+	@Entity
+	@Table(name = "second_child", indexes = @Index(columnList = "secondChildIndex", name = "index_2"))
+	public class SecondChild extends AbstractParent {
+		@Column(unique = true)
+		private String secondChildUniqueField;
+
+		private String secondChildIndex;
 	}
 }

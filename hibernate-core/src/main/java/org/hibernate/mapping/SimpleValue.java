@@ -168,7 +168,12 @@ public abstract class SimpleValue implements KeyValue {
 		// the plan here is to generate all logical ForeignKeys, but disable it for export
 		// 		if it has formulas
 
-		final ForeignKey fk = table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName, getForeignKeyDefinition() );
+		final ForeignKey fk = table.createForeignKey(
+				getForeignKeyName(),
+				getConstraintColumns(),
+				entityName,
+				getForeignKeyDefinition()
+		);
 		fk.setCascadeDeleteEnabled( cascadeDeleteEnabled );
 
 		if ( hasFormula() || "none".equals( getForeignKeyName() ) ) {
@@ -220,10 +225,10 @@ public abstract class SimpleValue implements KeyValue {
 		params.setProperty( PersistentIdentifierGenerator.PK, columnName );
 
 		if (rootClass!=null) {
-			StringBuilder tables = new StringBuilder();
-			Iterator iter = rootClass.getIdentityTables().iterator();
+			final StringBuilder tables = new StringBuilder();
+			final Iterator iter = rootClass.getIdentityTables().iterator();
 			while ( iter.hasNext() ) {
-				Table table= (Table) iter.next();
+				final Table table= (Table) iter.next();
 				tables.append( table.getQuotedName(dialect) );
 				if ( iter.hasNext() ) {
 					tables.append(", ");
@@ -254,7 +259,11 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		identifierGeneratorFactory.setDialect( dialect );
-		identifierGenerator = identifierGeneratorFactory.createIdentifierGenerator( identifierGeneratorStrategy, getJavaTypeDescriptor(), params );
+		identifierGenerator = identifierGeneratorFactory.createIdentifierGenerator(
+				identifierGeneratorStrategy,
+				getJavaTypeDescriptor(),
+				params
+		);
 
 		return identifierGenerator;
 	}
@@ -347,15 +356,14 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public boolean isNullable() {
-		Iterator itr = getColumnIterator();
-		while ( itr.hasNext() ) {
-			final Object selectable = itr.next();
-			if ( selectable instanceof Formula ) {
+		final List<MappedColumn> mappedColumns = getMappedColumns();
+		for ( MappedColumn column : mappedColumns ) {
+			if ( column instanceof Formula ) {
 				// if there are *any* formulas, then the Value overall is
 				// considered nullable
 				return true;
 			}
-			else if ( !( (Column) selectable ).isNullable() ) {
+			else if ( !( (Column) column ).isNullable() ) {
 				// if there is a single non-nullable column, the Value
 				// overall is considered non-nullable.
 				return false;

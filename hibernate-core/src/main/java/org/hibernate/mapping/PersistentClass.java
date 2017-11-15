@@ -194,7 +194,8 @@ public abstract class PersistentClass
 	}
 
 
-	public String getDiscriminatorValue() {
+	public String
+	getDiscriminatorValue() {
 		return discriminatorValue;
 	}
 

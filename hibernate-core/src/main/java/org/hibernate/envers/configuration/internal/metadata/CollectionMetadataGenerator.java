@@ -64,7 +64,6 @@ import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQuer
 import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
-import org.hibernate.envers.internal.tools.Tools;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -73,7 +72,6 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
 
 import org.jboss.logging.Logger;
@@ -420,7 +418,7 @@ public final class CollectionMetadataGenerator {
 			// Adding related-entity (in this case: the referencing's entity id) id mapping to the xml.
 			addRelatedToXmlMapping(
 					middleEntityXml, referencingPrefixRelated,
-					MetadataTools.getColumnNameIterator( propertyValue.getKey().getColumnIterator() ),
+					MetadataTools.getColumnNameIterator( propertyValue.getKey().getMappedColumns() ),
 					referencingIdMapping
 			);
 		}
@@ -548,7 +546,7 @@ public final class CollectionMetadataGenerator {
 						xmlMapping, prefixRelated,
 						joinColumns != null && joinColumns.length > 0
 								? MetadataTools.getColumnNameIterator( joinColumns )
-								: MetadataTools.getColumnNameIterator( value.getColumnIterator() ),
+								: MetadataTools.getColumnNameIterator( value.getMappedColumns() ),
 						referencedIdMapping
 				);
 			}
@@ -596,7 +594,7 @@ public final class CollectionMetadataGenerator {
 				final PropertyAuditingData nestedAuditingData = auditData.getPropertyAuditingData( auditedPropertyName );
 				mainGenerator.addValue(
 						parentXmlMapping,
-						component.getProperty( auditedPropertyName ).getValue(),
+						component.getDeclaredPersistentAttribute( auditedPropertyName ).getValueMapping(),
 						componentMapper,
 						prefix, xmlMappingData,
 						nestedAuditingData,
@@ -611,7 +609,7 @@ public final class CollectionMetadataGenerator {
 				final PropertyAuditingData nestedAuditingData = auditData.getPropertyAuditingData( auditedPropertyName );
 				mainGenerator.addValue(
 						parentXmlMapping,
-						component.getProperty( auditedPropertyName ).getValue(),
+						component.getDeclaredPersistentAttribute( auditedPropertyName ).getValueMapping(),
 						componentMapper,
 						referencingEntityName,
 						xmlMappingData,
@@ -675,7 +673,6 @@ public final class CollectionMetadataGenerator {
 			MiddleComponentData elementComponentData,
 			MiddleComponentData indexComponentData) {
 		final boolean embeddableElementType = isEmbeddableElementType();
-		final boolean lobMapElementType = isLobMapElementType();
 		if ( propertyValue instanceof org.hibernate.mapping.Set ) {
 			final org.hibernate.mapping.Set collection = (org.hibernate.mapping.Set) propertyValue;
 			if ( collection.isSorted() ) {
@@ -787,11 +784,11 @@ public final class CollectionMetadataGenerator {
 	private Element createMiddleEntityXml(String auditMiddleTableName, String auditMiddleEntityName, String where) {
 		final String schema = mainGenerator.getSchema(
 				propertyAuditingData.getJoinTable().schema(),
-				propertyValue.getCollectionTable()
+				propertyValue.getMappedTable()
 		);
 		final String catalog = mainGenerator.getCatalog(
 				propertyAuditingData.getJoinTable().catalog(),
-				propertyValue.getCollectionTable()
+				propertyValue.getMappedTable()
 		);
 
 		final Element middleEntityXml = MetadataTools.createEntity(
@@ -887,10 +884,7 @@ public final class CollectionMetadataGenerator {
 		while ( assocClassProps.hasNext() ) {
 			final Property property = assocClassProps.next();
 
-			if ( Tools.iteratorsContentEqual(
-					property.getValue().getColumnIterator(),
-					collectionValue.getKey().getColumnIterator()
-			) ) {
+			if ( property.getValue().getMappedColumns().equals( collectionValue.getKey().getMappedColumns() ) ) {
 				return property.getName();
 			}
 		}

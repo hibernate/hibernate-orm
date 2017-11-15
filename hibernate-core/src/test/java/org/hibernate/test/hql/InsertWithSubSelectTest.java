@@ -10,20 +10,16 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.QueryException;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.fail;
 
 /**
  * @author bjoern.moritz
  */
+@TestForIssue(jiraKey = "HHH-5274")
 public class InsertWithSubSelectTest extends BaseCoreFunctionalTestCase {
 
 	@Override

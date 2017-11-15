@@ -40,6 +40,7 @@ import static org.junit.Assert.assertTrue;
 public class AliasWithCriterionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
+	@RequiresDialect( H2Dialect.class )
 	public void testCaseClause() {
 		doInHibernate( this::sessionFactory, session -> {
 			Criteria criteria = session.createCriteria( TableA.class );

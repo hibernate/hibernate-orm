@@ -311,9 +311,6 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 
 		final List<Object> values = new ArrayList<Object>();
 		final List<Type> types = new ArrayList<Type>();
-        final Map<String, String> aliasMap = new HashMap<String, String>();
-        final Map<String, Collection<Object>> valueMap = new HashMap<String, Collection<Object>>();
-        final Map<String, Collection<Type>> typeMap = new HashMap<String, Collection<Type>>();
 		final Iterator<CriteriaImpl.Subcriteria> subcriteriaIterator = rootCriteria.iterateSubcriteria();
 		while ( subcriteriaIterator.hasNext() ) {
 			final CriteriaImpl.Subcriteria subcriteria = subcriteriaIterator.next();
@@ -321,65 +318,11 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 			if ( lm != null ) {
 				lockOptions.setAliasSpecificLockMode( getSQLAlias( subcriteria ), lm );
 			}
-            aliasMap.put(subcriteria.getPath(), subcriteria.getAlias());
 			if ( subcriteria.getWithClause() != null ) {
 				final TypedValue[] tv = subcriteria.getWithClause().getTypedValues( subcriteria, this );
 				for ( TypedValue aTv : tv ) {
-					Collection<Object> valueCollection = valueMap.get( subcriteria.getPath() );
-					Collection<Type> typeCollection = typeMap.get( subcriteria.getPath() );
-					if ( valueCollection == null ) {
-						valueCollection = new LinkedList<>();
-						valueMap.put( subcriteria.getPath(), valueCollection );
-					}
-					if ( typeCollection == null ) {
-						typeCollection = new LinkedList<>();
-						typeMap.put( subcriteria.getPath(), typeCollection );
-					}
-					valueCollection.add( aTv.getValue() );
-					typeCollection.add( aTv.getType() );
-				}
-			}
-		}
-		if ( associations != null ) {
-			for ( String association : this.associations ) {
-				if ( association.contains( "." ) ) {
-					String alias = null;
-					String[] pathArray = association.split( "\\." );
-					for ( int i = 0; i < pathArray.length; i++ ) {
-						String element = pathArray[i];
-						if ( i == ( pathArray.length - 1 ) ) {
-							Collection<Object> valueList = valueMap.get( alias + "." + element );
-							Collection<Type> typeList = typeMap.get( alias + "." + element );
-							if ( typeList != null ) {
-								values.addAll( valueList );
-								types.addAll( typeList );
-							}
-						}
-						else if ( alias == null ) {
-							alias = aliasMap.get( element );
-						}
-						else {
-							alias = aliasMap.get( alias + "." + element );
-						}
-					}
-				}
-				else {
-					String matchingAssociation = null;
-					for ( Map.Entry<String, Collection<Type>> typeEntry : typeMap.entrySet() ) {
-						String path = typeEntry.getKey();
-						if ( path.equals( association ) || path.endsWith( "." + association ) ) {
-							matchingAssociation = path;
-							break;
-						}
-					}
-					if ( matchingAssociation != null ) {
-						Collection<Object> valueList = valueMap.get( matchingAssociation );
-						Collection<Type> typeList = typeMap.get( matchingAssociation );
-						if ( typeList != null ) {
-							values.addAll( valueList );
-							types.addAll( typeList );
-						}
-					}
+					values.add( aTv.getValue() );
+					types.add( aTv.getType() );
 				}
 			}
 		}

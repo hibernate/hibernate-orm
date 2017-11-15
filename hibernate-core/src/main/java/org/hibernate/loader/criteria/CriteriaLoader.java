@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,7 +28,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.OuterJoinLoader;
-import org.hibernate.loader.OuterJoinableAssociation;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Lockable;
@@ -90,7 +88,6 @@ public class CriteriaLoader extends OuterJoinLoader {
 
 		initFromWalker(walker);
 
-		translator.setAssociations(getAssociationPaths());
 		userAliases = walker.getUserAliases();
 		resultTypes = walker.getResultTypes();
 		includeInResultRow = walker.includeInResultRow();
@@ -98,19 +95,6 @@ public class CriteriaLoader extends OuterJoinLoader {
 
 		postInstantiate();
 
-	}
-
-	private Set<String> getAssociationPaths() {
-		Set<String> associationPaths = new HashSet<>();
-		for ( Object association : this.associations ) {
-			if ( association instanceof OuterJoinableAssociation ) {
-				OuterJoinableAssociation outerJoinableAssociation = (OuterJoinableAssociation) association;
-				if ( outerJoinableAssociation.getPropertyPath() != null ) {
-					associationPaths.add( outerJoinableAssociation.getPropertyPath().getFullPath() );
-				}
-			}
-		}
-		return associationPaths;
 	}
 
 	public ScrollableResultsImplementor scroll(SharedSessionContractImplementor session, ScrollMode scrollMode)

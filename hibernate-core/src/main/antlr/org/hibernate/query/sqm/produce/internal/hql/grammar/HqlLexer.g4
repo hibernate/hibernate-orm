@@ -60,7 +60,7 @@ STRING_LITERAL
 
 fragment
 ESCAPE_SEQUENCE
-	:	'\\' ('b'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\')
+	:	'\\' ('b'|'t'|'n'|'f'|'r'|'\\"'|'\''|'\\')
 	|	UNICODE_ESCAPE
 	|	OCTAL_ESCAPE
 	;

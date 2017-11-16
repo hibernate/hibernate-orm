@@ -8,6 +8,7 @@ package org.hibernate.procedure.spi;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import javax.persistence.FlushModeType;
 import javax.persistence.Parameter;
 import javax.persistence.ParameterMode;
@@ -20,6 +21,16 @@ import org.hibernate.query.spi.QueryImplementor;
  * @author Steve Ebersole
  */
 public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImplementor<R> {
+	@Override
+	default List<R> getResultList() {
+		return list();
+	}
+
+	@Override
+	default R getSingleResult() {
+		return uniqueResult();
+	}
+
 	@Override
 	ProcedureCallImplementor<R> setHint(String hintName, Object value);
 

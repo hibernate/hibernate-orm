@@ -1223,6 +1223,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public LockModeType getLockMode() {
+		if ( !isSelect() ) {
+			throw new IllegalStateException( "Illegal attempt to get lock mode on a non-SELECT query" );
+		}
 		return LockModeTypeHelper.getLockModeType( lockOptions.getLockMode() );
 	}
 

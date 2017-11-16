@@ -14,7 +14,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Locale;
 import java.util.regex.Pattern;
-
 import javax.persistence.Transient;
 
 import org.hibernate.AssertionFailure;
@@ -635,5 +634,52 @@ public final class ReflectHelper {
 		}
 
 		return potentialSetter;
+	}
+
+	/**
+	 * Similar to {@link #getterMethodOrNull}, except that here we are just looking for the
+	 * corresponding getter for a field (defined as field access) if one exists.
+	 *
+	 * We do not look at supers, although conceivably the super could declare the method
+	 * as an abstract - but again, that is such an edge case...
+	 */
+	public static Method findGetterMethodForFieldAccess(Field field, String propertyName) {
+		for ( Method method : field.getDeclaringClass().getDeclaredMethods() ) {
+			// if the method has parameters, skip it
+			if ( method.getParameterCount() != 0 ) {
+				continue;
+			}
+
+			if ( Modifier.isStatic( method.getModifiers() ) ) {
+				continue;
+			}
+
+			if ( ! method.getReturnType().isAssignableFrom( field.getType() ) ) {
+				continue;
+			}
+
+			final String methodName = method.getName();
+
+			// try "get"
+			if ( methodName.startsWith( "get" ) ) {
+				final String stemName = methodName.substring( 3 );
+				final String decapitalizedStemName = Introspector.decapitalize( stemName );
+				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
+					return method;
+				}
+
+			}
+
+			// if not "get", then try "is"
+			if ( methodName.startsWith( "is" ) ) {
+				final String stemName = methodName.substring( 2 );
+				String decapitalizedStemName = Introspector.decapitalize( stemName );
+				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
+					return method;
+				}
+			}
+		}
+
+		return null;
 	}
 }

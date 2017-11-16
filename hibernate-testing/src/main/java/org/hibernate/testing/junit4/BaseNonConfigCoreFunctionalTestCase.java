@@ -20,7 +20,6 @@ import java.util.function.Consumer;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
@@ -54,10 +53,11 @@ import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.cache.CachingRegionFactory;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.After;
 import org.junit.Before;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.fail;
 
 /**
@@ -545,76 +545,13 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 
-
 	public void inSession(Consumer<SessionImplementor> action) {
 		log.trace( "#inSession(action)" );
-		inSession( sessionFactory(), action );
+		TransactionUtil2.inSession( sessionFactory(), action );
 	}
 
 	public void inTransaction(Consumer<SessionImplementor> action) {
 		log.trace( "#inTransaction(action)" );
-		inTransaction( sessionFactory(), action );
-	}
-
-	public void inSession(SessionFactoryImplementor sfi, Consumer<SessionImplementor> action) {
-		log.trace( "##inSession(SF,action)" );
-
-		try (SessionImplementor session = (SessionImplementor) sfi.openSession()) {
-			log.trace( "Session opened, calling action" );
-			action.accept( session );
-			log.trace( "called action" );
-		}
-		finally {
-			log.trace( "Session close - auto-close lock" );
-		}
-	}
-
-	public void inTransaction(SessionFactoryImplementor factory, Consumer<SessionImplementor> action) {
-		log.trace( "#inTransaction(factory, action)");
-
-
-		try (SessionImplementor session = (SessionImplementor) factory.openSession()) {
-			log.trace( "Session opened, calling action" );
-			inTransaction( session, action );
-			log.trace( "called action" );
-		}
-		finally {
-			log.trace( "Session close - auto-close lock" );
-		}
-	}
-
-	public void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action) {
-		log.trace( "inTransaction(session,action)" );
-
-		final Transaction txn = session.beginTransaction();
-		log.trace( "Started transaction" );
-
-		try {
-			log.trace( "Calling action in txn" );
-			action.accept( session );
-			log.trace( "Called action - in txn" );
-
-			log.trace( "Committing transaction" );
-			txn.commit();
-			log.trace( "Committed transaction" );
-		}
-		catch (Exception e) {
-			log.tracef(
-					"Error calling action: %s (%s) - rolling back",
-					e.getClass().getName(),
-					e.getMessage()
-			);
-			try {
-				txn.rollback();
-			}
-			catch (Exception ignore) {
-				log.trace( "Was unable to roll back transaction" );
-				// really nothing else we can do here - the attempt to
-				//		rollback already failed and there is nothing else
-				// 		to clean up.
-			}
-
-			throw e;
-		}
+		TransactionUtil2.inTransaction( sessionFactory(), action );
 	}
 }

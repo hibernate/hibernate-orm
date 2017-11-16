@@ -627,6 +627,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public MetamodelImplementor getMetamodel() {
+		validateNotClosed();
 		return metamodel;
 	}
 
@@ -734,6 +735,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	 */
 	public void close() throws HibernateException {
 		if ( isClosed ) {
+			if ( sessionFactoryOptions.isJpaBootstrap() ) {
+				throw new IllegalStateException( "EntityManagerFactory is closed" );
+			}
+
 			LOG.trace( "Already closed" );
 			return;
 		}

@@ -3,13 +3,16 @@
  */
 package org.hibernate.internal.hhh12076;
 
+import javax.persistence.Column;
+
 public class EwtAssessmentExtension extends SettlementExtension {
 	public static final long serialVersionUID = 1L;
 	public static final String PROPERTY_DETAIL_OPTIONS = "detail_options";
 	public static final String PROPERTY_DAMAGE_TYPE_OPTIONS = "damage_type_options";
 	public static final String PROPERTY_EXCLUSION_OPTIONS = "exclusion_options";
 	public static final String PROPERTY_OVERRIDE_ENABLED = "override_enabled";
-	
+
+	@Column(name = "requested_units")
 	private Double _requestedUnits = -1.0; //2
 	private Double _requestedUnitAmount = -1.0; //$150
 	private Double _requestedSubtotal = 0.0; //$300

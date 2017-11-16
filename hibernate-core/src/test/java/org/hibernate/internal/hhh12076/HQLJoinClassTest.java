@@ -109,7 +109,7 @@ public class HQLJoinClassTest extends BaseCoreFunctionalTestCase {
             s.save(settlementTask);
         }
 
-        final String hql = "select rootAlias.id, linked.id, extensions.id from SettlementTask as rootAlias join rootAlias.linked as linked left join linked.extensions as extensions with extensions.class = org.hibernate.internal.hhh12076.EwtAssessmentExtension where linked.id = :claimId";
+        final String hql = "select rootAlias.id, linked.id, extensions.requestedUnits from SettlementTask as rootAlias join rootAlias.linked as linked left join linked.extensions as extensions with extensions.class = org.hibernate.internal.hhh12076.EwtAssessmentExtension where linked.id = :claimId";
 
         Query<SettlementTask> query = session.createQuery(hql);
         query.setParameter("claimId", 1L);

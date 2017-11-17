@@ -117,16 +117,7 @@ public class CalendarTypeDescriptor extends AbstractTypeDescriptor<Calendar> {
 		}
 
 		Calendar cal = new GregorianCalendar();
-		if ( Environment.jvmHasTimestampBug() ) {
-			final long milliseconds = ( (java.util.Date) value ).getTime();
-			final long nanoseconds = java.sql.Timestamp.class.isInstance( value )
-					? ( (java.sql.Timestamp) value ).getNanos()
-					: 0;
-			cal.setTime( new Date( milliseconds + nanoseconds / 1000000 ) );
-		}
-		else {
-			cal.setTime( (java.util.Date) value );
-		}
+		cal.setTime( (java.util.Date) value );
 		return cal;
 	}
 }

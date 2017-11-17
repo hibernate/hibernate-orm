@@ -8,7 +8,6 @@ package org.hibernate.cfg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -156,7 +155,6 @@ public final class Environment implements AvailableSettings {
 	private static final BytecodeProvider BYTECODE_PROVIDER_INSTANCE;
 	private static final boolean ENABLE_BINARY_STREAMS;
 	private static final boolean ENABLE_REFLECTION_OPTIMIZER;
-	private static final boolean JVM_HAS_TIMESTAMP_BUG;
 
 	private static final Properties GLOBAL_PROPERTIES;
 
@@ -238,29 +236,10 @@ public final class Environment implements AvailableSettings {
 		}
 
 		BYTECODE_PROVIDER_INSTANCE = buildBytecodeProvider( GLOBAL_PROPERTIES );
-
-		long x = 123456789;
-		JVM_HAS_TIMESTAMP_BUG = new Timestamp(x).getTime() != x;
-		if ( JVM_HAS_TIMESTAMP_BUG ) {
-			LOG.usingTimestampWorkaround();
-		}
 	}
 
 	public static BytecodeProvider getBytecodeProvider() {
 		return BYTECODE_PROVIDER_INSTANCE;
-	}
-
-	/**
-	 * Does this JVM's implementation of {@link java.sql.Timestamp} have a bug in which the following is true:<code>
-	 * new java.sql.Timestamp( x ).getTime() != x
-	 * </code>
-	 * <p/>
-	 * NOTE : IBM JDK 1.3.1 the only known JVM to exhibit this behavior.
-	 *
-	 * @return True if the JVM's {@link Timestamp} implementa
-	 */
-	public static boolean jvmHasTimestampBug() {
-		return JVM_HAS_TIMESTAMP_BUG;
 	}
 
 	/**

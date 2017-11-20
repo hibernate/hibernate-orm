@@ -1089,7 +1089,11 @@ public class ActionQueue {
 			 * @return This {@link BatchIdentifier} has a parent matching the given {@link BatchIdentifier reference
 			 */
 			boolean hasParent(BatchIdentifier batchIdentifier) {
-				return parent == batchIdentifier || parent != null && parent.hasParent( batchIdentifier );
+				return (
+					parent == batchIdentifier ||
+					( parent != null && parent.hasParent( batchIdentifier ) ) ||
+					( parentEntityNames.contains( batchIdentifier.getEntityName() ) )
+				);
 			}
 		}
 

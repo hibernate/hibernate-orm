@@ -101,7 +101,7 @@ include::{sourcedir}/CollectionImmutabilityTest.java[tags=collection-immutabilit
 
 [source, bash, indent=0]
 ----
-include::{extrasdir}/collection-immutability-update-example.log[]
+include::{extrasdir}/collection-immutability-update-example.log.txt[]
 ----
 ====
 

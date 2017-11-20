@@ -1,0 +1,7 @@
+javax.persistence.RollbackException: Error while committing the transaction
+
+Caused by: javax.persistence.PersistenceException: org.hibernate.HibernateException:
+
+Caused by: org.hibernate.HibernateException: changed an immutable collection instance: [
+    org.hibernate.userguide.immutability.CollectionImmutabilityTest$Batch.events#1
+]

@@ -1210,7 +1210,7 @@ public class ActionQueue {
 
 			if ( iterations > maxIterations ) {
 				LOG.warn( "The batch containing " + latestBatches.size() + " statements could not be sorted after " + maxIterations + " iterations. " +
-						   "This might indicate a bug in Hibernate!" );
+						"This might indicate a bug in Hibernate!" );
 			}
 
 			// Now, rebuild the insertions list. There is a batch for each entry in the name list.

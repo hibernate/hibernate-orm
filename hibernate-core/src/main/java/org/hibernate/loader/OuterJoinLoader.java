@@ -36,11 +36,11 @@ public abstract class OuterJoinLoader extends BasicLoader {
 	protected String[] suffixes;
 	protected String[] collectionSuffixes;
 
-    private LoadQueryInfluencers loadQueryInfluencers;
+	private LoadQueryInfluencers loadQueryInfluencers;
 
 	protected final Dialect getDialect() {
-    	return getFactory().getDialect();
-    }
+		return getFactory().getDialect();
+	}
 
 	public OuterJoinLoader(
 			SessionFactoryImplementor factory,

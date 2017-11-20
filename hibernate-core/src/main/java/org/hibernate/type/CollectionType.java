@@ -683,8 +683,8 @@ public abstract class CollectionType extends AbstractType implements Association
 		// for a null target, or a target which is the same as the original, we
 		// need to put the merged elements in a new collection
 		Object result = ( target == null ||
-						  target == original ||
-				          target == LazyPropertyInitializer.UNFETCHED_PROPERTY ) ?
+				target == original ||
+				target == LazyPropertyInitializer.UNFETCHED_PROPERTY ) ?
 				instantiateResult( original ) : target;
 
 		//for arrays, replaceElements() may return a different reference, since

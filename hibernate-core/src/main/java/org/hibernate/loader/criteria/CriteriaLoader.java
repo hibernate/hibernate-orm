@@ -154,7 +154,7 @@ public class CriteriaLoader extends OuterJoinLoader {
 			for ( int i=0, pos=0; i<result.length; i++ ) {
 				int numColumns = types[i].getColumnSpan( session.getFactory() );
 				if ( numColumns > 1 ) {
-			    	String[] typeColumnAliases = ArrayHelper.slice( columnAliases, pos, numColumns );
+					String[] typeColumnAliases = ArrayHelper.slice( columnAliases, pos, numColumns );
 					result[i] = types[i].nullSafeGet(rs, typeColumnAliases, session, null);
 				}
 				else {
@@ -207,8 +207,8 @@ public class CriteriaLoader extends OuterJoinLoader {
 
 		if ( ( parameters.getLockOptions().getFollowOnLocking() == null && dialect.useFollowOnLocking( parameters ) ) ||
 			( parameters.getLockOptions().getFollowOnLocking() != null && parameters.getLockOptions().getFollowOnLocking() ) ) {
-            final LockMode lockMode = determineFollowOnLockMode( lockOptions );
-            if( lockMode != LockMode.UPGRADE_SKIPLOCKED ) {
+			final LockMode lockMode = determineFollowOnLockMode( lockOptions );
+			if ( lockMode != LockMode.UPGRADE_SKIPLOCKED ) {
 				// Dialect prefers to perform locking in a separate step
 				LOG.usingFollowOnLocking();
 
@@ -223,7 +223,7 @@ public class CriteriaLoader extends OuterJoinLoader {
 									( (Session) session ).buildLockRequest( lockOptionsToUse )
 										.lock( persister.getEntityName(), entity );
 								}
-				        }
+						}
 				);
 				parameters.setLockOptions( new LockOptions() );
 				return sql;

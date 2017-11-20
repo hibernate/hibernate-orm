@@ -67,26 +67,26 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	private final Map<String, Criteria> associationPathCriteriaMap = new LinkedHashMap<String, Criteria>();
 	private final Map<String, JoinType> associationPathJoinTypesMap = new LinkedHashMap<String,JoinType>();
 	private final Map<String, Criterion> withClauseMap = new HashMap<String, Criterion>();
-    private Set<String> associations;
+	private Set<String> associations;
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final SessionFactoryHelper helper;
 
 	public CriteriaQueryTranslator(
 			final SessionFactoryImplementor factory,
-	        final CriteriaImpl criteria,
-	        final String rootEntityName,
-	        final String rootSQLAlias,
-	        CriteriaQuery outerQuery) throws HibernateException {
+			final CriteriaImpl criteria,
+			final String rootEntityName,
+			final String rootSQLAlias,
+			CriteriaQuery outerQuery) throws HibernateException {
 		this( factory, criteria, rootEntityName, rootSQLAlias );
 		outerQueryTranslator = outerQuery;
 	}
 
 	public CriteriaQueryTranslator(
 			final SessionFactoryImplementor factory,
-	        final CriteriaImpl criteria,
-	        final String rootEntityName,
-	        final String rootSQLAlias) throws HibernateException {
+			final CriteriaImpl criteria,
+			final String rootEntityName,
+			final String rootSQLAlias) throws HibernateException {
 		this.rootCriteria = criteria;
 		this.rootEntityName = rootEntityName;
 		this.sessionFactory = factory;
@@ -344,17 +344,17 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		final Type[] typeArray = ArrayHelper.toTypeArray( types );
 		return new QueryParameters(
 				typeArray,
-		        valueArray,
-		        lockOptions,
-		        selection,
-		        rootCriteria.isReadOnlyInitialized(),
-		        ( rootCriteria.isReadOnlyInitialized() && rootCriteria.isReadOnly() ),
-		        rootCriteria.getCacheable(),
-		        rootCriteria.getCacheRegion(),
-		        rootCriteria.getComment(),
-		        rootCriteria.getQueryHints(),
-		        rootCriteria.isLookupByNaturalKey(),
-		        rootCriteria.getResultTransformer()
+				valueArray,
+				lockOptions,
+				selection,
+				rootCriteria.isReadOnlyInitialized(),
+				( rootCriteria.isReadOnlyInitialized() && rootCriteria.isReadOnly() ),
+				rootCriteria.getCacheable(),
+				rootCriteria.getCacheRegion(),
+				rootCriteria.getComment(),
+				rootCriteria.getQueryHints(),
+				rootCriteria.isLookupByNaturalKey(),
+				rootCriteria.getResultTransformer()
 		);
 	}
 
@@ -375,8 +375,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	public String getSelect() {
 		return rootCriteria.getProjection().toSqlString(
 				rootCriteria.getProjectionCriteria(),
-		        0,
-		        this
+				0,
+				this
 		);
 	}
 
@@ -458,7 +458,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	@Override
 	public String[] getColumnsUsingProjection(
 			Criteria subcriteria,
-	        String propertyName) throws HibernateException {
+			String propertyName) throws HibernateException {
 
 		//first look for a reference to a projection alias
 		final Projection projection = rootCriteria.getProjection();
@@ -512,11 +512,11 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	@Override
 	public String[] getColumns(
 			String propertyName,
-	        Criteria subcriteria) throws HibernateException {
+			Criteria subcriteria) throws HibernateException {
 		return getPropertyMapping( getEntityName( subcriteria, propertyName ) )
 				.toColumns(
 						getSQLAlias( subcriteria, propertyName ),
-				        getPropertyName( propertyName )
+						getPropertyName( propertyName )
 				);
 	}
 
@@ -549,8 +549,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		//first look for a reference to a projection alias
 		final Projection projection = rootCriteria.getProjection();
 		Type[] projectionTypes = projection == null ?
-		                         null :
-		                         projection.getTypes( propertyName, subcriteria, this );
+				null :
+				projection.getTypes( propertyName, subcriteria, this );
 
 		if ( projectionTypes == null ) {
 			try {

@@ -10,6 +10,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -30,19 +31,20 @@ public class LGMB_From {
 	@Column(length = 50, nullable = false)
 	private String name;
 
-	// Lazy-Attribut without LazyGroup-Annotation (therefore Default-LazyGroup)
-	@Column(length = 65000, columnDefinition = "text")
+	// Lazy-Attribute without LazyGroup-Annotation (therefore Default-LazyGroup)
+	@Column(length = 65000)
 	@Basic(fetch = FetchType.LAZY)
+	@Lob
 	private String bigText;
 
-	// Lazy-Assoziation with mappdedBy in own LazyGroup
+	// Lazy-Association with mappdedBy in own LazyGroup
 	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "fromRelation", optional = true)
 	@LazyToOne(LazyToOneOption.NO_PROXY)
 	@LazyGroup(value = "toRelationLazyGroup")
 	private LGMB_To toRelation;
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(nullable = false)
 	private Long id;
 

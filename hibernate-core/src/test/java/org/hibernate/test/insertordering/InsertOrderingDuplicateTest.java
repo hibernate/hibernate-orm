@@ -7,36 +7,27 @@
 package org.hibernate.test.insertordering;
 
 import java.math.BigDecimal;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.SequenceGenerator;
 
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
@@ -90,7 +81,7 @@ public class InsertOrderingDuplicateTest
 			SaleDocument correction = new SaleDocument();
 			session.persist(correction);
 
-			saleDocument.setCorerctionSubject(correction);
+			saleDocument.setCorerctionsubject( correction);
 		} );
 	}
 
@@ -158,14 +149,15 @@ public class InsertOrderingDuplicateTest
 		@GeneratedValue
 		private Long id;
 
+		@Column(name = "sale_number")
 		private String number;
 
 		@OneToMany(fetch = FetchType.LAZY, mappedBy = "saleDocument")
-		private Set<SaleDocumentItem> items = new HashSet();
+		private Set<SaleDocumentItem> items = new HashSet<>();
 
 		@JoinColumn(name = "ID_SALE_DOCUMENT_CORRECTION", nullable = true)
 		@ManyToOne(fetch = FetchType.LAZY)
-		private SaleDocument corerctionSubject;
+		private SaleDocument corerctionsubject;
 
 		private BigDecimal totalPrice;
 
@@ -206,12 +198,12 @@ public class InsertOrderingDuplicateTest
 			sdi.setSaleDocument( this );
 		}
 
-		public SaleDocument getCorerctionSubject() {
-			return corerctionSubject;
+		public SaleDocument getCorerctionsubject() {
+			return corerctionsubject;
 		}
 
-		public void setCorerctionSubject(SaleDocument corerctionSubject) {
-			this.corerctionSubject = corerctionSubject;
+		public void setCorerctionsubject(SaleDocument corerctionsubject) {
+			this.corerctionsubject = corerctionsubject;
 		}
 
 	}
@@ -293,10 +285,12 @@ public class InsertOrderingDuplicateTest
 		@Id
 		@GeneratedValue
 		private Long id;
+
+		@Column(name = "sale_number")
 		private String number;
 
 		@OneToMany(fetch = FetchType.LAZY, mappedBy = "summary")
-		private Set<SaleDocumentItem> items = new HashSet();
+		private Set<SaleDocumentItem> items = new HashSet<>();
 
 		private BigDecimal totalPrice;
 

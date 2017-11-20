@@ -68,8 +68,8 @@ public class LazyGroupMappedByTest extends BaseCoreFunctionalTestCase {
 	public Long createEntities() {
 		return doInHibernate(
 				this::sessionFactory, session -> {
-					session.createNativeQuery( "DELETE FROM LGMB_TO" ).executeUpdate();
-					session.createNativeQuery( "DELETE FROM LGMB_FROM" ).executeUpdate();
+					session.createQuery( "delete from LGMB_To" ).executeUpdate();
+					session.createQuery( "delete from LGMB_From" ).executeUpdate();
 
 					LGMB_From from = new LGMB_From( "A" );
 					LGMB_To to = new LGMB_To( "B" );

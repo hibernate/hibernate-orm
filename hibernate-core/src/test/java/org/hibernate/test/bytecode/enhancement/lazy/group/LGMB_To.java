@@ -18,11 +18,9 @@ import org.hibernate.annotations.AccessType;
 @Entity
 @Table(name = "LGMB_TO")
 public class LGMB_To {
-	@Id
-	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(nullable = false)
 	@AccessType("property")
 	private Long id;

@@ -63,7 +63,7 @@ public class CascadeDetachedTest extends BaseCoreFunctionalTestCase {
     public static class Book {
 
         @Id
-        @GeneratedValue( strategy = GenerationType.IDENTITY )
+        @GeneratedValue( strategy = GenerationType.AUTO )
         Long id;
 
         String isbn;
@@ -91,7 +91,7 @@ public class CascadeDetachedTest extends BaseCoreFunctionalTestCase {
     public static class Author {
 
         @Id
-        @GeneratedValue( strategy = GenerationType.IDENTITY )
+        @GeneratedValue( strategy = GenerationType.AUTO )
         Long id;
 
         String firstName;

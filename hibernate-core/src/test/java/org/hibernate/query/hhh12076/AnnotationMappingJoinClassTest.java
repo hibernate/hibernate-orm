@@ -142,45 +142,45 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 
 		@Id
 		@GeneratedValue
-		private Long _id;
+		private Long id;
 
 		@Version
-		private Integer _version;
+		private Integer version;
 
 		@CreationTimestamp
-		private Date _creationDate;
+		private Date creationDate;
 
 		@UpdateTimestamp
-		private Date _modifiedDate;
+		private Date modifiedDate;
 
-		private Long _trackingId;
-		private Integer _term;
-		private Double _initialReserve = 0.0;
-
-		@Temporal( TemporalType.DATE )
-		private Date _effectiveDate;
+		private Long trackingId;
+		private Integer term;
+		private Double initialReserve = 0.0;
 
 		@Temporal( TemporalType.DATE )
-		private Date _expiryDate;
+		private Date effectiveDate;
 
 		@Temporal( TemporalType.DATE )
-		private Date _notificationDate;
+		private Date expiryDate;
 
 		@Temporal( TemporalType.DATE )
-		private Date _pendingDate;
+		private Date notificationDate;
 
 		@Temporal( TemporalType.DATE )
-		private Date _openDate;
+		private Date pendingDate;
 
 		@Temporal( TemporalType.DATE )
-		private Date _suspendDate;
+		private Date openDate;
 
 		@Temporal( TemporalType.DATE )
-		private Date _closeDate;
+		private Date suspendDate;
 
-		private String _externalId;
-		private String _importRef;
-		private String _location;
+		@Temporal( TemporalType.DATE )
+		private Date closeDate;
+
+		private String externalId;
+		private String importRef;
+		private String location;
 
 		@OneToMany(mappedBy = "claim", cascade = CascadeType.ALL, orphanRemoval = true)
 		private Set<Extension> extensions = new HashSet<>();
@@ -203,67 +203,67 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Long getId() {
-			return _id;
+			return id;
 		}
 
 		public void setId(Long id) {
-			_id = id;
+			this.id = id;
 		}
 
 		public Date getCreationDate() {
-			return _creationDate;
+			return creationDate;
 		}
 
 		public void setCreationDate(Date creationDate) {
-			_creationDate = creationDate;
+			this.creationDate = creationDate;
 		}
 
 		public Date getModifiedDate() {
-			return _modifiedDate;
+			return modifiedDate;
 		}
 
 		public void setModifiedDate(Date modifiedDate) {
-			_modifiedDate = modifiedDate;
+			this.modifiedDate = modifiedDate;
 		}
 
 		public Integer getVersion() {
-			return _version;
+			return version;
 		}
 
 		public void setVersion(Integer version) {
-			_version = version;
+			this.version = version;
 		}
 
 		public Long getTrackingId() {
-			return _trackingId;
+			return trackingId;
 		}
 
 		public void setTrackingId(Long trackingId) {
-			_trackingId = trackingId;
+			this.trackingId = trackingId;
 		}
 
 		public String getExternalId() {
-			return _externalId;
+			return externalId;
 		}
 
 		public void setExternalId(String externalId) {
-			_externalId = externalId;
+			this.externalId = externalId;
 		}
 
 		public Date getEffectiveDate() {
-			return _effectiveDate;
+			return effectiveDate;
 		}
 
 		public void setEffectiveDate(Date effectiveDate) {
-			_effectiveDate = effectiveDate;
+			this.effectiveDate = effectiveDate;
 		}
 
 		public Date getExpiryDate() {
-			return _expiryDate;
+			return expiryDate;
 		}
 
 		public void setExpiryDate(Date expiryDate) {
-			_expiryDate = expiryDate;
+			this.expiryDate = expiryDate;
 		}
 
 		public Set<Extension> getExtensions() {
@@ -283,276 +283,276 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Date getNotificationDate() {
-			return _notificationDate;
+			return notificationDate;
 		}
 
 		public void setNotificationDate(Date notificationDate) {
-			_notificationDate = notificationDate;
+			this.notificationDate = notificationDate;
 		}
 
 		public Date getOpenDate() {
-			return _openDate;
+			return openDate;
 		}
 
 		public void setOpenDate(Date openDate) {
-			_openDate = openDate;
+			this.openDate = openDate;
 		}
 
 		public Date getCloseDate() {
-			return _closeDate;
+			return closeDate;
 		}
 
 		public void setCloseDate(Date closeDate) {
-			_closeDate = closeDate;
+			this.closeDate = closeDate;
 		}
 
 		public Double getInitialReserve() {
-			return _initialReserve;
+			return initialReserve;
 		}
 
 		public void setInitialReserve(Double initialReserve) {
-			_initialReserve = initialReserve;
+			this.initialReserve = initialReserve;
 		}
 
 		public String getLocation() {
-			return _location;
+			return location;
 		}
 
 		public void setLocation(String location) {
-			_location = location;
+			this.location = location;
 		}
 
 		public String getImportRef() {
-			return _importRef;
+			return importRef;
 		}
 
 		public void setImportRef(String importRef) {
-			_importRef = importRef;
+			this.importRef = importRef;
 		}
 
 		public Date getPendingDate() {
-			return _pendingDate;
+			return pendingDate;
 		}
 
 		public void setPendingDate(Date startDate) {
-			_pendingDate = startDate;
+			pendingDate = startDate;
 		}
 
 		public Date getSuspendDate() {
-			return _suspendDate;
+			return suspendDate;
 		}
 
 		public void setSuspendDate(Date suspendDate) {
-			_suspendDate = suspendDate;
+			this.suspendDate = suspendDate;
 		}
 	}
 
     @Entity(name = "EwtAssessmentExtension")
-	@Table(name = "claim_settlement_ext_i3_ewt")
+	@Table(name = "claimsettlement_ext_i3_ewt")
 	public static class EwtAssessmentExtension extends SettlementExtension {
 		public static final long serialVersionUID = 1L;
 
-		private Double _requestedUnits = -1.0; //2
-		private Double _requestedUnitAmount = -1.0; //$150
-		private Double _requestedSubtotal = 0.0; //$300
-		private Double _requestedTaxAmount = 0.0; //$30
-		private Double _requestedTotal = 0.0;  //$330
+		private Double requestedUnits = -1.0; //2
+		private Double requestedUnitAmount = -1.0; //$150
+		private Double requestedSubtotal = 0.0; //$300
+		private Double requestedTaxAmount = 0.0; //$30
+		private Double requestedTotal = 0.0;  //$330
 
-		private Double _coveredRatio = 0.0;
-		private Double _coveredUnits = 0.0;
-		private Double _coveredUnitAmount = 0.0;
-		private Double _coveredUnitAmountOverride = 0.0;
-		private Double _coveredSubtotal = 0.0;
-		private Double _coveredTaxAmount = 0.0;
-		private Double _coveredTotal = 0.0;
+		private Double coveredRatio = 0.0;
+		private Double coveredUnits = 0.0;
+		private Double coveredUnitAmount = 0.0;
+		private Double coveredUnitAmountOverride = 0.0;
+		private Double coveredSubtotal = 0.0;
+		private Double coveredTaxAmount = 0.0;
+		private Double coveredTotal = 0.0;
 
-		private Double _underinsuredAmount = 0.0;
-		private Double _shortfallUnitAmount = 0.0;
-		private Double _shortfallTotal = 0.0;
+		private Double underinsuredAmount = 0.0;
+		private Double shortfallUnitAmount = 0.0;
+		private Double shortfallTotal = 0.0;
 
-		private Double _taxRate = 0.0;
+		private Double taxRate = 0.0;
 
-		private String _details;
-		private String _damageType;
-		private String _exclusion;
-		private Boolean _validInspection;
-		private Boolean _taxExempt = false;
+		private String details;
+		private String damageType;
+		private String exclusion;
+		private Boolean validInspection;
+		private Boolean taxExempt = false;
 
 		public EwtAssessmentExtension() {
 		}
 
 		public Double getRequestedUnits() {
-			return _requestedUnits;
+			return requestedUnits;
 		}
 
 		public void setRequestedUnits(Double requestedUnits) {
-			_requestedUnits = requestedUnits;
+			this.requestedUnits = requestedUnits;
 		}
 
 		public Double getRequestedUnitAmount() {
-			return _requestedUnitAmount;
+			return requestedUnitAmount;
 		}
 
 		public void setRequestedUnitAmount(Double requestedBenefitPerUnit) {
-			_requestedUnitAmount = requestedBenefitPerUnit;
+			requestedUnitAmount = requestedBenefitPerUnit;
 		}
 
 		public Double getRequestedSubtotal() {
-			return _requestedSubtotal;
+			return requestedSubtotal;
 		}
 
 		public void setRequestedSubtotal(Double requestedBenefitSubtotal) {
-			_requestedSubtotal = requestedBenefitSubtotal;
+			requestedSubtotal = requestedBenefitSubtotal;
 		}
 
 		public Double getRequestedTaxAmount() {
-			return _requestedTaxAmount;
+			return requestedTaxAmount;
 		}
 
 		public void setRequestedTaxAmount(Double requestedBenefitTax) {
-			_requestedTaxAmount = requestedBenefitTax;
+			requestedTaxAmount = requestedBenefitTax;
 		}
 
 		public Double getRequestedTotal() {
-			return _requestedTotal;
+			return requestedTotal;
 		}
 
 		public void setRequestedTotal(Double requestedBenefitTotal) {
-			_requestedTotal = requestedBenefitTotal;
+			requestedTotal = requestedBenefitTotal;
 		}
 
 		public Double getCoveredUnitAmount() {
-			return _coveredUnitAmount;
+			return coveredUnitAmount;
 		}
 
 		public void setCoveredUnitAmount(Double coveredBenefitPerUnit) {
-			_coveredUnitAmount = coveredBenefitPerUnit;
+			coveredUnitAmount = coveredBenefitPerUnit;
 		}
 
 		public Double getCoveredSubtotal() {
-			return _coveredSubtotal;
+			return coveredSubtotal;
 		}
 
 		public void setCoveredSubtotal(Double coveredBenefitSubtotal) {
-			_coveredSubtotal = coveredBenefitSubtotal;
+			coveredSubtotal = coveredBenefitSubtotal;
 		}
 
 		public Double getCoveredTaxAmount() {
-			return _coveredTaxAmount;
+			return coveredTaxAmount;
 		}
 
 		public void setCoveredTaxAmount(Double coveredTaxAmount) {
-			_coveredTaxAmount = coveredTaxAmount;
+			this.coveredTaxAmount = coveredTaxAmount;
 		}
 
 		public Double getCoveredTotal() {
-			return _coveredTotal;
+			return coveredTotal;
 		}
 
 		public void setCoveredTotal(Double coveredBenefitTotal) {
-			_coveredTotal = coveredBenefitTotal;
+			coveredTotal = coveredBenefitTotal;
 		}
 
 		public Double getTaxRate() {
-			return _taxRate;
+			return taxRate;
 		}
 
 		public void setTaxRate(Double taxRate) {
-			_taxRate = taxRate;
+			this.taxRate = taxRate;
 		}
 
 		public Double getShortfallUnitAmount() {
-			return _shortfallUnitAmount;
+			return shortfallUnitAmount;
 		}
 
 		public void setShortfallUnitAmount(Double shortfallUnitAmount) {
-			_shortfallUnitAmount = shortfallUnitAmount;
+			this.shortfallUnitAmount = shortfallUnitAmount;
 		}
 
 		public Double getShortfallTotal() {
-			return _shortfallTotal;
+			return shortfallTotal;
 		}
 
 		public void setShortfallTotal(Double shortfallTotal) {
-			_shortfallTotal = shortfallTotal;
+			this.shortfallTotal = shortfallTotal;
 		}
 
 		public String getDetails() {
-			return _details;
+			return details;
 		}
 
 		public void setDetails(String description) {
-			_details = description;
+			details = description;
 		}
 
 		public Double getUnderinsuredAmount() {
-			return _underinsuredAmount;
+			return underinsuredAmount;
 		}
 
 		public void setUnderinsuredAmount(Double truncatedAmount) {
-			_underinsuredAmount = truncatedAmount;
+			underinsuredAmount = truncatedAmount;
 		}
 
 		public Double getCoveredUnits() {
-			return _coveredUnits;
+			return coveredUnits;
 		}
 
 		public void setCoveredUnits(Double coveredUnits) {
-			_coveredUnits = coveredUnits;
+			this.coveredUnits = coveredUnits;
 		}
 
 		public String getDamageType() {
-			return _damageType;
+			return damageType;
 		}
 
 		public void setDamageType(String damageType) {
-			_damageType = damageType;
+			this.damageType = damageType;
 		}
 
 		public Double getCoveredRatio() {
-			return _coveredRatio;
+			return coveredRatio;
 		}
 
 		public void setCoveredRatio(Double coveredRatio) {
-			_coveredRatio = coveredRatio;
+			this.coveredRatio = coveredRatio;
 		}
 
 		public String getExclusion() {
-			return _exclusion;
+			return exclusion;
 		}
 
 		public void setExclusion(String exclusion) {
-			_exclusion = exclusion;
+			this.exclusion = exclusion;
 		}
 
 		public Double getCoveredUnitAmountOverride() {
-			return _coveredUnitAmountOverride;
+			return coveredUnitAmountOverride;
 		}
 
 		public void setCoveredUnitAmountOverride(Double coveredUnitOverride) {
-			_coveredUnitAmountOverride = coveredUnitOverride;
+			coveredUnitAmountOverride = coveredUnitOverride;
 		}
 
 		public Boolean isValidInspection() {
-			return _validInspection;
+			return validInspection;
 		}
 
 		public void setValidInspection(Boolean validInspection) {
-			_validInspection = validInspection;
+			this.validInspection = validInspection;
 		}
 
 		public Boolean isTaxExempt() {
-			return _taxExempt;
+			return taxExempt;
 		}
 
 		public void setTaxExempt(Boolean taxExempt) {
-			_taxExempt = taxExempt;
+			this.taxExempt = taxExempt;
 		}
 
 	}
 
     @Entity(name = "Extension")
-	@Table(name = "claim_ext")
+	@Table(name = "claimext")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public abstract static class Extension {
 
@@ -600,7 +600,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public void setModifiedDate(Date modifiedDate) {
-			modifiedDate = modifiedDate;
+			this.modifiedDate = modifiedDate;
 		}
 
 		public Integer getVersion() {
@@ -633,41 +633,41 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 	@Table(name = "claim_settlement_ext_gap")
 	public static class GapAssessmentExtension extends SettlementExtension {
 
-		private Double _insuredsObligation = 0.0;
-		private Double _eligibleAmount = 0.0;
-		private Double _assessedAmount = 0.0;
-		private Double _underinsuredAmount = 0.0;
+		private Double insuredsObligation = 0.0;
+		private Double eligibleAmount = 0.0;
+		private Double assessedAmount = 0.0;
+		private Double underinsuredAmount = 0.0;
 
 		public Double getAssessedAmount() {
-			return _assessedAmount;
+			return assessedAmount;
 		}
 
 		public void setAssessedAmount(Double assessedAmount) {
-			_assessedAmount = assessedAmount;
+			this.assessedAmount = assessedAmount;
 		}
 
 		public Double getEligibleAmount() {
-			return _eligibleAmount;
+			return eligibleAmount;
 		}
 
 		public void setEligibleAmount(Double eligible) {
-			_eligibleAmount = eligible;
+			eligibleAmount = eligible;
 		}
 
 		public Double getUnderinsuredAmount() {
-			return _underinsuredAmount;
+			return underinsuredAmount;
 		}
 
 		public void setUnderinsuredAmount(Double underinsuredAmount) {
-			_underinsuredAmount = underinsuredAmount;
+			this.underinsuredAmount = underinsuredAmount;
 		}
 
 		public Double getInsuredsObligation() {
-			return _insuredsObligation;
+			return insuredsObligation;
 		}
 
 		public void setInsuredsObligation(Double insuredsObligation) {
-			_insuredsObligation = insuredsObligation;
+			this.insuredsObligation = insuredsObligation;
 		}
 	}
 
@@ -677,42 +677,42 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 
 		@Id
 		@GeneratedValue
-		private Long _id;
+		private Long id;
 
 		@Version
-		private Integer _version;
+		private Integer version;
 
 		@CreationTimestamp
-		private Date _creationDate;
+		private Date creationDate;
 
 		@UpdateTimestamp
-		private Date _modifiedDate;
+		private Date modifiedDate;
 
-		private Boolean _override = false;
-		private Boolean _started = false;
-		private Boolean _taxable = false;
+		private Boolean override = false;
+		private Boolean started = false;
+		private Boolean taxable = false;
 
-		private Double _units = 0.0;
-		private Double _amount = 0.0;
-		private Double _subtotal = 0.0;
+		private Double units = 0.0;
+		private Double amount = 0.0;
+		private Double subtotal = 0.0;
 
-		private Double _taxRate = 0.0;
-		private Double _taxAmount = 0.0;
+		private Double taxRate = 0.0;
+		private Double taxAmount = 0.0;
 
-		private Double _goodwill = 0.0;
-		private Double _totalAmount = 0.0;
-		private Double _underinsuredAmount = 0.0;
-
-		@Temporal( TemporalType.TIMESTAMP )
-		private Date _openDate;
+		private Double goodwill = 0.0;
+		private Double totalAmount = 0.0;
+		private Double underinsuredAmount = 0.0;
 
 		@Temporal( TemporalType.TIMESTAMP )
-		private Date _allocateDate;
+		private Date openDate;
 
 		@Temporal( TemporalType.TIMESTAMP )
-		private Date _closeDate;
+		private Date allocateDate;
 
-		private String _trackingId;
+		@Temporal( TemporalType.TIMESTAMP )
+		private Date closeDate;
+
+		private String trackingId;
 
 		@ManyToOne(fetch = FetchType.LAZY)
 		private Claim claim;
@@ -721,41 +721,41 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		private SettlementStatus status = SettlementStatus.RESERVED;
 
 		@OneToMany(mappedBy = "settlement", cascade = CascadeType.ALL, orphanRemoval = true)
-		@OrderColumn(name = "order_index")
+		@OrderColumn(name = "orderindex")
 		private Set<SettlementExtension> extensions = new HashSet<>();
 
-		private transient Map<Class<?>, SettlementExtension> _extensionMap;
+		private transient Map<Class<?>, SettlementExtension> extensionMap;
 
 		public Long getId() {
-			return _id;
+			return id;
 		}
 
 		protected void setId(Long id) {
-			_id = id;
+			this.id = id;
 		}
 
 		public Integer getVersion() {
-			return _version;
+			return version;
 		}
 
 		public void setVersion(Integer version) {
-			_version = version;
+			this.version = version;
 		}
 
 		public Date getCreationDate() {
-			return _creationDate;
+			return creationDate;
 		}
 
 		public void setCreationDate(Date creationDate) {
-			_creationDate = creationDate;
+			this.creationDate = creationDate;
 		}
 
 		public Date getModifiedDate() {
-			return _modifiedDate;
+			return modifiedDate;
 		}
 
 		public void setModifiedDate(Date modifiedDate) {
-			_modifiedDate = modifiedDate;
+			this.modifiedDate = modifiedDate;
 		}
 
 		public Claim getClaim() {
@@ -775,43 +775,43 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public String getTrackingId() {
-			return _trackingId;
+			return trackingId;
 		}
 
 		public void setTrackingId(String trackingId) {
-			_trackingId = trackingId;
+			this.trackingId = trackingId;
 		}
 
 		public Double getUnits() {
-			return _units;
+			return units;
 		}
 
 		public void setUnits(Double units) {
-			_units = units;
+			this.units = units;
 		}
 
 		public Double getAmount() {
-			return _amount;
+			return amount;
 		}
 
 		public void setAmount(Double amount) {
-			_amount = amount;
+			this.amount = amount;
 		}
 
 		public Double getTotalAmount() {
-			return _totalAmount;
+			return totalAmount;
 		}
 
 		public void setTotalAmount(Double totalAmount) {
-			_totalAmount = totalAmount;
+			this.totalAmount = totalAmount;
 		}
 
 		public Date getCloseDate() {
-			return _closeDate;
+			return closeDate;
 		}
 
 		public void setCloseDate(Date settlementDate) {
-			_closeDate = settlementDate;
+			closeDate = settlementDate;
 		}
 
 		public Set<SettlementExtension> getExtensions() {
@@ -834,14 +834,14 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 
 		@SuppressWarnings("unchecked")
 		public <X extends SettlementExtension> X getExtension(Class<X> extensionType) {
-			if (_extensionMap == null || _extensionMap.size() != extensions.size()) {
+			if (extensionMap == null || extensionMap.size() != extensions.size()) {
 				Map<Class<?>, SettlementExtension> map = new HashMap<Class<?>, SettlementExtension>( extensions.size());
 				for (SettlementExtension extension : extensions ) {
 					map.put(extension.getClass(), extension);
 				}
-				_extensionMap = map;
+				extensionMap = map;
 			}
-			return (X)_extensionMap.get(extensionType);
+			return (X)extensionMap.get(extensionType);
 		}
 
 		public <X extends SettlementExtension> boolean hasExtension(Class<X> extensionType) {
@@ -849,103 +849,103 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Boolean isOverride() {
-			return _override;
+			return override;
 		}
 
 		public void setOverride(Boolean override) {
-			_override = override;
+			this.override = override;
 		}
 
 		public Double getGoodwill() {
-			return _goodwill;
+			return goodwill;
 		}
 
 		public void setGoodwill(Double goodwill) {
-			_goodwill = goodwill;
+			this.goodwill = goodwill;
 		}
 
 		public Date getOpenDate() {
-			return _openDate;
+			return openDate;
 		}
 
 		public void setOpenDate(Date startDate) {
-			_openDate = startDate;
+			openDate = startDate;
 		}
 
 		public Date getAllocateDate() {
-			return _allocateDate;
+			return allocateDate;
 		}
 
 		public void setAllocateDate(Date allocateDate) {
-			_allocateDate = allocateDate;
+			this.allocateDate = allocateDate;
 		}
 
 		public Double getSubtotal() {
-			return _subtotal;
+			return subtotal;
 		}
 
 		public void setSubtotal(Double subtotal) {
-			_subtotal = subtotal;
+			this.subtotal = subtotal;
 		}
 
 		public Double getTaxRate() {
-			return _taxRate;
+			return taxRate;
 		}
 
 		public void setTaxRate(Double taxRate) {
-			_taxRate = taxRate;
+			this.taxRate = taxRate;
 		}
 
 		public Double getTaxAmount() {
-			return _taxAmount;
+			return taxAmount;
 		}
 
 		public void setTaxAmount(Double taxAmount) {
-			_taxAmount = taxAmount;
+			this.taxAmount = taxAmount;
 		}
 
 		public Double getUnderinsuredAmount() {
-			return _underinsuredAmount;
+			return underinsuredAmount;
 		}
 
 		public void setUnderinsuredAmount(Double underinsuredAmount) {
-			_underinsuredAmount = underinsuredAmount;
+			this.underinsuredAmount = underinsuredAmount;
 		}
 
 		public Boolean isStarted() {
-			return _started;
+			return started;
 		}
 
 		public void setStarted(Boolean started) {
-			_started = started;
+			this.started = started;
 		}
 
 		public Boolean isTaxable() {
-			return _taxable;
+			return taxable;
 		}
 
 		public void setTaxable(Boolean taxable) {
-			_taxable = taxable;
+			this.taxable = taxable;
 		}
 
 	}
 
     @Entity(name = "SettlementExtension")
-	@Table(name = "claim_settlement_ext")
+	@Table(name = "claimsettlement_ext")
 	public abstract static class SettlementExtension {
 
 		@Id
 		@GeneratedValue
-		private Long _id;
+		private Long id;
 
 		@Version
-		private Integer _version;
+		private Integer version;
 
 		@CreationTimestamp
-		private Date _creationDate;
+		private Date creationDate;
 
 		@UpdateTimestamp
-		private Date _modifiedDate;
+		private Date modifiedDate;
 
 		@Column(name = "order_index")
 		private Integer orderIndex;
@@ -961,35 +961,35 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Long getId() {
-			return _id;
+			return id;
 		}
 
 		protected void setId(Long id) {
-			_id = id;
+			this.id = id;
 		}
 
 		public Integer getVersion() {
-			return _version;
+			return version;
 		}
 
 		public void setVersion(Integer version) {
-			_version = version;
+			this.version = version;
 		}
 
 		public Date getCreationDate() {
-			return _creationDate;
+			return creationDate;
 		}
 
 		public void setCreationDate(Date creationDate) {
-			_creationDate = creationDate;
+			this.creationDate = creationDate;
 		}
 
 		public Date getModifiedDate() {
-			return _modifiedDate;
+			return modifiedDate;
 		}
 
 		public void setModifiedDate(Date modifiedDate) {
-			_modifiedDate = modifiedDate;
+			this.modifiedDate = modifiedDate;
 		}
 
 		public Settlement getSettlement() {
@@ -1037,37 +1037,37 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 
 		@Id
 		@GeneratedValue
-		private Long _id;
+		private Long id;
 
 		@Version
-		private Integer _version;
+		private Integer version;
 
 		@CreationTimestamp
-		private Date _creationDate;
+		private Date creationDate;
 
 		@UpdateTimestamp
-		private Date _modifiedDate;
+		private Date modifiedDate;
 
 		@Temporal( TemporalType.DATE )
-		private Date _startDate;
+		private Date startDate;
 
 		@Temporal( TemporalType.DATE )
-		private Date _closeDate;
+		private Date closeDate;
 
 		@Temporal( TemporalType.DATE )
-		private Date _dueDate;
+		private Date dueDate;
 
 		@Temporal( TemporalType.DATE )
-		private Date _stateDueDate;
+		private Date stateDueDate;
 
 		@Temporal( TemporalType.DATE )
-		private Date _statusDueDate;
+		private Date statusDueDate;
 
 		@Temporal( TemporalType.DATE )
-		private Date _stateTransitionDate;
+		private Date stateTransitionDate;
 
 		@Temporal( TemporalType.DATE )
-		private Date _statusTransitionDate;
+		private Date statusTransitionDate;
 
 		@ManyToOne(fetch = FetchType.LAZY)
 		private Task<?> parent;
@@ -1091,35 +1091,35 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Long getId() {
-			return _id;
+			return id;
 		}
 
 		public void setId(Long id) {
-			_id = id;
+			this.id = id;
 		}
 
 		public Integer getVersion() {
-			return _version;
+			return  version;
 		}
 
 		public void setVersion(Integer version) {
-			_version = version;
+			this.version = version;
 		}
 
 		public Date getCreationDate() {
-			return _creationDate;
+			return  creationDate;
 		}
 
 		public void setCreationDate(Date creationDate) {
-			_creationDate = creationDate;
+			this.creationDate = creationDate;
 		}
 
 		public Date getModifiedDate() {
-			return _modifiedDate;
+			return  modifiedDate;
 		}
 
 		public void setModifiedDate(Date modifiedDate) {
-			_modifiedDate = modifiedDate;
+			this.modifiedDate = modifiedDate;
 		}
 
 		public TaskStatus getStatus() {
@@ -1152,27 +1152,27 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Date getStartDate() {
-			return _startDate;
+			return  startDate;
 		}
 
 		public void setStartDate(Date openDate) {
-			_startDate = openDate;
+		 	startDate = openDate;
 		}
 
 		public Date getCloseDate() {
-			return _closeDate;
+			return  closeDate;
 		}
 
 		public void setCloseDate(Date closeDate) {
-			_closeDate = closeDate;
+			this.closeDate = closeDate;
 		}
 
 		public Date getDueDate() {
-			return _dueDate;
+			return  dueDate;
 		}
 
 		public void setDueDate(Date expiryDate) {
-			_dueDate = expiryDate;
+		 	dueDate = expiryDate;
 		}
 
 		public Task<?> getParent() {
@@ -1192,35 +1192,35 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Date getStateTransitionDate() {
-			return _stateTransitionDate;
+			return  stateTransitionDate;
 		}
 
 		public void setStateTransitionDate(Date stateTransitionDate) {
-			_stateTransitionDate = stateTransitionDate;
+			this.stateTransitionDate = stateTransitionDate;
 		}
 
 		public Date getStatusTransitionDate() {
-			return _statusTransitionDate;
+			return  statusTransitionDate;
 		}
 
 		public void setStatusTransitionDate(Date taskTransitionDate) {
-			_statusTransitionDate = taskTransitionDate;
+		 	statusTransitionDate = taskTransitionDate;
 		}
 
 		public Date getStateDueDate() {
-			return _stateDueDate;
+			return  stateDueDate;
 		}
 
 		public void setStateDueDate(Date stateDueDate) {
-			_stateDueDate = stateDueDate;
+			this.stateDueDate = stateDueDate;
 		}
 
 		public Date getStatusDueDate() {
-			return _statusDueDate;
+			return  statusDueDate;
 		}
 
 		public void setStatusDueDate(Date statusDueDate) {
-			_statusDueDate = statusDueDate;
+			this.statusDueDate = statusDueDate;
 		}
 
 	}
@@ -1231,125 +1231,91 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 
 		@Id
 		@GeneratedValue
-		private Long _id;
+		private Long  id;
 
 		@Version
-		private Integer _version;
+		private Integer  version;
 
 		@CreationTimestamp
-		private Date _creationDate;
+		private Date  creationDate;
 
 		@UpdateTimestamp
-		private Date _modifiedDate;
+		private Date  modifiedDate;
 
-		private boolean _active;
+		private boolean  active;
 
 		@Column(name = "order_index")
 		private Integer orderIndex;
 
-		private String _name;
-		private String _displayName;
+		private String  name;
+		private String  displayName;
 
 		public TaskStatus() {
 		}
 
 		public String getEntityName() {
-			return _displayName;
+			return  displayName;
 		}
 
 		public Long getId() {
-			return _id;
+			return  id;
 		}
 
 		public void setId(Long id) {
-			_id = id;
+			this.id = id;
 		}
 
 		public Integer getVersion() {
-			return _version;
+			return  version;
 		}
 
 		public void setVersion(Integer version) {
-			_version = version;
+			this.version = version;
 		}
 
 		public Date getCreationDate() {
-			return _creationDate;
+			return  creationDate;
 		}
 
 		public void setCreationDate(Date creationDate) {
-			_creationDate = creationDate;
+			this.creationDate = creationDate;
 		}
 
 		public Date getModifiedDate() {
-			return _modifiedDate;
+			return  modifiedDate;
 		}
 
 		public void setModifiedDate(Date modifiedDate) {
-			_modifiedDate = modifiedDate;
+			this.modifiedDate = modifiedDate;
 		}
 
 		public String getName() {
-			return _name;
+			return  name;
 		}
 
 		public void setName(String name) {
-			_name = name;
+			this.name = name;
 		}
 
 		public String getDisplayName() {
-			return _displayName;
+			return  displayName;
 		}
 
 		public void setDisplayName(String displayName) {
-			_displayName = displayName;
+		 	this.displayName = displayName;
 		}
 
 		public boolean isActive() {
-			return _active;
+			return  active;
 		}
 
 		public void setActive(boolean active) {
-			_active = active;
+			this.active = active;
 		}
 
 		@Override
 		public String toString() {
-			return _name;
-		}
-
-		public Integer getOrderIndex() {
-			return orderIndex;
-		}
-
-		public void setOrderIndex(Integer ordering) {
-			orderIndex = ordering;
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + ((_name == null) ? 0 : _name.hashCode());
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj == null) return false;
-			if (obj == this) return true;
-			if (!(obj instanceof TaskStatus )) {
-				return false;
-			}
-			TaskStatus other = (TaskStatus) obj;
-			if (_name == null) {
-				if (other._name != null) {
-					return false;
-				}
-			} else if (!_name.equals(other._name)) {
-				return false;
-			}
-			return true;
+			return  name;
 		}
 
 	}

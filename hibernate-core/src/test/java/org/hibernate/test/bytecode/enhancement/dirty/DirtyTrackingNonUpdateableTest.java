@@ -56,7 +56,7 @@ public class DirtyTrackingNonUpdateableTest extends BaseCoreFunctionalTestCase {
     public class Thing {
 
         @Id
-        @GeneratedValue( strategy = GenerationType.IDENTITY )
+        @GeneratedValue( strategy = GenerationType.AUTO )
         long id;
 
         @Version

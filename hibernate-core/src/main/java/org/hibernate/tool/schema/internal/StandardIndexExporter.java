@@ -7,6 +7,7 @@
 package org.hibernate.tool.schema.internal;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.QualifiedNameImpl;
@@ -57,7 +58,8 @@ public class StandardIndexExporter implements Exporter<Index> {
 				.append( " (" );
 
 		boolean first = true;
-		Iterator<Column> columnItr = index.getColumnIterator();
+		final Iterator<Column> columnItr = index.getColumnIterator();
+		final Map<Column, String> columnOrderMap = index.getColumnOrderMap();
 		while ( columnItr.hasNext() ) {
 			final Column column = columnItr.next();
 			if ( first ) {
@@ -67,6 +69,9 @@ public class StandardIndexExporter implements Exporter<Index> {
 				buf.append( ", " );
 			}
 			buf.append( ( column.getQuotedName( dialect ) ) );
+			if ( columnOrderMap.containsKey( column ) ) {
+				buf.append( " " ).append( columnOrderMap.get( column ) );
+			}
 		}
 		buf.append( ")" );
 		return new String[] { buf.toString() };
@@ -74,7 +79,7 @@ public class StandardIndexExporter implements Exporter<Index> {
 
 	@Override
 	public String[] getSqlDropStrings(Index index, Metadata metadata) {
-		if ( ! dialect.dropConstraints() ) {
+		if ( !dialect.dropConstraints() ) {
 			return NO_COMMANDS;
 		}
 

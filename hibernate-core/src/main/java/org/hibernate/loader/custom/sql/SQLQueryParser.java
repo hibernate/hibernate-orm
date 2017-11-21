@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.query.spi.ParameterParser;
@@ -24,6 +25,7 @@ import org.hibernate.persister.entity.SQLLoadable;
  * @author Paul Benedict
  */
 public class SQLQueryParser {
+	private static final Pattern PREPARED_STATEMENT_PATTERN = Pattern.compile( "^\\{.*?\\}$" );
 	private static final String HIBERNATE_PLACEHOLDER_PREFIX = "h-";
 	private static final String DOMAIN_PLACEHOLDER = "h-domain";
 	private static final String CATALOG_PLACEHOLDER = "h-catalog";
@@ -73,6 +75,10 @@ public class SQLQueryParser {
 	// TODO: should "record" how many properties we have reffered to - and if we 
 	//       don't get'em'all we throw an exception! Way better than trial and error ;)
 	protected String substituteBrackets(String sqlQuery) throws QueryException {
+
+		if ( PREPARED_STATEMENT_PATTERN.matcher( sqlQuery ).matches() ) {
+			return sqlQuery;
+		}
 
 		StringBuilder result = new StringBuilder( sqlQuery.length() + 20 );
 		int left, right;

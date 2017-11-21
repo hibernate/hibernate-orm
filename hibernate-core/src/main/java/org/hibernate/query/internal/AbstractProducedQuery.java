@@ -167,6 +167,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public FlushModeType getFlushMode() {
+		getProducer().checkOpen();
 		return ( flushMode == null ?
 				getProducer().getFlushMode() :
 				FlushModeTypeHelper.getFlushModeType( flushMode )
@@ -176,6 +177,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setFlushMode(FlushModeType flushModeType) {
+		getProducer().checkOpen();
 		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
 		return this;
 	}
@@ -281,6 +283,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setLockMode(LockModeType lockModeType) {
+		getProducer().checkOpen();
 		if ( !LockModeType.NONE.equals( lockModeType ) ) {
 			if ( !isSelect() ) {
 				throw new IllegalStateException( "Illegal attempt to set lock mode on a non-SELECT query" );
@@ -430,6 +433,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <P> QueryImplementor setParameter(Parameter<P> parameter, P value) {
+		getProducer().checkOpen();
 		if ( value instanceof TypedParameterValue ) {
 			setParameter( parameter, ( (TypedParameterValue) value ).getValue(), ( (TypedParameterValue) value ).getType() );
 		}
@@ -475,6 +479,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setParameter(String name, Object value) {
+		getProducer().checkOpen();
 		if ( value instanceof TypedParameterValue ) {
 			final TypedParameterValue  typedValueWrapper = (TypedParameterValue) value;
 			setParameter( name, typedValueWrapper.getValue(), typedValueWrapper.getType() );
@@ -492,6 +497,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setParameter(int position, Object value) {
+		getProducer().checkOpen();
 		if ( value instanceof TypedParameterValue ) {
 			final TypedParameterValue typedParameterValue = (TypedParameterValue) value;
 			setParameter( position, typedParameterValue.getValue(), typedParameterValue.getType() );
@@ -585,6 +591,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
+		getProducer().checkOpen();
 		queryParameterBindings.getBinding( (QueryParameter) param ).setBindValue( value, temporalType );
 		return this;
 	}
@@ -592,6 +599,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
+		getProducer().checkOpen();
 		queryParameterBindings.getBinding( (QueryParameter) param ).setBindValue( value, temporalType );
 		return this;
 	}
@@ -599,6 +607,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setParameter(String name, Calendar value, TemporalType temporalType) {
+		getProducer().checkOpen();
 		queryParameterBindings.getBinding( name ).setBindValue( value, temporalType );
 		return this;
 	}
@@ -606,6 +615,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setParameter(String name, Date value, TemporalType temporalType) {
+		getProducer().checkOpen();
 		queryParameterBindings.getBinding( name ).setBindValue( value, temporalType );
 		return this;
 	}
@@ -613,6 +623,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setParameter(int position, Calendar value, TemporalType temporalType) {
+		getProducer().checkOpen();
 		queryParameterBindings.getBinding( position ).setBindValue( value, temporalType );
 		return this;
 	}
@@ -620,17 +631,20 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setParameter(int position, Date value, TemporalType temporalType) {
+		getProducer().checkOpen();
 		queryParameterBindings.getBinding( position ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public Set<Parameter<?>> getParameters() {
+		getProducer().checkOpen( false );
 		return getParameterMetadata().collectAllParametersJpa();
 	}
 
 	@Override
 	public Parameter<?> getParameter(String name) {
+		getProducer().checkOpen( false );
 		try {
 			return getParameterMetadata().getQueryParameter( name );
 		}
@@ -672,6 +686,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		// if ParameterMetadata reports that it has any positional-parameters it is talking about the
 		// legacy Hibernate concept.
 		// lookup jpa-based positional parameters first by name.
+		getProducer().checkOpen( false );
 		try {
 			if ( getParameterMetadata().getPositionalParameterCount() == 0 ) {
 				try {
@@ -710,17 +725,20 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public boolean isBound(Parameter<?> parameter) {
+		getProducer().checkOpen();
 		return queryParameterBindings.isBound( (QueryParameter) parameter );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T getParameterValue(Parameter<T> parameter) {
+		getProducer().checkOpen( false );
 		return (T) queryParameterBindings.getBinding( (QueryParameter) parameter ).getBindValue();
 	}
 
 	@Override
 	public Object getParameterValue(String name) {
+		getProducer().checkOpen( false );
 		return queryParameterBindings.getBinding( name ).getBindValue();
 	}
 
@@ -813,6 +831,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public int getMaxResults() {
+		getProducer().checkOpen();
 		// to be JPA compliant this method returns an int - specifically the "magic number" Integer.MAX_VALUE defined by the spec.
 		// For access to the Integer (for checking), use #getQueryOptions#getMaxRows instead
 		return queryOptions.getMaxRows() == null ? Integer.MAX_VALUE : queryOptions.getMaxRows();
@@ -833,6 +852,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public int getFirstResult() {
+		getProducer().checkOpen();
 		// to be JPA compliant this method returns an int - specifically the "magic number" 0 (ZERO) defined by the spec.
 		// For access to the Integer (for checking), use #getQueryOptions#getFirstRow instead
 		return queryOptions.getFirstRow() == null ? 0 : queryOptions.getFirstRow();
@@ -841,6 +861,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setFirstResult(int startPosition) {
+		getProducer().checkOpen();
 		queryOptions.setFirstRow( startPosition );
 		return this;
 	}
@@ -1223,6 +1244,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public LockModeType getLockMode() {
+		getProducer().checkOpen( false );
 		if ( !isSelect() ) {
 			throw new IllegalStateException( "Illegal attempt to get lock mode on a non-SELECT query" );
 		}

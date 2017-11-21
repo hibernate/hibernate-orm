@@ -526,6 +526,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public FlushModeType getFlushMode() {
+		checkOpen();
 		return FlushModeTypeHelper.getFlushModeType( this.flushMode );
 	}
 
@@ -751,8 +752,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	protected  <T> QueryImplementor<T> buildQueryFromName(String name, Class<T> resultType) {
+		checkOpen();
 		try {
-			checkOpen();
 			checkTransactionSynchStatus();
 			delayedAfterCompletion();
 

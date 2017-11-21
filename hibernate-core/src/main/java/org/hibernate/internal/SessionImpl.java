@@ -1446,6 +1446,7 @@ public final class SessionImpl
 
 	@Override
 	public void setFlushMode(FlushModeType flushModeType) {
+		checkOpen();
 		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
 	}
 
@@ -3805,21 +3806,25 @@ public final class SessionImpl
 
 	@Override
 	public Object getDelegate() {
+		checkOpen();
 		return this;
 	}
 
 	@Override
 	public SessionFactoryImplementor getEntityManagerFactory() {
+		checkOpen();
 		return getFactory();
 	}
 
 	@Override
 	public CriteriaBuilder getCriteriaBuilder() {
+		checkOpen();
 		return getFactory().getCriteriaBuilder();
 	}
 
 	@Override
 	public MetamodelImplementor getMetamodel() {
+		checkOpen();
 		return getFactory().getMetamodel();
 	}
 

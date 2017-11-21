@@ -76,7 +76,7 @@ public class SQLQueryParser {
 	//       don't get'em'all we throw an exception! Way better than trial and error ;)
 	protected String substituteBrackets(String sqlQuery) throws QueryException {
 
-		if ( PREPARED_STATEMENT_PATTERN.matcher( sqlQuery ).matches() ) {
+		if ( PREPARED_STATEMENT_PATTERN.matcher( sqlQuery.trim() ).matches() ) {
 			return sqlQuery;
 		}
 

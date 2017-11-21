@@ -32,6 +32,7 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.PostgreSQL92Dialect;
 import org.hibernate.dialect.PostgreSQL94Dialect;
+import org.hibernate.dialect.PostgreSQL95Dialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
@@ -87,6 +88,10 @@ public class StandardDialectResolver implements DialectResolver {
 		if ( "PostgreSQL".equals( databaseName ) ) {
 			final int majorVersion = info.getDatabaseMajorVersion();
 			final int minorVersion = info.getDatabaseMinorVersion();
+
+			if ( majorVersion == 10 ) {
+				return new PostgreSQL95Dialect();
+			}
 
 			if ( majorVersion == 9 ) {
 				if ( minorVersion >= 4 ) {

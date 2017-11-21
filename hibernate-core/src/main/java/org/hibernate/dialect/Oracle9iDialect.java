@@ -42,13 +42,18 @@ public class Oracle9iDialect extends Oracle8iDialect {
 			}
 
 			final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
-			pagingSelect.append( "select * from ( select row_.*, rownum rownum_ from ( " );
-			pagingSelect.append( sql );
 			if (hasOffset) {
-				pagingSelect.append( " ) row_ ) where rownum_ <= ? and rownum_ > ? " );
+			pagingSelect.append( "select * from ( select row_.*, rownum rownum_ from ( " );
 			}
 			else {
-				pagingSelect.append( " ) row_ ) where rownum_ <= ?" );
+				pagingSelect.append( "select * from ( " );
+			}
+			pagingSelect.append( sql );
+			if (hasOffset) {
+				pagingSelect.append( " ) row_ where rownum <= ?) where rownum_ > ?" );
+			}
+			else {
+				pagingSelect.append( " ) where rownum <= ?" );
 			}
 
 			if (isForUpdate) {

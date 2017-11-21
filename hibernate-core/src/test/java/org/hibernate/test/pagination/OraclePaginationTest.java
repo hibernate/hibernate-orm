@@ -88,22 +88,22 @@ public class OraclePaginationTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			List<RootEntity> rootEntitiesAll = getAllRows( entityManager );
+			List<RootEntity> rootEntitiesAllPages = getLimitedRows( entityManager, 0, 10 );
 
 			List<RootEntity> rootEntitiesFirst = getLimitedRows( entityManager, 0, 5 );
 			List<RootEntity> rootEntitiesSecond = getLimitedRows( entityManager, 5, 10 );
 
-			assertEquals( rootEntitiesAll.get( 0 ).getId(), rootEntitiesFirst.get( 0 ).getId() );
-			assertEquals( rootEntitiesAll.get( 1 ).getId(), rootEntitiesFirst.get( 1 ).getId() );
-			assertEquals( rootEntitiesAll.get( 2 ).getId(), rootEntitiesFirst.get( 2 ).getId() );
-			assertEquals( rootEntitiesAll.get( 3 ).getId(), rootEntitiesFirst.get( 3 ).getId() );
-			assertEquals( rootEntitiesAll.get( 4 ).getId(), rootEntitiesFirst.get( 4 ).getId() );
+			assertEquals( rootEntitiesAllPages.get( 0 ).getId(), rootEntitiesFirst.get( 0 ).getId() );
+			assertEquals( rootEntitiesAllPages.get( 1 ).getId(), rootEntitiesFirst.get( 1 ).getId() );
+			assertEquals( rootEntitiesAllPages.get( 2 ).getId(), rootEntitiesFirst.get( 2 ).getId() );
+			assertEquals( rootEntitiesAllPages.get( 3 ).getId(), rootEntitiesFirst.get( 3 ).getId() );
+			assertEquals( rootEntitiesAllPages.get( 4 ).getId(), rootEntitiesFirst.get( 4 ).getId() );
 
-			assertEquals( rootEntitiesAll.get( 5 ).getId(), rootEntitiesSecond.get( 0 ).getId() );
-			assertEquals( rootEntitiesAll.get( 6 ).getId(), rootEntitiesSecond.get( 1 ).getId() );
-			assertEquals( rootEntitiesAll.get( 7 ).getId(), rootEntitiesSecond.get( 2 ).getId() );
-			assertEquals( rootEntitiesAll.get( 8 ).getId(), rootEntitiesSecond.get( 3 ).getId() );
-			assertEquals( rootEntitiesAll.get( 9 ).getId(), rootEntitiesSecond.get( 4 ).getId() );
+			assertEquals( rootEntitiesAllPages.get( 5 ).getId(), rootEntitiesSecond.get( 0 ).getId() );
+			assertEquals( rootEntitiesAllPages.get( 6 ).getId(), rootEntitiesSecond.get( 1 ).getId() );
+			assertEquals( rootEntitiesAllPages.get( 7 ).getId(), rootEntitiesSecond.get( 2 ).getId() );
+			assertEquals( rootEntitiesAllPages.get( 8 ).getId(), rootEntitiesSecond.get( 3 ).getId() );
+			assertEquals( rootEntitiesAllPages.get( 9 ).getId(), rootEntitiesSecond.get( 4 ).getId() );
 		} );
 	}
 

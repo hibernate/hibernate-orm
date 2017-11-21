@@ -396,6 +396,39 @@ public class Oracle8iDialect extends Dialect {
 	}
 
 	@Override
+	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) {
+		if ( initialValue < 0 && incrementSize > 0 ) {
+			return
+				String.format(
+						"%s minvalue %d start with %d increment by %d",
+						getCreateSequenceString( sequenceName ),
+						initialValue,
+						initialValue,
+						incrementSize
+				);
+		}
+		else if ( initialValue > 0 && incrementSize < 0 ) {
+			return
+				String.format(
+						"%s maxvalue %d start with %d increment by %d",
+						getCreateSequenceString( sequenceName ),
+						initialValue,
+						initialValue,
+						incrementSize
+				);
+		}
+		else {
+			return
+				String.format(
+						"%s start with %d increment by  %d",
+						getCreateSequenceString( sequenceName ),
+						initialValue,
+						incrementSize
+				);
+		}
+	}
+
+	@Override
 	public String getDropSequenceString(String sequenceName) {
 		return "drop sequence " + sequenceName;
 	}

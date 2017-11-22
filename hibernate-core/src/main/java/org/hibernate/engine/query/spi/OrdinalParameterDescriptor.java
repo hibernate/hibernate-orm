@@ -7,7 +7,6 @@
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.QueryParameter;
 import org.hibernate.type.Type;
 
 /**
@@ -16,58 +15,29 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 @Incubating
-public class OrdinalParameterDescriptor implements QueryParameter {
-	private final int ordinalPosition;
-	private final Type expectedType;
-	private final int sourceLocation;
+public class OrdinalParameterDescriptor extends AbstractParameterDescriptor {
+	private final int label;
+	private final int valuePosition;
 
 	/**
 	 * Constructs an ordinal parameter descriptor.
-	 *
-	 * @param ordinalPosition The ordinal position
-	 * @param expectedType The expected type of the parameter
-	 * @param sourceLocation The location of the parameter
 	 */
-	public OrdinalParameterDescriptor(int ordinalPosition, Type expectedType, int sourceLocation) {
-		this.ordinalPosition = ordinalPosition;
-		this.expectedType = expectedType;
-		this.sourceLocation = sourceLocation;
-	}
-
-	public int getOrdinalPosition() {
-		return ordinalPosition;
-	}
-
-	public Type getExpectedType() {
-		return expectedType;
-	}
-
-	public int getSourceLocation() {
-		return sourceLocation;
-	}
-
-	@Override
-	public Type getType() {
-		return expectedType;
-	}
-
-	@Override
-	public String getName() {
-		return null;
+	public OrdinalParameterDescriptor(
+			int label,
+			int valuePosition,
+			Type expectedType,
+			int[] sourceLocations) {
+		super( sourceLocations, expectedType );
+		this.label = label;
+		this.valuePosition = valuePosition;
 	}
 
 	@Override
 	public Integer getPosition() {
-		return ordinalPosition;
+		return label;
 	}
 
-	@Override
-	public Class getParameterType() {
-		return expectedType == null ? null : expectedType.getReturnedClass();
-	}
-
-	@Override
-	public boolean isJpaPositionalParameter() {
-		return false;
+	public int getValuePosition() {
+		return valuePosition;
 	}
 }

@@ -45,6 +45,7 @@ public final class QueryParameters {
 	private Type[] positionalParameterTypes;
 	private Object[] positionalParameterValues;
 	private Map<String,TypedValue> namedParameters;
+
 	private LockOptions lockOptions;
 	private RowSelection rowSelection;
 	private boolean cacheable;

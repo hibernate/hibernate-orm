@@ -186,9 +186,9 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 		
 		sessionFactory().getStatistics().clear();
 		
-		List parents = s.createQuery("from Parent where name between ? and ? order by name desc")
-			.setParameter(0, "bar")
-			.setParameter(1, "foo")
+		List parents = s.createQuery("from Parent where name between ?1 and ?2 order by name desc")
+			.setParameter(1, "bar")
+			.setParameter(2, "foo")
 			.list();
 		p = (Parent) parents.get(0);
 		q = (Parent) parents.get(1);

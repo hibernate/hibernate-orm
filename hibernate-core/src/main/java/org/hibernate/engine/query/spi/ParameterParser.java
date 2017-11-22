@@ -22,20 +22,20 @@ public class ParameterParser {
 	/**
 	 * Maybe better named a Journaler.  Essentially provides a callback contract for things that recognize parameters
 	 */
-	public static interface Recognizer {
+	public interface Recognizer {
 		/**
 		 * Called when an output parameter is recognized
 		 *
 		 * @param position The position within the query
 		 */
-		public void outParameter(int position);
+		void outParameter(int position);
 
 		/**
 		 * Called when an ordinal parameter is recognized
 		 *
 		 * @param position The position within the query
 		 */
-		public void ordinalParameter(int position);
+		void ordinalParameter(int position);
 
 		/**
 		 * Called when a named parameter is recognized
@@ -43,22 +43,24 @@ public class ParameterParser {
 		 * @param name The recognized parameter name
 		 * @param position The position within the query
 		 */
-		public void namedParameter(String name, int position);
+		void namedParameter(String name, int position);
 
 		/**
 		 * Called when a JPA-style named parameter is recognized
 		 *
-		 * @param name The name of the JPA-style parameter
+		 * @param identifier The identifier (name) of the JPA-style parameter
 		 * @param position The position within the query
 		 */
-		public void jpaPositionalParameter(String name, int position);
+		void jpaPositionalParameter(int identifier, int position);
 
 		/**
 		 * Called when a character that is not a parameter (or part of a parameter dfinition) is recognized.
 		 *
 		 * @param character The recognized character
 		 */
-		public void other(char character);
+		void other(char character);
+
+		void complete();
 	}
 
 	/**
@@ -179,20 +181,19 @@ public class ParameterParser {
 				}
 				else if ( c == '?' ) {
 					// could be either an ordinal or JPA-positional parameter
-					if ( indx < stringLength - 1 && Character.isDigit( sqlString.charAt( indx + 1 ) ) ) {
+					if ( indx < stringLength - 2 && Character.isDigit( sqlString.charAt( indx + 1 ) ) ) {
 						// a peek ahead showed this as an JPA-positional parameter
 						final int right = StringHelper.firstIndexOfChar( sqlString, ParserHelper.HQL_SEPARATORS, indx + 1 );
 						final int chopLocation = right < 0 ? sqlString.length() : right;
 						final String param = sqlString.substring( indx + 1, chopLocation );
 						// make sure this "name" is an integral
 						try {
-							Integer.valueOf( param );
+							recognizer.jpaPositionalParameter( Integer.valueOf( param ), indx );
+							indx = chopLocation - 1;
 						}
 						catch( NumberFormatException e ) {
 							throw new QueryException( "JPA-style positional param was not an integral ordinal" );
 						}
-						recognizer.jpaPositionalParameter( param, indx );
-						indx = chopLocation - 1;
 					}
 					else {
 						if ( hasMainOutputParameter && !foundMainOutputParam ) {
@@ -209,6 +210,8 @@ public class ParameterParser {
 				}
 			}
 		}
+
+		recognizer.complete();
 	}
 
 	/**

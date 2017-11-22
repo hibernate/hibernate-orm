@@ -39,8 +39,8 @@ public class ProcedureParameterImpl<T> extends QueryParameterImpl<T> implements 
 	}
 
 	@Override
-	public boolean isJpaPositionalParameter() {
-		return false;
+	public int[] getSourceLocations() {
+		return new int[0];
 	}
 
 	@Override

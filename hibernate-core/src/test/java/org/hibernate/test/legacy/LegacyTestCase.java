@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
@@ -88,6 +89,7 @@ public abstract class LegacyTestCase extends BaseCoreFunctionalTestCase {
 				// the Integer#parseInt call failed...
 			}
 		}
+		cfg.setProperty( AvailableSettings.JDBC_TYLE_PARAMS_ZERO_BASE, "true" );
 	}
 
 	protected int doDelete(Session session, String queryString) {

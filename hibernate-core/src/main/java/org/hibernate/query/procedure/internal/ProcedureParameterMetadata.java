@@ -7,10 +7,12 @@
 package org.hibernate.query.procedure.internal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.persistence.Parameter;
 
 import org.hibernate.QueryParameterException;
@@ -152,5 +154,20 @@ public class ProcedureParameterMetadata implements ParameterMetadata {
 		}
 
 		return null;
+	}
+
+	@Override
+	public Collection<QueryParameter> getPositionalParameters() {
+		return parameters.stream().filter( p -> p.getPosition() != null ).collect( Collectors.toList() );
+	}
+
+	@Override
+	public Collection<QueryParameter> getNamedParameters() {
+		return parameters.stream().filter( p -> p.getPosition() == null ).collect( Collectors.toList() );
+	}
+
+	@Override
+	public int getParameterCount() {
+		return parameters.size();
 	}
 }

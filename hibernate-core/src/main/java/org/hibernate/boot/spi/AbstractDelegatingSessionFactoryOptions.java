@@ -395,4 +395,9 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	public LiteralHandlingMode getCriteriaLiteralHandlingMode() {
 		return delegate.getCriteriaLiteralHandlingMode();
 	}
+
+	@Override
+	public boolean jdbcStyleParamsZeroBased() {
+		return delegate.jdbcStyleParamsZeroBased();
+	}
 }

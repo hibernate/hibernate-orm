@@ -88,8 +88,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 						.getKeyType();
 				CollectionFilterKeyParameterSpecification paramSpec = new CollectionFilterKeyParameterSpecification(
 						hqlSqlWalker.getCollectionFilterRole(),
-						collectionFilterKeyType,
-						0
+						collectionFilterKeyType
 				);
 				fragment.addEmbeddedParameter( paramSpec );
 			}

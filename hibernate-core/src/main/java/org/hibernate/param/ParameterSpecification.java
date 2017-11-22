@@ -7,10 +7,7 @@
 package org.hibernate.param;
 
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
-import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -19,20 +16,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public interface ParameterSpecification {
-	/**
-	 * Bind the appropriate value into the given statement at the specified position.
-	 *
-	 * @param statement The statement into which the value should be bound.
-	 * @param qp The defined values for the current query execution.
-	 * @param session The session against which the current execution is occuring.
-	 * @param position The position from which to start binding value(s).
-	 *
-	 * @return The number of sql bind positions "eaten" by this bind operation.
-	 * @throws java.sql.SQLException Indicates problems performing the JDBC biind operation.
-	 */
-	int bind(PreparedStatement statement, QueryParameters qp, SharedSessionContractImplementor session, int position) throws SQLException;
-
+public interface ParameterSpecification extends ParameterBinder {
 	/**
 	 * Get the type which we are expeting for a bind into this parameter based
 	 * on translated contextual information.

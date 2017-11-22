@@ -11,7 +11,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -22,6 +21,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
+import org.hibernate.param.ParameterBinder;
 import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.Outputs;
@@ -245,9 +245,9 @@ public class OutputsImpl implements Outputs {
 			}
 
 			@Override
-			public Map getNamedParameterBindPoints() {
-				// no named parameters in terms of embedded in the SQL string
-				return null;
+			public List<ParameterBinder> getParameterValueBinders() {
+				// no parameters in terms of embedded in the SQL string
+				return Collections.emptyList();
 			}
 
 			@Override

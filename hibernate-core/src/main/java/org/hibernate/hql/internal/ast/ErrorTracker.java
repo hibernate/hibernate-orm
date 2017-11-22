@@ -20,23 +20,24 @@ import antlr.RecognitionException;
 /**
  * An error handler that counts parsing errors and warnings.
  */
-public class ErrorCounter implements ParseErrorHandler {
+public class ErrorTracker implements ParseErrorHandler {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
-			ErrorCounter.class.getName()
+			ErrorTracker.class.getName()
 	);
 
 	private final String hql;
 
-	private List<String> errorList = new ArrayList<String>();
-	private List<RecognitionException> recognitionExceptions = new ArrayList<RecognitionException>();
+	private List<String> errorList = new ArrayList<>();
+	private List<RecognitionException> recognitionExceptions = new ArrayList<>();
 
 	/**
 	 * Constructs an ErrorCounter without knowledge of the HQL, meaning that generated QueryException
 	 * instances *will not* contain the HQL (and will need to be wrapped at a higher level in another
 	 * QueryException).
 	 */
-	public ErrorCounter() {
+	@SuppressWarnings("WeakerAccess")
+	public ErrorTracker() {
 		this( null );
 	}
 
@@ -44,7 +45,8 @@ public class ErrorCounter implements ParseErrorHandler {
 	 * Constructs an ErrorCounter with knowledge of the HQL, meaning that generated QueryException
 	 * instances *will* contain the HQL.
 	 */
-	public ErrorCounter(String hql) {
+	@SuppressWarnings("WeakerAccess")
+	public ErrorTracker(String hql) {
 		this.hql = hql;
 	}
 

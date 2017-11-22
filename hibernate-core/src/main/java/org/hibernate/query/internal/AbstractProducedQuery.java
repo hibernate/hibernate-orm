@@ -503,7 +503,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			setParameter( position, typedParameterValue.getValue(), typedParameterValue.getType() );
 		}
 		else if ( value instanceof Collection && !isRegisteredAsBasicType( value.getClass() ) ) {
-			setParameterList( Integer.toString( position ), (Collection) value );
+			setParameterList( parameterMetadata.getQueryParameter( position ), (Collection) value );
 		}
 		else {
 			queryParameterBindings.getBinding( position ).setBindValue( value );
@@ -569,8 +569,22 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	@SuppressWarnings("unchecked")
+	public QueryImplementor setParameterList(int position, Collection values) {
+		queryParameterBindings.getQueryParameterListBinding( position ).setBindValues( values );
+		return this;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
 	public QueryImplementor setParameterList(String name, Collection values, Type type) {
 		queryParameterBindings.getQueryParameterListBinding( name ).setBindValues( values, type );
+		return this;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public QueryImplementor setParameterList(int position, Collection values, Type type) {
+		queryParameterBindings.getQueryParameterListBinding( position ).setBindValues( values, type );
 		return this;
 	}
 
@@ -583,8 +597,22 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	@SuppressWarnings("unchecked")
+	public QueryImplementor setParameterList(int position, Object[] values, Type type) {
+		queryParameterBindings.getQueryParameterListBinding( position ).setBindValues( Arrays.asList( values ), type );
+		return this;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
 	public QueryImplementor setParameterList(String name, Object[] values) {
 		queryParameterBindings.getQueryParameterListBinding( name ).setBindValues( Arrays.asList( values ) );
+		return this;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public QueryImplementor setParameterList(int position, Object[] values) {
+		queryParameterBindings.getQueryParameterListBinding( position ).setBindValues( Arrays.asList( values ) );
 		return this;
 	}
 
@@ -1271,19 +1299,14 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 //		throw new IllegalArgumentException( "Could not unwrap this [" + toString() + "] as requested Java type [" + cls.getName() + "]" );
 	}
 
-	public QueryParameters getQueryParameters() {
+	protected QueryParameters makeQueryParametersForExecution(String hql) {
 		final HQLQueryPlan entityGraphHintedQueryPlan;
 		if ( entityGraphQueryHint == null) {
 			entityGraphHintedQueryPlan = null;
 		}
 		else {
-			queryParameterBindings.verifyParametersBound( false );
-
-			// todo : ideally we'd update the instance state related to queryString but that is final atm
-
-			final String expandedQuery = queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() );
 			entityGraphHintedQueryPlan = new HQLQueryPlan(
-					expandedQuery,
+					hql,
 					false,
 					getProducer().getLoadQueryInfluencers().getEnabledFilters(),
 					getProducer().getFactory(),
@@ -1291,10 +1314,8 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			);
 		}
 
-		QueryParameters queryParameters = new QueryParameters(
-				getPositionalParameterTypes(),
-				getPositionalParameterValues(),
-				getNamedParameterMap(),
+	QueryParameters queryParameters = new QueryParameters(
+				queryParameterBindings,
 				getLockOptions(),
 				queryOptions,
 				true,
@@ -1316,6 +1337,11 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		return queryParameters;
 	}
 
+	public QueryParameters getQueryParameters() {
+		final String expandedQuery = queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() );
+		return makeQueryParametersForExecution( expandedQuery );
+	}
+
 	@SuppressWarnings("deprecation")
 	protected Type[] getPositionalParameterTypes() {
 		return queryParameterBindings.collectPositionalBindTypes();
@@ -1335,7 +1361,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	private CacheMode sessionCacheMode;
 
 	protected void beforeQuery() {
-		queryParameterBindings.verifyParametersBound( isCallable() );
+		if ( optionalId == null ) {
+			queryParameterBindings.verifyParametersBound( isCallable() );
+		}
 
 		assert sessionFlushMode == null;
 		assert sessionCacheMode == null;
@@ -1405,7 +1433,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			return EmptyScrollableResults.INSTANCE;
 		}
 		final String query = queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() );
-		QueryParameters queryParameters = getQueryParameters();
+		QueryParameters queryParameters = makeQueryParametersForExecution( query );
 		queryParameters.setScrollMode( scrollMode );
 		return getProducer().scroll( query, queryParameters );
 	}
@@ -1467,9 +1495,10 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			}
 		}
 
+		final String expandedQuery = queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() );
 		return getProducer().list(
-				queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() ),
-				getQueryParameters()
+				expandedQuery,
+				makeQueryParametersForExecution( expandedQuery )
 		);
 	}
 
@@ -1548,9 +1577,10 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	protected int doExecuteUpdate() {
+		final String expandedQuery = queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() );
 		return getProducer().executeUpdate(
-				queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() ),
-				getQueryParameters()
+				expandedQuery,
+				makeQueryParametersForExecution( expandedQuery )
 		);
 	}
 

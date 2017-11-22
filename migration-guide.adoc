@@ -1,189 +1,29 @@
-= 5.2 Migration Guide
+= 5.3 Migration Guide
 :toc:
 
-This guide discusses migration from Hibernate ORM version 5.1 to version 5.2.  For migration from
+This guide discusses migration from Hibernate ORM version 5.2 to version 5.3.  For migration from
 earlier versions, see any other pertinent migration guides as well.
 
 == Background
 
-Lots of work has been done for 6.0.  One of the things 6.0 will need is a unified view of "type systems"
-including its own type system (Type, EntityPersister, CollectionPersister, etc) and JPA's type system - which
-would mean unifying all of this in hibernate-core.  Because of this and the other large changes slated for 6.0
-we decided to release a 5.2 that showed a clear migration path to the changes in 6.0 but that still supported the
-older calls and expectations as much as possible.
+5.3 represents a JPA 2.2 compatible version on top of 5.2
 
 
-== Move to Java 8 for baseline
+== Changes to positional query parameter handling
 
-Hibernate 5.2 is built using Java 8 JDK and will require Java 8 JRE at runtime (we are investigating whether
-Java 9 will also work).  This has a number of implications:
+This really breaks down into 2 related changes:
 
-* The hibernate-java8 module has been merged into hibernate-core and the Java 8 date/time types are now natively
-	supported.
-* (todo) support for Java 8 Optional
-* (todo) support for other Java 8 features?
+* Support for JDBC-style parameter declarations in HQL/JPQL queries has been removed.  This feature
+    has been deprecated since 4.1 and removing it made implementing the second change, so we decided
+    to remove that support.  JDBC-style parameter declaration is still supported in native-queries.
+* Since JPA positional parameters really behave more like named parameters (they can be repeated,
+    declared in any order, etc.) Hibernate used to treat them as named parameters - it relied on
+    Hibernate's JPA wrapper to interpret the JPA setParameter calls and properly handle delegating to
+    the named variant.  This is actually a regression in 5.2 as it causes
+    `javax.persistence.Parameter#getPosition` to report `null`.
 
+For JDBC-style parameter declarations in native queries, we have also moved to using one-based
+instead of zero-bade parameter binding to be consistent with JPA.  That can temporarily be
+reverted by setting the `hibernate.query.sql.jdbc_style_params_base` setting to `true` which
+reverts to expecting zero-based binding.
 
-== hibernate-entitymanager merged into hibernate-core
-
-The hibernate-entitymanager module has also been merged into hibernate-core.
-
-* `org.hibernate.SessionFactory` now extends `javax.persistence.EntityManagerFactory` - temporarily it
-	technically extends `org.hibernate.jpa.HibernateEntityManagerFactory` (which in turn extends
-	`javax.persistence.EntityManagerFactory`) for backwards compatibility.  `HibernateEntityManagerFactory`
-	is deprecated.
-* `org.hibernate.Session` now extends `javax.persistence.EntityManager` - temporarily it
-	technically extends `org.hibernate.jpa.HibernateEntityManager` (which in turn extends
-	`javax.persistence.EntityManager`) for backwards compatibility.  `HibernateEntityManager` is deprecated.
-* `org.hibernate.Query` (deprecated in favor of new `org.hibernate.query.Query`) now extends the JPA contracts
-	`javax.persistence.Query` and `javax.persistence.TypedQuery`.  `ProcedureCall` and `StoredProcedureQuery` as well.
-* `org.hibernate.HibernateException` now extends `javax.persistence.PersistenceExceptions`.  Hibernate methods
-	that "override" methods from their JPA counterparts now will also throw various JDK defined RuntimeExceptions
-	(such as `IllegalArgumentException`, `IllegalStateException`, etc) as required by the JPA contract.
-* Persister/type access is now exposed through `org.hibernate.Metamodel`, which extends
-	`javax.persistence.metamodel.Metamodel`.  MetamodelImpl now manages all aspects of type system (see below).
-* Cache management has also been consolidated.  `org.hibernate.Cache` now extends `javax.persistence.Cache`.  CacheImpl
-	now manages all aspects of cache regions (see below).
-
-
-== SessionFactory hierarchy cleanup
-
-As part of merging hibernate-entitymanager into hibernate-core, I also wanted to take a moment to clean up
-some of these very old contracts,  In conjunction with the move to Java 8 (default methods) and needing to
-implement JPA methods now in core I decided to implement more of a composition approach here, thus:
-
-* SessionFactoryImplementor used to have a number of methods pertaining to managing and accessing entity and collection persisters.
-	Since we need to deal with JPA Metamodel contract anyway, I went ahead and moved all of that code into our new
-	`org.hibernate.metamodel.spi.MetamodelImplementor`
-* SessionFactory and SessionFactoryImplementor each had a number of methods dealing with cache regions.
-	Many of these methods have been deprecated since 5.0 and those will be removed.  However, the functionality
-	has been moved into the `org.hibernate.Cache` and `org.hibernate.engine.spi.CacheImplementor` contracts
-	helping implement JPA's `javax.persistence.Cache` role.
-
-== LimitHandler changes
-
-In Hibernate 4.3, dialect implementations that did not support a limit offset would fetch all rows for a query and
-perform pagination in-memory.  This solution, while functional, could have severe performance penalties.  In 5.x,
-we preferred to favor performance optimizations which meant dialect implementations would throw an exception if a
-limit offset was specified but the dialect didn't support such syntax.
-
-As of 5.2.5.Final, we have introduced a new setting, `hibernate.legacy_limit_handler`, that is designed to allow
-users to enable the legacy 4.3 limit handler behavior.  By default, this setting is _false_.
-
-The specific dialects impacted by this change are restricted to the following.
-
-* Cache71Dialect
-* DB2390Dialect
-* InformixDialect
-* IngresDialect
-* RDMSOS2200Dialect
-* SQLServerDialect
-* TimesTenDialect
-
-NOTE: If a dialect that extends any in the above list but overrides the limit handler implementation, then those
-dialects remain unchanged, e.g. SQLServer2005Dialect.
-
-== Changes to schema management tooling
-
-In 5.2.3, a new strategy for retrieving database tables was introduced that improves SchemaMigrator and SchemaValidator
-performance. This strategy executes a single `java.sql.DatabaseMetaData#getTables(String, String, String, String[])`
-call to determine if each `javax.persistence.Entity` has a mapped database table.
-This strategy is the default, and uses the property setting `hibernate.hbm2ddl.jdbc_metadata_extraction_strategy=grouped`.
-This strategy may require `hibernate.default_schema` and/or `hibernate.default_catalog` to be provided.
-
-To use the old strategy, which executes a `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call for
-each javax.persistence.Entity, use the property setting `hibernate.hbm2ddl.jdbc_metadata_extraction_strategy=individually`.
-
-== Changes to how Clob values are processed using PostgreSQL81Dialect and its subclasses
-
-Up to and including 5.2.8, `Clob` values and values for `String`, `character[]`, and `Character[]` attributes that are
-annotated with `@Lob` were:
-
-* bound using `Clob` representations of the data (using `PreparedStatement#setClob` or `CallableStatement#setClob`);
-* retrieved as `Clob` values (using `ResultSet#getClob` or `CallableStatement#getClob`), which were converted to the
-appropriate Java type;
-* stored as PostgreSQL Large Objects; i.e., an `OID` for the value is stored in a `text` column,
- which refers to the actual data stored in a different (PostgreSQL-specific) table.
-
-In 5.2.9 and 5.2.10, due to the fix for https://hibernate.atlassian.net/browse/HHH-11477[HHH-11477], `Clob` values and values for `String`, `character[]`, and `Character[]`
-attributes that are annotated with `@Lob` were:
-
-* bound using `String` representations of the data (using `PreparedStatement#setString` or `CallableStatement#setString`);
-* retrieved as `String` values (using `ResultSet#getString` or `CallableStatement#getString`), which were converted
-to the appropriate Java type;
-* stored as variable-length character strings.
-
-In 5.2.11, the fix for https://hibernate.atlassian.net/browse/HHH-11477[HHH-11477] was reverted
-(https://hibernate.atlassian.net/browse/HHH-11614[HHH-11614]) to restore the 5.2.8 behavior.
-
-As a consequence of these changes, data persisted using a version of Hibernate prior to 5.2.9 cannot be read
-using 5.2.9 or 5.2.10. Data persisted using Hibernate 5.2.9 or 5.2.10 can no longer be read using 5.2.11 or later.
-
-A workaround that can be used in 5.2.9 and 5.2.10 that will restore the 5.2.8/5.2.11 behavior is to override the
-PostgreSQL dialect with:
-
-[source,java]
-----
-public SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-	if( sqlCode == Types.CLOB ){
-		return ClobTypeDescriptor.CLOB_BINDING;
-	}
-	return super.getSqlTypeDescriptorOverride( sqlCode );
-}
-----
-
-In addition, any `Clob` values and values for `String`, `character[]`, `Character[]` attributes that are annotated with
-`@Lob` that were stored as variable-length character strings using 5.2.9 or 5.2.10 should be updated to store the values
-as PostgreSQL Large Objects before migrating to 5.2.11.
-
-For example, if variable-length character strings were stored by 5.2.9 or 5.2.10 for the following mapping:
-
-[source,java]
-----
-@Entity(name = "TestEntity")
-@Table(name = "TEST_ENTITY")
-public static class TestEntity {
-	@Id
-	@GeneratedValue
-	private long id;
-
-	@Lob
-	String firstLobField;
-
-	@Lob
-	String secondLobField;
-
-	@Lob
-	Clob clobField;
-
-	...
-}
-----
-
-the variable-length character strings can be converted to PostgreSQL Large Objects by executing the following SQL:
-
-[source,sql]
-----
-update test_entity
-set clobfield = lo_from_bytea( 0, cast( clobfield as bytea ) ),
-    firstlobfield = lo_from_bytea( 0, cast( firstlobfield as bytea ) ),
-    secondlobfield = lo_from_bytea( 0, cast( secondlobfield as bytea ) )
-----
-
-== Misc
-
-* QueryCacheFactory contract changed
-* RegionFactory contract changes
-* todo : merge AvailableSettings together
-* org.hibernate.Transaction now extends JPA's EntityTransaction and follows its pre- and post- assertions.
-	e.g. begin() now throws an exception if transaction is already active.
-* (todo) following the above one, JPA also says that only PersistenceUnitTransactionType#JTA EntityManagers
-	are allowed to access EntityTransactions.  Need a strategy to handle this
-* Session#getFlushMode and Query#getFlushMode clash in terms of Hibernate (FlushMode) and JPA (FlushModeType)
-	returns.  #getFlushMode has been altered to return JPA's FlushModeType.  The Hibernate FlushMode
-	is still available via #getHibernateFlushMode and #setHibernateFlushMode.  Same for Session#getFlushMode
-	and EntityManager#getFlushMode.
-* Setting `hibernate.listeners.envers.autoRegister` has been deprecated in favor of
-  `hibernate.envers.autoRegisterListeners`.
-* AuditReader#getCurrentRevision has been deprecated in favor of `org.hibernate.envers.RevisionListener`.
-* As of 5.2.11, NoopOptimizer#generate will no longer skip negative values and 0 when it has a positive increment size; instead it will return the value obtained from the database.

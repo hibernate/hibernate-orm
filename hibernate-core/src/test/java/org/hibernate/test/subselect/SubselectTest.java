@@ -112,9 +112,9 @@ public class SubselectTest extends BaseCoreFunctionalTestCase {
 		assertEquals(HUMAN_INCHES, b.getHeightInches(), 0.01d);
 		
 		// Test predicate and entity load via HQL
-		b = (Being)s.createQuery("from Being b where b.heightInches between ? and ?")
-			.setDouble(0, ALIEN_INCHES - 0.01d)
-			.setDouble(1, ALIEN_INCHES + 0.01d)
+		b = (Being)s.createQuery("from Being b where b.heightInches between ?1 and ?2")
+			.setDouble(1, ALIEN_INCHES - 0.01d)
+			.setDouble(2, ALIEN_INCHES + 0.01d)
 			.uniqueResult();
 		assertEquals(ALIEN_INCHES, b.getHeightInches(), 0.01d);
                 s.delete(gavin);

@@ -97,9 +97,9 @@ public class CompositeUserTypeTest extends BaseCoreFunctionalTestCase {
 		assertEquals(AMOUNT.doubleValue(), f.getHoldings().getAmount().doubleValue(), 0.01d);
 		
 		// Test predicate and entity load via HQL
-		f = (MutualFund)s.createQuery("from MutualFund f where f.holdings.amount between ? and ?")
-			.setBigDecimal(0, AMOUNT.subtract(one))
-			.setBigDecimal(1, AMOUNT.add(one))
+		f = (MutualFund)s.createQuery("from MutualFund f where f.holdings.amount between ?1 and ?2")
+			.setBigDecimal(1, AMOUNT.subtract(one))
+			.setBigDecimal(2, AMOUNT.add(one))
 			.uniqueResult();
 		assertEquals(AMOUNT.doubleValue(), f.getHoldings().getAmount().doubleValue(), 0.01d);
 				

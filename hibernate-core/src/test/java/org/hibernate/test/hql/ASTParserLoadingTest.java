@@ -195,9 +195,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session.clear();
 
 		session.getTransaction().begin();
-		List result = session.createQuery( "FROM Zoo z WHERE z.name IN (?1) and z.address.city IN (?11)" )
-				.setParameterList( "1", namesArray )
-				.setParameterList( "11", citiesArray )
+		List result = session.createQuery( "FROM Zoo z WHERE z.name IN (?1) and z.address.city IN (?2)" )
+				.setParameterList( 1, namesArray )
+				.setParameterList( 2, citiesArray )
 				.list();
 		assertEquals( 1, result.size() );
 		session.getTransaction().commit();
@@ -761,13 +761,13 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		String query =
 				( getDialect() instanceof DB2Dialect || getDialect() instanceof HSQLDialect ) ?
 						"from Human where cast(? as string) is null" :
-						"from Human where ? is null"
+						"from Human where ?1 is null"
 				;
 		if ( getDialect() instanceof DerbyDialect ) {
-			s.createQuery( query ).setParameter( 0, "null" ).list();
+			s.createQuery( query ).setParameter( 1, "null" ).list();
 		}
 		else {
-			s.createQuery( query ).setParameter( 0, null ).list();
+			s.createQuery( query ).setParameter( 1, null ).list();
 		}
 
 		s.getTransaction().commit();
@@ -1429,35 +1429,35 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		params.add( "Doe" );
 		params.add( "Public" );
 		s.createQuery( "from Human where name.last in (?1)" )
-				.setParameterList( "1", params )
+				.setParameterList( 1, params )
 				.list();
 
 		s.createQuery( "from Human where name.last in ?1" )
-				.setParameterList( "1", params )
+				.setParameterList( 1, params )
 				.list();
 
 		s.createQuery( "from Human where nickName = ?1 and ( name.first = ?2 or name.last in (?3) )" )
-				.setParameter( "1", "Yogster" )
-				.setParameter( "2", "Yogi"  )
-				.setParameterList( "3", params )
+				.setParameter( 1, "Yogster" )
+				.setParameter( 2, "Yogi"  )
+				.setParameterList( 3, params )
 				.list();
 
 		s.createQuery( "from Human where nickName = ?1 and ( name.first = ?2 or name.last in ?3 )" )
-				.setParameter( "1", "Yogster" )
-				.setParameter( "2", "Yogi" )
-				.setParameterList( "3", params )
+				.setParameter( 1, "Yogster" )
+				.setParameter( 2, "Yogi" )
+				.setParameterList( 3, params )
 				.list();
 
 		s.createQuery( "from Human where nickName = ?1 or ( name.first = ?2 and name.last in (?3) )" )
-				.setParameter( "1", "Yogster" )
-				.setParameter( "2", "Yogi"  )
-				.setParameterList( "3", params )
+				.setParameter( 1, "Yogster" )
+				.setParameter( 2, "Yogi"  )
+				.setParameterList( 3, params )
 				.list();
 
 		s.createQuery( "from Human where nickName = ?1 or ( name.first = ?2 and name.last in ?3 )" )
-				.setParameter( "1", "Yogster" )
-				.setParameter( "2", "Yogi"  )
-				.setParameterList( "3", params )
+				.setParameter( 1, "Yogster" )
+				.setParameter( 2, "Yogi"  )
+				.setParameterList( 3, params )
 				.list();
 
 		s.getTransaction().commit();
@@ -2489,9 +2489,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	public void testParameterMixing() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		s.createQuery( "from Animal a where a.description = ? and a.bodyWeight = ? or a.bodyWeight = :bw" )
-				.setString( 0, "something" )
-				.setFloat( 1, 12345f )
+		s.createQuery( "from Animal a where a.description = ?1 and a.bodyWeight = ?2 or a.bodyWeight = :bw" )
+				.setString( 1, "something" )
+				.setFloat( 2, 12345f )
 				.setFloat( "bw", 123f )
 				.list();
 		t.commit();
@@ -2502,13 +2502,13 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	public void testOrdinalParameters() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		s.createQuery( "from Animal a where a.description = ? and a.bodyWeight = ?" )
-				.setString( 0, "something" )
-				.setFloat( 1, 123f )
+		s.createQuery( "from Animal a where a.description = ?1 and a.bodyWeight = ?2" )
+				.setString( 1, "something" )
+				.setFloat( 2, 123f )
 				.list();
-		s.createQuery( "from Animal a where a.bodyWeight in (?, ?)" )
-				.setFloat( 0, 999f )
-				.setFloat( 1, 123f )
+		s.createQuery( "from Animal a where a.bodyWeight in (?1, ?2)" )
+				.setFloat( 1, 999f )
+				.setFloat( 2, 123f )
 				.list();
 		t.commit();
 		s.close();
@@ -2801,8 +2801,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session.flush();
 
 		assertEquals( session.createFilter( human.getFriends(), "" ).list().size(), 1 );
-		assertEquals( session.createFilter( human.getFriends(), "where this.bodyWeight > ?" ).setFloat( 0, 10f ).list().size(), 1 );
-		assertEquals( session.createFilter( human.getFriends(), "where this.bodyWeight < ?" ).setFloat( 0, 10f ).list().size(), 0 );
+		assertEquals( session.createFilter( human.getFriends(), "where this.bodyWeight > ?1" ).setFloat( 1, 10f ).list().size(), 1 );
+		assertEquals( session.createFilter( human.getFriends(), "where this.bodyWeight < ?1" ).setFloat( 1, 10f ).list().size(), 0 );
 
 		session.delete(human);
 		session.delete(friend);
@@ -2835,17 +2835,22 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session.flush();
 
 		assertEquals( session.createFilter( human.getFriends(), "" ).list().size(), 1 );
-		assertEquals( session.createFilter( human.getFriends(), "where this.heightInches < ?" ).setDouble( 0, 51d ).list().size(), 1 );
 		assertEquals(
-				session.createFilter( human.getFriends(), "where this.heightInches > ?" )
-						.setDouble( 0, 51d )
-						.list()
-						.size(), 0
+				session.createFilter( human.getFriends(), "where this.heightInches < ?1" ).setDouble( 1, 51d ).list().size(),
+				1
 		);
 		assertEquals(
-				session.createFilter( human.getFriends(), "where this.heightInches between 49 and 51" ).list().size(), 1
+				session.createFilter( human.getFriends(), "where this.heightInches > ?1" ).setDouble( 1, 51d ).list().size(),
+				0
 		);
-		assertEquals( session.createFilter( human.getFriends(), "where this.heightInches not between 49 and 51" ).list().size(), 0 );
+		assertEquals(
+				session.createFilter( human.getFriends(), "where this.heightInches between 49 and 51" ).list().size(),
+				1
+		);
+		assertEquals(
+				session.createFilter( human.getFriends(), "where this.heightInches not between 49 and 51" ).list().size(),
+				0
+		);
 
 		session.delete( human );
 		session.delete( friend );

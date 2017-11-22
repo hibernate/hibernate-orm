@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.ScrollMode;
+import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -48,20 +49,24 @@ public class CollectionFilterImpl extends org.hibernate.query.internal.AbstractP
 	@Override
 	public Iterator iterate() throws HibernateException {
 		getQueryParameterBindings().verifyParametersBound( false );
+
+		final String expandedQuery = getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() );
 		return getProducer().iterateFilter(
 				collection,
-				getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() ),
-				getQueryParameters()
+				expandedQuery,
+				makeQueryParametersForExecution( expandedQuery )
 		);
 	}
 
 	@Override
 	public List list() throws HibernateException {
 		getQueryParameterBindings().verifyParametersBound( false );
+
+		final String expandedQuery = getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() );
 		return getProducer().listFilter(
 				collection,
-				getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() ),
-				getQueryParameters()
+				expandedQuery,
+				makeQueryParametersForExecution( expandedQuery )
 		);
 	}
 

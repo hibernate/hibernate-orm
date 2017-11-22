@@ -203,4 +203,6 @@ public interface SessionFactoryOptionsState {
 	default LiteralHandlingMode getCriteriaLiteralHandlingMode() {
 		return LiteralHandlingMode.AUTO;
 	}
+
+	boolean jdbcStyleParamsZeroBased();
 }

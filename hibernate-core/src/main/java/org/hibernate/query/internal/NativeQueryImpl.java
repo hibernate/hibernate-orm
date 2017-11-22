@@ -126,10 +126,6 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 		return this;
 	}
 
-	public void setZeroBasedParametersIndex(boolean zeroBasedParametersIndex) {
-		getParameterMetadata().setOrdinalParametersZeroBased( zeroBasedParametersIndex );
-	}
-
 	@Override
 	public String getQueryString() {
 		return sqlString;

@@ -46,7 +46,7 @@ public final class NamedQueryCollectionInitializer implements CollectionInitiali
 			);
 		}
 		else {
-			nativeQuery.setParameter( 0, key, persister.getKeyType() );
+			nativeQuery.setParameter( 1, key, persister.getKeyType() );
 		}
 
 		nativeQuery.setCollectionKey( key ).setFlushMode( FlushMode.MANUAL ).list();

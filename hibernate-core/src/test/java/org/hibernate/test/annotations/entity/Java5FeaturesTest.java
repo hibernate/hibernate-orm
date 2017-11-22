@@ -92,7 +92,7 @@ public class Java5FeaturesTest extends BaseCoreFunctionalTestCase {
 		s.clear();
 		communityBid = (CommunityBid) s.createSQLQuery( "select {b.*} from Bid b where b.id = ?" )
 				.addEntity( "b", CommunityBid.class )
-				.setInteger( 0, communityBid.getId() ).uniqueResult();
+				.setInteger( 1, communityBid.getId() ).uniqueResult();
 		assertEquals( Starred.OK, communityBid.getCommunityNote() );
 		s.delete( communityBid );
 		tx.commit();

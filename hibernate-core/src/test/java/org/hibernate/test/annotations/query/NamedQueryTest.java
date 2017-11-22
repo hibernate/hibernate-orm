@@ -57,10 +57,10 @@ public class NamedQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNamedQueriesOrdinalParametersAreZeroBased() {
+	public void testNamedQueriesOrdinalParametersAreOneBased() {
 		doInHibernate( this::sessionFactory, session -> {
 					 Query query = session.getNamedQuery( "NamedQuery" );
-					 query.setParameter( 0, GAME_TITLES[0] );
+					 query.setParameter( 1, GAME_TITLES[0] );
 					 List list = query.getResultList();
 					 assertEquals( 1, list.size() );
 				 }
@@ -68,10 +68,10 @@ public class NamedQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNativeNamedQueriesOrdinalParametersAreZeroBased() {
+	public void testNativeNamedQueriesOrdinalParametersAreOneBased() {
 		doInHibernate( this::sessionFactory, session -> {
 					 Query query = session.getNamedNativeQuery( "NamedNativeQuery" );
-					 query.setParameter( 0, GAME_TITLES[0] );
+					 query.setParameter( 1, GAME_TITLES[0] );
 					 List list = query.getResultList();
 					 assertEquals( 1, list.size() );
 				 }
@@ -79,7 +79,7 @@ public class NamedQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "Game")
-	@NamedQueries(@NamedQuery(name = "NamedQuery", query = "select g from Game g where title = ?"))
+	@NamedQueries(@NamedQuery(name = "NamedQuery", query = "select g from Game g where title = ?1"))
 	@NamedNativeQueries(@NamedNativeQuery(name = "NamedNativeQuery", query = "select * from Game g where title = ?"))
 	public static class Game {
 		private Long id;

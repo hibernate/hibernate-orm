@@ -7,7 +7,7 @@
 package org.hibernate.loader.custom.sql;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 import org.hibernate.QueryException;
 import org.hibernate.engine.query.spi.ParameterParser;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.param.ParameterBinder;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.SQLLoadable;
 
@@ -35,8 +36,9 @@ public class SQLQueryParser {
 	private final String originalQueryString;
 	private final ParserContext context;
 
-	private final Map namedParameters = new HashMap();
 	private long aliasesFound;
+
+	private List<ParameterBinder> paramValueBinders;
 
 	interface ParserContext {
 		boolean isEntityAlias(String aliasName);
@@ -54,8 +56,8 @@ public class SQLQueryParser {
 		this.factory = factory;
 	}
 
-	public Map getNamedParameters() {
-		return namedParameters;
+	public List<ParameterBinder> getParameterValueBinders() {
+		return paramValueBinders == null ? Collections.emptyList() : paramValueBinders;
 	}
 
 	public boolean queryHasAliases() {
@@ -276,19 +278,25 @@ public class SQLQueryParser {
 	 * @return The SQL query with parameter substitution complete.
 	 */
 	private String substituteParams(String sqlString) {
-		ParameterSubstitutionRecognizer recognizer = new ParameterSubstitutionRecognizer();
+		final ParameterSubstitutionRecognizer recognizer = new ParameterSubstitutionRecognizer( factory );
 		ParameterParser.parse( sqlString, recognizer );
 
-		namedParameters.clear();
-		namedParameters.putAll( recognizer.namedParameterBindPoints );
+		paramValueBinders = recognizer.getParameterValueBinders();
 
 		return recognizer.result.toString();
 	}
 
 	public static class ParameterSubstitutionRecognizer implements ParameterParser.Recognizer {
 		StringBuilder result = new StringBuilder();
-		Map namedParameterBindPoints = new HashMap();
-		int parameterCount;
+
+		int jdbcPositionalParamCount;
+		private List<ParameterBinder> paramValueBinders;
+
+		public ParameterSubstitutionRecognizer(SessionFactoryImplementor factory) {
+			this.jdbcPositionalParamCount = factory.getSessionFactoryOptions().jdbcStyleParamsZeroBased()
+					? 0
+					: 1;
+		}
 
 		@Override
 		public void outParameter(int position) {
@@ -298,17 +306,35 @@ public class SQLQueryParser {
 		@Override
 		public void ordinalParameter(int position) {
 			result.append( '?' );
+			registerPositionParamBinder( jdbcPositionalParamCount++ );
+		}
+
+		private void registerPositionParamBinder(int label) {
+			if ( paramValueBinders == null ) {
+				paramValueBinders = new ArrayList<>();
+			}
+
+			paramValueBinders.add( new PositionalParamBinder( label ) );
+		}
+
+		@Override
+		public void jpaPositionalParameter(int name, int position) {
+			result.append( '?' );
+			registerPositionParamBinder( name );
 		}
 
 		@Override
 		public void namedParameter(String name, int position) {
-			addNamedParameter( name );
 			result.append( '?' );
+			registerNamedParamBinder( name );
 		}
 
-		@Override
-		public void jpaPositionalParameter(String name, int position) {
-			namedParameter( name, position );
+		private void registerNamedParamBinder(String name) {
+			if ( paramValueBinders == null ) {
+				paramValueBinders = new ArrayList<>();
+			}
+
+			paramValueBinders.add( new NamedParamBinder( name ) );
 		}
 
 		@Override
@@ -316,21 +342,12 @@ public class SQLQueryParser {
 			result.append( character );
 		}
 
-		private void addNamedParameter(String name) {
-			Integer loc = parameterCount++;
-			Object o = namedParameterBindPoints.get( name );
-			if ( o == null ) {
-				namedParameterBindPoints.put( name, loc );
-			}
-			else if ( o instanceof Integer ) {
-				ArrayList list = new ArrayList( 4 );
-				list.add( o );
-				list.add( loc );
-				namedParameterBindPoints.put( name, list );
-			}
-			else {
-				( ( List ) o ).add( loc );
-			}
+		public List<ParameterBinder> getParameterValueBinders() {
+			return paramValueBinders;
+		}
+
+		@Override
+		public void complete() {
 		}
 	}
 }

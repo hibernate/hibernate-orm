@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -477,6 +478,20 @@ public interface AvailableSettings {
 	 */
 	String JTA_CACHE_UT = "hibernate.jta.cacheUserTransaction";
 
+	/**
+	 * `true` / `false - should zero be used as the base for JDBC-style parameters
+	 * found in native-queries?
+	 *
+	 * @since 5.3
+	 *
+	 * @see DeprecationLogger#logUseOfDeprecatedZeroBasedJdbcStyleParams
+	 *
+	 * @deprecated This is a temporary backwards-compatibility setting to help applications
+	 * using versions prior to 5.3 in upgrading.  Deprecation warnings are issued when this
+	 * is set to `true`.
+	 */
+	@Deprecated
+	String JDBC_TYLE_PARAMS_ZERO_BASE = "hibernate.query.sql.jdbc_style_params_base";
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

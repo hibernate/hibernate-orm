@@ -48,6 +48,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.loader.hql.QueryLoader;
+import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -252,7 +253,12 @@ public class QueryTranslatorImpl implements FilterTranslator {
 				LOG.debugf( "SQL: %s", sql );
 			}
 			gen.getParseErrorHandler().throwQueryException();
-			collectedParameterSpecifications = gen.getCollectedParameters();
+			if ( collectedParameterSpecifications == null ) {
+				collectedParameterSpecifications = gen.getCollectedParameters();
+			}
+			else {
+				collectedParameterSpecifications.addAll( gen.getCollectedParameters() );
+			}
 		}
 	}
 
@@ -583,7 +589,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	@Override
 	public ParameterTranslations getParameterTranslations() {
 		if ( paramTranslations == null ) {
-			paramTranslations = new ParameterTranslationsImpl( getWalker().getParameters() );
+			paramTranslations = new ParameterTranslationsImpl( getWalker().getParameterSpecs() );
 		}
 		return paramTranslations;
 	}

@@ -369,8 +369,8 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 
 		Car c = (Car) s.createQuery( "from Car where owner = 'Kirsten'" ).uniqueResult();
 		c.setOwner( "NotKirsten" );
-		assertEquals( 0, s.getNamedQuery( "native-delete-car" ).setString( 0, "Kirsten" ).executeUpdate() );
-		assertEquals( 1, s.getNamedQuery( "native-delete-car" ).setString( 0, "NotKirsten" ).executeUpdate() );
+		assertEquals( 0, s.getNamedQuery( "native-delete-car" ).setString( 1, "Kirsten" ).executeUpdate() );
+		assertEquals( 1, s.getNamedQuery( "native-delete-car" ).setString( 1, "NotKirsten" ).executeUpdate() );
 
 
 		assertEquals(

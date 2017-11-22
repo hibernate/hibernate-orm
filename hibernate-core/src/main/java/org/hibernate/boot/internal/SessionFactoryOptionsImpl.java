@@ -23,6 +23,7 @@ import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.criteria.LiteralHandlingMode;
@@ -131,6 +132,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final Map<String, SQLFunction> sqlFunctions;
 	private boolean queryParametersValidationEnabled;
 	private LiteralHandlingMode criteriaLiteralHandlingMode;
+	private boolean jdbcStyleParamsZeroBased;
 
 	public SessionFactoryOptionsImpl(SessionFactoryOptionsState state) {
 		this.serviceRegistry = state.getServiceRegistry();
@@ -186,6 +188,12 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.conventionalJavaConstants = state.isConventionalJavaConstants();
 		this.procedureParameterNullPassingEnabled = state.isProcedureParameterNullPassingEnabled();
 		this.collectionJoinSubqueryRewriteEnabled = state.isCollectionJoinSubqueryRewriteEnabled();
+		this.queryParametersValidationEnabled = state.isQueryParametersValidationEnabled();
+		this.criteriaLiteralHandlingMode = state.getCriteriaLiteralHandlingMode();
+		this.jdbcStyleParamsZeroBased = state.jdbcStyleParamsZeroBased();
+		if ( jdbcStyleParamsZeroBased ) {
+			DeprecationLogger.DEPRECATION_LOGGER.logUseOfDeprecatedZeroBasedJdbcStyleParams();
+		}
 
 		this.secondLevelCacheEnabled = state.isSecondLevelCacheEnabled();
 		this.queryCacheEnabled = state.isQueryCacheEnabled();
@@ -210,9 +218,6 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.sqlFunctions = state.getCustomSqlFunctionMap();
 
 		this.jdbcTimeZone = state.getJdbcTimeZone();
-
-		this.queryParametersValidationEnabled = state.isQueryParametersValidationEnabled();
-		this.criteriaLiteralHandlingMode = state.getCriteriaLiteralHandlingMode();
 	}
 
 	@Override
@@ -557,5 +562,10 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public LiteralHandlingMode getCriteriaLiteralHandlingMode() {
 		return criteriaLiteralHandlingMode;
+	}
+
+	@Override
+	public boolean jdbcStyleParamsZeroBased() {
+		return jdbcStyleParamsZeroBased;
 	}
 }

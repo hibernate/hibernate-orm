@@ -17,7 +17,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
-import javax.persistence.SequenceGenerators;
 import javax.persistence.Table;
 
 import org.hibernate.boot.MetadataSources;
@@ -41,7 +40,7 @@ import static org.junit.Assert.assertThat;
  * @author Andrea Boriero
  */
 @RequiresDialect(H2Dialect.class)
-public class SequenceGeneratorsTest {
+public class SequenceGenerationTest {
 	private StandardServiceRegistry ssr;
 	private File output;
 	private MetadataImplementor metadata;
@@ -68,12 +67,12 @@ public class SequenceGeneratorsTest {
 		List<String> commands = Files.readAllLines( output.toPath() );
 
 		assertThat(
-				isCommandGenerated( commands, "CREATE TABLE TEST_ENTITY \\(ID .*, PRIMARY KEY \\(ID\\)\\)" ),
+				isCommandGenerated( commands, "create table test_entity \\(id .*, primary key \\(id\\)\\)" ),
 				is( true )
 		);
 
 		assertThat(
-				isCommandGenerated( commands, "CREATE SEQUENCE SEQUENCE_GENERATOR START WITH 5 INCREMENT BY 3" ),
+				isCommandGenerated( commands, "create sequence sequence_generator start with 5 increment by 3" ),
 				is( true )
 		);
 	}
@@ -109,13 +108,7 @@ public class SequenceGeneratorsTest {
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQUENCEGENERATOR")
-		@SequenceGenerators({
-				@SequenceGenerator(
-						name = "SEQUENCEGENERATOR",
-						allocationSize = 3,
-						initialValue = 5,
-						sequenceName = "SEQUENCE_GENERATOR")
-		})
+		@SequenceGenerator(name = "SEQUENCEGENERATOR", allocationSize = 3, initialValue = 5, sequenceName = "SEQUENCE_GENERATOR")
 		public Long getId() {
 			return id;
 		}

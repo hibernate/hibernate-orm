@@ -16,9 +16,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.SequenceGenerators;
 import javax.persistence.Table;
+import javax.persistence.TableGenerator;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -34,25 +33,29 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Andrea Boriero
  */
 @RequiresDialect(H2Dialect.class)
-public class SequenceGeneratorsTest {
+public class TableGeneratorTest {
+
 	private StandardServiceRegistry ssr;
 	private File output;
 	private MetadataImplementor metadata;
+	private static final int INITIAL_VALUE = 5;
+	private static final int EXPECTED_DB_INSERTED_VALUE = INITIAL_VALUE;
 
 	@Before
 	public void setUp() throws Exception {
 		ssr = new StandardServiceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
 				.build();
+
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
+
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( TestEntity.class )
 				.buildMetadata();
@@ -60,34 +63,72 @@ public class SequenceGeneratorsTest {
 	}
 
 	@Test
-	public void testSequenceIsGenerated() throws Exception {
+	public void testTableGeneratorIsGenerated() throws Exception {
 		new SchemaExport()
 				.setOutputFile( output.getAbsolutePath() )
 				.create( EnumSet.of( TargetType.SCRIPT, TargetType.DATABASE ), metadata );
 
-		List<String> commands = Files.readAllLines( output.toPath() );
+		final List<String> commands = Files.readAllLines( output.toPath() );
 
-		assertThat(
-				isCommandGenerated( commands, "CREATE TABLE TEST_ENTITY \\(ID .*, PRIMARY KEY \\(ID\\)\\)" ),
-				is( true )
+		final String expectedTestEntityTableCreationCommand = "CREATE TABLE TEST_ENTITY \\(ID .*, PRIMARY KEY \\(ID\\)\\)";
+		assertTrue(
+				"The command '" + expectedTestEntityTableCreationCommand + "' has not been correctly generated",
+				isCommandGenerated( commands, expectedTestEntityTableCreationCommand )
 		);
 
-		assertThat(
-				isCommandGenerated( commands, "CREATE SEQUENCE SEQUENCE_GENERATOR START WITH 5 INCREMENT BY 3" ),
-				is( true )
+		final String expectedIdTableGeneratorCreationCommand = "CREATE TABLE ID_TABLE_GENERATOR \\(PK .*, VALUE .*, PRIMARY KEY \\(PK\\)\\)";
+
+		assertTrue(
+				"The command '" + expectedIdTableGeneratorCreationCommand + "' has not been correctly generated",
+
+				isCommandGenerated(
+						commands,
+						expectedIdTableGeneratorCreationCommand
+				)
+		);
+
+		final String expectedInsertIntoTableGeneratorCommand = "INSERT INTO ID_TABLE_GENERATOR\\(PK, VALUE\\) VALUES \\('TEST_ENTITY_ID'," + EXPECTED_DB_INSERTED_VALUE + "\\)";
+
+		assertTrue(
+				"The command '" + expectedInsertIntoTableGeneratorCommand + "' has not been correctly generated",
+				isCommandGenerated(
+						commands,
+						expectedInsertIntoTableGeneratorCommand
+				)
 		);
 	}
 
 	@After
 	public void tearDown() {
 		try {
-			new SchemaExport()
-					.drop( EnumSet.of( TargetType.DATABASE ), metadata );
+			new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
 		}
+	}
 
+	@Entity(name = "TestEntity")
+	@Table(name = "TEST_ENTITY")
+	@TableGenerator(name = "tableGenerator",
+			table = "ID_TABLE_GENERATOR",
+			pkColumnName = "PK",
+			pkColumnValue = "TEST_ENTITY_ID",
+			valueColumnName = "VALUE",
+			allocationSize = 3,
+			initialValue = INITIAL_VALUE)
+	public static class TestEntity {
+		Long id;
+
+		@Id
+		@GeneratedValue(strategy = GenerationType.TABLE, generator = "tableGenerator")
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
 	}
 
 	private boolean isCommandGenerated(List<String> commands, String expectedCommnad) {
@@ -101,27 +142,4 @@ public class SequenceGeneratorsTest {
 		return false;
 	}
 
-
-	@Entity(name = "TestEntity")
-	@Table(name = "TEST_ENTITY")
-	public static class TestEntity {
-		Long id;
-
-		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQUENCEGENERATOR")
-		@SequenceGenerators({
-				@SequenceGenerator(
-						name = "SEQUENCEGENERATOR",
-						allocationSize = 3,
-						initialValue = 5,
-						sequenceName = "SEQUENCE_GENERATOR")
-		})
-		public Long getId() {
-			return id;
-		}
-
-		public void setId(Long id) {
-			this.id = id;
-		}
-	}
 }

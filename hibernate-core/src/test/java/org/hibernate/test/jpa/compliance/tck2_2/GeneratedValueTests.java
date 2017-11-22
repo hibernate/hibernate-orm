@@ -200,9 +200,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 		assertThat( tableGenerator.getTableName(), is( "my_id_table" ) );
 
 		// all the JPA defaults since they were not defined
-		//		- note : currently initialValue=1 in mapping is shows up here
-		//			as 2
-//		assertThat( tableGenerator.getInitialValue(), is( 1 ) );
+		assertThat( tableGenerator.getInitialValue(), is( 1 ) );
 		assertThat( tableGenerator.getIncrementSize(), is( 50 ) );
 	}
 
@@ -226,7 +224,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 		assertThat( tableGenerator.getTableName(), is( "my_id_table" ) );
 
 		//		- note : currently initialValue=1 in mapping is shows up here as 2
-//		assertThat( tableGenerator.getInitialValue(), is( 1 ) );
+		assertThat( tableGenerator.getInitialValue(), is( 1 ) );
 		assertThat( tableGenerator.getIncrementSize(), is( 25 ) );
 	}
 

@@ -25,9 +25,11 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
+import org.hibernate.testing.RequiresDialect;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,6 +39,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Andrea Boriero
  */
+@RequiresDialect(H2Dialect.class)
 public class TableGeneratorsTest {
 
 	private StandardServiceRegistry ssr;
@@ -68,13 +71,13 @@ public class TableGeneratorsTest {
 
 		final List<String> commands = Files.readAllLines( output.toPath() );
 
-		final String expectedTestEntityTableCreationCommand = "create table test_entity \\(id .*, primary key \\(id\\)\\)";
+		final String expectedTestEntityTableCreationCommand = "CREATE TABLE TEST_ENTITY \\(ID .*, PRIMARY KEY \\(ID\\)\\)";
 		assertTrue(
 				"The command '" + expectedTestEntityTableCreationCommand + "' has not been correctly generated",
 				isCommandGenerated( commands, expectedTestEntityTableCreationCommand )
 		);
 
-		final String expectedIdTableGeneratorCreationCommand = "create table ID_TABLE_GENERATOR \\(PK .*, VALUE .*, primary key \\(PK\\)\\)";
+		final String expectedIdTableGeneratorCreationCommand = "CREATE TABLE ID_TABLE_GENERATOR \\(PK .*, VALUE .*, PRIMARY KEY \\(PK\\)\\)";
 
 		assertTrue(
 				"The command '" + expectedIdTableGeneratorCreationCommand + "' has not been correctly generated",
@@ -85,7 +88,7 @@ public class TableGeneratorsTest {
 				)
 		);
 
-		final String expectedInsertIntoTableGeneratorCommand = "INSERT INTO ID_TABLE_GENERATOR\\(PK, VALUE\\) values \\('TEST_ENTITY_ID'," + EXPECTED_DB_INSERTED_VALUE + "\\)";
+		final String expectedInsertIntoTableGeneratorCommand = "INSERT INTO ID_TABLE_GENERATOR\\(PK, VALUE\\) VALUES \\('TEST_ENTITY_ID'," + EXPECTED_DB_INSERTED_VALUE + "\\)";
 
 		assertTrue(
 				"The command '" + expectedInsertIntoTableGeneratorCommand + "' has not been correctly generated",

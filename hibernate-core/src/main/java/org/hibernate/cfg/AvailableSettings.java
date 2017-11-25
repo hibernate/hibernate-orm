@@ -8,6 +8,8 @@ package org.hibernate.cfg;
 
 import java.util.function.Supplier;
 
+import javax.persistence.GeneratedValue;
+
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -1728,4 +1730,11 @@ public interface AvailableSettings {
 	 * @see org.hibernate.query.criteria.LiteralHandlingMode
 	 */
 	String CRITERIA_LITERAL_HANDLING_MODE = "hibernate.criteria.literal_handling_mode";
+
+	/**
+	 * True/false setting indicating whether the value specified for {@link GeneratedValue#generator()}
+	 * should be used as the sequence/table name when no matching {@link javax.persistence.SequenceGenerator}
+	 * or {@link javax.persistence.TableGenerator} is found.
+	 */
+	String PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME = "hibernate.model.generator_name_as_sequence_name";
 }

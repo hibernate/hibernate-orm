@@ -104,7 +104,14 @@ public class IdBagBinder extends BagBinder {
 			else {
 				generatorType = null;
 			}
-			BinderHelper.makeIdGenerator( id, generatorType, generator, getBuildingContext(), localGenerators );
+			BinderHelper.makeIdGenerator(
+					id,
+					property,
+					generatorType,
+					generator,
+					getBuildingContext(),
+					localGenerators
+			);
 		}
 		return result;
 	}

@@ -25,7 +25,10 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -34,6 +37,7 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.ExportableColumn;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -349,7 +353,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 
-		qualifiedTableName = determineGeneratorTableName( params, jdbcEnvironment );
+		qualifiedTableName = determineGeneratorTableName( params, jdbcEnvironment, serviceRegistry );
 		segmentColumnName = determineSegmentColumnName( params, jdbcEnvironment );
 		valueColumnName = determineValueColumnName( params, jdbcEnvironment );
 
@@ -383,8 +387,21 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 * @return The table name to use.
 	 */
 	@SuppressWarnings("UnusedParameters")
-	protected QualifiedName determineGeneratorTableName(Properties params, JdbcEnvironment jdbcEnvironment) {
-		final String tableName = ConfigurationHelper.getString( TABLE_PARAM, params, DEF_TABLE );
+	protected QualifiedName determineGeneratorTableName(Properties params, JdbcEnvironment jdbcEnvironment, ServiceRegistry serviceRegistry) {
+		String tableName = ConfigurationHelper.getString( TABLE_PARAM, params, DEF_TABLE );
+
+
+		if ( tableName == null ) {
+			tableName = DEF_TABLE;
+			final Boolean preferGeneratorNameAsDefaultName = serviceRegistry.getService( ConfigurationService.class )
+					.getSetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, StandardConverters.BOOLEAN );
+			if ( preferGeneratorNameAsDefaultName != null && preferGeneratorNameAsDefaultName ) {
+				final String generatorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
+				if ( StringHelper.isNotEmpty( generatorName ) ) {
+					tableName = generatorName;
+				}
+			}
+		}
 
 		if ( tableName.contains( "." ) ) {
 			return QualifiedNameParser.INSTANCE.parse( tableName );

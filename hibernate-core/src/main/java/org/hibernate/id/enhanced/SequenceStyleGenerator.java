@@ -15,13 +15,18 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.Configurable;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
@@ -220,7 +225,7 @@ public class SequenceStyleGenerator
 		this.identifierType = type;
 		boolean forceTableUse = ConfigurationHelper.getBoolean( FORCE_TBL_PARAM, params, false );
 
-		final QualifiedName sequenceName = determineSequenceName( params, dialect, jdbcEnvironment );
+		final QualifiedName sequenceName = determineSequenceName( params, dialect, jdbcEnvironment, serviceRegistry );
 
 		final int initialValue = determineInitialValue( params );
 		int incrementSize = determineIncrementSize( params );
@@ -262,15 +267,30 @@ public class SequenceStyleGenerator
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @param dialect The dialect in effect
 	 * @param jdbcEnv The JdbcEnvironment
+	 * @param serviceRegistry
 	 * @return The sequence name
 	 */
 	@SuppressWarnings("UnusedParameters")
-	protected QualifiedName determineSequenceName(Properties params, Dialect dialect, JdbcEnvironment jdbcEnv) {
+	protected QualifiedName determineSequenceName(
+			Properties params,
+			Dialect dialect,
+			JdbcEnvironment jdbcEnv,
+			ServiceRegistry serviceRegistry) {
 		final String sequencePerEntitySuffix = ConfigurationHelper.getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, params, DEF_SEQUENCE_SUFFIX );
+
+		String fallbackSequenceName = DEF_SEQUENCE_NAME;
+		final Boolean preferGeneratorNameAsDefaultName = serviceRegistry.getService( ConfigurationService.class )
+				.getSetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, StandardConverters.BOOLEAN );
+		if ( preferGeneratorNameAsDefaultName != null && preferGeneratorNameAsDefaultName ) {
+			final String generatorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
+			if ( StringHelper.isNotEmpty( generatorName ) ) {
+				fallbackSequenceName = generatorName;
+			}
+		}
 		// JPA_ENTITY_NAME value honors <class ... entity-name="..."> (HBM) and @Entity#name (JPA) overrides.
 		final String defaultSequenceName = ConfigurationHelper.getBoolean( CONFIG_PREFER_SEQUENCE_PER_ENTITY, params, false )
 				? params.getProperty( JPA_ENTITY_NAME ) + sequencePerEntitySuffix
-				: DEF_SEQUENCE_NAME;
+				: fallbackSequenceName;
 
 		final String sequenceName = ConfigurationHelper.getString( SEQUENCE_PARAM, params, defaultSequenceName );
 		if ( sequenceName.contains( "." ) ) {

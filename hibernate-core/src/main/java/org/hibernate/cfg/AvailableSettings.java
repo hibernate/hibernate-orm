@@ -1735,6 +1735,10 @@ public interface AvailableSettings {
 	 * True/false setting indicating whether the value specified for {@link GeneratedValue#generator()}
 	 * should be used as the sequence/table name when no matching {@link javax.persistence.SequenceGenerator}
 	 * or {@link javax.persistence.TableGenerator} is found.
+	 *
+	 * The default value is `true` meaning that {@link GeneratedValue#generator()} will be used as the
+	 * sequence/table name by default.  Users migrating from earlier versions using the legacy
+	 * `hibernate_sequence` name should disable this setting,
 	 */
 	String PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME = "hibernate.model.generator_name_as_sequence_name";
 }

@@ -394,7 +394,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		if ( tableName == null ) {
 			tableName = DEF_TABLE;
 			final Boolean preferGeneratorNameAsDefaultName = serviceRegistry.getService( ConfigurationService.class )
-					.getSetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, StandardConverters.BOOLEAN );
+					.getSetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, StandardConverters.BOOLEAN, true );
 			if ( preferGeneratorNameAsDefaultName != null && preferGeneratorNameAsDefaultName ) {
 				final String generatorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
 				if ( StringHelper.isNotEmpty( generatorName ) ) {

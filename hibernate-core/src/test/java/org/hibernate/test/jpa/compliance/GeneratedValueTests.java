@@ -12,6 +12,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -19,6 +20,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.mapping.PersistentClass;
@@ -33,6 +35,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 
 /**
+ * Tests of various aspects of {@link GeneratedValue} handling in regards to determining
+ * the {@link IdentifierGenerator} to use
+ *
  * @author Steve Ebersole
  */
 public class GeneratedValueTests extends BaseUnitTestCase {
@@ -60,7 +65,9 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 
 	@Test
 	public void testImplicitSequenceGenerator() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, "false" )
+				.build();
 		final Metadata bootModel = new MetadataSources( ssr )
 				.addAnnotatedClass( ImplicitSequenceGeneratorEntity.class )
 				.buildMetadata();
@@ -81,9 +88,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 
 	@Test
 	public void testImplicitSequenceGeneratorGeneratorName() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
-				.applySetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, "true" )
-				.build();
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
 		final Metadata bootModel = new MetadataSources( ssr )
 				.addAnnotatedClass( ImplicitSequenceGeneratorEntity.class )
 				.buildMetadata();
@@ -105,7 +110,9 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 
 	@Test
 	public void testExplicitSequenceGeneratorImplicitName() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, "false" )
+				.build();
 		final Metadata bootModel = new MetadataSources( ssr )
 				.addAnnotatedClass( ExplicitSequenceGeneratorImplicitNameEntity.class )
 				.buildMetadata();
@@ -127,9 +134,8 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 
 	@Test
 	public void testExplicitSequenceGeneratorImplicitNamePreferGeneratorName() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
-				.applySetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, "true" )
-				.build();
+		// this should be the default behavior
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
 		final Metadata bootModel = new MetadataSources( ssr )
 				.addAnnotatedClass( ExplicitSequenceGeneratorImplicitNameEntity.class )
 				.buildMetadata();
@@ -169,6 +175,42 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 		// all the JPA defaults since they were not defined
 		assertThat( tableGenerator.getInitialValue(), is( 1 ) );
 		assertThat( tableGenerator.getIncrementSize(), is( 50 ) );
+	}
+
+	@Test
+	public void testExplicitIncrementGenerator() {
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final Metadata bootModel = new MetadataSources( ssr )
+				.addAnnotatedClass( ExplicitIncrementGeneratorEntity.class )
+				.buildMetadata();
+		final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitIncrementGeneratorEntity.class.getName() );
+		final IdentifierGenerator generator  = entityMapping.getIdentifier().createIdentifierGenerator(
+				bootModel.getIdentifierGeneratorFactory(),
+				ssr.getService( JdbcEnvironment.class ).getDialect(),
+				null,
+				null,
+				(RootClass) entityMapping
+		);
+
+		assertTyping( IncrementGenerator.class, generator );
+	}
+
+	@Test
+	public void testImplicitIncrementGenerator() {
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final Metadata bootModel = new MetadataSources( ssr )
+				.addAnnotatedClass( ImplicitIncrementGeneratorEntity.class )
+				.buildMetadata();
+		final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitIncrementGeneratorEntity.class.getName() );
+		final IdentifierGenerator generator  = entityMapping.getIdentifier().createIdentifierGenerator(
+				bootModel.getIdentifierGeneratorFactory(),
+				ssr.getService( JdbcEnvironment.class ).getDialect(),
+				null,
+				null,
+				(RootClass) entityMapping
+		);
+
+		assertTyping( IncrementGenerator.class, generator );
 	}
 
 	@Entity
@@ -213,6 +255,29 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 		 */
 		@Id
 		@GeneratedValue( strategy = GenerationType.TABLE, generator = "my_id_table" )
+		public Integer id;
+		public String name;
+	}
+
+	@Entity
+	public static class ExplicitIncrementGeneratorEntity {
+		/**
+		 * This entity does not have explicit {@link javax.persistence.TableGenerator} defined
+		 */
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO, generator = "increment" )
+		@GenericGenerator( name = "increment", strategy = "increment" )
+		public Integer id;
+		public String name;
+	}
+
+	@Entity
+	public static class ImplicitIncrementGeneratorEntity {
+		/**
+		 * This entity does not have explicit {@link javax.persistence.TableGenerator} defined
+		 */
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO, generator = "increment" )
 		public Integer id;
 		public String name;
 	}

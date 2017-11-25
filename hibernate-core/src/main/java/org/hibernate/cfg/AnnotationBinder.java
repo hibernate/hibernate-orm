@@ -35,7 +35,6 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.InheritanceType;
@@ -146,11 +145,8 @@ import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.cfg.annotations.SimpleValueBinder;
 import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.PersistentIdentifierGenerator;
-import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
@@ -2386,7 +2382,7 @@ public final class AnnotationBinder {
 
 		GeneratedValue generatedValue = idXProperty.getAnnotation( GeneratedValue.class );
 		String generatorType = generatedValue != null
-				? generatorType( generatedValue.strategy(), buildingContext, entityXClass )
+				? generatorType( generatedValue, buildingContext, entityXClass )
 				: "assigned";
 		String generatorName = generatedValue != null
 				? generatedValue.generator()
@@ -2410,11 +2406,11 @@ public final class AnnotationBinder {
 	}
 
 	public static String generatorType(
-			GenerationType generatorEnum,
+			GeneratedValue generatedValueAnn,
 			final MetadataBuildingContext buildingContext,
 			final XClass javaTypeXClass) {
 		return buildingContext.getBuildingOptions().getIdGenerationTypeInterpreter().determineGeneratorName(
-				generatorEnum,
+				generatedValueAnn.strategy(),
 				new IdGeneratorStrategyInterpreter.GeneratorNameDeterminationContext() {
 					Class javaType = null;
 					@Override
@@ -2425,6 +2421,11 @@ public final class AnnotationBinder {
 									.toClass( javaTypeXClass );
 						}
 						return javaType;
+					}
+
+					@Override
+					public String getGeneratedValueGeneratorName() {
+						return generatedValueAnn.generator();
 					}
 				}
 		);
@@ -2739,7 +2740,7 @@ public final class AnnotationBinder {
 
 				GeneratedValue generatedValue = property.getAnnotation( GeneratedValue.class );
 				String generatorType = generatedValue != null
-						? generatorType( generatedValue.strategy(), buildingContext, property.getType() )
+						? generatorType( generatedValue, buildingContext, property.getType() )
 						: "assigned";
 				String generator = generatedValue != null ? generatedValue.generator() : BinderHelper.ANNOTATION_STRING_DEFAULT;
 

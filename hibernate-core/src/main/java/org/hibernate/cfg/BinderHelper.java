@@ -877,7 +877,19 @@ public class BinderHelper {
 		else {
 			strategyName = generationInterpreter.determineGeneratorName(
 					generationType,
-					() -> buildingContext.getBuildingOptions().getReflectionManager().toClass( idXProperty.getType() )
+					new IdGeneratorStrategyInterpreter.GeneratorNameDeterminationContext() {
+						@Override
+						public Class getIdType() {
+							return buildingContext.getBuildingOptions()
+									.getReflectionManager()
+									.toClass( idXProperty.getType() );
+						}
+
+						@Override
+						public String getGeneratedValueGeneratorName() {
+							return generatedValueAnn.generator();
+						}
+					}
 			);
 		}
 

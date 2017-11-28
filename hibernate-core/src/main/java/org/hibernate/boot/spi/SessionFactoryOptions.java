@@ -103,7 +103,14 @@ public interface SessionFactoryOptions {
 	 *
 	 * @return The interceptor to use factory wide.  May be {@code null}
 	 */
-	Supplier<? extends Interceptor> getStatelessInterceptorImplementor();
+	Class<? extends Interceptor> getStatelessInterceptorImplementor();
+
+	/**
+	 * Get the interceptor to use by default for all sessions opened from this factory.
+	 *
+	 * @return The interceptor to use factory wide.  May be {@code null}
+	 */
+	Supplier<? extends Interceptor> getStatelessInterceptorSupplier();
 
 	StatementInspector getStatementInspector();
 

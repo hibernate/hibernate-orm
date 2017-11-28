@@ -102,6 +102,7 @@ import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.InstantiationException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -1039,8 +1040,16 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		// then check the Session-scoped interceptor prototype
-		if ( options.getStatelessInterceptorImplementor() != null ) {
-			return options.getStatelessInterceptorImplementor().get();
+		if ( options.getStatelessInterceptorImplementor() != null && options.getStatelessInterceptorSupplier() != null ) {
+			throw new HibernateException("A session scoped interceptor class or supplier are allowed, both were provided.");
+		} else if(options.getStatelessInterceptorImplementor() != null) {
+			try {
+				return options.getStatelessInterceptorImplementor().newInstance();
+			} catch (InstantiationException | IllegalAccessException e) {
+				throw new HibernateException( "Could not supply session-scoped SessionFactory Interceptor", e );
+			}
+		} else if(options.getStatelessInterceptorSupplier() != null) {
+			return options.getStatelessInterceptorSupplier().get();
 		}
 
 		return null;

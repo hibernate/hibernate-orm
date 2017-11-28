@@ -67,6 +67,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	// Statistics/Interceptor/observers
 	private final boolean statisticsEnabled;
 	private final Interceptor interceptor;
+	private Class<? extends Interceptor> statelessInterceptorClass;
 	private Supplier<? extends Interceptor> statelessInterceptorSupplier;
 	private final StatementInspector statementInspector;
 	private final SessionFactoryObserver[] sessionFactoryObserverList;
@@ -153,7 +154,8 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 
 		this.statisticsEnabled = state.isStatisticsEnabled();
 		this.interceptor = state.getInterceptor();
-		this.statelessInterceptorSupplier = state.getStatelessInterceptorImplementor();
+		this.statelessInterceptorSupplier = state.getStatelessInterceptorSupplier();
+		this.statelessInterceptorClass = state.getStatelessInterceptorImplementor();
 		this.statementInspector = state.getStatementInspector();
 		this.sessionFactoryObserverList = state.getSessionFactoryObservers();
 		this.baselineSessionEventsListenerBuilder = state.getBaselineSessionEventsListenerBuilder();
@@ -274,7 +276,12 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	}
 
 	@Override
-	public Supplier<? extends Interceptor> getStatelessInterceptorImplementor() {
+	public Class<? extends Interceptor> getStatelessInterceptorImplementor() {
+		return statelessInterceptorClass;
+	}
+
+	@Override
+	public Supplier<? extends Interceptor> getStatelessInterceptorSupplier() {
 		return statelessInterceptorSupplier;
 	}
 

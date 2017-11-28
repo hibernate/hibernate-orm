@@ -402,6 +402,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
+	public T applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass) {
+		delegate.applyStatelessInterceptor(statelessInterceptorClass);
+		return getThis();
+	}
+
+	@Override
 	public T applyConnectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
 		delegate.applyConnectionHandlingMode( connectionHandlingMode );
 		return getThis();

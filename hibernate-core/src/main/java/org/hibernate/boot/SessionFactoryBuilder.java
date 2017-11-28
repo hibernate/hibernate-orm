@@ -129,7 +129,19 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyInterceptor(Interceptor interceptor);
 
 	/**
-	 * Names an interceptor Supplier to be applied to the SessionFactory, which in turn means it will be used by all
+	 * Names an interceptor Class to be applied to the SessionFactory, which in turn means it will be used by all
+	 * Sessions unless one is explicitly specified in {@link org.hibernate.SessionBuilder#interceptor}
+	 *
+	 * @param statelessInterceptorClass The interceptor class
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#SESSION_SCOPED_INTERCEPTOR
+	 */
+	SessionFactoryBuilder applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass);
+
+	/**
+	 * Names an interceptor Class to be applied to the SessionFactory, which in turn means it will be used by all
 	 * Sessions unless one is explicitly specified in {@link org.hibernate.SessionBuilder#interceptor}
 	 *
 	 * @param statelessInterceptorSupplier The interceptor supplier

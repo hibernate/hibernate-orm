@@ -73,7 +73,9 @@ public interface SessionFactoryOptionsState {
 
 	Interceptor getInterceptor();
 
-	Supplier<? extends Interceptor> getStatelessInterceptorImplementor();
+	Class<? extends Interceptor> getStatelessInterceptorImplementor();
+
+	Supplier<? extends Interceptor> getStatelessInterceptorSupplier();
 
 	StatementInspector getStatementInspector();
 

@@ -372,8 +372,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public Supplier<? extends Interceptor> getStatelessInterceptorImplementor() {
+	public Class<? extends Interceptor> getStatelessInterceptorImplementor() {
 		return delegate.getStatelessInterceptorImplementor();
+	}
+
+	@Override
+	public Supplier<? extends Interceptor> getStatelessInterceptorSupplier() {
+		return delegate.getStatelessInterceptorSupplier();
 	}
 
 	@Override

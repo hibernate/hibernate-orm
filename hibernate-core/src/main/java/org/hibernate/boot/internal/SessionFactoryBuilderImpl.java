@@ -155,6 +155,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public SessionFactoryBuilder applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass) {
+		this.options.statelessInterceptorClass = statelessInterceptorClass;
+		return this;
+	}
+
+	@Override
 	public SessionFactoryBuilder applyStatelessInterceptor(Supplier<? extends Interceptor> statelessInterceptorSupplier) {
 		this.options.statelessInterceptorSupplier = statelessInterceptorSupplier;
 		return this;
@@ -504,6 +510,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		// Statistics/Interceptor/observers
 		private boolean statisticsEnabled;
 		private Interceptor interceptor;
+		private Class<? extends Interceptor> statelessInterceptorClass;
 		private Supplier<? extends Interceptor> statelessInterceptorSupplier;
 		private StatementInspector statementInspector;
 		private List<SessionFactoryObserver> sessionFactoryObserverList = new ArrayList<>();
@@ -970,7 +977,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 
 		@Override
-		public Supplier<? extends Interceptor> getStatelessInterceptorImplementor() {
+		public Class<? extends Interceptor> getStatelessInterceptorImplementor() {
+			return statelessInterceptorClass;
+		}
+
+		@Override
+		public Supplier<? extends Interceptor> getStatelessInterceptorSupplier() {
 			return statelessInterceptorSupplier;
 		}
 
@@ -1238,7 +1250,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
             try {
                 return clazz.newInstance();
             } catch (InstantiationException | IllegalAccessException e) {
-                throw new HibernateException( "Could not supplierOf session-scoped SessionFactory Interceptor", e );
+                throw new HibernateException( "Could not supply session-scoped SessionFactory Interceptor", e );
             }
         };
 	}
@@ -1312,8 +1324,13 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public Supplier<? extends Interceptor> getStatelessInterceptorImplementor() {
+	public Class<? extends Interceptor> getStatelessInterceptorImplementor() {
 		return options.getStatelessInterceptorImplementor();
+	}
+
+	@Override
+	public Supplier<? extends Interceptor> getStatelessInterceptorSupplier() {
+		return options.getStatelessInterceptorSupplier();
 	}
 
 	@Override

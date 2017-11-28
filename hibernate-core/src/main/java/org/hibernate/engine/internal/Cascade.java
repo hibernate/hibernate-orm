@@ -142,10 +142,6 @@ public final class Cascade {
 					);
 				}
 				else {
-					if ( action == CascadingActions.DELETE ) {
-
-					}
-
 					if ( action.requiresNoCascadeChecking() ) {
 						action.noCascade(
 								eventSource,

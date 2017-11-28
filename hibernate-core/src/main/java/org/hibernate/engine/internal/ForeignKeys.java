@@ -14,7 +14,6 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -159,9 +158,6 @@ public final class ForeignKeys {
 			final EntityEntry entityEntry = session.getPersistenceContext().getEntry( object );
 			if ( entityEntry == null ) {
 				return isTransient( entityName, object, null, session );
-			}
-			else if ( isDelete && ( entityEntry.getStatus() == Status.DELETED || entityEntry.getStatus() == Status.GONE ) ) {
-				return false;
 			}
 			else {
 				return entityEntry.isNullifiable( isEarlyInsert, session );

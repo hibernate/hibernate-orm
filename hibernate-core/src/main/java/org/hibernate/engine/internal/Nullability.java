@@ -101,23 +101,6 @@ public final class Nullability {
 				if ( checkability[i] && values[i]!= LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 					final Object value = values[i];
 					if ( !nullability[i] && value == null ) {
-
-						// generally speaking this is an exception as we will throw below
-						// but first, we check for a special condition in which:
-						// 		1) we are processing a delete
-						//		2) the property represents the "other side" of this association
-						//		3) the other side is currently in the "being deleted" status
-						//		4) the property is defined to cascade deletes from the other side to
-						// 			this association property
-						//
-						// in such a case we allow this to continue
-						if ( checkType == NullabilityCheckType.DELETE ) {
-							if ( propertyTypes[i].isEntityType() ) {
-								final EntityType associationType = (EntityType) propertyTypes[i];
-
-							}
-						}
-
 						//check basic level one nullablilty
 						throw new PropertyValueException(
 								"not-null property references a null or transient value",

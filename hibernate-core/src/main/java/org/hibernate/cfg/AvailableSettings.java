@@ -6,6 +6,8 @@
  */
 package org.hibernate.cfg;
 
+import java.util.function.Supplier;
+
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.query.internal.ParameterMetadataImpl;
@@ -1467,6 +1469,7 @@ public interface AvailableSettings {
 	 * Can reference<ul>
 	 *     <li>Interceptor implementation {@link Class} reference</li>
 	 *     <li>Interceptor implementation class name</li>
+	 *     <li>{@link Supplier} instance which is used to retrieve the interceptor</li>
 	 * </ul>
 	 * Note specifically that this setting cannot name an Interceptor instance.
 	 *

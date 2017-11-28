@@ -6,13 +6,11 @@
  */
 package org.hibernate.boot.internal;
 
-import java.util.Map;
-import java.util.TimeZone;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
@@ -32,6 +30,10 @@ import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
+
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.function.Supplier;
 
 /**
  * Sort of a mutable SessionFactoryOptions used during SessionFactoryBuilder calls.
@@ -72,7 +74,24 @@ public interface SessionFactoryOptionsState {
 
 	Interceptor getInterceptor();
 
+	/**
+	 * Returns an {@link Interceptor} class.
+	 *
+	 * @deprecated use {@link #getStatelessInterceptorImplementorSupplier()} instead.
+	 * @return {@link Interceptor} class
+	 */
+	@Deprecated
 	Class<? extends Interceptor> getStatelessInterceptorImplementor();
+
+	default Supplier<? extends Interceptor> getStatelessInterceptorImplementorSupplier() {
+		return () -> {
+			try {
+				return getStatelessInterceptorImplementor().newInstance();
+			} catch (InstantiationException | IllegalAccessException e) {
+				throw new HibernateException( "Could not supply session-scoped SessionFactory Interceptor", e );
+			}
+		};
+	}
 
 	StatementInspector getStatementInspector();
 

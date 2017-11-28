@@ -6,9 +6,6 @@
  */
 package org.hibernate.boot.internal;
 
-import java.util.Map;
-import java.util.TimeZone;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -32,6 +29,10 @@ import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
+
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.function.Supplier;
 
 /**
  * Standard implementation of SessionFactoryOptions
@@ -67,6 +68,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final boolean statisticsEnabled;
 	private final Interceptor interceptor;
 	private Class<? extends Interceptor> statelessInterceptorClass;
+	private Supplier<? extends Interceptor> statelessInterceptorSupplier;
 	private final StatementInspector statementInspector;
 	private final SessionFactoryObserver[] sessionFactoryObserverList;
 	private final BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;	// not exposed on builder atm
@@ -152,6 +154,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 
 		this.statisticsEnabled = state.isStatisticsEnabled();
 		this.interceptor = state.getInterceptor();
+		this.statelessInterceptorSupplier = state.getStatelessInterceptorImplementorSupplier();
 		this.statelessInterceptorClass = state.getStatelessInterceptorImplementor();
 		this.statementInspector = state.getStatementInspector();
 		this.sessionFactoryObserverList = state.getSessionFactoryObservers();
@@ -275,6 +278,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public Class<? extends Interceptor> getStatelessInterceptorImplementor() {
 		return statelessInterceptorClass;
+	}
+
+	@Override
+	public Supplier<? extends Interceptor> getStatelessInterceptorImplementorSupplier() {
+		return statelessInterceptorSupplier;
 	}
 
 	@Override

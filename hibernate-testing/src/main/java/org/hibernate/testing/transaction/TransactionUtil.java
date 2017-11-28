@@ -9,7 +9,6 @@ package org.hibernate.testing.transaction;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -19,7 +18,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;

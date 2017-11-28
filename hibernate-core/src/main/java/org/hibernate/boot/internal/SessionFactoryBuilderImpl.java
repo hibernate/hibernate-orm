@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.function.Supplier;
 
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -21,6 +22,7 @@ import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
@@ -156,6 +158,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass) {
 		this.options.statelessInterceptorClass = statelessInterceptorClass;
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyStatelessInterceptor(Supplier<? extends Interceptor> statelessInterceptorSupplier) {
+		this.options.statelessInterceptorSupplier = statelessInterceptorSupplier;
 		return this;
 	}
 
@@ -504,6 +512,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private boolean statisticsEnabled;
 		private Interceptor interceptor;
 		private Class<? extends Interceptor> statelessInterceptorClass;
+		private Supplier<? extends Interceptor> statelessInterceptorSupplier;
 		private StatementInspector statementInspector;
 		private List<SessionFactoryObserver> sessionFactoryObserverList = new ArrayList<>();
 		private BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;	// not exposed on builder atm
@@ -609,7 +618,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 			this.statisticsEnabled = cfgService.getSetting( GENERATE_STATISTICS, BOOLEAN, false );
 			this.interceptor = determineInterceptor( configurationSettings, strategySelector );
-			this.statelessInterceptorClass = determineStatelessInterceptorClass( configurationSettings, strategySelector );
+			this.statelessInterceptorSupplier = determineStatelessInterceptor( configurationSettings, strategySelector );
 			this.statementInspector = strategySelector.resolveStrategy(
 					StatementInspector.class,
 					configurationSettings.get( STATEMENT_INSPECTOR )
@@ -803,7 +812,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 
 		@SuppressWarnings("unchecked")
-		private static Class<? extends Interceptor> determineStatelessInterceptorClass(
+		private static Supplier<? extends Interceptor> determineStatelessInterceptor(
 				Map configurationSettings,
 				StrategySelector strategySelector) {
 			Object setting = configurationSettings.get( SESSION_SCOPED_INTERCEPTOR );
@@ -821,16 +830,19 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			if ( setting == null ) {
 				return null;
 			}
+			else if ( setting instanceof Supplier ) {
+				return (Supplier<? extends Interceptor>) setting;
+			}
 			else if ( setting instanceof Class ) {
-				return (Class<? extends Interceptor>) setting;
+				Class<? extends Interceptor> clazz = (Class<? extends Interceptor>) setting;
+				return interceptorSupplier( clazz );
 			}
 			else {
-				return strategySelector.selectStrategyImplementor(
+				return interceptorSupplier( strategySelector.selectStrategyImplementor(
 						Interceptor.class,
 						setting.toString()
-				);
+				) );
 			}
-
 		}
 
 		private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(
@@ -967,6 +979,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		@Override
 		public Class<? extends Interceptor> getStatelessInterceptorImplementor() {
 			return statelessInterceptorClass;
+		}
+
+		@Override
+		public Supplier<? extends Interceptor> getStatelessInterceptorImplementorSupplier() {
+			return statelessInterceptorSupplier;
 		}
 
 		@Override
@@ -1228,6 +1245,16 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 	}
 
+	private static Supplier<? extends Interceptor> interceptorSupplier(Class<? extends Interceptor> clazz) {
+		return () -> {
+            try {
+                return clazz.newInstance();
+            } catch (InstantiationException | IllegalAccessException e) {
+                throw new HibernateException( "Could not supply session-scoped SessionFactory Interceptor", e );
+            }
+        };
+	}
+
 	@Override
 	public StandardServiceRegistry getServiceRegistry() {
 		return options.getServiceRegistry();
@@ -1299,6 +1326,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public Class<? extends Interceptor> getStatelessInterceptorImplementor() {
 		return options.getStatelessInterceptorImplementor();
+	}
+
+	@Override
+	public Supplier<? extends Interceptor> getStatelessInterceptorImplementorSupplier() {
+		return options.getStatelessInterceptorImplementorSupplier();
 	}
 
 	@Override

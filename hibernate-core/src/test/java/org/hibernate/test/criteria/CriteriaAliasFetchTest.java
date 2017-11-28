@@ -33,10 +33,10 @@ import org.junit.Test;
 public class CriteriaAliasFetchTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( Cat.class );
-		metadataSources.addAnnotatedClass( Kitten.class );
+	protected void applyMetadataSources(MetadataSources sources) {
+		super.applyMetadataSources( sources );
+		sources.addAnnotatedClass( Cat.class );
+		sources.addAnnotatedClass( Kitten.class );
 	}
 
 	@Override

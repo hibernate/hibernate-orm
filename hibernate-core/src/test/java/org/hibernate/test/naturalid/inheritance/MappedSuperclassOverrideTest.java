@@ -39,9 +39,9 @@ public class MappedSuperclassOverrideTest extends BaseNonConfigCoreFunctionalTes
 	}
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( MyMappedSuperclass.class )
+	protected void applyMetadataSources(MetadataSources sources) {
+		super.applyMetadataSources( sources );
+		sources.addAnnotatedClass( MyMappedSuperclass.class )
 				.addAnnotatedClass( MyEntity.class );
 	}
 

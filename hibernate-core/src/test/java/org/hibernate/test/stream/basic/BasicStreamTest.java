@@ -34,9 +34,9 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 public class BasicStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( MyEntity.class );
+	protected void applyMetadataSources(MetadataSources sources) {
+		super.applyMetadataSources( sources );
+		sources.addAnnotatedClass( MyEntity.class );
 	}
 
 	@Test

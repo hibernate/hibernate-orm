@@ -44,6 +44,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.QueryException;
 import org.hibernate.QueryParameterException;
 import org.hibernate.ScrollMode;
 import org.hibernate.TypeMismatchException;
@@ -79,6 +80,8 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 
+import org.jboss.logging.Logger;
+
 import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
@@ -102,7 +105,8 @@ import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
  * @author Steve Ebersole
  */
 public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
-	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( AbstractProducedQuery.class );
+	private static final EntityManagerMessageLogger MSG_LOGGER = HEMLogging.messageLogger( AbstractProducedQuery.class );
+	private static final Logger LOGGER = Logger.getLogger( AbstractProducedQuery.class );
 
 	private final SharedSessionContractImplementor producer;
 	private final ParameterMetadata parameterMetadata;
@@ -397,6 +401,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <P> QueryImplementor setParameter(QueryParameter<P> parameter, P value) {
+		queryParameterBindings.getBinding( (QueryParameter) parameter );
 		locateBinding( parameter ).setBindValue( value );
 		return this;
 	}
@@ -758,21 +763,57 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> T getParameterValue(Parameter<T> parameter) {
 		getProducer().checkOpen( false );
-		return (T) queryParameterBindings.getBinding( (QueryParameter) parameter ).getBindValue();
+
+		if ( !parameterMetadata.containsReference( (QueryParameter) parameter ) ) {
+			throw new IllegalArgumentException( "Parameter reference [" + parameter + "] did not come from this query" );
+		}
+
+		final QueryParameterBinding<T> binding = queryParameterBindings.getBinding( (QueryParameter<T>) parameter );
+		LOGGER.debugf( "Checking whether parameter reference [%s] is bound : %s", parameter, binding.isBound() );
+		if ( !binding.isBound() ) {
+			throw new IllegalStateException( "Parameter value not yet bound : " + parameter.toString() );
+		}
+		return binding.getBindValue();
 	}
 
 	@Override
 	public Object getParameterValue(String name) {
 		getProducer().checkOpen( false );
-		return queryParameterBindings.getBinding( name ).getBindValue();
+
+		final QueryParameterBinding binding;
+		try {
+			binding = queryParameterBindings.getBinding( name );
+		}
+		catch (QueryParameterException e) {
+			throw new IllegalArgumentException( "Could not resolve parameter by name - " + name, e );
+		}
+
+		LOGGER.debugf( "Checking whether named parameter [%s] is bound : %s", name, binding.isBound() );
+		if ( !binding.isBound() ) {
+			throw new IllegalStateException( "Parameter value not yet bound : " + name );
+		}
+		return binding.getBindValue();
 	}
 
 	@Override
 	public Object getParameterValue(int position) {
-		return queryParameterBindings.getBinding( position ).getBindValue();
+		getProducer().checkOpen( false );
+
+		final QueryParameterBinding binding;
+		try {
+			binding = queryParameterBindings.getBinding( position );
+		}
+		catch (QueryParameterException e) {
+			throw new IllegalArgumentException( "Could not resolve parameter by position - " + position, e );
+		}
+
+		LOGGER.debugf( "Checking whether positional  parameter [%s] is bound : %s", (Integer) position, (Boolean) binding.isBound() );
+		if ( !binding.isBound() ) {
+			throw new IllegalStateException( "Parameter value not yet bound : " + position );
+		}
+		return binding.getBindValue();
 	}
 
 	@Override
@@ -869,8 +910,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setMaxResults(int maxResult) {
 		if ( maxResult < 0 ) {
-			// treat zero and negatives specially as meaning no limit...
-			queryOptions.setMaxRows( null );
+			throw new IllegalArgumentException( "max-results cannot be negative" );
 		}
 		else {
 			queryOptions.setMaxRows( maxResult );
@@ -890,6 +930,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setFirstResult(int startPosition) {
 		getProducer().checkOpen();
+		if ( startPosition < 0 ) {
+			throw new IllegalArgumentException( "first-result value cannot be negative : " + startPosition );
+		}
 		queryOptions.setFirstRow( startPosition );
 		return this;
 	}
@@ -1036,7 +1079,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 						applyAliasSpecificLockModeHint( alias, lockMode );
 					}
 					catch ( Exception e ) {
-						log.unableToDetermineLockModeValue( hintName, value );
+						MSG_LOGGER.unableToDetermineLockModeValue( hintName, value );
 						applied = false;
 					}
 				}
@@ -1049,7 +1092,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 					applyEntityGraphQueryHint( new EntityGraphQueryHint( hintName, (EntityGraphImpl) value ) );
 				}
 				else {
-					log.warnf( "The %s hint was set, but the value was not an EntityGraph!", hintName );
+					MSG_LOGGER.warnf( "The %s hint was set, but the value was not an EntityGraph!", hintName );
 				}
 				applied = true;
 			}
@@ -1060,7 +1103,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 				applied = applyPassDistinctThrough( ConfigurationHelper.getBoolean( value ) );
 			}
 			else {
-				log.ignoringUnrecognizedQueryHint( hintName );
+				MSG_LOGGER.ignoringUnrecognizedQueryHint( hintName );
 			}
 		}
 		catch ( ClassCastException e ) {
@@ -1068,7 +1111,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		}
 
 		if ( !applied ) {
-			log.debugf( "Skipping unsupported query hint [%s]", hintName );
+			MSG_LOGGER.debugf( "Skipping unsupported query hint [%s]", hintName );
 		}
 
 		return this;

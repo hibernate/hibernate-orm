@@ -170,4 +170,10 @@ public class ProcedureParameterMetadata implements ParameterMetadata {
 	public int getParameterCount() {
 		return parameters.size();
 	}
+
+	@Override
+	@SuppressWarnings("SuspiciousMethodCalls")
+	public boolean containsReference(QueryParameter parameter) {
+		return parameters.contains( parameter );
+	}
 }

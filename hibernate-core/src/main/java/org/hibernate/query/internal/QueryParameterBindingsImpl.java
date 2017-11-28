@@ -10,13 +10,10 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-
 import javax.persistence.Parameter;
 
 import org.hibernate.HibernateException;
@@ -108,7 +105,18 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@SuppressWarnings("WeakerAccess")
 	protected QueryParameterBinding makeBinding(QueryParameter queryParameter) {
-		return makeBinding( queryParameter.getType() );
+		assert ! parameterBindingMap.containsKey( queryParameter );
+
+		if ( ! parameterMetadata.containsReference( queryParameter ) ) {
+			throw new IllegalArgumentException(
+					"Cannot create binding for parameter reference [" + queryParameter + "] - reference is not a parameter of this query"
+			);
+		}
+
+		final QueryParameterBinding binding = makeBinding( queryParameter.getType() );
+		parameterBindingMap.put( queryParameter, binding );
+
+		return binding;
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -140,107 +148,38 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public boolean isBound(QueryParameter parameter) {
-		final QueryParameterBinding binding = locateBinding( parameter );
-		if ( binding != null ) {
-			return binding.getBindValue() != null;
-		}
+		final QueryParameterBinding binding = getBinding( parameter );
 
-		final QueryParameterListBinding listBinding = locateQueryParameterListBinding( parameter );
-		if ( listBinding != null ) {
-			return listBinding.getBindValues() != null;
-		}
-
-		return false;
+		return binding.isBound();
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T> QueryParameterBinding<T> getBinding(QueryParameter<T> parameter) {
-		final QueryParameterBinding<T> binding = locateBinding( parameter );
+		QueryParameterBinding<T> binding = parameterBindingMap.get( parameter );
 
 		if ( binding == null ) {
-			throw new IllegalArgumentException(
-					"Could not resolve QueryParameter reference [" + parameter + "] to QueryParameterBinding"
-			);
+			if ( ! parameterMetadata.containsReference( parameter ) ) {
+				throw new IllegalArgumentException(
+						"Could not resolve QueryParameter reference [" + parameter + "] to QueryParameterBinding"
+				);
+			}
+
+			binding = makeBinding( parameter );
 		}
 
 		return binding;
 	}
 
-	@SuppressWarnings("unchecked")
-	public <T> QueryParameterBinding<T> locateBinding(QueryParameter<T> parameter) {
-		// see if this exact instance is known as a key
-		if ( parameterBindingMap.containsKey( parameter ) ) {
-			return parameterBindingMap.get( parameter );
-		}
-
-		// if the incoming parameter has a name, try to find it by name
-		if ( StringHelper.isNotEmpty( parameter.getName() ) ) {
-			final QueryParameterBinding binding = locateBinding( parameter.getName() );
-			if ( binding != null ) {
-				return binding;
-			}
-		}
-
-		// if the incoming parameter has a position, try to find it by position
-		if ( parameter.getPosition() != null ) {
-			final QueryParameterBinding binding = locateBinding( parameter.getPosition() );
-			if ( binding != null ) {
-				return binding;
-			}
-		}
-
-		return null;
-	}
-
-	protected QueryParameterBinding locateAndRemoveBinding(String name) {
-		final Iterator<Map.Entry<QueryParameter, QueryParameterBinding>> entryIterator = parameterBindingMap.entrySet().iterator();
-		while ( entryIterator.hasNext() ) {
-			final Map.Entry<QueryParameter, QueryParameterBinding> entry = entryIterator.next();
-			if ( name.equals( entry.getKey().getName() ) ) {
-				entryIterator.remove();
-				return entry.getValue();
-			}
-		}
-
-		return null;
-	}
-
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryParameterBinding getBinding(int position) {
-		return locateBinding( position );
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	protected QueryParameterBinding locateBinding(int position) {
-		final QueryParameter<Object> param = parameterMetadata.getQueryParameter( position );
-		if ( param == null ) {
-			throw new IllegalArgumentException( "Unknown ordinal parameter : " + position );
-		}
-
-		return parameterBindingMap.computeIfAbsent(
-				param,
-				this::makeBinding
-		);
+		return getBinding( parameterMetadata.getQueryParameter( position ) );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryParameterBinding getBinding(String name) {
-		return locateBinding( name );
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	protected QueryParameterBinding locateBinding(String name) {
-		final QueryParameter<Object> param = parameterMetadata.getQueryParameter( name );
-		if ( param == null ) {
-			throw new IllegalArgumentException( "Unknown named parameter : " + name );
-		}
-
-		return parameterBindingMap.computeIfAbsent(
-				param,
-				this::makeBinding
-		);
+		return getBinding( parameterMetadata.getQueryParameter( name ) );
 	}
 
 	public void verifyParametersBound(boolean reserveFirstParameter) {

@@ -91,6 +91,13 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 	}
 
 	@Override
+	@SuppressWarnings("SuspiciousMethodCalls")
+	public boolean containsReference(QueryParameter parameter) {
+		return ordinalDescriptorMap.containsValue( parameter )
+				|| namedDescriptorMap.containsValue( parameter );
+	}
+
+	@Override
 	public boolean hasNamedParameters() {
 		return !namedDescriptorMap.isEmpty();
 	}
@@ -213,7 +220,7 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 	public NamedParameterDescriptor getNamedParameterDescriptor(String name) {
 		final NamedParameterDescriptor descriptor = namedDescriptorMap.get( name );
 		if ( descriptor == null ) {
-			throw new QueryParameterException(
+			throw new IllegalArgumentException(
 					String.format(
 							Locale.ROOT,
 							"Could not locate named parameter [%s], expecting one of [%s]",

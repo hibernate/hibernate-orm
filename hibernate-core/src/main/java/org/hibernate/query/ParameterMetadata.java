@@ -60,4 +60,6 @@ public interface ParameterMetadata {
 	Collection<QueryParameter> getNamedParameters();
 
 	int getParameterCount();
+
+	boolean containsReference(QueryParameter parameter);
 }

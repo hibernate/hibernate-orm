@@ -254,21 +254,21 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected void afterStandardServiceRegistryBuilt(StandardServiceRegistry ssr) {
 	}
 
-	protected void applyMetadataSources(MetadataSources metadataSources) {
+	protected void applyMetadataSources(MetadataSources sources) {
 		for ( String mapping : getMappings() ) {
-			metadataSources.addResource( getBaseForMappings() + mapping );
+			sources.addResource( getBaseForMappings() + mapping );
 		}
 
 		for ( Class annotatedClass : getAnnotatedClasses() ) {
-			metadataSources.addAnnotatedClass( annotatedClass );
+			sources.addAnnotatedClass( annotatedClass );
 		}
 
 		for ( String annotatedPackage : getAnnotatedPackages() ) {
-			metadataSources.addPackage( annotatedPackage );
+			sources.addPackage( annotatedPackage );
 		}
 
 		for ( String ormXmlFile : getXmlFiles() ) {
-			metadataSources.addInputStream( Thread.currentThread().getContextClassLoader().getResourceAsStream( ormXmlFile ) );
+			sources.addInputStream( Thread.currentThread().getContextClassLoader().getResourceAsStream( ormXmlFile ) );
 		}
 	}
 

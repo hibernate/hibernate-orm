@@ -6,8 +6,6 @@
  */
 package org.hibernate.boot;
 
-import java.util.Map;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -27,6 +25,9 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
+
+import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * The contract for building a {@link org.hibernate.SessionFactory} given a number of options.
@@ -128,16 +129,16 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyInterceptor(Interceptor interceptor);
 
 	/**
-	 * Names an interceptor Class to be applied to the SessionFactory, which in turn means it will be used by all
+	 * Names an interceptor Supplier to be applied to the SessionFactory, which in turn means it will be used by all
 	 * Sessions unless one is explicitly specified in {@link org.hibernate.SessionBuilder#interceptor}
 	 *
-	 * @param statelessInterceptorClass The interceptor class
+	 * @param statelessInterceptorSupplier The interceptor supplier
 	 *
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#SESSION_SCOPED_INTERCEPTOR
 	 */
-	SessionFactoryBuilder applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass);
+	SessionFactoryBuilder applyStatelessInterceptor(Supplier<? extends Interceptor> statelessInterceptorSupplier);
 
 	/**
 	 * Names a StatementInspector to be applied to the SessionFactory, which in turn means it will be used by all

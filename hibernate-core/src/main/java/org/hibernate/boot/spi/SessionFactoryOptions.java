@@ -6,9 +6,6 @@
  */
 package org.hibernate.boot.spi;
 
-import java.util.Map;
-import java.util.TimeZone;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -31,6 +28,10 @@ import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
+
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.function.Supplier;
 
 /**
  * Aggregator of special options used to build the SessionFactory.
@@ -102,7 +103,7 @@ public interface SessionFactoryOptions {
 	 *
 	 * @return The interceptor to use factory wide.  May be {@code null}
 	 */
-	Class<? extends Interceptor> getStatelessInterceptorImplementor();
+	Supplier<? extends Interceptor> getStatelessInterceptorImplementor();
 
 	StatementInspector getStatementInspector();
 

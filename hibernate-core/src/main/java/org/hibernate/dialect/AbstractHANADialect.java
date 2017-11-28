@@ -54,6 +54,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.ConfigurationService.Converter;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.CharacterStream;
@@ -85,7 +86,9 @@ import org.hibernate.type.descriptor.java.DataHelper;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
+import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.BooleanTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
@@ -660,14 +663,18 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	private static final String MAX_LOB_PREFETCH_SIZE_PARAMETER_NAME = new String( "hibernate.dialect.hana.max_lob_prefetch_size" );
+	private static final String USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME = new String( "hibernate.dialect.hana.use_legacy_boolean_type" );
 
 	private static final int MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE = 1024;
+	private static final Boolean USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE = Boolean.FALSE;
 
 	private HANANClobTypeDescriptor nClobTypeDescriptor = new HANANClobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
 
 	private HANABlobTypeDescriptor blobTypeDescriptor = new HANABlobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
 
 	private HANAClobTypeDescriptor clobTypeDescriptor = new HANAClobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
+
+	private boolean useLegacyBooleanType = USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE.booleanValue();
 
 	/*
 	 * Tables named "TYPE" need to be quoted
@@ -1067,8 +1074,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(final int sqlCode) {
 		switch ( sqlCode ) {
-			// case Types.BOOLEAN:
-			// return BitTypeDescriptor.INSTANCE;
 			case Types.CLOB:
 				return this.clobTypeDescriptor;
 			case Types.NCLOB:
@@ -1078,6 +1083,8 @@ public abstract class AbstractHANADialect extends Dialect {
 			case Types.TINYINT:
 				// tinyint is unsigned on HANA
 				return SmallIntTypeDescriptor.INSTANCE;
+			case Types.BOOLEAN:
+				return this.useLegacyBooleanType ? BitTypeDescriptor.INSTANCE : BooleanTypeDescriptor.INSTANCE;
 			default:
 				return super.getSqlTypeDescriptorOverride( sqlCode );
 		}
@@ -1497,6 +1504,9 @@ public abstract class AbstractHANADialect extends Dialect {
 		if ( this.clobTypeDescriptor.getMaxLobPrefetchSize() != maxLobPrefetchSize ) {
 			this.clobTypeDescriptor = new HANAClobTypeDescriptor( maxLobPrefetchSize );
 		}
+
+		this.useLegacyBooleanType = configurationService.getSetting( USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME, StandardConverters.BOOLEAN,
+				USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE ).booleanValue();
 	}
 
 	public SqlTypeDescriptor getBlobTypeDescriptor() {
@@ -1505,6 +1515,9 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String toBooleanValueString(boolean bool) {
+		if ( this.useLegacyBooleanType ) {
+			return bool ? "1" : "0";
+		}
 		return bool ? "true" : "false";
 	}
 

@@ -10,7 +10,7 @@
     xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence/orm
     http://xmlns.jcp.org/xml/ns/persistence/orm_2_1.xsd"
     version="2.1">
-    <entity class="org.hibernate.test.jpa.compliance.joincolumn.Company">
+    <entity class="org.hibernate.test.jpa.compliance.tck2_2.joincolumn.Company">
         <attributes>
             <one-to-many name="locations" mapped-by="company">
                 <cascade>
@@ -19,7 +19,7 @@
             </one-to-many>
         </attributes>
     </entity>
-    <entity class="org.hibernate.test.jpa.compliance.joincolumn.Location">
+    <entity class="org.hibernate.test.jpa.compliance.tck2_2.joincolumn.Location">
         <attributes>
             <many-to-one name="company">
                 <join-column name="COMP_ID" referenced-column-name="ID" nullable="false" />

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.jpa.compliance.joincolumn;
+package org.hibernate.test.jpa.compliance.tck2_2.joincolumn;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -38,7 +38,7 @@ public class JoinColumnTest extends BaseUnitTestCase {
 			try (SessionFactoryImplementor sf = (SessionFactoryImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Company.class )
 					.addAnnotatedClass( Location.class )
-					.addResource( "org/hibernate/test/jpa/compliance/joincolumn/orm.xml" )
+					.addResource( "org/hibernate/test/jpa/compliance/tck2_2/joincolumn/orm.xml" )
 					.buildMetadata()
 					.buildSessionFactory()) {
 				try {

@@ -10,6 +10,7 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
@@ -110,7 +111,15 @@ public interface SessionFactoryOptions {
 	 *
 	 * @return The interceptor to use factory wide.  May be {@code null}
 	 */
-	Supplier<? extends Interceptor> getStatelessInterceptorSupplier();
+	default Supplier<? extends Interceptor> getStatelessInterceptorSupplier() {
+		return () -> {
+			try {
+				return getStatelessInterceptorImplementor().newInstance();
+			} catch (InstantiationException | IllegalAccessException e) {
+				throw new HibernateException( "Could not supply session-scoped SessionFactory Interceptor", e );
+			}
+		};
+	}
 
 	StatementInspector getStatementInspector();
 

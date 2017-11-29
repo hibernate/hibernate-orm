@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import javax.persistence.Parameter;
 
 import org.hibernate.QueryException;
@@ -197,14 +198,6 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 			return (QueryParameter<T>) param;
 		}
 
-		if ( param.getName() != null ) {
-			return getQueryParameter( param.getName() );
-		}
-
-		if ( param.getPosition() != null ) {
-			return getQueryParameter( param.getPosition() );
-		}
-
 		throw new IllegalArgumentException( "Could not resolve javax.persistence.Parameter to org.hibernate.query.QueryParameter" );
 	}
 
@@ -230,6 +223,20 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 			);
 		}
 		return descriptor;
+	}
+
+	@Override
+	public void visitRegistrations(Consumer<QueryParameter> action) {
+		if ( hasPositionalParameters() ) {
+			for ( OrdinalParameterDescriptor descriptor : ordinalDescriptorMap.values() ) {
+				action.accept( descriptor );
+			}
+		}
+		else if ( hasNamedParameters() ) {
+			for ( NamedParameterDescriptor descriptor : namedDescriptorMap.values() ) {
+				action.accept( descriptor );
+			}
+		}
 	}
 
 	/**

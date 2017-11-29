@@ -14,6 +14,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.Query;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.type.Type;
 
@@ -25,6 +26,7 @@ import org.hibernate.type.Type;
 public class CollectionFilterImpl extends org.hibernate.query.internal.AbstractProducedQuery {
 	private final String queryString;
 	private Object collection;
+	private final QueryParameterBindingsImpl queryParameterBindings;
 
 	public CollectionFilterImpl(
 			String queryString,
@@ -34,6 +36,16 @@ public class CollectionFilterImpl extends org.hibernate.query.internal.AbstractP
 		super( session, parameterMetadata );
 		this.queryString = queryString;
 		this.collection = collection;
+		this.queryParameterBindings = QueryParameterBindingsImpl.from(
+				parameterMetadata,
+				session.getFactory(),
+				session.isQueryParametersValidationEnabled()
+		);
+	}
+
+	@Override
+	protected QueryParameterBindings getQueryParameterBindings() {
+		return queryParameterBindings;
 	}
 
 	@Override

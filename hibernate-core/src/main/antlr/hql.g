@@ -813,7 +813,7 @@ identPrimaryBase
     ;
 
 castedIdentPrimaryBase
-    : i:IDENT! OPEN! p:path AS! a:path! CLOSE! { i.getText().equals("treat") }? {
+    : i:IDENT! OPEN! p:path AS! a:path! CLOSE! { i.getText().equalsIgnoreCase("treat") }? {
         registerTreat( #p, #a );
     }
     ;

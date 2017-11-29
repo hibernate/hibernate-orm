@@ -8,6 +8,7 @@ package org.hibernate.query;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.function.Consumer;
 import javax.persistence.Parameter;
 
 /**
@@ -62,4 +63,6 @@ public interface ParameterMetadata {
 	int getParameterCount();
 
 	boolean containsReference(QueryParameter parameter);
+
+	void visitRegistrations(Consumer<QueryParameter> action);
 }

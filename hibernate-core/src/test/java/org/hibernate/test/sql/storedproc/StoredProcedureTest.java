@@ -284,8 +284,10 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 
 		ProcedureCall query = session.createStoredProcedureCall( "findUserRange" );
-		query.registerParameter( 1, Integer.class, ParameterMode.IN ).bindValue( 1 );
-		query.registerParameter( 2, Integer.class, ParameterMode.IN ).bindValue( 2 );
+		query.registerParameter( 1, Integer.class, ParameterMode.IN )
+				.bindValue( 1 );
+		query.registerParameter( 2, Integer.class, ParameterMode.IN )
+				.bindValue( 2 );
 		ProcedureOutputs procedureResult = query.getOutputs();
 		Output currentOutput = procedureResult.getCurrent();
 		assertNotNull( currentOutput );

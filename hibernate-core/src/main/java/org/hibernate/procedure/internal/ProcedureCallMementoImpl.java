@@ -162,7 +162,7 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 					registration.getPosition(),
 					registration.getName(),
 					registration.getMode(),
-					registration.getType(),
+					registration.getParameterType(),
 					registration.getHibernateType(),
 					registration.isPassNullsEnabled()
 			);

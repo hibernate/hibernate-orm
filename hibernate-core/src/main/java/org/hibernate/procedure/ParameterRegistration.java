@@ -9,6 +9,8 @@ package org.hibernate.procedure;
 import javax.persistence.ParameterMode;
 import javax.persistence.TemporalType;
 
+import org.hibernate.query.QueryParameter;
+import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.type.Type;
 
 /**
@@ -16,7 +18,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public interface ParameterRegistration<T> {
+public interface ParameterRegistration<T> extends ProcedureParameter<T> {
 	/**
 	 * The name under which this parameter was registered.  Can be {@code null} which should indicate that
 	 * positional registration was used (and therefore {@link #getPosition()} should return non-null.
@@ -32,14 +34,6 @@ public interface ParameterRegistration<T> {
 	 * @return The name;
 	 */
 	Integer getPosition();
-
-	/**
-	 * Obtain the Java type of parameter.  This is used to guess the Hibernate type (unless {@link #setHibernateType}
-	 * is called explicitly).
-	 *
-	 * @return The parameter Java type.
-	 */
-	Class<T> getType();
 
 	/**
 	 * Retrieves the parameter "mode" which describes how the parameter is defined in the actual database procedure

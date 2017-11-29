@@ -6,8 +6,13 @@
  */
 package org.hibernate.query.spi;
 
+import java.util.Map;
+
 import org.hibernate.Incubating;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
@@ -19,4 +24,15 @@ public interface QueryParameterBindings {
 	<T> QueryParameterBinding<T> getBinding(QueryParameter<T> parameter);
 	<T> QueryParameterBinding<T> getBinding(String name);
 	<T> QueryParameterBinding<T> getBinding(int position);
+
+	void verifyParametersBound(boolean callable);
+	String expandListValuedParameters(String queryString, SharedSessionContractImplementor producer);
+
+	<T> QueryParameterListBinding<T> getQueryParameterListBinding(QueryParameter<T> parameter);
+	<T> QueryParameterListBinding<T> getQueryParameterListBinding(String name);
+	<T> QueryParameterListBinding<T> getQueryParameterListBinding(int position);
+
+	Type[] collectPositionalBindTypes();
+	Object[] collectPositionalBindValues();
+	Map<String,TypedValue> collectNamedParameterBindings();
 }

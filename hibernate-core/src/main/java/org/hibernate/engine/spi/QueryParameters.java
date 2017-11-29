@@ -25,6 +25,7 @@ import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
@@ -230,7 +231,7 @@ public final class QueryParameters {
 	}
 
 	public QueryParameters(
-			QueryParameterBindingsImpl queryParameterBindings,
+			QueryParameterBindings queryParameterBindings,
 			LockOptions lockOptions,
 			RowSelection selection,
 			final boolean isReadOnlyInitialized,

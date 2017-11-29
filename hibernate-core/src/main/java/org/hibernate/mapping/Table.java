@@ -447,8 +447,24 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		
 		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
 
+		Identifier quotedCatalog = catalog != null && catalog.isQuoted() ?
+				new Identifier( tableInfo.getName().getCatalogName().getText(), true ) :
+				tableInfo.getName().getCatalogName();
+
+		Identifier quotedSchema = schema != null && schema.isQuoted() ?
+				new Identifier( tableInfo.getName().getSchemaName().getText(), true ) :
+				tableInfo.getName().getSchemaName();
+
+		Identifier quotedTable = name != null &&  name.isQuoted() ?
+				new Identifier( tableInfo.getName().getObjectName().getText(), true ) :
+				tableInfo.getName().getObjectName();
+
 		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				tableInfo.getName(),
+				new QualifiedTableName(
+					quotedCatalog,
+					quotedSchema,
+					quotedTable
+				),
 				dialect
 		);
 

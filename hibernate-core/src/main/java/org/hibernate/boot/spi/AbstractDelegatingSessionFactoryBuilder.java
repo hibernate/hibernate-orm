@@ -6,8 +6,6 @@
  */
 package org.hibernate.boot.spi;
 
-import java.util.Map;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -29,6 +27,9 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
+
+import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Convenience base class for custom implementors of SessionFactoryBuilder, using delegation
@@ -395,8 +396,14 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
+	public T applyStatelessInterceptor(Supplier<? extends Interceptor> statelessInterceptorSupplier) {
+		delegate.applyStatelessInterceptor(statelessInterceptorSupplier);
+		return getThis();
+	}
+
+	@Override
 	public T applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass) {
-		delegate.applyStatelessInterceptor( statelessInterceptorClass );
+		delegate.applyStatelessInterceptor(statelessInterceptorClass);
 		return getThis();
 	}
 

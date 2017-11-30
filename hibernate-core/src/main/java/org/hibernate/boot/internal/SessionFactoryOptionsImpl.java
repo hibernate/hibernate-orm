@@ -24,6 +24,7 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.jpa.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.criteria.LiteralHandlingMode;
@@ -133,6 +134,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private boolean queryParametersValidationEnabled;
 	private LiteralHandlingMode criteriaLiteralHandlingMode;
 	private boolean jdbcStyleParamsZeroBased;
+	private final JpaCompliance jpaCompliance;
 
 	public SessionFactoryOptionsImpl(SessionFactoryOptionsState state) {
 		this.serviceRegistry = state.getServiceRegistry();
@@ -218,6 +220,8 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.sqlFunctions = state.getCustomSqlFunctionMap();
 
 		this.jdbcTimeZone = state.getJdbcTimeZone();
+
+		this.jpaCompliance = state.getJpaCompliance();
 	}
 
 	@Override
@@ -567,5 +571,10 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public boolean jdbcStyleParamsZeroBased() {
 		return jdbcStyleParamsZeroBased;
+	}
+
+	@Override
+	public JpaCompliance getJpaCompliance() {
+		return jpaCompliance;
 	}
 }

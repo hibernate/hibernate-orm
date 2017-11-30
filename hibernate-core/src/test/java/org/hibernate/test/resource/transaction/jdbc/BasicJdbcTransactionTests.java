@@ -9,7 +9,6 @@ package org.hibernate.test.resource.transaction.jdbc;
 import org.hibernate.TransactionException;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
-import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.test.resource.common.SynchronizationCollectorImpl;
@@ -31,12 +30,7 @@ public class BasicJdbcTransactionTests {
 
 		final TransactionCoordinator transactionCoordinator = transactionCoordinatorBuilder.buildTransactionCoordinator(
 				owner,
-				new TransactionCoordinatorBuilder.Options() {
-					@Override
-					public boolean shouldAutoJoinTransaction() {
-						return false;
-					}
-				}
+				() -> false
 		);
 
 		SynchronizationCollectorImpl sync = new SynchronizationCollectorImpl();
@@ -63,12 +57,7 @@ public class BasicJdbcTransactionTests {
 
 		final TransactionCoordinator transactionCoordinator = transactionCoordinatorBuilder.buildTransactionCoordinator(
 				owner,
-				new TransactionCoordinatorBuilder.Options() {
-					@Override
-					public boolean shouldAutoJoinTransaction() {
-						return false;
-					}
-				}
+				() -> false
 		);
 
 		assertEquals( TransactionStatus.NOT_ACTIVE, transactionCoordinator.getTransactionDriverControl().getStatus() );
@@ -98,12 +87,7 @@ public class BasicJdbcTransactionTests {
 
 		final TransactionCoordinator transactionCoordinator = transactionCoordinatorBuilder.buildTransactionCoordinator(
 				owner,
-				new TransactionCoordinatorBuilder.Options() {
-					@Override
-					public boolean shouldAutoJoinTransaction() {
-						return false;
-					}
-				}
+				() -> false
 		);
 
 		assertEquals( TransactionStatus.NOT_ACTIVE, transactionCoordinator.getTransactionDriverControl().getStatus() );

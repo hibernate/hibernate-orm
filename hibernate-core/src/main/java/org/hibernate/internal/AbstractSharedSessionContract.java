@@ -374,7 +374,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public Transaction getTransaction() throws HibernateException {
-		if ( getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+		if ( getFactory().getSessionFactoryOptions().getJpaCompliance().isJpaTransactionComplianceEnabled() ) {
 			// JPA requires that we throw IllegalStateException if this is called
 			// on a JTA EntityManager
 			if ( getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta() ) {
@@ -383,6 +383,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				}
 			}
 		}
+
 		return accessTransaction();
 	}
 
@@ -391,7 +392,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( this.currentHibernateTransaction == null || this.currentHibernateTransaction.getStatus() != TransactionStatus.ACTIVE ) {
 			this.currentHibernateTransaction = new TransactionImpl(
 					getTransactionCoordinator(),
-					getExceptionConverter()
+					getExceptionConverter(),
+					getFactory().getSessionFactoryOptions().getJpaCompliance()
 			);
 
 		}

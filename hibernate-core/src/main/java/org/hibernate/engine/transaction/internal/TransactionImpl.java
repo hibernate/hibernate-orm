@@ -13,6 +13,7 @@ import org.hibernate.TransactionException;
 import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.jpa.JpaCompliance;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
@@ -29,12 +30,24 @@ public class TransactionImpl implements TransactionImplementor {
 
 	private final TransactionCoordinator transactionCoordinator;
 	private final ExceptionConverter exceptionConverter;
+	private final JpaCompliance jpaCompliance;
+
 	private TransactionDriver transactionDriverControl;
 
-	public TransactionImpl(TransactionCoordinator transactionCoordinator, ExceptionConverter exceptionConverter) {
+	public TransactionImpl(
+			TransactionCoordinator transactionCoordinator,
+			ExceptionConverter exceptionConverter,
+			JpaCompliance jpaCompliance) {
 		this.transactionCoordinator = transactionCoordinator;
 		this.exceptionConverter = exceptionConverter;
-		transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+		this.jpaCompliance = jpaCompliance;
+
+		this.transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+
+		LOG.debugf(
+				"On TransactionImpl creation, JpaCompliance#isJpaTransactionComplianceEnabled == %s",
+				jpaCompliance.isJpaTransactionComplianceEnabled()
+		);
 	}
 
 	@Override
@@ -82,7 +95,14 @@ public class TransactionImpl implements TransactionImplementor {
 
 	@Override
 	public void rollback() {
-		// todo : may need a "JPA compliant" flag here
+		if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
+			if ( !isActive() ) {
+				throw new IllegalStateException(
+						"JPA compliance dictates throwing IllegalStateException when #rollback " +
+								"is called on non-active transaction"
+				);
+			}
+		}
 
 		TransactionStatus status = getStatus();
 		if ( status == TransactionStatus.ROLLED_BACK || status == TransactionStatus.NOT_ACTIVE ) {
@@ -140,11 +160,29 @@ public class TransactionImpl implements TransactionImplementor {
 
 	@Override
 	public void setRollbackOnly() {
+		if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
+			if ( !isActive() ) {
+				throw new IllegalStateException(
+						"JPA compliance dictates throwing IllegalStateException when #setRollbackOnly " +
+								"is called on non-active transaction"
+				);
+			}
+		}
+
 		internalGetTransactionDriverControl().markRollbackOnly();
 	}
 
 	@Override
 	public boolean getRollbackOnly() {
+		if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
+			if ( !isActive() ) {
+				throw new IllegalStateException(
+						"JPA compliance dictates throwing IllegalStateException when #getRollbackOnly " +
+								"is called on non-active transaction"
+				);
+			}
+		}
+
 		return getStatus() == TransactionStatus.MARKED_ROLLBACK;
 	}
 

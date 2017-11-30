@@ -60,11 +60,6 @@ import org.junit.After;
 import org.junit.Test;
 import junit.framework.AssertionFailedError;
 
-import org.infinispan.Cache;
-import org.infinispan.test.TestingUtil;
-
-import org.jboss.logging.Logger;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -339,7 +334,10 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 							.buildTransactionCoordinator(txOwner, null);
 			when(session.getTransactionCoordinator()).thenReturn(txCoord);
 			when(session.beginTransaction()).then(invocation -> {
-				Transaction tx = new TransactionImpl(txCoord, session.getExceptionConverter());
+				Transaction tx = new TransactionImpl(
+						txCoord,
+						session.getExceptionConverter(),
+						session.getFactory().getSessionFactoryOptions().getJpaCompliance() );
 				tx.begin();
 				return tx;
 			});

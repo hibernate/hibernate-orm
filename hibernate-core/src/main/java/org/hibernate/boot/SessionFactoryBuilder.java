@@ -19,6 +19,7 @@ import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.jpa.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -717,6 +718,28 @@ public interface SessionFactoryBuilder {
 	 *
 	 */
 	SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable);
+
+
+	/**
+	 * @see JpaCompliance#isJpaQueryComplianceEnabled()
+	 */
+	SessionFactoryBuilder enableJpaQueryCompliance(boolean enabled);
+
+	/**
+	 * @see JpaCompliance#isJpaTransactionComplianceEnabled()
+	 */
+	SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled);
+
+	/**
+	 * @see JpaCompliance#isJpaListComplianceEnabled()
+	 */
+	SessionFactoryBuilder enableJpaListCompliance(boolean enabled);
+
+	/**
+	 * @see JpaCompliance#isJpaClosedComplianceEnabled()
+	 */
+	SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled);
+
 
 	/**
 	 * Allows unwrapping this builder as another, more specific type.

@@ -390,6 +390,30 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
+	public SessionFactoryBuilder enableJpaQueryCompliance(boolean enabled) {
+		delegate.enableJpaQueryCompliance( enabled );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled) {
+		delegate.enableJpaTransactionCompliance( enabled );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder enableJpaListCompliance(boolean enabled) {
+		delegate.enableJpaListCompliance( enabled );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled) {
+		delegate.enableJpaClosedCompliance( enabled );
+		return getThis();
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public <S extends SessionFactoryBuilder> S unwrap(Class<S> type) {
 		return (S) this;

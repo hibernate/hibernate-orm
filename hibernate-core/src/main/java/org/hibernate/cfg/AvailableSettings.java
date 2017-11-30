@@ -10,9 +10,11 @@ import java.util.function.Supplier;
 
 import javax.persistence.GeneratedValue;
 
+import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.jpa.JpaCompliance;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -1741,4 +1743,51 @@ public interface AvailableSettings {
 	 * `hibernate_sequence` name should disable this setting,
 	 */
 	String PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME = "hibernate.model.generator_name_as_sequence_name";
+
+	/**
+	 * Should Hibernate's {@link Transaction} behave as
+	 * defined by the spec for JPA's {@link javax.persistence.EntityTransaction}
+	 * since it extends the JPA one.
+	 *
+	 * @see JpaCompliance#isJpaTransactionComplianceEnabled()
+	 */
+	String JPA_TRANSACTION_COMPLIANCE = "hibernate.jpa.compliance.transaction";
+
+	/**
+	 * Controls whether Hibernate's handling of {@link javax.persistence.Query}
+	 * (JPQL, Criteria and native-query) should strictly follow the JPA spec.
+	 * Tis includes both in terms of parsing or translating a query as well
+	 * as calls to the {@link javax.persistence.Query} methods throwing spec
+	 * defined exceptions where as Hibernate might not.
+	 *
+	 * Deviations result in an exception if enabled
+	 *
+	 * @see JpaCompliance#isJpaQueryComplianceEnabled()
+	 */
+	String JPA_QUERY_COMPLIANCE = "hibernate.jpa.compliance.query";
+
+	/**
+	 * Controls whether Hibernate should recognize what it considers a "bag"
+	 * ({@link org.hibernate.collection.internal.PersistentBag}) as a List
+	 * ({@link org.hibernate.collection.internal.PersistentList}) or as a bag.
+	 *
+	 * If enabled, we will recognize it as a List where {@link @{@link javax.persistence.OrderColumn}}
+	 * is just missing (and its defaults will apply).
+	 *
+	 * @see JpaCompliance#isJpaListComplianceEnabled()
+	 */
+	String JPA_LIST_COMPLIANCE	= "hibernate.jpa.compliance.list";
+
+	/**
+	 * JPA defines specific exceptions on specific methods when called on
+	 * {@link javax.persistence.EntityManager} and {@link javax.persistence.EntityManagerFactory}
+	 * when those objects have been closed.  This setting controls
+	 * whether the spec defined behavior or Hibernate's behavior will be used.
+	 *
+	 * If enabled Hibernate will operate in the JPA specified way throwing
+	 * exceptions when the spec says it should.
+	 *
+	 * @see JpaCompliance#isJpaClosedComplianceEnabled()
+	 */
+	String JPA_CLOSED_COMPLIANCE = "hibernate.jpa.compliance.closed";
 }

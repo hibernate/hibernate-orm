@@ -34,7 +34,7 @@ public class ClosedFactoryTests extends BaseUnitTestCase {
 				.build();
 
 		try {
-			final SessionFactoryBuilderImplementor factoryBuilder = (SessionFactoryBuilderImplementor) new MetadataSources()
+			final SessionFactoryBuilderImplementor factoryBuilder = (SessionFactoryBuilderImplementor) new MetadataSources( ssr )
 					.buildMetadata()
 					.getSessionFactoryBuilder();
 			final SessionFactory sf = factoryBuilder.build();

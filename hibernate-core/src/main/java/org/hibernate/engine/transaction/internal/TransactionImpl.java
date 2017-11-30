@@ -159,7 +159,19 @@ public class TransactionImpl implements TransactionImplementor {
 	}
 
 	@Override
+	public void markRollbackOnly() {
+		// this is the Hibernate-specific API, whereas #setRollbackOnly is the
+		// JPA-defined API.  In our opinion it is much more user-friendly to
+		// always allow user/integration to indicate that the transaction
+		// should not be allowed to commit.
+		internalGetTransactionDriverControl().markRollbackOnly();
+	}
+
+	@Override
 	public void setRollbackOnly() {
+		// Since this is the JPA-defined one, we make sure the txn is active first
+		// so long as compliance (JpaCompliance) has not been defined to disable
+		// that check - making this active more like Hibernate's #markRollbackOnly
 		if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
 			if ( !isActive() ) {
 				throw new IllegalStateException(
@@ -169,7 +181,7 @@ public class TransactionImpl implements TransactionImplementor {
 			}
 		}
 
-		internalGetTransactionDriverControl().markRollbackOnly();
+		markRollbackOnly();
 	}
 
 	@Override

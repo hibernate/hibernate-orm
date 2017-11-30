@@ -29,7 +29,7 @@ public class JpaComplianceImpl implements JpaCompliance {
 		queryCompliance = ConfigurationHelper.getBoolean(
 				AvailableSettings.JPA_QUERY_COMPLIANCE,
 				configurationSettings,
-				legacyQueryCompliance == null ? jpaByDefault : ConfigurationHelper.toBoolean( legacyQueryCompliance, jpaByDefault )
+				ConfigurationHelper.toBoolean( legacyQueryCompliance, jpaByDefault )
 		);
 		transactionCompliance = ConfigurationHelper.getBoolean(
 				AvailableSettings.JPA_TRANSACTION_COMPLIANCE,

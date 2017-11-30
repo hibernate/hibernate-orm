@@ -735,8 +735,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	 */
 	public void close() throws HibernateException {
 		if ( isClosed ) {
-			if ( sessionFactoryOptions.isJpaBootstrap() ) {
-				throw new IllegalStateException( "EntityManagerFactory is closed" );
+			if ( getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
+				throw new IllegalStateException( "EntityManagerFactory is already closed" );
 			}
 
 			LOG.trace( "Already closed" );

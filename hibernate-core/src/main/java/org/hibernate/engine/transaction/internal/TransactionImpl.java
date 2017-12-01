@@ -71,8 +71,13 @@ public class TransactionImpl implements TransactionImplementor {
 
 	@Override
 	public void commit() {
-		if ( !isActive() ) {
+		if ( !isActive( true ) ) {
 			// allow MARKED_ROLLBACK to propagate through to transactionDriverControl
+			// the boolean passed to isActive indicates whether MARKED_ROLLBACK should be
+			// considered active
+			//
+			// essentially here we have a transaction that is not active and
+			// has not been marked for rollback only
 			throw new IllegalStateException( "Transaction not successfully started" );
 		}
 
@@ -124,6 +129,7 @@ public class TransactionImpl implements TransactionImplementor {
 	@Override
 	public boolean isActive() {
 		// old behavior considered TransactionStatus#MARKED_ROLLBACK as active
+//		return isActive( jpaCompliance.isJpaTransactionComplianceEnabled() ? false : true );
 		return isActive( true );
 	}
 

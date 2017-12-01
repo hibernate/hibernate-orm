@@ -2,6 +2,7 @@ package org.hibernate.test.cache.infinispan.util;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collections;
 import javax.transaction.RollbackException;
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
@@ -13,6 +14,8 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
+import org.hibernate.jpa.JpaCompliance;
+import org.hibernate.jpa.spi.JpaComplianceImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaIsolationDelegate;
 import org.hibernate.resource.transaction.backend.jta.internal.StatusTranslator;
 import org.hibernate.resource.transaction.spi.SynchronizationRegistry;
@@ -110,6 +113,11 @@ public class BatchModeTransactionCoordinator implements TransactionCoordinator {
 				}
 			}
 		};
+	}
+
+	@Override
+	public JpaCompliance getJpaCompliance() {
+		return new JpaComplianceImpl( Collections.emptyMap(), false );
 	}
 
 	@Override

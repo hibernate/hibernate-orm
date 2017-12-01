@@ -287,6 +287,7 @@ public class SequenceStyleGenerator
 				fallbackSequenceName = generatorName;
 			}
 		}
+
 		// JPA_ENTITY_NAME value honors <class ... entity-name="..."> (HBM) and @Entity#name (JPA) overrides.
 		final String defaultSequenceName = ConfigurationHelper.getBoolean( CONFIG_PREFER_SEQUENCE_PER_ENTITY, params, false )
 				? params.getProperty( JPA_ENTITY_NAME ) + sequencePerEntitySuffix

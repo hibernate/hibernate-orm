@@ -183,6 +183,41 @@ public class SQLQueryReturnProcessor {
 		return new ResultAliasContext();
 	}
 
+	private interface QueryReturnVisitor {
+		void visitScalarReturn(NativeSQLQueryScalarReturn rtn);
+		void visitRootReturn(NativeSQLQueryRootReturn rtn);
+		void visitCollectionReturn(NativeSQLQueryCollectionReturn rtn);
+
+		void visitFetch(NativeSQLQueryJoinReturn rtn);
+
+		void visitDynamicInstantiation(NativeSQLQueryConstructorReturn rtn);
+	}
+
+	public void visitReturns(QueryReturnVisitor visitor) {
+		for ( NativeSQLQueryReturn queryReturn : queryReturns ) {
+			if ( NativeSQLQueryScalarReturn.class.isInstance( queryReturn ) ) {
+				visitor.visitScalarReturn( (NativeSQLQueryScalarReturn) queryReturn );
+			}
+			else if ( NativeSQLQueryRootReturn.class.isInstance( queryReturn ) ) {
+				visitor.visitRootReturn( (NativeSQLQueryRootReturn) queryReturn );
+			}
+			else if ( NativeSQLQueryCollectionReturn.class.isInstance( queryReturn ) ) {
+				visitor.visitCollectionReturn( (NativeSQLQueryCollectionReturn) queryReturn );
+			}
+			else if ( NativeSQLQueryJoinReturn.class.isInstance( queryReturn ) ) {
+				visitor.visitFetch( (NativeSQLQueryJoinReturn) queryReturn );
+			}
+			else if ( NativeSQLQueryConstructorReturn.class.isInstance( queryReturn ) ) {
+				visitor.visitDynamicInstantiation( (NativeSQLQueryConstructorReturn) queryReturn );
+			}
+			else {
+				throw new IllegalStateException(
+						"Unrecognized NativeSQLQueryReturn concrete type : " + queryReturn
+				);
+			}
+		}
+	}
+
 	public List<Return> generateCustomReturns(boolean queryHadAliases) {
 		List<Return> customReturns = new ArrayList<Return>();
 		Map<String,Return> customReturnsByAlias = new HashMap<String,Return>();
@@ -351,6 +386,58 @@ public class SQLQueryReturnProcessor {
 				);
 			}
 		}
+		return customReturns;
+	}
+
+	public List<Return> generateCallableReturns() {
+		final List<Return> customReturns = new ArrayList<>();
+
+		visitReturns(
+				new QueryReturnVisitor() {
+					@Override
+					public void visitScalarReturn(NativeSQLQueryScalarReturn rtn) {
+						customReturns.add( new ScalarReturn( rtn.getType(), rtn.getColumnAlias() ) );
+					}
+
+					@Override
+					public void visitRootReturn(NativeSQLQueryRootReturn rtn) {
+						customReturns.add(
+								new RootReturn(
+										rtn.getAlias(),
+										rtn.getReturnEntityName(),
+										new ColumnEntityAliases(
+												(Map) entityPropertyResultMaps.get( rtn.getAlias() ),
+												(SQLLoadable) alias2Persister.get( rtn.getAlias() ),
+												(String) alias2Suffix.get( rtn.getAlias() )
+										),
+										rtn.getLockMode()
+								)
+						);
+					}
+
+					@Override
+					public void visitCollectionReturn(NativeSQLQueryCollectionReturn rtn) {
+						throw new UnsupportedOperationException( "Collection returns not supported for stored procedure mapping" );
+					}
+
+					@Override
+					public void visitFetch(NativeSQLQueryJoinReturn rtn) {
+						throw new UnsupportedOperationException( "Collection returns not supported for stored procedure mapping" );
+					}
+
+					@Override
+					public void visitDynamicInstantiation(NativeSQLQueryConstructorReturn rtn) {
+						final ScalarReturn[] scalars = new ScalarReturn[ rtn.getColumnReturns().length ];
+						int i = 0;
+						for ( NativeSQLQueryScalarReturn scalarReturn : rtn.getColumnReturns() ) {
+							scalars[i++] = new ScalarReturn( scalarReturn.getType(), scalarReturn.getColumnAlias() );
+						}
+
+						customReturns.add( new ConstructorReturn( rtn.getTargetClass(), scalars ) );
+					}
+				}
+		);
+
 		return customReturns;
 	}
 

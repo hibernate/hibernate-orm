@@ -58,24 +58,43 @@ public class TransactionUtil2 {
 			action.accept( session );
 			log.trace( "Called action - in txn" );
 
-			log.trace( "Committing transaction" );
-			txn.commit();
-			log.trace( "Committed transaction" );
+			if ( txn.isActive() ) {
+				if ( txn.getRollbackOnly() ) {
+					log.trace( "Rolling back transaction due to being marked for rollback only" );
+					txn.rollback();
+					log.trace( "Rolled back transaction due to being marked for rollback only" );
+				}
+				else {
+					log.trace( "Committing transaction" );
+					txn.commit();
+					log.trace( "Committed transaction" );
+				}
+			}
 		}
 		catch (Exception e) {
-			log.tracef(
-					"Error calling action: %s (%s) - rolling back",
-					e.getClass().getName(),
-					e.getMessage()
-			);
-			try {
-				txn.rollback();
+			if ( txn.isActive() ) {
+				log.tracef(
+						"Error calling action: %s (%s) - rolling back",
+						e.getClass().getName(),
+						e.getMessage()
+				);
+
+				try {
+					txn.rollback();
+				}
+				catch (Exception ignore) {
+					log.trace( "Was unable to roll back transaction" );
+					// really nothing else we can do here - the attempt to
+					//		rollback already failed and there is nothing else
+					// 		to clean up.
+				}
 			}
-			catch (Exception ignore) {
-				log.trace( "Was unable to roll back transaction" );
-				// really nothing else we can do here - the attempt to
-				//		rollback already failed and there is nothing else
-				// 		to clean up.
+			else {
+				log.tracef(
+						"Error calling action: %s (%s) - transaction was already rolled back",
+						e.getClass().getName(),
+						e.getMessage()
+				);
 			}
 
 			throw e;

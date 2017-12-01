@@ -6,18 +6,25 @@
  */
 package org.hibernate.test.jpa.compliance.tck2_2;
 
+import javax.persistence.RollbackException;
+
 import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
+import org.hamcrest.CoreMatchers;
+
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil2.inSession;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -47,6 +54,78 @@ public class EntityTransactionTests extends BaseUnitTestCase {
 								fail( "Expecting failure #getRollbackOnly on non-active txn" );
 							}
 							catch (IllegalStateException expected) {
+							}
+						}
+				);
+			}
+			finally {
+				sessionFactory.close();
+			}
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
+	}
+
+	@Test
+	public void testSetRollbackOnlyOutcomeExpectations() {
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" )
+				.build();
+
+		try {
+			final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources( ssr )
+					.buildMetadata()
+					.buildSessionFactory();
+
+			try {
+				inSession(
+						sessionFactory,
+						session -> {
+							final Transaction transaction = session.getTransaction();
+							transaction.begin();
+
+							try {
+								assertTrue( transaction.isActive() );
+
+								transaction.setRollbackOnly();
+								assertTrue( transaction.isActive() );
+								assertTrue( transaction.getRollbackOnly() );
+							}
+							finally {
+								if ( transaction.isActive() ) {
+									transaction.rollback();
+								}
+							}
+						}
+				);
+
+				inSession(
+						sessionFactory,
+						session -> {
+							final Transaction transaction = session.getTransaction();
+							transaction.begin();
+
+							try {
+								assertTrue( transaction.isActive() );
+
+								transaction.setRollbackOnly();
+								assertTrue( transaction.isActive() );
+								assertTrue( transaction.getRollbackOnly() );
+
+								// now try to commit, this should force a rollback
+								try {
+									transaction.commit();
+								}
+								catch (RollbackException e) {
+									assertFalse( transaction.isActive() );
+									assertThat( transaction.getStatus(), CoreMatchers.is( TransactionStatus.ROLLED_BACK ) );
+								}
+							}
+							finally {
+								if ( transaction.isActive() ) {
+									transaction.rollback();
+								}
 							}
 						}
 				);

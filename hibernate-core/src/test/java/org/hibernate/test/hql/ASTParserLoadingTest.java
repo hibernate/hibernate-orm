@@ -46,6 +46,7 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.internal.util.StringHelper;
@@ -82,6 +83,7 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -851,61 +853,84 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testInvalidCollectionDereferencesFail() {
-		Session s = openSession();
-		s.beginTransaction();
 
-		// control group...
-		s.createQuery( "from Animal a join a.offspring o where o.description = 'xyz'" ).list();
-		s.createQuery( "from Animal a join a.offspring o where o.father.description = 'xyz'" ).list();
-		s.createQuery( "from Animal a join a.offspring o order by o.description" ).list();
-		s.createQuery( "from Animal a join a.offspring o order by o.father.description" ).list();
 
-		try {
-			s.createQuery( "from Animal a where a.offspring.description = 'xyz'" ).list();
-			fail( "illegal collection dereference semantic did not cause failure" );
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch( QueryException qe ) {
-            log.trace("expected failure...", qe);
-		}
+		try ( final SessionImplementor s = (SessionImplementor) openSession() ) {
+			// control group...
+			inTransaction(
+					s,
+					session -> {
+						s.createQuery( "from Animal a join a.offspring o where o.description = 'xyz'" ).list();
+						s.createQuery( "from Animal a join a.offspring o where o.father.description = 'xyz'" ).list();
+						s.createQuery( "from Animal a join a.offspring o order by o.description" ).list();
+						s.createQuery( "from Animal a join a.offspring o order by o.father.description" ).list();
+					}
+			);
 
-		try {
-			s.createQuery( "from Animal a where a.offspring.father.description = 'xyz'" ).list();
-			fail( "illegal collection dereference semantic did not cause failure" );
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch( QueryException qe ) {
-            log.trace("expected failure...", qe);
-		}
+			inTransaction(
+					s,
+					session -> {
+						try {
+							s.createQuery( "from Animal a where a.offspring.description = 'xyz'" ).list();
+							fail( "illegal collection dereference semantic did not cause failure" );
+						}
+						catch (IllegalArgumentException e) {
+							assertTyping( QueryException.class, e.getCause() );
+						}
+						catch (QueryException qe) {
+							log.trace( "expected failure...", qe );
+						}
+					}
+			);
 
-		try {
-			s.createQuery( "from Animal a order by a.offspring.description" ).list();
-			fail( "illegal collection dereference semantic did not cause failure" );
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch( QueryException qe ) {
-            log.trace("expected failure...", qe);
-		}
+			inTransaction(
+					s,
+					session -> {
+						try {
+							s.createQuery( "from Animal a where a.offspring.father.description = 'xyz'" ).list();
+							fail( "illegal collection dereference semantic did not cause failure" );
+						}
+						catch (IllegalArgumentException e) {
+							assertTyping( QueryException.class, e.getCause() );
+						}
+						catch (QueryException qe) {
+							log.trace( "expected failure...", qe );
+						}
+					}
+			);
 
-		try {
-			s.createQuery( "from Animal a order by a.offspring.father.description" ).list();
-			fail( "illegal collection dereference semantic did not cause failure" );
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch( QueryException qe ) {
-            log.trace("expected failure...", qe);
-		}
+			inTransaction(
+					s,
+					session -> {
+						try {
+							s.createQuery( "from Animal a order by a.offspring.description" ).list();
+							fail( "illegal collection dereference semantic did not cause failure" );
+						}
+						catch (IllegalArgumentException e) {
+							assertTyping( QueryException.class, e.getCause() );
+						}
+						catch (QueryException qe) {
+							log.trace( "expected failure...", qe );
+						}
+					}
+			);
 
-		s.getTransaction().commit();
-		s.close();
+			inTransaction(
+					s,
+					session -> {
+						try {
+							s.createQuery( "from Animal a order by a.offspring.father.description" ).list();
+							fail( "illegal collection dereference semantic did not cause failure" );
+						}
+						catch (IllegalArgumentException e) {
+							assertTyping( QueryException.class, e.getCause() );
+						}
+						catch (QueryException qe) {
+							log.trace( "expected failure...", qe );
+						}
+					}
+			);
+		}
 	}
 
 	@Test
@@ -1571,42 +1596,46 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@FailureExpected( jiraKey = "unknown" )
 	public void testParameterTypeMismatch() {
-		Session s = openSession();
-		s.beginTransaction();
-
-		Query query = s.createQuery( "from Animal a where a.description = :nonstring" )
-				.setParameter( "nonstring", Integer.valueOf( 1 ) );
-		try {
-			query.list();
-			fail( "query execution should have failed" );
+		try ( final SessionImplementor s = (SessionImplementor) openSession() ) {
+			inTransaction(
+					s,
+				session -> {
+					try {
+						s.createQuery( "from Animal a where a.description = :nonstring" )
+								.setParameter( "nonstring", Integer.valueOf( 1 ) )
+								.list();
+						fail( "query execution should have failed" );
+					}
+					catch (IllegalArgumentException e) {
+						assertTyping( TypeMismatchException.class, e.getCause() );
+					}
+					catch (TypeMismatchException tme) {
+						// expected behavior
+					}
+				}
+			);
 		}
-		catch (IllegalArgumentException e) {
-			assertTyping( TypeMismatchException.class, e.getCause() );
-		}
-		catch( TypeMismatchException tme ) {
-			// expected behavior
-		}
-
-		s.getTransaction().commit();
-		s.close();
 	}
 
 	@Test
 	public void testMultipleBagFetchesFail() {
-		Session s = openSession();
-		s.beginTransaction();
-		try {
-			s.createQuery( "from Human h join fetch h.friends f join fetch f.friends fof" ).list();
-			fail( "failure expected" );
+		try ( final SessionImplementor s = (SessionImplementor) openSession() ) {
+			inTransaction(
+					s,
+					session-> {
+						try {
+							s.createQuery( "from Human h join fetch h.friends f join fetch f.friends fof" ).list();
+							fail( "failure expected" );
+						}
+						catch (IllegalArgumentException e) {
+							assertTyping( MultipleBagFetchException.class, e.getCause() );
+						}
+						catch( HibernateException e ) {
+							assertTrue( "unexpected failure reason : " + e, e.getMessage().indexOf( "multiple bags" ) > 0 );
+						}
+					}
+			);
 		}
-		catch (IllegalArgumentException e) {
-			assertTyping( MultipleBagFetchException.class, e.getCause() );
-		}
-		catch( HibernateException e ) {
-			assertTrue( "unexpected failure reason : " + e, e.getMessage().indexOf( "multiple bags" ) > 0 );
-		}
-		s.getTransaction().commit();
-		s.close();
 	}
 
 	@Test
@@ -1880,31 +1909,39 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testInvalidFetchSemantics() {
-		Session s = openSession();
-		s.beginTransaction();
+		try ( final SessionImplementor s = (SessionImplementor) openSession()) {
 
-		try {
-			s.createQuery( "select mother from Human a left join fetch a.mother mother" ).list();
-			fail( "invalid fetch semantic allowed!" );
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch( QueryException e ) {
-		}
+			inTransaction(
+					s,
+					session -> {
+						try {
+							s.createQuery( "select mother from Human a left join fetch a.mother mother" ).list();
+							fail( "invalid fetch semantic allowed!" );
+						}
+						catch (IllegalArgumentException e) {
+							assertTyping( QueryException.class, e.getCause() );
+						}
+						catch( QueryException e ) {
+						}
+					}
+			);
 
-		try {
-			s.createQuery( "select mother from Human a left join fetch a.mother mother" ).list();
-			fail( "invalid fetch semantic allowed!" );
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch( QueryException e ) {
-		}
+			inTransaction(
+					s,
+					session-> {
+						try {
+							s.createQuery( "select mother from Human a left join fetch a.mother mother" ).list();
+							fail( "invalid fetch semantic allowed!" );
+						}
+						catch (IllegalArgumentException e) {
+							assertTyping( QueryException.class, e.getCause() );
+						}
+						catch( QueryException e ) {
+						}
+					}
+			);
 
-		s.getTransaction().commit();
-		s.close();
+		}
 	}
 
 	@Test

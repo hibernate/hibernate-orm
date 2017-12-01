@@ -7,6 +7,7 @@
 package org.hibernate.test.jpa.compliance.tck2_2;
 
 import java.util.Date;
+import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Parameter;
@@ -16,12 +17,14 @@ import javax.persistence.TemporalType;
 import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -36,6 +39,12 @@ public class QueryApiTest extends BaseNonConfigCoreFunctionalTestCase {
 		String name;
 		@Temporal( TemporalType.DATE )
 		Date dob;
+	}
+
+	@Override
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+		settings.put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" );
 	}
 
 	@Override
@@ -181,7 +190,7 @@ public class QueryApiTest extends BaseNonConfigCoreFunctionalTestCase {
 				session -> {
 					try {
 						// Query
-						session.createQuery( "select p from Person p where name = ?" ).setMaxResults( -3 );
+						session.createQuery( "select p from Person p where name = ?1" ).setMaxResults( -3 );
 						fail( "expecting failure" );
 					}
 					catch (IllegalArgumentException expected) {
@@ -203,6 +212,24 @@ public class QueryApiTest extends BaseNonConfigCoreFunctionalTestCase {
 					}
 					catch (TransactionRequiredException expected) {
 						// expected condition
+					}
+				}
+		);
+	}
+
+	@Test
+	public void testInvalidQueryMarksTxnForRollback() {
+		inSession(
+				session -> {
+					try {
+						assertFalse( session.getTransaction().isActive() );
+						// Query
+						session.createQuery( "invalid" ).list();
+						fail( "expecting failure" );
+					}
+					catch (IllegalArgumentException expected) {
+						assertTrue( session.getTransaction().isActive() );
+						assertTrue( session.getTransaction().getRollbackOnly() );
 					}
 				}
 		);

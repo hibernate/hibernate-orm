@@ -143,12 +143,14 @@ public class SequenceStyleGenerator
 	 * Used to create dedicated sequence for each entity based on the entity name.  Sequence suffix can be
 	 * controlled with {@link #CONFIG_SEQUENCE_PER_ENTITY_SUFFIX} option.
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public static final String CONFIG_PREFER_SEQUENCE_PER_ENTITY = "prefer_sequence_per_entity";
 
 	/**
 	 * Indicates the suffix to use in naming the identifier sequence/table name, by appending the suffix to
 	 * the name of the entity.  Used in conjunction with {@link #CONFIG_PREFER_SEQUENCE_PER_ENTITY}.
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public static final String CONFIG_SEQUENCE_PER_ENTITY_SUFFIX = "sequence_per_entity_suffix";
 
 	/**
@@ -173,11 +175,13 @@ public class SequenceStyleGenerator
 	/**
 	 * Indicates the name of the column holding the identifier values.  The default value is {@link #DEF_VALUE_COLUMN}
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public static final String VALUE_COLUMN_PARAM = "value_column";
 
 	/**
 	 * The default value for {@link #VALUE_COLUMN_PARAM}
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public static final String DEF_VALUE_COLUMN = "next_val";
 
 
@@ -267,10 +271,9 @@ public class SequenceStyleGenerator
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @param dialect The dialect in effect
 	 * @param jdbcEnv The JdbcEnvironment
-	 * @param serviceRegistry
 	 * @return The sequence name
 	 */
-	@SuppressWarnings("UnusedParameters")
+	@SuppressWarnings({"UnusedParameters", "WeakerAccess"})
 	protected QualifiedName determineSequenceName(
 			Properties params,
 			Dialect dialect,
@@ -281,7 +284,7 @@ public class SequenceStyleGenerator
 		String fallbackSequenceName = DEF_SEQUENCE_NAME;
 		final Boolean preferGeneratorNameAsDefaultName = serviceRegistry.getService( ConfigurationService.class )
 				.getSetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, StandardConverters.BOOLEAN, true );
-		if ( preferGeneratorNameAsDefaultName != null && preferGeneratorNameAsDefaultName ) {
+		if ( preferGeneratorNameAsDefaultName ) {
 			final String generatorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
 			if ( StringHelper.isNotEmpty( generatorName ) ) {
 				fallbackSequenceName = generatorName;
@@ -324,7 +327,7 @@ public class SequenceStyleGenerator
 	 * @param jdbcEnvironment The JDBC environment
 	 * @return The value column name
 	 */
-	@SuppressWarnings("UnusedParameters")
+	@SuppressWarnings({"UnusedParameters", "WeakerAccess"})
 	protected Identifier determineValueColumnName(Properties params, JdbcEnvironment jdbcEnvironment) {
 		final String name = ConfigurationHelper.getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
 		return jdbcEnvironment.getIdentifierHelper().toIdentifier( name );
@@ -340,6 +343,7 @@ public class SequenceStyleGenerator
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @return The initial value
 	 */
+	@SuppressWarnings({"WeakerAccess"})
 	protected int determineInitialValue(Properties params) {
 		return ConfigurationHelper.getInt( INITIAL_PARAM, params, DEFAULT_INITIAL_VALUE );
 	}
@@ -353,6 +357,7 @@ public class SequenceStyleGenerator
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @return The increment size
 	 */
+	@SuppressWarnings("WeakerAccess")
 	protected int determineIncrementSize(Properties params) {
 		return ConfigurationHelper.getInt( INCREMENT_PARAM, params, DEFAULT_INCREMENT_SIZE );
 	}
@@ -366,6 +371,7 @@ public class SequenceStyleGenerator
 	 * @param incrementSize The {@link #determineIncrementSize determined increment size}
 	 * @return The optimizer strategy (name)
 	 */
+	@SuppressWarnings("WeakerAccess")
 	protected String determineOptimizationStrategy(Properties params, int incrementSize) {
 		return ConfigurationHelper.getString(
 				OPT_PARAM,
@@ -382,6 +388,7 @@ public class SequenceStyleGenerator
 	 * @param incrementSize The {@link #determineIncrementSize determined increment size}
 	 * @return The adjusted increment size.
 	 */
+	@SuppressWarnings("WeakerAccess")
 	protected int determineAdjustedIncrementSize(String optimizationStrategy, int incrementSize) {
 		final int resolvedIncrementSize;
 		if ( Math.abs( incrementSize ) > 1 &&
@@ -427,6 +434,7 @@ public class SequenceStyleGenerator
 	 *
 	 * @return An abstraction for the actual database structure in use (table vs. sequence).
 	 */
+	@SuppressWarnings("WeakerAccess")
 	protected DatabaseStructure buildDatabaseStructure(
 			Type type,
 			Properties params,
@@ -454,6 +462,7 @@ public class SequenceStyleGenerator
 		return new SequenceStructure( jdbcEnvironment, sequenceName, initialValue, incrementSize, type.getReturnedClass() );
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	protected DatabaseStructure buildTableStructure(
 			Type type,
 			Properties params,

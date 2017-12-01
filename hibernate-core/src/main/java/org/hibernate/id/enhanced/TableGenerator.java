@@ -148,6 +148,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	/**
 	 * The default {@link #TABLE_PARAM} value
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public static final String DEF_TABLE = "hibernate_sequences";
 
 	/**
@@ -181,17 +182,20 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	/**
 	 * The default {@link #SEGMENT_VALUE_PARAM} value, unless {@link #CONFIG_PREFER_SEGMENT_PER_ENTITY} is specified
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public static final String DEF_SEGMENT_VALUE = "default";
 
 	/**
 	 * Indicates the length of the column defined by {@link #SEGMENT_COLUMN_PARAM}.  Used in schema export.  The
 	 * default value is {@link #DEF_SEGMENT_LENGTH}
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public static final String SEGMENT_LENGTH_PARAM = "segment_value_length";
 
 	/**
 	 * The default {@link #SEGMENT_LENGTH_PARAM} value
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public static final int DEF_SEGMENT_LENGTH = 255;
 
 	/**
@@ -202,6 +206,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	/**
 	 * The default {@link #INITIAL_PARAM} value
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public static final int DEFAULT_INITIAL_VALUE = 1;
 
 	/**
@@ -212,6 +217,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	/**
 	 * The default {@link #INCREMENT_PARAM} value
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public static final int DEFAULT_INCREMENT_SIZE = 1;
 
 	/**
@@ -294,7 +300,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 *
 	 * @return the column size.
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings({"UnusedDeclaration", "WeakerAccess"})
 	public final int getSegmentValueLength() {
 		return segmentValueLength;
 	}
@@ -386,22 +392,22 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 * @param jdbcEnvironment The JDBC environment
 	 * @return The table name to use.
 	 */
-	@SuppressWarnings("UnusedParameters")
+	@SuppressWarnings({"UnusedParameters", "WeakerAccess"})
 	protected QualifiedName determineGeneratorTableName(Properties params, JdbcEnvironment jdbcEnvironment, ServiceRegistry serviceRegistry) {
-		String tableName = ConfigurationHelper.getString( TABLE_PARAM, params, DEF_TABLE );
 
+		String fallbackTableName = DEF_TABLE;
 
-		if ( tableName == null ) {
-			tableName = DEF_TABLE;
-			final Boolean preferGeneratorNameAsDefaultName = serviceRegistry.getService( ConfigurationService.class )
-					.getSetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, StandardConverters.BOOLEAN, true );
-			if ( preferGeneratorNameAsDefaultName != null && preferGeneratorNameAsDefaultName ) {
-				final String generatorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
-				if ( StringHelper.isNotEmpty( generatorName ) ) {
-					tableName = generatorName;
-				}
+		final Boolean preferGeneratorNameAsDefaultName = serviceRegistry.getService( ConfigurationService.class )
+				.getSetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, StandardConverters.BOOLEAN, true );
+		if ( preferGeneratorNameAsDefaultName ) {
+			final String generatorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
+			if ( StringHelper.isNotEmpty( generatorName ) ) {
+				fallbackTableName = generatorName;
 			}
 		}
+
+
+		String tableName = ConfigurationHelper.getString( TABLE_PARAM, params, fallbackTableName );
 
 		if ( tableName.contains( "." ) ) {
 			return QualifiedNameParser.INSTANCE.parse( tableName );
@@ -433,7 +439,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 * @param jdbcEnvironment The JDBC environment
 	 * @return The name of the segment column
 	 */
-	@SuppressWarnings("UnusedParameters")
+	@SuppressWarnings({"UnusedParameters", "WeakerAccess"})
 	protected String determineSegmentColumnName(Properties params, JdbcEnvironment jdbcEnvironment) {
 		final String name = ConfigurationHelper.getString( SEGMENT_COLUMN_PARAM, params, DEF_SEGMENT_COLUMN );
 		return jdbcEnvironment.getIdentifierHelper().toIdentifier( name ).render( jdbcEnvironment.getDialect() );
@@ -449,7 +455,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 * @param jdbcEnvironment The JDBC environment
 	 * @return The name of the value column
 	 */
-	@SuppressWarnings("UnusedParameters")
+	@SuppressWarnings({"UnusedParameters", "WeakerAccess"})
 	protected String determineValueColumnName(Properties params, JdbcEnvironment jdbcEnvironment) {
 		final String name = ConfigurationHelper.getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
 		return jdbcEnvironment.getIdentifierHelper().toIdentifier( name ).render( jdbcEnvironment.getDialect() );
@@ -464,6 +470,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @return The name of the value column
 	 */
+	@SuppressWarnings("WeakerAccess")
 	protected String determineSegmentValue(Properties params) {
 		String segmentValue = params.getProperty( SEGMENT_VALUE_PARAM );
 		if ( StringHelper.isEmpty( segmentValue ) ) {
@@ -479,6 +486,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @return The default segment value to use.
 	 */
+	@SuppressWarnings("WeakerAccess")
 	protected String determineDefaultSegmentValue(Properties params) {
 		final boolean preferSegmentPerEntity = ConfigurationHelper.getBoolean( CONFIG_PREFER_SEGMENT_PER_ENTITY, params, false );
 		final String defaultToUse = preferSegmentPerEntity ? params.getProperty( TABLE ) : DEF_SEGMENT_VALUE;
@@ -495,19 +503,22 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @return The size of the segment column
 	 */
+	@SuppressWarnings("WeakerAccess")
 	protected int determineSegmentColumnSize(Properties params) {
 		return ConfigurationHelper.getInt( SEGMENT_LENGTH_PARAM, params, DEF_SEGMENT_LENGTH );
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	protected int determineInitialValue(Properties params) {
 		return ConfigurationHelper.getInt( INITIAL_PARAM, params, DEFAULT_INITIAL_VALUE );
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	protected int determineIncrementSize(Properties params) {
 		return ConfigurationHelper.getInt( INCREMENT_PARAM, params, DEFAULT_INCREMENT_SIZE );
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	protected String buildSelectQuery(Dialect dialect) {
 		final String alias = "tbl";
 		final String query = "select " + StringHelper.qualify( alias, valueColumnName ) +
@@ -519,12 +530,14 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		return dialect.applyLocksToSql( query, lockOptions, updateTargetColumnsMap );
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	protected String buildUpdateQuery() {
 		return "update " + renderedTableName +
 				" set " + valueColumnName + "=? " +
 				" where " + valueColumnName + "=? and " + segmentColumnName + "=?";
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	protected String buildInsertQuery() {
 		return "insert into " + renderedTableName + " (" + segmentColumnName + ", " + valueColumnName + ") " + " values (?,?)";
 	}
@@ -551,23 +564,28 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 										final IntegralDataTypeHolder value = makeValue();
 										int rows;
 										do {
-											final PreparedStatement selectPS = prepareStatement( connection, selectQuery, statementLogger, statsCollector );
 
-											try {
+											try (PreparedStatement selectPS = prepareStatement(
+													connection,
+													selectQuery,
+													statementLogger,
+													statsCollector
+											)) {
 												selectPS.setString( 1, segmentValue );
 												final ResultSet selectRS = executeQuery( selectPS, statsCollector );
 												if ( !selectRS.next() ) {
 													value.initialize( initialValue );
 
-													final PreparedStatement insertPS = prepareStatement( connection, insertQuery, statementLogger, statsCollector );
-													try {
+													try (PreparedStatement insertPS = prepareStatement(
+															connection,
+															insertQuery,
+															statementLogger,
+															statsCollector
+													)) {
 														LOG.tracef( "binding parameter [%s] - [%s]", 1, segmentValue );
 														insertPS.setString( 1, segmentValue );
 														value.bind( insertPS, 2 );
 														executeUpdate( insertPS, statsCollector );
-													}
-													finally {
-														insertPS.close();
 													}
 												}
 												else {
@@ -579,13 +597,14 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 												LOG.unableToReadOrInitHiValue( e );
 												throw e;
 											}
-											finally {
-												selectPS.close();
-											}
 
 
-											final PreparedStatement updatePS = prepareStatement( connection, updateQuery, statementLogger, statsCollector );
-											try {
+											try (PreparedStatement updatePS = prepareStatement(
+													connection,
+													updateQuery,
+													statementLogger,
+													statsCollector
+											)) {
 												final IntegralDataTypeHolder updateValue = value.copy();
 												if ( optimizer.applyIncrementSizeToSourceValues() ) {
 													updateValue.add( incrementSize );
@@ -601,9 +620,6 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 											catch (SQLException e) {
 												LOG.unableToUpdateQueryHiValue( renderedTableName, e );
 												throw e;
-											}
-											finally {
-												updatePS.close();
 											}
 										}
 										while ( rows == 0 );

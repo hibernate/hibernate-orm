@@ -136,11 +136,11 @@ public final class TypeFactory implements Serializable {
 	public static void injectParameters(Object type, Properties parameters) {
 		if ( ParameterizedType.class.isInstance( type ) ) {
 			if ( parameters == null ) {
-				ConcurrentHashMapBackedProperties	concurrentParams = new ConcurrentHashMapBackedProperties(parameters);
-				( (ParameterizedType) type ).setParameterValues( concurrentParams );
+				( (ParameterizedType) type ).setParameterValues( EMPTY_PROPERTIES );
 			}
 			else {
-				( (ParameterizedType) type ).setParameterValues( parameters );
+				ConcurrentHashMapBackedProperties concurrentParams = new ConcurrentHashMapBackedProperties(parameters);
+				( (ParameterizedType) type ).setParameterValues( concurrentParams );
 			}
 		}
 		else if ( parameters != null && !parameters.isEmpty() ) {

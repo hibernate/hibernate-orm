@@ -26,11 +26,11 @@ public class ConcurrentHashMapBackedProperties extends Properties {
 	 */
 	private static final long serialVersionUID = 23632462472472L;
 
-	private ConcurrentHashMap<Object,Object> properties = new ConcurrentHashMap<Object,Object>();
+	private ConcurrentHashMap<String,String> properties = new ConcurrentHashMap<String,String>();
 	
 
 	public ConcurrentHashMapBackedProperties(Properties properties){
-		this.properties.putAll(properties);
+		this.properties.putAll((Map)properties);
 		
 	}
 

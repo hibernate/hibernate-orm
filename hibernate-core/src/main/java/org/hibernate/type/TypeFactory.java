@@ -131,12 +131,13 @@ public final class TypeFactory implements Serializable {
 	}
 
 	// todo : can a Properties be wrapped in unmodifiable in any way?
-	private final static Properties EMPTY_PROPERTIES = new Properties();
+	private final static ConcurrentHashMapBackedProperties EMPTY_PROPERTIES = new ConcurrentHashMapBackedProperties();
 
 	public static void injectParameters(Object type, Properties parameters) {
 		if ( ParameterizedType.class.isInstance( type ) ) {
 			if ( parameters == null ) {
-				( (ParameterizedType) type ).setParameterValues( EMPTY_PROPERTIES );
+				ConcurrentHashMapBackedProperties	concurrentParams = new ConcurrentHashMapBackedProperties(parameters);
+				( (ParameterizedType) type ).setParameterValues( concurrentParams );
 			}
 			else {
 				( (ParameterizedType) type ).setParameterValues( parameters );

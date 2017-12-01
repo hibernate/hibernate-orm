@@ -19,6 +19,7 @@ import org.jboss.logging.Logger;
  */
 public class TransactionUtil2 {
 	private static final Logger log = Logger.getLogger( TransactionUtil2.class );
+	public static final String ACTION_COMPLETED_TXN = "Execution of action caused managed transaction to be completed";
 
 	public static void inSession(SessionFactoryImplementor sfi, Consumer<SessionImplementor> action) {
 		log.trace( "#inSession(SF,action)" );
@@ -29,7 +30,7 @@ public class TransactionUtil2 {
 			log.trace( "called action" );
 		}
 		finally {
-			log.trace( "Session close - auto-close block" );
+			log.trace( "Session closed (AutoCloseable)" );
 		}
 	}
 
@@ -37,14 +38,12 @@ public class TransactionUtil2 {
 	public static void inTransaction(SessionFactoryImplementor factory, Consumer<SessionImplementor> action) {
 		log.trace( "#inTransaction(factory, action)");
 
-		try (SessionImplementor session = (SessionImplementor) factory.openSession()) {
-			log.trace( "Session opened, calling action" );
-			inTransaction( session, action );
-			log.trace( "called action" );
-		}
-		finally {
-			log.trace( "Session close - auto-close lock" );
-		}
+		inSession(
+				factory,
+				session -> {
+					inTransaction( session, action );
+				}
+		);
 	}
 
 	public static void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action) {
@@ -58,46 +57,47 @@ public class TransactionUtil2 {
 			action.accept( session );
 			log.trace( "Called action - in txn" );
 
-			if ( txn.isActive() ) {
-				if ( txn.getRollbackOnly() ) {
-					log.trace( "Rolling back transaction due to being marked for rollback only" );
-					txn.rollback();
-					log.trace( "Rolled back transaction due to being marked for rollback only" );
-				}
-				else {
-					log.trace( "Committing transaction" );
-					txn.commit();
-					log.trace( "Committed transaction" );
-				}
+			if ( !txn.isActive() ) {
+				throw new TransactionManagementException( ACTION_COMPLETED_TXN );
 			}
 		}
 		catch (Exception e) {
-			if ( txn.isActive() ) {
-				log.tracef(
-						"Error calling action: %s (%s) - rolling back",
-						e.getClass().getName(),
-						e.getMessage()
-				);
-
-				try {
-					txn.rollback();
-				}
-				catch (Exception ignore) {
-					log.trace( "Was unable to roll back transaction" );
-					// really nothing else we can do here - the attempt to
-					//		rollback already failed and there is nothing else
-					// 		to clean up.
-				}
+			// an error happened in the action
+			if ( ! txn.isActive() ) {
+				log.warn( ACTION_COMPLETED_TXN, e );
 			}
 			else {
-				log.tracef(
-						"Error calling action: %s (%s) - transaction was already rolled back",
-						e.getClass().getName(),
-						e.getMessage()
-				);
+				log.trace( "Rolling back transaction due to action error" );
+				try {
+					txn.rollback();
+					log.trace( "Rolled back transaction due to action error" );
+				}
+				catch (Exception inner) {
+					log.trace( "Rolling back transaction due to action error failed; throwing original error" );
+				}
 			}
 
 			throw e;
+		}
+
+		// action completed with no errors - attempt to commit the transaction allowing
+		// 		any RollbackException to propagate.  Note that when we get here we know the
+		//		txn is active
+
+		log.trace( "Committing transaction after successful action execution" );
+		try {
+			txn.commit();
+			log.trace( "Committing transaction after successful action execution - success" );
+		}
+		catch (Exception e) {
+			log.trace( "Committing transaction after successful action execution - failure" );
+			throw e;
+		}
+	}
+
+	private static class TransactionManagementException extends RuntimeException {
+		public TransactionManagementException(String message) {
+			super( message );
 		}
 	}
 }

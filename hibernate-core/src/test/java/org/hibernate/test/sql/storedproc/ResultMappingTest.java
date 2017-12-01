@@ -18,7 +18,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -41,7 +40,6 @@ public class ResultMappingTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testResultClass() {
 		inTransaction(
-				sessionFactory(),
 				session -> {
 					final ProcedureCall call = session.createStoredProcedureCall(
 							"findOneUser",
@@ -61,7 +59,6 @@ public class ResultMappingTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testMappingAllFields() {
 		inTransaction(
-				sessionFactory(),
 				session -> {
 					final ProcedureCall call = session.createStoredProcedureCall( "findOneUser", "all-fields" );
 					final ProcedureOutputs procedureResult = call.getOutputs();
@@ -78,7 +75,6 @@ public class ResultMappingTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testMappingSomeFields() {
 		inTransaction(
-				sessionFactory(),
 				session -> {
 					final ProcedureCall call = session.createStoredProcedureCall( "findOneUser", "some-fields" );
 					final ProcedureOutputs procedureResult = call.getOutputs();
@@ -95,7 +91,6 @@ public class ResultMappingTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testMappingNoFields() {
 		inTransaction(
-				sessionFactory(),
 				session -> {
 					final ProcedureCall call = session.createStoredProcedureCall( "findOneUser", "no-fields" );
 					final ProcedureOutputs procedureResult = call.getOutputs();

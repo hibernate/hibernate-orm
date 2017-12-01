@@ -94,6 +94,25 @@ public class CaseStatementTest extends BaseCoreFunctionalTestCase {
 								.list();
 					}
 			);
+
+			inTransaction(
+					s,
+					session -> {
+						try {
+							s.createQuery( "select case p.name when 'Steve' then :opt1 else :opt2 end from Person p" )
+									.setString( "opt1", "x" )
+									.setString( "opt2", "y" )
+									.list();
+							fail( "was expecting an exception" );
+						}
+						catch (IllegalArgumentException e) {
+							assertTyping( QueryException.class, e.getCause() );
+						}
+						catch (QueryException expected) {
+							// expected
+						}
+					}
+			);
 		}
 	}
 

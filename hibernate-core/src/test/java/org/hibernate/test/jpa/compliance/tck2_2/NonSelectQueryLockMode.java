@@ -11,8 +11,6 @@ import javax.persistence.LockModeType;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
-
 /**
  * @author Steve Ebersole
  */
@@ -21,7 +19,6 @@ public class NonSelectQueryLockMode extends AbstractJPATest {
 	@Test( expected = IllegalStateException.class )
 	public void testNonSelectQueryGetLockMode() {
 		inTransaction(
-				sessionFactory(),
 				session -> session.createQuery( "delete Item" ).getLockMode()
 		);
 	}
@@ -29,7 +26,6 @@ public class NonSelectQueryLockMode extends AbstractJPATest {
 	@Test( expected = IllegalStateException.class )
 	public void testNonSelectQuerySetLockMode() {
 		inTransaction(
-				sessionFactory(),
 				session -> session.createQuery( "delete Item" ).setLockMode( LockModeType.PESSIMISTIC_WRITE )
 		);
 	}

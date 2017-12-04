@@ -46,6 +46,7 @@ import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StructuredCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
+import org.hibernate.cfg.Environment;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -83,6 +84,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
@@ -165,6 +167,7 @@ public abstract class AbstractEntityPersister
 	private final String versionColumnName;
 	private final boolean hasFormulaProperties;
 	protected final int batchSize;
+	protected final Integer configuredBatchSize;
 	private final boolean hasSubselectLoadableCollections;
 	protected final String rowIdName;
 
@@ -828,6 +831,7 @@ public abstract class AbstractEntityPersister
 
 		this.cacheEntryHelper = buildCacheEntryHelper();
 
+		this.configuredBatchSize = ConfigurationHelper.getInt(Environment.STATEMENT_BATCH_SIZE, this.factory.getProperties(),1);
 	}
 
 	protected CacheEntryHelper buildCacheEntryHelper() {
@@ -2973,10 +2977,13 @@ public abstract class AbstractEntityPersister
 
 		// TODO : shouldn't inserts be Expectations.NONE?
 		final Expectation expectation = Expectations.appropriateExpectation( insertResultCheckStyles[j] );
-		// we can't batch joined inserts, *especially* not if it is an identity insert;
-		// nor can we batch statements where the expectation is based on an output param
-		final boolean useBatch = j == 0 && expectation.canBeBatched();
-		if ( useBatch && inserBatchKey == null ) {
+		/**
+		 * Use batch only when expectation.canBeBatched() and batch size is bigger then 1, otherwise execute directly
+		 */
+		final Integer sessionJdbcBatchSize = session.getJdbcCoordinator().getJdbcSessionOwner().getJdbcBatchSize();
+		final int jdbcBatchSizeToUse = sessionJdbcBatchSize == null ? configuredBatchSize : sessionJdbcBatchSize;
+		final boolean useBatch = expectation.canBeBatched() && jdbcBatchSizeToUse > 1;
+		if ( useBatch && inserBatchKey == null) {
 			inserBatchKey = new BasicBatchKey(
 					getEntityName() + "#INSERT",
 					expectation
@@ -3114,7 +3121,12 @@ public abstract class AbstractEntityPersister
 			final SharedSessionContractImplementor session) throws HibernateException {
 
 		final Expectation expectation = Expectations.appropriateExpectation( updateResultCheckStyles[j] );
-		final boolean useBatch = j == 0 && expectation.canBeBatched() && isBatchable(); //note: updates to joined tables can't be batched...
+		/**
+		 * Use batch only when expectation.canBeBatched() and batch size is bigger then 1, otherwise execute directly
+		 */
+		final Integer sessionJdbcBatchSize = session.getJdbcCoordinator().getJdbcSessionOwner().getJdbcBatchSize();
+		final int jdbcBatchSizeToUse = sessionJdbcBatchSize == null ? configuredBatchSize : sessionJdbcBatchSize;
+		final boolean useBatch = expectation.canBeBatched() && isBatchable() && jdbcBatchSizeToUse > 1;
 		if ( useBatch && updateBatchKey == null ) {
 			updateBatchKey = new BasicBatchKey(
 					getEntityName() + "#UPDATE",
@@ -3193,7 +3205,6 @@ public abstract class AbstractEntityPersister
 						}
 					}
 				}
-
 				if ( useBatch ) {
 					session.getJdbcCoordinator().getBatch( updateBatchKey ).addToBatch();
 					return true;

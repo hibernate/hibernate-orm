@@ -6,13 +6,6 @@
  */
 package org.hibernate.test.batch;
 
-import java.lang.reflect.Field;
-import java.util.Map;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
@@ -20,10 +13,17 @@ import org.hibernate.engine.jdbc.batch.internal.AbstractBatchImpl;
 import org.hibernate.engine.jdbc.batch.internal.NonBatchingBatch;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.spi.SessionImplementor;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Ignore;
 import org.junit.Test;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import java.lang.reflect.Field;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -33,6 +33,11 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-7689" )
+/**
+ * BatchBuilder was the only place where we use NonBatchingBatch.class.
+ * Having the usage of it removed,class can be marked @depricated and imo the tests can be ignored
+ */
+@Ignore
 public class NonBatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

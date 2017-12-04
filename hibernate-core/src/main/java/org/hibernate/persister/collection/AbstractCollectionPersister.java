@@ -29,6 +29,7 @@ import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cache.spi.entry.StructuredCollectionCacheEntry;
 import org.hibernate.cache.spi.entry.StructuredMapCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
+import org.hibernate.cfg.Environment;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -48,6 +49,7 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.collection.CollectionInitializer;
@@ -183,6 +185,7 @@ public abstract class AbstractCollectionPersister
 	private final boolean isMutable;
 	private final boolean isVersioned;
 	protected final int batchSize;
+	protected final Integer configuredBatchSize;
 	private final FetchMode fetchMode;
 	private final boolean hasOrphanDelete;
 	private final boolean subselectLoadable;
@@ -290,6 +293,7 @@ public abstract class AbstractCollectionPersister
 		}
 		batchSize = batch;
 
+		this.configuredBatchSize = ConfigurationHelper.getInt(Environment.STATEMENT_BATCH_SIZE, this.factory.getProperties(),1);
 		isVersioned = collectionBinding.isOptimisticLocked();
 
 		// KEY

@@ -31,7 +31,15 @@ public class BatchingBatch extends AbstractBatchImpl {
 
 	// IMPL NOTE : Until HHH-5797 is fixed, there will only be 1 statement in a batch
 
-	private final int batchSize;
+	private int batchSize;
+	/**
+	 * configuredBatchSize is the property copied from batchSize passed in constructor.
+	 * Having Batching per Joined tables we would have to multiply the batch size on the number of tables in inheritance.
+	 * Since we don't have access to this info here in this class, we can multiply by number of statements in the AbstractBatchImpl.statements.
+	 * A batch is per saved Entity which might have 2 or more levels of inheritance.
+	 * Meaning that the AbstractBatchImpl.statements will have 1 statement per level of inheritance.
+	 */
+	private final int configuredBatchSize;
 	private int batchPosition;
 	private boolean batchExecuted;
 	private int statementPosition;
@@ -52,6 +60,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 			throw new HibernateException( "attempting to batch an operation which cannot be batched" );
 		}
 		this.batchSize = batchSize;
+		this.configuredBatchSize = batchSize;
 	}
 
 	private String currentStatementSql;
@@ -61,6 +70,11 @@ public class BatchingBatch extends AbstractBatchImpl {
 	public PreparedStatement getBatchStatement(String sql, boolean callable) {
 		currentStatementSql = sql;
 		currentStatement = super.getBatchStatement( sql, callable );
+		/**
+		 * Here we multiply by number of statements, assuming that super.getBatchStatement() is called.
+		 * Super adds a new statement in the list only if that statement is not there.
+		 */
+		this.batchSize = this.configuredBatchSize * getStatements().size();
 		return currentStatement;
 	}
 
@@ -134,7 +148,12 @@ public class BatchingBatch extends AbstractBatchImpl {
 
 	private void checkRowCounts(int[] rowCounts, PreparedStatement ps) throws SQLException, HibernateException {
 		final int numberOfRowCounts = rowCounts.length;
-		if ( numberOfRowCounts != batchPosition ) {
+		/**
+		 * Batch position represents the number of adds in the batch.
+		 * If we save an entity with 2 hierarchies having batch size 11 we will have batchPosition-44
+		 * in order to keep the batch size correctly we have to devide by hierarchy number(statements number)
+		 */
+		if (batchPosition != 0 && numberOfRowCounts != batchPosition / getStatements().size()) {
 			LOG.unexpectedRowCounts();
 		}
 		for ( int i = 0; i < numberOfRowCounts; i++ ) {

@@ -66,9 +66,26 @@ public class BatchBuilderImpl implements BatchBuilder, Configurable, Manageable,
 		final int jdbcBatchSizeToUse = sessionJdbcBatchSize == null ?
 				this.jdbcBatchSize :
 				sessionJdbcBatchSize;
-		return jdbcBatchSizeToUse > 1
-				? new BatchingBatch( key, jdbcCoordinator, jdbcBatchSizeToUse )
-				: new NonBatchingBatch( key, jdbcCoordinator );
+/**
+IMO, No need to use NoBatchingBatch class, because
+1.It duplicates the if/else condition for example from AbstractEntityPersister:3163 and
+2.useBatch - variable is kind of responsible to use batch or not - keep single responsibility
+jdbcBatchSizeToUse > 1 - condition can be checked in AbstractEntityPersister and adjust the useBatch variable
+So: here we always return BatchingBatch object and we batch only when useBatch is TRUE:
+if ( useBatch ) {
+ update = session
+ .getJdbcCoordinator()
+ .getBatch( updateBatchKey ) --> Here we call the builder
+ .getBatchStatement( sql, callable );
+ }
+ else {
+ update = session
+ .getJdbcCoordinator()
+ .getStatementPreparer()
+ .prepareStatement( sql, callable );
+ }
+ **/
+		return new BatchingBatch( key, jdbcCoordinator, jdbcBatchSizeToUse );
 	}
 
 	@Override

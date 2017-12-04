@@ -2973,10 +2973,9 @@ public abstract class AbstractEntityPersister
 
 		// TODO : shouldn't inserts be Expectations.NONE?
 		final Expectation expectation = Expectations.appropriateExpectation( insertResultCheckStyles[j] );
-		// we can't batch joined inserts, *especially* not if it is an identity insert;
-		// nor can we batch statements where the expectation is based on an output param
-		final boolean useBatch = j == 0 && expectation.canBeBatched();
-		if ( useBatch && inserBatchKey == null ) {
+		final int jdbcBatchSizeToUse = session.getConfiguredJdbcBatchSize();
+		final boolean useBatch = expectation.canBeBatched() && jdbcBatchSizeToUse > 1;
+		if ( useBatch && inserBatchKey == null) {
 			inserBatchKey = new BasicBatchKey(
 					getEntityName() + "#INSERT",
 					expectation
@@ -3114,7 +3113,8 @@ public abstract class AbstractEntityPersister
 			final SharedSessionContractImplementor session) throws HibernateException {
 
 		final Expectation expectation = Expectations.appropriateExpectation( updateResultCheckStyles[j] );
-		final boolean useBatch = j == 0 && expectation.canBeBatched() && isBatchable(); //note: updates to joined tables can't be batched...
+		final int jdbcBatchSizeToUse = session.getConfiguredJdbcBatchSize();
+		final boolean useBatch = expectation.canBeBatched() && isBatchable() && jdbcBatchSizeToUse > 1;
 		if ( useBatch && updateBatchKey == null ) {
 			updateBatchKey = new BasicBatchKey(
 					getEntityName() + "#UPDATE",

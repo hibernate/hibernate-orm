@@ -77,7 +77,23 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 //				}
 //			}
 //			return attribute;
-		return new AnnotationMetaSingleAttribute( entity, element, TypeUtils.toTypeString( t ) );
+
+		String typeName = null;
+
+		TypeMirror type = t.getComponentType();
+
+		if ( type instanceof com.sun.tools.javac.code.Type.AnnotatedType ) {
+			type = ((com.sun.tools.javac.code.Type.AnnotatedType) type).unannotatedType();
+			if ( type.getKind().isPrimitive() ) {
+				typeName = context.getTypeUtils().getPrimitiveType(type.getKind()).toString();
+			}
+		}
+
+		if ( typeName == null ) {
+			typeName = type.toString();
+		}
+
+		return new AnnotationMetaSingleAttribute( entity, element, typeName + "[]" );
 	}
 
 	@Override

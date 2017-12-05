@@ -22,3 +22,9 @@ sourcesJar {
     // so make sure we dont use the OSGi one :)
     manifest = null
 }
+
+javadocJar {
+    // The OSGi JAR manifest support does not like a non-existent classes dir,
+    // so make sure we dont use the OSGi one :)
+    manifest = null
+}

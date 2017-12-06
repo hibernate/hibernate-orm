@@ -61,11 +61,13 @@ import javax.persistence.OrderColumn;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.PrimaryKeyJoinColumns;
 import javax.persistence.SequenceGenerator;
+import javax.persistence.SequenceGenerators;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.SqlResultSetMapping;
 import javax.persistence.SqlResultSetMappings;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
+import javax.persistence.TableGenerators;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
@@ -224,6 +226,34 @@ public final class AnnotationBinder {
 			}
 		}
 
+		{
+			List<TableGenerators> anns = (List<TableGenerators>) defaults.get( TableGenerators.class );
+			if ( anns != null ) {
+				anns.forEach( tableGenerators -> {
+					for ( TableGenerator tableGenerator : tableGenerators.value() ) {
+						IdentifierGeneratorDefinition idGen = buildIdGenerator( tableGenerator, context );
+						if ( idGen != null ) {
+							context.getMetadataCollector().addDefaultIdentifierGenerator( idGen );
+						}
+					}
+				} );
+			}
+		}
+
+		{
+			List<SequenceGenerators> anns = (List<SequenceGenerators>) defaults.get( SequenceGenerators.class );
+			if ( anns != null ) {
+				anns.forEach( sequenceGenerators -> {
+					for ( SequenceGenerator ann : sequenceGenerators.value() ) {
+						IdentifierGeneratorDefinition idGen = buildIdGenerator( ann, context );
+						if ( idGen != null ) {
+							context.getMetadataCollector().addDefaultIdentifierGenerator( idGen );
+						}
+					}
+				} );
+			}
+		}
+
 		// queries ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		{
@@ -298,11 +328,23 @@ public final class AnnotationBinder {
 				LOG.tracev( "Add sequence generator with name: {0}", idGen.getName() );
 			}
 		}
+		if ( pckg.isAnnotationPresent( SequenceGenerators.class ) ) {
+			SequenceGenerators ann = pckg.getAnnotation( SequenceGenerators.class );
+			for ( SequenceGenerator tableGenerator : ann.value() ) {
+				context.getMetadataCollector().addIdentifierGenerator( buildIdGenerator( tableGenerator, context ) );
+			}
+		}
 
 		if ( pckg.isAnnotationPresent( TableGenerator.class ) ) {
 			TableGenerator ann = pckg.getAnnotation( TableGenerator.class );
 			IdentifierGeneratorDefinition idGen = buildIdGenerator( ann, context );
 			context.getMetadataCollector().addIdentifierGenerator( idGen );
+		}
+		if ( pckg.isAnnotationPresent( TableGenerators.class ) ) {
+			TableGenerators ann = pckg.getAnnotation( TableGenerators.class );
+			for ( TableGenerator tableGenerator : ann.value() ) {
+				context.getMetadataCollector().addIdentifierGenerator( buildIdGenerator( tableGenerator, context ) );
+			}
 		}
 
 		bindGenericGenerators( pckg, context );
@@ -3354,7 +3396,28 @@ public final class AnnotationBinder {
 	}
 
 	private static HashMap<String, IdentifierGeneratorDefinition> buildLocalGenerators(XAnnotatedElement annElt, MetadataBuildingContext context) {
-		HashMap<String, IdentifierGeneratorDefinition> generators = new HashMap<String, IdentifierGeneratorDefinition>();
+		HashMap<String, IdentifierGeneratorDefinition> generators = new HashMap<>();
+
+		TableGenerators tableGenerators = annElt.getAnnotation( TableGenerators.class );
+		if ( tableGenerators != null ) {
+			for ( TableGenerator tableGenerator : tableGenerators.value() ) {
+				generators.put(
+						buildIdGenerator( tableGenerator, context ).getName(),
+						buildIdGenerator( tableGenerator, context )
+				);
+			}
+		}
+
+		SequenceGenerators sequenceGenerators = annElt.getAnnotation( SequenceGenerators.class );
+		if ( sequenceGenerators != null ) {
+			for ( SequenceGenerator sequenceGenerator : sequenceGenerators.value() ) {
+				generators.put(
+						buildIdGenerator( sequenceGenerator, context ).getName(),
+						buildIdGenerator( sequenceGenerator, context )
+				);
+			}
+		}
+
 		TableGenerator tabGen = annElt.getAnnotation( TableGenerator.class );
 		SequenceGenerator seqGen = annElt.getAnnotation( SequenceGenerator.class );
 		GenericGenerator genGen = annElt.getAnnotation( GenericGenerator.class );

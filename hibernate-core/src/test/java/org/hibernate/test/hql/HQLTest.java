@@ -875,6 +875,12 @@ public class HQLTest extends QueryTranslatorTestCase {
 		}
 	}
 
+    @Test
+    @TestForIssue(jiraKey = "HHH-12149")
+    public void testOrderByPredicates() throws Exception {
+        assertTranslation( "from Animal an order by an.bodyWeight > 10" );
+    }
+
 	@Test
 	public void testGroupByFunction() {
 		if ( getDialect() instanceof Oracle8iDialect ) return; // the new hiearchy...

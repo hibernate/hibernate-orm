@@ -566,11 +566,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public Session createEntityManager() {
+		validateNotClosed();
 		return buildEntityManager( SynchronizationType.SYNCHRONIZED, Collections.emptyMap() );
 	}
 
 	private Session buildEntityManager(SynchronizationType synchronizationType, Map map) {
-		validateNotClosed();
+		assert !isClosed;
+
 		SessionBuilderImplementor builder = withOptions();
 		if ( synchronizationType == SynchronizationType.SYNCHRONIZED ) {
 			builder.autoJoinTransactions( true );
@@ -592,11 +594,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public Session createEntityManager(Map map) {
+		validateNotClosed();
 		return buildEntityManager( SynchronizationType.SYNCHRONIZED, map );
 	}
 
 	@Override
 	public Session createEntityManager(SynchronizationType synchronizationType) {
+		validateNotClosed();
 		errorIfResourceLocalDueToExplicitSynchronizationType();
 		return buildEntityManager( synchronizationType, Collections.emptyMap() );
 	}
@@ -615,6 +619,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public Session createEntityManager(SynchronizationType synchronizationType, Map map) {
+		validateNotClosed();
 		errorIfResourceLocalDueToExplicitSynchronizationType();
 		return buildEntityManager( synchronizationType, map );
 	}

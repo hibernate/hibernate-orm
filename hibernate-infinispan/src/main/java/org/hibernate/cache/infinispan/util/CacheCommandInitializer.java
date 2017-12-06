@@ -48,6 +48,10 @@ public class CacheCommandInitializer implements ModuleCommandInitializer {
 		putFromLoadValidators.put(cacheName, putFromLoadValidator);
 	}
 
+	public PutFromLoadValidator findPutFromLoadValidator(String cacheName) {
+		return putFromLoadValidators.get(cacheName);
+	}
+
 	public PutFromLoadValidator removePutFromLoadValidator(String cacheName) {
 		return putFromLoadValidators.remove(cacheName);
 	}

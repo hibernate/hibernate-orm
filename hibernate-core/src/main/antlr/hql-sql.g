@@ -383,6 +383,7 @@ nullPrecedence
 orderExpr
 	: { isOrderExpressionResultVariableRef( _t ) }? resultVariableRef
 	| expr [ null ]
+	| logicalExpr
 	;
 
 resultVariableRef!

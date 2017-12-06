@@ -1806,6 +1806,7 @@ The types of expressions considered valid as part of the `ORDER BY` clause inclu
 * state fields
 * component/embeddable attributes
 * scalar expressions such as arithmetic operations, functions, etc.
+* predicate operators
 * identification variable declared in the select clause for any of the previous expression types
 
 Additionally, JPQL says that all values referenced in the `ORDER BY` clause must be named in the `SELECT` clause.

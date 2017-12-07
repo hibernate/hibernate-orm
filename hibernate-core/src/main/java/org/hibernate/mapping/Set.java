@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedPrimaryKey;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -42,7 +43,7 @@ public class Set extends Collection {
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			final MappedPrimaryKey pk = new MappedPrimaryKey( getMappedTable() );
+			final MappedPrimaryKey pk = new PrimaryKey( getMappedTable() );
 			pk.addColumns( getKey().getMappedColumns() );
 			((List<MappedColumn>) getElement().getMappedColumns()).stream()
 					.filter( Column.class::isInstance )

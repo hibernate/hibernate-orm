@@ -17,6 +17,7 @@ import java.util.Set;
 import org.hibernate.boot.model.relational.DenormalizedMappedTable;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedNamespace;
+import org.hibernate.boot.model.relational.MappedPrimaryKey;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.naming.Identifier;

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.hibernate.boot.model.domain.MappedTableJoin;
+import org.hibernate.boot.model.relational.MappedPrimaryKey;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.sql.Alias;
@@ -108,7 +109,7 @@ public class Join implements AttributeContainer, Serializable, MappedTableJoin {
 
 	public void createPrimaryKey() {
 		//Primary key constraint
-		MappedPrimaryKey pk = new MappedPrimaryKey( table );
+		MappedPrimaryKey pk = new PrimaryKey( table );
 		pk.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		table.setPrimaryKey(pk);
 

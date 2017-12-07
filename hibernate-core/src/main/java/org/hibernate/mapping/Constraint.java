@@ -18,6 +18,7 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedConstraint;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.dialect.Dialect;
 
@@ -27,7 +28,7 @@ import org.hibernate.dialect.Dialect;
  * @author Gavin King
  * @author Brett Meyer
  */
-public abstract class Constraint implements Serializable {
+public abstract class Constraint implements MappedConstraint, Serializable {
 
 	private String name;
 	private final ArrayList<Selectable> columns = new ArrayList<>();
@@ -35,13 +36,16 @@ public abstract class Constraint implements Serializable {
 
 	private boolean creationEnabled = true;
 
+	@Override
 	public String getName() {
 		return name;
 	}
 
+	@Override
 	public void setName(String name) {
 		this.name = name;
 	}
+
 	public void disableCreation() {
 		creationEnabled = false;
 	}
@@ -49,6 +53,7 @@ public abstract class Constraint implements Serializable {
 	public boolean isCreationEnabled() {
 		return creationEnabled;
 	}
+
 	/**
 	 * If a constraint is not explicitly named, this is called to generate
 	 * a unique hash using the table and column names.
@@ -126,6 +131,7 @@ public abstract class Constraint implements Serializable {
 	 * are "exportable" (a real, physical constraint).  So we open up the type of
 	 * "columns" we accept here.
 	 */
+	@Override
 	public void addColumn(Column column) {
 		addColumn( (Selectable) column );
 	}
@@ -143,13 +149,15 @@ public abstract class Constraint implements Serializable {
 	/**
 	 * @deprecated since 6.0, use {@link #addColumns(List)} )}.
 	 */
-	@Deprecated	public void addColumns(Iterator columnIterator) {
+	@Deprecated
+	public void addColumns(Iterator columnIterator) {
 		while ( columnIterator.hasNext() ) {
 			Selectable col = (Selectable) columnIterator.next();
 			addColumn( col );
 		}
 	}
 
+	@Override
 	public void addColumns(List<? extends MappedColumn> columns) {
 		columns.stream()
 				.filter( mappedColumn -> !mappedColumn.isFormula() )
@@ -163,13 +171,11 @@ public abstract class Constraint implements Serializable {
 		return columns.contains( column );
 	}
 
-	public int getColumnSpan() {
-		return columns.size();
+	@Override
+	public Column getColumn(int i) {
+		return (Column) columns.get( i );
 	}
 
-	public Column getColumn(int i) {
-		return  (Column)columns.get( i );
-	}
 	/**
 	 *todo (6.0) : remove this
 	 *
@@ -215,6 +221,7 @@ public abstract class Constraint implements Serializable {
 		return true;
 	}
 
+	@Override
 	public List<Column> getColumns() {
 		return cast( columns );
 	}

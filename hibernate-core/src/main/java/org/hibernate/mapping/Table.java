@@ -21,6 +21,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedNamespace;
+import org.hibernate.boot.model.relational.MappedPrimaryKey;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
@@ -404,7 +405,7 @@ public class Table implements MappedTable<Column>, Serializable {
 	}
 
 	private boolean isSameAsPrimaryKeyColumns(UniqueKey uniqueKey) {
-		if ( primaryKey == null || !primaryKey.columnIterator().hasNext() ) {
+		if ( primaryKey == null || !primaryKey.getColumns().isEmpty() ) {
 			// happens for many-to-many tables
 			return false;
 		}

@@ -298,7 +298,7 @@ public final class MetadataTools {
 		}
 	}
 
-	public static void addColumns(Element anyMapping, List<MappedColumn> mappedColumns) {
+	public static void addColumns(Element anyMapping, List<? extends MappedColumn> mappedColumns) {
 		mappedColumns.forEach( column -> {
 			if ( column.isFormula() ) {
 				throw new FormulaNotSupportedException();

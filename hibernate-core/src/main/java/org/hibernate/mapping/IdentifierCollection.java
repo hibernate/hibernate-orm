@@ -7,6 +7,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedPrimaryKey;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
 /**
@@ -34,7 +35,7 @@ public abstract class IdentifierCollection extends Collection {
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			MappedPrimaryKey pk = new MappedPrimaryKey( getMappedTable() );
+			MappedPrimaryKey pk = new PrimaryKey( getMappedTable() );
 			pk.addColumns( getIdentifier().getMappedColumns() );
 			getMappedTable().setPrimaryKey(pk);
 		}

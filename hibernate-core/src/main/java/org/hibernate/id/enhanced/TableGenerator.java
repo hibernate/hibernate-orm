@@ -20,6 +20,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.MappedTable;
@@ -43,7 +44,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.MappedPrimaryKey;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
@@ -682,7 +682,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 			table.addColumn( segmentColumn );
 
 			// lol
-			table.setPrimaryKey( new MappedPrimaryKey( table ) );
+			table.setPrimaryKey( new PrimaryKey( table ) );
 			table.getPrimaryKey().addColumn( segmentColumn );
 
 			final Column valueColumn = new ExportableColumn(

@@ -27,6 +27,7 @@ import org.hibernate.boot.model.domain.internal.AbstractIdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
 import org.hibernate.boot.model.domain.spi.EntityMappingImplementor;
 import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedPrimaryKey;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -434,7 +435,7 @@ public abstract class PersistentClass
 	public void createPrimaryKey() {
 		//Primary key constraint
 		final MappedTable table = getMappedTable();
-		MappedPrimaryKey pk = new MappedPrimaryKey( table );
+		MappedPrimaryKey pk = new PrimaryKey( table );
 		pk.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		table.setPrimaryKey( pk );
 

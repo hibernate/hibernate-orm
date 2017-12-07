@@ -9,6 +9,7 @@ package org.hibernate.mapping;
 import java.util.List;
 
 import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedPrimaryKey;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
 /**
@@ -38,7 +39,7 @@ public abstract class IndexedCollection extends Collection {
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			final MappedPrimaryKey pk = new MappedPrimaryKey( getMappedTable() );
+			final MappedPrimaryKey pk = new PrimaryKey( getMappedTable() );
 			pk.addColumns( getKey().getMappedColumns() );
 			
 			// index should be last column listed

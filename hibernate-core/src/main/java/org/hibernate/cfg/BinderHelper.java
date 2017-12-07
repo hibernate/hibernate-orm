@@ -812,9 +812,10 @@ public class BinderHelper {
 						public String table() {
 							return "";
 						}
+
 						@Override
 						public int initialValue() {
-							return 1;
+							return 0;
 						}
 
 						@Override

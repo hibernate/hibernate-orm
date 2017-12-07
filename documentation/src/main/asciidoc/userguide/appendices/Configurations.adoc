@@ -186,6 +186,9 @@ If true, generated identifier properties are reset to default values when object
 `*hibernate.id.optimizer.pooled.preferred*` (e.g. `none`, `hilo`, `legacy-hilo`, `pooled` (default value), `pooled-lo`, `pooled-lotl` or a fully-qualified name of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/id/enhanced/Optimizer.html[`Optimizer`] implementation)::
 When a generator specified an increment-size and an optimizer was not explicitly specified, which of the _pooled_ optimizers should be preferred?
 
+`*hibernate.id.generator.stored_last_used*` (e.g. `true` (default value) or `false`)::
+If true, the value stored in the table used by the `@TableGenerator` is the last value used, if false the value is the next value to be used.
+
 ==== Quoting options
 
 `*hibernate.globally_quoted_identifiers*` (e.g. `true` or `false` (default value))::

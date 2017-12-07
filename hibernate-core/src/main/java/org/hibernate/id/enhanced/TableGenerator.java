@@ -22,6 +22,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
@@ -226,6 +227,8 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 */
 	public static final String OPT_PARAM = "optimizer";
 
+	private boolean storeLastUsedValue;
+
 
 	private Type identifierType;
 
@@ -355,6 +358,8 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 
 	@Override
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+		storeLastUsedValue = serviceRegistry.getService( ConfigurationService.class )
+				.getSetting( AvailableSettings.TABLE_GENERATOR_STORE_LAST_USED, StandardConverters.BOOLEAN, true );
 		identifierType = type;
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
@@ -374,11 +379,12 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 				params,
 				OptimizerFactory.determineImplicitOptimizerName( incrementSize, params )
 		);
+		int optimizerInitialValue = ConfigurationHelper.getInt( INITIAL_PARAM, params, -1 );
 		optimizer = OptimizerFactory.buildOptimizer(
 				optimizationStrategy,
 				identifierType.getReturnedClass(),
 				incrementSize,
-				ConfigurationHelper.getInt( INITIAL_PARAM, params, -1 )
+				optimizerInitialValue
 		);
 	}
 
@@ -542,6 +548,14 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		return "insert into " + renderedTableName + " (" + segmentColumnName + ", " + valueColumnName + ") " + " values (?,?)";
 	}
 
+	protected InitCommand generateInsertInitCommand() {
+		int value = initialValue;
+		if ( storeLastUsedValue ) {
+			value = initialValue - 1;
+		}
+		return new InitCommand( "insert into " + renderedTableName + "(" + segmentColumnName + ", " + valueColumnName + ")" + " values ('" + segmentValue + "'," + ( value ) + ")" );
+	}
+
 	private IntegralDataTypeHolder makeValue() {
 		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );
 	}
@@ -574,7 +588,14 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 												selectPS.setString( 1, segmentValue );
 												final ResultSet selectRS = executeQuery( selectPS, statsCollector );
 												if ( !selectRS.next() ) {
-													value.initialize( initialValue );
+													long initializationValue;
+													if ( storeLastUsedValue ) {
+														initializationValue = initialValue - 1;
+													}
+													else {
+														initializationValue = initialValue;
+													}
+													value.initialize( initializationValue );
 
 													try (PreparedStatement insertPS = prepareStatement(
 															connection,
@@ -589,7 +610,14 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 													}
 												}
 												else {
-													value.initialize( selectRS, 1 );
+													int defaultValue;
+													if ( storeLastUsedValue ) {
+														defaultValue = 0;
+													}
+													else {
+														defaultValue = 1;
+													}
+													value.initialize( selectRS, defaultValue );
 												}
 												selectRS.close();
 											}
@@ -625,8 +653,12 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 										while ( rows == 0 );
 
 										accessCount++;
-
-										return value;
+										if ( storeLastUsedValue ) {
+											return value.increment();
+										}
+										else {
+											return value;
+										}
 									}
 								},
 								true
@@ -734,10 +766,10 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 				table.getQualifiedTableName(),
 				dialect
 		);
+		table.addInitCommand( generateInsertInitCommand() );
 
 		this.selectQuery = buildSelectQuery( dialect );
 		this.updateQuery = buildUpdateQuery();
 		this.insertQuery = buildInsertQuery();
-
 	}
 }

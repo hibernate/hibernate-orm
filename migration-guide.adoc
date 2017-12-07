@@ -27,3 +27,11 @@ instead of zero-bade parameter binding to be consistent with JPA.  That can temp
 reverted by setting the `hibernate.query.sql.jdbc_style_params_base` setting to `true` which
 reverts to expecting zero-based binding.
 
+== Change in the `@TableGenerator` stored value
+
+In order to be compliant with JPA specifications, the value stored by Hibernate 5.3 in the Table used by the `javax.persistence.TableGenerator` is the last value generated.
+Previous versions of Hibernate instead stored the next value to be used.
+
+For backward compatibility a new setting, `hibernate.id.generator.stored_last_used`, has been introduced that gives the opportunity to fall back to the old Hibernate behaviour.
+Existing applications migrating to 5.3 and using @TableGenerator have to set `hibernate.id.generator.stored_last_used` to `false`.
+

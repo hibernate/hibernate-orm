@@ -1790,4 +1790,13 @@ public interface AvailableSettings {
 	 * @see JpaCompliance#isJpaClosedComplianceEnabled()
 	 */
 	String JPA_CLOSED_COMPLIANCE = "hibernate.jpa.compliance.closed";
+
+	/**
+	 * True/False setting indicating if the value stored in the table used by the {@link javax.persistence.TableGenerator}
+	 * is the last value generated or the next value to be used.
+	 *
+	 * The default value is true.
+	 *
+	 */
+	String TABLE_GENERATOR_STORE_LAST_USED = "hibernate.id.generator.stored_last_used";
 }

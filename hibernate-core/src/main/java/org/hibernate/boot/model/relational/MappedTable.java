@@ -15,7 +15,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.KeyValue;
-import org.hibernate.mapping.UniqueKey;
 import org.hibernate.metamodel.model.relational.internal.InflightTable;
 import org.hibernate.metamodel.model.relational.spi.Exportable;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
@@ -84,13 +83,13 @@ public interface MappedTable<T extends MappedColumn> extends Loggable {
 
 	MappedIndex getOrCreateIndex(String indexName);
 
-	UniqueKey getOrCreateUniqueKey(String keyName);
+	MappedUniqueKey getOrCreateUniqueKey(String keyName);
 
-	default UniqueKey createUniqueKey(List<T> columns){
+	default MappedUniqueKey createUniqueKey(List<T> columns){
 		return null;
 	}
 
-	void addUniqueKey(UniqueKey uk);
+	void addUniqueKey(MappedUniqueKey uk);
 
 	void createForeignKeys();
 
@@ -104,9 +103,9 @@ public interface MappedTable<T extends MappedColumn> extends Loggable {
 	 *
 	 * @return the constructed foreign key.
 	 */
-	ForeignKey createForeignKey(String keyName, List<T> keyColumns, String referencedEntityName, String keyDefinition);
+	MappedForeignKey createForeignKey(String keyName, List<T> keyColumns, String referencedEntityName, String keyDefinition);
 
-	ForeignKey createForeignKey(
+	MappedForeignKey createForeignKey(
 			String keyName,
 			List keyColumns,
 			String referencedEntityName,
@@ -172,9 +171,9 @@ public interface MappedTable<T extends MappedColumn> extends Loggable {
 
 	Collection<MappedIndex> getIndexes();
 
-	Collection<ForeignKey> getForeignKeys();
+	Collection<MappedForeignKey> getForeignKeys();
 
-	Collection<UniqueKey> getUniqueKeys();
+	Collection<MappedUniqueKey> getUniqueKeys();
 
 	MappedPrimaryKey getPrimaryKey();
 

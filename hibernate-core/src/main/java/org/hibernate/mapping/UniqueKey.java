@@ -9,6 +9,7 @@ package org.hibernate.mapping;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.boot.model.relational.MappedUniqueKey;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -16,9 +17,10 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Brett Meyer
  */
-public class UniqueKey extends Constraint {
+public class UniqueKey extends Constraint implements MappedUniqueKey {
 	private java.util.Map<Column, String> columnOrderMap = new HashMap<>();
 
+	@Override
 	public void addColumn(Column column, String order) {
 		addColumn( column );
 		if ( StringHelper.isNotEmpty( order ) ) {
@@ -26,6 +28,7 @@ public class UniqueKey extends Constraint {
 		}
 	}
 
+	@Override
 	public Map<Column, String> getColumnOrderMap() {
 		return columnOrderMap;
 	}

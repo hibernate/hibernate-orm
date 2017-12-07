@@ -50,6 +50,7 @@ public abstract class Constraint implements MappedConstraint, Serializable {
 		creationEnabled = false;
 	}
 
+	@Override
 	public boolean isCreationEnabled() {
 		return creationEnabled;
 	}
@@ -131,11 +132,11 @@ public abstract class Constraint implements MappedConstraint, Serializable {
 	 * are "exportable" (a real, physical constraint).  So we open up the type of
 	 * "columns" we accept here.
 	 */
-	@Override
 	public void addColumn(Column column) {
 		addColumn( (Selectable) column );
 	}
 
+	@Override
 	public void addColumn(Selectable column) {
 		if ( !columns.contains( column ) ) {
 			columns.add( column );
@@ -209,12 +210,22 @@ public abstract class Constraint implements MappedConstraint, Serializable {
 		return (Table) getMappedTable();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #setMappedTable(MappedTable)}.
+	 */
+	@Deprecated
 	public void setTable(MappedTable table) {
-		this.table = table;
+		setMappedTable( table );
 	}
 
+	@Override
 	public MappedTable getMappedTable() {
 		return table;
+	}
+
+	@Override
+	public void setMappedTable(MappedTable table) {
+		this.table = table;
 	}
 
 	public boolean isGenerated(Dialect dialect) {
@@ -235,10 +246,4 @@ public abstract class Constraint implements MappedConstraint, Serializable {
 	public String toString() {
 		return getClass().getName() + '(' + getMappedTable().getName() + getColumns() + ") as " + name;
 	}
-
-	/**
-	 * @return String The prefix to use in generated constraint names.  Examples:
-	 * "UK_", "FK_", and "PK_".
-	 */
-	public abstract String generatedConstraintNamePrefix();
 }

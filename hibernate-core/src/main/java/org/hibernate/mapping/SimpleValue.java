@@ -168,7 +168,7 @@ public abstract class SimpleValue implements KeyValue {
 		// the plan here is to generate all logical ForeignKeys, but disable it for export
 		// 		if it has formulas
 
-		final ForeignKey fk = table.createForeignKey(
+		final ForeignKey fk = (ForeignKey) table.createForeignKey(
 				getForeignKeyName(),
 				getConstraintColumns(),
 				entityName,

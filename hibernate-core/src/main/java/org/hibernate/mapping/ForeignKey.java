@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedForeignKey;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.JavaTypeHelper;
@@ -21,7 +23,7 @@ import org.hibernate.internal.util.JavaTypeHelper;
  *
  * @author Gavin King
  */
-public class ForeignKey extends Constraint {
+public class ForeignKey extends Constraint implements MappedForeignKey {
 	private MappedTable referencedTable;
 	private String referencedEntityName;
 	private String keyDefinition;
@@ -41,8 +43,7 @@ public class ForeignKey extends Constraint {
 		}
 	}
 
-
-
+	@Override
 	public MappedTable getReferencedTable() {
 		return referencedTable;
 	}
@@ -61,6 +62,7 @@ public class ForeignKey extends Constraint {
 		}
 	}
 
+	@Override
 	public void setReferencedTable(MappedTable referencedTable) throws MappingException {
 		this.referencedTable = referencedTable;
 	}
@@ -70,6 +72,7 @@ public class ForeignKey extends Constraint {
 	 * <p/>
 	 * Furthermore it aligns the length of the underlying tables columns.
 	 */
+	@Override
 	public void alignColumns() {
 		if ( isReferenceToPrimaryKey() ) {
 			alignColumns( referencedTable );
@@ -106,18 +109,22 @@ public class ForeignKey extends Constraint {
 		}
 	}
 
+	@Override
 	public String getReferencedEntityName() {
 		return referencedEntityName;
 	}
 
+	@Override
 	public void setReferencedEntityName(String referencedEntityName) {
 		this.referencedEntityName = referencedEntityName;
 	}
 
+	@Override
 	public String getKeyDefinition() {
 		return keyDefinition;
 	}
 
+	@Override
 	public void setKeyDefinition(String keyDefinition) {
 		this.keyDefinition = keyDefinition;
 	}
@@ -130,6 +137,7 @@ public class ForeignKey extends Constraint {
 		this.cascadeDeleteEnabled = cascadeDeleteEnabled;
 	}
 
+	@Override
 	public boolean isPhysicalConstraint() {
 		return isCreationEnabled()
 				&& referencedTable.isPhysicalTable()
@@ -140,10 +148,12 @@ public class ForeignKey extends Constraint {
 	/**
 	 * Returns the referenced columns if the foreignkey does not refer to the primary key
 	 */
+	@Override
 	public List getReferencedColumns() {
 		return referencedColumns;
 	}
 
+	@Override
 	public List<Column> getTargetColumns() {
 		if ( referencedColumns != null && !referencedColumns.isEmpty() ) {
 			return referencedColumns;
@@ -156,10 +166,15 @@ public class ForeignKey extends Constraint {
 	/**
 	 * Does this foreignkey reference the primary key of the reference table
 	 */
+	@Override
 	public boolean isReferenceToPrimaryKey() {
 		return referencedColumns.isEmpty();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #addReferencedColumns(List<? extends MappedColumn>()}.
+	 */
+	@Deprecated
 	public void addReferencedColumns(Iterator referencedColumnsIterator) {
 		while ( referencedColumnsIterator.hasNext() ) {
 			Selectable col = (Selectable) referencedColumnsIterator.next();
@@ -169,12 +184,18 @@ public class ForeignKey extends Constraint {
 		}
 	}
 
+	@Override
+	public void addReferencedColumns(List<? extends MappedColumn> referencedColumns) {
+		addReferencedColumns( referencedColumns.iterator() );
+	}
+
 	private void addReferencedColumn(Column column) {
 		if ( !referencedColumns.contains( column ) ) {
 			referencedColumns.add( column );
 		}
 	}
 
+	@Override
 	public String generatedConstraintNamePrefix() {
 		return "FK_";
 	}

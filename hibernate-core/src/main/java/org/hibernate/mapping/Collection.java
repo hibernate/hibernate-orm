@@ -18,6 +18,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.ForeignKeyExporter;
 import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedForeignKey;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -86,7 +87,7 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 	private ExecuteUpdateResultCheckStyle deleteAllCheckStyle;
 
 	private String loaderName;
-	private ForeignKey foreignKey;
+	private MappedForeignKey foreignKey;
 
 	protected Collection(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		this.buildingContext = buildingContext;
@@ -117,11 +118,11 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 	}
 
 	@Override
-	public ForeignKey getForeignKey() {
+	public MappedForeignKey getForeignKey() {
 		return foreignKey;
 	}
 
-	public void setForeignKey(ForeignKey foreignKey) {
+	public void setForeignKey(MappedForeignKey foreignKey) {
 		this.foreignKey = foreignKey;
 	}
 

@@ -6,11 +6,17 @@
  */
 package org.hibernate.boot.model.relational;
 
+import java.util.Map;
+
+import org.hibernate.mapping.Column;
+
 /**
- * Contract for a relational primary key constraint.
+ * Contract for a relational unique key constraint.
  *
  * @author Chris Cranford
  */
-public interface MappedPrimaryKey extends MappedConstraint {
+public interface MappedUniqueKey extends MappedConstraint {
+	void addColumn(Column column, String order);
 
+	Map<Column, String> getColumnOrderMap();
 }

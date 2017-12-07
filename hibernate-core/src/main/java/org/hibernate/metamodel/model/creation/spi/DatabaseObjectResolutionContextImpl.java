@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedForeignKey;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -29,7 +30,7 @@ public class DatabaseObjectResolutionContextImpl
 	private final Map<MappedTable, Table> runtimeTableByBootTable = new HashMap<>();
 	private final Map<MappedColumn, Column> columnMap = new HashMap<>();
 
-	private final Map<org.hibernate.mapping.ForeignKey,ForeignKey> foreignKeyMap = new IdentityHashMap<>();
+	private final Map<MappedForeignKey, ForeignKey> foreignKeyMap = new IdentityHashMap<>();
 	// Product.vendor
 	//		or T_PRODUCT->VENDOR
 	// T_PRODUCT->PRODUCT_SUPP
@@ -45,7 +46,7 @@ public class DatabaseObjectResolutionContextImpl
 	}
 
 	@Override
-	public void foreignKeyBuilt(org.hibernate.mapping.ForeignKey mappedFk, ForeignKey runtimeFk) {
+	public void foreignKeyBuilt(MappedForeignKey mappedFk, ForeignKey runtimeFk) {
 		foreignKeyMap.put( mappedFk, runtimeFk );
 	}
 
@@ -60,7 +61,7 @@ public class DatabaseObjectResolutionContextImpl
 	}
 
 	@Override
-	public ForeignKey resolveForeignKey(org.hibernate.mapping.ForeignKey bootForeignKey) {
+	public ForeignKey resolveForeignKey(MappedForeignKey bootForeignKey) {
 		return foreignKeyMap.get( bootForeignKey );
 	}
 

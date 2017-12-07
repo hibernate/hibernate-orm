@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.creation.spi;
 import java.util.List;
 
 import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedForeignKey;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -25,5 +26,5 @@ public interface DatabaseObjectResolver {
 
 	ForeignKey.ColumnMappings resolveColumnMappings(List<Selectable> columns, List<Selectable> otherColumns);
 
-	ForeignKey resolveForeignKey(org.hibernate.mapping.ForeignKey bootForeignKey);
+	ForeignKey resolveForeignKey(MappedForeignKey bootForeignKey);
 }

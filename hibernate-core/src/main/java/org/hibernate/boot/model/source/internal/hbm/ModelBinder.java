@@ -39,6 +39,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.boot.model.relational.MappedUniqueKey;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.internal.SourceHelper;
 import org.hibernate.boot.model.source.spi.AnyDiscriminatorSource;
@@ -4086,8 +4087,8 @@ public class ModelBinder {
 
 			final List<Identifier> columnNames = new ArrayList<>();
 
-			final UniqueKey uk = new UniqueKey();
-			uk.setTable( entityBinding.getTable() );
+			final MappedUniqueKey uk = new UniqueKey();
+			uk.setMappedTable( entityBinding.getTable() );
 			for ( Property attributeBinding : attributeBindings ) {
 				final List<MappedColumn> mappedColumns = attributeBinding.getMappedColumns();
 				mappedColumns.stream()

@@ -6,7 +6,6 @@
  */
 package org.hibernate.cfg;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,12 +15,12 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedIndex;
 import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.boot.model.relational.MappedUniqueKey;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.UniqueKey;
 
 /**
  * @author Emmanuel Bernard
@@ -109,7 +108,7 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 
 	private void addConstraintToColumns(List<Column> columns) {
 		if ( unique ) {
-			UniqueKey uniqueKey = table.getOrCreateUniqueKey( indexName );
+			MappedUniqueKey uniqueKey = table.getOrCreateUniqueKey( indexName );
 			for ( Column column : columns ) {
 				uniqueKey.addColumn( column );
 			}

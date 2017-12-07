@@ -20,10 +20,12 @@ import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedForeignKey;
 import org.hibernate.boot.model.relational.MappedIndex;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedPrimaryKey;
 import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.boot.model.relational.MappedUniqueKey;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -61,9 +63,9 @@ public class Table implements MappedTable<Column>, Serializable {
 	private Map<String, Column> columns = new LinkedHashMap();
 	private KeyValue idValue;
 	private MappedPrimaryKey primaryKey;
-	private Map<ForeignKeyKey, ForeignKey> foreignKeyMap = new LinkedHashMap<>();
+	private Map<ForeignKeyKey, MappedForeignKey> foreignKeyMap = new LinkedHashMap<>();
 	private Map<String, MappedIndex> indexes = new LinkedHashMap<>();
-	private Map<String, UniqueKey> uniqueKeys = new LinkedHashMap<>();
+	private Map<String, MappedUniqueKey> uniqueKeys = new LinkedHashMap<>();
 	private int uniqueInteger;
 	private List<String> checkConstraints = new ArrayList<>();
 	private String rowId;
@@ -310,7 +312,7 @@ public class Table implements MappedTable<Column>, Serializable {
 		return indexes.values();
 	}
 
-	public Map<ForeignKeyKey, ForeignKey> getForeignKeyMap() {
+	public Map<ForeignKeyKey, MappedForeignKey> getForeignKeyMap() {
 		return Collections.unmodifiableMap( foreignKeyMap );
 	}
 
@@ -321,19 +323,19 @@ public class Table implements MappedTable<Column>, Serializable {
 		return foreignKeyMap.values().iterator();
 	}
 
-	public java.util.Collection<ForeignKey> getForeignKeys() {
+	public java.util.Collection<MappedForeignKey> getForeignKeys() {
 		return Collections.unmodifiableCollection( foreignKeyMap.values() );
 	}
 
 	/**
 	 * @deprecated since 6.0, use {@link #getUniqueKeys()} instead.
 	 */
-	public Iterator<UniqueKey> getUniqueKeyIterator() {
+	public Iterator<MappedUniqueKey> getUniqueKeyIterator() {
 		return getUniqueKeys().iterator();
 	}
 
 	@Override
-	public java.util.Collection<UniqueKey> getUniqueKeys() {
+	public java.util.Collection<MappedUniqueKey> getUniqueKeys() {
 		cleanseUniqueKeyMapIfNeeded();
 		return uniqueKeys.values();
 	}
@@ -365,21 +367,21 @@ public class Table implements MappedTable<Column>, Serializable {
 		}
 		else if ( uniqueKeys.size() == 1 ) {
 			// we have to worry about condition 2 above, but not condition 1
-			final Map.Entry<String, UniqueKey> uniqueKeyEntry = uniqueKeys.entrySet().iterator().next();
+			final Map.Entry<String, MappedUniqueKey> uniqueKeyEntry = uniqueKeys.entrySet().iterator().next();
 			if ( isSameAsPrimaryKeyColumns( uniqueKeyEntry.getValue() ) ) {
 				uniqueKeys.remove( uniqueKeyEntry.getKey() );
 			}
 		}
 		else {
 			// we have to check both conditions 1 and 2
-			final Iterator<Map.Entry<String, UniqueKey>> uniqueKeyEntries = uniqueKeys.entrySet().iterator();
+			final Iterator<Map.Entry<String, MappedUniqueKey>> uniqueKeyEntries = uniqueKeys.entrySet().iterator();
 			while ( uniqueKeyEntries.hasNext() ) {
-				final Map.Entry<String, UniqueKey> uniqueKeyEntry = uniqueKeyEntries.next();
-				final UniqueKey uniqueKey = uniqueKeyEntry.getValue();
+				final Map.Entry<String, MappedUniqueKey> uniqueKeyEntry = uniqueKeyEntries.next();
+				final MappedUniqueKey uniqueKey = uniqueKeyEntry.getValue();
 				boolean removeIt = false;
 
 				// condition 1 : check against other unique keys
-				for ( UniqueKey otherUniqueKey : uniqueKeys.values() ) {
+				for ( MappedUniqueKey otherUniqueKey : uniqueKeys.values() ) {
 					// make sure its not the same unique key
 					if ( uniqueKeyEntry.getValue() == otherUniqueKey ) {
 						continue;
@@ -405,7 +407,7 @@ public class Table implements MappedTable<Column>, Serializable {
 		}
 	}
 
-	private boolean isSameAsPrimaryKeyColumns(UniqueKey uniqueKey) {
+	private boolean isSameAsPrimaryKeyColumns(MappedUniqueKey uniqueKey) {
 		if ( primaryKey == null || !primaryKey.getColumns().isEmpty() ) {
 			// happens for many-to-many tables
 			return false;
@@ -475,33 +477,34 @@ public class Table implements MappedTable<Column>, Serializable {
 		return indexes.get( indexName );
 	}
 
-	public void addUniqueKey(UniqueKey uniqueKey) {
-		UniqueKey current = uniqueKeys.get( uniqueKey.getName() );
+	public void addUniqueKey(MappedUniqueKey uniqueKey) {
+		MappedUniqueKey current = uniqueKeys.get( uniqueKey.getName() );
 		if ( current != null ) {
 			throw new MappingException( "UniqueKey " + uniqueKey.getName() + " already exists!" );
 		}
 		uniqueKeys.put( uniqueKey.getName(), uniqueKey );
 	}
 
-	public UniqueKey createUniqueKey(List<Column> keyColumns) {
+	@Override
+	public MappedUniqueKey createUniqueKey(List<Column> keyColumns) {
 		String keyName = Constraint.generateName( "UK_", this, keyColumns );
-		UniqueKey uk = getOrCreateUniqueKey( keyName );
+		MappedUniqueKey uk = getOrCreateUniqueKey( keyName );
 		uk.addColumns( keyColumns );
 		return uk;
 	}
 
-	public UniqueKey getUniqueKey(String keyName) {
+	public MappedUniqueKey getUniqueKey(String keyName) {
 		return uniqueKeys.get( keyName );
 	}
 
 	@Override
-	public UniqueKey getOrCreateUniqueKey(String keyName) {
-		UniqueKey uk = uniqueKeys.get( keyName );
+	public MappedUniqueKey getOrCreateUniqueKey(String keyName) {
+		MappedUniqueKey uk = uniqueKeys.get( keyName );
 
 		if ( uk == null ) {
 			uk = new UniqueKey();
 			uk.setName( keyName );
-			uk.setTable( this );
+			uk.setMappedTable( this );
 			uniqueKeys.put( keyName, uk );
 		}
 		return uk;
@@ -512,7 +515,7 @@ public class Table implements MappedTable<Column>, Serializable {
 	}
 
 	@Override
-	public ForeignKey createForeignKey(
+	public MappedForeignKey createForeignKey(
 			String keyName,
 			List keyColumns,
 			String referencedEntityName,
@@ -521,7 +524,7 @@ public class Table implements MappedTable<Column>, Serializable {
 	}
 
 	@Override
-	public ForeignKey createForeignKey(
+	public MappedForeignKey createForeignKey(
 			String keyName,
 			List keyColumns,
 			String referencedEntityName,
@@ -529,15 +532,15 @@ public class Table implements MappedTable<Column>, Serializable {
 			List referencedColumns) {
 		final ForeignKeyKey key = new ForeignKeyKey( keyColumns, referencedEntityName, referencedColumns );
 
-		ForeignKey fk = foreignKeyMap.get( key );
+		MappedForeignKey fk = foreignKeyMap.get( key );
 		if ( fk == null ) {
 			fk = new ForeignKey();
-			fk.setTable( this );
+			fk.setMappedTable( this );
 			fk.setReferencedEntityName( referencedEntityName );
 			fk.setKeyDefinition( keyDefinition );
-			fk.addColumns( keyColumns.iterator() );
+			fk.addColumns( keyColumns );
 			if ( referencedColumns != null ) {
-				fk.addReferencedColumns( referencedColumns.iterator() );
+				fk.addReferencedColumns( referencedColumns );
 			}
 
 			// NOTE : if the name is null, we will generate an implicit name during second pass processing

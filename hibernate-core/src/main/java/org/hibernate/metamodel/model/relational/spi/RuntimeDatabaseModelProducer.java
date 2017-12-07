@@ -14,10 +14,12 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedForeignKey;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedPrimaryKey;
 import org.hibernate.boot.model.relational.MappedSequence;
 import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.boot.model.relational.MappedUniqueKey;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -157,7 +159,7 @@ public class RuntimeDatabaseModelProducer {
 				for ( MappedTable<MappedColumn> bootTable : bootModelNamespace.getTables() ) {
 					log.tracef( "Processing FKs for table : %s", bootTable );
 
-					for ( org.hibernate.mapping.ForeignKey bootFk : bootTable.getForeignKeys() ) {
+					for ( MappedForeignKey bootFk : bootTable.getForeignKeys() ) {
 						log.tracef( "Processing mapped FK to runtime FK : %s", bootFk );
 
 						bootFk.alignColumns();
@@ -286,10 +288,10 @@ public class RuntimeDatabaseModelProducer {
 		default void primaryKeyBuilt(MappedPrimaryKey bootPk, PrimaryKey runtimePk) {
 		}
 
-		default void foreignKeyBuilt(org.hibernate.mapping.ForeignKey mappedFk, ForeignKey runtimeFk) {
+		default void foreignKeyBuilt(MappedForeignKey mappedFk, ForeignKey runtimeFk) {
 		}
 
-		default void uniqueKeyBuilt(org.hibernate.mapping.UniqueKey mappedUk, UniqueKey runtimeUk) {
+		default void uniqueKeyBuilt(MappedUniqueKey mappedUk, UniqueKey runtimeUk) {
 		}
 
 		default void sequenceBuilt(Sequence sequence) {

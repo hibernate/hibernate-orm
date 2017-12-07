@@ -15,12 +15,12 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.boot.model.relational.DenormalizedMappedTable;
-import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedForeignKey;
 import org.hibernate.boot.model.relational.MappedIndex;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedPrimaryKey;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.boot.model.relational.MappedUniqueKey;
 import org.hibernate.naming.Identifier;
 
 /**
@@ -64,7 +64,7 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable<
 	@Override
 	public void createForeignKeys() {
 		includedTable.createForeignKeys();
-		for ( ForeignKey fk : includedTable.getForeignKeys() ) {
+		for ( MappedForeignKey fk : includedTable.getForeignKeys() ) {
 			createForeignKey(
 					Constraint.generateName(
 							fk.generatedConstraintNamePrefix(),
@@ -130,7 +130,7 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable<
 	}
 
 	@Override
-	public Collection<UniqueKey> getUniqueKeys() {
+	public Collection<MappedUniqueKey> getUniqueKeys() {
 		includedTable.getUniqueKeys().forEach( uniqueKey -> createUniqueKey( uniqueKey.getColumns() ) );
 		return super.getUniqueKeys();
 	}

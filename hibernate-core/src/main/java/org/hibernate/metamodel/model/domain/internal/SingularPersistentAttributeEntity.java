@@ -14,7 +14,6 @@ import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.model.creation.internal.Utils;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;

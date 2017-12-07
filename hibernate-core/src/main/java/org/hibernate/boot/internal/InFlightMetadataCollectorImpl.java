@@ -45,9 +45,11 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.MappedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedForeignKey;
 import org.hibernate.boot.model.relational.MappedIndex;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.boot.model.relational.MappedUniqueKey;
 import org.hibernate.boot.model.resultset.spi.ResultSetMappingDefinition;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
@@ -1559,7 +1561,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	private void secondPassCompileForeignKeys(MetadataBuildingContext buildingContext) {
 		int uniqueInteger = 0;
-		Set<ForeignKey> done = new HashSet<>();
+		Set<MappedForeignKey> done = new HashSet<>();
 		for ( MappedTable table : collectTableMappings() ) {
 			table.setUniqueInteger( uniqueInteger++ );
 			secondPassCompileForeignKeys( table, done, buildingContext );
@@ -1568,11 +1570,11 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	protected void secondPassCompileForeignKeys(
 			final MappedTable<MappedColumn> table,
-			Set<ForeignKey> done,
+			Set<MappedForeignKey> done,
 			final MetadataBuildingContext buildingContext) throws MappingException {
 		table.createForeignKeys();
 
-		for ( ForeignKey fk : table.getForeignKeys() ) {
+		for ( MappedForeignKey fk : table.getForeignKeys() ) {
 			if ( !done.contains( fk ) ) {
 				done.add( fk );
 				final String referencedEntityName = fk.getReferencedEntityName();
@@ -1778,7 +1780,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
 			}
 
-			final UniqueKey uk = table.getOrCreateUniqueKey( keyName );
+			final MappedUniqueKey uk = table.getOrCreateUniqueKey( keyName );
 			for ( int i = 0; i < columns.length; i++ ) {
 				final Column column = columns[i];
 				final String order = orderings != null ? orderings[i] : null;

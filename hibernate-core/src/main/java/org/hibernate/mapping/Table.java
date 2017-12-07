@@ -20,6 +20,7 @@ import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedIndex;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedPrimaryKey;
 import org.hibernate.boot.model.relational.MappedTable;
@@ -461,7 +462,7 @@ public class Table implements MappedTable<Column>, Serializable {
 		MappedIndex index = indexes.get( indexName );
 
 		if ( index == null ) {
-			index = new MappedIndex();
+			index = new Index();
 			index.setName( indexName );
 			index.setTable( this );
 			indexes.put( indexName, index );
@@ -834,7 +835,7 @@ public class Table implements MappedTable<Column>, Serializable {
 		runtimeTable.setCheckConstraints( getCheckConstraints() );
 
 		for ( MappedIndex index : getIndexes() ) {
-			runtimeTable.addIndex( index.generateRuntimeIndex(
+			runtimeTable.addIndex( ( (Index) index ).generateRuntimeIndex(
 					runtimeTable,
 					namingStrategy,
 					jdbcEnvironment

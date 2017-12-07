@@ -15,7 +15,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.KeyValue;
-import org.hibernate.mapping.MappedIndex;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.metamodel.model.relational.internal.InflightTable;
 import org.hibernate.metamodel.model.relational.spi.Exportable;

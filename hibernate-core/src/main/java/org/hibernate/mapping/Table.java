@@ -532,7 +532,7 @@ public class Table implements MappedTable<Column>, Serializable {
 			List referencedColumns) {
 		final ForeignKeyKey key = new ForeignKeyKey( keyColumns, referencedEntityName, referencedColumns );
 
-		MappedForeignKey fk = foreignKeyMap.get( key );
+		MappedForeignKey fk = (ForeignKey) foreignKeyMap.get( key );
 		if ( fk == null ) {
 			fk = new ForeignKey();
 			fk.setMappedTable( this );

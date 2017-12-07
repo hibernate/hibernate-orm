@@ -144,7 +144,11 @@ public abstract class BaseTransactionalDataRegion
 			assert strategy == Strategy.VALIDATION;
 			return;
 		}
-		synchronized (this) {
+		// If two regions share the same name, they should use the same cache.
+		// Using same cache means they should use the same put validator.
+		// Besides, any cache interceptor initialization should only be done once.
+		// Synchronizes on the cache instance since it's shared between regions with same name.
+		synchronized (cache) {
 			PutFromLoadValidator found = findValidator(cache);
 			validator = found != null ? found : new PutFromLoadValidator(cache, factory);
 			strategy = Strategy.VALIDATION;

@@ -16,6 +16,7 @@ public final class StandardTags {
 	public static final String QUERY = "query";
 	public static final String SQM = "sqm";
 	public static final String UNIT = "unit";
+	public static final String ENVERS = "envers";
 
 	private StandardTags() {
 	}

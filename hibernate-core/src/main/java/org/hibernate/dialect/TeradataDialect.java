@@ -144,6 +144,11 @@ public class TeradataDialect extends Dialect implements IdTableSupport {
 	public String getDropIdTableCommand() {
 		return "drop table";
 	}
+	
+	@Override
+	public String getTruncateIdTableCommand() {
+		return "delete from";
+	}
 
 	/**
 	 * Get the name of the database type associated with the given

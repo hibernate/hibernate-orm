@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.hibernate.HibernateError;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.JavaTypeMapping;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -71,7 +72,7 @@ public class ManyToOne extends ToOne {
 
 		@Override
 		public JavaTypeDescriptor resolveJavaTypeDescriptor() {
-			return getJavaTypeDescriptor();
+			return getJavaTypeMapping().resolveJavaTypeDescriptor();
 		}
 	}
 
@@ -161,18 +162,19 @@ public class ManyToOne extends ToOne {
 		return isLogicalOneToOne;
 	}
 
+
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeMapping getJavaTypeMapping() {
 		final PersistentClass referencedPersistentClass = getMetadataBuildingContext()
 				.getMetadataCollector()
 				.getEntityBinding( getReferencedEntityName() );
 		if ( referenceToPrimaryKey || referencedPropertyName == null ) {
-			return referencedPersistentClass.getIdentifier().getJavaTypeDescriptor();
+			return referencedPersistentClass.getIdentifier().getJavaTypeMapping();
 		}
 		else {
 			return referencedPersistentClass.getReferencedProperty( getReferencedPropertyName() )
 					.getValue()
-					.getJavaTypeDescriptor();
+					.getJavaTypeMapping();
 		}
 	}
 }

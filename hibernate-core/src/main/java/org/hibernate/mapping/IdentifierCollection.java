@@ -58,7 +58,7 @@ public abstract class IdentifierCollection extends Collection {
 				"collection id mapping has wrong number of columns: " +
 				getRole() +
 				" type: " +
-				getIdentifier().getJavaTypeDescriptor().getTypeName()
+				getIdentifier().getJavaTypeMapping().getTypeName()
 			);
 		}
 	}

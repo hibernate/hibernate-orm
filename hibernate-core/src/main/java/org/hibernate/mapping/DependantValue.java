@@ -6,6 +6,7 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.boot.model.domain.JavaTypeMapping;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -35,8 +36,8 @@ public class DependantValue extends SimpleValue {
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return wrappedValue.getJavaTypeDescriptor();
+	public JavaTypeMapping getJavaTypeMapping() {
+		return wrappedValue.getJavaTypeMapping();
 	}
 
 	public class DependantValueTypeDescriptorResolver implements TypeDescriptorResolver {
@@ -53,7 +54,7 @@ public class DependantValue extends SimpleValue {
 
 		@Override
 		public JavaTypeDescriptor resolveJavaTypeDescriptor() {
-			return wrappedValue.getJavaTypeDescriptor();
+			return wrappedValue.getJavaTypeMapping().resolveJavaTypeDescriptor();
 		}
 	}
 

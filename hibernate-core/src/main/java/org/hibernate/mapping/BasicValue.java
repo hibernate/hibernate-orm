@@ -11,6 +11,7 @@ import javax.persistence.AttributeConverter;
 import org.hibernate.MappingException;
 import org.hibernate.boot.internal.AttributeConverterDescriptorNonAutoApplicableImpl;
 import org.hibernate.boot.model.domain.BasicValueMapping;
+import org.hibernate.boot.model.domain.JavaTypeMapping;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -38,6 +39,7 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 	private boolean isLob;
 	private AttributeConverterDescriptor attributeConverterDescriptor;
 	private BasicTypeResolver basicTypeResolver;
+	private JavaTypeMapping javaTypeMapping;
 	private BasicType basicType;
 
 	public BasicValue(MetadataBuildingContext buildingContext, MappedTable table) {
@@ -45,8 +47,24 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return resolveType().getJavaTypeDescriptor();
+	public JavaTypeMapping getJavaTypeMapping() {
+		// todo (6.0) - this seems hackish as a replacement for {@link #getJavaTypeDescriptor()}.
+		if ( javaTypeMapping == null ) {
+			final BasicType basicType = resolveType();
+			javaTypeMapping = new JavaTypeMapping() {
+				@Override
+				public String getTypeName() {
+					return basicType.getJavaType().getTypeName();
+				}
+
+				@Override
+				public JavaTypeDescriptor resolveJavaTypeDescriptor() {
+					return basicType.getJavaTypeDescriptor();
+				}
+			};
+		}
+
+		return javaTypeMapping;
 	}
 
 	public AttributeConverterDescriptor getAttributeConverterDescriptor() {

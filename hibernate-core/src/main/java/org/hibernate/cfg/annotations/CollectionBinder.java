@@ -844,7 +844,7 @@ public abstract class CollectionBinder {
 		collection.setElement( oneToMany );
 		oneToMany.setReferencedEntityName( collectionType.getName() );
 		oneToMany.setIgnoreNotFound( ignoreNotFound );
-		oneToMany.setJavaTypeDescriptor( collection.getJavaTypeDescriptor() );
+		oneToMany.setJavaTypeMapping( collection.getJavaTypeMapping() );
 
 		String assocClass = oneToMany.getReferencedEntityName();
 		PersistentClass associatedClass = (PersistentClass) persistentClasses.get( assocClass );

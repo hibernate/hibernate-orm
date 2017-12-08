@@ -7,8 +7,8 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.JavaTypeMapping;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * A map has a primary key consisting of
@@ -36,11 +36,7 @@ public class Map extends IndexedCollection {
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeMapping getJavaTypeMapping() {
 		return null;
-//		if ( isSorted() ) {
-//			return SortedMapJavaDescriptor.INSTANCE;
-//		}
-//		return MapJavaDescriptor.INSTANCE;
 	}
 }

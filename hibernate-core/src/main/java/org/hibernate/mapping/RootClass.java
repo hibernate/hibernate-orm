@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EntityJavaTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.boot.model.domain.internal.EntityMappingHierarchyImpl;
@@ -51,8 +52,8 @@ public class RootClass extends PersistentClass implements TableOwner {
 
 	public RootClass(
 			MetadataBuildingContext metadataBuildingContext,
-			EntityJavaDescriptor javaTypeDescriptor) {
-		super( metadataBuildingContext, javaTypeDescriptor, new EntityMappingHierarchyImpl() );
+			EntityJavaTypeMapping javaTypeMapping) {
+		super( metadataBuildingContext, javaTypeMapping, new EntityMappingHierarchyImpl() );
 		getEntityMappingHierarchy().setRootType( this );
 	}
 

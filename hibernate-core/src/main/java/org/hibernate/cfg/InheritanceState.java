@@ -8,7 +8,6 @@ package org.hibernate.cfg;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import javax.persistence.Access;
 import javax.persistence.EmbeddedId;
@@ -20,17 +19,15 @@ import javax.persistence.InheritanceType;
 import javax.persistence.MappedSuperclass;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.internal.MappedSuperclassJavaTypeMappingImpl;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.spi.MappedSuperclassJavaDescriptor;
 
 /**
  * Some extra data to the inheritance position of a class.
@@ -326,26 +323,14 @@ public class InheritanceState {
 					superTypeMapping = null;
 				}
 
-				final JavaTypeDescriptor<?> jtd = buildingContext.getBootstrapContext().getTypeConfiguration()
-						.getJavaTypeDescriptorRegistry()
-						.getDescriptor( type );
-				if ( !MappedSuperclassJavaDescriptor.class.isInstance( jtd ) ) {
-					throw new HibernateException(
-							String.format(
-									Locale.ROOT,
-									"Found JavaTypeDescriptor(%s) mapped to non-%s sub-type [%s] - " +
-											"most likely cause is that class is used both as a MappedSuperclass and Entity",
-									jtd.getTypeName(),
-									MappedSuperclassJavaDescriptor.class.getName(),
-									jtd.getClass().getName()
-							)
-					);
-				}
-
 				mappedSuperclass = new org.hibernate.mapping.MappedSuperclass(
 						entityHierarchy,
 						superTypeMapping,
-						(MappedSuperclassJavaDescriptor) jtd
+						new MappedSuperclassJavaTypeMappingImpl(
+								buildingContext,
+								type.getTypeName(),
+								superTypeMapping != null ? superTypeMapping.getJavaTypeMapping() : null
+						)
 				);
 
 				buildingContext.getMetadataCollector().addMappedSuperclass( type, mappedSuperclass );

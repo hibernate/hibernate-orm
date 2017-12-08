@@ -261,7 +261,7 @@ public abstract class SimpleValue implements KeyValue {
 		identifierGeneratorFactory.setDialect( dialect );
 		identifierGenerator = identifierGeneratorFactory.createIdentifierGenerator(
 				identifierGeneratorStrategy,
-				getJavaTypeDescriptor(),
+				getJavaTypeMapping().resolveJavaTypeDescriptor(),
 				params
 		);
 

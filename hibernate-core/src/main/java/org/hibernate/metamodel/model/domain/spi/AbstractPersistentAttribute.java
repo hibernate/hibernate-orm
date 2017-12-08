@@ -31,7 +31,7 @@ public abstract class AbstractPersistentAttribute<O,J> implements PersistentAttr
 			PersistentAttributeMapping bootModelAttribute,
 			PropertyAccess propertyAccess) {
 		this.container = container;
-		this.javaTypeDescriptor = bootModelAttribute.getValueMapping().getJavaTypeDescriptor();
+		this.javaTypeDescriptor = bootModelAttribute.getValueMapping().getJavaTypeMapping().resolveJavaTypeDescriptor();
 		this.access = propertyAccess;
 
 		this.includedInOptimisticLocking = bootModelAttribute.isIncludedInOptimisticLocking();

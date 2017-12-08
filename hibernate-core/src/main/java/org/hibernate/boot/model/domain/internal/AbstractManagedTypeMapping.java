@@ -10,14 +10,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
+
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.boot.model.domain.JavaTypeMapping;
+import org.hibernate.boot.model.domain.ManagedJavaTypeMapping;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -27,22 +28,23 @@ import org.jboss.logging.Logger;
 public abstract class AbstractManagedTypeMapping implements ManagedTypeMappingImplementor {
 	private static final Logger log = Logger.getLogger( AbstractManagedTypeMapping.class );
 
-	private final ManagedJavaDescriptor javaTypeDescriptor;
+	private final ManagedJavaTypeMapping javaTypeMapping;
+
 	private ManagedTypeMapping superTypeMapping;
 	private TreeMap<String, PersistentAttributeMapping> declaredAttributeMappings;
 
-	public AbstractManagedTypeMapping(ManagedJavaDescriptor javaTypeDescriptor) {
-		this.javaTypeDescriptor = javaTypeDescriptor;
+	public AbstractManagedTypeMapping(ManagedJavaTypeMapping javaTypeMapping) {
+		this.javaTypeMapping = javaTypeMapping;
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return javaTypeDescriptor;
+	public JavaTypeMapping getJavaTypeMapping() {
+		return javaTypeMapping;
 	}
 
 	@Override
 	public String getName() {
-		return getJavaTypeDescriptor().getTypeName();
+		return getJavaTypeMapping().getTypeName();
 	}
 
 	@Override

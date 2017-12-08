@@ -13,7 +13,6 @@ import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.Value;
 import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
@@ -71,7 +70,7 @@ public final class BasicMetadataGenerator {
 			enumClass = parameters.getProperty( ENUM );
 		}
 		else {
-			enumClass = value.getJavaTypeDescriptor().getTypeName();
+			enumClass = value.getJavaTypeMapping().getTypeName();
 		}
 		parent.addElement( "param" ).addAttribute( "name", ENUM ).setText( enumClass );
 
@@ -96,7 +95,7 @@ public final class BasicMetadataGenerator {
 		// A null mapper occurs when adding to composite-id element
 		final Element manyToOneElement = parent.addElement( mapper != null ? "many-to-one" : "key-many-to-one" );
 		manyToOneElement.addAttribute( "name", propertyAuditingData.getName() );
-		manyToOneElement.addAttribute( "class", value.getJavaTypeDescriptor().getTypeName() );
+		manyToOneElement.addAttribute( "class", value.getJavaTypeMapping().getTypeName() );
 
 		// HHH-11107
 		// Use FK hbm magic value 'none' to skip making foreign key constraints between the Envers
@@ -128,7 +127,7 @@ public final class BasicMetadataGenerator {
 		final Element propMapping = MetadataTools.addProperty(
 				parent,
 				propertyAuditingData.getName(),
-				isAddNestedType( value ) ? null : value.getJavaTypeDescriptor().getTypeName(),
+				isAddNestedType( value ) ? null : value.getJavaTypeMapping().getTypeName(),
 				propertyAuditingData.isForceInsertable() || insertable,
 				key
 		);
@@ -141,7 +140,7 @@ public final class BasicMetadataGenerator {
 	private void applyNestedType(BasicValue value, Element propertyMapping) {
 		final Properties typeParameters = value.getTypeParameters();
 		final Element typeMapping = propertyMapping.addElement( "type" );
-		final String typeName = value.getJavaTypeDescriptor().getTypeName();
+		final String typeName = value.getJavaTypeMapping().getTypeName();
 
 		typeMapping.addAttribute( "name", typeName );
 

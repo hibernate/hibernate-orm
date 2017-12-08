@@ -15,11 +15,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EmbeddableJavaTypeMapping;
+import org.hibernate.boot.model.domain.JavaTypeMapping;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.domain.internal.EmbeddableJavaTypeMappingImpl;
 import org.hibernate.boot.model.domain.spi.EmbeddedValueMappingImplementor;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
@@ -64,7 +68,7 @@ public class Component extends SimpleValue
 	private Map<String, MetaAttribute> metaAttributes;
 	private boolean isKey;
 	private String roleName;
-	private EmbeddableJavaDescriptor javaTypeDescriptor;
+	private EmbeddableJavaTypeMapping javaTypeMapping;
 
 	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getMappedTable(), owner );
@@ -88,21 +92,19 @@ public class Component extends SimpleValue
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public EmbeddableJavaDescriptor getJavaTypeDescriptor() {
-		if ( javaTypeDescriptor == null ) {
-			javaTypeDescriptor = resolveJavaTypeDescriptor( getMetadataBuildingContext(), componentClassName );
+	public JavaTypeMapping getJavaTypeMapping() {
+		if ( javaTypeMapping == null ) {
+			javaTypeMapping = new EmbeddableJavaTypeMappingImpl<>( getMetadataBuildingContext(), roleName, componentClassName, null );
 		}
-		return javaTypeDescriptor;
+		return javaTypeMapping;
 	}
 
 	@Override
 	public String getName() {
-		// todo (6.0) - For cases where a component doesn't have a pojo representation, should we return roleName?
-		if ( componentClassName != null ) {
-			return componentClassName;
+		if ( roleName != null ) {
+			return roleName;
 		}
-		return roleName;
+		return componentClassName;
 	}
 
 	@Override

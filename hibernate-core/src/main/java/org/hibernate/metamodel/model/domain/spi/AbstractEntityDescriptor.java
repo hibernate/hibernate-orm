@@ -120,7 +120,7 @@ public abstract class AbstractEntityDescriptor<J>
 		super(
 				bootMapping,
 				superTypeDescriptor,
-				resolveJavaTypeDescriptor( creationContext, bootMapping ),
+				resolveJavaTypeDescriptorFromJavaTypeMapping( bootMapping ),
 				creationContext
 		);
 
@@ -228,12 +228,9 @@ public abstract class AbstractEntityDescriptor<J>
 		return creationContext.getDatabaseObjectResolver().resolveForeignKey( bootJoinTable.getJoinMapping() );
 	}
 
-	private static <T> IdentifiableJavaDescriptor<T> resolveJavaTypeDescriptor(
-			RuntimeModelCreationContext creationContext,
+	private static <T> IdentifiableJavaDescriptor<T> resolveJavaTypeDescriptorFromJavaTypeMapping(
 			EntityMapping entityMapping) {
-		return (EntityJavaDescriptor<T>) creationContext.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( entityMapping.getEntityName() );
+		return (IdentifiableJavaDescriptor<T>) entityMapping.getJavaTypeMapping().resolveJavaTypeDescriptor();
 	}
 
 	@Override

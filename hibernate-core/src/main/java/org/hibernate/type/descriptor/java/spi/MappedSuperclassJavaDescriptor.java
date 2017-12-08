@@ -7,6 +7,8 @@
 package org.hibernate.type.descriptor.java.spi;
 
 /**
+ * Contract for "mapped superclass" types.
+ *
  * @author Steve Ebersole
  */
 public interface MappedSuperclassJavaDescriptor<J> extends IdentifiableJavaDescriptor<J> {

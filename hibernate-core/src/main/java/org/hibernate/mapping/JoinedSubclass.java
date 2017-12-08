@@ -9,10 +9,10 @@ package org.hibernate.mapping;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EntityJavaTypeMapping;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * A subclass in a table-per-subclass mapping
@@ -24,9 +24,9 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 
 	public JoinedSubclass(
 			EntityMapping superclass,
-			EntityJavaDescriptor javaTypeDescriptor,
+			EntityJavaTypeMapping javaTypeMapping,
 			MetadataBuildingContext metadataBuildingContext) {
-		super( superclass, javaTypeDescriptor, metadataBuildingContext );
+		super( superclass, javaTypeMapping, metadataBuildingContext );
 	}
 
 
@@ -63,7 +63,7 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 					"subclass key mapping has wrong number of columns: " +
 					getEntityName() +
 					" type: " +
-					key.getJavaTypeDescriptor().getTypeName()
+					key.getJavaTypeMapping().getTypeName()
 				);
 		}
 	}

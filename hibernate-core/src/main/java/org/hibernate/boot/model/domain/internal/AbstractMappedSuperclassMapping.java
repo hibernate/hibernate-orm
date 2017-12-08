@@ -9,12 +9,12 @@ package org.hibernate.boot.model.domain.internal;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
+import org.hibernate.boot.model.domain.MappedSuperclassJavaTypeMapping;
 import org.hibernate.boot.model.domain.MappedSuperclassMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.MappedSuperclassImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
-import org.hibernate.type.descriptor.java.spi.MappedSuperclassJavaDescriptor;
 
 /**
  * @author Chris Cranford
@@ -25,8 +25,8 @@ public abstract class AbstractMappedSuperclassMapping
 
 	public AbstractMappedSuperclassMapping(
 			EntityMappingHierarchy entityMappingHierarchy,
-			MappedSuperclassJavaDescriptor javaTypeDescriptor) {
-		super( entityMappingHierarchy, javaTypeDescriptor );
+			MappedSuperclassJavaTypeMapping javaTypeMapping) {
+		super( entityMappingHierarchy, javaTypeMapping );
 	}
 
 	@Override

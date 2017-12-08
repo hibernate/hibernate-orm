@@ -9,10 +9,10 @@ package org.hibernate.mapping;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EntityJavaTypeMapping;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.collections.JoinedIterator;
-import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * @author Gavin King
@@ -21,9 +21,9 @@ public class SingleTableSubclass extends Subclass {
 
 	public SingleTableSubclass(
 			EntityMapping superclass,
-			EntityJavaDescriptor javaTypeDescriptor,
+			EntityJavaTypeMapping javaTypeMapping,
 			MetadataBuildingContext metadataBuildingContext) {
-		super( superclass, javaTypeDescriptor, metadataBuildingContext );
+		super( superclass, javaTypeMapping, metadataBuildingContext );
 	}
 
 	@Override

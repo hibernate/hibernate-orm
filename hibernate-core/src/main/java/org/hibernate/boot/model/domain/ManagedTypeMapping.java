@@ -7,10 +7,10 @@
 package org.hibernate.boot.model.domain;
 
 import java.util.List;
+
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.metamodel.model.domain.RepresentationMode;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Corollary to what JPA calls a "managed type" as part of Hibernate's boot-time
@@ -25,10 +25,7 @@ public interface ManagedTypeMapping {
 	 */
 	String getName();
 
-	// todo (6.0) : remove this.  it forces access to the ClassLoader too early (container+enhancement)
-	//		We probably need a boot-time representation of JavaTypeDescriptor where
-	//		we could load the Class from JPA temp ClassLoader, if present
-	JavaTypeDescriptor getJavaTypeDescriptor();
+	JavaTypeMapping getJavaTypeMapping();
 
 	/**
 	 * The mappings persistence type.

@@ -16,6 +16,7 @@ import java.util.Properties;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.JavaTypeMapping;
 import org.hibernate.boot.model.relational.ForeignKeyExporter;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedForeignKey;
@@ -26,7 +27,6 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Mapping for a collection. Subclasses specialize to particular collection styles.
@@ -333,7 +333,7 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 					"collection foreign key mapping has wrong number of columns: "
 							+ getRole()
 							+ " type: "
-							+ getKey().getJavaTypeDescriptor().getTypeName()
+							+ getKey().getJavaTypeMapping().getTypeName()
 			);
 		}
 		if ( !getElement().isValid() ) {
@@ -341,7 +341,7 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 					"collection element mapping has wrong number of columns: "
 							+ getRole()
 							+ " type: "
-							+ getElement().getJavaTypeDescriptor().getTypeName()
+							+ getElement().getJavaTypeMapping().getTypeName()
 			);
 		}
 
@@ -693,7 +693,7 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeMapping getJavaTypeMapping() {
 		return null;
 	}
 }

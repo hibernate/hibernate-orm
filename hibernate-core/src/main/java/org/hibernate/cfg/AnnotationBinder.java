@@ -128,8 +128,9 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.domain.EntityJavaTypeMapping;
+import org.hibernate.boot.model.domain.internal.EntityJavaTypeMappingImpl;
 import org.hibernate.boot.model.relational.MappedColumn;
-import org.hibernate.boot.model.source.internal.SourceHelper;
 import org.hibernate.boot.model.source.spi.EntityNamingSource;
 import org.hibernate.boot.model.type.internal.BasicTypeResolverExplicitNamedImpl;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -168,8 +169,6 @@ import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.internal.EntityJavaDescriptorImpl;
-import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -1216,27 +1215,27 @@ public final class AnnotationBinder {
 		if ( !inheritanceState.hasParents() ) {
 			return new RootClass(
 					metadataBuildingContext,
-					resolveJavaDescriptor( inheritanceState, null, metadataBuildingContext )
+					resolveJavaTypeMapping( inheritanceState, null, metadataBuildingContext )
 			);
 		}
 		else if ( InheritanceType.SINGLE_TABLE.equals( inheritanceState.getType() ) ) {
 			return new SingleTableSubclass(
 					superEntity,
-					resolveJavaDescriptor( inheritanceState, superEntity, metadataBuildingContext ),
+					resolveJavaTypeMapping( inheritanceState, superEntity, metadataBuildingContext ),
 					metadataBuildingContext
 			);
 		}
 		else if ( InheritanceType.JOINED.equals( inheritanceState.getType() ) ) {
 			return new JoinedSubclass(
 					superEntity,
-					resolveJavaDescriptor( inheritanceState, superEntity, metadataBuildingContext ),
+					resolveJavaTypeMapping( inheritanceState, superEntity, metadataBuildingContext ),
 					metadataBuildingContext
 			);
 		}
 		else if ( InheritanceType.TABLE_PER_CLASS.equals( inheritanceState.getType() ) ) {
 			return new UnionSubclass(
 					superEntity,
-					resolveJavaDescriptor( inheritanceState, superEntity, metadataBuildingContext ),
+					resolveJavaTypeMapping( inheritanceState, superEntity, metadataBuildingContext ),
 					metadataBuildingContext
 			);
 		}
@@ -1245,22 +1244,14 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static EntityJavaDescriptor resolveJavaDescriptor(
+	private static EntityJavaTypeMapping resolveJavaTypeMapping(
 			InheritanceState inheritanceState,
 			PersistentClass superEntity,
 			MetadataBuildingContext metadataBuildingContext) {
-		EntityNamingSource namingSource = resolveEntityNamingSource( inheritanceState );
-		return SourceHelper.resolveJavaDescriptor(
-				inheritanceState.getClazz().getName(),
-				metadataBuildingContext.getBootstrapContext().getTypeConfiguration(),
-				() -> new EntityJavaDescriptorImpl(
-						namingSource.getTypeName(),
-						namingSource.getEntityName(),
-						SourceHelper.resolveJavaType( namingSource.getClassName(), metadataBuildingContext ),
-						superEntity == null ? null : superEntity.getJavaTypeDescriptor(),
-						null,
-						null
-				)
+		return new EntityJavaTypeMappingImpl(
+				metadataBuildingContext,
+				resolveEntityNamingSource( inheritanceState ),
+				superEntity == null ? null : superEntity.getJavaTypeMapping()
 		);
 	}
 
@@ -2263,7 +2254,8 @@ public final class AnnotationBinder {
 				//Overrides from @MapsId if needed
 				boolean isOverridden = false;
 				if ( isId || propertyHolder.isOrWithinEmbeddedId() || propertyHolder.isInIdClass() ) {
-					//the associated entity could be using an @IdClass making the overridden property a component
+					// todo (6.0) - this loads the class prematurely which we want to avoid.
+					// the associated entity could be using an @IdClass making the overridden property a component
 					final PropertyData overridingProperty = BinderHelper.getPropertyOverriddenByMapperOrMapsId(
 							isId,
 							propertyHolder,

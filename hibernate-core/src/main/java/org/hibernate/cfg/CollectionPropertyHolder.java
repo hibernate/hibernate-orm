@@ -32,7 +32,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
@@ -419,8 +418,8 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		}
 
 		if ( collection.getElement() != null ) {
-			if ( collection.getElement().getJavaTypeDescriptor() != null ) {
-				return collection.getElement().getJavaTypeDescriptor().getJavaType();
+			if ( collection.getElement().getJavaTypeMapping() != null ) {
+				return collection.getElement().getJavaTypeMapping().resolveJavaTypeDescriptor().getJavaType();
 			}
 		}
 
@@ -461,33 +460,33 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 				.findAutoApplyConverterForMapKey( mapXProperty, getContext() );
 	}
 
-	private Class determineKeyClass(XClass keyXClass) {
-		if ( keyXClass != null ) {
-			try {
-				return getContext().getBootstrapContext().getReflectionManager().toClass( keyXClass );
-			}
-			catch (Exception e) {
-				log.debugf(
-						"Unable to resolve XClass [%s] to Class for collection key [%s]",
-						keyXClass.getName(),
-						collection.getRole()
-				);
-			}
-		}
-
-		final IndexedCollection indexedCollection = (IndexedCollection) collection;
-		if ( indexedCollection.getIndex() != null ) {
-			if ( indexedCollection.getIndex().getJavaTypeDescriptor() != null ) {
-				return indexedCollection.getIndex().getJavaTypeDescriptor().getJavaType();
-			}
-		}
-
-		// currently this is called from paths where the element type really should be known,
-		// so log the fact that we could not resolve the collection element info
-		log.debugf(
-				"Unable to resolve key information for collection [%s]",
-				collection.getRole()
-		);
-		return null;
-	}
+//	private Class determineKeyClass(XClass keyXClass) {
+//		if ( keyXClass != null ) {
+//			try {
+//				return getContext().getBootstrapContext().getReflectionManager().toClass( keyXClass );
+//			}
+//			catch (Exception e) {
+//				log.debugf(
+//						"Unable to resolve XClass [%s] to Class for collection key [%s]",
+//						keyXClass.getName(),
+//						collection.getRole()
+//				);
+//			}
+//		}
+//
+//		final IndexedCollection indexedCollection = (IndexedCollection) collection;
+//		if ( indexedCollection.getIndex() != null ) {
+//			if ( indexedCollection.getIndex().getJavaTypeDescriptor() != null ) {
+//				return indexedCollection.getIndex().getJavaTypeDescriptor().getJavaType();
+//			}
+//		}
+//
+//		// currently this is called from paths where the element type really should be known,
+//		// so log the fact that we could not resolve the collection element info
+//		log.debugf(
+//				"Unable to resolve key information for collection [%s]",
+//				collection.getRole()
+//		);
+//		return null;
+//	}
 }

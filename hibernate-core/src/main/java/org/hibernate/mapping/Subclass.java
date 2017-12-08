@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.boot.model.domain.EntityJavaTypeMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
@@ -20,7 +21,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
-import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * A sublass in a table-per-class-hierarchy mapping
@@ -33,9 +33,9 @@ public class Subclass extends PersistentClass {
 	
 	public Subclass(
 			IdentifiableTypeMapping superclass,
-			EntityJavaDescriptor javaTypeDescriptor,
+			EntityJavaTypeMapping javaTypeMapping,
 			MetadataBuildingContext metadataBuildingContext) {
-		super( metadataBuildingContext, javaTypeDescriptor, superclass.getEntityMappingHierarchy() );
+		super( metadataBuildingContext, javaTypeMapping, superclass.getEntityMappingHierarchy() );
 		this.superclass = superclass;
 		this.subclassId = ( (IdentifiableTypeMappingImplementor) superclass ).nextSubclassId();
 	}

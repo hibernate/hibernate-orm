@@ -456,12 +456,12 @@ public class EntityBinder {
 			if ( discriminator == null ) {
 				persistentClass.setDiscriminatorValue( name );
 			}
-			else if ( "character".equals( discriminator.getJavaTypeDescriptor().getTypeName() ) ) {
+			else if ( "character".equals( discriminator.getJavaTypeMapping().getTypeName() ) ) {
 				throw new AnnotationException(
 						"Using default @DiscriminatorValue for a discriminator of type CHAR is not safe"
 				);
 			}
-			else if ( "integer".equals( discriminator.getJavaTypeDescriptor().getTypeName() ) ) {
+			else if ( "integer".equals( discriminator.getJavaTypeMapping().getTypeName() ) ) {
 				persistentClass.setDiscriminatorValue( String.valueOf( name.hashCode() ) );
 			}
 			else {

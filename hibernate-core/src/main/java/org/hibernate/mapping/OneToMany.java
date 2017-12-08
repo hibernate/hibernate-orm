@@ -13,12 +13,12 @@ import java.util.List;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.JavaTypeMapping;
 import org.hibernate.boot.model.relational.ForeignKeyExporter;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * A mapping for a one-to-many association
@@ -33,7 +33,7 @@ public class OneToMany implements ForeignKeyExporter, Value {
 	private PersistentClass associatedClass;
 	private boolean embedded;
 	private boolean ignoreNotFound;
-	private JavaTypeDescriptor javaTypeDescriptor;
+	private JavaTypeMapping javaTypeMapping;
 
 	public OneToMany(MetadataBuildingContext buildingContext, PersistentClass owner) throws MappingException {
 		this.buildingContext = buildingContext;
@@ -162,11 +162,11 @@ public class OneToMany implements ForeignKeyExporter, Value {
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return javaTypeDescriptor;
+	public JavaTypeMapping getJavaTypeMapping() {
+		return javaTypeMapping;
 	}
 
-	public void setJavaTypeDescriptor(JavaTypeDescriptor javaTypeDescriptor) {
-		this.javaTypeDescriptor = javaTypeDescriptor;
+	public void setJavaTypeMapping(JavaTypeMapping javaTypeMapping) {
+		this.javaTypeMapping = javaTypeMapping;
 	}
 }

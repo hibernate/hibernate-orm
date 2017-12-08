@@ -44,7 +44,12 @@ public class MappedSuperclassImpl<J>
 			EntityHierarchy hierarchy,
 			IdentifiableTypeDescriptor<? super J> superTypeDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		super( bootMapping, superTypeDescriptor, bootMapping.getJavaTypeDescriptor(), creationContext );
+		super(
+				bootMapping,
+				superTypeDescriptor,
+				bootMapping.getJavaTypeMapping().resolveJavaTypeDescriptor(),
+				creationContext
+		);
 		this.hierarchy = hierarchy;
 	}
 

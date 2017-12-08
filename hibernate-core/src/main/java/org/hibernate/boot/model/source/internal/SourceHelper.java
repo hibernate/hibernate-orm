@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.source.internal;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
@@ -34,13 +35,15 @@ public class SourceHelper {
 	}
 
 	public static <T> Class<T> resolveJavaType(String className, MetadataBuildingContext metadataBuildingContext) {
-		final ClassLoaderService cls = metadataBuildingContext.getBootstrapContext()
-				.getServiceRegistry()
-				.getService( ClassLoaderService.class );
+		return resolveJavaType( className, metadataBuildingContext.getBootstrapContext() );
+	}
+
+	public static <T> Class<T> resolveJavaType(String className, BootstrapContext bootstrapContext) {
+		final ClassLoaderService cls = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
 		try {
 			return cls.classForName( className );
 		}
-		catch (Exception ignore) {
+		catch ( Exception ignore ) {
 		}
 
 		return null;

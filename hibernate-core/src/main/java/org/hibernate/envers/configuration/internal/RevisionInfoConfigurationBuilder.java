@@ -330,11 +330,12 @@ public class RevisionInfoConfigurationBuilder {
 				}
 
 				if ( isValidTimestampProperty( property.getType(), reflectionManager ) ) {
+					final org.hibernate.mapping.Property value = persistentClass.getProperty( property.getName() );
 					revisionInfoTimestampData = new RevisionTimestampData(
 							property.getName(),
 							property.getName(),
 							accessType,
-							persistentClass.getProperty( property.getName() ).getValueMapping().getJavaTypeDescriptor()
+							value.getValueMapping().getJavaTypeMapping().resolveJavaTypeDescriptor()
 					);
 					revisionTimestampFound.set();
 				}

@@ -10,9 +10,9 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.domain.JavaTypeMapping;
 import org.hibernate.boot.model.relational.MappedPrimaryKey;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * A set with no nullable element columns. It will have a primary key
@@ -70,7 +70,7 @@ public class Set extends Collection {
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeMapping getJavaTypeMapping() {
 		return null;
 	}
 }

@@ -8,7 +8,6 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.Locale;
-import java.util.Objects;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -220,7 +219,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		return sqlTypeDescriptor;
 	}
 
-	protected JavaTypeDescriptor getJavaTypeDescriptor(){
+	protected JavaTypeDescriptor getJavaTypeDescriptor() {
 		return typeDescriptorResolver.resolveJavaTypeDescriptor();
 	}
 

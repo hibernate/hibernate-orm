@@ -16,12 +16,12 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.MappedSuperclassJavaTypeMapping;
 import org.hibernate.boot.model.domain.MappedTableJoin;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.internal.AbstractMappedSuperclassMapping;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
-import org.hibernate.type.descriptor.java.spi.MappedSuperclassJavaDescriptor;
 
 /**
  * Represents a @MappedSuperclass.
@@ -44,8 +44,8 @@ public class MappedSuperclass extends AbstractMappedSuperclassMapping implements
 	public MappedSuperclass(
 			EntityMappingHierarchy entityMappingHierarchy,
 			IdentifiableTypeMapping superIdentifiableTypeMapping,
-			MappedSuperclassJavaDescriptor javaTypeDescriptor) {
-		super( entityMappingHierarchy, javaTypeDescriptor );
+			MappedSuperclassJavaTypeMapping javaTypeMapping) {
+		super( entityMappingHierarchy, javaTypeMapping );
 		setSuperManagedType( superIdentifiableTypeMapping );
 	}
 

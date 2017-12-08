@@ -563,7 +563,7 @@ public final class AuditMetadataGenerator {
 			final Element discriminatorElement = classMapping.addElement( "discriminator" );
 			// Database column or SQL formula allowed to distinguish entity types
 			MetadataTools.addColumnsOrFormulas( discriminatorElement, discriminatorMapping.getMappedColumns() );
-			discriminatorElement.addAttribute( "type", discriminatorMapping.getJavaTypeDescriptor().getTypeName() );
+			discriminatorElement.addAttribute( "type", discriminatorMapping.getJavaTypeMapping().getTypeName() );
 		}
 
 		// Adding the id mapping
@@ -778,7 +778,7 @@ public final class AuditMetadataGenerator {
 	}
 
 	void throwUnsupportedTypeException(ValueMapping value, String entityName, String propertyName) {
-		final String message = "Type not supported for auditing: " + value.getJavaTypeDescriptor().getTypeName() +
+		final String message = "Type not supported for auditing: " + value.getJavaTypeMapping().getTypeName() +
 				", on entity " + entityName + ", property '" + propertyName + "'.";
 
 		throw new MappingException( message );

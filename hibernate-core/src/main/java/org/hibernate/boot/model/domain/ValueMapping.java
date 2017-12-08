@@ -14,7 +14,6 @@ import org.hibernate.boot.model.relational.MappedForeignKey;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Corollary to {@link org.hibernate.metamodel.model.domain.spi.Navigable}
@@ -38,7 +37,7 @@ public interface ValueMapping<J> {
 
 	MetadataBuildingContext getMetadataBuildingContext();
 
-	JavaTypeDescriptor<J> getJavaTypeDescriptor();
+	JavaTypeMapping<J> getJavaTypeMapping();
 
 	ServiceRegistry getServiceRegistry();
 

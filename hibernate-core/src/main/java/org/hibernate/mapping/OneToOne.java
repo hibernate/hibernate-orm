@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.domain.JavaTypeMapping;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.ForeignKeyDirection;
@@ -119,7 +120,7 @@ public class OneToOne extends ToOne {
 
 		@Override
 		public JavaTypeDescriptor resolveJavaTypeDescriptor() {
-			return getJavaTypeDescriptor();
+			return getJavaTypeMapping().resolveJavaTypeDescriptor();
 		}
 	}
 
@@ -185,18 +186,18 @@ public class OneToOne extends ToOne {
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeMapping getJavaTypeMapping() {
 		final PersistentClass referencedPersistentClass = getMetadataBuildingContext()
 				.getMetadataCollector()
 				.getEntityBinding( getReferencedEntityName() );
 
 		if ( referenceToPrimaryKey || referencedPropertyName == null ) {
-			return referencedPersistentClass.getIdentifier().getJavaTypeDescriptor();
+			return referencedPersistentClass.getIdentifier().getJavaTypeMapping();
 		}
 		else {
 			return referencedPersistentClass.getReferencedProperty( getReferencedPropertyName() )
 					.getValue()
-					.getJavaTypeDescriptor();
+					.getJavaTypeMapping();
 		}
 	}
 }

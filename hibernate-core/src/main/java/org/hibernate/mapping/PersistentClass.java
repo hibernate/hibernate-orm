@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.EntityJavaTypeMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.MappedTableJoin;
@@ -43,7 +44,6 @@ import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
-import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * Mapping for an entity.
@@ -106,15 +106,15 @@ public abstract class PersistentClass
 
 	public PersistentClass(
 			MetadataBuildingContext metadataBuildingContext,
-			EntityJavaDescriptor javaTypeDescriptor,
+			EntityJavaTypeMapping javaTypeMapping,
 			EntityMappingHierarchy entityMappingHierarchy) {
-		super( entityMappingHierarchy, javaTypeDescriptor );
+		super( entityMappingHierarchy, javaTypeMapping );
 		this.metadataBuildingContext = metadataBuildingContext;
 	}
 
 	@Override
-	public EntityJavaDescriptor getJavaTypeDescriptor() {
-		return (EntityJavaDescriptor) super.getJavaTypeDescriptor();
+	public EntityJavaTypeMapping getJavaTypeMapping() {
+		return (EntityJavaTypeMapping) super.getJavaTypeMapping();
 	}
 
 	public ServiceRegistry getServiceRegistry() {
@@ -687,7 +687,7 @@ public abstract class PersistentClass
 						"property mapping has wrong number of columns: " +
 								StringHelper.qualify( getEntityName(), prop.getName() ) +
 								" type: " +
-								prop.getValueMapping().getJavaTypeDescriptor().getTypeName()
+								prop.getValueMapping().getJavaTypeMapping().getTypeName()
 				);
 			}
 		}

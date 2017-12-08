@@ -15,11 +15,11 @@ import java.util.Locale;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
+import org.hibernate.boot.model.domain.IdentifiableJavaTypeMapping;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
-import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -43,8 +43,8 @@ public abstract class AbstractIdentifiableTypeMapping
 
 	public AbstractIdentifiableTypeMapping(
 			EntityMappingHierarchy entityMappingHierarchy,
-			IdentifiableJavaDescriptor javaDescriptor) {
-		super( javaDescriptor );
+			IdentifiableJavaTypeMapping javaTypeMapping) {
+		super( javaTypeMapping );
 		this.entityMappingHierarchy = entityMappingHierarchy;
 	}
 
@@ -148,7 +148,7 @@ public abstract class AbstractIdentifiableTypeMapping
 	}
 
 	@Override
-	public IdentifiableJavaDescriptor getJavaTypeDescriptor(){
-		return (IdentifiableJavaDescriptor)super.getJavaTypeDescriptor();
+	public IdentifiableJavaTypeMapping getJavaTypeMapping() {
+		return (IdentifiableJavaTypeMapping) super.getJavaTypeMapping();
 	}
 }

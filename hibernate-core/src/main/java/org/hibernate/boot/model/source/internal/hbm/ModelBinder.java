@@ -25,6 +25,8 @@ import org.hibernate.boot.model.Caching;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.domain.EntityJavaTypeMapping;
+import org.hibernate.boot.model.domain.internal.EntityJavaTypeMappingImpl;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitCollectionTableNameSource;
@@ -41,7 +43,6 @@ import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.MappedUniqueKey;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
-import org.hibernate.boot.model.source.internal.SourceHelper;
 import org.hibernate.boot.model.source.spi.AnyDiscriminatorSource;
 import org.hibernate.boot.model.source.spi.AnyMappingSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
@@ -121,7 +122,6 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.DependantValue;
-import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexBackref;
@@ -151,8 +151,6 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.tuple.GeneratedValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.descriptor.java.internal.EntityJavaDescriptorImpl;
-import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -195,18 +193,7 @@ public class ModelBinder {
 	public void bindEntityHierarchy(EntityHierarchySourceImpl hierarchySource) {
 		final RootClass rootEntityDescriptor = new RootClass(
 				metadataBuildingContext,
-				SourceHelper.resolveJavaDescriptor(
-						hierarchySource.getRoot().getEntityNamingSource().getTypeName(),
-						metadataBuildingContext.getBootstrapContext().getTypeConfiguration(),
-						() -> new EntityJavaDescriptorImpl(
-								hierarchySource.getRoot().getEntityNamingSource().getTypeName(),
-								hierarchySource.getRoot().getEntityNamingSource().getEntityName(),
-								SourceHelper.resolveJavaType( hierarchySource.getRoot().getEntityNamingSource().getClassName(), metadataBuildingContext ),
-								null,
-								null,
-								null
-						)
-				)
+				new EntityJavaTypeMappingImpl( metadataBuildingContext, hierarchySource.getRoot().getEntityNamingSource(), null )
 		);
 		bindRootEntity( hierarchySource, rootEntityDescriptor );
 		final InFlightMetadataCollector metadataCollector = hierarchySource.getRoot()
@@ -547,17 +534,10 @@ public class ModelBinder {
 
 			final SingleTableSubclass subEntityDescriptor = new SingleTableSubclass(
 					superEntityDescriptor,
-					SourceHelper.resolveJavaDescriptor(
-							subclassEntitySource.getEntityNamingSource().getTypeName(),
-							metadataBuildingContext.getBootstrapContext().getTypeConfiguration(),
-							() -> new EntityJavaDescriptorImpl<>(
-									subclassEntitySource.getEntityNamingSource().getTypeName(),
-									subclassEntitySource.getEntityNamingSource().getEntityName(),
-									SourceHelper.resolveJavaType( subclassEntitySource.getEntityNamingSource().getClassName(), metadataBuildingContext ),
-									superEntityDescriptor.getJavaTypeDescriptor(),
-									null,
-									null
-							)
+					new EntityJavaTypeMappingImpl(
+							metadataBuildingContext,
+							subclassEntitySource.getEntityNamingSource(),
+							superEntityDescriptor.getJavaTypeMapping()
 					),
 					metadataBuildingContext
 			);
@@ -617,24 +597,17 @@ public class ModelBinder {
 			final SubclassEntitySource subclassSource = (SubclassEntitySource) subTypeSource;
 			final JoinedSubclass subEntityDescriptor = new JoinedSubclass(
 					superEntityDescriptor,
-					SourceHelper.resolveJavaDescriptor(
-							subclassSource.getEntityNamingSource().getTypeName(),
-							metadataBuildingContext.getBootstrapContext().getTypeConfiguration(),
-							() -> new EntityJavaDescriptorImpl<>(
-									subclassSource.getEntityNamingSource().getTypeName(),
-									subclassSource.getEntityNamingSource().getEntityName(),
-									SourceHelper.resolveJavaType( subclassSource.getEntityNamingSource().getClassName(), metadataBuildingContext ),
-									superEntityDescriptor.getJavaTypeDescriptor(),
-									null,
-									null
-							)
+					new EntityJavaTypeMappingImpl(
+							metadataBuildingContext,
+							subclassSource.getEntityNamingSource(),
+							superEntityDescriptor.getJavaTypeMapping()
 					),
 					metadataBuildingContext
 			);
 			bindJoinedSubclassEntity(
 					(JoinedSubclassEntitySourceImpl) subTypeSource,
 					subEntityDescriptor,
-					subEntityDescriptor.getJavaTypeDescriptor()
+					subEntityDescriptor.getJavaTypeMapping()
 			);
 			superEntityDescriptor.addSubclass( subEntityDescriptor );
 			superEntitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityBinding( subEntityDescriptor );
@@ -644,7 +617,7 @@ public class ModelBinder {
 	private void bindJoinedSubclassEntity(
 			JoinedSubclassEntitySourceImpl entitySource,
 			JoinedSubclass entityDescriptor,
-			EntityJavaDescriptor superJavaTypeDescriptor) {
+			EntityJavaTypeMapping superJavaTypeMapping) {
 		MappingDocument mappingDocument = entitySource.sourceMappingDocument();
 
 		bindBasicEntityValues(
@@ -714,17 +687,10 @@ public class ModelBinder {
 			final SubclassEntitySource subclassSource = (SubclassEntitySource) subTypeSource;
 			final UnionSubclass subEntityDescriptor = new UnionSubclass(
 					superEntityMapping,
-					SourceHelper.resolveJavaDescriptor(
-							subTypeSource.getTypeName(),
-							metadataBuildingContext.getBootstrapContext().getTypeConfiguration(),
-							() -> new EntityJavaDescriptorImpl<>(
-									subclassSource.getEntityNamingSource().getTypeName(),
-									subclassSource.getEntityNamingSource().getEntityName(),
-									SourceHelper.resolveJavaType( subclassSource.getEntityNamingSource().getClassName(), metadataBuildingContext ),
-									superEntityMapping.getJavaTypeDescriptor(),
-									null,
-									null
-							)
+					new EntityJavaTypeMappingImpl(
+							metadataBuildingContext,
+							subclassSource.getEntityNamingSource(),
+							superEntityMapping.getJavaTypeMapping()
 					),
 					metadataBuildingContext
 			);

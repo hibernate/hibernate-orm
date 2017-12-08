@@ -27,8 +27,8 @@ public class Array extends List {
 	public Class getElementClass() throws MappingException {
 		if ( elementClassName == null ) {
 			return isPrimitiveArray()
-					? ( (Primitive) getElement().getJavaTypeDescriptor() ).getPrimitiveClass()
-					: getElement().getJavaTypeDescriptor().getJavaType();
+					? ( (Primitive) getElement().getJavaTypeMapping().resolveJavaTypeDescriptor() ).getPrimitiveClass()
+					: getElement().getJavaTypeMapping().resolveJavaTypeDescriptor().getJavaType();
 		}
 		else {
 			try {

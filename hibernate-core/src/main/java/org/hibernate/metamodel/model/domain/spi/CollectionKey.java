@@ -25,7 +25,7 @@ public class CollectionKey {
 			Collection bootCollectionValue,
 			RuntimeModelCreationContext creationContext) {
 		this.collectionDescriptor = collectionDescriptor;
-		this.javaTypeDescriptor = bootCollectionValue.getJavaTypeDescriptor();
+		this.javaTypeDescriptor = resolveJavaTypeDescriptor( bootCollectionValue );
 		this.joinForeignKey = creationContext.getDatabaseObjectResolver().resolveForeignKey(
 				bootCollectionValue.getForeignKey()
 		);
@@ -110,4 +110,11 @@ public class CollectionKey {
 //
 //		return columns;
 //	}
+
+	private static JavaTypeDescriptor resolveJavaTypeDescriptor(Collection collectionValue) {
+		if ( collectionValue.getJavaTypeMapping() != null ) {
+			return collectionValue.getJavaTypeMapping().resolveJavaTypeDescriptor();
+		}
+		return null;
+	}
 }

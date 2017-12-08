@@ -158,7 +158,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 			spaces[i] = (String) iter.next();
 		}
 
-		this.keyJavaTypeDescriptor = collectionBinding.getKey().getJavaTypeDescriptor();
+		this.keyJavaTypeDescriptor = collectionBinding.getKey().getJavaTypeMapping().resolveJavaTypeDescriptor();
 
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( pluralProperty.getName() );
 

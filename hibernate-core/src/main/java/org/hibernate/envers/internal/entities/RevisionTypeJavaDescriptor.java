@@ -7,15 +7,16 @@
 package org.hibernate.envers.internal.entities;
 
 import org.hibernate.envers.RevisionType;
-import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.internal.EnumJavaDescriptor;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
 
 /**
  * @author Chris Cranford
  */
-public class RevisionTypeJavaDescriptor extends AbstractBasicJavaDescriptor<RevisionType> {
+public class RevisionTypeJavaDescriptor extends EnumJavaDescriptor<RevisionType> {
 	public static final RevisionTypeJavaDescriptor INSTANCE = new RevisionTypeJavaDescriptor();
 
 	private RevisionTypeJavaDescriptor() {
@@ -24,17 +25,7 @@ public class RevisionTypeJavaDescriptor extends AbstractBasicJavaDescriptor<Revi
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return null;
-	}
-
-	@Override
-	public String toString(RevisionType value) {
-		return value != null ? value.name() : null;
-	}
-
-	@Override
-	public RevisionType fromString(String string) {
-		return string == null ? null : RevisionType.valueOf( string );
+		return TinyIntSqlDescriptor.INSTANCE;
 	}
 
 	@Override

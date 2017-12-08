@@ -24,6 +24,10 @@ public class TypeContributorImpl implements TypeContributor {
 		if ( !enversService.isEnabled() ) {
 			return;
 		}
+
+		// Register our custom java type and basic type mapping.
+		// No need to register the SqlTypeDescriptor as we use an already registered type.
+		typeContributions.contributeJavaTypeDescriptor( RevisionTypeType.INSTANCE.getJavaTypeDescriptor() );
 		typeContributions.contributeType( RevisionTypeType.INSTANCE );
 	}
 }

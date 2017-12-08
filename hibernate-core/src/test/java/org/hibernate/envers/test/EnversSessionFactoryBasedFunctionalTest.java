@@ -60,7 +60,7 @@ public class EnversSessionFactoryBasedFunctionalTest implements EnversSessionFac
 
 	@Override
 	public SessionFactory produceSessionFactory(String auditStrategyName) {
-		log.infof( "Producing SessionFactory (%s)", auditStrategyName );
+		log.debugf( "Producing SessionFactory (%s)", auditStrategyName );
 		this.auditStrategyName = auditStrategyName;
 
 		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder(  );
@@ -89,7 +89,7 @@ public class EnversSessionFactoryBasedFunctionalTest implements EnversSessionFac
 
 	@EnversAfterAll
 	public void releaseSessionFactory() {
-		log.infof( "Releasing SessionFactory - %s", auditStrategyName );
+		log.debugf( "Releasing SessionFactory - %s", auditStrategyName );
 		sessionFactoryScope.releaseSessionFactory();
 	}
 

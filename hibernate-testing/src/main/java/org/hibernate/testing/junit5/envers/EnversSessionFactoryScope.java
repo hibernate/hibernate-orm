@@ -31,13 +31,13 @@ public class EnversSessionFactoryScope implements SessionFactoryAccess {
 	private SessionFactory sessionFactory;
 
 	public EnversSessionFactoryScope(EnversSessionFactoryProducer producer, Strategy auditStrategy) {
-		log.infof( "#<init> - %s", auditStrategy.getDisplayName() );
+		log.debugf( "#<init> - %s", auditStrategy.getDisplayName() );
 		this.auditStrategy = auditStrategy;
 		this.sessionFactoryProducer = producer;
 	}
 
 	public void releaseSessionFactory() {
-		log.infof( "#releaseSessionFactory - %s", auditStrategy.getDisplayName() );
+		log.debugf( "#releaseSessionFactory - %s", auditStrategy.getDisplayName() );
 		if ( sessionFactory != null ) {
 			log.infof( "Closing SessionFactory %s (%s)", sessionFactory, auditStrategy.getDisplayName() );
 			sessionFactory.close();
@@ -47,7 +47,7 @@ public class EnversSessionFactoryScope implements SessionFactoryAccess {
 
 	@Override
 	public SessionFactoryImplementor getSessionFactory() {
-		log.infof( "#getSessionFactory - %s", auditStrategy.getDisplayName() );
+		log.debugf( "#getSessionFactory - %s", auditStrategy.getDisplayName() );
 		if ( sessionFactory == null || sessionFactory.isClosed() ) {
 			sessionFactory = sessionFactoryProducer.produceSessionFactory( auditStrategy.getSettingValue() );
 		}

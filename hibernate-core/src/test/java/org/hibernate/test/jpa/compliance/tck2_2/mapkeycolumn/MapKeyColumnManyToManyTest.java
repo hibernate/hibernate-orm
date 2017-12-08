@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.jpa.compliance.tck2_2;
+package org.hibernate.test.jpa.compliance.tck2_2.mapkeycolumn;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +13,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -22,26 +23,42 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static junit.framework.Assert.assertEquals;
+
 /**
  * @author Steve Ebersole
  */
-public class MapKeyColumnTest extends BaseNonConfigCoreFunctionalTestCase {
+public class MapKeyColumnManyToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testReferenceToAlreadyMappedColumn() {
 		inTransaction(
 				session -> {
 					AddressCapable2 holder = new AddressCapable2( 1, "osd");
-					holder.addresses.put( "work", new Address2( 1, "123 Main St" ) );
+					Address2 address = new Address2( 1, "123 Main St" );
+
+					session.persist( holder );
+					session.persist( address );
+				}
+		);
+		inTransaction(
+				session -> {
+					AddressCapable2 holder = session.get( AddressCapable2.class, 1 );
+					Address2 address = session.get( Address2.class, 1 );
+
+					holder.addresses.put( "work", address );
 
 					session.persist( holder );
 				}
 		);
 		inTransaction(
 				session -> {
-					session.remove(
-							session.byId( AddressCapable2.class ).load( 1 )
-					);
+					AddressCapable2 holder = session.get( AddressCapable2.class, 1 );
+					assertEquals( 1, holder.addresses.size() );
+					final Map.Entry<String,Address2> entry = holder.addresses.entrySet().iterator().next();
+					assertEquals( "work", entry.getKey() );
+					assertEquals( null, entry.getValue().type );
+					session.remove( holder );
 				}
 		);
 	}
@@ -51,16 +68,29 @@ public class MapKeyColumnTest extends BaseNonConfigCoreFunctionalTestCase {
 		inTransaction(
 				session -> {
 					AddressCapable holder = new AddressCapable( 1, "osd");
-					holder.addresses.put( "work", new Address( 1, "123 Main St" ) );
+					Address address = new Address( 1, "123 Main St" );
+
+					session.persist( holder );
+					session.persist( address );
+				}
+		);
+		inTransaction(
+				session -> {
+					AddressCapable holder = session.get( AddressCapable.class, 1 );
+					Address address = session.get( Address.class, 1 );
+
+					holder.addresses.put( "work", address );
 
 					session.persist( holder );
 				}
 		);
 		inTransaction(
 				session -> {
-					session.remove(
-							session.byId( AddressCapable.class ).load( 1 )
-					);
+					AddressCapable holder = session.get( AddressCapable.class, 1 );
+					assertEquals( 1, holder.addresses.size() );
+					final Map.Entry<String,Address> entry = holder.addresses.entrySet().iterator().next();
+					assertEquals( "work", entry.getKey() );
+					session.remove( holder );
 				}
 		);
 	}
@@ -81,9 +111,8 @@ public class MapKeyColumnTest extends BaseNonConfigCoreFunctionalTestCase {
 		@Id
 		public Integer id;
 		public String name;
-		@JoinColumn
 		@MapKeyColumn( name = "a_type" )
-		@OneToMany( cascade = {CascadeType.PERSIST, CascadeType.REMOVE} )
+		@ManyToMany( cascade = {CascadeType.PERSIST, CascadeType.REMOVE} )
 		public Map<String,Address> addresses = new HashMap<>();
 
 		public AddressCapable() {
@@ -117,9 +146,8 @@ public class MapKeyColumnTest extends BaseNonConfigCoreFunctionalTestCase {
 		@Id
 		public Integer id;
 		public String name;
-		@JoinColumn
 		@MapKeyColumn( name = "a_type" )
-		@OneToMany( cascade = {CascadeType.PERSIST, CascadeType.REMOVE} )
+		@ManyToMany( cascade = {CascadeType.PERSIST, CascadeType.REMOVE} )
 		public Map<String,Address2> addresses = new HashMap<>();
 
 		public AddressCapable2() {

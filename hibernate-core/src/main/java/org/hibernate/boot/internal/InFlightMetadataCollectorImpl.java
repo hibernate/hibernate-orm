@@ -269,7 +269,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public void addEntityMappingHierarchy(EntityMappingHierarchy entityMappingHierarchy) {
-		final String rootEntityName = entityMappingHierarchy.getRootType().getEntityName();
+		final String rootEntityName = entityMappingHierarchy.getRootType().getName();
 		if ( entityMappingHierarchies.containsKey( rootEntityName ) ) {
 			throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY_HIERARCHY, rootEntityName );
 		}

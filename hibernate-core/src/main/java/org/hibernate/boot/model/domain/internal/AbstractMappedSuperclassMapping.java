@@ -14,7 +14,6 @@ import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.MappedSuperclassImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
 import org.hibernate.type.descriptor.java.spi.MappedSuperclassJavaDescriptor;
 
 /**

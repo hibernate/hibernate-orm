@@ -11,8 +11,8 @@ import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
+import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.domain.RepresentationMode;
 
 /**
@@ -36,8 +36,8 @@ public class EntityMappingHierarchyImpl implements EntityMappingHierarchyImpleme
 	}
 
 	@Override
-	public RootClass getRootType() {
-		return (RootClass) this.rootIdentifiableType;
+	public IdentifiableTypeMappingImplementor getRootType() {
+		return (IdentifiableTypeMappingImplementor) this.rootIdentifiableType;
 	}
 
 	@Override

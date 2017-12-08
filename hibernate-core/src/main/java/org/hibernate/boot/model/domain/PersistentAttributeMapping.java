@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.model.domain;
 
-import org.hibernate.mapping.MetaAttributable;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;

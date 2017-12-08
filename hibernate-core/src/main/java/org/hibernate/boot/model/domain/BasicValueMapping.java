@@ -12,7 +12,6 @@ import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.BasicType;
 

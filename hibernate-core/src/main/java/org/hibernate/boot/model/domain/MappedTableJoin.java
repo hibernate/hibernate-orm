@@ -6,8 +6,8 @@
  */
 package org.hibernate.boot.model.domain;
 
+import org.hibernate.boot.model.relational.MappedForeignKey;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.mapping.ForeignKey;
 
 /**
  * Common representation of both SecondaryTable and joined-tables
@@ -19,5 +19,5 @@ public interface MappedTableJoin {
 	MappedTable getMappedTable();
 	boolean isOptional();
 
-	ForeignKey getJoinMapping();
+	MappedForeignKey getJoinMapping();
 }

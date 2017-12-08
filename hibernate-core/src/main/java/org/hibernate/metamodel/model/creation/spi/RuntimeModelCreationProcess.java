@@ -131,7 +131,7 @@ public class RuntimeModelCreationProcess {
 					|| runtimeRootByBootHierarchy.containsKey( bootHierarchy ) ) {
 				throw new HibernateException(
 						"Entity boot hierarchy was encountered twice while transforming to runtime model : " +
-						bootHierarchy.getRootType().getEntityName()
+						bootHierarchy.getRootType().getName()
 				);
 			}
 

@@ -8,10 +8,12 @@ package org.hibernate.envers.boot.internal;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.HSQLDialect;
@@ -29,10 +31,8 @@ import org.hibernate.envers.configuration.internal.RevisionInfoConfigurationBuil
 import org.hibernate.envers.internal.entities.EntitiesConfigurations;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.strategy.AuditStrategy;
-import org.hibernate.envers.strategy.ValidityAuditStrategy;
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.envers.strategy.DefaultAuditStrategy;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.property.access.spi.Getter;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -81,8 +81,24 @@ public class AuditMetadataBuilderImpl implements AuditMetadataBuilderImplementor
 
 	private void buildMappings(MappingCollector mappingCollector) {
 		this.revisionInfoConfiguration = new RevisionInfoConfigurationBuilder( metadata, this ).build();
+
 		// this has to be resolved because of configurations for entities.
-		resolveAuditStrategy();
+		options.auditStrategy = options.serviceRegistry.getService( StrategySelector.class ).resolveStrategy(
+				AuditStrategy.class,
+				options.auditStrategyName,
+				new Callable<AuditStrategy>() {
+					@Override
+					public AuditStrategy call() throws Exception {
+						return new DefaultAuditStrategy();
+					}
+				},
+				new StrategyCreatorAuditStrategyImpl(
+						revisionInfoConfiguration.getRevisionInfoTimestampData(),
+						revisionInfoConfiguration.getRevisionInfoClass(),
+						options.serviceRegistry
+				)
+		);
+
 		// build entity bindings
 		this.entitiesConfigurations = new EntitiesConfigurator( this ).build(
 				metadata,
@@ -90,28 +106,6 @@ public class AuditMetadataBuilderImpl implements AuditMetadataBuilderImplementor
 				revisionInfoConfiguration.getRevisionInfoXmlMapping(),
 				revisionInfoConfiguration.getRevisionInfoRelationMapping()
 		);
-	}
-
-	private void resolveAuditStrategy() {
-		AuditStrategy auditStrategy;
-		try {
-			final Class<?> clazz = resolveAuditStrategyClass( options.auditStrategyName, options.serviceRegistry );
-			auditStrategy = (AuditStrategy) ReflectHelper.getDefaultConstructor( clazz ).newInstance();
-		}
-		catch ( Exception e ) {
-			throw new MappingException(
-					String.format( "Unable to create audit strategy [%s]", options.auditStrategyName )
-			);
-		}
-		if ( auditStrategy instanceof ValidityAuditStrategy ) {
-			final Getter timestampGetter = ReflectionTools.getGetter(
-					revisionInfoConfiguration.getRevisionInfoClass(),
-					revisionInfoConfiguration.getRevisionInfoTimestampData(),
-					options.serviceRegistry
-			);
-			( (ValidityAuditStrategy) auditStrategy ).setRevisionTimestampGetter( timestampGetter );
-		}
-		options.auditStrategy = auditStrategy;
 	}
 
 	private Class<?> resolveAuditStrategyClass(String auditStrategyName, ServiceRegistry serviceRegistry) {

@@ -23,6 +23,7 @@ include 'hibernate-proxool'
 include 'hibernate-hikaricp'
 
 include 'hibernate-jcache'
+include 'hibernate-spring-cache'
 include 'hibernate-ehcache'
 include 'hibernate-infinispan'
 

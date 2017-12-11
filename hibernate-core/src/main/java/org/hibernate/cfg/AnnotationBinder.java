@@ -9,7 +9,6 @@ package org.hibernate.cfg;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -763,15 +762,14 @@ public final class AnnotationBinder {
 		}
 
 		// try to find class level generators
-		HashMap<String, IdentifierGeneratorDefinition> classGenerators = buildLocalGenerators( clazzToProcess, context );
-
+		HashMap<String, IdentifierGeneratorDefinition> classGenerators = buildGenerators( clazzToProcess, context );
 		// check properties
 		final InheritanceState.ElementsToProcess elementsToProcess = inheritanceState.getElementsToProcess();
 		inheritanceState.postProcess( persistentClass, entityBinder );
 
 		final boolean subclassAndSingleTableStrategy = inheritanceState.getType() == InheritanceType.SINGLE_TABLE
 				&& inheritanceState.hasParents();
-		Set<String> idPropertiesIfIdClass = new HashSet<String>();
+		Set<String> idPropertiesIfIdClass = new HashSet<>();
 		boolean isIdClass = mapAsIdClass(
 				inheritanceStatePerClass,
 				inheritanceState,
@@ -2134,7 +2132,7 @@ public final class AnnotationBinder {
 				}
 				if ( property.isAnnotationPresent( CollectionId.class ) ) { //do not compute the generators unless necessary
 					HashMap<String, IdentifierGeneratorDefinition> localGenerators = ( HashMap<String, IdentifierGeneratorDefinition> ) classGenerators.clone();
-					localGenerators.putAll( buildLocalGenerators( property, context ) );
+					localGenerators.putAll( buildGenerators( property, context ) );
 					collectionBinder.setLocalGenerators( localGenerators );
 
 				}
@@ -2242,23 +2240,24 @@ public final class AnnotationBinder {
 					final PropertyData mapsIdProperty = BinderHelper.getPropertyOverriddenByMapperOrMapsId(
 							isId, propertyHolder, property.getName(), context
 					);
-					Map<String, IdentifierGeneratorDefinition> localGenerators = ( HashMap<String, IdentifierGeneratorDefinition> ) classGenerators.clone();
 					final IdentifierGeneratorDefinition.Builder foreignGeneratorBuilder = new IdentifierGeneratorDefinition.Builder();
 					foreignGeneratorBuilder.setName( "Hibernate-local--foreign generator" );
 					foreignGeneratorBuilder.setStrategy( "foreign" );
 					foreignGeneratorBuilder.addParam( "property", mapsIdProperty.getPropertyName() );
 
 					final IdentifierGeneratorDefinition foreignGenerator = foreignGeneratorBuilder.build();
-					localGenerators.put( foreignGenerator.getName(), foreignGenerator );
+//					Map<String, IdentifierGeneratorDefinition> localGenerators = ( HashMap<String, IdentifierGeneratorDefinition> ) classGenerators.clone();
+//					localGenerators.put( foreignGenerator.getName(), foreignGenerator );
 
-					BinderHelper.makeIdGenerator(
+					SecondPass secondPass = new IdGeneratorResolverSecondPass(
 							( SimpleValue ) propertyBinder.getValue(),
 							property,
 							foreignGenerator.getStrategy(),
 							foreignGenerator.getName(),
 							context,
-							localGenerators
+							foreignGenerator
 					);
+					context.getMetadataCollector().addSecondPass( secondPass );
 				}
 				if ( isId ) {
 					//components and regular basic types create SimpleValue objects
@@ -2348,8 +2347,9 @@ public final class AnnotationBinder {
 		XClass entityXClass = inferredData.getClassOrElement();
 		XProperty idXProperty = inferredData.getProperty();
 		//clone classGenerator and override with local values
-		HashMap<String, IdentifierGeneratorDefinition> localGenerators = ( HashMap<String, IdentifierGeneratorDefinition> ) classGenerators.clone();
-		localGenerators.putAll( buildLocalGenerators( idXProperty, buildingContext ) );
+//		HashMap<String, IdentifierGeneratorDefinition> localGenerators = ( HashMap<String, IdentifierGeneratorDefinition> ) classGenerators.clone();
+//		localGenerators.putAll( buildGenerators( idXProperty, buildingContext ) );
+		buildGenerators( idXProperty, buildingContext );
 
 		//manage composite related metadata
 		//guess if its a component and find id data access (property, field etc)
@@ -2367,14 +2367,15 @@ public final class AnnotationBinder {
 			//a component must not have any generator
 			generatorType = "assigned";
 		}
-		BinderHelper.makeIdGenerator(
+
+		SecondPass secondPass = new IdGeneratorResolverSecondPass(
 				idValue,
 				idXProperty,
 				generatorType,
 				generatorName,
-				buildingContext,
-				localGenerators
+				buildingContext
 		);
+		buildingContext.getMetadataCollector().addSecondPass( secondPass );
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Bind {0} on {1}", ( isComponent ? "@EmbeddedId" : "@Id" ), inferredData.getPropertyName() );
@@ -2711,23 +2712,24 @@ public final class AnnotationBinder {
 			if ( property.isAnnotationPresent( GeneratedValue.class ) &&
 					property.isAnnotationPresent( Id.class ) ) {
 				//clone classGenerator and override with local values
-				Map<String, IdentifierGeneratorDefinition> localGenerators = new HashMap<String, IdentifierGeneratorDefinition>();
-				localGenerators.putAll( buildLocalGenerators( property, buildingContext ) );
+//				Map<String, IdentifierGeneratorDefinition> localGenerators = new HashMap<>();
+//				localGenerators.putAll( buildGenerators( property, buildingContext ) );
 
+				buildGenerators( property, buildingContext );
 				GeneratedValue generatedValue = property.getAnnotation( GeneratedValue.class );
 				String generatorType = generatedValue != null
 						? generatorType( generatedValue, buildingContext, property.getType() )
 						: "assigned";
 				String generator = generatedValue != null ? generatedValue.generator() : BinderHelper.ANNOTATION_STRING_DEFAULT;
 
-				BinderHelper.makeIdGenerator(
+				SecondPass secondPass = new IdGeneratorResolverSecondPass(
 						( SimpleValue ) comp.getProperty( property.getName() ).getValue(),
 						property,
 						generatorType,
 						generator,
-						buildingContext,
-						localGenerators
+						buildingContext
 				);
+				buildingContext.getMetadataCollector().addSecondPass( secondPass );
 			}
 
 		}
@@ -2827,14 +2829,15 @@ public final class AnnotationBinder {
 			id = value.make();
 		}
 		rootClass.setIdentifier( id );
-		BinderHelper.makeIdGenerator(
+		SecondPass secondPass = new IdGeneratorResolverSecondPass(
 				id,
 				inferredData.getProperty(),
 				generatorType,
 				generatorName,
-				buildingContext,
-				Collections.<String, IdentifierGeneratorDefinition>emptyMap()
+				buildingContext
 		);
+		buildingContext.getMetadataCollector().addSecondPass( secondPass );
+
 		if ( isEmbedded ) {
 			rootClass.setEmbeddedIdentifier( inferredData.getPropertyClass() == null );
 		}
@@ -3329,7 +3332,7 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static HashMap<String, IdentifierGeneratorDefinition> buildLocalGenerators(XAnnotatedElement annElt, MetadataBuildingContext context) {
+	private static HashMap<String, IdentifierGeneratorDefinition> buildGenerators(XAnnotatedElement annElt, MetadataBuildingContext context) {
 		HashMap<String, IdentifierGeneratorDefinition> generators = new HashMap<>();
 
 		TableGenerators tableGenerators = annElt.getAnnotation( TableGenerators.class );
@@ -3367,6 +3370,11 @@ public final class AnnotationBinder {
 			IdentifierGeneratorDefinition idGen = buildIdGenerator( genGen, context );
 			generators.put( idGen.getName(), idGen );
 		}
+
+		generators.forEach( (name, idGenerator) -> {
+			context.getMetadataCollector().addIdentifierGenerator( idGenerator );
+		} );
+
 		return generators;
 	}
 

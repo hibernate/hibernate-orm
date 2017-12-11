@@ -18,8 +18,10 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.Ejb3JoinColumn;
+import org.hibernate.cfg.IdGeneratorResolverSecondPass;
 import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyInferredData;
+import org.hibernate.cfg.SecondPass;
 import org.hibernate.cfg.WrappedInferredData;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
@@ -104,14 +106,15 @@ public class IdBagBinder extends BagBinder {
 			else {
 				generatorType = null;
 			}
-			BinderHelper.makeIdGenerator(
+
+			SecondPass secondPass = new IdGeneratorResolverSecondPass(
 					id,
 					property,
 					generatorType,
 					generator,
-					getBuildingContext(),
-					localGenerators
+					getBuildingContext()
 			);
+			buildingContext.getMetadataCollector().addSecondPass( secondPass );
 		}
 		return result;
 	}

@@ -779,7 +779,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Date timestamp = new Date(  );
 			Session session = entityManager.unwrap( Session.class );
-			//tag::hql-api-positional-parameter-example[]56:37
+			//tag::hql-api-positional-parameter-example[]
 			org.hibernate.query.Query query = session.createQuery(
 				"select p " +
 				"from Person p " +

@@ -34,6 +34,12 @@ import org.hibernate.annotations.NamedNativeQuery;
     callable = true,
     resultSetMapping = "person_with_phones"
 )
+@NamedNativeQuery(
+	    name = "fn_person_and_phones_hana",
+	    query = "select * from fn_person_and_phones( ? )",
+	    callable = false,
+	    resultSetMapping = "person_with_phones"
+	)
 @SqlResultSetMappings({
      @SqlResultSetMapping(
          name = "person_with_phones",

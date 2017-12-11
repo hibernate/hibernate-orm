@@ -74,6 +74,8 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
+import org.hibernate.procedure.internal.StandardCallableStatementSupport;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -1516,6 +1518,28 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public Exporter<Table> getTableExporter() {
 		return this.hanaTableExporter;
+	}
+
+	/*
+	 * HANA doesn't really support REF_CURSOR returns from a procedure, but REF_CURSOR support can be emulated by using
+	 * procedures or functions with an OUT parameter of type TABLE. The results will be returned as result sets on the
+	 * callable statement.
+	 */
+	@Override
+	public CallableStatementSupport getCallableStatementSupport() {
+		return StandardCallableStatementSupport.REF_CURSOR_INSTANCE;
+	}
+
+	@Override
+	public int registerResultSetOutParameter(CallableStatement statement, int position) throws SQLException {
+		// Result set (TABLE) OUT parameters don't need to be registered
+		return position;
+	}
+
+	@Override
+	public int registerResultSetOutParameter(CallableStatement statement, String name) throws SQLException {
+		// Result set (TABLE) OUT parameters don't need to be registered
+		return 0;
 	}
 
 }

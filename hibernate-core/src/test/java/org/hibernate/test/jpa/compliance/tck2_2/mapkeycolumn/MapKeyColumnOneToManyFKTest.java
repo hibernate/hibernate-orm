@@ -19,6 +19,7 @@ import javax.persistence.Table;
 
 import org.hibernate.boot.MetadataSources;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -63,6 +64,7 @@ public class MapKeyColumnOneToManyFKTest extends BaseNonConfigCoreFunctionalTest
 	}
 
 	@Test
+	@FailureExpected( jiraKey = "HHH-12150" )
 	public void testReferenceToNonMappedColumn() {
 		inTransaction(
 				session -> {

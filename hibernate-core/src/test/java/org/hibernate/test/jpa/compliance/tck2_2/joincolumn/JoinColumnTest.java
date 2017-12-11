@@ -38,7 +38,6 @@ public class JoinColumnTest extends BaseUnitTestCase {
 			try (SessionFactoryImplementor sf = (SessionFactoryImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Company.class )
 					.addAnnotatedClass( Location.class )
-					.addResource( "org/hibernate/test/jpa/compliance/tck2_2/joincolumn/orm.xml" )
 					.buildMetadata()
 					.buildSessionFactory()) {
 				try {

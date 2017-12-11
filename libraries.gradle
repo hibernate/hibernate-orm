@@ -15,7 +15,9 @@ ext {
     infinispanVersion = '8.2.5.Final'
     jnpVersion = '5.0.6.CR1'
     elVersion = '2.2.4'
-    cdiVersion = '1.1'
+
+    cdiVersion = '2.0'
+    weldVersion = '3.0.0.Final'
 
     javassistVersion = '3.22.0-GA'
     byteBuddyVersion = '1.6.14' // Improved JDK9 compatibility
@@ -129,6 +131,9 @@ ext {
             jcache:          "javax.cache:cache-api:1.0.0",
             proxool:         "proxool:proxool:0.8.3",
             hikaricp:        "com.zaxxer:HikariCP:2.5.1",
+
+            cdi: "javax.enterprise:cdi-api:${cdiVersion}",
+            weld: "org.jboss.weld.se:weld-se-shaded:${weldVersion}",
 
             // Arquillian/Shrinkwrap
             arquillian_junit_container: "org.jboss.arquillian.junit:arquillian-junit-container:${arquillianVersion}",

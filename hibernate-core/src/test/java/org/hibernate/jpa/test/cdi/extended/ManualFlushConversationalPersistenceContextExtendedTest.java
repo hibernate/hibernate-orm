@@ -11,6 +11,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.hibernate.testing.TestForIssue;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -30,6 +31,7 @@ import static org.junit.Assert.assertEquals;
  * @author Vlad Mihalcea
  */
 @RunWith(Arquillian.class)
+@Ignore( "WildFly has not released a version supporting JPA 2.2 and CDI 2.0" )
 public class ManualFlushConversationalPersistenceContextExtendedTest {
 
 	@Deployment

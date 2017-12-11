@@ -24,6 +24,7 @@ import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 
 import org.hibernate.test.wf.ddl.WildFlyDdlEntity;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Steve Ebersole
  */
 @RunWith( Arquillian.class )
+@Ignore( "WildFly has not released a version supporting JPA 2.2 and CDI 2.0" )
 public class DdlInWildFlyUsingBmtAndEmfTest {
 
 	public static final String PERSISTENCE_XML_RESOURCE_NAME = "pu-wf-ddl/persistence.xml";

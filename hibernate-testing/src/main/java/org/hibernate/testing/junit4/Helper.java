@@ -26,7 +26,7 @@ import org.junit.runners.model.TestClass;
  * @author Steve Ebersole
  */
 public final class Helper {
-	public static final String VALIDATE_FAILURE_EXPECTED = "hibernate.test.validatefailureexpected";
+	public static final String VALIDATE_FAILURE_EXPECTED = FailureExpected.VALIDATE_FAILURE_EXPECTED;
 
 	private Helper() {
 	}

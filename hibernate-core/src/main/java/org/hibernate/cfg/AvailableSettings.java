@@ -24,7 +24,7 @@ import org.hibernate.tool.schema.SourceType;
 /**
  * @author Steve Ebersole
  */
-public interface AvailableSettings {
+public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA defined settings

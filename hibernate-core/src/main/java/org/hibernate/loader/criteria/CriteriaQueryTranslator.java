@@ -185,8 +185,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 			String testAlias = StringHelper.root( path );
 			if ( !testAlias.equals( subcriteria.getAlias() ) ) {
 				// and the qualifier is not the alias of this criteria
-				//      -> check to see if we belong to some criteria other
-				//          than the one that created us
+				// -> check to see if we belong to some criteria other
+				//  than the one that created us
 				parent = aliasCriteriaMap.get( testAlias );
 			}
 		}
@@ -552,8 +552,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		//first look for a reference to a projection alias
 		final Projection projection = rootCriteria.getProjection();
 		Type[] projectionTypes = projection == null ?
-				null :
-				projection.getTypes( propertyName, subcriteria, this );
+		                         null :
+		                         projection.getTypes( propertyName, subcriteria, this );
 
 		if ( projectionTypes == null ) {
 			try {

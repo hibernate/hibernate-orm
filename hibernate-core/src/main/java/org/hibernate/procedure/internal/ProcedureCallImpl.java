@@ -292,7 +292,7 @@ public class ProcedureCallImpl<R>
 		);
 
 		registerParameter( procedureParameter );
-		 return procedureParameter;
+		return procedureParameter;
 	}
 
 	@Override

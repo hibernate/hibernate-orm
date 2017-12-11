@@ -573,7 +573,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 				//		3) create a new synthetic binding for just that single value under the synthetic name
 				final String syntheticName;
 				if ( sourceParam instanceof NamedParameterDescriptor ) {
-					 syntheticName = NamedParameterDescriptor.class.cast( sourceParam ).getName() + '_' + i;
+					syntheticName = NamedParameterDescriptor.class.cast( sourceParam ).getName() + '_' + i;
 				}
 				else {
 					syntheticName = "x" + OrdinalParameterDescriptor.class.cast( sourceParam ).getPosition() + '_' + i;

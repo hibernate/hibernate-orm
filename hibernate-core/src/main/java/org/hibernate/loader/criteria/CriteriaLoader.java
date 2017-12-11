@@ -223,7 +223,7 @@ public class CriteriaLoader extends OuterJoinLoader {
 									( (Session) session ).buildLockRequest( lockOptionsToUse )
 										.lock( persister.getEntityName(), entity );
 								}
-						}
+				        }
 				);
 				parameters.setLockOptions( new LockOptions() );
 				return sql;

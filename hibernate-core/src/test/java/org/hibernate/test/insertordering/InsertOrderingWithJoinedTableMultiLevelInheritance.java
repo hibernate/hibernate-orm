@@ -133,8 +133,8 @@ public class InsertOrderingWithJoinedTableMultiLevelInheritance
 	public static class Office {
 		@Id
 		@Column(name = "ID", nullable = false)
-		@SequenceGenerator(name = "ID", sequenceName = "ADDRESS_SEQ")
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ID")
+		@SequenceGenerator(name = "ID_2", sequenceName = "ADDRESS_SEQ")
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ID_2")
 		private Long id;
 	}
 
@@ -145,8 +145,8 @@ public class InsertOrderingWithJoinedTableMultiLevelInheritance
 	public static class Person {
 		@Id
 		@Column(name = "ID", nullable = false)
-		@SequenceGenerator(name = "ID", sequenceName = "PERSON_SEQ")
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ID")
+		@SequenceGenerator(name = "ID_3", sequenceName = "PERSON_SEQ")
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ID_3")
 		private Long id;
 
 	}

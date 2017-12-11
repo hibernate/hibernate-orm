@@ -6,6 +6,17 @@
  */
 package org.hibernate.cfg;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.StringTokenizer;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -39,18 +50,8 @@ import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.jboss.logging.Logger;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.StringTokenizer;
+import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
@@ -65,7 +66,7 @@ public class BinderHelper {
 	}
 
 	static {
-		Set<String> primitiveNames = new HashSet<String>();
+		Set<String> primitiveNames = new HashSet<>();
 		primitiveNames.add( byte.class.getName() );
 		primitiveNames.add( short.class.getName() );
 		primitiveNames.add( int.class.getName() );
@@ -260,7 +261,7 @@ public class BinderHelper {
 			Object columnOwner = findColumnOwner( ownerEntity, columns[0].getReferencedColumn(), context );
 			List<Property> properties = findPropertiesByColumns( columnOwner, columns, context );
 			//create an embeddable component
-			Property synthProp = null;
+			Property synthProp;
 			if ( properties != null ) {
                         //todo how about properties.size() == 1, this should be much simpler
 				Component embeddedComp = columnOwner instanceof PersistentClass ?
@@ -358,9 +359,9 @@ public class BinderHelper {
 			Object columnOwner,
 			Ejb3JoinColumn[] columns,
 			MetadataBuildingContext context) {
-		Map<Column, Set<Property>> columnsToProperty = new HashMap<Column, Set<Property>>();
-		List<Column> orderedColumns = new ArrayList<Column>( columns.length );
-		Table referencedTable = null;
+		Map<Column, Set<Property>> columnsToProperty = new HashMap<>();
+		List<Column> orderedColumns = new ArrayList<>( columns.length );
+		Table referencedTable;
 		if ( columnOwner instanceof PersistentClass ) {
 			referencedTable = ( (PersistentClass) columnOwner ).getTable();
 		}
@@ -383,7 +384,7 @@ public class BinderHelper {
 					)
 			);
 			orderedColumns.add( column );
-			columnsToProperty.put( column, new HashSet<Property>() );
+			columnsToProperty.put( column, new HashSet<>() );
 		}
 		boolean isPersistentClass = columnOwner instanceof PersistentClass;
 		Iterator it = isPersistentClass ?
@@ -399,7 +400,7 @@ public class BinderHelper {
 		//first naive implementation
 		//only check 1 columns properties
 		//TODO make it smarter by checking correctly ordered multi column properties
-		List<Property> orderedProperties = new ArrayList<Property>();
+		List<Property> orderedProperties = new ArrayList<>();
 		for (Column column : orderedColumns) {
 			boolean found = false;
 			for (Property property : columnsToProperty.get( column ) ) {
@@ -685,7 +686,24 @@ public class BinderHelper {
 		id.setIdentifierGeneratorProperties( params );
 	}
 
-	public static IdentifierGeneratorDefinition getIdentifierGenerator(
+	/**
+	 * apply an id generator to a SimpleValue
+	 */
+	public static void makeIdGenerator(
+			SimpleValue id,
+			String generatorType,
+			String generatorName,
+			MetadataBuildingContext buildingContext,
+			IdentifierGeneratorDefinition foreignKGeneratorDefinition) {
+		Map<String, IdentifierGeneratorDefinition> localIdentifiers = null;
+		if ( foreignKGeneratorDefinition != null ) {
+			localIdentifiers = new HashMap<>();
+			localIdentifiers.put( foreignKGeneratorDefinition.getName(), foreignKGeneratorDefinition );
+		}
+		makeIdGenerator( id, generatorType, generatorName, buildingContext, localIdentifiers );
+	}
+
+	private static IdentifierGeneratorDefinition getIdentifierGenerator(
 			String name,
 			Map<String, IdentifierGeneratorDefinition> localGenerators,
 			MetadataBuildingContext buildingContext) {
@@ -894,7 +912,7 @@ public class BinderHelper {
 	}
 	
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
-		Map<String,String> ret = new HashMap<String,String>();
+		Map<String,String> ret = new HashMap<>();
 		for ( int i = 0; i < aliases.length; i++ ){
 			if ( StringHelper.isNotEmpty( aliases[i].table() ) ){
 				ret.put( aliases[i].alias(), aliases[i].table() );
@@ -904,7 +922,7 @@ public class BinderHelper {
 	}
 	
 	public static Map<String,String> toAliasEntityMap(SqlFragmentAlias[] aliases){
-		Map<String,String> ret = new HashMap<String,String>();
+		Map<String,String> ret = new HashMap<>();
 		for (int i = 0; i < aliases.length; i++){
 			if (aliases[i].entity() != void.class){
 				ret.put( aliases[i].alias(), aliases[i].entity().getName() );

@@ -56,6 +56,7 @@ import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.CopyIdentifierComponentSecondPass;
 import org.hibernate.cfg.CreateKeySecondPass;
 import org.hibernate.cfg.FkSecondPass;
+import org.hibernate.cfg.IdGeneratorResolverSecondPass;
 import org.hibernate.cfg.JPAIndexHolder;
 import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
 import org.hibernate.cfg.PropertyData;
@@ -441,10 +442,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		if ( defaultIdentifierGeneratorNames.contains( generator.getName() ) ) {
 			return;
 		}
-
 		final IdentifierGeneratorDefinition old = idGeneratorDefinitionMap.put( generator.getName(), generator );
 		if ( old != null ) {
-			log.duplicateGeneratorName( old.getName() );
+			if ( !old.equals( generator ) ) {
+				throw new IllegalArgumentException( "Duplicate generator name " + old.getName() );
+			}
+//			log.duplicateGeneratorName( old.getName() );
 		}
 	}
 
@@ -1442,6 +1445,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
+	private ArrayList<IdGeneratorResolverSecondPass> idGeneratorResolverSecondPassList;
 	private ArrayList<PkDrivenByDefaultMapsIdSecondPass> pkDrivenByDefaultMapsIdSecondPassList;
 	private ArrayList<SetSimpleValueTypeSecondPass> setSimpleValueTypeSecondPassList;
 	private ArrayList<CopyIdentifierComponentSecondPass> copyIdentifierComponentSecondPasList;
@@ -1460,7 +1464,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public void addSecondPass(SecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( secondPass instanceof PkDrivenByDefaultMapsIdSecondPass ) {
+		if ( secondPass instanceof IdGeneratorResolverSecondPass ) {
+			addIdGeneratorResolverSecondPass( (IdGeneratorResolverSecondPass) secondPass, onTopOfTheQueue );
+		}
+		else if ( secondPass instanceof PkDrivenByDefaultMapsIdSecondPass ) {
 			addPkDrivenByDefaultMapsIdSecondPass( (PkDrivenByDefaultMapsIdSecondPass) secondPass, onTopOfTheQueue );
 		}
 		else if ( secondPass instanceof SetSimpleValueTypeSecondPass ) {
@@ -1518,6 +1525,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		addSecondPass( secondPass, setSimpleValueTypeSecondPassList, onTopOfTheQueue );
 	}
 
+	private void addIdGeneratorResolverSecondPass(IdGeneratorResolverSecondPass secondPass, boolean onTopOfTheQueue) {
+		if ( idGeneratorResolverSecondPassList == null ) {
+			idGeneratorResolverSecondPassList = new ArrayList<>();
+		}
+		addSecondPass( secondPass, idGeneratorResolverSecondPassList, onTopOfTheQueue );
+	}
+
 	private void addCopyIdentifierComponentSecondPass(
 			CopyIdentifierComponentSecondPass secondPass,
 			boolean onTopOfTheQueue) {
@@ -1573,8 +1587,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		inSecondPass = true;
 
 		try {
+			processSecondPasses( idGeneratorResolverSecondPassList );
 			processSecondPasses( implicitColumnNamingSecondPassList );
-
 			processSecondPasses( pkDrivenByDefaultMapsIdSecondPassList );
 			processSecondPasses( setSimpleValueTypeSecondPassList );
 

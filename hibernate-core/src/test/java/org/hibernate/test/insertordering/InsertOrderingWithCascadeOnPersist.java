@@ -99,8 +99,8 @@ public class InsertOrderingWithCascadeOnPersist extends BaseCoreFunctionalTestCa
 	@Access(AccessType.FIELD)
 	public static class MarketBidGroup {
 		@Id
-		@GeneratedValue(strategy = GenerationType.TABLE, generator = "ID_TABLE")
-		@TableGenerator(name = "ID_TABLE", pkColumnValue = "MarketBidGroup", allocationSize = 10000)
+		@GeneratedValue(strategy = GenerationType.TABLE, generator = "ID_TABLE_2")
+		@TableGenerator(name = "ID_TABLE_2", pkColumnValue = "MarketBidGroup", allocationSize = 10000)
 		private Long id;
 
 		@OneToMany(mappedBy = "group")
@@ -115,8 +115,8 @@ public class InsertOrderingWithCascadeOnPersist extends BaseCoreFunctionalTestCa
 	@Access(AccessType.FIELD)
 	public static class MarketResult {
 		@Id
-		@GeneratedValue(strategy = GenerationType.TABLE, generator = "ID_TABLE")
-		@TableGenerator(name = "ID_TABLE", pkColumnValue = "MarketResult", allocationSize = 10000)
+		@GeneratedValue(strategy = GenerationType.TABLE, generator = "ID_TABLE_3")
+		@TableGenerator(name = "ID_TABLE_3", pkColumnValue = "MarketResult", allocationSize = 10000)
 		private Long id;
 
 		@ManyToOne(optional = false)

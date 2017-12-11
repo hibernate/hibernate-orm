@@ -160,11 +160,11 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
 		@Column(nullable = false)
 		@GeneratedValue(
 				strategy = SEQUENCE,
-				generator = "ID"
+				generator = "ID_2"
 		)
 		@Id
 		@SequenceGenerator(
-				name = "ID",
+				name = "ID_2",
 				sequenceName = "BOTTOM2_SEQ"
 		)
 		private Long id;
@@ -179,11 +179,11 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
 		@Column(nullable = false)
 		@GeneratedValue(
 				strategy = SEQUENCE,
-				generator = "ID"
+				generator = "ID_3"
 		)
 		@Id
 		@SequenceGenerator(
-				name = "ID",
+				name = "ID_3",
 				sequenceName = "MIDDLE_SEQ"
 		)
 		private Long id;
@@ -220,11 +220,11 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
 		@Column(nullable = false)
 		@GeneratedValue(
 				strategy = SEQUENCE,
-				generator = "ID"
+				generator = "ID_4"
 		)
 		@Id
 		@SequenceGenerator(
-				name = "ID",
+				name = "ID_4",
 				sequenceName = "TOP_SEQ"
 		)
 		private Long id;

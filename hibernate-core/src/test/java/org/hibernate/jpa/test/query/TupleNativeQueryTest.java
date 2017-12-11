@@ -200,9 +200,9 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
             List<TupleElement<?>> result = tuples.get(0).getElements();
             assertEquals(2, result.size());
             assertEquals(BigInteger.class, result.get(0).getJavaType());
-            assertEquals("id", result.get(0).getAlias());
+            assertEquals("ID", result.get(0).getAlias());
             assertEquals(String.class, result.get(1).getJavaType());
-            assertEquals("firstname", result.get(1).getAlias());
+            assertEquals("FIRSTNAME", result.get(1).getAlias());
         });
     }
 
@@ -362,9 +362,9 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
             List<TupleElement<?>> result = tuples.get(0).getElements();
             assertEquals(2, result.size());
             assertEquals(BigInteger.class, result.get(0).getJavaType());
-            assertEquals("id", result.get(0).getAlias());
+            assertEquals("ID", result.get(0).getAlias());
             assertEquals(String.class, result.get(1).getJavaType());
-            assertEquals("firstname", result.get(1).getAlias());
+            assertEquals("FIRSTNAME", result.get(1).getAlias());
         });
     }
 
@@ -524,9 +524,9 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
             List<TupleElement<?>> result = tuples.get(0).getElements();
             assertEquals(2, result.size());
             assertEquals(BigInteger.class, result.get(0).getJavaType());
-            assertEquals("id", result.get(0).getAlias());
+            assertEquals("ID", result.get(0).getAlias());
             assertEquals(String.class, result.get(1).getJavaType());
-            assertEquals("firstname", result.get(1).getAlias());
+            assertEquals("FIRSTNAME", result.get(1).getAlias());
         });
     }
 
@@ -686,9 +686,9 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
             List<TupleElement<?>> result = tuples.get(0).getElements();
             assertEquals(2, result.size());
             assertEquals(BigInteger.class, result.get(0).getJavaType());
-            assertEquals("id", result.get(0).getAlias());
+            assertEquals("ID", result.get(0).getAlias());
             assertEquals(String.class, result.get(1).getJavaType());
-            assertEquals("firstname", result.get(1).getAlias());
+            assertEquals("FIRSTNAME", result.get(1).getAlias());
         });
     }
 
@@ -706,11 +706,11 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
             assertEquals(2, result.size());
             final TupleElement<?> firstTupleElement = result.get(0);
             assertEquals(BigInteger.class, firstTupleElement.getJavaType());
-            assertEquals("id", firstTupleElement.getAlias());
+            assertEquals("ID", firstTupleElement.getAlias());
             assertEquals(BigInteger.valueOf(1L), tuple.get(firstTupleElement.getAlias()));
             final TupleElement<?> secondTupleElement = result.get(1);
             assertEquals(Object.class, secondTupleElement.getJavaType());
-            assertEquals("firstname", secondTupleElement.getAlias());
+            assertEquals("FIRSTNAME", secondTupleElement.getAlias());
             assertNull(tuple.get(secondTupleElement.getAlias()));
         });
     }

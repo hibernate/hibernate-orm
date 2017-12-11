@@ -55,6 +55,7 @@ public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
 		private Object[] tuple;
 
 		private Map<String, Object> aliasToValue = new LinkedHashMap<>();
+		private Map<String, String> aliasReferences = new LinkedHashMap<>();
 
 		public NativeTupleImpl(Object[] tuple, String[] aliases) {
 			if ( tuple == null ) {
@@ -68,7 +69,8 @@ public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
 			}
 			this.tuple = tuple;
 			for ( int i = 0; i < tuple.length; i++ ) {
-				aliasToValue.put( aliases[i].toLowerCase(), tuple[i] );
+				aliasToValue.put( aliases[i], tuple[i] );
+				aliasReferences.put( aliases[i].toLowerCase(), aliases[i] );
 			}
 		}
 
@@ -81,11 +83,11 @@ public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
 
 		@Override
 		public Object get(String alias) {
-			final String lowerCasedAlias = alias.toLowerCase();
-			if (!aliasToValue.containsKey(lowerCasedAlias)) {
-				throw new IllegalArgumentException( "Unknown alias [" + alias + "]" );
+			final String aliasReference = aliasReferences.get( alias.toLowerCase() );
+			if ( aliasReference != null && aliasToValue.containsKey( aliasReference ) ) {
+				return aliasToValue.get( aliasReference );
 			}
-			return aliasToValue.get(lowerCasedAlias);
+			throw new IllegalArgumentException( "Unknown alias [" + alias + "]" );
 		}
 
 		@Override

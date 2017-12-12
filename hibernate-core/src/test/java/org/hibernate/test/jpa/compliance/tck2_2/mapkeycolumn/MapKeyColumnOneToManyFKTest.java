@@ -64,7 +64,6 @@ public class MapKeyColumnOneToManyFKTest extends BaseNonConfigCoreFunctionalTest
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-12150" )
 	public void testReferenceToNonMappedColumn() {
 		inTransaction(
 				session -> {

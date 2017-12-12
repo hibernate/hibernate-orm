@@ -281,7 +281,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.identifierGenerators = new HashMap<>();
 
 			metadata.getEntityMappings().stream()
-					.filter( entityMapping ->  entityMapping.getSuperManagedTypeMapping() != null )
+					.filter( entityMapping -> entityMapping.getEntityMappingHierarchy().getRootType().equals( entityMapping ) )
 					.map( RootClass.class::cast )
 					.forEach( rootClass -> {
 						IdentifierGenerator generator =  rootClass.getIdentifier()

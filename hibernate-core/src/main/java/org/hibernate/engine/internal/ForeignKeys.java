@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.TransientObjectException;
@@ -321,8 +320,7 @@ public final class ForeignKeys<T> {
 		final Nullifier nullifier = new Nullifier( entity, false, isEarlyInsert, session );
 		final EntityDescriptor descriptor = session.getEntityPersister( entityName, entity );
 		final String[] propertyNames = descriptor.getPropertyNames();
-		final Set<PersistentAttribute<?, ?>> persistentAttributes = (Set<PersistentAttribute<?, ?>>) descriptor
-				.getPersistentAttributes();
+		final List<PersistentAttribute<?, ?>> persistentAttributes = descriptor.getPersistentAttributes();
 		final boolean[] nullability = descriptor.getPropertyNullability();
 		final NonNullableTransientDependencies nonNullableTransientEntities = new NonNullableTransientDependencies();
 		int i = 0;
@@ -336,7 +334,6 @@ public final class ForeignKeys<T> {
 					session,
 					nonNullableTransientEntities
 			);
-			i++;
 		}
 		return nonNullableTransientEntities.isEmpty() ? null : nonNullableTransientEntities;
 	}

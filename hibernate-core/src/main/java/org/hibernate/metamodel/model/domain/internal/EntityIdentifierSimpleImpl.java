@@ -40,6 +40,7 @@ public class EntityIdentifierSimpleImpl<O,J>
 	private final String name;
 	private final Column column;
 	private final BasicType<J> basicType;
+	private final IdentifierGenerator identifierGenerator;
 
 	@SuppressWarnings("unchecked")
 	public EntityIdentifierSimpleImpl(
@@ -63,6 +64,7 @@ public class EntityIdentifierSimpleImpl<O,J>
 		final BasicValueMapping<J> basicValueMapping = (BasicValueMapping<J>) bootModelRootEntity.getIdentifierAttributeMapping().getValueMapping();
 		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( basicValueMapping.getMappedColumn() );
 		this.basicType = basicValueMapping.resolveType();
+		this.identifierGenerator = creationContext.getSessionFactory().getIdentifierGenerator( bootModelRootEntity.getEntityName() );
 	}
 
 	@Override
@@ -83,7 +85,7 @@ public class EntityIdentifierSimpleImpl<O,J>
 
 	@Override
 	public IdentifierGenerator getIdentifierValueGenerator() {
-		throw new NotYetImplementedException(  );
+		return identifierGenerator;
 	}
 
 	@Override

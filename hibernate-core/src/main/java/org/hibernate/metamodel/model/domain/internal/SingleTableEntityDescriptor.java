@@ -12,6 +12,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -350,7 +351,12 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 	@Override
 	public EntityDescriptor getSubclassEntityPersister(
 			Object instance, SessionFactoryImplementor factory) {
-		return null;
+		if ( getSubclassTypes().isEmpty() ) {
+			return this;
+		}
+		else {
+			throw new NotYetImplementedFor6Exception(  );
+		}
 	}
 
 	@Override

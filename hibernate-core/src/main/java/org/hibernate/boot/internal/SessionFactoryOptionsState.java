@@ -87,7 +87,8 @@ public interface SessionFactoryOptionsState {
 		return () -> {
 			try {
 				return getStatelessInterceptorImplementor().newInstance();
-			} catch (InstantiationException | IllegalAccessException e) {
+			}
+			catch (InstantiationException | IllegalAccessException e) {
 				throw new HibernateException( "Could not supply session-scoped SessionFactory Interceptor", e );
 			}
 		};

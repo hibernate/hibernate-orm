@@ -1247,12 +1247,13 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 	private static Supplier<? extends Interceptor> interceptorSupplier(Class<? extends Interceptor> clazz) {
 		return () -> {
-            try {
-                return clazz.newInstance();
-            } catch (InstantiationException | IllegalAccessException e) {
-                throw new HibernateException( "Could not supply session-scoped SessionFactory Interceptor", e );
-            }
-        };
+			try {
+				return clazz.newInstance();
+			}
+			catch (InstantiationException | IllegalAccessException e) {
+				throw new HibernateException( "Could not supply session-scoped SessionFactory Interceptor", e );
+			}
+		};
 	}
 
 	@Override

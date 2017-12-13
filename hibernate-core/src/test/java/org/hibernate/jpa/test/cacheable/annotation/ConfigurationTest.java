@@ -13,7 +13,6 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.SharedCacheMode;
 
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.AvailableSettings;
@@ -24,12 +23,11 @@ import org.hibernate.mapping.PersistentClass;
 
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
 import org.junit.After;
 import org.junit.Test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * this is hacky transient step until EMF building is integrated with metamodel
@@ -51,13 +49,13 @@ public class ConfigurationTest extends BaseUnitTestCase {
 		MetadataImplementor metadata = buildMetadata( SharedCacheMode.NONE );
 
 		PersistentClass pc = metadata.getEntityBinding( ExplicitlyCacheableEntity.class.getName() );
-		assertNull( pc.getCacheConcurrencyStrategy() );
+		assertFalse( pc.isCached() );
 
 		pc = metadata.getEntityBinding( ExplicitlyNonCacheableEntity.class.getName() );
-		assertNull( pc.getCacheConcurrencyStrategy() );
+		assertFalse( pc.isCached() );
 
 		pc = metadata.getEntityBinding( NoCacheableAnnotationEntity.class.getName() );
-		assertNull( pc.getCacheConcurrencyStrategy() );
+		assertFalse( pc.isCached() );
 	}
 
 	@Test
@@ -65,13 +63,13 @@ public class ConfigurationTest extends BaseUnitTestCase {
 		MetadataImplementor metadata = buildMetadata( SharedCacheMode.UNSPECIFIED );
 
 		PersistentClass pc = metadata.getEntityBinding( ExplicitlyCacheableEntity.class.getName() );
-		assertNull( pc.getCacheConcurrencyStrategy() );
+		assertFalse( pc.isCached() );
 
 		pc = metadata.getEntityBinding( ExplicitlyNonCacheableEntity.class.getName() );
-		assertNull( pc.getCacheConcurrencyStrategy() );
+		assertFalse( pc.isCached() );
 
 		pc = metadata.getEntityBinding( NoCacheableAnnotationEntity.class.getName() );
-		assertNull( pc.getCacheConcurrencyStrategy() );
+		assertFalse( pc.isCached() );
 	}
 
 	@Test
@@ -79,13 +77,13 @@ public class ConfigurationTest extends BaseUnitTestCase {
 		MetadataImplementor metadata = buildMetadata( SharedCacheMode.ALL );
 
 		PersistentClass pc = metadata.getEntityBinding( ExplicitlyCacheableEntity.class.getName() );
-		assertNotNull( pc.getCacheConcurrencyStrategy() );
+		assertTrue( pc.isCached() );
 
 		pc = metadata.getEntityBinding( ExplicitlyNonCacheableEntity.class.getName() );
-		assertNotNull( pc.getCacheConcurrencyStrategy() );
+		assertTrue( pc.isCached() );
 
 		pc = metadata.getEntityBinding( NoCacheableAnnotationEntity.class.getName() );
-		assertNotNull( pc.getCacheConcurrencyStrategy() );
+		assertTrue( pc.isCached() );
 	}
 
 	@Test
@@ -93,13 +91,13 @@ public class ConfigurationTest extends BaseUnitTestCase {
 		MetadataImplementor metadata = buildMetadata( SharedCacheMode.ENABLE_SELECTIVE );
 
 		PersistentClass pc = metadata.getEntityBinding( ExplicitlyCacheableEntity.class.getName() );
-		assertNotNull( pc.getCacheConcurrencyStrategy() );
+		assertTrue( pc.isCached() );
 
 		pc = metadata.getEntityBinding( ExplicitlyNonCacheableEntity.class.getName() );
-		assertNull( pc.getCacheConcurrencyStrategy() );
+		assertFalse( pc.isCached() );
 
 		pc = metadata.getEntityBinding( NoCacheableAnnotationEntity.class.getName() );
-		assertNull( pc.getCacheConcurrencyStrategy() );
+		assertFalse( pc.isCached() );
 	}
 
 	@Test
@@ -107,13 +105,13 @@ public class ConfigurationTest extends BaseUnitTestCase {
 		MetadataImplementor metadata = buildMetadata( SharedCacheMode.DISABLE_SELECTIVE );
 
 		PersistentClass pc = metadata.getEntityBinding( ExplicitlyCacheableEntity.class.getName() );
-		assertNotNull( pc.getCacheConcurrencyStrategy() );
+		assertTrue( pc.isCached() );
 
 		pc = metadata.getEntityBinding( ExplicitlyNonCacheableEntity.class.getName() );
-		assertNull( pc.getCacheConcurrencyStrategy() );
+		assertFalse( pc.isCached() );
 
 		pc = metadata.getEntityBinding( NoCacheableAnnotationEntity.class.getName() );
-		assertNotNull( pc.getCacheConcurrencyStrategy() );
+		assertTrue( pc.isCached() );
 	}
 
 	@SuppressWarnings("unchecked")

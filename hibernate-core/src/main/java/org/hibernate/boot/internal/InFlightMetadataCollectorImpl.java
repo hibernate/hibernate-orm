@@ -2146,6 +2146,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 							"Cache override referenced a non-root entity : " + cacheRegionDefinition.getRole()
 					);
 				}
+				entityBinding.setCached( true );
 				( (RootClass) entityBinding ).setCacheRegionName( cacheRegionDefinition.getRegion() );
 				( (RootClass) entityBinding ).setCacheConcurrencyStrategy( cacheRegionDefinition.getUsage() );
 				( (RootClass) entityBinding ).setLazyPropertiesCacheable( cacheRegionDefinition.isCacheLazy() );

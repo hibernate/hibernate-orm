@@ -78,7 +78,7 @@ public abstract class EntityAction
 	protected abstract boolean hasPostCommitEventListeners();
 
 	protected boolean needsAfterTransactionCompletion() {
-		return persister.hasCache() || hasPostCommitEventListeners();
+		return persister.canWriteToCache() || hasPostCommitEventListeners();
 	}
 
 	/**

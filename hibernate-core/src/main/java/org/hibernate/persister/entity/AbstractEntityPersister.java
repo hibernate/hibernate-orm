@@ -97,6 +97,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -148,6 +149,8 @@ public abstract class AbstractEntityPersister
 
 	// moved up from AbstractEntityPersister ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private final SessionFactoryImplementor factory;
+	private final boolean canReadFromCache;
+	private final boolean canWriteToCache;
 	private final EntityRegionAccessStrategy cacheAccessStrategy;
 	private final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy;
 	private final boolean isLazyPropertiesCacheable;
@@ -512,9 +515,21 @@ public abstract class AbstractEntityPersister
 
 		// moved up from AbstractEntityPersister ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		this.factory = creationContext.getSessionFactory();
-		this.cacheAccessStrategy = cacheAccessStrategy;
-		this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
-		isLazyPropertiesCacheable = persistentClass.isLazyPropertiesCacheable();
+
+		if ( creationContext.getSessionFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
+			this.canWriteToCache = persistentClass.isCached();
+			this.canReadFromCache = determineCanReadFromCache( persistentClass );
+			this.cacheAccessStrategy = cacheAccessStrategy;
+			this.isLazyPropertiesCacheable = persistentClass.getRootClass().isLazyPropertiesCacheable();
+			this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
+		}
+		else {
+			this.canWriteToCache = false;
+			this.canReadFromCache = false;
+			this.cacheAccessStrategy = null;
+			this.isLazyPropertiesCacheable = true;
+			this.naturalIdRegionAccessStrategy = null;
+		}
 
 		this.entityMetamodel = new EntityMetamodel( persistentClass, this, factory );
 		this.entityTuplizer = this.entityMetamodel.getTuplizer();
@@ -830,6 +845,22 @@ public abstract class AbstractEntityPersister
 
 	}
 
+	@SuppressWarnings("unchecked")
+	private boolean determineCanReadFromCache(PersistentClass persistentClass) {
+		if ( persistentClass.isCached() ) {
+			return true;
+		}
+
+		final Iterator<Subclass> subclassIterator = persistentClass.getSubclassIterator();
+		while ( subclassIterator.hasNext() ) {
+			final Subclass subclass = subclassIterator.next();
+			if ( subclass.isCached() ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	protected CacheEntryHelper buildCacheEntryHelper() {
 		if ( cacheAccessStrategy == null ) {
 			// the entity defined no caching...
@@ -985,7 +1016,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		if ( session.getCacheMode().isGetEnabled() && hasCache() && isLazyPropertiesCacheable() ) {
+		if ( session.getCacheMode().isGetEnabled() && canReadFromCache() && isLazyPropertiesCacheable() ) {
 			final EntityRegionAccessStrategy cache = getCacheAccessStrategy();
 			final Object cacheKey = cache.generateCacheKey(id, this, session.getFactory(), session.getTenantIdentifier() );
 			final Object ce = CacheHelper.fromSharedCache( session, cacheKey, cache );
@@ -4293,8 +4324,18 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel;
 	}
 
+	@Override
+	public boolean canReadFromCache() {
+		return canReadFromCache;
+	}
+
+	@Override
+	public boolean canWriteToCache() {
+		return canWriteToCache;
+	}
+
 	public boolean hasCache() {
-		return cacheAccessStrategy != null;
+		return canWriteToCache;
 	}
 
 	public EntityRegionAccessStrategy getCacheAccessStrategy() {
@@ -4467,7 +4508,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		// check to see if it is in the second-level cache
-		if ( session.getCacheMode().isGetEnabled() && hasCache() ) {
+		if ( session.getCacheMode().isGetEnabled() && canReadFromCache() ) {
 			final EntityRegionAccessStrategy cache = getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey( id, this, session.getFactory(), session.getTenantIdentifier() );
 			final Object ce = CacheHelper.fromSharedCache( session, ck, getCacheAccessStrategy() );

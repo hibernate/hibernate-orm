@@ -249,7 +249,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 	
 	private boolean isCachePutEnabled(EntityPersister persister, SharedSessionContractImplementor session) {
-		return persister.hasCache()
+		return persister.canWriteToCache()
 				&& !persister.isCacheInvalidationRequired()
 				&& session.getCacheMode().isPutEnabled();
 	}

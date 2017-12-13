@@ -19,6 +19,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
@@ -74,7 +75,9 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		ms.addAnnotatedClass( Invoice.class );
 
 		Metadata metadata = ms.buildMetadata();
-		( (RootClass) metadata.getEntityBinding( Customer.class.getName() ) ).setCacheConcurrencyStrategy( "read-write" );
+		final PersistentClass customerMapping = metadata.getEntityBinding( Customer.class.getName() );
+		customerMapping.setCached( true );
+		( (RootClass) customerMapping ).setCacheConcurrencyStrategy( "read-write" );
 
 		HibernateSchemaManagementTool tool = new HibernateSchemaManagementTool();
 		tool.injectServices( serviceRegistry );

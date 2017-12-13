@@ -6,7 +6,6 @@
  */
 package org.hibernate.cfg;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -21,7 +20,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import javax.persistence.Basic;
-import javax.persistence.Cacheable;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ConstraintMode;
@@ -78,7 +76,6 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Check;
@@ -105,7 +102,6 @@ import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
@@ -625,8 +621,7 @@ public final class AnnotationBinder {
 		entityBinder.setProxy( clazzToProcess.getAnnotation( Proxy.class ) );
 		entityBinder.setBatchSize( clazzToProcess.getAnnotation( BatchSize.class ) );
 		entityBinder.setWhere( clazzToProcess.getAnnotation( Where.class ) );
-		entityBinder.setCache( determineCacheSettings( clazzToProcess, context ) );
-		entityBinder.setNaturalIdCache( clazzToProcess, clazzToProcess.getAnnotation( NaturalIdCache.class ) );
+		applyCacheSettings( entityBinder, clazzToProcess, context );
 
 		bindFilters( clazzToProcess, entityBinder, context );
 
@@ -1158,78 +1153,17 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static Cache determineCacheSettings(XClass clazzToProcess, MetadataBuildingContext context) {
-		Cache cacheAnn = clazzToProcess.getAnnotation( Cache.class );
-		if ( cacheAnn != null ) {
-			return cacheAnn;
-		}
+	private static void applyCacheSettings(EntityBinder binder, XClass clazzToProcess, MetadataBuildingContext context) {
+		binder.applyCaching(
+				clazzToProcess,
+				determineSharedCacheMode( context ),
+				context
 
-		Cacheable cacheableAnn = clazzToProcess.getAnnotation( Cacheable.class );
-		SharedCacheMode mode = determineSharedCacheMode( context );
-		switch ( mode ) {
-			case ALL: {
-				cacheAnn = buildCacheMock( clazzToProcess.getName(), context );
-				break;
-			}
-			case ENABLE_SELECTIVE: {
-				if ( cacheableAnn != null && cacheableAnn.value() ) {
-					cacheAnn = buildCacheMock( clazzToProcess.getName(), context );
-				}
-				break;
-			}
-			case DISABLE_SELECTIVE: {
-				if ( cacheableAnn == null || cacheableAnn.value() ) {
-					cacheAnn = buildCacheMock( clazzToProcess.getName(), context );
-				}
-				break;
-			}
-			default: {
-				// treat both NONE and UNSPECIFIED the same
-				break;
-			}
-		}
-		return cacheAnn;
+		);
 	}
 
 	private static SharedCacheMode determineSharedCacheMode(MetadataBuildingContext context) {
 		return context.getBuildingOptions().getSharedCacheMode();
-	}
-
-	private static Cache buildCacheMock(String region, MetadataBuildingContext context) {
-		return new LocalCacheAnnotationImpl( region, determineCacheConcurrencyStrategy( context ) );
-	}
-
-	private static CacheConcurrencyStrategy determineCacheConcurrencyStrategy(MetadataBuildingContext context) {
-		return CacheConcurrencyStrategy.fromAccessType(
-				context.getBuildingOptions().getImplicitCacheAccessType()
-		);
-	}
-
-	@SuppressWarnings({ "ClassExplicitlyAnnotation" })
-	private static class LocalCacheAnnotationImpl implements Cache {
-		private final String region;
-		private final CacheConcurrencyStrategy usage;
-
-		private LocalCacheAnnotationImpl(String region, CacheConcurrencyStrategy usage) {
-			this.region = region;
-			this.usage = usage;
-		}
-
-		public CacheConcurrencyStrategy usage() {
-			return usage;
-		}
-
-		public String region() {
-			return region;
-		}
-
-		public String include() {
-			return "all";
-		}
-
-		public Class<? extends Annotation> annotationType() {
-			return Cache.class;
-		}
 	}
 
 	private static PersistentClass makePersistentClass(

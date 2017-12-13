@@ -503,9 +503,16 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	 * Should lazy properties of this entity be cached?
 	 */
 	boolean isLazyPropertiesCacheable();
+
+	boolean canReadFromCache();
+	boolean canWriteToCache();
+
 	/**
 	 * Does this class have a cache.
+	 *
+	 * @deprecated Use {@link #canReadFromCache()} and/or {@link #canWriteToCache()} depending on need
 	 */
+	@Deprecated
 	boolean hasCache();
 	/**
 	 * Get the cache (optional operation)

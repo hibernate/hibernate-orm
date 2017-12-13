@@ -47,7 +47,7 @@ public class Subclass extends PersistentClass {
 	}
 
 	public String getCacheConcurrencyStrategy() {
-		return getSuperclass().getCacheConcurrencyStrategy();
+		return getRootClass().getCacheConcurrencyStrategy();
 	}
 
 	public RootClass getRootClass() {
@@ -188,10 +188,6 @@ public class Subclass extends PersistentClass {
 
 	public void setEntityPersisterClass(Class classPersisterClass) {
 		this.classPersisterClass = classPersisterClass;
-	}
-
-	public boolean isLazyPropertiesCacheable() {
-		return getSuperclass().isLazyPropertiesCacheable();
 	}
 
 	public int getJoinClosureSpan() {

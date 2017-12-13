@@ -344,6 +344,7 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 
 			if ( !hasLob ) {
 				( ( RootClass) entityBinding ).setCacheConcurrencyStrategy( getCacheConcurrencyStrategy() );
+				entityBinding.setCached( true );
 			}
 		}
 

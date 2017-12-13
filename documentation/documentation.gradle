@@ -1,5 +1,6 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.asciidoctor.gradle.AsciidoctorTask
+
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -8,13 +9,6 @@ import org.asciidoctor.gradle.AsciidoctorTask
  */
 buildscript {
     repositories {
-        mavenCentral()
-        mavenLocal()
-
-        maven {
-            name 'jboss-nexus'
-            url "http://repository.jboss.org/nexus/content/groups/public/"
-        }
         jcenter()
     }
     dependencies {
@@ -74,19 +68,6 @@ dependencies {
 
 	testCompile "org.osgi:org.osgi.core:4.3.1"
 
-	if (db.equalsIgnoreCase("oracle")) {
-		dependencies {
-			testRuntime( libraries.oracle ) {
-				exclude group: 'com.oracle.jdbc', module: 'xmlparserv2'
-			}
-		}
-	}
-	if (db.equalsIgnoreCase("hana")) {
-		dependencies {
-			testRuntime( libraries.hana )
-		}
-	}
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Java 9 ftw!
 	if ( JavaVersion.current().isJava9Compatible() ) {
@@ -113,21 +94,6 @@ dependencies {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
-processTestResources.doLast( {
-	copy {
-		from( sourceSets.test.java.srcDirs ) {
-			include '**/*.properties'
-			include '**/*.xml'
-		}
-		into sourceSets.test.output.classesDir
-	}
-	copy {
-		ext.targetDir = file( "${buildDir}/resources/test" )
-		from file('src/test/resources')
-		into targetDir
-		filter( ReplaceTokens, tokens: dbBundle[db] );
-	}
-} )
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // grouping tasks - declaration, see below for task dependency definitions

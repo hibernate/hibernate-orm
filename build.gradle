@@ -109,15 +109,15 @@ subprojects { subProject ->
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"
 
-	if ( subProject.name.startsWith( 'release' ) || subProject.name.startsWith( 'documentation' ) ) {
-		return;
+	if ( subProject.name.startsWith( 'release' ) ) {
+		return
 	}
 
 	if ( subProject.name.startsWith( 'hibernate-orm-modules' ) ) {
-		return;
+		return
 	}
 
-	// everything below here in the closure applies to java projects
+	// everything below here in the closure applies to modules with Java code
 	apply plugin: 'java'
 	apply plugin: 'maven-publish'
 	apply plugin: 'maven-publish-auth'
@@ -455,28 +455,31 @@ subprojects { subProject ->
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Publishing
-	publishing {
-		publications {
-			mavenJava(MavenPublication) {
-				from components.java
+	if ( !subProject.name.equals( 'documentation' ) ) {
+		// do not configure publishing for the documentation module
+		publishing {
+			publications {
+				mavenJava(MavenPublication) {
+					from components.java
 
-				artifact( sourcesJar ) {
-					classifier 'sources'
+					artifact( sourcesJar ) {
+						classifier 'sources'
+					}
 				}
+				// http://issues.gradle.org/browse/GRADLE-2966
+				// Once ^^ is resolved:
+				//		1) Move hibernate-testing module into hibernate-core tests
+				//		2) Define a second publication on hibernate-core for publishing the testing jar
+				// We could kind of do this now, but it would just be the jar.  Every module would still need
+				// to duplicate the testing dependencies.  Well, on second thought, we could centralize the
+				// testing dependencies here within the subprojects block
 			}
-			// http://issues.gradle.org/browse/GRADLE-2966
-			// Once ^^ is resolved:
-			//		1) Move hibernate-testing module into hibernate-core tests
-			//		2) Define a second publication on hibernate-core for publishing the testing jar
-			// We could kind of do this now, but it would just be the jar.  Every module would still need
-			// to duplicate the testing dependencies.  Well, on second thought, we could centralize the
-			// testing dependencies here within the subprojects block
 		}
-	}
 
-	model {
-		tasks.generatePomFileForMavenJavaPublication {
-			destination = file( "$subProject.buildDir/generated-pom.xml" )
+		model {
+			tasks.generatePomFileForMavenJavaPublication {
+				destination = file( "$subProject.buildDir/generated-pom.xml" )
+			}
 		}
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

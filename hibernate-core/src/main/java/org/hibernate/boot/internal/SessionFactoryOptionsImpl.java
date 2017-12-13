@@ -112,6 +112,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final boolean structuredCacheEntriesEnabled;
 	private final boolean directReferenceCacheEntriesEnabled;
 	private final boolean autoEvictCollectionCache;
+	private final boolean checkSecondLevelCacheForPolymorphicProxiesEnabled;
 
 	// Schema tooling
 	private final SchemaAutoTooling schemaAutoTooling;
@@ -195,6 +196,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.structuredCacheEntriesEnabled = state.isStructuredCacheEntriesEnabled();
 		this.directReferenceCacheEntriesEnabled = state.isDirectReferenceCacheEntriesEnabled();
 		this.autoEvictCollectionCache = state.isAutoEvictCollectionCache();
+		this.checkSecondLevelCacheForPolymorphicProxiesEnabled = state.isCheckSecondLevelCacheForPolymorphicProxiesEnabled();
 
 		this.schemaAutoTooling = state.getSchemaAutoTooling();
 		this.physicalConnectionHandlingMode = state.getPhysicalConnectionHandlingMode();
@@ -407,6 +409,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public boolean isCollectionJoinSubqueryRewriteEnabled() {
 		return collectionJoinSubqueryRewriteEnabled;
+	}
+
+	@Override
+	public boolean isCheckSecondLevelCacheForPolymorphicProxiesEnabled() {
+		return checkSecondLevelCacheForPolymorphicProxiesEnabled;
 	}
 
 	@Override

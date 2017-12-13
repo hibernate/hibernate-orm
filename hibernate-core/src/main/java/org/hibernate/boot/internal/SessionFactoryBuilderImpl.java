@@ -557,6 +557,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private boolean structuredCacheEntriesEnabled;
 		private boolean directReferenceCacheEntriesEnabled;
 		private boolean autoEvictCollectionCache;
+		private boolean checkSecondLevelCacheForPolymorphicProxiesEnabled;
 
 		// Schema tooling
 		private SchemaAutoTooling schemaAutoTooling;
@@ -698,6 +699,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			this.structuredCacheEntriesEnabled = cfgService.getSetting( USE_STRUCTURED_CACHE, BOOLEAN, false );
 			this.directReferenceCacheEntriesEnabled = cfgService.getSetting( USE_DIRECT_REFERENCE_CACHE_ENTRIES,BOOLEAN, false );
 			this.autoEvictCollectionCache = cfgService.getSetting( AUTO_EVICT_COLLECTION_CACHE, BOOLEAN, false );
+			this.checkSecondLevelCacheForPolymorphicProxiesEnabled = cfgService.getSetting( CHECK_SECOND_LEVEL_CACHE_FOR_POLYMORPHIC_PROXIES_ENABLED, BOOLEAN, true );
 
 			try {
 				this.schemaAutoTooling = SchemaAutoTooling.interpret( (String) configurationSettings.get( AvailableSettings.HBM2DDL_AUTO ) );
@@ -1151,6 +1153,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 
 		@Override
+		public boolean isCheckSecondLevelCacheForPolymorphicProxiesEnabled() {
+			return checkSecondLevelCacheForPolymorphicProxiesEnabled;
+		}
+
+		@Override
 		public SchemaAutoTooling getSchemaAutoTooling() {
 			return schemaAutoTooling;
 		}
@@ -1496,6 +1503,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public boolean isAutoEvictCollectionCache() {
 		return options.isAutoEvictCollectionCache();
+	}
+
+	@Override
+	public boolean isCheckSecondLevelCacheForPolymorphicProxiesEnabled() {
+		return options.isCheckSecondLevelCacheForPolymorphicProxiesEnabled();
 	}
 
 	@Override

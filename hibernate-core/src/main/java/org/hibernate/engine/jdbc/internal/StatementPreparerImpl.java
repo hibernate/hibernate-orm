@@ -74,7 +74,22 @@ class StatementPreparerImpl implements StatementPreparer {
 
 	@Override
 	public PreparedStatement prepareStatement(String sql, final boolean isCallable) {
-		jdbcCoordinator.executeBatch();
+		/**
+		 There is no need to execute batch here because :
+		 1. It breaks of putting SQL statements condition from AbstractBatchImpl.getBatchStatement:
+		 PreparedStatement statement = statements.get( sql );
+		 if ( statement == null ) {
+		 statement = buildBatchStatement( sql, callable ); --> as soon as we get different SQL insert for example, it will execute the batch.
+		 statements.put( sql, statement );
+		 }
+		 else {
+		 LOG.debug( "Reusing batch statement" );
+		 sqlStatementLogger().logStatement( sql );
+		 }
+		 Having a save of a 2 level inheritance Entity: Employee -> Person. Batch will always have 1 statement.
+		 So by removing this we allow multiple PreparedStatements in AbstractBatchImpl.statements.
+		 So now in BatchingBatch.performExecution(), the for loop makes sense(there where always 1 interation because of 1 statement).
+		 */
 		return buildPreparedStatementPreparationTemplate( sql, isCallable ).prepareStatement();
 	}
 

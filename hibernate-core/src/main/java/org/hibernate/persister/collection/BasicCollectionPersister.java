@@ -10,12 +10,14 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cfg.Environment;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -24,6 +26,7 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.collection.BatchingCollectionInitializerBuilder;
@@ -196,7 +199,14 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			PreparedStatement st = null;
 			Expectation expectation = Expectations.appropriateExpectation( getUpdateCheckStyle() );
 			boolean callable = isUpdateCallable();
-			boolean useBatch = expectation.canBeBatched();
+
+			final Integer sessionJdbcBatchSize = session.getJdbcCoordinator().getJdbcSessionOwner()
+					.getJdbcBatchSize();
+			final int jdbcBatchSizeToUse = sessionJdbcBatchSize == null ? configuredBatchSize :	sessionJdbcBatchSize;
+			/**
+			 * Use batch only when expectation.canBeBatched() and batch size is bigger then 1, otherwise execute directly
+			 */
+			boolean useBatch = expectation.canBeBatched() && jdbcBatchSizeToUse >1;
 			Iterator entries = collection.entries( this );
 			String sql = getSQLUpdateRowString();
 			int i = 0;

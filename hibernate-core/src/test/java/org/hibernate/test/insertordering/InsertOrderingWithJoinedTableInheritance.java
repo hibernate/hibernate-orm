@@ -97,8 +97,10 @@ public class InsertOrderingWithJoinedTableInheritance
 			}
 			connectionProvider.clear();
 		} );
-
-		assertEquals( 26, connectionProvider.getPreparedStatements().size() );
+		/**
+		 * Having the fix, the test does less statements to the DB
+		 */
+		assertEquals( 4, connectionProvider.getPreparedStatements().size() );
 	}
 
 	@Override

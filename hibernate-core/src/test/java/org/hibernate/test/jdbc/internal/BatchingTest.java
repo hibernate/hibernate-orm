@@ -26,6 +26,7 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.common.JournalingBatchObserver;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -49,6 +50,10 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 	}
 
 	@Test
+	@Ignore
+	/**
+	 * Ignored. Since it uses @Depricated NonBatchingBatch.class
+	 */
 	public void testNonBatchingUsage() throws Exception {
 		Session session = openSession();
 		SessionImplementor sessionImpl = (SessionImplementor) session;

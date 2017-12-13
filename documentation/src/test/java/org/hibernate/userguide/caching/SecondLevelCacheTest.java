@@ -58,7 +58,7 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
         options.put( AvailableSettings.CACHE_REGION_FACTORY, EhCacheRegionFactory.class.getName() );
         options.put( AvailableSettings.USE_QUERY_CACHE, Boolean.TRUE.toString() );
         options.put( AvailableSettings.GENERATE_STATISTICS, Boolean.TRUE.toString() );
-        options.put( AvailableSettings.CACHE_REGION_PREFIX, "" );
+        //options.put( AvailableSettings.CACHE_REGION_PREFIX, "" );
     }
 
     @Test

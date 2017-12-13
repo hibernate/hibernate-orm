@@ -386,7 +386,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				integrator.disintegrate( this, serviceRegistry );
 				integratorObserver.integrators.remove( integrator );
 			}
-			serviceRegistry.destroy();
+			close();
 			throw e;
 		}
 	}

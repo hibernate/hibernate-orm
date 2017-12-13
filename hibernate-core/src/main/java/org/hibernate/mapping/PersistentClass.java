@@ -282,7 +282,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	/**
-	 * Use {@link #isCached} instead
+	 * @deprecated Use {@link #isCached} instead
 	 */
 	@Deprecated
 	public boolean isCachingExplicitlyRequested() {
@@ -290,7 +290,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	/**
-	 * Use {@link #setCached} instead
+	 * @deprecated Use {@link #setCached} instead
 	 */
 	@Deprecated
 	public void setCachingExplicitlyRequested(boolean cached) {

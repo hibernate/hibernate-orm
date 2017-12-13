@@ -552,8 +552,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		//first look for a reference to a projection alias
 		final Projection projection = rootCriteria.getProjection();
 		Type[] projectionTypes = projection == null ?
-		                         null :
-		                         projection.getTypes( propertyName, subcriteria, this );
+				null :
+				projection.getTypes( propertyName, subcriteria, this );
 
 		if ( projectionTypes == null ) {
 			try {

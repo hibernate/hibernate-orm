@@ -334,3 +334,5 @@ buildDocsForPublishing.dependsOn renderTopicalGuides
 buildDocsForPublishing.dependsOn renderGettingStartedGuides
 buildDocsForPublishing.dependsOn renderUserGuide
 buildDocsForPublishing.dependsOn renderIntegrationGuide
+
+checkstyleMain.exclude '**/org/hibernate/userguide/model/*'

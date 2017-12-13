@@ -53,14 +53,12 @@ configurations {
 
     wildflyDist
     byteBuddy
-    jpa
 }
 
 dependencies {
     jipijapa "org.wildfly:jipijapa-hibernate5:${wildflyVersion}"
     wildflyDist "org.wildfly:wildfly-dist:${wildflyVersion}@zip"
     byteBuddy libraries.byteBuddy
-    jpa libraries.jpa
 
     testCompile project( ":hibernate-core" )
     testCompile project( ":hibernate-envers" )
@@ -187,27 +185,12 @@ task installHibernateModule( type:Copy, dependsOn: [createModulesZip, installWil
     into "${wildFlyInstallDir}/modules"
 }
 
-task copyJpaLib(type: Copy) {
-    into "$wildFlyInstallDir/modules/system/layers/base/javax/persistence/api/main"
-    from configurations.jpa
-}
-
-task prepareWildFlyForTests( dependsOn: [installWildFly, installHibernateModule, copyJpaLib] )
+task prepareWildFlyForTests( dependsOn: [installWildFly, installHibernateModule] )
 
 test.dependsOn prepareWildFlyForTests
 
 processTestResources {
     expand( wildFlyInstallDir: wildFlyInstallDir, arquillianDeploymentExportDir: "${rootProject.buildDir.absolutePath}/arquillian-deployments" )
-}
-
-test {
-    doFirst {
-        copy {
-            file("$wildFlyInstallDir/modules/system/layers/base/javax/persistence/api/main/module.xml").delete()
-            from "${projectDir}/src/test/resources/wildfly/module.xml"
-            into "$wildFlyInstallDir/modules/system/layers/base/javax/persistence/api/main"
-        }
-    }
 }
 
 

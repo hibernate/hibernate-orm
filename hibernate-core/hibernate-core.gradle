@@ -239,13 +239,6 @@ processTestResources {
 test.dependsOn ":hibernate-orm-modules:prepareWildFlyForTests"
 
 test {
-    doFirst {
-        copy {
-            file("${rootProject.buildDir.absolutePath}/wildfly-${wildflyVersion}/modules/system/layers/base/javax/persistence/api/main/module.xml").delete()
-            from "${projectDir}/../hibernate-orm-modules/src/test/resources/wildfly/module.xml"
-            into "${rootProject.buildDir.absolutePath}/wildfly-${wildflyVersion}/modules/system/layers/base/javax/persistence/api/main"
-        }
-    }
     systemProperty "file.encoding", "utf-8"
     beforeTest { descriptor ->
         //println "Starting test: " + descriptor

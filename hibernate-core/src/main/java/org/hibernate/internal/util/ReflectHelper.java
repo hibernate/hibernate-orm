@@ -14,7 +14,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Locale;
 import java.util.regex.Pattern;
-
 import javax.persistence.Transient;
 
 import org.hibernate.AssertionFailure;
@@ -395,6 +394,10 @@ public final class ReflectHelper {
 	}
 
 	public static Method findGetterMethod(Class containerClass, String propertyName) {
+		return findGetterMethod(containerClass, propertyName, null);
+	}
+
+	private static Method findGetterMethod(Class containerClass, String propertyName, Field field) {
 		Class checkClass = containerClass;
 		Method getter = null;
 
@@ -404,13 +407,13 @@ public final class ReflectHelper {
 				break;
 			}
 
-			getter = getGetterOrNull( checkClass, propertyName );
+			getter = getGetterOrNull( checkClass, propertyName, field );
 			checkClass = checkClass.getSuperclass();
 		}
 
 		// if no getter found yet, check all implemented interfaces
 		if ( getter == null ) {
-			getter = getGetterOrNull( containerClass.getInterfaces(), propertyName );
+			getter = getGetterOrNull( containerClass.getInterfaces(), propertyName, field );
 		}
 
 		if ( getter == null ) {
@@ -428,20 +431,20 @@ public final class ReflectHelper {
 		return getter;
 	}
 
-	private static Method getGetterOrNull(Class[] interfaces, String propertyName) {
+	private static Method getGetterOrNull(Class[] interfaces, String propertyName, Field field) {
 		Method getter = null;
 		for ( int i = 0; getter == null && i < interfaces.length; ++i ) {
 			final Class anInterface = interfaces[i];
-			getter = getGetterOrNull( anInterface, propertyName );
+			getter = getGetterOrNull( anInterface, propertyName, field );
 			if ( getter == null ) {
 				// if no getter found yet, check all implemented interfaces of interface
-				getter = getGetterOrNull( anInterface.getInterfaces(), propertyName );
+				getter = getGetterOrNull( anInterface.getInterfaces(), propertyName, field );
 			}
 		}
 		return getter;
 	}
 
-	private static Method getGetterOrNull(Class containerClass, String propertyName) {
+	private static Method getGetterOrNull(Class containerClass, String propertyName, Field field) {
 		for ( Method method : containerClass.getDeclaredMethods() ) {
 			// if the method has parameters, skip it
 			if ( method.getParameterCount() != 0 ) {
@@ -461,6 +464,10 @@ public final class ReflectHelper {
 				continue;
 			}
 
+			if ( field != null && !field.getType().equals( method.getReturnType() ) ) {
+				continue;
+			}
+
 			final String methodName = method.getName();
 
 			// try "get"
@@ -468,7 +475,7 @@ public final class ReflectHelper {
 				final String stemName = methodName.substring( 3 );
 				final String decapitalizedStemName = Introspector.decapitalize( stemName );
 				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
-					verifyNoIsVariantExists( containerClass, propertyName, method, stemName );
+					verifyNoIsVariantExists( containerClass, propertyName, method, stemName, field );
 					return method;
 				}
 
@@ -479,7 +486,7 @@ public final class ReflectHelper {
 				final String stemName = methodName.substring( 2 );
 				String decapitalizedStemName = Introspector.decapitalize( stemName );
 				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
-					verifyNoGetVariantExists( containerClass, propertyName, method, stemName );
+					verifyNoGetVariantExists( containerClass, propertyName, method, stemName, field );
 					return method;
 				}
 			}
@@ -492,11 +499,15 @@ public final class ReflectHelper {
 			Class containerClass,
 			String propertyName,
 			Method getMethod,
-			String stemName) {
+			String stemName,
+			Field field) {
 		// verify that the Class does not also define a method with the same stem name with 'is'
 		try {
 			final Method isMethod = containerClass.getDeclaredMethod( "is" + stemName );
-			if ( !Modifier.isStatic( isMethod.getModifiers() ) && isMethod.getAnnotation( Transient.class ) == null ) {
+			if ( !Modifier.isStatic( isMethod.getModifiers() ) &&
+				 isMethod.getAnnotation( Transient.class ) == null &&
+					( field == null || field.getType().equals( isMethod.getReturnType() ) )
+			) {
 				// No such method should throw the caught exception.  So if we get here, there was
 				// such a method.
 				checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
@@ -532,13 +543,17 @@ public final class ReflectHelper {
 			Class containerClass,
 			String propertyName,
 			Method isMethod,
-			String stemName) {
+			String stemName,
+			Field field) {
 		// verify that the Class does not also define a method with the same stem name with 'is'
 		try {
 			final Method getMethod = containerClass.getDeclaredMethod( "get" + stemName );
 			// No such method should throw the caught exception.  So if we get here, there was
 			// such a method.
-			if ( !Modifier.isStatic( getMethod.getModifiers() ) && getMethod.getAnnotation( Transient.class ) == null ) {
+			if ( !Modifier.isStatic( getMethod.getModifiers() ) &&
+					getMethod.getAnnotation( Transient.class ) == null &&
+					( field == null || field.getType().equals( getMethod.getReturnType() ) )
+			) {
 				checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
 			}
 		}
@@ -546,9 +561,18 @@ public final class ReflectHelper {
 		}
 	}
 
+	public static Method getterMethodOrNull(Class containerJavaType, String propertyName, Field field) {
+		try {
+			return findGetterMethod( containerJavaType, propertyName, field );
+		}
+		catch (PropertyNotFoundException e) {
+			return null;
+		}
+	}
+
 	public static Method getterMethodOrNull(Class containerJavaType, String propertyName) {
 		try {
-			return findGetterMethod( containerJavaType, propertyName );
+			return findGetterMethod( containerJavaType, propertyName, null );
 		}
 		catch (PropertyNotFoundException e) {
 			return null;

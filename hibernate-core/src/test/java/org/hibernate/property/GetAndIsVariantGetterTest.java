@@ -113,7 +113,7 @@ public class GetAndIsVariantGetterTest {
 
 	@Entity
 	public static class TheEntity {
-		private Integer id;
+		private Number id;
 
 		public boolean isId() {
 			return false;
@@ -121,7 +121,7 @@ public class GetAndIsVariantGetterTest {
 
 		@Id
 		public Integer getId() {
-			return id;
+			return id.intValue();
 		}
 
 		public void setId(Integer id) {

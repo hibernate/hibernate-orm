@@ -17,9 +17,9 @@ import org.hibernate.event.spi.PostCollectionUpdateEvent;
 import org.hibernate.event.spi.PostCollectionUpdateEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
-import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
-import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
-import org.hibernate.jpa.event.spi.jpa.CallbackType;
+import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
+import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**

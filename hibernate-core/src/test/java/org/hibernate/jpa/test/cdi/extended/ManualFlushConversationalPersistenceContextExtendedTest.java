@@ -45,7 +45,7 @@ public class ManualFlushConversationalPersistenceContextExtendedTest {
 
 	private static PersistenceDescriptor persistenceXml() {
 		return Descriptors.create( PersistenceDescriptor.class )
-				.createPersistenceUnit().name( "pu-cdi-basic" )
+				.createPersistenceUnit().name( "pu-beans-basic" )
 				.clazz( Event.class.getName() )
 				.excludeUnlistedClasses( true )
 				.nonJtaDataSource( "java:jboss/datasources/ExampleDS" )

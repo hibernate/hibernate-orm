@@ -16,6 +16,7 @@ import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.JpaCompliance;
 import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.resource.beans.spi.ExtendedBeanManager;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
@@ -185,12 +186,22 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 *
 	 * According to JPA, strictly, the BeanManager should be passed in
 	 * at boot-time and be ready for use at that time.  However not all
-	 * environments can do this (WildFly for one).  To accommodate such
-	 * environments, Hibernate provides an SPI via
-	 * {@link org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager} that
-	 * can be used to provide delayed BeanManager access.  Long story
-	 * short, this setting could be typed as BeanManager or as
-	 * {@link org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager}.
+	 * environments can do this (WildFly e.g.).  To accommodate such
+	 * environments, Hibernate provides 2 options:
+	 *
+	 *     * a proprietary CDI extension SPI (that we have proposed to
+	 *     	the CDI spec group as a standard option) that can be used
+	 *     	to provide delayed BeanManager access.  To use this solution,
+	 *     	the reference passed as the BeanManager during bootstrap
+	 *     	should be typed as {@link ExtendedBeanManager}
+	 *     * delayed access to the BeanManager reference.  Here, Hibernate
+	 *      will not access the reference passed as the BeanManager during
+	 *      bootstrap until it is first needed.  Note however that this has
+	 *      the effect of delaying any deployement problems until after
+	 *      bootstrapping.
+	 *
+	 * This setting is used to configure Hibernate ORM's access to
+	 * the BeanManager (either directly or via {@link ExtendedBeanManager}).
 	 */
 	String CDI_BEAN_MANAGER = "javax.persistence.bean.manager";
 

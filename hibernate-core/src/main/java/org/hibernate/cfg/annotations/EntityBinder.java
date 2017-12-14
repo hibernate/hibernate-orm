@@ -600,7 +600,7 @@ public class EntityBinder {
 				}
 			}
 
-			cacheConcurrentStrategy = effectiveCacheAnn.usage().name();
+			cacheConcurrentStrategy = resolveCacheConcurrencyStrategy( effectiveCacheAnn.usage() );
 			cacheRegion = effectiveCacheAnn.region();
 			switch ( effectiveCacheAnn.include().toLowerCase( Locale.ROOT ) ) {
 				case "all": {
@@ -672,6 +672,11 @@ public class EntityBinder {
 				naturalIdCacheRegion = naturalIdCacheAnn.region();
 			}
 		}
+	}
+
+	private static String resolveCacheConcurrencyStrategy(CacheConcurrencyStrategy strategy) {
+		final org.hibernate.cache.spi.access.AccessType accessType = strategy.toAccessType();
+		return accessType == null ? null : accessType.getExternalName();
 	}
 
 	private static Cache buildCacheMock(String region, MetadataBuildingContext context) {

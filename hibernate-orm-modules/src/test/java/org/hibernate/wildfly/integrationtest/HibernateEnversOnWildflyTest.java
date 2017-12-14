@@ -25,6 +25,8 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.descriptor.api.Descriptors;
 import org.jboss.shrinkwrap.descriptor.api.persistence21.PersistenceDescriptor;
 import org.jboss.shrinkwrap.descriptor.api.persistence21.PersistenceUnitTransactionType;
+
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -34,6 +36,7 @@ import static org.junit.Assert.assertEquals;
  * @author Chris Cranford
  */
 @RunWith(Arquillian.class)
+@Ignore
 public class HibernateEnversOnWildflyTest {
 
 	private static final String ORM_VERSION = Session.class.getPackage().getImplementationVersion();

@@ -75,6 +75,7 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 		}
 	}
 
+	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	public Callback[] resolveCallbacks(XClass beanClass, CallbackType callbackType, ReflectionManager reflectionManager) {
 		List<Callback> callbacks = new ArrayList<>();
 		List<String> callbacksMethodNames = new ArrayList<>();
@@ -162,7 +163,7 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 							//overridden method, remove the superclass overridden method
 							if ( callback == null ) {
 								callback = new ListenerCallback(
-										managedBeanRegistry.getBean( listener ),
+										managedBeanRegistry.getBean( listener, true ),
 										method,
 										callbackType
 								);

@@ -23,12 +23,13 @@ public class ManagedBeanRegistryDirectImpl extends AbstractManagedBeanRegistry {
 
 	private static final Logger log = Logger.getLogger( ManagedBeanRegistryDirectImpl.class );
 
-	/**
-	 * Singleton access
-	 */
-	public static final ManagedBeanRegistryDirectImpl INSTANCE = new ManagedBeanRegistryDirectImpl();
+	@SuppressWarnings("WeakerAccess")
+	public ManagedBeanRegistryDirectImpl() {
+	}
 
-	private ManagedBeanRegistryDirectImpl() {
+	@Override
+	protected <T> ManagedBean<T> createBean(Class<T> beanClass) {
+		return new ManagedBeanImpl<>( beanClass );
 	}
 
 	@Override

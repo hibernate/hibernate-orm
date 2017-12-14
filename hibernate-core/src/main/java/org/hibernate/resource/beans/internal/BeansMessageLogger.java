@@ -26,7 +26,7 @@ public interface BeansMessageLogger {
 	/**
 	 * *The* BeansMessageLogger instance
 	 */
-	BeansMessageLogger CDI_LOGGER = Logger.getMessageLogger(
+	BeansMessageLogger BEANS_LOGGER = Logger.getMessageLogger(
 			BeansMessageLogger.class,
 			"org.hibernate.orm.beans"
 	);

@@ -8,6 +8,7 @@ package org.hibernate.resource.beans.internal;
 
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.AnnotatedType;
+import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionTarget;
 
@@ -42,8 +43,13 @@ public class ManagedBeanRegistryCdiExtendedImpl
 	}
 
 	@Override
+	protected <T> ManagedBean<T> createBean(Class<T> beanClass) {
+		return new ManagedBeanImpl<>( beanClass );
+	}
+
+	@Override
 	protected <T> ManagedBean<T> createBean(String beanName, Class<T> beanContract) {
-		return new ManagedBeanImpl<>( beanContract );
+		return new NamedManagedBeanImpl<>( beanName, beanContract );
 	}
 
 	@Override
@@ -67,25 +73,11 @@ public class ManagedBeanRegistryCdiExtendedImpl
 		private boolean initialized = false;
 
 		private InjectionTarget<T> injectionTarget;
-		private CreationalContext<T> creationalContext;
+		private CreationalContext<T> creationContext;
 		private T beanInstance;
 
 		private ManagedBeanImpl(Class<T> beanClass) {
 			this.beanClass = beanClass;
-		}
-
-		public void initialize() {
-			final BeanManager beanManager = getUsableBeanManager();
-			AnnotatedType<T> annotatedType = beanManager.createAnnotatedType( beanClass );
-			this.injectionTarget = beanManager.createInjectionTarget( annotatedType );
-			this.creationalContext = beanManager.createCreationalContext( null );
-
-			this.beanInstance = injectionTarget.produce( creationalContext );
-			injectionTarget.inject( this.beanInstance, creationalContext );
-
-			injectionTarget.postConstruct( this.beanInstance );
-
-			this.initialized = true;
 		}
 
 		@Override
@@ -101,16 +93,86 @@ public class ManagedBeanRegistryCdiExtendedImpl
 			return beanInstance;
 		}
 
+		private void initialize() {
+			final BeanManager beanManager = getUsableBeanManager();
+			AnnotatedType<T> annotatedType = beanManager.createAnnotatedType( beanClass );
+			this.injectionTarget = beanManager.createInjectionTarget( annotatedType );
+			this.creationContext = beanManager.createCreationalContext( null );
+
+			this.beanInstance = injectionTarget.produce( creationContext );
+			injectionTarget.inject( this.beanInstance, creationContext );
+
+			injectionTarget.postConstruct( this.beanInstance );
+
+			this.initialized = true;
+		}
+
 		public void release() {
 			if ( !initialized ) {
-				// log
+				log.debugf( "Skipping release for (extended) CDI bean [%s] as it was not initialized", beanClass.getName() );
 				return;
 			}
 
+			log.debugf( "Releasing (extended) CDI bean [%s]", beanClass.getName() );
+
 			injectionTarget.preDestroy( beanInstance );
 			injectionTarget.dispose( beanInstance );
-			creationalContext.release();
+			creationContext.release();
 		}
 	}
 
+	private class NamedManagedBeanImpl<T> implements ManagedBean<T> {
+		private final String beanName;
+		private final Class<T> beanContract;
+
+		private boolean initialized = false;
+
+		private CreationalContext<T> creationContext;
+		private T beanInstance;
+
+		public NamedManagedBeanImpl(
+				String beanName,
+				Class<T> beanContract) {
+			this.beanName = beanName;
+			this.beanContract = beanContract;
+		}
+
+		@Override
+		public Class<T> getBeanClass() {
+			return beanContract;
+		}
+
+		@Override
+		public T getBeanInstance() {
+			if ( !initialized ) {
+				initialize();
+			}
+
+			return beanInstance;
+		}
+
+		private void initialize() {
+			final BeanManager beanManager = getUsableBeanManager();
+			final Bean<T> bean = Helper.INSTANCE.getNamedBean( beanName, beanContract, beanManager );
+
+			this.creationContext = beanManager.createCreationalContext( bean );
+			this.beanInstance = beanContract.cast( beanManager.getReference( bean, beanContract, creationContext ) );
+
+			this.initialized = true;
+		}
+
+		@Override
+		public void release() {
+			if ( !initialized ) {
+				log.debugf( "Skipping release for (extended) CDI bean [%s : %s] as it was not initialized", beanName, beanContract.getName() );
+				return;
+			}
+
+			log.debugf( "Releasing (extended) CDI bean [%s : %s]", beanName, beanContract.getName() );
+
+			creationContext.release();
+
+			initialized = false;
+		}
+	}
 }

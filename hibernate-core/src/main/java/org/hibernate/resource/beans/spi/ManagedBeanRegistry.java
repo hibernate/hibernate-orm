@@ -18,15 +18,32 @@ import org.hibernate.service.Service;
  */
 public interface ManagedBeanRegistry extends Service {
 	/**
-	 * Get a bean reference, by class.  By default, calls
-	 * {@link #getBean(String, Class)} using the beanClass's name
+	 * Get a bean reference, by class.
+	 *
+	 * @apiNote `shouldRegistryManageLifecycle` has multiple implications that are
+	 * important to understand.  First it indicates whether the registry should
+	 * handle releasing (end lifecycle) the bean or whether the caller will handle
+	 * that.  It also indicates whether cached references will be returned, or whether
+	 * new references will be returned each time.  `true` means that cached references
+	 * can be returned and the registry will handle releasing when the registry is itself
+	 * released (generally when the SessionFactory is closed).  `false` means that
+	 * new references should be returned for every call and the caller will handle
+	 * the release calls itself.
 	 */
-	default <T> ManagedBean<T> getBean(Class<T> beanClass) {
-		return getBean( beanClass.getName(), beanClass );
-	}
+	<T> ManagedBean<T> getBean(Class<T> beanClass, boolean shouldRegistryManageLifecycle);
 
 	/**
-	 * Get a bean reference by name, typed as the given bean contract.
+	 * Get a bean reference by name and contract.
+	 *
+	 * @apiNote `shouldRegistryManageLifecycle` has multiple implications that are
+	 * important to understand.  First it indicates whether the registry should
+	 * handle releasing (end lifecycle) the bean or whether the caller will handle
+	 * that.  It also indicates whether cached references will be returned, or whether
+	 * new references will be returned each time.  `true` means that cached references
+	 * can be returned and the registry will handle releasing when the registry is itself
+	 * released (generally when the SessionFactory is closed).  `false` means that
+	 * new references should be returned for every call and the caller will handle
+	 * the release calls itself.
 	 */
-	<T> ManagedBean<T> getBean(String beanName, Class<T> contract);
+	<T> ManagedBean<T> getBean(String beanName, Class<T> beanContract, boolean shouldRegistryManageLifecycle);
 }

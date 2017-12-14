@@ -755,10 +755,20 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		settings.getMultiTableBulkIdStrategy().release( serviceRegistry.getService( JdbcServices.class ), buildLocalConnectionAccess() );
 
-		cacheAccess.close();
-		metamodel.close();
+		// NOTE : the null checks below handle cases where close is called from
+		//		a failed attempt to create the SessionFactory
 
-		queryPlanCache.cleanup();
+		if ( cacheAccess != null ) {
+			cacheAccess.close();
+		}
+
+		if ( metamodel != null ) {
+			metamodel.close();
+		}
+
+		if ( queryPlanCache != null ) {
+			queryPlanCache.cleanup();
+		}
 
 		if ( delayedDropAction != null ) {
 			delayedDropAction.perform( serviceRegistry );

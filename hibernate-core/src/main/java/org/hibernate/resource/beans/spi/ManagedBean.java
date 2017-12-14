@@ -12,7 +12,18 @@ package org.hibernate.resource.beans.spi;
  * @author Steve Ebersole
  */
 public interface ManagedBean<T> {
+	/**
+	 * The bean Java type
+	 */
 	Class<T> getBeanClass();
+
+	/**
+	 * The bean reference
+	 */
 	T getBeanInstance();
+
+	/**
+	 * Release any resources
+	 */
 	void release();
 }

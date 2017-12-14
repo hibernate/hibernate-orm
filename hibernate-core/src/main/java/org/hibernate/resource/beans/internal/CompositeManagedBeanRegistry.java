@@ -6,56 +6,142 @@
  */
 package org.hibernate.resource.beans.internal;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
+import java.util.Map;
 
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.service.spi.Configurable;
+import org.hibernate.service.spi.Manageable;
+import org.hibernate.service.spi.OptionallyManageable;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.Startable;
+import org.hibernate.service.spi.Stoppable;
+
+import org.jboss.logging.Logger;
 
 /**
- * A ManagedBeanRegistry implementation that can delegate to multiple
- * other ManagedBeanRegistry instances, until one can handle the given call.
+ * A ManagedBeanRegistry that supports a single primary ManagedBeanRegistry
+ * delegate falling back to {@link ManagedBeanRegistryDirectImpl} for direct
+ * instantiation (no DI).
+ *
+ * Note too that it supports all of the optional Service contracts and delegates
+ * them to the primary if the primary also implements that particular contract.
  *
  * @author Steve Ebersole
  */
-public class CompositeManagedBeanRegistry implements ManagedBeanRegistry {
+public class CompositeManagedBeanRegistry
+		implements ManagedBeanRegistry, Startable, Stoppable, Configurable, ServiceRegistryAwareService, OptionallyManageable {
+	private static final Logger log = Logger.getLogger( CompositeManagedBeanRegistry.class );
 
-	private List<ManagedBeanRegistry> delegates;
+	private final ManagedBeanRegistry primaryRegistry;
+	private final ManagedBeanRegistryDirectImpl fallback = new ManagedBeanRegistryDirectImpl();
 
-	public void addDelegate(ManagedBeanRegistry beanRegistry) {
-		if ( delegates == null ) {
-			delegates = new ArrayList<>();
-		}
-
-		delegates.add( beanRegistry );
-	}
-	@Override
-	public <T> ManagedBean<T> getBean(Class<T> beanClass) {
-		return tryEachRegistry( registry -> registry.getBean( beanClass ) );
+	public CompositeManagedBeanRegistry(ManagedBeanRegistry primaryRegistry) {
+		this.primaryRegistry = primaryRegistry;
 	}
 
 	@Override
-	public <T> ManagedBean<T> getBean(String beanName, Class<T> contract) {
-		return tryEachRegistry( registry -> registry.getBean( beanName, contract ) );
-	}
-
-	private <T> ManagedBean<T> tryEachRegistry(Function<ManagedBeanRegistry, ManagedBean<T>> delegateAction) {
-		if ( delegates != null ) {
-			for ( ManagedBeanRegistry delegate : delegates ) {
-				ManagedBean<T> bean = null;
-				try {
-					bean = delegateAction.apply( delegate );
-				}
-				catch (Exception ignore) {
-				}
-
+	public <T> ManagedBean<T> getBean(Class<T> beanClass, boolean shouldRegistryManageLifecycle) {
+		if ( primaryRegistry != null ) {
+			try {
+				final ManagedBean<T> bean = primaryRegistry.getBean( beanClass, shouldRegistryManageLifecycle );
 				if ( bean != null ) {
 					return bean;
 				}
 			}
+			catch (Exception ignore) {
+				log.debugf(
+						"Error obtaining ManagedBean [%s] from registry [%s] - using fallback registry",
+						beanClass.getName(),
+						primaryRegistry
+				);
+			}
 		}
 
-		return delegateAction.apply( ManagedBeanRegistryDirectImpl.INSTANCE );
+		return fallback.getBean( beanClass, shouldRegistryManageLifecycle );
+	}
+
+	@Override
+	public <T> ManagedBean<T> getBean(String beanName, Class<T> beanContract, boolean shouldRegistryManageLifecycle) {
+		if ( primaryRegistry != null ) {
+			try {
+				final ManagedBean<T> bean = primaryRegistry.getBean( beanName, beanContract,shouldRegistryManageLifecycle );
+				if ( bean != null ) {
+					return bean;
+				}
+			}
+			catch (Exception ignore) {
+				log.debugf(
+						"Error obtaining ManagedBean [%s : %s] from registry [%s] - using fallback registry",
+						beanName,
+						beanContract.getName(),
+						primaryRegistry
+				);
+			}
+		}
+
+		return fallback.getBean( beanName, beanContract,shouldRegistryManageLifecycle );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Optional delegation
+
+	@Override
+	public void start() {
+		if ( primaryRegistry == null ) {
+			return;
+		}
+
+		if ( Startable.class.isInstance( primaryRegistry ) ) {
+			Startable.class.cast( primaryRegistry ).start();
+		}
+	}
+
+	@Override
+	public void configure(Map configurationValues) {
+		if ( primaryRegistry == null ) {
+			return;
+		}
+
+		if ( Configurable.class.isInstance( primaryRegistry ) ) {
+			Configurable.class.cast( primaryRegistry ).configure( configurationValues );
+		}
+	}
+
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		if ( primaryRegistry == null ) {
+			return;
+		}
+
+		if ( ServiceRegistryAwareService.class.isInstance( primaryRegistry ) ) {
+			ServiceRegistryAwareService.class.cast( primaryRegistry ).injectServices( serviceRegistry );
+		}
+	}
+
+	@Override
+	public List<Manageable> getRealManageables() {
+		if ( primaryRegistry != null ) {
+			if ( Manageable.class.isInstance( primaryRegistry ) ) {
+				return Collections.singletonList( (Manageable) primaryRegistry );
+			}
+		}
+
+		return Collections.emptyList();
+	}
+
+	@Override
+	public void stop() {
+		if ( primaryRegistry == null ) {
+			return;
+		}
+
+		if ( Stoppable.class.isInstance( primaryRegistry ) ) {
+			Stoppable.class.cast( primaryRegistry ).stop();
+		}
 	}
 }

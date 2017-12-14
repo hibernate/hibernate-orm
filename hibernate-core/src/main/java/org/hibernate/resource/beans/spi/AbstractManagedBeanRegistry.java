@@ -22,9 +22,44 @@ public abstract class AbstractManagedBeanRegistry implements ManagedBeanRegistry
 	private Map<String,ManagedBean<?>> registrations = new HashMap<>();
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> ManagedBean<T> getBean(String beanName, Class<T> beanContract) {
-		final ManagedBean<T> existing = (ManagedBean<T>) registrations.get( beanName );
+	public <T> ManagedBean<T> getBean(Class<T> beanClass, boolean shouldRegistryManageLifecycle) {
+		if ( shouldRegistryManageLifecycle ) {
+			return getCacheableBean( beanClass );
+		}
+		else {
+			return createBean( beanClass );
+		}
+	}
+
+	@SuppressWarnings({"WeakerAccess", "unchecked"})
+	protected <T> ManagedBean<T> getCacheableBean(Class<T> beanClass) {
+		final String beanName = beanClass.getName();
+		final ManagedBean existing = registrations.get( beanName );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final ManagedBean<T> bean = createBean( beanClass );
+		registrations.put( beanName, bean );
+		return bean;
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	protected abstract <T> ManagedBean<T> createBean(Class<T> beanClass);
+
+	@Override
+	public <T> ManagedBean<T> getBean(String beanName, Class<T> beanContract, boolean shouldRegistryManageLifecycle) {
+		if ( shouldRegistryManageLifecycle ) {
+			return getCacheableBean( beanName, beanContract );
+		}
+		else {
+			return createBean( beanName, beanContract );
+		}
+	}
+
+	@SuppressWarnings({"WeakerAccess", "unchecked"})
+	protected  <T> ManagedBean<T> getCacheableBean(String beanName, Class<T> beanContract) {
+		final ManagedBean existing = registrations.get( beanName );
 		if ( existing != null ) {
 			return existing;
 		}
@@ -44,7 +79,7 @@ public abstract class AbstractManagedBeanRegistry implements ManagedBeanRegistry
 
 	@Override
 	public void stop() {
-		BeansMessageLogger.CDI_LOGGER.stoppingManagedBeanRegistry( this );
+		BeansMessageLogger.BEANS_LOGGER.stoppingManagedBeanRegistry( this );
 		forEachBean( ManagedBean::release );
 		registrations.clear();
 	}

@@ -43,8 +43,7 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		final ConfigurationService cfgSvc = serviceRegistry.getService( ConfigurationService.class );
 
-		final CompositeManagedBeanRegistry beanRegistry = new CompositeManagedBeanRegistry();
-
+		ManagedBeanRegistry primaryCdiBasedRegistry = null;
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// apply CDI support
@@ -53,15 +52,18 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 		final Object beanManagerRef = cfgSvc.getSettings().get( AvailableSettings.CDI_BEAN_MANAGER );
 		if ( beanManagerRef != null ) {
 			if ( !isCdiAvailable ) {
-				BeansMessageLogger.CDI_LOGGER.beanManagerButCdiNotAvailable( beanManagerRef );
+				BeansMessageLogger.BEANS_LOGGER.beanManagerButCdiNotAvailable( beanManagerRef );
 			}
 
-			beanRegistry.addDelegate(
-					ManagedBeanRegistryCdiBuilder.fromBeanManagerReference( beanManagerRef, serviceRegistry )
-			);
+			primaryCdiBasedRegistry = ManagedBeanRegistryCdiBuilder.fromBeanManagerReference( beanManagerRef, serviceRegistry );
+		}
+		else {
+			if ( isCdiAvailable ) {
+				BeansMessageLogger.BEANS_LOGGER.noBeanManagerButCdiAvailable();
+			}
 		}
 
-		return beanRegistry;
+		return new CompositeManagedBeanRegistry( primaryCdiBasedRegistry );
 	}
 
 	private static boolean isCdiAvailable(ClassLoaderService classLoaderService) {

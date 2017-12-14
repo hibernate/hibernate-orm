@@ -23,6 +23,9 @@ import org.hibernate.service.ServiceRegistry;
 /**
  * Utility class for helping deal with the reflection calls relating to CDI.
  *
+ * We need to to avoid statically linking CDI classed into the ClassLoader which
+ * would lead to errors if CDI is not available on the classpath.
+ *
  * @author Steve Ebersole
  */
 public class ManagedBeanRegistryCdiBuilder {

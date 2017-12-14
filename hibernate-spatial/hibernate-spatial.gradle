@@ -35,8 +35,7 @@ dependencies {
         transitive = true
     }
 
-    testRuntime( libraries.expression_language_api )
-    testRuntime( libraries.expression_language_impl )
+    testRuntime( libraries.expression_language )
 
     testRuntime('jaxen:jaxen:1.1')
     testRuntime(libraries.javassist)

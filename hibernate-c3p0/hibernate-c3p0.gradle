@@ -15,8 +15,7 @@ dependencies {
         transitive = true
     }
     // EL libraries are provided scope in Validator
-    testRuntime( libraries.expression_language_api )
-    testRuntime( libraries.expression_language_impl )
+    testRuntime( libraries.expression_language )
 
     if (db.equalsIgnoreCase("oracle")) {
         dependencies {

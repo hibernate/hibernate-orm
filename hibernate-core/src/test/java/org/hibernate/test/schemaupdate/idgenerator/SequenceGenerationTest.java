@@ -29,6 +29,7 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +41,7 @@ import static org.junit.Assert.assertThat;
  * @author Andrea Boriero
  */
 @RequiresDialect(H2Dialect.class)
-public class SequenceGenerationTest {
+public class SequenceGenerationTest extends BaseUnitTestCase {
 	private StandardServiceRegistry ssr;
 	private File output;
 	private MetadataImplementor metadata;

@@ -8,10 +8,8 @@ package org.hibernate.envers.internal.revisioninfo;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 
-import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.RevisionListener;
@@ -21,15 +19,18 @@ import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.spi.Setter;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 	private final String revisionInfoEntityName;
-	private final RevisionListener listener;
+	private final ManagedBean<? extends RevisionListener> listenerManagedBean;
 	private final Setter revisionTimestampSetter;
 	private final boolean timestampAsDate;
 	private final Constructor<?> revisionInfoClassConstructor;
@@ -45,30 +46,12 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 		this.revisionInfoEntityName = revisionInfoEntityName;
 		this.timestampAsDate = timestampAsDate;
 
-		revisionInfoClassConstructor = ReflectHelper.getDefaultConstructor( revisionInfoClass );
-		revisionTimestampSetter = ReflectionTools.getSetter( revisionInfoClass, revisionInfoTimestampData, serviceRegistry );
+		this.revisionInfoClassConstructor = ReflectHelper.getDefaultConstructor( revisionInfoClass );
+		this.revisionTimestampSetter = ReflectionTools.getSetter( revisionInfoClass, revisionInfoTimestampData, serviceRegistry );
 
-		if ( !listenerClass.equals( RevisionListener.class ) ) {
-			// This is not the default value.
-			try {
-				listener = (RevisionListener) ReflectHelper.getDefaultConstructor( listenerClass ).newInstance();
-			}
-			catch (InstantiationException e) {
-				throw new MappingException( e );
-			}
-			catch (IllegalAccessException e) {
-				throw new MappingException( e );
-			}
-			catch (InvocationTargetException e) {
-				throw new MappingException( e );
-			}
-		}
-		else {
-			// Default listener - none
-			listener = null;
-		}
+		this.listenerManagedBean = resolveRevisionListenerBean( listenerClass, serviceRegistry );
 
-		sessionCacheCleaner = new SessionCacheCleaner();
+		this.sessionCacheCleaner = new SessionCacheCleaner();
 	}
 
 	@Override
@@ -90,8 +73,8 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 		final long timestamp = System.currentTimeMillis();
 		revisionTimestampSetter.set( revisionInfo, timestampAsDate ? new Date( timestamp ) : timestamp, null );
 
-		if ( listener != null ) {
-			listener.newRevision( revisionInfo );
+		if ( listenerManagedBean != null ) {
+			listenerManagedBean.getBeanInstance().newRevision( revisionInfo );
 		}
 
 		return revisionInfo;
@@ -104,14 +87,26 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 			Serializable entityId,
 			RevisionType revisionType,
 			Object revisionInfo) {
-		if ( listener instanceof EntityTrackingRevisionListener ) {
-			( (EntityTrackingRevisionListener) listener ).entityChanged(
-					entityClass,
-					entityName,
-					entityId,
-					revisionType,
-					revisionInfo
-			);
+		if ( listenerManagedBean != null ) {
+			final RevisionListener listener = listenerManagedBean.getBeanInstance();
+			if ( EntityTrackingRevisionListener.class.isInstance( listener ) ) {
+				( (EntityTrackingRevisionListener) listener ).entityChanged(
+						entityClass,
+						entityName,
+						entityId,
+						revisionType,
+						revisionInfo
+				);
+			}
 		}
+	}
+
+	private ManagedBean<? extends RevisionListener> resolveRevisionListenerBean(
+			Class<? extends RevisionListener> listenerClass,
+			ServiceRegistry serviceRegistry) {
+		if ( !listenerClass.equals( RevisionListener.class ) ) {
+			return serviceRegistry.getService( ManagedBeanRegistry.class ).getBean( listenerClass, true );
+		}
+		return null;
 	}
 }

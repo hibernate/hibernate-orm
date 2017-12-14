@@ -14,7 +14,9 @@ ext {
     bytemanVersion = '4.0.0-BETA5'
     infinispanVersion = '8.2.5.Final'
     jnpVersion = '5.0.6.CR1'
-    elVersion = '2.2.4'
+
+    hibernateValidatorVersion = '6.0.7.Final'
+    elVersion = '3.0.1-b08'
 
     cdiVersion = '2.0'
     weldVersion = '3.0.0.Final'
@@ -109,10 +111,9 @@ ext {
             mockito:         'org.mockito:mockito-core:2.7.5',
             mockito_inline:  'org.mockito:mockito-inline:2.7.5',
 
-            validator:       'org.hibernate:hibernate-validator:5.2.4.Final',
+            validator:       "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",
             // EL required by Hibernate Validator at test runtime
-            expression_language_api:  "javax.el:javax.el-api:${elVersion}",
-            expression_language_impl: "org.glassfish.web:javax.el:${elVersion}",
+            expression_language: "org.glassfish:javax.el:${elVersion}",
 
             // required by Hibernate Validator at test runtime
             unified_el:      "org.glassfish:javax.el:3.0-b07",

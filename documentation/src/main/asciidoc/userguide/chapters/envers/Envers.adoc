@@ -520,7 +520,7 @@ As demonstrated by the example above, the username is properly set and propagate
 
 [WARNING]
 ====
-**This strategy is deprecated since version 5.2 as an alternative is going to be provided in Hibernate Envers 6.0.**
+**This strategy is deprecated since version 5.2.  The alternative is to use dependency injection offered as of version 5.3.**
 
 An alternative method to using the `org.hibernate.envers.RevisionListener` is to instead call the
 [line-through]#https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReader.html#getCurrentRevision-java.lang.Class-boolean-[`getCurrentRevision( Class<T> revisionEntityClass, boolean persist )`]#
@@ -531,6 +531,15 @@ The method accepts a `persist` parameter indicating whether the revision entity 
 
 `true`:: ensures that the returned entity has access to its identifier value (revision number), but the revision entity will be persisted regardless of whether there are any audited entities changed.
 `false`:: means that the revision number will be `null`, but the revision entity will be persisted only if some audited entities have changed.
+====
+
+[NOTE]
+====
+As of Hibernate Envers 5.3, dependency injection is now supported for a `RevisionListener`.
+
+This feature is up to the various dependency frameworks, such as CDI and Spring, to supply the
+necessary implementation during Hibernate ORM bootstrap to support injection.  If no qualifying
+implementation is supplied, the `RevisionListener` will be constructed without injection.
 ====
 
 [[envers-tracking-modified-entities-revchanges]]

@@ -202,7 +202,9 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient TypeResolver typeResolver;
 	private final transient TypeHelper typeHelper;
 	private final transient SessionFactoryOptions sessionFactoryOptions;
-	private final transient Map<String, RegionAccessStrategy> cacheAccessStrategiesMap = new HashMap();
+	private final transient Map<String, EntityRegionAccessStrategy> entityRegionAccessStrategyMap = new HashMap();
+	private final transient Map<String, CollectionRegionAccessStrategy> collectionRegionAccessStrategyMap = new HashMap();
+	private final transient Map<String, NaturalIdRegionAccessStrategy> naturalIdRegionAccessStrategyMap = new HashMap();
 
 	private DelayedDropAction delayedDropAction;
 	private transient StatisticsImplementor statisticsImplementor;
@@ -339,7 +341,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				// cache region is defined by the root-class in the hierarchy...
 				final EntityRegionAccessStrategy accessStrategy = determineEntityRegionAccessStrategy(
 						regionFactory,
-						cacheAccessStrategiesMap,
+						entityRegionAccessStrategyMap,
 						model,
 						cacheRegionName
 				);
@@ -347,7 +349,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				final NaturalIdRegionAccessStrategy naturalIdAccessStrategy = determineNaturalIdRegionAccessStrategy(
 						regionFactory,
 						cacheRegionPrefix,
-						cacheAccessStrategiesMap,
+						naturalIdRegionAccessStrategyMap,
 						model
 				);
 
@@ -405,7 +407,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				final String cacheRegionName = cacheRegionPrefix + model.getCacheRegionName();
 				final CollectionRegionAccessStrategy accessStrategy = determineCollectionRegionAccessStrategy(
 						regionFactory,
-						cacheAccessStrategiesMap,
+						collectionRegionAccessStrategyMap,
 						model,
 						cacheRegionName
 				);
@@ -1171,7 +1173,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public RegionAccessStrategy getSecondLevelCacheRegionAccessStrategy(String regionName) {
-		return cacheAccessStrategiesMap.get(regionName);
+		EntityRegionAccessStrategy entityStrategy = entityRegionAccessStrategyMap.get(regionName);
+		return entityStrategy != null ? entityStrategy : collectionRegionAccessStrategyMap.get(regionName);
 	}
 
 	public Region getNaturalIdCacheRegion(String regionName) {
@@ -1180,7 +1183,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public RegionAccessStrategy getNaturalIdCacheRegionAccessStrategy(String regionName) {
-		return cacheAccessStrategiesMap.get(regionName);
+		return naturalIdRegionAccessStrategyMap.get(regionName);
 	}
 
 	@SuppressWarnings( {"unchecked"})

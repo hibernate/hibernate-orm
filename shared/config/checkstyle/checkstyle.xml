@@ -12,7 +12,7 @@
 
     <module name="RegexpHeader">
         <!--<property name="header" value="/*\n * Hibernate, Relational Persistence for Idiomatic Java\n *\n * License: GNU Lesser General Public License (LGPL), version 2.1 or (later.|later)\n * See the lgpl.txt file in the root directory or (&lt;http://www.gnu.org/licenses/lgpl-2.1.html&gt;.|http://www.gnu.org/licenses/lgpl-2.1.html)\n */"/>-->
-        <property name="headerFile" value="shared/config/checkstyle/java.header"/>
+        <property name="headerFile" value="shared/config/checkstyle/license.header"/>
         <property name="fileExtensions" value="java,gradle,groovy"/>
     </module>
 

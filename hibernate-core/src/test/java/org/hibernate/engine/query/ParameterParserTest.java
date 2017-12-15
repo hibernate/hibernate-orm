@@ -124,5 +124,15 @@ public class ParameterParserTest {
         assertTrue(recognizer.getNamedParameterDescriptionMap().containsKey("pxyz"));
         assertEquals( 2, recognizer.getNamedParameterDescriptionMap().size() );
     }
+    
+    @Test
+    public void testParseJPAPositionalParameter() {
+        ParamLocationRecognizer recognizer = new ParamLocationRecognizer( 0 );
+        ParameterParser.parse("from Stock s where s.stockCode = ?1 and s.xyz = ?1", recognizer);
+        assertEquals( 1, recognizer.getOrdinalParameterDescriptionMap().size() );
+        
+        ParameterParser.parse("from Stock s where s.stockCode = ?1 and s.xyz = ?2", recognizer);
+        assertEquals( 2, recognizer.getOrdinalParameterDescriptionMap().size() );
+    }
 
 }

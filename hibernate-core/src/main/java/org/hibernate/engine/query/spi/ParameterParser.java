@@ -181,7 +181,7 @@ public class ParameterParser {
 				}
 				else if ( c == '?' ) {
 					// could be either an ordinal or JPA-positional parameter
-					if ( indx < stringLength - 2 && Character.isDigit( sqlString.charAt( indx + 1 ) ) ) {
+					if ( indx < stringLength - 1 && Character.isDigit( sqlString.charAt( indx + 1 ) ) ) {
 						// a peek ahead showed this as an JPA-positional parameter
 						final int right = StringHelper.firstIndexOfChar( sqlString, ParserHelper.HQL_SEPARATORS, indx + 1 );
 						final int chopLocation = right < 0 ? sqlString.length() : right;

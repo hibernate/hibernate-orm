@@ -22,8 +22,6 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.descriptor.api.Descriptors;
 import org.jboss.shrinkwrap.descriptor.api.persistence21.PersistenceDescriptor;
 import org.jboss.shrinkwrap.descriptor.api.persistence21.PersistenceUnitTransactionType;
-
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -37,7 +35,6 @@ import org.junit.runner.RunWith;
  * @author Gunnar Morling
  */
 @RunWith(Arquillian.class)
-@Ignore
 public class HibernateModulesOnWildflyTest {
 
 	private static final String ORM_VERSION = Session.class.getPackage().getImplementationVersion();

@@ -24,6 +24,7 @@ ext {
 
     // e.g. "10" for WildFly 10.x
     wildFlyMajorVersion = wildFlyVersionComponents[0];
+    wildFlyJPA22PatchVersion = '1.0.0.Beta1'
 
     artifactClassifier = "wildfly-${wildFlyMajorVersion}-dist"
 
@@ -52,6 +53,7 @@ configurations {
     }
 
     wildflyDist
+    wildflyJPA22Patch
     byteBuddy
 }
 
@@ -59,6 +61,7 @@ dependencies {
     jipijapa "org.wildfly:jipijapa-hibernate5:${wildflyVersion}"
     wildflyDist "org.wildfly:wildfly-dist:${wildflyVersion}@zip"
     byteBuddy libraries.byteBuddy
+    wildflyJPA22Patch "org.hibernate.javax.persistence:hibernate-jpa-api-2.2-wildflymodules:${wildFlyJPA22PatchVersion}:wildfly-${wildflyVersion}-patch@zip"
 
     testCompile project( ":hibernate-core" )
     testCompile project( ":hibernate-envers" )
@@ -179,13 +182,30 @@ task installWildFly(type: Copy) {
     into wildFlyInstallDirBase
 }
 
+task patchWildFlytoJPA22(type: Copy, dependsOn: [installWildFly]) {
+    description = 'Patch the WildFly server to expose the JPA 2.2 API (instead of JPA 2.1)'
+    from configurations.wildflyJPA22Patch
+    into "$buildDir/jpa22-wildfly-patch"
+    doLast {
+        exec {
+            executable "$wildFlyInstallDirBase/wildfly-$wildflyVersion/bin/jboss-cli.sh"
+            //TODO find out how to reliably skip applying this patch when already applied?
+            //the current solution is close by making this task a 'Copy' rather than Exec,
+            //using the 'into' section as a marker for this being already done,
+            //but it's not very reliable so we need to enable 'ignoreExitValue'.
+            ignoreExitValue = true
+            args "patch apply $buildDir/jpa22-wildfly-patch/hibernate-jpa-api-2.2-wildflymodules-${wildFlyJPA22PatchVersion}-wildfly-$wildflyVersion-patch.zip"
+        }
+    }
+}
+
 task installHibernateModule( type:Copy, dependsOn: [createModulesZip, installWildFly]) {
     duplicatesStrategy DuplicatesStrategy.EXCLUDE
     from zipTree( createModulesZip.archivePath )
     into "${wildFlyInstallDir}/modules"
 }
 
-task prepareWildFlyForTests( dependsOn: [installWildFly, installHibernateModule] )
+task prepareWildFlyForTests( dependsOn: [installWildFly, installHibernateModule, patchWildFlytoJPA22] )
 
 test.dependsOn prepareWildFlyForTests
 

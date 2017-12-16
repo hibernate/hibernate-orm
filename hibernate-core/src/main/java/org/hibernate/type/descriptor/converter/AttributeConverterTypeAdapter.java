@@ -6,8 +6,7 @@
  */
 package org.hibernate.type.descriptor.converter;
 
-import javax.persistence.AttributeConverter;
-
+import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -31,7 +30,7 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 
 	private final Class modelType;
 	private final Class jdbcType;
-	private final AttributeConverter<? extends T,?> attributeConverter;
+	private final JpaAttributeConverter<? extends T,?> attributeConverter;
 
 	private final MutabilityPlan<T> mutabilityPlan;
 
@@ -39,7 +38,7 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 	public AttributeConverterTypeAdapter(
 			String name,
 			String description,
-			AttributeConverter<? extends T,?> attributeConverter,
+			JpaAttributeConverter<? extends T,?> attributeConverter,
 			SqlTypeDescriptor sqlTypeDescriptorAdapter,
 			Class modelType,
 			Class jdbcType,
@@ -51,10 +50,9 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 		this.jdbcType = jdbcType;
 		this.attributeConverter = attributeConverter;
 
-		this.mutabilityPlan =
-				entityAttributeJavaTypeDescriptor.getMutabilityPlan().isMutable() ?
-						new AttributeConverterMutabilityPlanImpl<T>( attributeConverter ) :
-						ImmutableMutabilityPlan.INSTANCE;
+		this.mutabilityPlan = entityAttributeJavaTypeDescriptor.getMutabilityPlan().isMutable()
+				? new AttributeConverterMutabilityPlanImpl<T>( attributeConverter )
+				: ImmutableMutabilityPlan.INSTANCE;
 
 		log.debug( "Created AttributeConverterTypeAdapter -> " + name );
 	}
@@ -72,7 +70,7 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 		return jdbcType;
 	}
 
-	public AttributeConverter<? extends T,?> getAttributeConverter() {
+	public JpaAttributeConverter<? extends T,?> getAttributeConverter() {
 		return attributeConverter;
 	}
 

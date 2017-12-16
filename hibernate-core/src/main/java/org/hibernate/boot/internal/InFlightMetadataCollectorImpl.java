@@ -36,6 +36,10 @@ import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.convert.internal.AttributeConverterManager;
+import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
@@ -46,7 +50,7 @@ import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
-import org.hibernate.boot.spi.AttributeConverterAutoApplyHandler;
+import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -346,22 +350,19 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// attribute converters
 
 	@Override
-	public void addAttributeConverter(AttributeConverterDefinition definition) {
+	public void addAttributeConverter(Class<? extends AttributeConverter> converterClass) {
 		attributeConverterManager.addConverter(
-				AttributeConverterDescriptorImpl.create(
-						definition,
-						classmateContext
-				)
+				new ClassBasedConverterDescriptor( converterClass, getClassmateContext() )
 		);
 	}
 
 	@Override
-	public void addAttributeConverter(Class<? extends AttributeConverter> converterClass) {
-		addAttributeConverter( AttributeConverterDefinition.from( converterClass ) );
+	public void addAttributeConverter(ConverterDescriptor descriptor) {
+		attributeConverterManager.addConverter( descriptor );
 	}
 
 	@Override
-	public AttributeConverterAutoApplyHandler getAttributeConverterAutoApplyHandler() {
+	public ConverterAutoApplyHandler getAttributeConverterAutoApplyHandler() {
 		return attributeConverterManager;
 	}
 

@@ -1,6 +1,13 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
  * Copyright (c) 2014, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
@@ -21,34 +28,36 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.jpa.convert;
-
-import java.math.BigDecimal;
+package org.hibernate.test.cdi.converters.legacy;
 
 import javax.persistence.AttributeConverter;
 
 /**
+ * This converter adds 10 to each integer stored in the database, and remove
+ * 10 from integer retrieved from the database. It is mainly intended to test
+ * that converters are always applied when they should.
+ *
  * @author Etienne Miret
  */
-public class BigDecimalToStringConverter implements AttributeConverter<BigDecimal, String> {
+public class AddTenConverter implements AttributeConverter<Integer, Integer> {
 
 	@Override
-	public String convertToDatabaseColumn(BigDecimal attribute) {
+	public Integer convertToDatabaseColumn(final Integer attribute) {
 		if ( attribute == null ) {
 			return null;
 		}
 		else {
-			return attribute.toString();
+			return new Integer( attribute.intValue() + 10 );
 		}
 	}
 
 	@Override
-	public BigDecimal convertToEntityAttribute(String dbData) {
+	public Integer convertToEntityAttribute(final Integer dbData) {
 		if ( dbData == null ) {
 			return null;
 		}
 		else {
-			return new BigDecimal( dbData );
+			return new Integer( dbData.intValue() - 10 );
 		}
 	}
 

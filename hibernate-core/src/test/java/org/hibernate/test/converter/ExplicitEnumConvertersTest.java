@@ -94,7 +94,7 @@ public class ExplicitEnumConvertersTest extends BaseNonConfigCoreFunctionalTestC
 				AttributeConverterTypeAdapter.class,
 				theDatePropertyType
 		);
-		assertTyping( MediaTypeConverter.class, type.getAttributeConverter() );
+		assertTrue( MediaTypeConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaType() ) );
 
 		resetFlags();
 

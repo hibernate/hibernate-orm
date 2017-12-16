@@ -8,11 +8,11 @@ package org.hibernate.hql.internal.ast.tree;
 
 import java.sql.Types;
 import java.util.Locale;
-import javax.persistence.AttributeConverter;
 
 import org.hibernate.QueryException;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
+import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.SingleColumnType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
@@ -92,8 +92,8 @@ public class LiteralNode extends AbstractSelectExpression implements HqlSqlToken
 	protected String determineConvertedValue(AttributeConverterTypeAdapter converterTypeAdapter, Object literalValue) {
 		if ( getDataType().getReturnedClass().equals( converterTypeAdapter.getModelType() ) ) {
 			// apply the converter
-			final AttributeConverter converter = converterTypeAdapter.getAttributeConverter();
-			final Object converted = converter.convertToDatabaseColumn( getLiteralValue() );
+			final JpaAttributeConverter converter = converterTypeAdapter.getAttributeConverter();
+			final Object converted = converter.toRelationalValue( getLiteralValue() );
 			if ( isCharacterData( converterTypeAdapter.sqlType() ) ) {
 				return "'" + converted.toString() + "'";
 			}

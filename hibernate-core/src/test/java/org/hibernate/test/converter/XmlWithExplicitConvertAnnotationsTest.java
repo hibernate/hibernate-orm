@@ -103,7 +103,7 @@ public class XmlWithExplicitConvertAnnotationsTest extends BaseNonConfigCoreFunc
 				AttributeConverterTypeAdapter.class,
 				theDatePropertyType
 		);
-		assertTyping( LongToDateConverter.class, type.getAttributeConverter() );
+		assertTrue( LongToDateConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaType() ) );
 
 		resetFlags();
 

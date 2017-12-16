@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test simple application of Convert annotation via XML.
@@ -58,7 +59,7 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 		PersistentClass pc = metadata.getEntityBinding( TheEntity.class.getName() );
 		Type type = pc.getProperty( "it" ).getType();
 		AttributeConverterTypeAdapter adapter = assertTyping( AttributeConverterTypeAdapter.class, type );
-		assertTyping( SillyStringConverter.class, adapter.getAttributeConverter() );
+		assertTrue( SillyStringConverter.class.isAssignableFrom( adapter.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaType() ) );
 	}
 
 	/**

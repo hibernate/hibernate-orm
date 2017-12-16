@@ -33,6 +33,7 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertTrue;
@@ -171,6 +172,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 		final Sequence sequence = bootModel.getDatabase()
 				.getDefaultNamespace()
 				.locateSequence( Identifier.toIdentifier( "my_db_sequence" ) );
+		assertThat( sequence, notNullValue() );
 		final String[] sqlCreateStrings = new H2Dialect().getSequenceExporter().getSqlCreateStrings(
 				sequence,
 				bootModel

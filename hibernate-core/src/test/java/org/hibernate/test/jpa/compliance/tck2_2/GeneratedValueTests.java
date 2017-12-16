@@ -29,6 +29,7 @@ import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -44,6 +45,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
+@RequiresDialect( value = H2Dialect.class, comment = "Really, these tests are independent of the underlying database - but Dialects that do not support sequences cause some assertions to erroneously fail" )
 public class GeneratedValueTests extends BaseUnitTestCase {
 	@Test
 	public void baseline() {

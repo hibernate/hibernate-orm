@@ -10,6 +10,7 @@ import org.hibernate.jpamodelgen.test.util.TestForIssue;
 import org.hibernate.jpamodelgen.util.StringUtil;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -34,5 +35,10 @@ public class StringUtilTest {
 	@TestForIssue(jiraKey = "METAGEN-76")
 	public void testHashCodeNotAProperty() {
 		assertFalse( StringUtil.isProperty( "hashCode", "Integer" ) );
+	}
+
+	@Test
+	public void testGetUpperUnderscoreCaseFromLowerCamelCase(){
+		assertEquals("USER_PARENT_NAME", StringUtil.getUpperUnderscoreCaseFromLowerCamelCase("userParentName"));
 	}
 }

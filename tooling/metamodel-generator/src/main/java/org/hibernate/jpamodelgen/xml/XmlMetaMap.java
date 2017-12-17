@@ -20,7 +20,7 @@ public class XmlMetaMap extends XmlMetaCollection {
 		this.keyType = keyType;
 	}
 
-	public String getDeclarationString() {
+	public String getAttributeDeclarationString() {
 		final MetaEntity hostingEntity = getHostingEntity();
 		return new StringBuilder().append( "public static volatile " )
 				.append( hostingEntity.importType( getMetaType() ) )

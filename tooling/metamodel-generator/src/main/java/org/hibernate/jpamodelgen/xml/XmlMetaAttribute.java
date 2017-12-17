@@ -8,6 +8,10 @@ package org.hibernate.jpamodelgen.xml;
 
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.MetaEntity;
+import org.hibernate.jpamodelgen.util.StringUtil;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Hardy Ferentschik
@@ -24,12 +28,33 @@ public abstract class XmlMetaAttribute implements MetaAttribute {
 		this.type = type;
 	}
 
-	@Override
-	public String getDeclarationString() {
+	protected String getAttributeDeclarationString() {
 		return "public static volatile " + hostingEntity.importType( getMetaType() )
 				+ "<" + hostingEntity.importType( hostingEntity.getQualifiedName() )
 				+ ", " + hostingEntity.importType( getTypeDeclaration() )
 				+ "> " + getPropertyName() + ";";
+	}
+
+	protected String getAttributeNameDeclarationString(){
+		return new StringBuilder().append("public static final ")
+				.append(hostingEntity.importType(String.class.getName()))
+				.append(" ")
+				.append(StringUtil.getUpperUnderscoreCaseFromLowerCamelCase(getPropertyName()))
+				.append(META_ATTRIBUTE_NAME_SUFFIX)
+				.append(" = ")
+				.append("\"")
+				.append(getPropertyName())
+				.append("\"")
+				.append(";")
+				.toString();
+	}
+
+	@Override
+	public List<String> getDeclarationStrings() {
+		List<String> list = new ArrayList<String>(2);
+		list.add(getAttributeDeclarationString());
+		list.add(getAttributeNameDeclarationString());
+		return list;
 	}
 
 	public String getPropertyName() {

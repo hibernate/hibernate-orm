@@ -6,11 +6,15 @@
  */
 package org.hibernate.jpamodelgen.model;
 
+import java.util.List;
+
 /**
  * @author Hardy Ferentschik
  */
 public interface MetaAttribute {
-	String getDeclarationString();
+	String META_ATTRIBUTE_NAME_SUFFIX = "_";
+
+	List<String> getDeclarationStrings();
 
 	String getMetaType();
 

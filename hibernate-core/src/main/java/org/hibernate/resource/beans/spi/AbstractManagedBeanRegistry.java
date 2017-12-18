@@ -27,7 +27,7 @@ public abstract class AbstractManagedBeanRegistry implements ManagedBeanRegistry
 			return getCacheableBean( beanClass );
 		}
 		else {
-			return createBean( beanClass );
+			return createBean( beanClass, shouldRegistryManageLifecycle );
 		}
 	}
 
@@ -39,13 +39,13 @@ public abstract class AbstractManagedBeanRegistry implements ManagedBeanRegistry
 			return existing;
 		}
 
-		final ManagedBean<T> bean = createBean( beanClass );
+		final ManagedBean<T> bean = createBean( beanClass, true );
 		registrations.put( beanName, bean );
 		return bean;
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected abstract <T> ManagedBean<T> createBean(Class<T> beanClass);
+	protected abstract <T> ManagedBean<T> createBean(Class<T> beanClass, boolean shouldRegistryManageLifecycle);
 
 	@Override
 	public <T> ManagedBean<T> getBean(String beanName, Class<T> beanContract, boolean shouldRegistryManageLifecycle) {
@@ -53,7 +53,7 @@ public abstract class AbstractManagedBeanRegistry implements ManagedBeanRegistry
 			return getCacheableBean( beanName, beanContract );
 		}
 		else {
-			return createBean( beanName, beanContract );
+			return createBean( beanName, beanContract, shouldRegistryManageLifecycle );
 		}
 	}
 
@@ -64,13 +64,13 @@ public abstract class AbstractManagedBeanRegistry implements ManagedBeanRegistry
 			return existing;
 		}
 
-		final ManagedBean<T> bean = createBean( beanName, beanContract );
+		final ManagedBean<T> bean = createBean( beanName, beanContract, false );
 		registrations.put( beanName, bean );
 		return bean;
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected abstract <T> ManagedBean<T> createBean(String beanName, Class<T> beanContract);
+	protected abstract <T> ManagedBean<T> createBean(String beanName, Class<T> beanContract, boolean shouldRegistryManageLifecycle);
 
 	@SuppressWarnings("WeakerAccess")
 	protected void forEachBean(Consumer<ManagedBean<?>> consumer) {

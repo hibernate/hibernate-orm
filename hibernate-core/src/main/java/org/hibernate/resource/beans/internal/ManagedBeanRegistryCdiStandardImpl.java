@@ -34,12 +34,14 @@ class ManagedBeanRegistryCdiStandardImpl extends AbstractManagedBeanRegistry {
 	}
 
 	@Override
-	protected <T> ManagedBean<T> createBean(Class<T> beanClass) {
-		return JpaCdiLifecycleManagementStrategy.INSTANCE.createBean( beanManager, beanClass );
+	protected <T> ManagedBean<T> createBean(Class<T> beanClass, boolean shouldRegistryManageLifecycle) {
+		return Helper.INSTANCE.getLifecycleManagementStrategy( shouldRegistryManageLifecycle )
+				.createBean( beanManager, beanClass );
 	}
 
 	@Override
-	protected <T> ManagedBean<T> createBean(String beanName, Class<T> beanContract) {
-		return StandardCdiLifecycleManagementStrategy.INSTANCE.createBean( beanManager, beanName, beanContract );
+	protected <T> ManagedBean<T> createBean(String beanName, Class<T> beanContract, boolean shouldRegistryManageLifecycle) {
+		return Helper.INSTANCE.getLifecycleManagementStrategy( shouldRegistryManageLifecycle )
+				.createBean( beanManager, beanName, beanContract );
 	}
 }

@@ -135,6 +135,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private LiteralHandlingMode criteriaLiteralHandlingMode;
 	private boolean jdbcStyleParamsZeroBased;
 	private final JpaCompliance jpaCompliance;
+	private final boolean failOnPaginationOverCollectionFetchEnabled;
 
 	public SessionFactoryOptionsImpl(SessionFactoryOptionsState state) {
 		this.serviceRegistry = state.getServiceRegistry();
@@ -222,6 +223,8 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.jdbcTimeZone = state.getJdbcTimeZone();
 
 		this.jpaCompliance = state.getJpaCompliance();
+
+		this.failOnPaginationOverCollectionFetchEnabled = state.isFailOnPaginationOverCollectionFetchEnabled();
 	}
 
 	@Override
@@ -576,5 +579,10 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public JpaCompliance getJpaCompliance() {
 		return jpaCompliance;
+	}
+
+	@Override
+	public boolean isFailOnPaginationOverCollectionFetchEnabled() {
+		return failOnPaginationOverCollectionFetchEnabled;
 	}
 }

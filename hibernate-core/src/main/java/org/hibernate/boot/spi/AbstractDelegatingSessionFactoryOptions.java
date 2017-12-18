@@ -406,4 +406,9 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	public JpaCompliance getJpaCompliance() {
 		return delegate.getJpaCompliance();
 	}
+
+	@Override
+	public boolean isFailOnPaginationOverCollectionFetchEnabled() {
+		return delegate.isFailOnPaginationOverCollectionFetchEnabled();
+	}
 }

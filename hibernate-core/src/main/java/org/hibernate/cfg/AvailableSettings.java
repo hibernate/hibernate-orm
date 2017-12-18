@@ -1151,7 +1151,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 *     <li>{@link org.hibernate.engine.query.spi.FilterQueryPlan}</li>
 	 *     <li>{@link org.hibernate.engine.query.spi.NativeSQLQueryPlan}</li>
 	 * </ul>
-	 * 
+	 *
 	 * maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 2048.
 	 */
 	String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
@@ -1531,14 +1531,14 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * {@code LEGACY} is the default value.
 	 */
 	String BATCH_FETCH_STYLE = "hibernate.batch_fetch_style";
-	
+
 	/**
 	 * A transaction can be rolled back by another thread ("tracking by thread")
 	 * -- not the original application. Examples of this include a JTA
 	 * transaction timeout handled by a background reaper thread.  The ability
 	 * to handle this situation requires checking the Thread ID every time
 	 * Session is called.  This can certainly have performance considerations.
-	 * 
+	 *
 	 * Default is <code>true</code> (enabled).
 	 */
 	String JTA_TRACK_BY_THREAD = "hibernate.jta.track_by_thread";
@@ -1568,7 +1568,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * SchemaUpdate needs to create these constraints, but DB's
 	 * support for finding existing constraints is extremely inconsistent. Further,
 	 * non-explicitly-named unique constraints use randomly generated characters.
-	 * 
+	 *
 	 * Therefore, select from these strategies.
 	 * {@link org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy#DROP_RECREATE_QUIETLY} (DEFAULT):
 	 * 			Attempt to drop, then (re-)create each unique constraint.
@@ -1810,4 +1810,10 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 *
 	 */
 	String TABLE_GENERATOR_STORE_LAST_USED = "hibernate.id.generator.stored_last_used";
+
+	/**
+	 * Raises an exception when in-memory pagination over collection fetch is about to be performed.
+	 * Disabled by default. Set to true to enable.
+	 */
+	String FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH = "hibernate.query.fail_on_pagination_over_collection_fetch";
 }

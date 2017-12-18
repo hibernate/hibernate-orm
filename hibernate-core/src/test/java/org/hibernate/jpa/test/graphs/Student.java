@@ -31,7 +31,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 	@NamedEntityGraph(
 		name = "Student.Full",
 		attributeNodes = {
-			@NamedAttributeNode(value = "courses")
+			@NamedAttributeNode(value = Student_.COURSES)
 		}
 	)
 })

@@ -93,6 +93,10 @@ public final class StringUtil {
 		}
 	}
 
+	public static String getUpperUnderscoreCaseFromLowerCamelCase(String lowerCamelCaseString){
+		return lowerCamelCaseString.replaceAll("(.)(\\p{Upper})", "$1_$2").toUpperCase();
+	}
+
 	private static boolean startsWithSeveralUpperCaseLetters(String string) {
 		return string.length() > 1 &&
 				Character.isUpperCase( string.charAt( 0 ) ) &&

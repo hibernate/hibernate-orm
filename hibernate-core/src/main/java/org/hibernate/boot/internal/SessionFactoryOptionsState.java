@@ -203,4 +203,8 @@ public interface SessionFactoryOptionsState {
 	default LiteralHandlingMode getCriteriaLiteralHandlingMode() {
 		return LiteralHandlingMode.AUTO;
 	}
+
+	default boolean isFailOnPaginationOverCollectionFetchEnabled() {
+		return false;
+	}
 }

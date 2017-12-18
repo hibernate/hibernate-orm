@@ -577,6 +577,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 		private Map<String, SQLFunction> sqlFunctions;
 
+		private boolean failOnPaginationOverCollectionFetchEnabled;
+
 		public SessionFactoryOptionsStateStandardImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
 
@@ -789,6 +791,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 			this.criteriaLiteralHandlingMode = LiteralHandlingMode.interpret(
 				configurationSettings.get( CRITERIA_LITERAL_HANDLING_MODE )
+			);
+
+			this.failOnPaginationOverCollectionFetchEnabled = ConfigurationHelper.getBoolean(
+					FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH,
+					configurationSettings,
+					false
 			);
 		}
 
@@ -1243,6 +1251,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		public LiteralHandlingMode getCriteriaLiteralHandlingMode() {
 			return this.criteriaLiteralHandlingMode;
 		}
+
+		@Override
+		public boolean isFailOnPaginationOverCollectionFetchEnabled() {
+			return this.failOnPaginationOverCollectionFetchEnabled;
+		}
 	}
 
 	private static Supplier<? extends Interceptor> interceptorSupplier(Class<? extends Interceptor> clazz) {
@@ -1591,5 +1604,9 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public LiteralHandlingMode getCriteriaLiteralHandlingMode() {
 		return options.getCriteriaLiteralHandlingMode();
+	}
+	@Override
+	public boolean isFailOnPaginationOverCollectionFetchEnabled() {
+		return options.isFailOnPaginationOverCollectionFetchEnabled();
 	}
 }

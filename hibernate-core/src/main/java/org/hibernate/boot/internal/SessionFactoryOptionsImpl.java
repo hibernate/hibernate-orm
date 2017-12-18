@@ -131,6 +131,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final Map<String, SQLFunction> sqlFunctions;
 	private boolean queryParametersValidationEnabled;
 	private LiteralHandlingMode criteriaLiteralHandlingMode;
+	private final boolean failOnPaginationOverCollectionFetchEnabled;
 
 	public SessionFactoryOptionsImpl(SessionFactoryOptionsState state) {
 		this.serviceRegistry = state.getServiceRegistry();
@@ -213,6 +214,8 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 
 		this.queryParametersValidationEnabled = state.isQueryParametersValidationEnabled();
 		this.criteriaLiteralHandlingMode = state.getCriteriaLiteralHandlingMode();
+
+		this.failOnPaginationOverCollectionFetchEnabled = state.isFailOnPaginationOverCollectionFetchEnabled();
 	}
 
 	@Override
@@ -557,5 +560,10 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public LiteralHandlingMode getCriteriaLiteralHandlingMode() {
 		return criteriaLiteralHandlingMode;
+	}
+
+	@Override
+	public boolean isFailOnPaginationOverCollectionFetchEnabled() {
+		return failOnPaginationOverCollectionFetchEnabled;
 	}
 }

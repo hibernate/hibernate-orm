@@ -23,6 +23,24 @@ public class Helper {
 	}
 
 	@SuppressWarnings("unchecked")
+	public <T> Bean<T> getBean(Class<T> beanContract, BeanManager beanManager) {
+		Set<Bean<?>> beans = beanManager.getBeans( beanContract );
+
+		if ( beans.isEmpty() ) {
+			throw new IllegalArgumentException(
+					"BeanManager returned no matching beans: contract = " + beanContract.getName()
+			);
+		}
+		if ( beans.size() > 1 ) {
+			throw new IllegalArgumentException(
+					"BeanManager returned multiple matching beans: contract = " + beanContract.getName()
+			);
+		}
+
+		return (Bean<T>) beans.iterator().next();
+	}
+
+	@SuppressWarnings("unchecked")
 	public <T> Bean<T> getNamedBean(String beanName, Class<T> beanContract, BeanManager beanManager) {
 		Set<Bean<?>> beans = beanManager.getBeans( beanContract, new NamedBeanQualifier( beanName ) );
 

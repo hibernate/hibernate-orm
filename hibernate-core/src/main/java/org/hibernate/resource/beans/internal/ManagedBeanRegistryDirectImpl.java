@@ -23,12 +23,15 @@ public class ManagedBeanRegistryDirectImpl extends AbstractManagedBeanRegistry {
 	}
 
 	@Override
-	protected <T> ManagedBean<T> createBean(Class<T> beanClass) {
+	protected <T> ManagedBean<T> createBean(Class<T> beanClass, boolean shouldRegistryManageLifecycle) {
 		return new DirectInstantiationManagedBeanImpl<>( beanClass );
 	}
 
 	@Override
-	protected <T> ManagedBean<T> createBean(String beanName, Class<T> beanContract) {
+	protected <T> ManagedBean<T> createBean(
+			String beanName,
+			Class<T> beanContract,
+			boolean shouldRegistryManageLifecycle) {
 		return new DirectInstantiationManagedBeanImpl<>( beanContract );
 	}
 }

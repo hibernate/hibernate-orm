@@ -39,13 +39,15 @@ public class ManagedBeanRegistryCdiExtendedImpl
 	}
 
 	@Override
-	protected <T> ManagedBean<T> createBean(Class<T> beanClass) {
-		return new LazilyInitializedManagedBeanImpl<>( beanClass, JpaCdiLifecycleManagementStrategy.INSTANCE );
+	protected <T> ManagedBean<T> createBean(Class<T> beanClass, boolean shouldRegistryManageLifecycle) {
+		return new LazilyInitializedManagedBeanImpl<>( beanClass,
+				Helper.INSTANCE.getLifecycleManagementStrategy( shouldRegistryManageLifecycle ) );
 	}
 
 	@Override
-	protected <T> ManagedBean<T> createBean(String beanName, Class<T> beanContract) {
-		return new LazilyInitializedNamedManagedBeanImpl<>( beanName, beanContract, StandardCdiLifecycleManagementStrategy.INSTANCE );
+	protected <T> ManagedBean<T> createBean(String beanName, Class<T> beanContract, boolean shouldRegistryManageLifecycle) {
+		return new LazilyInitializedNamedManagedBeanImpl<>( beanName, beanContract,
+				Helper.INSTANCE.getLifecycleManagementStrategy( shouldRegistryManageLifecycle ) );
 	}
 
 	@Override

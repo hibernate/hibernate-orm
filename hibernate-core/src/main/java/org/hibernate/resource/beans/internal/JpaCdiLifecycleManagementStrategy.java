@@ -14,6 +14,18 @@ import javax.enterprise.inject.spi.InjectionTarget;
 
 import org.hibernate.resource.beans.spi.ManagedBean;
 
+/**
+ * A {@link CdiLifecycleManagementStrategy} to use when JPA compliance is required
+ * (i.e. when the bean lifecycle is to be managed by the JPA runtime, not the CDI runtime).
+ *
+ * The main characteristic of this strategy is that each requested bean is instantiated directly
+ * and guaranteed to not be shared in the CDI context.
+ *
+ * In particular, @Singleton-scoped or @ApplicationScoped beans are instantiated directly by this strategy,
+ * even if there is already an instance in the CDI context.
+ * This means singletons are not really singletons, but this seems to be the behavior required by
+ * the JPA 2.2 spec.
+ */
 class JpaCdiLifecycleManagementStrategy implements CdiLifecycleManagementStrategy {
 
 	static final JpaCdiLifecycleManagementStrategy INSTANCE = new JpaCdiLifecycleManagementStrategy();
@@ -44,7 +56,7 @@ class JpaCdiLifecycleManagementStrategy implements CdiLifecycleManagementStrateg
 
 		T beanInstance = bean.create( creationalContext );
 
-		return new NamedJpaManagedBeanImpl<>( beanClass, creationalContext, beanInstance );
+		return new NamedJpaManagedBeanImpl<>( beanClass, bean, creationalContext, beanInstance );
 	}
 
 	private static class JpaManagedBeanImpl<T> implements ManagedBean<T> {
@@ -82,13 +94,14 @@ class JpaCdiLifecycleManagementStrategy implements CdiLifecycleManagementStrateg
 
 	private static class NamedJpaManagedBeanImpl<T> implements ManagedBean<T> {
 		private final Class<T> beanClass;
+		private final Bean<T> bean;
 		private final CreationalContext<T> creationContext;
 		private final T beanInstance;
 
 		private NamedJpaManagedBeanImpl(
-				Class<T> beanClass,
-				CreationalContext<T> creationContext, T beanInstance) {
+				Class<T> beanClass, Bean<T> bean, CreationalContext<T> creationContext, T beanInstance) {
 			this.beanClass = beanClass;
+			this.bean = bean;
 			this.creationContext = creationContext;
 			this.beanInstance = beanInstance;
 		}
@@ -105,7 +118,7 @@ class JpaCdiLifecycleManagementStrategy implements CdiLifecycleManagementStrateg
 
 		@Override
 		public void release() {
-			creationContext.release();
+			bean.destroy( beanInstance, creationContext );
 		}
 	}
 }

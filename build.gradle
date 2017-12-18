@@ -455,7 +455,7 @@ subprojects { subProject ->
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Publishing
-	if ( !subProject.name.equals( 'documentation' ) || !subProject.name.equals( 'hibernate-infinispan' ) ) {
+	if ( !subProject.name.equals( 'documentation' ) && !subProject.name.equals( 'hibernate-infinispan' ) ) {
 		// do not configure publishing for the documentation module
 		publishing {
 			publications {

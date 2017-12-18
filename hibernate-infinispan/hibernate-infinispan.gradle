@@ -10,21 +10,23 @@ mavenPom {
 	description = '(deprecated - use org.infinispan:infinispan-hibernate-cache instead) Integration for Infinispan into Hibernate as a second-level caching service'
 }
 
-def osgiDescription() {
-	return mavenPom.description
-}
+jar.enabled = false
 
-jar {
-	// The OSGi JAR manifest support does not like a non-existent classes dir,
-	// so make sure we dont use the OSGi one :)
-	manifest = null
-}
-
-sourcesJar {
-	// The OSGi JAR manifest support does not like a non-existent classes dir,
-	// so make sure we dont use the OSGi one :)
-	manifest = null
-}
+//def osgiDescription() {
+//	return mavenPom.description
+//}
+//
+//jar {
+//	// The OSGi JAR manifest support does not like a non-existent classes dir,
+//	// so make sure we dont use the OSGi one :)
+//	manifest = null
+//}
+//
+//sourcesJar {
+//	// The OSGi JAR manifest support does not like a non-existent classes dir,
+//	// so make sure we dont use the OSGi one :)
+//	manifest = null
+//}
 
 def relocatedGroupId  = 'org.infinispan'
 def relocatedArtifactId  = 'infinispan-hibernate-cache'

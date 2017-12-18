@@ -238,7 +238,10 @@ karafFeatures {
 			name = 'hibernate-infinispan'
 			description = 'Feature for easily adding Infinispan-based caching support to hibernate-orm'
 			dependencyFeatureNames = ['hibernate-orm']
-			projects = [rootProject.childProjects.'hibernate-infinispan']
+			bundle {
+				match group: 'org.infinispan', module: 'infinispan-hibernate-cache'
+				include = true
+			}
 			bundle {
 				match group: 'org.hibernate', module: 'hibernate-core'
 				include = false

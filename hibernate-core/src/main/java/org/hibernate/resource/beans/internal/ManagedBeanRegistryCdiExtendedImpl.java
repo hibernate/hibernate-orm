@@ -6,11 +6,7 @@
  */
 package org.hibernate.resource.beans.internal;
 
-import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.spi.AnnotatedType;
-import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.InjectionTarget;
 
 import org.hibernate.resource.beans.spi.AbstractManagedBeanRegistry;
 import org.hibernate.resource.beans.spi.ExtendedBeanManager;
@@ -44,12 +40,12 @@ public class ManagedBeanRegistryCdiExtendedImpl
 
 	@Override
 	protected <T> ManagedBean<T> createBean(Class<T> beanClass) {
-		return new ManagedBeanImpl<>( beanClass );
+		return new LazilyInitializedManagedBeanImpl<>( beanClass, JpaCdiLifecycleManagementStrategy.INSTANCE );
 	}
 
 	@Override
 	protected <T> ManagedBean<T> createBean(String beanName, Class<T> beanContract) {
-		return new NamedManagedBeanImpl<>( beanName, beanContract );
+		return new LazilyInitializedNamedManagedBeanImpl<>( beanName, beanContract, StandardCdiLifecycleManagementStrategy.INSTANCE );
 	}
 
 	@Override
@@ -67,17 +63,24 @@ public class ManagedBeanRegistryCdiExtendedImpl
 		return usableBeanManager;
 	}
 
-	private class ManagedBeanImpl<T> implements ManagedBean<T> {
+	/**
+	 * A {@link ManagedBean} that is lazily initialized upon the first call to {@link #getBeanInstance()},
+	 * relying on a {@link CdiLifecycleManagementStrategy} to initialize a delegate.
+	 *
+	 * Note that initialization is forced by the {@link ManagedBeanRegistryCdiExtendedImpl}
+	 * as soon as the bean manager is initialized, see {@link #beanManagerInitialized(BeanManager)}.
+	 *
+	 * @param <T> The type of bean instances
+	 */
+	private class LazilyInitializedManagedBeanImpl<T> implements ManagedBean<T> {
 		private final Class<T> beanClass;
+		private final CdiLifecycleManagementStrategy strategy;
 
-		private boolean initialized = false;
+		private ManagedBean<T> delegate = null;
 
-		private InjectionTarget<T> injectionTarget;
-		private CreationalContext<T> creationContext;
-		private T beanInstance;
-
-		private ManagedBeanImpl(Class<T> beanClass) {
+		LazilyInitializedManagedBeanImpl(Class<T> beanClass, CdiLifecycleManagementStrategy strategy) {
 			this.beanClass = beanClass;
+			this.strategy = strategy;
 		}
 
 		@Override
@@ -87,54 +90,48 @@ public class ManagedBeanRegistryCdiExtendedImpl
 
 		@Override
 		public T getBeanInstance() {
-			if ( !initialized ) {
+			if ( delegate == null ) {
 				initialize();
 			}
-			return beanInstance;
+			return delegate.getBeanInstance();
 		}
 
 		private void initialize() {
-			final BeanManager beanManager = getUsableBeanManager();
-			AnnotatedType<T> annotatedType = beanManager.createAnnotatedType( beanClass );
-			this.injectionTarget = beanManager.createInjectionTarget( annotatedType );
-			this.creationContext = beanManager.createCreationalContext( null );
-
-			this.beanInstance = injectionTarget.produce( creationContext );
-			injectionTarget.inject( this.beanInstance, creationContext );
-
-			injectionTarget.postConstruct( this.beanInstance );
-
-			this.initialized = true;
+			delegate = strategy.createBean( getUsableBeanManager(), beanClass );
 		}
 
+		@Override
 		public void release() {
-			if ( !initialized ) {
+			if ( delegate == null ) {
 				log.debugf( "Skipping release for (extended) CDI bean [%s] as it was not initialized", beanClass.getName() );
 				return;
 			}
 
-			log.debugf( "Releasing (extended) CDI bean [%s]", beanClass.getName() );
+			log.debugf( "Releasing (extended) CDI bean : %s", beanClass.getName() );
 
-			injectionTarget.preDestroy( beanInstance );
-			injectionTarget.dispose( beanInstance );
-			creationContext.release();
+			delegate.release();
+			delegate = null;
 		}
 	}
 
-	private class NamedManagedBeanImpl<T> implements ManagedBean<T> {
+	/**
+	 * A named {@link ManagedBean} that is lazily initialized upon the first call to {@link #getBeanInstance()}.
+	 *
+	 * @param <T> The type of bean instances
+	 *
+	 * @see LazilyInitializedManagedBeanImpl
+	 */
+	private class LazilyInitializedNamedManagedBeanImpl<T> implements ManagedBean<T> {
 		private final String beanName;
 		private final Class<T> beanContract;
+		private final CdiLifecycleManagementStrategy strategy;
 
-		private boolean initialized = false;
+		private ManagedBean<T> delegate = null;
 
-		private CreationalContext<T> creationContext;
-		private T beanInstance;
-
-		public NamedManagedBeanImpl(
-				String beanName,
-				Class<T> beanContract) {
+		LazilyInitializedNamedManagedBeanImpl(String beanName, Class<T> beanContract, CdiLifecycleManagementStrategy strategy) {
 			this.beanName = beanName;
 			this.beanContract = beanContract;
+			this.strategy = strategy;
 		}
 
 		@Override
@@ -144,35 +141,28 @@ public class ManagedBeanRegistryCdiExtendedImpl
 
 		@Override
 		public T getBeanInstance() {
-			if ( !initialized ) {
+			if ( delegate == null ) {
 				initialize();
 			}
-
-			return beanInstance;
+			return delegate.getBeanInstance();
 		}
 
 		private void initialize() {
-			final BeanManager beanManager = getUsableBeanManager();
-			final Bean<T> bean = Helper.INSTANCE.getNamedBean( beanName, beanContract, beanManager );
-
-			this.creationContext = beanManager.createCreationalContext( bean );
-			this.beanInstance = beanContract.cast( beanManager.getReference( bean, beanContract, creationContext ) );
-
-			this.initialized = true;
+			delegate = strategy.createBean( getUsableBeanManager(), beanName, beanContract );
 		}
 
 		@Override
 		public void release() {
-			if ( !initialized ) {
+			if ( delegate == null ) {
 				log.debugf( "Skipping release for (extended) CDI bean [%s : %s] as it was not initialized", beanName, beanContract.getName() );
 				return;
 			}
 
 			log.debugf( "Releasing (extended) CDI bean [%s : %s]", beanName, beanContract.getName() );
 
-			creationContext.release();
-
-			initialized = false;
+			delegate.release();
+			delegate = null;
 		}
 	}
+
 }

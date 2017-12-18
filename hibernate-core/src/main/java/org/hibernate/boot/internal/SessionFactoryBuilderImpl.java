@@ -85,6 +85,7 @@ import static org.hibernate.cfg.AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATE
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_ENTITY_MODE;
 import static org.hibernate.cfg.AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS;
+import static org.hibernate.cfg.AvailableSettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
 import static org.hibernate.cfg.AvailableSettings.FLUSH_BEFORE_COMPLETION;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.HQL_BULK_ID_STRATEGY;
@@ -664,6 +665,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 		private JpaComplianceImpl jpaCompliance;
 
+		private boolean failOnPaginationOverCollectionFetchEnabled;
+
 		public SessionFactoryOptionsStateStandardImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
 
@@ -886,6 +889,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 			// added the boolean parameter in case we want to define some form of "all" as discussed
 			this.jpaCompliance = new JpaComplianceImpl( configurationSettings, false );
+
+			this.failOnPaginationOverCollectionFetchEnabled = ConfigurationHelper.getBoolean(
+					FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH,
+					configurationSettings,
+					false
+			);
 		}
 
 		private static Interceptor determineInterceptor(Map configurationSettings, StrategySelector strategySelector) {
@@ -1347,6 +1356,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 
 		@Override
+		public boolean isFailOnPaginationOverCollectionFetchEnabled() {
+			return this.failOnPaginationOverCollectionFetchEnabled;
+		}
+
+		@Override
 		public JpaCompliance getJpaCompliance() {
 			return jpaCompliance;
 		}
@@ -1708,5 +1722,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public boolean jdbcStyleParamsZeroBased() {
 		return options.jdbcStyleParamsZeroBased();
+	}
+
+	@Override
+	public boolean isFailOnPaginationOverCollectionFetchEnabled() {
+		return options.isFailOnPaginationOverCollectionFetchEnabled();
 	}
 }

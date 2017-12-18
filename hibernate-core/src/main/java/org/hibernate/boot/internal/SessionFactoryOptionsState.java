@@ -208,4 +208,6 @@ public interface SessionFactoryOptionsState {
 	}
 
 	boolean jdbcStyleParamsZeroBased();
+
+	boolean isFailOnPaginationOverCollectionFetchEnabled();
 }

@@ -48,7 +48,6 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.loader.hql.QueryLoader;
-import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -377,7 +376,15 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 		QueryParameters queryParametersToUse;
 		if ( hasLimit && containsCollectionFetches() ) {
-			LOG.firstOrMaxResultsSpecifiedWithCollectionFetch();
+			boolean fail = session.getFactory().getSessionFactoryOptions().isFailOnPaginationOverCollectionFetchEnabled();
+			if (fail) {
+				throw new HibernateException("firstResult/maxResults specified with collection fetch. " +
+						"In memory pagination was about to be applied. " +
+						"Failing because 'Fail on pagination over collection fetch' is enabled.");
+			}
+			else {
+				LOG.firstOrMaxResultsSpecifiedWithCollectionFetch();
+			}
 			RowSelection selection = new RowSelection();
 			selection.setFetchSize( queryParameters.getRowSelection().getFetchSize() );
 			selection.setTimeout( queryParameters.getRowSelection().getTimeout() );

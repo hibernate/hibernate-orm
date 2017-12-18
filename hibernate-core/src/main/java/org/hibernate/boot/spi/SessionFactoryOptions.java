@@ -253,4 +253,6 @@ public interface SessionFactoryOptions {
 	boolean jdbcStyleParamsZeroBased();
 
 	JpaCompliance getJpaCompliance();
+
+	boolean isFailOnPaginationOverCollectionFetchEnabled();
 }

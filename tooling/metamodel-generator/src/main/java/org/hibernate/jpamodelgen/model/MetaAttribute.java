@@ -10,7 +10,9 @@ package org.hibernate.jpamodelgen.model;
  * @author Hardy Ferentschik
  */
 public interface MetaAttribute {
-	String getDeclarationString();
+    String getAttributeDeclarationString();
+
+    String getAttributeNameDeclarationString();
 
 	String getMetaType();
 

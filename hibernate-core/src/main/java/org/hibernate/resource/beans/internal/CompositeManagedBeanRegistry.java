@@ -86,6 +86,10 @@ public class CompositeManagedBeanRegistry
 		return fallback.getBean( beanName, beanContract,shouldRegistryManageLifecycle );
 	}
 
+	@Override
+	public ManagedBeanRegistry getPrimaryBeanRegistry() {
+		return primaryRegistry;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Optional delegation

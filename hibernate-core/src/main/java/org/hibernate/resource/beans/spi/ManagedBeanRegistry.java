@@ -46,4 +46,8 @@ public interface ManagedBeanRegistry extends Service {
 	 * the release calls itself.
 	 */
 	<T> ManagedBean<T> getBean(String beanName, Class<T> beanContract, boolean shouldRegistryManageLifecycle);
+
+	default ManagedBeanRegistry getPrimaryBeanRegistry() {
+		return this;
+	}
 }

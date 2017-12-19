@@ -6,6 +6,7 @@
  */
 package org.hibernate.resource.beans.internal;
 
+import java.util.Set;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
@@ -48,9 +49,11 @@ class JpaCdiLifecycleManagementStrategy implements CdiLifecycleManagementStrateg
 		return new JpaManagedBeanImpl<>( beanClass, injectionTarget, creationalContext, beanInstance );
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> ManagedBean<T> createBean(BeanManager beanManager, String beanName, Class<T> beanClass) {
-		Bean<T> bean = Helper.INSTANCE.getNamedBean( beanName, beanClass, beanManager );
+		Set<Bean<?>> beans = beanManager.getBeans( beanClass, new NamedBeanQualifier( beanName ) );
+		Bean<T> bean = (Bean<T>) beanManager.resolve( beans );
 
 		CreationalContext<T> creationalContext = beanManager.createCreationalContext( null );
 

@@ -28,7 +28,7 @@ public abstract class XmlMetaAttribute implements MetaAttribute {
 		this.type = type;
 	}
 
-    @Override
+	@Override
 	public String getAttributeDeclarationString() {
 		return "public static volatile " + hostingEntity.importType( getMetaType() )
 				+ "<" + hostingEntity.importType( hostingEntity.getQualifiedName() )
@@ -36,8 +36,8 @@ public abstract class XmlMetaAttribute implements MetaAttribute {
 				+ "> " + getPropertyName() + ";";
 	}
 
-    @Override
-    public String getAttributeNameDeclarationString(){
+	@Override
+	public String getAttributeNameDeclarationString(){
 		return new StringBuilder().append("public static final ")
 				.append(hostingEntity.importType(String.class.getName()))
 				.append(" ")

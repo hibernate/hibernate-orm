@@ -448,7 +448,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
 
 		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				tableInfo.getName(),
+				getQualifiedTableName(),
 				dialect
 		);
 

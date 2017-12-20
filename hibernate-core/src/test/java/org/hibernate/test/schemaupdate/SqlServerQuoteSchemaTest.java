@@ -21,19 +21,13 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
-import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.naturalid.inheritance.cache.ExtendedEntity;
-import org.hibernate.test.naturalid.inheritance.cache.MyEntity;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
@@ -46,7 +40,7 @@ import static org.junit.Assert.fail;
  */
 @TestForIssue( jiraKey = "HHH-12106" )
 @RequiresDialect( SQLServerDialect.class )
-public class SqlServerQuoteSchemaTestTest extends BaseCoreFunctionalTestCase {
+public class SqlServerQuoteSchemaTest extends BaseCoreFunctionalTestCase {
 
 	private File output;
 
@@ -88,9 +82,13 @@ public class SqlServerQuoteSchemaTestTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void cleanupTest() throws Exception {
+	protected void cleanupTest() {
 		try {
-			output.delete();
+			doInHibernate( this::sessionFactory, session -> {
+				session.createNativeQuery(
+						"DROP SCHEMA [my-schema]" )
+						.executeUpdate();
+			} );
 		}
 		catch (Exception ignore) {
 		}

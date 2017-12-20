@@ -17,11 +17,7 @@ import org.hibernate.cache.infinispan.access.TombstoneCallInterceptor;
 import org.hibernate.cache.infinispan.access.TxInvalidationCacheAccessDelegate;
 import org.hibernate.cache.infinispan.access.UnorderedDistributionInterceptor;
 import org.hibernate.cache.infinispan.access.VersionedCallInterceptor;
-import org.hibernate.cache.infinispan.util.Caches;
-import org.hibernate.cache.infinispan.util.FutureUpdate;
-import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
-import org.hibernate.cache.infinispan.util.Tombstone;
-import org.hibernate.cache.infinispan.util.VersionedEntry;
+import org.hibernate.cache.infinispan.util.*;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.TransactionalDataRegion;
@@ -148,8 +144,20 @@ public abstract class BaseTransactionalDataRegion
 			assert strategy == Strategy.VALIDATION;
 			return;
 		}
-		validator = new PutFromLoadValidator(cache, factory);
-		strategy = Strategy.VALIDATION;
+		// If two regions share the same name, they should use the same cache.
+		// Using same cache means they should use the same put validator.
+		// Besides, any cache interceptor initialization should only be done once.
+		// Synchronizes on the cache instance since it's shared between regions with same name.
+		synchronized (cache) {
+			PutFromLoadValidator found = findValidator(cache);
+			validator = found != null ? found : new PutFromLoadValidator(cache, factory);
+			strategy = Strategy.VALIDATION;
+		}
+	}
+
+	private PutFromLoadValidator findValidator(AdvancedCache cache) {
+		CacheCommandInitializer cmdInit = cache.getComponentRegistry().getComponent(CacheCommandInitializer.class);
+		return cmdInit.findPutFromLoadValidator(cache.getName());
 	}
 
 	protected void prepareForVersionedEntries() {

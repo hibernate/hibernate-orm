@@ -128,7 +128,7 @@ import static org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE;
  *
  * @author Steve Ebersole
  */
-public class SessionFactoryOptionsBuilder implements SessionFactoryOptionsState {
+public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private static final Logger log = Logger.getLogger( SessionFactoryOptionsBuilder.class );
 
 	private final StandardServiceRegistry serviceRegistry;
@@ -227,7 +227,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptionsState 
 
 	private boolean failOnPaginationOverCollectionFetchEnabled;
 
-	@SuppressWarnings("WeakerAccess")
+	@SuppressWarnings({"WeakerAccess", "deprecation"})
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 
@@ -457,6 +457,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptionsState 
 		);
 	}
 
+	@SuppressWarnings("deprecation")
 	private static Interceptor determineInterceptor(Map configurationSettings, StrategySelector strategySelector) {
 		Object setting = configurationSettings.get( INTERCEPTOR );
 		if ( setting == null ) {
@@ -476,7 +477,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptionsState 
 		);
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "deprecation"})
 	private static Supplier<? extends Interceptor> determineStatelessInterceptor(
 			Map configurationSettings,
 			StrategySelector strategySelector) {
@@ -524,6 +525,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptionsState 
 		};
 	}
 
+	@SuppressWarnings("deprecation")
 	private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(
 			Map configurationSettings,
 			StandardServiceRegistry serviceRegistry) {
@@ -552,6 +554,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptionsState 
 		return transactionCoordinatorBuilder.getDefaultConnectionHandlingMode();
 	}
 
+	@SuppressWarnings("deprecation")
 	private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(
 			ConnectionAcquisitionMode specifiedAcquisitionMode,
 			ConnectionReleaseMode specifiedReleaseMode,
@@ -771,11 +774,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptionsState 
 	}
 
 	@Override
-	public boolean isStrictJpaQueryLanguageCompliance() {
-		return jpaCompliance.isJpaQueryComplianceEnabled();
-	}
-
-	@Override
 	public boolean isNamedQueryStartupCheckingEnabled() {
 		return namedQueryStartupCheckingEnabled;
 	}
@@ -876,13 +874,18 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptionsState 
 	}
 
 	@Override
-	public boolean connectionProviderDisablesAutoCommit() {
-		return connectionProviderDisablesAutoCommit;
+	public void setCheckNullability(boolean enabled) {
+		this.checkNullability = enabled;
 	}
 
 	@Override
 	public ConnectionReleaseMode getConnectionReleaseMode() {
 		return getPhysicalConnectionHandlingMode().getReleaseMode();
+	}
+
+	@Override
+	public boolean doesConnectionProviderDisableAutoCommit() {
+		return connectionProviderDisablesAutoCommit;
 	}
 
 	@Override
@@ -1226,7 +1229,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptionsState 
 	}
 
 	public SessionFactoryOptions buildOptions() {
-		return new SessionFactoryOptionsImpl( this );
+		return this;
 	}
 
 }

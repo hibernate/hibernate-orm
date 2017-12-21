@@ -441,7 +441,10 @@ public interface SessionFactoryBuilder {
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#JPAQL_STRICT_COMPLIANCE
+	 *
+	 * @deprecated Use {@link #enableJpaQueryCompliance} instead
 	 */
+	@Deprecated
 	SessionFactoryBuilder applyStrictJpaQueryLanguageCompliance(boolean enabled);
 
 	/**

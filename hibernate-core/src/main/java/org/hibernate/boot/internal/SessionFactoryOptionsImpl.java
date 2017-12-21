@@ -99,7 +99,6 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 
 	// Queries
 	private final Map querySubstitutions;
-	private final boolean strictJpaQueryLanguageCompliance;
 	private final boolean namedQueryStartupCheckingEnabled;
 	private final boolean conventionalJavaConstants;
 	private final boolean procedureParameterNullPassingEnabled;
@@ -186,7 +185,6 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.currentTenantIdentifierResolver = state.getCurrentTenantIdentifierResolver();
 
 		this.querySubstitutions = state.getQuerySubstitutions();
-		this.strictJpaQueryLanguageCompliance = state.isStrictJpaQueryLanguageCompliance();
 		this.namedQueryStartupCheckingEnabled = state.isNamedQueryStartupCheckingEnabled();
 		this.conventionalJavaConstants = state.isConventionalJavaConstants();
 		this.procedureParameterNullPassingEnabled = state.isProcedureParameterNullPassingEnabled();
@@ -394,11 +392,6 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public Map getQuerySubstitutions() {
 		return querySubstitutions;
-	}
-
-	@Override
-	public boolean isStrictJpaQueryLanguageCompliance() {
-		return strictJpaQueryLanguageCompliance;
 	}
 
 	@Override

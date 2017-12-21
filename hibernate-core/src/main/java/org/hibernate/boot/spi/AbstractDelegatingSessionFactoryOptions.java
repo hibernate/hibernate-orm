@@ -212,11 +212,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public boolean isStrictJpaQueryLanguageCompliance() {
-		return delegate.isStrictJpaQueryLanguageCompliance();
-	}
-
-	@Override
 	public boolean isNamedQueryStartupCheckingEnabled() {
 		return delegate.isNamedQueryStartupCheckingEnabled();
 	}

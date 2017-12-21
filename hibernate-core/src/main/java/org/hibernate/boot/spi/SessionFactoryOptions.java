@@ -165,7 +165,14 @@ public interface SessionFactoryOptions {
 
 	Map getQuerySubstitutions();
 
-	boolean isStrictJpaQueryLanguageCompliance();
+	/**
+	 * @deprecated Use {@link JpaCompliance#isJpaQueryComplianceEnabled()} instead
+	 * via {@link #getJpaCompliance()}
+	 */
+	@Deprecated
+	default boolean isStrictJpaQueryLanguageCompliance() {
+		return getJpaCompliance().isJpaQueryComplianceEnabled();
+	}
 
 	boolean isNamedQueryStartupCheckingEnabled();
 

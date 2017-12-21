@@ -419,6 +419,6 @@ public class SessionFactoryHelper {
 	}
 
 	public boolean isStrictJPAQLComplianceEnabled() {
-		return sfi.getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance();
+		return sfi.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled();
 	}
 }

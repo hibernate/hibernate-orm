@@ -10,12 +10,8 @@ import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
-import org.hibernate.boot.internal.SessionFactoryOptionsImpl;
+import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -25,7 +21,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.service.ServiceRegistry;
@@ -126,13 +121,10 @@ public class CacheTestUtil {
 				}
 			}
 
-			final SessionFactoryOptionsImpl sessionFactoryOptions = new SessionFactoryOptionsImpl(
-					  new SessionFactoryBuilderImpl.SessionFactoryOptionsStateStandardImpl(
-								 (StandardServiceRegistry) serviceRegistry
-					  )
+			regionFactory.start(
+					new SessionFactoryOptionsBuilder( (StandardServiceRegistry) serviceRegistry ).buildOptions(),
+					properties
 			);
-
-			regionFactory.start( sessionFactoryOptions, properties );
 
 			return regionFactory;
 		}
@@ -174,11 +166,7 @@ public class CacheTestUtil {
 	}
 
 	public static SessionFactoryOptions sfOptionsForStart() {
-		return new SessionFactoryOptionsImpl(
-				new SessionFactoryBuilderImpl.SessionFactoryOptionsStateStandardImpl(
-						ServiceRegistryTestingImpl.forUnitTesting()
-				)
-		);
+		return new SessionFactoryOptionsBuilder( ServiceRegistryTestingImpl.forUnitTesting() ).buildOptions();
 	}
 
 	/**

@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.CollectionEntry;
@@ -123,7 +124,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				CollectionEntry entry = session.getPersistenceContext().getCollectionEntry(this);
 				CollectionPersister persister = entry.getLoadedPersister();
 				if ( persister.isExtraLazy() ) {
-					if ( hasQueuedOperations() ) {
+					if ( !session.getFlushMode().lessThan(FlushMode.AUTO) && hasQueuedOperations() ) {
 						session.flush();
 					}
 					cachedSize = persister.getSize( entry.getLoadedKey(), session );
@@ -141,7 +142,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			CollectionEntry entry = session.getPersistenceContext().getCollectionEntry(this);
 			CollectionPersister persister = entry.getLoadedPersister();
 			if ( persister.isExtraLazy() ) {
-				if ( hasQueuedOperations() ) {
+				if ( !session.getFlushMode().lessThan(FlushMode.AUTO) && hasQueuedOperations() ) {
 					session.flush();
 				}
 				return new Boolean( persister.indexExists( entry.getLoadedKey(), index, session ) );
@@ -158,7 +159,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			CollectionEntry entry = session.getPersistenceContext().getCollectionEntry(this);
 			CollectionPersister persister = entry.getLoadedPersister();
 			if ( persister.isExtraLazy() ) {
-				if ( hasQueuedOperations() ) {
+				if ( !session.getFlushMode().lessThan(FlushMode.AUTO) && hasQueuedOperations() ) {
 					session.flush();
 				}
 				return new Boolean( persister.elementExists( entry.getLoadedKey(), element, session ) );
@@ -177,7 +178,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			CollectionEntry entry = session.getPersistenceContext().getCollectionEntry(this);
 			CollectionPersister persister = entry.getLoadedPersister();
 			if ( persister.isExtraLazy() ) {
-				if ( hasQueuedOperations() ) {
+				if ( !session.getFlushMode().lessThan(FlushMode.AUTO) &&  hasQueuedOperations() ) {
 					session.flush();
 				}
 				return persister.getElementByIndex( entry.getLoadedKey(), index, session, owner );

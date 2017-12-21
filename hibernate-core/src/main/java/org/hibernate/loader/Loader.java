@@ -101,6 +101,20 @@ import org.hibernate.util.StringHelper;
 public abstract class Loader {
 
 	private static final Logger log = LoggerFactory.getLogger( Loader.class );
+	private static int MAX_COLLECTION_SIZE;
+
+	static {
+		final String envMaxCollectionSize = System.getenv("com.journal.hibernate.MAX_COLLECTION_SIZE");
+		if (envMaxCollectionSize != null) {
+			try {
+				MAX_COLLECTION_SIZE = Integer.parseInt(envMaxCollectionSize);
+			} catch (NumberFormatException e) {
+				log.error(e.toString(), e);
+			}
+		} else  {
+			MAX_COLLECTION_SIZE = 0;
+		}
+	}
 
 	private final SessionFactoryImplementor factory;
 	private ColumnNameCache columnNameCache;
@@ -823,6 +837,10 @@ public abstract class Loader {
 
 			int count;
 			for ( count = 0; count < maxRows && rs.next(); count++ ) {
+
+				if (MAX_COLLECTION_SIZE > 0 && count > MAX_COLLECTION_SIZE) {
+					throw new HibernateException("Maximum collection size exceeded " + MAX_COLLECTION_SIZE + " for " + this.getSQLString() + "; query parameters=" + Arrays.toString(queryParameters.getCollectionKeys()));
+				}
 				
 				if ( log.isTraceEnabled() ) log.debug("result set row: " + count);
 

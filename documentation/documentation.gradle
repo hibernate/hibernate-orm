@@ -21,28 +21,11 @@ apply plugin: 'org.asciidoctor.convert'
 
 apply plugin: 'hibernate-matrix-testing'
 
-apply from: "${rootProject.projectDir}/utilities.gradle"
-
 defaultTasks 'buildDocs'
 
-configurations {
-    asciidoclet {
-        description = 'Dependencies for Asciidoclet (the javadoc doclet tool for using Asciidoc)'
-    }
-    //asciidoctor
-}
-
-if ( JavaVersion.current().isJava8Compatible() ) {
-    tasks.withType( Javadoc ) {
-        options.addStringOption( 'Xdoclint:none', '-quiet' )
-    }
-}
 
 dependencies {
 	ext.pressgangVersion = '3.0.0'
-
-	//	asciidoctor 'org.asciidoctor:asciidoctorj:1.5.2'
-	asciidoclet 'org.asciidoctor:asciidoclet:0.+'
 
 	compile( libraries.jpa )
 	compile( project( ':hibernate-core' ) )
@@ -171,29 +154,28 @@ task aggregateJavadocs(type: Javadoc) {
     maxMemory = '512m'
     destinationDir = javadocDir
     configure( options ) {
-        overview = rootProject.file( 'shared/javadoc/overview.html' )
-        stylesheetFile = rootProject.file( 'shared/javadoc/stylesheet.css' )
+        overview = project.file( 'src/main/javadoc/overview.html' )
         windowTitle = 'Hibernate JavaDocs'
         docTitle = "Hibernate JavaDoc ($project.version)"
         bottom = "Copyright &copy; 2001-$copyrightYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
         use = true
         options.encoding = 'UTF-8'
-        links = [ 'http://download.oracle.com/javase/6/docs/api/', 'http://download.oracle.com/javaee/6/api/' ]
-        group( 'API', apiPackages.asList() )
+
+		links = [
+				'https://docs.oracle.com/javase/8/docs/api/',
+				'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
+				'http://docs.jboss.org/cdi/api/2.0/',
+				'https://docs.oracle.com/javaee/7/api/'
+		]
+
+		group( 'API', apiPackages.asList() )
         group( 'SPI', spiPackages.asList() )
         group( 'Internal', internalPackages.asList() )
         group ( 'Testing Support', ['org.hibernate.testing*'] )
-// ugh, http://issues.gradle.org/browse/GRADLE-1563
-//        tags ["todo:X"]
-// work around:
-        addStringOption( "tag", "todo:X" )
-    }
 
-    doLast {
-        copy {
-            from rootProject.file( 'shared/javadoc/images' )
-            into new File( javadocDir, "/images" )
-        }
+		if ( JavaVersion.current().isJava8Compatible() ) {
+			options.addStringOption( 'Xdoclint:none', '-quiet' )
+		}
     }
 }
 

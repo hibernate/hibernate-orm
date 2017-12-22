@@ -128,6 +128,8 @@ subprojects { subProject ->
 	apply plugin: 'build-dashboard'
 	apply plugin: 'project-report'
 
+	apply from: "${rootProject.projectDir}/utilities.gradle"
+
 	apply plugin: org.hibernate.build.HibernateBuildPlugin
 
 	sourceCompatibility = rootProject.baselineJavaVersion
@@ -143,6 +145,9 @@ subprojects { subProject ->
 		}
 		configurations {
 			all*.exclude group: 'xml-apis', module: 'xml-apis'
+		}
+		asciidoclet {
+			description = "Dependencies for Asciidoctor Javadoc taglet"
 		}
 	}
 
@@ -172,6 +177,8 @@ subprojects { subProject ->
 		testRuntime( libraries.mariadb )
 		testRuntime( libraries.mssql )
 		testRuntime( libraries.informix )
+
+		asciidoclet 'org.asciidoctor:asciidoclet:1.+'
 
 		if (db.equalsIgnoreCase("oracle")) {
 			dependencies {
@@ -347,12 +354,65 @@ subprojects { subProject ->
 
 	task sourcesJar(type: Jar, dependsOn: compileJava) {
 		from sourceSets.main.allSource
+		manifest = jar.manifest
 		classifier = 'sources'
 	}
 
-	sourcesJar {
-		manifest = jar.manifest
+	javadoc {
+		Set<String> apiPackages = new HashSet<>()
+		Set<String> spiPackages = new HashSet<>()
+		Set<String> internalPackages = new HashSet<>()
+
+		subProject.sourceSets.main.java.each { javaFile ->
+			final String packageName = determinePackageName( subProject.sourceSets.main.java, javaFile );
+			if ( packageName.endsWith( ".internal" ) || packageName.contains( ".internal." ) ) {
+				internalPackages.add( packageName );
+			}
+			else if ( packageName.endsWith( ".spi" ) || packageName.contains( ".spi." ) ) {
+				spiPackages.add( packageName );
+			}
+			else if ( packageName.startsWith( "org.hibernate.testing" ) ) {
+				// do nothing as testing support is already handled...
+			}
+			else {
+				apiPackages.add( packageName );
+			}
+		}
+
+		final int copyrightYear = new GregorianCalendar().get( Calendar.YEAR )
+
+		configure( options ) {
+			docletpath = configurations.asciidoclet.files.asType(List)
+			doclet = 'org.asciidoctor.Asciidoclet'
+
+			windowTitle = "$subProject.name JavaDocs"
+			docTitle = "$subProject.name JavaDocs ($project.version)"
+			bottom = "Copyright &copy; 2001-$copyrightYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+			use = true
+			encoding = 'UTF-8'
+			links += [
+					'https://docs.oracle.com/javase/8/docs/api/',
+					'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
+					'http://docs.jboss.org/cdi/api/2.0/',
+					'https://docs.oracle.com/javaee/7/api/'
+			]
+
+			group( 'API', apiPackages.asList() )
+			group( 'SPI', spiPackages.asList() )
+			group( 'Internal', internalPackages.asList() )
+			group( 'Testing Support', ['org.hibernate.testing*'] )
+
+			if ( JavaVersion.current().isJava8Compatible() ) {
+				options.addStringOption( 'Xdoclint:none', '-quiet' )
+			}
+		}
 	}
+
+	task javadocJar(type: Jar, dependsOn: javadoc) {
+		from tasks.javadoc.outputs
+		classifier = 'javadoc'
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -464,6 +524,10 @@ subprojects { subProject ->
 
 					artifact( sourcesJar ) {
 						classifier 'sources'
+					}
+
+					artifact(javadocJar) {
+						classifier "javadoc"
 					}
 				}
 				// http://issues.gradle.org/browse/GRADLE-2966

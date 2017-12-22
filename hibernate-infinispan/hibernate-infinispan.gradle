@@ -6,27 +6,12 @@
  */
 
 mavenPom {
-	name = '(deprecated - use org.infinispan:infinispan-hibernate-cache instead) Hibernate/Infinispan Integration'
-	description = '(deprecated - use org.infinispan:infinispan-hibernate-cache instead) Integration for Infinispan into Hibernate as a second-level caching service'
+	name = '(deprecated - use org.infinispan:infinispan-hibernate-cache instead)'
+	description = '(deprecated - use org.infinispan:infinispan-hibernate-cache instead)'
 }
 
 jar.enabled = false
-
-//def osgiDescription() {
-//	return mavenPom.description
-//}
-//
-//jar {
-//	// The OSGi JAR manifest support does not like a non-existent classes dir,
-//	// so make sure we dont use the OSGi one :)
-//	manifest = null
-//}
-//
-//sourcesJar {
-//	// The OSGi JAR manifest support does not like a non-existent classes dir,
-//	// so make sure we dont use the OSGi one :)
-//	manifest = null
-//}
+sourcesJar.enabled = false
 
 def relocatedGroupId  = 'org.infinispan'
 def relocatedArtifactId  = 'infinispan-hibernate-cache'

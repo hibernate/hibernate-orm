@@ -128,6 +128,8 @@ subprojects { subProject ->
 	apply plugin: 'build-dashboard'
 	apply plugin: 'project-report'
 
+	apply from: "${rootProject.projectDir}/utilities.gradle"
+
 	apply plugin: org.hibernate.build.HibernateBuildPlugin
 
 	sourceCompatibility = rootProject.baselineJavaVersion
@@ -342,6 +344,11 @@ subprojects { subProject ->
 			instruction 'Specification-Title', name
 			instruction 'Specification-Version', version
 			instruction 'Specification-Vendor', 'Hibernate.org'
+
+			String moduleSimpleName = java9ModuleName( subProject )
+			instruction 'Automatic-Module-Name', "org.hibernate.orm.$moduleSimpleName"
+			// alternative is to just use the full project name
+			//instruction 'Automatic-Module-Name', "org.hibernate.orm.$subProject.name"
 		}
 	}
 

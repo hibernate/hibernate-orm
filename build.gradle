@@ -359,27 +359,10 @@ subprojects { subProject ->
 	}
 
 	javadoc {
-		Set<String> apiPackages = new HashSet<>()
-		Set<String> spiPackages = new HashSet<>()
-		Set<String> internalPackages = new HashSet<>()
+		exclude( "**/internal/*" )
+		exclude( "**/generated-src/**" )
 
-		subProject.sourceSets.main.java.each { javaFile ->
-			final String packageName = determinePackageName( subProject.sourceSets.main.java, javaFile );
-			if ( packageName.endsWith( ".internal" ) || packageName.contains( ".internal." ) ) {
-				internalPackages.add( packageName );
-			}
-			else if ( packageName.endsWith( ".spi" ) || packageName.contains( ".spi." ) ) {
-				spiPackages.add( packageName );
-			}
-			else if ( packageName.startsWith( "org.hibernate.testing" ) ) {
-				// do nothing as testing support is already handled...
-			}
-			else {
-				apiPackages.add( packageName );
-			}
-		}
-
-		final int copyrightYear = new GregorianCalendar().get( Calendar.YEAR )
+		final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
 
 		configure( options ) {
 			docletpath = configurations.asciidoclet.files.asType(List)
@@ -387,23 +370,54 @@ subprojects { subProject ->
 
 			windowTitle = "$subProject.name JavaDocs"
 			docTitle = "$subProject.name JavaDocs ($project.version)"
-			bottom = "Copyright &copy; 2001-$copyrightYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+			bottom = "Copyright &copy; 2001-$currentYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
 			use = true
 			encoding = 'UTF-8'
 			links += [
-					'https://docs.oracle.com/javase/8/docs/api/',
-					'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
+					'http://docs.oracle.com/javase/8/docs/api/',
+					'http://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
 					'http://docs.jboss.org/cdi/api/2.0/',
-					'https://docs.oracle.com/javaee/7/api/'
+					'http://docs.oracle.com/javaee/7/api/'
 			]
-
-			group( 'API', apiPackages.asList() )
-			group( 'SPI', spiPackages.asList() )
-			group( 'Internal', internalPackages.asList() )
-			group( 'Testing Support', ['org.hibernate.testing*'] )
 
 			if ( JavaVersion.current().isJava8Compatible() ) {
 				options.addStringOption( 'Xdoclint:none', '-quiet' )
+			}
+
+			doFirst {
+				// calculation of these groups is expensive - so push
+				// that process from init/configuration phase to execution
+				// phase.
+				//
+				// Note : this does not affect UP-TO-DATE checking because
+				// the groups are based on packages of the classes, and
+				// if the classes change that would already trigger
+				// re-execution of this task...
+
+				Set<String> apiPackages = new HashSet<>()
+				Set<String> spiPackages = new HashSet<>()
+				Set<String> testingPackages = new HashSet<String>()
+
+				subProject.sourceSets.main.java.each { javaFile ->
+					final String packageName = determinePackageName( subProject.sourceSets.main.java, javaFile );
+					if ( packageName.endsWith( ".internal" ) || packageName.contains( ".internal." ) ) {
+						// nothing to do - we exclude internal packages
+					}
+					else if ( packageName.endsWith( ".spi" ) || packageName.contains( ".spi." ) ) {
+						spiPackages.add( packageName )
+					}
+					else if ( packageName.startsWith( "org.hibernate.testing" ) ) {
+						testingPackages += packageName
+					}
+					else {
+						apiPackages.add( packageName )
+					}
+				}
+
+				options.group( 'API', apiPackages.asList() )
+				options.group( 'SPI', spiPackages.asList() )
+				options.group( 'Testing Support', testingPackages.asList() )
+
 			}
 		}
 	}

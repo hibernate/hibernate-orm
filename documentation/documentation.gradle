@@ -103,63 +103,27 @@ final File javadocDir = mkdir( new File( (File) project.buildDir, 'javadocs' ) )
  * Builds the JavaDocs aggregated (unified) across all the sub-projects
  */
 task aggregateJavadocs(type: Javadoc) {
+	String[] projectsToSkip = ['release','documentation', 'hibernate-orm-modules']
+
     description = 'Builds the aggregated (unified) JavaDocs across all sub-projects'
 
-    final int copyrightYear = new GregorianCalendar().get( Calendar.YEAR );
+    final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
 
-    // exclude any generated sources (this is not working: http://forums.gradle.org/gradle/topics/excluding_generated_source_from_javadoc)
-    exclude "**/generated-src/**"
+    // exclude any generated sources and internal packages
+    exclude( '**/generated-src/**' )
+    exclude( '**/internal/**' )
 
-    // process each project, building up:
-    //      1) appropriate sources
-    //      2) classpath
-    //      3) the package list for groups
-    Set<String> apiPackages = new HashSet<String>()
-    Set<String> spiPackages = new HashSet<String>()
-    Set<String> internalPackages = new HashSet<String>()
-    parent.subprojects.each{ Project subProject->
-        // skip certain sub-projects
-		if ( ['release','documentation', 'hibernate-orm-modules'].contains( subProject.name ) ) {
-			return;
-		}
 
-		// we only care about the main SourceSet...
-		source subProject.sourceSets.main.java
-
-		if( classpath ) {
-			classpath += subProject.sourceSets.main.output + subProject.sourceSets.main.compileClasspath
-		}
-		else {
-			classpath = subProject.sourceSets.main.output + subProject.sourceSets.main.compileClasspath
-		}
-
-		subProject.sourceSets.main.java.each { javaFile ->
-			final String packageName = determinePackageName( subProject.sourceSets.main.java, javaFile );
-			if ( packageName.endsWith( ".internal" ) || packageName.contains( ".internal." ) ) {
-				internalPackages.add( packageName );
-			}
-			else if ( packageName.endsWith( ".spi" ) || packageName.contains( ".spi." ) ) {
-				spiPackages.add( packageName );
-			}
-			else if ( packageName.startsWith( "org.hibernate.testing" ) ) {
-				// do nothing as testing support is already handled...
-			}
-			else {
-				apiPackages.add( packageName );
-			}
-		}
-    }
-
-    // apply standard config
-    maxMemory = '512m'
-    destinationDir = javadocDir
-    configure( options ) {
-        overview = project.file( 'src/main/javadoc/overview.html' )
-        windowTitle = 'Hibernate JavaDocs'
-        docTitle = "Hibernate JavaDoc ($project.version)"
-        bottom = "Copyright &copy; 2001-$copyrightYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
-        use = true
-        options.encoding = 'UTF-8'
+	// apply standard config
+	maxMemory = '512m'
+	destinationDir = javadocDir
+	configure( options ) {
+		overview = project.file( 'src/main/javadoc/overview.html' )
+		windowTitle = 'Hibernate JavaDocs'
+		docTitle = "Hibernate JavaDoc ($project.version)"
+		bottom = "Copyright &copy; 2001-$currentYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+		use = true
+		options.encoding = 'UTF-8'
 
 		links = [
 				'https://docs.oracle.com/javase/8/docs/api/',
@@ -168,15 +132,63 @@ task aggregateJavadocs(type: Javadoc) {
 				'https://docs.oracle.com/javaee/7/api/'
 		]
 
-		group( 'API', apiPackages.asList() )
-        group( 'SPI', spiPackages.asList() )
-        group( 'Internal', internalPackages.asList() )
-        group ( 'Testing Support', ['org.hibernate.testing*'] )
-
 		if ( JavaVersion.current().isJava8Compatible() ) {
 			options.addStringOption( 'Xdoclint:none', '-quiet' )
 		}
+	}
+
+    // process each project, building up:
+    //      1) appropriate sources
+    //      2) classpath
+    parent.subprojects.each { Project subProject->
+        // skip certain sub-projects
+		if ( projectsToSkip.contains( subProject.name ) ) {
+			return
+		}
+
+		// we only care about the main SourceSet...
+		source subProject.sourceSets.main.java
+
+//		if( classpath ) {
+			classpath += subProject.sourceSets.main.output + subProject.sourceSets.main.compileClasspath
+//		}
+//		else {
+//			classpath = subProject.sourceSets.main.output + subProject.sourceSets.main.compileClasspath
+//		}
     }
+
+	doFirst {
+		Set<String> apiPackages = new HashSet<String>()
+		Set<String> spiPackages = new HashSet<String>()
+		Set<String> testingPackages = new HashSet<String>()
+
+		parent.subprojects.each { Project subProject ->
+			// skip certain sub-projects
+			if ( projectsToSkip.contains( subProject.name ) ) {
+				return
+			}
+
+			subProject.sourceSets.main.java.each { javaFile ->
+				final String packageName = determinePackageName( subProject.sourceSets.main.java, javaFile );
+				if ( packageName.endsWith( ".internal" ) || packageName.contains( ".internal." ) ) {
+					// do nothing - we exclude internal packages
+				}
+				else if ( packageName.endsWith( ".spi" ) || packageName.contains( ".spi." ) ) {
+					spiPackages.add( packageName )
+				}
+				else if ( packageName.startsWith( "org.hibernate.testing" ) ) {
+					testingPackages += packageName
+				}
+				else {
+					apiPackages.add( packageName )
+				}
+			}
+		}
+
+		options.group( 'API', apiPackages.asList() )
+		options.group( 'SPI', spiPackages.asList() )
+		options.group( 'Testing Support', testingPackages.asList() )
+	}
 }
 
 asciidoctor {

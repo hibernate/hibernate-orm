@@ -12,6 +12,8 @@ mavenPom {
 
 jar.enabled = false
 sourcesJar.enabled = false
+javadoc.enabled = false
+javadocJar.enabled = false
 
 def relocatedGroupId  = 'org.infinispan'
 def relocatedArtifactId  = 'infinispan-hibernate-cache'

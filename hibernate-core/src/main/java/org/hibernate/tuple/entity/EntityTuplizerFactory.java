@@ -132,7 +132,7 @@ public class EntityTuplizerFactory implements Serializable {
 		try {
 			constructor = clazz.getDeclaredConstructor( constructorArgs );
 			try {
-				constructor.setAccessible( true );
+				ReflectHelper.ensureAccessibility( constructor );
 			}
 			catch ( SecurityException e ) {
 				constructor = null;

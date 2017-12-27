@@ -14,6 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.resource.beans.spi.ExtendedBeanManager;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -63,7 +64,7 @@ public class ManagedBeanRegistryCdiBuilder {
 		try {
 			final Constructor<? extends ManagedBeanRegistry> ctor = registryClass.getDeclaredConstructor( ctorArgType );
 			try {
-				ctor.setAccessible( true );
+				ReflectHelper.ensureAccessibility( ctor );
 				return ctor.newInstance( ctorArgType.cast( beanManagerRef ) );
 			}
 			catch (InvocationTargetException e) {

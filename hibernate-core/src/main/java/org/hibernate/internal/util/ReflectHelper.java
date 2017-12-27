@@ -7,6 +7,7 @@
 package org.hibernate.internal.util;
 
 import java.beans.Introspector;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -273,7 +274,7 @@ public final class ReflectHelper {
 
 		try {
 			Constructor<T> constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
-			constructor.setAccessible( true );
+			ensureAccessibility( constructor );
 			return constructor;
 		}
 		catch ( NoSuchMethodException nme ) {
@@ -333,7 +334,7 @@ public final class ReflectHelper {
 				}
 				if ( found ) {
 					numberOfMatchingConstructors ++;
-					candidate.setAccessible( true );
+					ensureAccessibility( candidate );
 					constructor = candidate;
 				}
 			}
@@ -376,8 +377,17 @@ public final class ReflectHelper {
 			);
 		}
 
-		field.setAccessible( true );
+		ensureAccessibility( field );
+
 		return field;
+	}
+
+	public static void ensureAccessibility(AccessibleObject accessibleObject) {
+		if ( accessibleObject.isAccessible() ) {
+			return;
+		}
+
+		accessibleObject.setAccessible( true );
 	}
 
 	private static Field locateField(Class clazz, String propertyName) {
@@ -423,7 +433,8 @@ public final class ReflectHelper {
 			);
 		}
 
-		getter.setAccessible( true );
+		ensureAccessibility( getter );
+
 		return getter;
 	}
 
@@ -599,7 +610,8 @@ public final class ReflectHelper {
 			);
 		}
 
-		setter.setAccessible( true );
+		ensureAccessibility( setter );
+
 		return setter;
 	}
 

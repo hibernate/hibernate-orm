@@ -134,7 +134,7 @@ public class ComponentTuplizerFactory implements Serializable {
 		try {
 			constructor = clazz.getDeclaredConstructor( COMPONENT_TUP_CTOR_SIG );
 			try {
-				constructor.setAccessible( true );
+				ReflectHelper.ensureAccessibility( constructor );
 			}
 			catch ( SecurityException e ) {
 				constructor = null;

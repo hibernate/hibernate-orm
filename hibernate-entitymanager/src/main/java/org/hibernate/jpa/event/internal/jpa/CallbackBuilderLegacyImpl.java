@@ -26,6 +26,7 @@ import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.event.spi.jpa.Callback;
 import org.hibernate.jpa.event.spi.jpa.CallbackType;
 import org.hibernate.jpa.event.spi.jpa.CallbackBuilder;
@@ -108,7 +109,7 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 												+ callbackType.getCallbackAnnotation().getName() + " - " + xMethod
 								);
 							}
-							method.setAccessible( true );
+							ReflectHelper.ensureAccessibility( method );
 							log.debugf(
 									"Adding %s as %s callback for entity %s",
 									methodName,
@@ -182,9 +183,7 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 													+ callbackType.getCallbackAnnotation().getName() + " - " + method
 									);
 								}
-								if ( !method.isAccessible() ) {
-									method.setAccessible( true );
-								}
+								ReflectHelper.ensureAccessibility( method );
 								log.debugf(
 										"Adding %s as %s callback for entity %s",
 										methodName,

@@ -25,6 +25,7 @@ import javax.persistence.metamodel.Type;
 
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.mapping.Component;
@@ -439,7 +440,7 @@ class MetadataContext {
 					: metamodelClass.getDeclaredField( name );
 			try {
 				// should be public anyway, but to be sure...
-				field.setAccessible( true );
+				ReflectHelper.ensureAccessibility( field );
 				field.set( null, attribute );
 			}
 			catch (IllegalAccessException e) {

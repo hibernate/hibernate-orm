@@ -348,7 +348,7 @@ public final class ReflectHelper {
 				}
 				if ( found ) {
 					numberOfMatchingConstructors ++;
-					candidate.setAccessible( true );
+					ensureAccessibility( candidate );
 					constructor = candidate;
 				}
 			}
@@ -404,7 +404,8 @@ public final class ReflectHelper {
 			);
 		}
 
-		field.setAccessible( true );
+		ensureAccessibility( field );
+
 		return field;
 	}
 
@@ -475,7 +476,8 @@ public final class ReflectHelper {
 			);
 		}
 
-		getter.setAccessible( true );
+		ensureAccessibility( getter );
+
 		return getter;
 	}
 
@@ -627,7 +629,8 @@ public final class ReflectHelper {
 			);
 		}
 
-		setter.setAccessible( true );
+		ensureAccessibility( setter );
+
 		return setter;
 	}
 

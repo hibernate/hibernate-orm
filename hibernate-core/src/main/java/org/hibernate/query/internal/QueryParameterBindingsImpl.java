@@ -356,10 +356,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			parameterListBindingMap = new HashMap<>();
 		}
 
-		return parameterListBindingMap.computeIfAbsent(
-				queryParameter,
-				this::transformQueryParameterBindingToQueryParameterListBinding
-		);
+		return transformQueryParameterBindingToQueryParameterListBinding( queryParameter );
 	}
 
 	/**

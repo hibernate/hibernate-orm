@@ -14,6 +14,8 @@ apply plugin: 'idea'
 
 buildDir = "target"
 
+test.enabled = false
+
 ext {
     // Exact ORM version, e.g. "5.1.1.Final"
     slot = rootProject.hibernateFullVersion

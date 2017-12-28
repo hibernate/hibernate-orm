@@ -30,13 +30,6 @@ class SDOObjectProperty implements SQLFunction {
 		this.name = name;
 	}
 
-	/*
-		  * (non-Javadoc)
-		  *
-		  * @see org.hibernate.dialect.function.SQLFunction#getReturnType(org.hibernate.type.Type,
-		  *      org.hibernate.engine.Mapping)
-		  */
-
 	public Type getReturnType(Type columnType, Mapping mapping)
 			throws QueryException {
 		return type == null ? columnType : type;

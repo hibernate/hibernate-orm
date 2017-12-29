@@ -40,6 +40,9 @@ dependencies {
 		paxExamVersion = '4.4.0'
 		paxExamUrlVersion = '2.4.1'
 		karafVersion = '3.0.3'
+
+//		paxExamVersion = '4.11.0'
+//		karafVersion = '4.1.2'
 	}
 
 	compile( project( ':hibernate-core' ) )
@@ -174,8 +177,8 @@ karafFeatures {
 			}
 			bundle {
 				match {
-					group = 'org.hibernate.javax.persistence'
-					module = 'hibernate-jpa-2.1-api'
+					group = 'javax.persistence'
+					module = 'javax.persistence-api'
 				}
 				dependency = true
 			}

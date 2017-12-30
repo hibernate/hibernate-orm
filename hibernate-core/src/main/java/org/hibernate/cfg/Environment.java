@@ -238,17 +238,20 @@ public final class Environment implements AvailableSettings {
 		BYTECODE_PROVIDER_INSTANCE = buildBytecodeProvider( GLOBAL_PROPERTIES );
 	}
 
-	public static BytecodeProvider getBytecodeProvider() {
-		return BYTECODE_PROVIDER_INSTANCE;
-	}
-
 	/**
 	 * Should we use streams to bind binary types to JDBC IN parameters?
 	 *
 	 * @return True if streams should be used for binary data handling; false otherwise.
 	 *
 	 * @see #USE_STREAMS_FOR_BINARY
+	 *
+	 * @deprecated Deprecated to indicate that the method will be moved to
+	 * {@link org.hibernate.boot.spi.SessionFactoryOptions} /
+	 * {@link org.hibernate.boot.SessionFactoryBuilder} - probably in 6.0.
+	 * See <a href="https://hibernate.atlassian.net/browse/HHH-12194">HHH-12194</a> and
+	 * <a href="https://hibernate.atlassian.net/browse/HHH-12193">HHH-12193</a> for details
 	 */
+	@Deprecated
 	public static boolean useStreamsForBinary() {
 		return ENABLE_BINARY_STREAMS;
 	}
@@ -261,9 +264,28 @@ public final class Environment implements AvailableSettings {
 	 * @see #USE_REFLECTION_OPTIMIZER
 	 * @see #getBytecodeProvider()
 	 * @see BytecodeProvider#getReflectionOptimizer
+	 *
+	 * @deprecated Deprecated to indicate that the method will be moved to
+	 * {@link org.hibernate.boot.spi.SessionFactoryOptions} /
+	 * {@link org.hibernate.boot.SessionFactoryBuilder} - probably in 6.0.
+	 * See <a href="https://hibernate.atlassian.net/browse/HHH-12194">HHH-12194</a> and
+	 * <a href="https://hibernate.atlassian.net/browse/HHH-12193">HHH-12193</a> for details
 	 */
+	@Deprecated
 	public static boolean useReflectionOptimizer() {
 		return ENABLE_REFLECTION_OPTIMIZER;
+	}
+
+	/**
+	 * @deprecated Deprecated to indicate that the method will be moved to
+	 * {@link org.hibernate.boot.spi.SessionFactoryOptions} /
+	 * {@link org.hibernate.boot.SessionFactoryBuilder} - probably in 6.0.
+	 * See <a href="https://hibernate.atlassian.net/browse/HHH-12194">HHH-12194</a> and
+	 * <a href="https://hibernate.atlassian.net/browse/HHH-12193">HHH-12193</a> for details
+	 */
+	@Deprecated
+	public static BytecodeProvider getBytecodeProvider() {
+		return BYTECODE_PROVIDER_INSTANCE;
 	}
 
 	/**

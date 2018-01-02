@@ -228,7 +228,7 @@ processTestResources {
             into file( "${buildDir}/resources/test" )
             include 'arquillian.xml'
             include 'org/hibernate/test/wf/ddl/manifest.mf'
-            expand wildFlyInstallDir: "${rootProject.buildDir.absolutePath}/wildfly-${wildflyVersion}",
+            expand wildFlyInstallDir: project( ':hibernate-orm-modules' ).wildFlyInstallDir,
                    hibernateMajorMinorVersion: "${rootProject.hibernateMajorMinorVersion}",
                    arquillianDeploymentExportDir: "${rootProject.buildDir.absolutePath}/arquillian-deployments"
         }

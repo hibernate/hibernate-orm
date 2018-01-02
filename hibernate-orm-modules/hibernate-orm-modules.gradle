@@ -12,28 +12,26 @@ apply plugin: 'project-report'
 apply plugin: org.hibernate.build.HibernateBuildPlugin
 apply plugin: 'idea'
 
-buildDir = "target"
-
-test.enabled = false
-
 ext {
+    // NOTE : `wildflyVersion` comes from libraries.gradle...
+
     // Exact ORM version, e.g. "5.1.1.Final"
     slot = rootProject.hibernateFullVersion
     // Just the minor ORM version, e.g. "5.1"; Is used as an alias for the exact version
     minorSlot = rootProject.hibernateMajorMinorVersion
 
-    final String[] wildFlyVersionComponents = wildflyVersion.split( '\\.' );
-
-    // e.g. "10" for WildFly 10.x
-    wildFlyMajorVersion = wildFlyVersionComponents[0];
+    // "10" for WildFly 10.x, "11" for 11.x, etc
+    wildFlyMajorVersion = wildflyVersion.split( '\\.' )[0]
     wildFlyJPA22PatchVersion = '1.0.0.Beta1'
 
     artifactClassifier = "wildfly-${wildFlyMajorVersion}-dist"
 
     moduleXmlStagingDir = file( "$buildDir/tmp/modules" )
 
-    wildFlyInstallDirBase = rootProject.buildDir
-    wildFlyInstallDir = "${rootProject.buildDir.absolutePath}/wildfly-${wildflyVersion}"
+    wildFlyInstallDirBase = "$rootProject.buildDir.absolutePath/wildfly"
+	// this is just a "guess" as to the root directory inside the dist zip
+	// todo : Would be better to actually ask the zip
+    wildFlyInstallDir = "$wildFlyInstallDirBase/wildfly-${wildflyVersion}"
 
     expandedModuleProperties = [
             slot: slot,
@@ -41,7 +39,7 @@ ext {
             version: rootProject.hibernateTargetVersion,
             wildflyVersion: wildflyVersion,
             byteBuddyVersion: byteBuddyVersion
-    ];
+    ]
 }
 
 mavenPom {
@@ -175,39 +173,44 @@ build.dependsOn createModulesZip
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // tasks related to in-container (Arquillian + WF) testing
 
-task installWildFly(type: Copy) {
-    description = 'Downloads the WildFly distribution and installs it into a local directory (if needed)'
+task installWildFly(type: Copy, dependsOn: createModulesZip) {
+    description = 'Downloads the WildFly distribution, installs it into a local directory and prepares it for use (in testing)'
 
-    from {
-        configurations.wildflyDist.collect { zipTree(it) }
-    }
+    from configurations.wildflyDist.collect { zipTree(it) }
     into wildFlyInstallDirBase
-}
 
-task patchWildFlytoJPA22(type: Copy, dependsOn: [installWildFly]) {
-    description = 'Patch the WildFly server to expose the JPA 2.2 API (instead of JPA 2.1)'
-    from configurations.wildflyJPA22Patch
-    into "$buildDir/jpa22-wildfly-patch"
+    final File patchFile = configurations.wildflyJPA22Patch.resolvedConfiguration.resolvedArtifacts[0].file
+    inputs.file( patchFile )
+
+    doFirst {
+        cleanInstallWildFly
+    }
+
     doLast {
+
+        // until we have a version of WF supporting EE 8 (JPA 2.2),  we need to patch
+        // the install to support JPA 2.2
         exec {
-            executable "$wildFlyInstallDirBase/wildfly-$wildflyVersion/bin/jboss-cli.sh"
-            //TODO find out how to reliably skip applying this patch when already applied?
-            //the current solution is close by making this task a 'Copy' rather than Exec,
-            //using the 'into' section as a marker for this being already done,
-            //but it's not very reliable so we need to enable 'ignoreExitValue'.
             ignoreExitValue = true
-            args "patch apply $buildDir/jpa22-wildfly-patch/hibernate-jpa-api-2.2-wildflymodules-${wildFlyJPA22PatchVersion}-wildfly-$wildflyVersion-patch.zip"
+
+            executable "$wildFlyInstallDir/bin/jboss-cli.sh"
+            args "patch apply $patchFile.absolutePath"
+        }
+
+        // and then install the Hibernate
+        copy {
+            duplicatesStrategy DuplicatesStrategy.EXCLUDE
+            from zipTree( createModulesZip.archivePath )
+            into "${wildFlyInstallDir}/modules"
         }
     }
 }
 
-task installHibernateModule( type:Copy, dependsOn: [createModulesZip, installWildFly]) {
-    duplicatesStrategy DuplicatesStrategy.EXCLUDE
-    from zipTree( createModulesZip.archivePath )
-    into "${wildFlyInstallDir}/modules"
-}
+clean.dependsOn cleanInstallWildFly
 
-task prepareWildFlyForTests( dependsOn: [installWildFly, installHibernateModule, patchWildFlytoJPA22] )
+task installHibernateModule( dependsOn: [createModulesZip, installWildFly])
+
+task prepareWildFlyForTests( dependsOn: [installWildFly, installHibernateModule] )
 
 test.dependsOn prepareWildFlyForTests
 

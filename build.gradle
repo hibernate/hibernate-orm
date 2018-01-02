@@ -55,6 +55,9 @@ allprojects {
             url "http://snapshots.jboss.org/maven2/"
         }
     }
+
+	// minimize changes, at least for now (gradle uses 'build' by default)..
+	buildDir = "target"
 }
 
 ext {
@@ -87,8 +90,6 @@ def osgiDescription() {
 	return "A module of the Hibernate O/RM project"
 }
 
-buildDir = "target"
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 subprojects { subProject ->
@@ -105,9 +106,6 @@ subprojects { subProject ->
     version = rootProject.hibernateTargetVersion
 
     ext.exportPackageVersion = rootProject.osgiExportVersion
-
-    // minimize changes, at least for now (gradle uses 'build' by default)..
-    buildDir = "target"
 
 	if ( subProject.name.startsWith( 'release' ) ) {
 		return

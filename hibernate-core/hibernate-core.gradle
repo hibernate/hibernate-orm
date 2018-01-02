@@ -149,6 +149,7 @@ jar {
             '!javax.enterprise*',
             'javax.enterprise.context.spi;resolution:=optional',
             'javax.enterprise.inject.spi;resolution:=optional',
+            'javax.inject;resolution:=optional',
             'net.bytebuddy.*;resolution:=optional'
 
 //        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer

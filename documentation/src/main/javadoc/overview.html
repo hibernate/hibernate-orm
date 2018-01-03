@@ -17,7 +17,7 @@ Hibernate provides both<ul>
         See the latest <a href="http://jcp.org/en/jsr/detail?id=338">JPA JSR</a> for details.
     </li>
 </ul>
-<hr/>
+<p></p>
 
 <h3>Native API</h3>
 In addition to SessionFactory and Session, applications using the native API will often utilize the following
@@ -35,28 +35,32 @@ interfaces:<ul>
 </ul>
 These interfaces are fully intended to be exposed to application code.
 <p></p>
-<hr/>
 
 <h3>JPA</h3>
-The JPA interfaces are all defined by the JPA specification.  For details see {@link javax.persistence}
+The JPA interfaces are all defined by the JPA specification.  For details see {@link javax.persistence}.
+Not that since 5.2 Hibernate extends JPA (e.g. SessionFactory extends EntityManagerFactory) rather
+than wrapping it.
 <p></p>
-<hr/>
 
-<h3>Package Groups</h3>
-This documentation groups packages into the following 3 categories:<ul>
+
+<h3>Note about package categories</h3>
+Hibernate categorizes packages into a number of groups based on intended consumers:<ul>
     <li>
-        <strong>API</strong> - classes to which application code will generally bind directly.
+        <strong>API</strong> - classes to which application code will generally bind directly.  These
+        are generally classes which do not have "spi" nor "internal" in their package path and are
+        not under the "org.hibernate.testing" package
     </li>
     <li>
-        <strong>SPI</strong> - classes to which application developers or integrators will commonly bind directly in
-        order to develop extensions to Hibernate, or to alter its behavior in some way.
+        <strong>SPI</strong> - classes to which integrator developers will commonly bind directly in
+        order to develop extensions to Hibernate, or to alter its behavior in some way.  These are
+        generally under packages with "spi" in the package path.
     </li>
     <li>
-        <strong>Testing Support</strong> - classes from the hibernate-testing artifact used in building Hibernate test cases.
+        <strong>Testing Support</strong> - classes from the hibernate-testing artifact used in building
+        Hibernate test cases.  These are classes under the "org.hibernate.testing" package
     </li>
 </ul>
-
-<hr/>
+<p></p>
 
 Complete Hibernate documentation may be found online at <a href="http://hibernate.org/orm/documentation">http://hibernate.org/orm/documentation/</a>
 

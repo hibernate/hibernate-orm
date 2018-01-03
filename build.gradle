@@ -386,10 +386,10 @@ subprojects { subProject ->
 			use = true
 			encoding = 'UTF-8'
 			links += [
-					'http://docs.oracle.com/javase/8/docs/api/',
+					'https://docs.oracle.com/javase/8/docs/api/',
 					'http://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
 					'http://docs.jboss.org/cdi/api/2.0/',
-					'http://docs.oracle.com/javaee/7/api/'
+					'https://docs.oracle.com/javaee/7/api/'
 			]
 
 			if ( JavaVersion.current().isJava8Compatible() ) {
@@ -397,39 +397,8 @@ subprojects { subProject ->
 			}
 
 			doFirst {
-				// calculation of these groups is expensive - so push
-				// that process from init/configuration phase to execution
-				// phase.
-				//
-				// Note : this does not affect UP-TO-DATE checking because
-				// the groups are based on packages of the classes, and
-				// if the classes change that would already trigger
-				// re-execution of this task...
-
-				Set<String> apiPackages = new HashSet<>()
-				Set<String> spiPackages = new HashSet<>()
-				Set<String> testingPackages = new HashSet<String>()
-
-				subProject.sourceSets.main.java.each { javaFile ->
-					final String packageName = determinePackageName( subProject.sourceSets.main.java, javaFile );
-					if ( packageName.endsWith( ".internal" ) || packageName.contains( ".internal." ) ) {
-						// nothing to do - we exclude internal packages
-					}
-					else if ( packageName.endsWith( ".spi" ) || packageName.contains( ".spi." ) ) {
-						spiPackages.add( packageName )
-					}
-					else if ( packageName.startsWith( "org.hibernate.testing" ) ) {
-						testingPackages += packageName
-					}
-					else {
-						apiPackages.add( packageName )
-					}
-				}
-
-				options.group( 'API', apiPackages.asList() )
-				options.group( 'SPI', spiPackages.asList() )
-				options.group( 'Testing Support', testingPackages.asList() )
-
+				// ordering problems if we try to do this during config phase :(
+				classpath += subProject.sourceSets.main.output + subProject.sourceSets.main.compileClasspath + subProject.configurations.provided
 			}
 		}
 	}

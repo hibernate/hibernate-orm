@@ -149,46 +149,8 @@ task aggregateJavadocs(type: Javadoc) {
 		// we only care about the main SourceSet...
 		source subProject.sourceSets.main.java
 
-//		if( classpath ) {
-			classpath += subProject.sourceSets.main.output + subProject.sourceSets.main.compileClasspath
-//		}
-//		else {
-//			classpath = subProject.sourceSets.main.output + subProject.sourceSets.main.compileClasspath
-//		}
+		classpath += subProject.sourceSets.main.output + subProject.sourceSets.main.compileClasspath + subProject.configurations.provided
     }
-
-	doFirst {
-		Set<String> apiPackages = new HashSet<String>()
-		Set<String> spiPackages = new HashSet<String>()
-		Set<String> testingPackages = new HashSet<String>()
-
-		parent.subprojects.each { Project subProject ->
-			// skip certain sub-projects
-			if ( projectsToSkip.contains( subProject.name ) ) {
-				return
-			}
-
-			subProject.sourceSets.main.java.each { javaFile ->
-				final String packageName = determinePackageName( subProject.sourceSets.main.java, javaFile );
-				if ( packageName.endsWith( ".internal" ) || packageName.contains( ".internal." ) ) {
-					// do nothing - we exclude internal packages
-				}
-				else if ( packageName.endsWith( ".spi" ) || packageName.contains( ".spi." ) ) {
-					spiPackages.add( packageName )
-				}
-				else if ( packageName.startsWith( "org.hibernate.testing" ) ) {
-					testingPackages += packageName
-				}
-				else {
-					apiPackages.add( packageName )
-				}
-			}
-		}
-
-		options.group( 'API', apiPackages.asList() )
-		options.group( 'SPI', spiPackages.asList() )
-		options.group( 'Testing Support', testingPackages.asList() )
-	}
 }
 
 asciidoctor {

@@ -19,6 +19,10 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
+import org.hibernate.cache.spi.EntityRegion;
+import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
@@ -30,6 +34,8 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gail Badner
@@ -206,6 +212,22 @@ public class EntitiesAndCollectionsInSameRegionTest extends SingleNodeTest {
 					assertEquals( anotherEntity.values, anotherEntity1.values );
 				}
 		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10418")
+	public void testSessionFactoryImplCachImplConsistent() {
+		// When there is an entity region and collection region with the same name,
+		// * SessionFactoryImplementor#getSecondLevelCacheRegionAccessStrategy should return an EntityRegionAccessStrategy;
+		// * SessionFactoryImplementor#getSecondLevelCacheRegionAccessStrategy should return an EntityRegion.
+
+		final RegionAccessStrategy regionAccessStrategy = sessionFactory().getSecondLevelCacheRegionAccessStrategy(
+				REGION_NAME
+		);
+		assertTrue( EntityRegionAccessStrategy.class.isInstance( regionAccessStrategy ) );
+		final EntityRegionAccessStrategy entityRegionAccessStrategy = (EntityRegionAccessStrategy) regionAccessStrategy;
+
+		assertSame( entityRegionAccessStrategy.getRegion(), sessionFactory().getSecondLevelCacheRegion( REGION_NAME ) );
 	}
 
 	@Entity(name = "AnEntity")

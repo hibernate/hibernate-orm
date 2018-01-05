@@ -1173,8 +1173,21 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public RegionAccessStrategy getSecondLevelCacheRegionAccessStrategy(String regionName) {
-		EntityRegionAccessStrategy entityStrategy = entityRegionAccessStrategyMap.get(regionName);
-		return entityStrategy != null ? entityStrategy : collectionRegionAccessStrategyMap.get(regionName);
+		RegionAccessStrategy strategy = entityRegionAccessStrategyMap.get( regionName );
+		if ( strategy != null ) {
+			return strategy;
+		}
+		strategy = collectionRegionAccessStrategyMap.get( regionName );
+		if ( strategy != null ) {
+			return strategy;
+		}
+		// Although #getNaturalIdCacheRegionAccessStrategy should be called to get a
+		// NaturalIdCacheRegionAccessStrategy, earlier versions of this method would have
+		// returned a NaturalIdCacheRegionAccessStrategy (instead of null) if regionName
+		// was used for a NaturalIdCacheRegionAccessStrategy.
+
+		// The following is included in order to avoid breaking existing applications.
+		return naturalIdRegionAccessStrategyMap.get( regionName );
 	}
 
 	public Region getNaturalIdCacheRegion(String regionName) {

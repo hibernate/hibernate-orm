@@ -14,7 +14,7 @@ import java.util.Set;
 
 import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -45,7 +45,7 @@ public class BatchFetchQueueHelper {
 			Serializable[] ids,
 			List<?> results,
 			EntityPersister persister,
-			SharedSessionContractImplementor session) {
+			SessionImplementor session) {
 		if ( !persister.isBatchLoadable() ) {
 			return;
 		}
@@ -53,7 +53,7 @@ public class BatchFetchQueueHelper {
 			return;
 		}
 		LOG.debug( "Not all entities were loaded." );
-		Set<Serializable> idSet = new HashSet<>( Arrays.asList( ids ) );
+		Set<Serializable> idSet = new HashSet<Serializable>( Arrays.asList( ids ) );
 		for ( Object result : results ) {
 			// All results should be in the PersistenceContext
 			idSet.remove( session.getContextEntityIdentifier( result ) );
@@ -78,7 +78,7 @@ public class BatchFetchQueueHelper {
 	public static void removeBatchLoadableEntityKey(
 			Serializable id,
 			EntityPersister persister,
-			SharedSessionContractImplementor session) {
+			SessionImplementor session) {
 		final EntityKey entityKey = session.generateEntityKey( id, persister );
 		final BatchFetchQueue batchFetchQueue = session.getPersistenceContext().getBatchFetchQueue();
 		batchFetchQueue.removeBatchLoadableEntityKey( entityKey );

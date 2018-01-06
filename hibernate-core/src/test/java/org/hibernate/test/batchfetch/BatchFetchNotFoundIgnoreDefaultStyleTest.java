@@ -32,7 +32,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -61,8 +60,10 @@ public class BatchFetchNotFoundIgnoreDefaultStyleTest extends BaseCoreFunctional
 	@Before
 	public void createData() {
 		tasks.clear();
-		tasks = doInHibernate(
-				this::sessionFactory, session -> {
+
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 					for (int i = 0 ; i < NUMBER_OF_EMPLOYEES ; i++) {
 						Task task = new Task();
 						task.id = i;
@@ -72,45 +73,51 @@ public class BatchFetchNotFoundIgnoreDefaultStyleTest extends BaseCoreFunctional
 						e.task = task;
 						session.persist(e);
 					}
-					return tasks;
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@After
 	public void deleteData() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 					session.createQuery( "delete from Task" ).executeUpdate();
 					session.createQuery( "delete from Employee" ).executeUpdate();
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	public void testSeveralNotFoundFromQuery() {
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 					// delete 2nd and 8th Task so that the non-found Task entities will be queried
 					// in 2 different batches.
 					session.delete( tasks.get( 1 ) );
 					session.delete( tasks.get( 7 ) );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
 		statementInspector.clear();
 
-		final List<Employee> employees = doInHibernate(
-				this::sessionFactory, session -> {
-					List<Employee> results =
-							session.createQuery( "from Employee e order by e.id", Employee.class ).getResultList();
-					for ( int i = 0 ; i < tasks.size() ; i++ ) {
-						checkInBatchFetchQueue( tasks.get( i ).id, session, false );
-					}
-					return results;
-				}
-		);
+		session = openSession();
+		session.getTransaction().begin();
+
+		final List<Employee> employees =
+				(List<Employee>) session.createQuery( "from Employee e order by e.id" ).list();
+		for ( int i = 0 ; i < tasks.size() ; i++ ) {
+			checkInBatchFetchQueue( tasks.get( i ).id, session, false );
+		}
+
+		session.getTransaction().commit();
+		session.close();
 
 		final List<Integer> paramterCounts = statementInspector.parameterCounts;
 
@@ -154,29 +161,33 @@ public class BatchFetchNotFoundIgnoreDefaultStyleTest extends BaseCoreFunctional
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	public void testMostNotFoundFromQuery() {
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 					// delete all but last Task entity
 					for ( int i = 0; i < 7; i++ ) {
 						session.delete( tasks.get( i ) );
 					}
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
 		statementInspector.clear();
 
-		final List<Employee> employees = doInHibernate(
-				this::sessionFactory, session -> {
-					List<Employee> results =
-							session.createQuery( "from Employee e order by e.id", Employee.class ).getResultList();
-					for ( int i = 0 ; i < tasks.size() ; i++ ) {
-						checkInBatchFetchQueue( tasks.get( i ).id, session, false );
-					}
-					return results;
-				}
-		);
+		session = openSession();
+		session.getTransaction().begin();
+
+		final List<Employee> employees =
+				(List<Employee>) session.createQuery( "from Employee e order by e.id" ).list();
+		for ( int i = 0 ; i < tasks.size() ; i++ ) {
+			checkInBatchFetchQueue( tasks.get( i ).id, session, false );
+		}
+
+		session.getTransaction().commit();
+		session.close();
 
 		final List<Integer> paramterCounts = statementInspector.parameterCounts;
 
@@ -242,25 +253,29 @@ public class BatchFetchNotFoundIgnoreDefaultStyleTest extends BaseCoreFunctional
 	}
 
 	@Test
-	public void testNotFoundFromGet() {
+	public void testNotFoundFromGet ( ) {
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					// delete task so it is not found later when getting the Employee.
-					session.delete( tasks.get( 0 ) );
-				}
-		);
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
+						// delete task so it is not found later when getting the Employee.
+						session.delete( tasks.get( 0 ) );
+		}
+		session.getTransaction().commit();
+		session.close();
 
 		statementInspector.clear();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		session = openSession();
+		session.getTransaction().begin();
+		{
 					Employee employee = session.get( Employee.class, "employee00" );
 					checkInBatchFetchQueue( tasks.get( 0 ).id, session, false );
 					assertNotNull( employee );
 					assertNull( employee.task );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 
 		final List<Integer> paramterCounts = statementInspector.parameterCounts;
 
@@ -281,7 +296,7 @@ public class BatchFetchNotFoundIgnoreDefaultStyleTest extends BaseCoreFunctional
 	private static void checkInBatchFetchQueue(long id, Session session, boolean expected) {
 		final SessionImplementor sessionImplementor = (SessionImplementor) session;
 		final EntityPersister persister =
-				sessionImplementor.getFactory().getMetamodel().entityPersister( Task.class );
+				sessionImplementor.getFactory().getEntityPersister( Task.class.getName() );
 		final BatchFetchQueue batchFetchQueue =
 				sessionImplementor.getPersistenceContext().getBatchFetchQueue();
 		assertEquals( expected, batchFetchQueue.containsEntityKey( new EntityKey( id, persister ) ) );

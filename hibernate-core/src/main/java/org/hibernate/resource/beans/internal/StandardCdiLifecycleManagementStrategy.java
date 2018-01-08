@@ -6,10 +6,13 @@
  */
 package org.hibernate.resource.beans.internal;
 
+import javax.enterprise.context.ContextNotActiveException;
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.BeanManager;
 
 import org.hibernate.resource.beans.spi.ManagedBean;
+
+import org.jboss.logging.Logger;
 
 /**
  * A {@link CdiLifecycleManagementStrategy} to use when CDI compliance is required
@@ -22,6 +25,7 @@ import org.hibernate.resource.beans.spi.ManagedBean;
  * and are not duplicated, in contrast to {@link JpaCdiLifecycleManagementStrategy}.
  */
 class StandardCdiLifecycleManagementStrategy implements CdiLifecycleManagementStrategy {
+	private static final Logger log = Logger.getLogger( CompositeManagedBeanRegistry.class );
 
 	static final StandardCdiLifecycleManagementStrategy INSTANCE = new StandardCdiLifecycleManagementStrategy();
 
@@ -70,7 +74,17 @@ class StandardCdiLifecycleManagementStrategy implements CdiLifecycleManagementSt
 
 		@Override
 		public void release() {
-			instance.destroy( beanInstance );
+			try {
+				instance.destroy( beanInstance );
+			}
+			catch (ContextNotActiveException e) {
+				log.debugf(
+						"Error destroying managed bean instance [%s] - the context is not active anymore."
+								+ " The instance must have been destroyed already - ignoring.",
+						instance,
+						e
+				);
+			}
 		}
 	}
 }

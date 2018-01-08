@@ -190,10 +190,13 @@ task installWildFly(type: Copy, dependsOn: createModulesZip) {
 
         // until we have a version of WF supporting EE 8 (JPA 2.2),  we need to patch
         // the install to support JPA 2.2
+
+        def executableExtension = (System.properties['os.name'].toLowerCase().contains('windows')) ? 'bat' : 'sh'
+
         exec {
             ignoreExitValue = true
 
-            executable "$wildFlyInstallDir/bin/jboss-cli.sh"
+            executable "$wildFlyInstallDir/bin/jboss-cli." + executableExtension
             args "patch apply $patchFile.absolutePath"
         }
 

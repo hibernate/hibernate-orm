@@ -309,16 +309,25 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void addCacheRegion(String name, Region region) {
+		// Add the Region to all applicable maps
+		boolean isOtherRegion = true;
 		if ( EntityRegion.class.isInstance( region ) ) {
 			entityRegionMap.put( name, (EntityRegion) region );
+			isOtherRegion = false;
 		}
-		else if ( CollectionRegion.class.isInstance( region ) ) {
+		if ( CollectionRegion.class.isInstance( region ) ) {
 			collectionRegionMap.put( name, (CollectionRegion) region );
+			isOtherRegion = false;
 		}
-		else if ( NaturalIdRegion.class.isInstance( region ) ) {
+		if ( NaturalIdRegion.class.isInstance( region ) ) {
 			naturalIdRegionMap.put( name, (NaturalIdRegion) region );
+			isOtherRegion = false;
 		}
-		else {
+		// If the Region is not an EntityRegion, CollectionRegion, or NaturalIdRegion,
+		// then add it to otherRegionMap; the only other type of Region that Hibernate knows about
+		// is updateTimestampsCache, queryCache, and queryCaches; those regions should not
+		// be added using this method.
+		if ( isOtherRegion ) {
 			// in case an application uses this method for some other type of Region
 			otherRegionMap.put( name, region );
 		}
@@ -338,7 +347,12 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public Region getSecondLevelCacheRegion(String regionName) {
-		// If there is an EntityRegion and CollectionRegion with the same name,
+
+		// Order is important!
+		// To keep results of #getSecondLevelCacheRegion and #getAllSecondLevelCacheRegions consistent,
+		// the order of lookups in getSecondLevelCacheRegion needs to be the opposite of the order in
+		// which Map contents are added to getAllSecondLevelCacheRegions.
+		// In addition, if there is an EntityRegion and CollectionRegion with the same name,
 		// then the EntityRegion should be returned.
 		Region region = entityRegionMap.get(regionName);
 		if ( region != null ) {
@@ -348,8 +362,30 @@ public class CacheImpl implements CacheImplementor {
 		if ( region != null ) {
 			return region;
 		}
-		// Check for another type of Region of name regionName
-		return getNonEntityNonCollectionRegions().get( regionName );
+		region = naturalIdRegionMap.get( regionName );
+		if ( region != null ) {
+			return region;
+		}
+		region = otherRegionMap.get( regionName );
+		if ( region != null ) {
+			return region;
+		}
+		// keys in queryCaches may not be equal to the Region names
+		// obtained from queryCaches values; we need to be sure we are comparing
+		// the actual QueryCache region names with regionName.
+		for ( QueryCache queryCacheValue : queryCaches.values() ) {
+			if( queryCacheValue.getRegion().getName().equals( regionName ) ) {
+				return queryCacheValue.getRegion();
+			}
+		}
+		if ( queryCache.getRegion().getName().equals( regionName ) ) {
+			return queryCache.getRegion();
+		}
+		if ( updateTimestampsCache.getRegion().getName().equals( regionName ) ) {
+			return updateTimestampsCache.getRegion();
+		}
+		// no Region with the specified name
+		return null;
 	}
 
 	@Override
@@ -359,24 +395,29 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public Map<String, Region> getAllSecondLevelCacheRegions() {
-		// Order is important!
-		// For example, if there is a CollectionRegion and an EntityRegion with the same name, then we
-		// want the EntityRegion to be in the Map that gets returned.
-		Map<String, Region> allCacheRegions = getNonEntityNonCollectionRegions();
-		allCacheRegions.putAll( collectionRegionMap );
-		allCacheRegions.putAll( entityRegionMap );
-		return allCacheRegions;
-	}
 
-	private Map<String, Region> getNonEntityNonCollectionRegions() {
-		final Map<String, Region> allCacheRegions = new HashMap<String, Region>();
+		// Order is important!
+		// To keep results of #getSecondLevelCacheRegion and #getAllSecondLevelCacheRegions consistent,
+		// the order of lookups in getSecondLevelCacheRegion needs to be the opposite of the order in
+		// which Map contents are added to getAllSecondLevelCacheRegions.
+		// In addition, if there is a CollectionRegion and an EntityRegion with the same name, then we
+		// want the EntityRegion to be in the Map that gets returned.
+		final Map<String, Region> allCacheRegions = new HashMap<String, Region>(
+				2 + queryCaches.size() + otherRegionMap.size() + naturalIdRegionMap.size()
+						+ collectionRegionMap.size() + entityRegionMap.size()
+		);
 		allCacheRegions.put( updateTimestampsCache.getRegion().getName(), updateTimestampsCache.getRegion() );
 		allCacheRegions.put( queryCache.getRegion().getName(), queryCache.getRegion() );
+		// keys in queryCaches may not be equal to the Region names
+		// obtained from queryCaches values; we need to be sure we are adding
+		// the actual QueryCache region name as the key in allCacheRegions.
 		for ( QueryCache queryCacheValue : queryCaches.values() ) {
 			allCacheRegions.put( queryCacheValue.getRegion().getName(), queryCacheValue.getRegion() );
 		}
 		allCacheRegions.putAll( otherRegionMap );
 		allCacheRegions.putAll( naturalIdRegionMap );
+		allCacheRegions.putAll( collectionRegionMap );
+		allCacheRegions.putAll( entityRegionMap );
 		return allCacheRegions;
 	}
 

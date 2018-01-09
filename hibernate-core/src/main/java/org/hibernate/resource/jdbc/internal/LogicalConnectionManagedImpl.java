@@ -265,10 +265,10 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 
 	@Override
 	protected void afterCompletion() {
-		afterTransaction();
-
 		resetConnection( initiallyAutoCommit );
 		initiallyAutoCommit = false;
+
+		afterTransaction();
 	}
 
 	@Override

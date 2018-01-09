@@ -246,7 +246,7 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
-		private String id;
+		private int id;
 
 		@Column(nullable = false, length = 80)
 		private String name;
@@ -286,11 +286,11 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 			this.sex = sex;
 		}
 
-		public String getId() {
+		public int getId() {
 			return id;
 		}
 
-		public void setId(String id) {
+		public void setId(int id) {
 			this.id = id;
 		}
 

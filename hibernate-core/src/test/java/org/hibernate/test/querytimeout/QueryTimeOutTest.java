@@ -6,36 +6,39 @@
  */
 package org.hibernate.test.querytimeout;
 
-import java.sql.SQLException;
+import java.lang.reflect.Method;
+import java.sql.PreparedStatement;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.QueryHint;
 import javax.persistence.Table;
 
+import org.hibernate.SQLQuery;
+import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.QueryHints;
-import org.hibernate.query.NativeQuery;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.test.util.jdbc.BasicPreparedStatementObserver;
+import org.hibernate.test.util.jdbc.PreparedStatementProxyConnectionProvider;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Gail Badner
  */
 public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 
-	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER = new PreparedStatementSpyConnectionProvider();
+	private static final TimeoutPreparedStatementObserver preparedStatementObserver = new TimeoutPreparedStatementObserver();
+	private static final PreparedStatementProxyConnectionProvider connectionProvider = new PreparedStatementProxyConnectionProvider(
+			preparedStatementObserver
+	);
+
 	private static final String QUERY = "update AnEntity set name='abc'";
 
 	@Override
@@ -45,126 +48,52 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected void addSettings(Map settings) {
-		settings.put( AvailableSettings.CONNECTION_PROVIDER, CONNECTION_PROVIDER );
+		settings.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
 	}
 
 	@Before
 	public void before() {
-		CONNECTION_PROVIDER.clear();
+		preparedStatementObserver.clear();
+	}
+
+	@Override
+	public void releaseResources() {
+		super.releaseResources();
+		connectionProvider.stop();
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12075")
 	public void testCreateQuerySetTimeout() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 					Query query = session.createQuery( QUERY );
 					query.setTimeout( 123 );
 					query.executeUpdate();
 
-					try {
-						verify( CONNECTION_PROVIDER.getPreparedStatement( QUERY ), times( 1 ) ).setQueryTimeout( 123 );
-					}
-					catch (SQLException ex) {
-						fail( "should not have thrown exception" );
-					}
-				}
-		);
-	}
-
-	@Test
-	@TestForIssue( jiraKey = "HHH-12075")
-	public void testCreateQuerySetTimeoutHint() {
-		doInHibernate(
-				this::sessionFactory, session -> {
-					Query query = session.createQuery( QUERY );
-					query.setHint( QueryHints.SPEC_HINT_TIMEOUT, 123000 );
-					query.executeUpdate();
-
-					try {
-						verify( CONNECTION_PROVIDER.getPreparedStatement( QUERY ), times( 1 ) ).setQueryTimeout( 123 );
-					}
-					catch (SQLException ex) {
-						fail( "should not have thrown exception" );
-					}
-				}
-		);
-	}
-
-	@Test
-	@TestForIssue( jiraKey = "HHH-12075")
-	public void testCreateNativeQuerySetTimeout() {
-		doInHibernate(
-				this::sessionFactory, session -> {
-					NativeQuery query = session.createNativeQuery( QUERY );
-					query.setTimeout( 123 );
-					query.executeUpdate();
-
-					try {
-						verify( CONNECTION_PROVIDER.getPreparedStatement( QUERY ), times( 1 ) ).setQueryTimeout( 123 );
-					}
-					catch (SQLException ex) {
-						fail( "should not have thrown exception" );
-					}
-				}
-		);
-	}
-
-	@Test
-	@TestForIssue( jiraKey = "HHH-12075")
-	public void testCreateNativeQuerySetTimeoutHint() {
-		doInHibernate(
-				this::sessionFactory, session -> {
-					NativeQuery query = session.createNativeQuery( QUERY );
-					query.setHint( QueryHints.SPEC_HINT_TIMEOUT, 123000 );
-					query.executeUpdate();
-
-					try {
-						verify( CONNECTION_PROVIDER.getPreparedStatement( QUERY ), times( 1 ) ).setQueryTimeout( 123 );
-					}
-					catch (SQLException ex) {
-						fail( "should not have thrown exception" );
-					}
-				}
-		);
+					PreparedStatement preparedStatement = preparedStatementObserver.getPreparedStatement( QUERY );
+					assertEquals( 123, preparedStatementObserver.getTimeOut( preparedStatement ) );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12075")
 	public void testCreateSQLQuerySetTimeout() {
-		doInHibernate(
-				this::sessionFactory, session -> {
-					NativeQuery query = session.createSQLQuery( QUERY );
-					query.setTimeout( 123 );
-					query.executeUpdate();
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
+			SQLQuery query = session.createSQLQuery( QUERY );
+			query.setTimeout( 123 );
+			query.executeUpdate();
 
-					try {
-						verify( CONNECTION_PROVIDER.getPreparedStatement( QUERY ), times( 1 ) ).setQueryTimeout( 123 );
-					}
-					catch (SQLException ex) {
-						fail( "should not have thrown exception" );
-					}
-				}
-		);
-	}
-
-	@Test
-	@TestForIssue( jiraKey = "HHH-12075")
-	public void testCreateSQLQuerySetTimeoutHint() {
-		doInHibernate(
-				this::sessionFactory, session -> {
-					NativeQuery query = session.createSQLQuery( QUERY );
-					query.setHint( QueryHints.SPEC_HINT_TIMEOUT, 123000 );
-					query.executeUpdate();
-
-					try {
-						verify( CONNECTION_PROVIDER.getPreparedStatement( QUERY ), times( 1 ) ).setQueryTimeout( 123 );
-					}
-					catch (SQLException ex) {
-						fail( "should not have thrown exception" );
-					}
-				}
-		);
+			PreparedStatement preparedStatement = preparedStatementObserver.getPreparedStatement( QUERY );
+			assertEquals( 123, preparedStatementObserver.getTimeOut( preparedStatement ) );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Entity(name = "AnEntity" )
@@ -174,5 +103,47 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 		private int id;
 
 		private String name;
+	}
+
+	private static class TimeoutPreparedStatementObserver extends BasicPreparedStatementObserver {
+		private final Map<PreparedStatement, Integer> timeoutByPreparedStatement =
+				new HashMap<PreparedStatement, Integer>();
+
+		@Override
+		public void preparedStatementMethodInvoked(
+				PreparedStatement preparedStatement,
+				Method method,
+				Object[] args,
+				Object invocationReturnValue) {
+			super.preparedStatementMethodInvoked( preparedStatement, method, args, invocationReturnValue );
+			if ( "setQueryTimeout".equals( method.getName() ) ) {
+				// ugh, when ResourceRegistryStandardImpl closes the PreparedStatement, it calls
+				// PreparedStatement#setQueryTimeout( 0 ). Ignore this call if the PreparedStatement
+				// is already in timeoutByPreparedStatement
+				Integer timeout = (Integer) args[0];
+				Integer existingTimeout = timeoutByPreparedStatement.get( preparedStatement );
+				if ( timeout == 0 && existingTimeout != null && existingTimeout != 0  ) {
+					// ignore;
+					return;
+				}
+				timeoutByPreparedStatement.put( preparedStatement, timeout );
+			}
+		}
+
+		public int getTimeOut(PreparedStatement preparedStatement) {
+			return timeoutByPreparedStatement.get( preparedStatement );
+		}
+
+		@Override
+		public void connectionProviderStopped() {
+			super.connectionProviderStopped();
+			timeoutByPreparedStatement.clear();
+		}
+
+		@Override
+		public void clear() {
+			super.clear();
+			timeoutByPreparedStatement.clear();
+		}
 	}
 }

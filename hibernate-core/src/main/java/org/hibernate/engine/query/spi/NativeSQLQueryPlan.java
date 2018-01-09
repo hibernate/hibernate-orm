@@ -17,6 +17,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.event.spi.EventSource;
@@ -181,6 +182,7 @@ public class NativeSQLQueryPlan implements Serializable {
 
 		int result = 0;
 		PreparedStatement ps;
+		RowSelection selection = queryParameters.getRowSelection();
 		try {
 			queryParameters.processFilters( this.customQuery.getSQL(), session );
 			final String sql = session.getJdbcServices().getDialect()
@@ -196,6 +198,9 @@ public class NativeSQLQueryPlan implements Serializable {
 				int col = 1;
 				col += bindPositionalParameters( ps, queryParameters, col, session );
 				col += bindNamedParameters( ps, queryParameters.getNamedParameters(), col, session );
+				if ( selection != null && selection.getTimeout() != null ) {
+					ps.setQueryTimeout( selection.getTimeout() );
+				}
 				result = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 			}
 			finally {

@@ -44,8 +44,15 @@ class BatchCountingPreparedStatementObserver extends BasicPreparedStatementObser
 		return batchesAddedByPreparedStatement.get( preparedStatement );
 	}
 
+	@Override
 	public void connectionProviderStopped() {
 		super.connectionProviderStopped();
+		batchesAddedByPreparedStatement.clear();
+	}
+
+	@Override
+	public void clear() {
+		super.clear();
 		batchesAddedByPreparedStatement.clear();
 	}
 }

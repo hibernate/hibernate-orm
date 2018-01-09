@@ -66,6 +66,11 @@ public class BasicPreparedStatementObserver implements PreparedStatementObserver
 
 	@Override
 	public void connectionProviderStopped() {
+		clear();
+	}
+
+	@Override
+	public void clear() {
 		sqlByPreparedStatement.clear();
 	}
 }

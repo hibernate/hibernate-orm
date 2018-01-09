@@ -63,4 +63,10 @@ public interface PreparedStatementObserver {
 	 * @return list of recorded PreparedStatements.
 	 */
 	List<PreparedStatement> getPreparedStatements();
+
+	/**
+	 * Clears the recorded PreparedStatements and associated data.
+	 */
+	void clear();
+
 }

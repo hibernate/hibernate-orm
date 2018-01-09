@@ -722,6 +722,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		super();
 
 		registerColumnType( Types.DECIMAL, "decimal($p, $s)" );
+		registerColumnType( Types.NUMERIC, "decimal($p, $s)" );
 		registerColumnType( Types.DOUBLE, "double" );
 
 		// varbinary max length 5000

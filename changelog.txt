@@ -3,6 +3,27 @@ Hibernate 5.1 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changed in 5.1.11.Final (January 10, 2018)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/31001
+https://hibernate.atlassian.net/issues/?jql=project%20%3D%2010031%20AND%20fixVersion%20%3D%2031001%20ORDER%20BY%20priority%20DESC%2C%20key%20ASC
+
+** Bug
+    * [HHH-10418] - ClassCastException thrown in SessionFactoryImpl for named regions containing both entity and collection
+    * [HHH-11364] - Unable to populate an ElementCollection (of an embeddable type) of an audited entity when the collection has a null value for a property with JoinColumn
+    * [HHH-11915] - DatabaseMetaData#getIndexInfo can return column names enclosed in quotes on PostgresPlus
+    * [HHH-11957] - DB2 substring method needs to be exposed in DB297Dialect
+    * [HHH-11970] - Use of @NotFound(IGNORE) and @BatchSize when there are unresolved foreign key values results in extra queries
+    * [HHH-12075] - SQLQuery.executeUpdate() ignores SQLQuery.setTimeout()
+
+** Task
+    * [HHH-11808] - Update migration guide and documentation
+
+** Improvement
+    * [HHH-4959] - Concurrent HQL parsing blocks on ReflectHelper.classForName()
+    * [HHH-11377] - ReflectHelper#getConstantValue should consider digits as well
+
+
 Changed in 5.1.10.Final (August 18, 2017)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/30300

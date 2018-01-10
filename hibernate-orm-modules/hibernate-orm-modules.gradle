@@ -15,6 +15,8 @@ apply plugin: 'project-report'
 apply plugin: org.hibernate.build.HibernateBuildPlugin
 apply plugin: 'idea'
 
+project.tasks.jar.enabled = false
+project.tasks.javadoc.enabled = false
 
 ext {
     // NOTE : `wildflyVersion` comes from libraries.gradle...

@@ -18,6 +18,7 @@ ext {
 			'release'
 	]
 }
+
 rootProject.subprojects { subproject ->
 	if ( !this.projectsToSkipWhenAggregatingJavadocs.contains( subproject.name ) ) {
 		this.evaluationDependsOn( subproject.path )

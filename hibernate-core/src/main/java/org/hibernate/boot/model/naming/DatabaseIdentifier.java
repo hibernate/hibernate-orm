@@ -14,19 +14,28 @@ import org.hibernate.internal.util.StringHelper;
  * @author Andrea Boriero
  */
 public class DatabaseIdentifier extends Identifier {
+
 	/**
 	 * Constructs a datatabase identifier instance.
+	 * It is assumed that <code>text</code> is unquoted.
 	 *
 	 * @param text The identifier text.
 	 */
-	public DatabaseIdentifier(String text) {
-		super( text, false );
+	protected DatabaseIdentifier(String text) {
+		super( text );
 	}
 
 	public static DatabaseIdentifier toIdentifier(String text) {
 		if ( StringHelper.isEmpty( text ) ) {
 			return null;
 		}
-		return new DatabaseIdentifier( text );
+		else if ( isQuoted( text ) ) {
+			// exclude the quotes from text
+			final String unquotedtext = text.substring( 1, text.length() - 1 );
+			return new DatabaseIdentifier( unquotedtext );
+		}
+		else {
+			return new DatabaseIdentifier( text );
+		}
 	}
 }

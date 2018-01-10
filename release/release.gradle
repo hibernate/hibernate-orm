@@ -4,15 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-plugins {
-    id "com.jfrog.bintray" version "1.7"
-}
+apply from: rootProject.file( 'gradle/base-information.gradle' )
 
-apply plugin: 'base'
 apply plugin: 'idea'
 apply plugin: 'distribution'
-
-buildDir = "target"
 
 idea.module {
 }
@@ -150,8 +145,8 @@ distributions {
 
             // todo : this closure is problematic as it does not write into the hibernate-release-$project.version directory
             // due to http://issues.gradle.org/browse/GRADLE-1450
-            [ 'hibernate-c3p0', 'hibernate-proxool', 'hibernate-ehcache', 'hibernate-infinispan' ].each { feature ->
-                final String shortName = feature.substring( 'hibernate-'.length() );
+            [ 'hibernate-c3p0', 'hibernate-proxool', 'hibernate-ehcache' ].each { feature ->
+                final String shortName = feature.substring( 'hibernate-'.length() )
 // WORKAROUND http://issues.gradle.org/browse/GRADLE-1450
 //                into('lib/optional/' + shortName) {
                 owner.into('lib/optional/' + shortName) {
@@ -244,135 +239,5 @@ artifacts {
     bundles distZip
 }
 
-String binTrayUser = null
-String binTrayApiKey = null
+task release( dependsOn: uploadBundlesSourceForge )
 
-if ( project.hasProperty( "BINTRAY_USER" ) ) {
-    binTrayUser = project.property( "BINTRAY_USER" ) as String;
-}
-if ( binTrayUser == null ) {
-    binTrayUser = System.getProperty( "BINTRAY_USER" );
-}
-if ( binTrayUser == null ) {
-    binTrayUser = System.getenv( "BINTRAY_USER" );
-}
-if ( binTrayUser == null ) {
-    binTrayUser = 'UNDEFINED'
-}
-
-if ( project.hasProperty( "BINTRAY_APIKEY" ) ) {
-    binTrayApiKey = project.property( "BINTRAY_APIKEY" ) as String;
-}
-if ( binTrayApiKey == null ) {
-    binTrayApiKey = System.getProperty( "BINTRAY_APIKEY" );
-}
-if ( binTrayApiKey == null ) {
-    binTrayApiKey = System.getenv( "BINTRAY_APIKEY" );
-}
-if ( binTrayApiKey == null ) {
-    binTrayApiKey = 'UNDEFINED'
-}
-
-bintray {
-    user = binTrayUser
-    key = binTrayApiKey
-
-    publish = true
-
-    configurations = ['bundles']
-
-    pkg {
-        userOrg = 'hibernate'
-        repo = 'bundles'
-        name = 'hibernate-orm'
-
-        version {
-            name = project.version
-            desc = "The ${project.version} release of the Hibernate ORM project"
-
-            gpg {
-                sign = true
-                passphrase = 'hibernate'
-            }
-        }
-    }
-}
-
-bintrayUpload.dependsOn buildBundles
-
-bintrayUpload {
-    doFirst {
-        if ( version.endsWith( "SNAPSHOT" ) ) {
-            logger.error( "Cannot perform upload of SNAPSHOT bundles to BinTray" );
-            throw new RuntimeException( "Cannot perform upload of SNAPSHOT bundles to BinTray" )
-        }
-        else {
-            logger.lifecycle( "Uploading release bundles to BinTray..." )
-        }
-    }
-}
-
-task uploadBundles(dependsOn: [bintrayUpload, uploadBundlesSourceForge]) {
-    description = 'Performs all release bundle uploads'
-}
-
-
-// Full release related tasks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-task cleanAllSubProjects(type: Task) {
-    description = 'Performs clean on all sub-projects'
-}
-
-task testAllSubProjects(type: Task) {
-    description = 'Performs test on all sub-projects'
-}
-
-task publishAllSubProjects(type: Task) {
-    description = 'Performs publish on all sub-projects'
-}
-
-task buildAllSubProjects(type: Task, dependsOn: [testAllSubProjects,publishAllSubProjects])
-
-task uploadReleaseArtifacts(type: Task, dependsOn: [uploadDocumentation, uploadBundles])
-
-task announce(type: Task) { doFirst { println 'Hear ye, hear ye...' } }
-
-task release(type: Task, dependsOn: [buildAllSubProjects, uploadReleaseArtifacts, announce]) {
-    description = "Coordinates all release tasks; does not perform a clean first (see cleanAndRelease task)"
-}
-
-task cleanAndRelease(type: Task, dependsOn: [cleanAllSubProjects, release]) {
-	description = "Coordinates all release tasks *including clean*"
-}
-
-
-// must-run-afters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-buildAllSubProjects.mustRunAfter cleanAllSubProjects
-
-publishAllSubProjects.mustRunAfter testAllSubProjects
-publishAllSubProjects.mustRunAfter cleanAllSubProjects
-
-uploadReleaseArtifacts.mustRunAfter buildAllSubProjects
-
-announce.mustRunAfter uploadReleaseArtifacts
-
-
-// sub-project task dependencies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-rootProject.subprojects { Project subproject ->
-    final Task subprojectCleanTask = subproject.tasks.findByPath( 'clean' );
-    if ( subprojectCleanTask != null ) {
-        cleanAllSubProjects.dependsOn subprojectCleanTask
-    }
-
-    final Task subprojectTestTask = subproject.tasks.findByPath( 'test' );
-    if ( subprojectTestTask != null ) {
-        testAllSubProjects.dependsOn subprojectTestTask
-    }
-
-    final Task subprojectPublishTask = subproject.tasks.findByPath( 'publish' );
-    if ( subprojectPublishTask != null ) {
-        publishAllSubProjects.dependsOn subprojectPublishTask
-    }
-}

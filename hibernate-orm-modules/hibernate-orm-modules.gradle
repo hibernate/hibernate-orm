@@ -4,6 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+
+apply from: rootProject.file( 'gradle/java-module.gradle' )
+
 apply plugin: 'java'
 apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
@@ -12,16 +15,17 @@ apply plugin: 'project-report'
 apply plugin: org.hibernate.build.HibernateBuildPlugin
 apply plugin: 'idea'
 
+
 ext {
     // NOTE : `wildflyVersion` comes from libraries.gradle...
 
     // Exact ORM version, e.g. "5.1.1.Final"
-    slot = rootProject.hibernateFullVersion
+    slot = rootProject.hibernateVersion
     // Just the minor ORM version, e.g. "5.1"; Is used as an alias for the exact version
     minorSlot = rootProject.hibernateMajorMinorVersion
 
     // "10" for WildFly 10.x, "11" for 11.x, etc
-    wildFlyMajorVersion = wildflyVersion.split( '\\.' )[0]
+    wildFlyMajorVersion = project.wildflyVersion.split( '\\.' )[0]
     wildFlyJPA22PatchVersion = '1.0.0.Beta1'
 
     artifactClassifier = "wildfly-${wildFlyMajorVersion}-dist"
@@ -36,16 +40,13 @@ ext {
     expandedModuleProperties = [
             slot: slot,
             minorSlot: minorSlot,
-            version: rootProject.hibernateTargetVersion,
+            version: project.hibernateVersion,
             wildflyVersion: wildflyVersion,
             byteBuddyVersion: byteBuddyVersion
     ]
 }
 
-mavenPom {
-    name = "Hibernate ORM modules for WildFly ${wildFlyMajorVersion}"
-    description = "Hibernate ORM modules for WildFly ${wildFlyMajorVersion}"
-}
+description = "Hibernate ORM modules for WildFly ${wildFlyMajorVersion}"
 
 configurations {
     jipijapa {
@@ -71,29 +72,6 @@ dependencies {
     testCompile libraries.shrinkwrap_descriptors_api_javaee
     testCompile libraries.shrinkwrap_descriptors_impl_javaee
     testCompile libraries.wildfly_arquillian_container_managed
-
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // Java 9 ftw!
-    if ( JavaVersion.current().isJava9Compatible() ) {
-        compile( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-        compile( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-        compile( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-        compile( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-        compile( 'javax:javaee-api:7.0' )
-
-        testCompile( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-        testCompile( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-        testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-        testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-        testCompile( 'javax:javaee-api:7.0' )
-
-        testRuntime( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-        testRuntime( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-        testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-        testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-        testRuntime( 'javax:javaee-api:7.0' )
-    }
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
 
@@ -166,7 +144,7 @@ publishing {
     }
 }
 
-build.dependsOn createModulesZip
+task release( dependsOn: createModulesZip )
 
 
 

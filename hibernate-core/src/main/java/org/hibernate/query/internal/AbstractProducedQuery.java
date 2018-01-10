@@ -687,6 +687,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> QueryParameter<T> getParameter(String name, Class<T> type) {
+		getProducer().checkOpen( false );
 		try {
 			final QueryParameter parameter = getParameterMetadata().getQueryParameter( name );
 			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {

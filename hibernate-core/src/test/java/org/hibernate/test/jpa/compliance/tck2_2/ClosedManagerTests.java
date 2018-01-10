@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.jpa.compliance.tck2_2;
 
+import javax.persistence.Parameter;
+
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 
@@ -55,7 +57,7 @@ public class ClosedManagerTests extends AbstractJPATest {
 	}
 
 	@Test
-	public void testQuerySetParameter() {
+	public void testQuerySetPositionalParameter() {
 		final Session session = sessionFactory().openSession();
 
 		final Query qry = session.createQuery( "select i from Item i where i.id = ?1" );
@@ -72,7 +74,24 @@ public class ClosedManagerTests extends AbstractJPATest {
 	}
 
 	@Test
-	public void testQueryGetParameter() {
+	public void testQuerySetNamedParameter() {
+		final Session session = sessionFactory().openSession();
+
+		final Query qry = session.createQuery( "select i from Item i where i.id = :id" );
+
+		session.close();
+		assertThat( session.isOpen(), CoreMatchers.is ( false ) );
+
+		try {
+			qry.setParameter( "id", 1 );
+			fail( "Expecting call to fail" );
+		}
+		catch (IllegalStateException expected) {
+		}
+	}
+
+	@Test
+	public void testQueryGetPositionalParameter() {
 		final Session session = sessionFactory().openSession();
 
 		final Query qry = session.createQuery( "select i from Item i where i.id = ?1" );
@@ -90,6 +109,31 @@ public class ClosedManagerTests extends AbstractJPATest {
 
 		try {
 			qry.getParameter( 1, Integer.class );
+			fail( "Expecting call to fail" );
+		}
+		catch (IllegalStateException expected) {
+		}
+	}
+
+	@Test
+	public void testQueryGetNamedParameter() {
+		final Session session = sessionFactory().openSession();
+
+		final Query qry = session.createQuery( "select i from Item i where i.id = :id" );
+		qry.setParameter( "id", 1 );
+
+		session.close();
+		assertThat( session.isOpen(), CoreMatchers.is ( false ) );
+
+		try {
+			qry.getParameter( "id" );
+			fail( "Expecting call to fail" );
+		}
+		catch (IllegalStateException expected) {
+		}
+
+		try {
+			qry.getParameter( "id", Long.class );
 			fail( "Expecting call to fail" );
 		}
 		catch (IllegalStateException expected) {

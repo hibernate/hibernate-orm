@@ -43,10 +43,10 @@ public class PrimitiveCharacterArrayIdTest extends BaseCoreFunctionalTestCase {
 		for ( int i = 0; i < 3; i++ ) {
 			DemoEntity entity = new DemoEntity();
 			entity.id = new char[] {
-					(char) ( i + 1 ),
-					(char) ( i + 2 ),
-					(char) ( i + 3 ),
-					(char) ( i + 4 )
+					(char) ( i + 'a' ),
+					(char) ( i + 'b' ),
+					(char) ( i + 'c' ),
+					(char) ( i + 'd' )
 			};
 			entity.name = "Simple name " + i;
 			s.persist( entity );

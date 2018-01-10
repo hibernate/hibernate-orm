@@ -349,40 +349,50 @@ public class ProcedureParameterImpl<T>
 		if ( mode == ParameterMode.IN ) {
 			throw new ParameterMisuseException( "IN parameter not valid for output extraction" );
 		}
-
-		final Type hibernateType = determineHibernateType();
-		final int[] sqlTypes = hibernateType.sqlTypes( procedureCall.getSession().getFactory() );
-
-		// TODO: sqlTypesToUse.length > 1 does not seem to have a working use case (HHH-10769).
-		// For now, if sqlTypes.length > 1 with a named parameter, then extract
-		// parameter values by position (since we only have one name).
-		final boolean useNamed = sqlTypes.length == 1 &&
-				procedureCall.getParameterStrategy() == ParameterStrategy.NAMED &&
-				canDoNameParameterBinding( hibernateType );
-
 		try {
-			if ( ProcedureParameterExtractionAware.class.isInstance( hibernateType ) ) {
-				if ( useNamed ) {
-					return (T) ( (ProcedureParameterExtractionAware) hibernateType ).extract(
-							statement,
-							new String[] { getName() },
-							procedureCall.getSession()
-					);
-				}
-				else {
-					return (T) ( (ProcedureParameterExtractionAware) hibernateType ).extract(
-							statement,
-							startIndex,
-							procedureCall.getSession()
-					);
-				}
-			}
-			else {
-				if ( useNamed ) {
+			if ( mode == ParameterMode.REF_CURSOR ) {
+				if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED ) {
 					return (T) statement.getObject( name );
 				}
 				else {
 					return (T) statement.getObject( startIndex );
+				}
+			}
+			else {
+				final Type hibernateType = determineHibernateType();
+				final int[] sqlTypes = hibernateType.sqlTypes( procedureCall.getSession().getFactory() );
+
+				// TODO: sqlTypesToUse.length > 1 does not seem to have a working use case (HHH-10769).
+				// For now, if sqlTypes.length > 1 with a named parameter, then extract
+				// parameter values by position (since we only have one name).
+				final boolean useNamed = sqlTypes.length == 1 &&
+						procedureCall.getParameterStrategy() == ParameterStrategy.NAMED &&
+						canDoNameParameterBinding( hibernateType );
+
+
+				if ( ProcedureParameterExtractionAware.class.isInstance( hibernateType ) ) {
+					if ( useNamed ) {
+						return (T) ( (ProcedureParameterExtractionAware) hibernateType ).extract(
+								statement,
+								new String[] { getName() },
+								procedureCall.getSession()
+						);
+					}
+					else {
+						return (T) ( (ProcedureParameterExtractionAware) hibernateType ).extract(
+								statement,
+								startIndex,
+								procedureCall.getSession()
+						);
+					}
+				}
+				else {
+					if ( useNamed ) {
+						return (T) statement.getObject( name );
+					}
+					else {
+						return (T) statement.getObject( startIndex );
+					}
 				}
 			}
 		}

@@ -1,24 +1,23 @@
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+description = '(deprecated - use hibernate-core instead) Support for Java8-specific features - mainly Java8 Date/Time (JSR 310)'
+
 dependencies {
     compile( project( ':hibernate-core' ) )
 }
-
-mavenPom {
-    name = '(deprecated - use hibernate-core instead) Java8-specific Hibernate O/RM functionality'
-    description = '(deprecated - use hibernate-core instead) Support for Java8-specific features - mainly Java8 Date/Time (JSR 310)'
-}
-
-public String osgiDescription() {
-    return mavenPom.description
-}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// The OSGi JAR manifest support does not like a non-existent classes dir,
+// so make sure we dont use the OSGi one :)
 
 jar {
-    // The OSGi JAR manifest support does not like a non-existent classes dir,
-    // so make sure we dont use the OSGi one :)
     manifest = null
 }
 
 sourcesJar {
-    // The OSGi JAR manifest support does not like a non-existent classes dir,
-    // so make sure we dont use the OSGi one :)
+    manifest = null
+}
+
+javadocJar {
     manifest = null
 }

@@ -7,16 +7,25 @@ import org.asciidoctor.gradle.AsciidoctorTask
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.2'
-    }
+
+ext {
+	projectsToSkipWhenAggregatingJavadocs = [
+			'documentation',
+			'hibernate-entitymanager',
+			'hibernate-infinispan',
+			'hibernate-java8',
+			'hibernate-orm-modules',
+			'release'
+	]
+}
+rootProject.subprojects { subproject ->
+	if ( !this.projectsToSkipWhenAggregatingJavadocs.contains( subproject.name ) ) {
+		this.evaluationDependsOn( subproject.path )
+	}
 }
 
-apply plugin: "java"
+apply from: rootProject.file( 'gradle/java-module.gradle' )
+
 apply plugin: 'org.asciidoctor.convert'
 
 apply plugin: 'hibernate-matrix-testing'
@@ -50,31 +59,6 @@ dependencies {
 	testRuntime( libraries.mssql )
 
 	testCompile "org.osgi:org.osgi.core:4.3.1"
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Java 9 ftw!
-	if ( JavaVersion.current().isJava9Compatible() ) {
-		// The JDK used to run Gradle is Java 9+, and we assume that that is the same
-		//		JDK for executing tasks
-		compile( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-		compile( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-		compile( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-		compile( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-		compile( 'javax:javaee-api:7.0' )
-
-		testCompile( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-		testCompile( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-		testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-		testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-		testCompile( 'javax:javaee-api:7.0' )
-
-		testRuntime( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-		testRuntime( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-		testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-		testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-		testRuntime( 'javax:javaee-api:7.0' )
-	}
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
 
@@ -103,8 +87,6 @@ final File javadocDir = mkdir( new File( (File) project.buildDir, 'javadocs' ) )
  * Builds the JavaDocs aggregated (unified) across all the sub-projects
  */
 task aggregateJavadocs(type: Javadoc) {
-	String[] projectsToSkip = ['release','documentation', 'hibernate-orm-modules']
-
     description = 'Builds the aggregated (unified) JavaDocs across all sub-projects'
 
     final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
@@ -142,14 +124,12 @@ task aggregateJavadocs(type: Javadoc) {
     //      2) classpath
     parent.subprojects.each { Project subProject->
         // skip certain sub-projects
-		if ( projectsToSkip.contains( subProject.name ) ) {
-			return
+		if ( ! projectsToSkipWhenAggregatingJavadocs.contains( subProject.name ) ) {
+			// we only care about the main SourceSet...
+			source subProject.sourceSets.main.java
+
+			classpath += subProject.sourceSets.main.output + subProject.sourceSets.main.compileClasspath + subProject.configurations.provided
 		}
-
-		// we only care about the main SourceSet...
-		source subProject.sourceSets.main.java
-
-		classpath += subProject.sourceSets.main.output + subProject.sourceSets.main.compileClasspath + subProject.configurations.provided
     }
 }
 
@@ -167,7 +147,7 @@ task renderTopicalGuides(type: AsciidoctorTask, group: 'Documentation') {
 	backends "html5"
 	separateOutputDirs false
 	options logDocuments: true
-	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', majorMinorVersion: rootProject.hibernateMajorMinorVersion, fullVersion: rootProject.hibernateFullVersion
+	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', majorMinorVersion: rootProject.hibernateMajorMinorVersion, fullVersion: rootProject.hibernateVersion
 }
 
 
@@ -191,8 +171,8 @@ task buildTutorialZip(type: Zip) {
 	expand(
 			version: project.version,
 			slf4j: "1.7.5",
-			junit: parent.junitVersion,
-			h2: parent.h2Version
+			junit: project.junitVersion,
+			h2: project.h2Version
 	)
 }
 
@@ -233,7 +213,7 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
 			   linkcss: true,
 			   stylesheet: "css/hibernate.css",
 			   majorMinorVersion: rootProject.hibernateMajorMinorVersion,
-			   fullVersion: rootProject.hibernateFullVersion,
+			   fullVersion: rootProject.hibernateVersion,
 			   docinfo: true
 
 	resources {
@@ -292,3 +272,4 @@ buildDocsForPublishing.dependsOn renderUserGuide
 buildDocsForPublishing.dependsOn renderIntegrationGuide
 
 checkstyleMain.exclude '**/org/hibernate/userguide/model/*'
+

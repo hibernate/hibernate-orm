@@ -4,6 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+description = 'Support for testing Hibernate ORM functionality'
+
 dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.jta )
@@ -28,11 +33,3 @@ sourceSets.test.resources {
 //		that will allow us to keep the same artifactId and publish the pom
 //		with proper dependencies
 
-mavenPom {
-    name = 'Hibernate ORM Testing'
-    description = 'Support for testing Hibernate ORM functionality'
-}
-
-def osgiDescription() {
-	return mavenPom.description
-}

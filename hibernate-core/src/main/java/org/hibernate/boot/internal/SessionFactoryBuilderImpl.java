@@ -602,7 +602,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			this.strictJpaQueryLanguageCompliance = cfgService.getSetting( JPAQL_STRICT_COMPLIANCE, BOOLEAN, false );
 			this.namedQueryStartupCheckingEnabled = cfgService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
 			this.conventionalJavaConstants = cfgService.getSetting(
-					CONVENTIONAL_JAVA_CONSTANTS, BOOLEAN, true );
+					CONVENTIONAL_JAVA_CONSTANTS, BOOLEAN, false );
 			this.procedureParameterNullPassingEnabled = cfgService.getSetting( PROCEDURE_NULL_PARAM_PASSING, BOOLEAN, false );
 			this.collectionJoinSubqueryRewriteEnabled = cfgService.getSetting( COLLECTION_JOIN_SUBQUERY, BOOLEAN, true );
 

@@ -565,11 +565,18 @@ public interface AvailableSettings {
 	/**
 	 * Setting which indicates whether or not Java constant follow the Java Naming conventions.
 	 * <p/>
-	 * Default is {@code true}. Existing applications may want to disable this (set it {@code false}) if non-conventional Java constants are used.
-	 * However, there is a significant performance overhead for using non-conventional Java constants since Hibernate cannot determine if aliases
-	 * should be treated as Java constants or not.
+	 * Default is {@code false}. Existing applications may want to enable this (set it to {@code true})
+	 * if only conventional Java constants are used.
+	 * <p/>
+	 * There is a significant performance improvement by setting {@code hibernate.query.conventional_java_constants}
+	 * to {@code true}, because Hibernate can determine if an alias should be treated as a Java constant by simply
+	 * checking if the alias follows Java constant conventions.
+	 * <p/>
+	 * With {@code hibernate.query.conventional_java_constants} set to {@code false}, Hibernate determines if an alias
+	 * should be treated as a Java constant by attempting to load the alias as a class (an expensive operation);
+	 * if it fails, then Hibernate treats the alias as a Java constant.
 	 *
-	 * @since 5.2
+	 * @since 5.1.11, 5.2
 	 */
 	String CONVENTIONAL_JAVA_CONSTANTS = "hibernate.query.conventional_java_constants";
 

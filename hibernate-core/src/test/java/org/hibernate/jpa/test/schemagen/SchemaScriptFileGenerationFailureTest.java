@@ -11,6 +11,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.regex.Pattern;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.PersistenceException;
@@ -56,7 +57,7 @@ public class SchemaScriptFileGenerationFailureTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12192")
-	public void testGenerateSchemaDoesNotProduceTheSameStatementTwice() throws Exception {
+	public void testErrorMessageContainsTheFailingDDLCommand() throws Exception {
 		try {
 			entityManagerFactoryBuilder.generateSchema();
 			fail( "Should haave thrown IOException" );
@@ -69,7 +70,10 @@ public class SchemaScriptFileGenerationFailureTest {
 			CommandAcceptanceException commandAcceptanceException = (CommandAcceptanceException) e.getCause()
 					.getCause();
 
-			assertTrue( commandAcceptanceException.getMessage().contains( "drop table test_entity if exists" ) );
+
+			boolean ddlCommandFound = Pattern.compile( "drop table( if exists)? test_entity( if exists)?" )
+					.matcher( commandAcceptanceException.getMessage().toLowerCase() ).find();
+			assertTrue( "The Exception Message does not contain the DDL command causing the failure", ddlCommandFound );
 
 			assertTrue( commandAcceptanceException.getCause() instanceof IOException );
 

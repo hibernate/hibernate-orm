@@ -82,7 +82,7 @@ public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescript
 		if ( relationalForm == null ) {
 			return null;
 		}
-		return (T) Enum.valueOf( getJavaType(), relationalForm );
+		return (T) Enum.valueOf( getJavaType(), relationalForm.trim() );
 	}
 
 	public String toName(T domainForm) {

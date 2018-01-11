@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -5,14 +7,16 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-apply from: rootProject.file( 'gradle/java-module.gradle' )
-
+apply from: rootProject.file( 'gradle/base-information.gradle' )
 apply plugin: 'java'
+apply from: rootProject.file( 'gradle/libraries.gradle' )
+
 apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
+apply from: rootProject.file( 'gradle/publishing-repos.gradle' )
+
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
-apply plugin: org.hibernate.build.HibernateBuildPlugin
 apply plugin: 'idea'
 
 project.tasks.jar.enabled = false
@@ -48,7 +52,7 @@ ext {
     ]
 }
 
-description = "Hibernate ORM modules for WildFly ${wildFlyMajorVersion}"
+description = "Hibernate ORM modules for WildFly ${project.wildFlyMajorVersion}"
 
 configurations {
     jipijapa {
@@ -176,7 +180,7 @@ task installWildFly(type: Copy, dependsOn: createModulesZip) {
         exec {
             ignoreExitValue = true
 
-            executable "$wildFlyInstallDir/bin/jboss-cli." + executableExtension
+            executable "$project.wildFlyInstallDir/bin/jboss-cli." + executableExtension
             args "patch apply $patchFile.absolutePath"
         }
 
@@ -184,7 +188,7 @@ task installWildFly(type: Copy, dependsOn: createModulesZip) {
         copy {
             duplicatesStrategy DuplicatesStrategy.EXCLUDE
             from zipTree( createModulesZip.archivePath )
-            into "${wildFlyInstallDir}/modules"
+            into "${project.wildFlyInstallDir}/modules"
         }
     }
 }
@@ -198,7 +202,10 @@ task prepareWildFlyForTests( dependsOn: [installWildFly, installHibernateModule]
 test.dependsOn prepareWildFlyForTests
 
 processTestResources {
-    expand( wildFlyInstallDir: wildFlyInstallDir, arquillianDeploymentExportDir: "${rootProject.buildDir.absolutePath}/arquillian-deployments" )
+    expand([
+			wildFlyInstallDir: project.wildFlyInstallDir,
+			arquillianDeploymentExportDir: "${rootProject.buildDir.absolutePath}/arquillian-deployments"
+    ])
 }
 
 

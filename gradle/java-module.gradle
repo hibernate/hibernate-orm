@@ -209,7 +209,7 @@ processTestResources {
 				include '**/*.properties'
 				include '**/*.xml'
 			}
-			into sourceSets.test.output.classesDir
+			into sourceSets.test.java.outputDir
 		}
 		copy {
 			from file( 'src/test/resources' )

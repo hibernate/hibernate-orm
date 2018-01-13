@@ -132,6 +132,7 @@ ext {
             jcache:          "javax.cache:cache-api:1.0.0",
             proxool:         "proxool:proxool:0.8.3",
             hikaricp:        "com.zaxxer:HikariCP:2.5.1",
+            vibur:           "org.vibur:vibur-dbcp:21.2",
 
             cdi: "javax.enterprise:cdi-api:${cdiVersion}",
             weld: "org.jboss.weld.se:weld-se-shaded:${weldVersion}",

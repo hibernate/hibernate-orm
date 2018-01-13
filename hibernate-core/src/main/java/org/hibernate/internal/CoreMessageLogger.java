@@ -1782,4 +1782,9 @@ public interface CoreMessageLogger extends BasicLogger {
 					"issue HHH-11936 for details."
 	)
 	void emptyCompositesEnabled();
+
+	@LogMessage(level = WARN)
+	@Message(value = "Vibur properties were encountered, but the Vibur ConnectionProvider was not found on the classpath; these properties are going to be ignored.",
+			id = 484)
+	void viburProviderClassNotFound();
 }

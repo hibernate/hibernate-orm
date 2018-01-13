@@ -64,6 +64,19 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 						namedSpecification.getName(),
 						k -> new NamedParameterInformationImpl( k, namedSpecification.getExpectedType() )
 				);
+
+				/*
+					If a previous reference to the NamedParameter already exists with expected type null and the new
+					reference expected type is not null then we add the type to the NamedParameterInformation.
+
+					This situation may occur when the same name parameter is used twice in the same query,
+					an example is ".... where :name is null or name.last = :name"
+
+					If info.getExpectedType() != null and also != namedSpecification.getExpectedType(), should an exception be thrown?
+				*/
+				if ( info.getExpectedType() == null && namedSpecification.getExpectedType() != null ) {
+					info.setExpectedType( namedSpecification.getExpectedType() );
+				}
 				info.addSourceLocation( i++ );
 			}
 		}

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.jpa.compliance.tck2_2.mapkeycolumn;
+package org.hibernate.test.jpa.mapkeycolumn;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +12,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -27,9 +27,8 @@ import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
- * @author Gail Badner
  */
-public class MapKeyColumnBiDiOneToManyFKTest extends BaseNonConfigCoreFunctionalTestCase {
+public class MapKeyColumnOneToManyFKTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12150" )
@@ -48,7 +47,6 @@ public class MapKeyColumnBiDiOneToManyFKTest extends BaseNonConfigCoreFunctional
 					AddressCapable2 holder = session.get( AddressCapable2.class, 1 );
 					Address2 address = session.get( Address2.class, 1 );
 
-					address.holder = holder;
 					holder.addresses.put( "work", address );
 
 					session.persist( holder );
@@ -83,7 +81,6 @@ public class MapKeyColumnBiDiOneToManyFKTest extends BaseNonConfigCoreFunctional
 					AddressCapable holder = session.get( AddressCapable.class, 1 );
 					Address address = session.get( Address.class, 1 );
 
-					address.holder = holder;
 					holder.addresses.put( "work", address );
 
 					session.persist( holder );
@@ -116,8 +113,9 @@ public class MapKeyColumnBiDiOneToManyFKTest extends BaseNonConfigCoreFunctional
 		@Id
 		public Integer id;
 		public String name;
+		@JoinColumn
 		@MapKeyColumn( name = "a_type" )
-		@OneToMany( mappedBy = "holder", cascade = {CascadeType.PERSIST, CascadeType.REMOVE} )
+		@OneToMany( cascade = {CascadeType.PERSIST, CascadeType.REMOVE} )
 		public Map<String,Address> addresses = new HashMap<>();
 
 		public AddressCapable() {
@@ -135,8 +133,6 @@ public class MapKeyColumnBiDiOneToManyFKTest extends BaseNonConfigCoreFunctional
 		@Id
 		public Integer id;
 		public String street;
-		@ManyToOne
-		public AddressCapable holder;
 
 		public Address() {
 		}
@@ -153,8 +149,9 @@ public class MapKeyColumnBiDiOneToManyFKTest extends BaseNonConfigCoreFunctional
 		@Id
 		public Integer id;
 		public String name;
+		@JoinColumn
 		@MapKeyColumn( name = "a_type" )
-		@OneToMany( mappedBy = "holder", cascade = {CascadeType.PERSIST, CascadeType.REMOVE} )
+		@OneToMany( cascade = {CascadeType.PERSIST, CascadeType.REMOVE} )
 		public Map<String,Address2> addresses = new HashMap<>();
 
 		public AddressCapable2() {
@@ -174,8 +171,6 @@ public class MapKeyColumnBiDiOneToManyFKTest extends BaseNonConfigCoreFunctional
 		public String street;
 		@Column( name = "a_type" )
 		public String type;
-		@ManyToOne
-		public AddressCapable2 holder;
 
 		public Address2() {
 		}

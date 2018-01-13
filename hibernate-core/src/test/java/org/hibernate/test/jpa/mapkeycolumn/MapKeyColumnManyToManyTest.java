@@ -4,16 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.jpa.compliance.tck2_2.mapkeycolumn;
+package org.hibernate.test.jpa.mapkeycolumn;
 
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 
@@ -28,7 +27,7 @@ import static junit.framework.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-public class MapKeyColumnElementCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
+public class MapKeyColumnManyToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12150" )
@@ -36,15 +35,16 @@ public class MapKeyColumnElementCollectionTest extends BaseNonConfigCoreFunction
 		inTransaction(
 				session -> {
 					AddressCapable2 holder = new AddressCapable2( 1, "osd");
+					Address2 address = new Address2( 1, "123 Main St" );
 
 					session.persist( holder );
+					session.persist( address );
 				}
 		);
 		inTransaction(
 				session -> {
 					AddressCapable2 holder = session.get( AddressCapable2.class, 1 );
-					Address2 address = new Address2( 1, "123 Main St" );
-					address.type = "work";
+					Address2 address = session.get( Address2.class, 1 );
 
 					holder.addresses.put( "work", address );
 
@@ -57,7 +57,7 @@ public class MapKeyColumnElementCollectionTest extends BaseNonConfigCoreFunction
 					assertEquals( 1, holder.addresses.size() );
 					final Map.Entry<String,Address2> entry = holder.addresses.entrySet().iterator().next();
 					assertEquals( "work", entry.getKey() );
-					assertEquals( "work", entry.getValue().type );
+					assertEquals( null, entry.getValue().type );
 					session.remove( holder );
 				}
 		);
@@ -69,15 +69,18 @@ public class MapKeyColumnElementCollectionTest extends BaseNonConfigCoreFunction
 		inTransaction(
 				session -> {
 					AddressCapable holder = new AddressCapable( 1, "osd");
+					Address address = new Address( 1, "123 Main St" );
 
 					session.persist( holder );
+					session.persist( address );
 				}
 		);
 		inTransaction(
 				session -> {
 					AddressCapable holder = session.get( AddressCapable.class, 1 );
+					Address address = session.get( Address.class, 1 );
 
-					holder.addresses.put( "work", new Address( 1, "123 Main St" ) );
+					holder.addresses.put( "work", address );
 
 					session.persist( holder );
 				}
@@ -99,6 +102,8 @@ public class MapKeyColumnElementCollectionTest extends BaseNonConfigCoreFunction
 
 		sources.addAnnotatedClass( AddressCapable.class );
 		sources.addAnnotatedClass( AddressCapable2.class );
+		sources.addAnnotatedClass( Address.class );
+		sources.addAnnotatedClass( Address2.class );
 	}
 
 	@Entity( name = "AddressCapable" )
@@ -108,7 +113,7 @@ public class MapKeyColumnElementCollectionTest extends BaseNonConfigCoreFunction
 		public Integer id;
 		public String name;
 		@MapKeyColumn( name = "a_type" )
-		@ElementCollection
+		@ManyToMany( cascade = {CascadeType.PERSIST, CascadeType.REMOVE} )
 		public Map<String,Address> addresses = new HashMap<>();
 
 		public AddressCapable() {
@@ -120,16 +125,18 @@ public class MapKeyColumnElementCollectionTest extends BaseNonConfigCoreFunction
 		}
 	}
 
-	@Embeddable
+	@Entity( name = "Address" )
+	@Table( name = "addresses" )
 	public static class Address {
-		public Integer buildingNumber;
+		@Id
+		public Integer id;
 		public String street;
 
 		public Address() {
 		}
 
-		public Address(Integer buildingNumber, String street) {
-			this.buildingNumber = buildingNumber;
+		public Address(Integer id, String street) {
+			this.id = id;
 			this.street = street;
 		}
 	}
@@ -140,8 +147,8 @@ public class MapKeyColumnElementCollectionTest extends BaseNonConfigCoreFunction
 		@Id
 		public Integer id;
 		public String name;
-		@MapKeyColumn( name = "a_type", insertable = false, updatable = false)
-		@ElementCollection
+		@MapKeyColumn( name = "a_type" )
+		@ManyToMany( cascade = {CascadeType.PERSIST, CascadeType.REMOVE} )
 		public Map<String,Address2> addresses = new HashMap<>();
 
 		public AddressCapable2() {
@@ -153,9 +160,11 @@ public class MapKeyColumnElementCollectionTest extends BaseNonConfigCoreFunction
 		}
 	}
 
-	@Embeddable
+	@Entity( name = "Address2" )
+	@Table( name = "addresses2" )
 	public static class Address2 {
-		public Integer buildingNumber;
+		@Id
+		public Integer id;
 		public String street;
 		@Column( name = "a_type" )
 		public String type;
@@ -163,8 +172,8 @@ public class MapKeyColumnElementCollectionTest extends BaseNonConfigCoreFunction
 		public Address2() {
 		}
 
-		public Address2(Integer buildingNumber, String street) {
-			this.buildingNumber = buildingNumber;
+		public Address2(Integer id, String street) {
+			this.id = id;
 			this.street = street;
 		}
 	}

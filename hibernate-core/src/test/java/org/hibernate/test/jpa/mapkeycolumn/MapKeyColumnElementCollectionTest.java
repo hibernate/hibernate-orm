@@ -4,15 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.jpa.compliance.tck2_2.mapkeycolumn;
+package org.hibernate.test.jpa.mapkeycolumn;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 
@@ -27,7 +27,7 @@ import static junit.framework.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-public class MapKeyColumnManyToManyTest extends BaseNonConfigCoreFunctionalTestCase {
+public class MapKeyColumnElementCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12150" )
@@ -35,16 +35,15 @@ public class MapKeyColumnManyToManyTest extends BaseNonConfigCoreFunctionalTestC
 		inTransaction(
 				session -> {
 					AddressCapable2 holder = new AddressCapable2( 1, "osd");
-					Address2 address = new Address2( 1, "123 Main St" );
 
 					session.persist( holder );
-					session.persist( address );
 				}
 		);
 		inTransaction(
 				session -> {
 					AddressCapable2 holder = session.get( AddressCapable2.class, 1 );
-					Address2 address = session.get( Address2.class, 1 );
+					Address2 address = new Address2( 1, "123 Main St" );
+					address.type = "work";
 
 					holder.addresses.put( "work", address );
 
@@ -57,7 +56,7 @@ public class MapKeyColumnManyToManyTest extends BaseNonConfigCoreFunctionalTestC
 					assertEquals( 1, holder.addresses.size() );
 					final Map.Entry<String,Address2> entry = holder.addresses.entrySet().iterator().next();
 					assertEquals( "work", entry.getKey() );
-					assertEquals( null, entry.getValue().type );
+					assertEquals( "work", entry.getValue().type );
 					session.remove( holder );
 				}
 		);
@@ -69,18 +68,15 @@ public class MapKeyColumnManyToManyTest extends BaseNonConfigCoreFunctionalTestC
 		inTransaction(
 				session -> {
 					AddressCapable holder = new AddressCapable( 1, "osd");
-					Address address = new Address( 1, "123 Main St" );
 
 					session.persist( holder );
-					session.persist( address );
 				}
 		);
 		inTransaction(
 				session -> {
 					AddressCapable holder = session.get( AddressCapable.class, 1 );
-					Address address = session.get( Address.class, 1 );
 
-					holder.addresses.put( "work", address );
+					holder.addresses.put( "work", new Address( 1, "123 Main St" ) );
 
 					session.persist( holder );
 				}
@@ -102,8 +98,6 @@ public class MapKeyColumnManyToManyTest extends BaseNonConfigCoreFunctionalTestC
 
 		sources.addAnnotatedClass( AddressCapable.class );
 		sources.addAnnotatedClass( AddressCapable2.class );
-		sources.addAnnotatedClass( Address.class );
-		sources.addAnnotatedClass( Address2.class );
 	}
 
 	@Entity( name = "AddressCapable" )
@@ -113,7 +107,7 @@ public class MapKeyColumnManyToManyTest extends BaseNonConfigCoreFunctionalTestC
 		public Integer id;
 		public String name;
 		@MapKeyColumn( name = "a_type" )
-		@ManyToMany( cascade = {CascadeType.PERSIST, CascadeType.REMOVE} )
+		@ElementCollection
 		public Map<String,Address> addresses = new HashMap<>();
 
 		public AddressCapable() {
@@ -125,18 +119,16 @@ public class MapKeyColumnManyToManyTest extends BaseNonConfigCoreFunctionalTestC
 		}
 	}
 
-	@Entity( name = "Address" )
-	@Table( name = "addresses" )
+	@Embeddable
 	public static class Address {
-		@Id
-		public Integer id;
+		public Integer buildingNumber;
 		public String street;
 
 		public Address() {
 		}
 
-		public Address(Integer id, String street) {
-			this.id = id;
+		public Address(Integer buildingNumber, String street) {
+			this.buildingNumber = buildingNumber;
 			this.street = street;
 		}
 	}
@@ -147,8 +139,8 @@ public class MapKeyColumnManyToManyTest extends BaseNonConfigCoreFunctionalTestC
 		@Id
 		public Integer id;
 		public String name;
-		@MapKeyColumn( name = "a_type" )
-		@ManyToMany( cascade = {CascadeType.PERSIST, CascadeType.REMOVE} )
+		@MapKeyColumn( name = "a_type", insertable = false, updatable = false)
+		@ElementCollection
 		public Map<String,Address2> addresses = new HashMap<>();
 
 		public AddressCapable2() {
@@ -160,11 +152,9 @@ public class MapKeyColumnManyToManyTest extends BaseNonConfigCoreFunctionalTestC
 		}
 	}
 
-	@Entity( name = "Address2" )
-	@Table( name = "addresses2" )
+	@Embeddable
 	public static class Address2 {
-		@Id
-		public Integer id;
+		public Integer buildingNumber;
 		public String street;
 		@Column( name = "a_type" )
 		public String type;
@@ -172,8 +162,8 @@ public class MapKeyColumnManyToManyTest extends BaseNonConfigCoreFunctionalTestC
 		public Address2() {
 		}
 
-		public Address2(Integer id, String street) {
-			this.id = id;
+		public Address2(Integer buildingNumber, String street) {
+			this.buildingNumber = buildingNumber;
 			this.street = street;
 		}
 	}

@@ -28,8 +28,9 @@ public class StrategyRegistrationProviderImpl implements StrategyRegistrationPro
 					ViburDBCPConnectionProvider.class,
 					"vibur",
 					"viburdbcp",
-					ViburDBCPConnectionProvider.class.getName(),
 					ViburDBCPConnectionProvider.class.getSimpleName(),
+					// for backward compatibility with pre-existing Vibur project Hibernate integration artifacts
+					"org.vibur.dbcp.integration.ViburDBCPConnectionProvider",
 					// for consistency's sake
 					"org.hibernate.connection.ViburDBCPConnectionProvider"
 			)

@@ -90,35 +90,43 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
     @Override
     @SuppressWarnings( {"unchecked"})
     public <T> T unwrap(Class<T> unwrapType) {
-        if (isUnwrappableAs(unwrapType))
+        if (isUnwrappableAs(unwrapType)) {
             return (T) this;
-        else
+        }
+        else {
             throw new UnknownUnwrapTypeException(unwrapType);
+        }
     }
 
     private static Properties transform(Map<String, String> configurationValues) {
         Properties result  = new Properties();
 
         String driverClassName = configurationValues.get(DRIVER);
-        if (driverClassName != null)
+        if (driverClassName != null) {
             result.setProperty("driverClassName", driverClassName);
+        }
         String jdbcUrl = configurationValues.get(URL);
-        if (jdbcUrl != null)
+        if (jdbcUrl != null) {
             result.setProperty("jdbcUrl", jdbcUrl);
+        }
 
         String username = configurationValues.get(USER);
-        if (username != null)
+        if (username != null) {
             result.setProperty("username", username);
+        }
         String password = configurationValues.get(PASS);
-        if (password != null)
+        if (password != null) {
             result.setProperty("password", password);
+        }
 
         String defaultTransactionIsolationValue = configurationValues.get(ISOLATION);
-        if (defaultTransactionIsolationValue != null)
+        if (defaultTransactionIsolationValue != null) {
             result.setProperty("defaultTransactionIsolationValue", defaultTransactionIsolationValue);
+        }
         String defaultAutoCommit = configurationValues.get(AUTOCOMMIT);
-        if (defaultAutoCommit != null)
+        if (defaultAutoCommit != null) {
             result.setProperty("defaultAutoCommit", defaultAutoCommit);
+        }
 
         for (Map.Entry<String, String> entry : configurationValues.entrySet()) {
             String key = entry.getKey();

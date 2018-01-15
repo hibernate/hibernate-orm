@@ -1787,4 +1787,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Vibur properties were encountered, but the Vibur ConnectionProvider was not found on the classpath; these properties are going to be ignored.",
 			id = 484)
 	void viburProviderClassNotFound();
+
+	@LogMessage(level = ERROR)
+	@Message(value = "Illegally attempted to associate a proxy for entity [%s] with id [%s] with two open sessions.", id = 485)
+	void attemptToAssociateProxyWithTwoOpenSessions(
+			String entityName,
+			Object id
+	);
+
 }

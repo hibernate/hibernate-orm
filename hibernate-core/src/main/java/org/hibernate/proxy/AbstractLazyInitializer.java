@@ -102,6 +102,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			}
 			else if ( isConnectedToSession() ) {
 				//TODO: perhaps this should be some other RuntimeException...
+				log.debug("Illegally attempted to associate a proxy for entity with name " + entityName + " and ID " + id + " with two open sessions.");
 				throw new HibernateException( "illegally attempted to associate a proxy with two open Sessions" );
 			}
 			else {

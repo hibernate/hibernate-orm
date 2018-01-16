@@ -133,7 +133,7 @@ ext {
 }
 
 sourceSets.main {
-    java.srcDir jaxbTargetDir
+    java.srcDir project.jaxbTargetDir
 }
 
 // resources inherently exclude sources
@@ -148,7 +148,7 @@ sourceSets.test.resources {
 //}
 
 xjc {
-    outputDir = jaxbTargetDir
+    outputDir = project.jaxbTargetDir
 
     schemas {
         cfg {
@@ -169,14 +169,18 @@ xjc {
 tasks.compile.dependsOn generateGrammarSource
 
 task copyBundleResources (type: Copy) {
-    ext.bundlesTargetDir = file( "${buildDir}/bundles" )
+    ext {
+        bundlesTargetDir = file( "${buildDir}/bundles" )
+        bundleTokens = dbBundle[db]
+        ext.bundleTokens['buildDirName'] = buildDir.absolutePath
+    }
+
     from file('src/test/bundles')
-    into bundlesTargetDir
-    ext.bundleTokens = dbBundle[db]
-    ext.bundleTokens['buildDirName'] = buildDir.absolutePath
-    filter( ReplaceTokens, tokens: bundleTokens);
+    into ext.bundlesTargetDir
+    filter( ReplaceTokens, tokens: ext.bundleTokens)
+
     doFirst {
-        bundlesTargetDir.mkdirs()
+        ext.bundlesTargetDir.mkdirs()
     }
 }
 processTestResources.dependsOn copyBundleResources

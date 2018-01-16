@@ -12,8 +12,9 @@ description = 'Integration for Vibur Connection pooling as a Hibernate ORM Conne
 dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.vibur )
-    testCompile( 'com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2' )
 
+    testCompile( 'org.vibur:vibur-dbcp:21.2:tests' )
+    testCompile( 'com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2' )
     testCompile project( ':hibernate-testing' )
     testCompile( libraries.mockito )
 }

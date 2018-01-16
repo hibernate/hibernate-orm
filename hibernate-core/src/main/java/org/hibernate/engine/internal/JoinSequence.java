@@ -613,10 +613,14 @@ public class JoinSequence {
 		JoinSequence copy = this.copy();
 		copy.joins.clear();
 		Iterator<Join> joinIterator = this.joins.iterator();
-		while (joinIterator.hasNext()) {
+		while ( joinIterator.hasNext() ) {
 			Join join = joinIterator.next();
-			copy.addJoin(join.getAssociationType(), join.getAlias(),
-						 JoinType.INNER_JOIN, join.getLHSColumns());
+			copy.addJoin(
+					join.getAssociationType(),
+					join.getAlias(),
+					JoinType.INNER_JOIN,
+					join.getLHSColumns()
+			);
 		}
 		return copy;
 	}

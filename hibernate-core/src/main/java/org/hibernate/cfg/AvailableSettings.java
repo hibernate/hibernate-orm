@@ -16,7 +16,7 @@ import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.JpaCompliance;
 import org.hibernate.query.internal.ParameterMetadataImpl;
-import org.hibernate.resource.beans.spi.ExtendedBeanManager;
+import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
@@ -915,6 +915,17 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * @since 5.1
 	 */
 	String LOG_JDBC_WARNINGS =  "hibernate.jdbc.log.warnings";
+
+	/**
+	 * Identifies an explicit {@link org.hibernate.resource.beans.container.spi.BeanContainer}
+	 * to be used.
+	 *
+	 * Note that for CDI-based containers setting this is not necessary - simply
+	 * pass the BeanManager to use via {@link #CDI_BEAN_MANAGER} and
+	 * optionally specify {@link #DELAY_CDI_ACCESS}.  This setting is more meant to
+	 * integrate non-CDI bean containers such as Spring.
+	 */
+	String BEAN_CONTAINER = "hibernate.resource.beans.container";
 
 
 

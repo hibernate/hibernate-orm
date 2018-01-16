@@ -33,9 +33,4 @@ public class ProvidedInstanceManagedBeanImpl<T> implements ManagedBean<T> {
 	public T getBeanInstance() {
 		return instance;
 	}
-
-	@Override
-	public void release() {
-		// nothing to do
-	}
 }

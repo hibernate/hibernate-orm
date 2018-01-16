@@ -7,7 +7,7 @@
 package org.hibernate.resource.beans.spi;
 
 /**
- * Generalized contract for a CDI ManagedBean as seen by Hibernate
+ * Generalized contract for a "ManagedBean" as seen by Hibernate
  *
  * @author Steve Ebersole
  */
@@ -21,9 +21,4 @@ public interface ManagedBean<T> {
 	 * The bean reference
 	 */
 	T getBeanInstance();
-
-	/**
-	 * Release any resources
-	 */
-	void release();
 }

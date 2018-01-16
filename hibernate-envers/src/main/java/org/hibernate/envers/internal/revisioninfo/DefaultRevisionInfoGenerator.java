@@ -105,7 +105,7 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 			Class<? extends RevisionListener> listenerClass,
 			ServiceRegistry serviceRegistry) {
 		if ( !listenerClass.equals( RevisionListener.class ) ) {
-			return serviceRegistry.getService( ManagedBeanRegistry.class ).getBean( listenerClass, true );
+			return serviceRegistry.getService( ManagedBeanRegistry.class ).getBean( listenerClass );
 		}
 		return null;
 	}

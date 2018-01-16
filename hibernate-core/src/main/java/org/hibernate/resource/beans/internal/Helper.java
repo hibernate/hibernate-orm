@@ -6,6 +6,10 @@
  */
 package org.hibernate.resource.beans.internal;
 
+import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
+import org.hibernate.resource.beans.container.internal.ContainerManagedLifecycleStrategy;
+import org.hibernate.resource.beans.container.internal.JpaCompliantLifecycleStrategy;
+
 /**
  * @author Steve Ebersole
  */
@@ -18,12 +22,21 @@ public class Helper {
 	private Helper() {
 	}
 
-	public CdiLifecycleManagementStrategy getLifecycleManagementStrategy(boolean shouldRegistryManageLifecycle) {
+	public String determineBeanRegistrationKey(Class beanType) {
+		return beanType.getName();
+	}
+
+	public String determineBeanRegistrationKey(String name, Class beanType) {
+		return beanType.getName() + ':' + name;
+	}
+
+	@SuppressWarnings("unused")
+	public BeanLifecycleStrategy getLifecycleStrategy(boolean shouldRegistryManageLifecycle) {
 		if ( shouldRegistryManageLifecycle ) {
-			return JpaCdiLifecycleManagementStrategy.INSTANCE;
+			return JpaCompliantLifecycleStrategy.INSTANCE;
 		}
 		else {
-			return StandardCdiLifecycleManagementStrategy.INSTANCE;
+			return ContainerManagedLifecycleStrategy.INSTANCE;
 		}
 	}
 }

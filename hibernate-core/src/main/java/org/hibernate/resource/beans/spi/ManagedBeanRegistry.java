@@ -6,6 +6,7 @@
  */
 package org.hibernate.resource.beans.spi;
 
+import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.service.Service;
 
 /**
@@ -18,36 +19,18 @@ import org.hibernate.service.Service;
  */
 public interface ManagedBeanRegistry extends Service {
 	/**
-	 * Get a bean reference, by class.
-	 *
-	 * @apiNote `shouldRegistryManageLifecycle` has multiple implications that are
-	 * important to understand.  First it indicates whether the registry should
-	 * handle releasing (end lifecycle) the bean or whether the caller will handle
-	 * that.  It also indicates whether cached references will be returned, or whether
-	 * new references will be returned each time.  `true` means that cached references
-	 * can be returned and the registry will handle releasing when the registry is itself
-	 * released (generally when the SessionFactory is closed).  `false` means that
-	 * new references should be returned for every call and the caller will handle
-	 * the release calls itself.
+	 * Get a bean reference by class.
 	 */
-	<T> ManagedBean<T> getBean(Class<T> beanClass, boolean shouldRegistryManageLifecycle);
+	<T> ManagedBean<T> getBean(Class<T> beanClass);
 
 	/**
 	 * Get a bean reference by name and contract.
-	 *
-	 * @apiNote `shouldRegistryManageLifecycle` has multiple implications that are
-	 * important to understand.  First it indicates whether the registry should
-	 * handle releasing (end lifecycle) the bean or whether the caller will handle
-	 * that.  It also indicates whether cached references will be returned, or whether
-	 * new references will be returned each time.  `true` means that cached references
-	 * can be returned and the registry will handle releasing when the registry is itself
-	 * released (generally when the SessionFactory is closed).  `false` means that
-	 * new references should be returned for every call and the caller will handle
-	 * the release calls itself.
 	 */
-	<T> ManagedBean<T> getBean(String beanName, Class<T> beanContract, boolean shouldRegistryManageLifecycle);
+	<T> ManagedBean<T> getBean(String beanName, Class<T> beanContract);
 
-	default ManagedBeanRegistry getPrimaryBeanRegistry() {
-		return this;
-	}
+	/**
+	 * Get a reference to the underlying BeanContainer.  May return {@code null}
+	 * indicating that no back-end container has been configured
+	 */
+	BeanContainer getBeanContainer();
 }

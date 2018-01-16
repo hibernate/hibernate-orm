@@ -164,7 +164,7 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 							//overridden method, remove the superclass overridden method
 							if ( callback == null ) {
 								callback = new ListenerCallback(
-										managedBeanRegistry.getBean( listener, true ),
+										managedBeanRegistry.getBean( listener ),
 										method,
 										callbackType
 								);

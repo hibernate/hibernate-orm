@@ -6,6 +6,7 @@
  */
 package org.hibernate.resource.beans.internal;
 
+import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 import org.jboss.logging.Logger;
@@ -54,4 +55,11 @@ public interface BeansMessageLogger {
 			value = "Stopping ManagedBeanRegistry : %s"
 	)
 	void stoppingManagedBeanRegistry(ManagedBeanRegistry registry);
+
+	@LogMessage( level = INFO )
+	@Message(
+			id = 10005004,
+			value = "Stopping BeanContainer : %s"
+	)
+	void stoppingBeanContainer(BeanContainer beanContainer);
 }

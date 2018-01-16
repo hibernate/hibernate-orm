@@ -30,12 +30,9 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.mockito.Mockito;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.doThrow;
 
 /**
  * @author Vlad Mihalcea
@@ -44,10 +41,10 @@ public class SchemaScriptFileGenerationFailureTest {
 	private Writer writer;
 	private EntityManagerFactoryBuilder entityManagerFactoryBuilder;
 
+
 	@Before
-	public void setUp() throws IOException {
-		writer = Mockito.mock( Writer.class );
-		doThrow( new IOException( "Expected" ) ).when( writer ).flush();
+	public void setUp() {
+		writer = new FailingWriter();
 
 		entityManagerFactoryBuilder = Bootstrap.getEntityManagerFactoryBuilder(
 				buildPersistenceUnitDescriptor(),
@@ -57,7 +54,7 @@ public class SchemaScriptFileGenerationFailureTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12192")
-	public void testErrorMessageContainsTheFailingDDLCommand() throws Exception {
+	public void testErrorMessageContainsTheFailingDDLCommand() {
 		try {
 			entityManagerFactoryBuilder.generateSchema();
 			fail( "Should haave thrown IOException" );
@@ -79,7 +76,6 @@ public class SchemaScriptFileGenerationFailureTest {
 
 			IOException root = (IOException) e.getCause().getCause().getCause();
 			assertEquals( "Expected", root.getMessage() );
-
 		}
 	}
 
@@ -116,4 +112,21 @@ public class SchemaScriptFileGenerationFailureTest {
 		return config;
 	}
 
+	public class FailingWriter extends Writer {
+
+		@Override
+		public void write(char[] cbuf, int off, int len) throws IOException {
+
+		}
+
+		@Override
+		public void flush() throws IOException {
+			throw new IOException( "Expected" );
+		}
+
+		@Override
+		public void close() throws IOException {
+
+		}
+	}
 }

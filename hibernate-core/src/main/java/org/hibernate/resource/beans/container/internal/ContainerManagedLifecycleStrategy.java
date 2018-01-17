@@ -111,7 +111,7 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 			}
 			catch (Exception e) {
 				log.debugf( "Error resolving CDI bean [%s] - using fallback" );
-				this.beanInstance = fallbackProducer.produceBeanInstance( beanType );
+				this.beanInstance = produceFallbackInstance();
 			}
 
 			this.beanManager = null;
@@ -148,6 +148,8 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 				fallbackProducer = null;
 			}
 		}
+
+		protected abstract B produceFallbackInstance();
 	}
 
 	private static class BeanImpl<B> extends AbstractBeanImpl<B> {
@@ -177,6 +179,11 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 			catch (Exception e) {
 				throw new NoSuchBeanException( "Bean class not known to CDI : " + beanType.getName(), e );
 			}
+		}
+
+		@Override
+		protected B produceFallbackInstance() {
+			return fallbackProducer.produceBeanInstance( beanType );
 		}
 	}
 
@@ -211,6 +218,11 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 			catch (Exception e) {
 				throw new NoSuchBeanException( "Bean class not known to CDI : " + beanType.getName(), e );
 			}
+		}
+
+		@Override
+		protected B produceFallbackInstance() {
+			return fallbackProducer.produceBeanInstance( beanName, beanType );
 		}
 	}
 }

@@ -13,6 +13,7 @@ import java.util.EnumSet;
 import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -74,7 +75,7 @@ public class NumericValidationTest implements ExecutionOptions {
 	@Test
 	public void testValidation() {
 		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-				.addAnnotatedClass( Numeric.class )
+				.addAnnotatedClass( TestEntity.class )
 				.buildMetadata();
 		metadata.validate();
 
@@ -155,8 +156,8 @@ public class NumericValidationTest implements ExecutionOptions {
 		);
 	}
 
-@Entity(name = "Numeric")
-public static class Numeric {
+@Entity(name = "TestEntity")
+public static class TestEntity {
 	@Id
 	public Integer id;
 	BigDecimal number;

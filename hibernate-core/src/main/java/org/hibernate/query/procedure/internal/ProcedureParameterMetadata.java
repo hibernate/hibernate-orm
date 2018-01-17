@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -72,7 +73,7 @@ public class ProcedureParameterMetadata implements ParameterMetadata {
 
 	@Override
 	public Set<QueryParameter<?>> collectAllParameters() {
-		final Set<QueryParameter<?>> rtn = new HashSet<>();
+		final Set<QueryParameter<?>> rtn = new LinkedHashSet<>();
 		for ( ProcedureParameter parameter : parameters ) {
 			rtn.add( parameter );
 		}
@@ -81,7 +82,7 @@ public class ProcedureParameterMetadata implements ParameterMetadata {
 
 	@Override
 	public Set<Parameter<?>> collectAllParametersJpa() {
-		final Set<Parameter<?>> rtn = new HashSet<>();
+		final Set<Parameter<?>> rtn = new LinkedHashSet<>();
 		for ( ProcedureParameter parameter : parameters ) {
 			rtn.add( parameter );
 		}

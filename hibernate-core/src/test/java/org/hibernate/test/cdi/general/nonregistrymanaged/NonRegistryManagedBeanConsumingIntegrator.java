@@ -14,6 +14,7 @@ import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
@@ -28,15 +29,25 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Yoann Rodiere
  */
 public class NonRegistryManagedBeanConsumingIntegrator implements Integrator {
+	
+	private final BeanInstanceProducer fallbackBeanInstanceProducer;
 
 	private ContainedBeanImplementor<TheApplicationScopedBean> applicationScopedBean1;
 	private ContainedBeanImplementor<TheApplicationScopedBean> applicationScopedBean2;
 	private ContainedBeanImplementor<TheDependentBean> dependentBean1;
 	private ContainedBeanImplementor<TheDependentBean> dependentBean2;
+	private ContainedBeanImplementor<TheReflectionInstantiatedBean> reflectionInstantiatedBean1;
+	private ContainedBeanImplementor<TheReflectionInstantiatedBean> reflectionInstantiatedBean2;
 	private ContainedBeanImplementor<TheNamedApplicationScopedBean> namedApplicationScopedBean1;
 	private ContainedBeanImplementor<TheNamedApplicationScopedBean> namedApplicationScopedBean2;
 	private ContainedBeanImplementor<TheNamedDependentBean> namedDependentBean1;
 	private ContainedBeanImplementor<TheNamedDependentBean> namedDependentBean2;
+	private ContainedBeanImplementor<TheReflectionInstantiatedBean> namedReflectionInstantiatedBean1;
+	private ContainedBeanImplementor<TheReflectionInstantiatedBean> namedReflectionInstantiatedBean2;
+
+	public NonRegistryManagedBeanConsumingIntegrator(BeanInstanceProducer fallbackBeanInstanceProducer) {
+		this.fallbackBeanInstanceProducer = fallbackBeanInstanceProducer;
+	}
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -50,46 +61,68 @@ public class NonRegistryManagedBeanConsumingIntegrator implements Integrator {
 		applicationScopedBean1 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheApplicationScopedBean.class,
 				ContainerManagedLifecycleStrategy.INSTANCE,
-				FallbackBeanInstanceProducer.INSTANCE
+				fallbackBeanInstanceProducer
 		);
 		applicationScopedBean2 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheApplicationScopedBean.class,
 				ContainerManagedLifecycleStrategy.INSTANCE,
-				FallbackBeanInstanceProducer.INSTANCE
+				fallbackBeanInstanceProducer
 		);
 		dependentBean1 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheDependentBean.class,
 				ContainerManagedLifecycleStrategy.INSTANCE,
-				FallbackBeanInstanceProducer.INSTANCE
+				fallbackBeanInstanceProducer
 		);
 		dependentBean2 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheDependentBean.class,
 				ContainerManagedLifecycleStrategy.INSTANCE,
-				FallbackBeanInstanceProducer.INSTANCE
+				fallbackBeanInstanceProducer
+		);
+		reflectionInstantiatedBean1 = (ContainedBeanImplementor) beanContainer.getBean(
+				TheReflectionInstantiatedBean.class,
+				ContainerManagedLifecycleStrategy.INSTANCE,
+				fallbackBeanInstanceProducer
+		);
+		reflectionInstantiatedBean2 = (ContainedBeanImplementor) beanContainer.getBean(
+				TheReflectionInstantiatedBean.class,
+				ContainerManagedLifecycleStrategy.INSTANCE,
+				fallbackBeanInstanceProducer
 		);
 		namedApplicationScopedBean1 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheMainNamedApplicationScopedBeanImpl.NAME,
 				TheNamedApplicationScopedBean.class,
 				ContainerManagedLifecycleStrategy.INSTANCE,
-				FallbackBeanInstanceProducer.INSTANCE
+				fallbackBeanInstanceProducer
 		);
 		namedApplicationScopedBean2 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheMainNamedApplicationScopedBeanImpl.NAME,
 				TheNamedApplicationScopedBean.class,
 				ContainerManagedLifecycleStrategy.INSTANCE,
-				FallbackBeanInstanceProducer.INSTANCE
+				fallbackBeanInstanceProducer
 		);
 		namedDependentBean1 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheMainNamedDependentBeanImpl.NAME,
 				TheNamedDependentBean.class,
 				ContainerManagedLifecycleStrategy.INSTANCE,
-				FallbackBeanInstanceProducer.INSTANCE
+				fallbackBeanInstanceProducer
 		);
 		namedDependentBean2 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheMainNamedDependentBeanImpl.NAME,
 				TheNamedDependentBean.class,
 				ContainerManagedLifecycleStrategy.INSTANCE,
-				FallbackBeanInstanceProducer.INSTANCE
+				fallbackBeanInstanceProducer
+		);
+		namedReflectionInstantiatedBean1 = (ContainedBeanImplementor) beanContainer.getBean(
+				TheReflectionInstantiatedBean.class.getName(),
+				TheReflectionInstantiatedBean.class,
+				ContainerManagedLifecycleStrategy.INSTANCE,
+				fallbackBeanInstanceProducer
+		);
+		namedReflectionInstantiatedBean2 = (ContainedBeanImplementor) beanContainer.getBean(
+				TheReflectionInstantiatedBean.class.getName(),
+				TheReflectionInstantiatedBean.class,
+				ContainerManagedLifecycleStrategy.INSTANCE,
+				fallbackBeanInstanceProducer
 		);
 	}
 
@@ -103,10 +136,14 @@ public class NonRegistryManagedBeanConsumingIntegrator implements Integrator {
 		applicationScopedBean2.getBeanInstance().ensureInitialized();
 		dependentBean1.getBeanInstance().ensureInitialized();
 		dependentBean2.getBeanInstance().ensureInitialized();
+		reflectionInstantiatedBean1.getBeanInstance().ensureInitialized();
+		reflectionInstantiatedBean2.getBeanInstance().ensureInitialized();
 		namedApplicationScopedBean1.getBeanInstance().ensureInitialized();
 		namedApplicationScopedBean2.getBeanInstance().ensureInitialized();
 		namedDependentBean1.getBeanInstance().ensureInitialized();
 		namedDependentBean2.getBeanInstance().ensureInitialized();
+		namedReflectionInstantiatedBean1.getBeanInstance().ensureInitialized();
+		namedReflectionInstantiatedBean2.getBeanInstance().ensureInitialized();
 	}
 
 	@Override
@@ -115,9 +152,13 @@ public class NonRegistryManagedBeanConsumingIntegrator implements Integrator {
 		applicationScopedBean2.release();
 		dependentBean1.release();
 		dependentBean2.release();
+		reflectionInstantiatedBean1.release();
+		reflectionInstantiatedBean2.release();
 		namedApplicationScopedBean1.release();
 		namedApplicationScopedBean2.release();
 		namedDependentBean1.release();
 		namedDependentBean2.release();
+		namedReflectionInstantiatedBean1.release();
+		namedReflectionInstantiatedBean2.release();
 	}
 }

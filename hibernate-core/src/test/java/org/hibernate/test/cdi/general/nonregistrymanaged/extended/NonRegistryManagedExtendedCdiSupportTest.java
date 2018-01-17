@@ -31,6 +31,7 @@ import org.hibernate.test.cdi.general.nonregistrymanaged.TheAlternativeNamedDepe
 import org.hibernate.test.cdi.general.nonregistrymanaged.TheApplicationScopedBean;
 import org.hibernate.test.cdi.general.nonregistrymanaged.TheDependentBean;
 import org.hibernate.test.cdi.general.nonregistrymanaged.TheEntity;
+import org.hibernate.test.cdi.general.nonregistrymanaged.TheFallbackBeanInstanceProducer;
 import org.hibernate.test.cdi.general.nonregistrymanaged.TheMainNamedApplicationScopedBeanImpl;
 import org.hibernate.test.cdi.general.nonregistrymanaged.TheMainNamedDependentBeanImpl;
 import org.hibernate.test.cdi.general.nonregistrymanaged.TheNamedApplicationScopedBean;
@@ -56,8 +57,10 @@ public class NonRegistryManagedExtendedCdiSupportTest extends BaseUnitTestCase {
 		Monitor.reset();
 
 		final ExtendedBeanManagerImpl standIn = new ExtendedBeanManagerImpl();
+		final TheFallbackBeanInstanceProducer fallbackBeanInstanceProducer =
+				new TheFallbackBeanInstanceProducer();
 		final NonRegistryManagedBeanConsumingIntegrator beanConsumingIntegrator =
-				new NonRegistryManagedBeanConsumingIntegrator();
+				new NonRegistryManagedBeanConsumingIntegrator( fallbackBeanInstanceProducer );
 
 		try (SessionFactoryImplementor sessionFactory = buildSessionFactory( standIn, beanConsumingIntegrator )) {
 			final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
@@ -86,6 +89,8 @@ public class NonRegistryManagedExtendedCdiSupportTest extends BaseUnitTestCase {
 				assertEquals( 0, Monitor.theDependentBean().currentInstantiationCount() );
 				assertEquals( 0, Monitor.theMainNamedDependentBean().currentInstantiationCount() );
 				assertEquals( 0, Monitor.theAlternativeNamedDependentBean().currentInstantiationCount() );
+				assertEquals( 0, fallbackBeanInstanceProducer.currentInstantiationCount() );
+				assertEquals( 0, fallbackBeanInstanceProducer.currentNamedInstantiationCount() );
 				// Nested dependent bean: 1 instance per bean that depends on it
 				assertEquals( 1, Monitor.theNestedDependentBean().currentInstantiationCount() );
 
@@ -108,10 +113,14 @@ public class NonRegistryManagedExtendedCdiSupportTest extends BaseUnitTestCase {
 				assertEquals( 2, Monitor.theMainNamedDependentBean().currentInstantiationCount() );
 				assertEquals( 0, Monitor.theAlternativeNamedDependentBean().currentInstantiationCount() );
 
+				// Reflection-instantiated: 1 instance per bean we requested explicitly
+				assertEquals( 2, fallbackBeanInstanceProducer.currentInstantiationCount() );
+				assertEquals( 2, fallbackBeanInstanceProducer.currentNamedInstantiationCount() );
+
 				// Nested dependent bean: 1 instance per bean that depends on it
 				assertEquals( 7, Monitor.theNestedDependentBean().currentInstantiationCount() );
 
-				// Expect one PostConstruct call per instance
+				// Expect one PostConstruct call per CDI bean instance
 				assertEquals( 1, Monitor.theApplicationScopedBean().currentPostConstructCount() );
 				assertEquals( 1, Monitor.theMainNamedApplicationScopedBean().currentPostConstructCount() );
 				assertEquals( 0, Monitor.theAlternativeNamedApplicationScopedBean().currentPostConstructCount() );
@@ -132,8 +141,8 @@ public class NonRegistryManagedExtendedCdiSupportTest extends BaseUnitTestCase {
 				assertEquals( 0, Monitor.theNestedDependentBean().currentPreDestroyCount() );
 			}
 
-			// After the CDI context has ended, PreDestroy should have been called on every "normal-scoped" bean
-			// (i.e. all beans excepting the dependent ones we requested explicitly and haven't released yet)
+			// After the CDI context has ended, PreDestroy should have been called on every "normal-scoped" CDI bean
+			// (i.e. all CDI beans excepting the dependent ones we requested explicitly and haven't released yet)
 			assertEquals( 1, Monitor.theApplicationScopedBean().currentPreDestroyCount() );
 			assertEquals( 1, Monitor.theMainNamedApplicationScopedBean().currentPreDestroyCount() );
 			assertEquals( 0, Monitor.theAlternativeNamedApplicationScopedBean().currentPreDestroyCount() );

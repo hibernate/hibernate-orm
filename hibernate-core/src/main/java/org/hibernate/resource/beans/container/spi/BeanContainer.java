@@ -15,14 +15,19 @@ import org.hibernate.service.spi.Stoppable;
  * @author Steve Ebersole
  */
 public interface BeanContainer extends Stoppable {
+	interface LifecycleOptions {
+		boolean canUseCachedReferences();
+		boolean useJpaCompliantCreation();
+	}
+
 	<B> ContainedBean<B> getBean(
 			Class<B> beanType,
-			BeanLifecycleStrategy lifecycleStrategy,
+			LifecycleOptions lifecycleOptions,
 			BeanInstanceProducer fallbackProducer);
 
 	<B> ContainedBean<B> getBean(
 			String name,
 			Class<B> beanType,
-			BeanLifecycleStrategy lifecycleStrategy,
+			LifecycleOptions lifecycleOptions,
 			BeanInstanceProducer fallbackProducer);
 }

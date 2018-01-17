@@ -22,11 +22,11 @@ public class Helper {
 	private Helper() {
 	}
 
-	public String determineBeanRegistrationKey(Class beanType) {
+	public String determineBeanCacheKey(Class beanType) {
 		return beanType.getName();
 	}
 
-	public String determineBeanRegistrationKey(String name, Class beanType) {
+	public String determineBeanCacheKey(String name, Class beanType) {
 		return beanType.getName() + ':' + name;
 	}
 

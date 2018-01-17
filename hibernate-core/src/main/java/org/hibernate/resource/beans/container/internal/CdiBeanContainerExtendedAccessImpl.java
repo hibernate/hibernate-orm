@@ -13,7 +13,6 @@ import org.hibernate.resource.beans.container.spi.AbstractBeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
-import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
 import org.jboss.logging.Logger;
@@ -38,14 +37,12 @@ public class CdiBeanContainerExtendedAccessImpl
 	}
 
 	@Override
-	protected <B> ContainedBean<B> createBean(
+	protected <B> ContainedBeanImplementor<B> createBean(
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,
 			BeanInstanceProducer fallbackProducer) {
 		if ( usableBeanManager == null ) {
-			final BeanImpl<B> bean = new BeanImpl<>( beanType, lifecycleStrategy, fallbackProducer );
-			registerContainedBean( beanType.getName(), bean );
-			return bean;
+			return new BeanImpl<>( beanType, lifecycleStrategy, fallbackProducer );
 		}
 		else {
 			return lifecycleStrategy.createBean( beanType, fallbackProducer, this );
@@ -53,20 +50,18 @@ public class CdiBeanContainerExtendedAccessImpl
 	}
 
 	@Override
-	protected <B> ContainedBean<B> createBean(
+	protected <B> ContainedBeanImplementor<B> createBean(
 			String name,
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,
 			BeanInstanceProducer fallbackProducer) {
 		if ( usableBeanManager == null ) {
-			final NamedBeanImpl<B> bean = new NamedBeanImpl<>(
+			return new NamedBeanImpl<>(
 					name,
 					beanType,
 					lifecycleStrategy,
 					fallbackProducer
 			);
-			registerContainedBean( Helper.INSTANCE.determineBeanRegistrationKey( name, beanType), bean );
-			return bean;
 		}
 		else {
 			return lifecycleStrategy.createBean( name, beanType, fallbackProducer, this );
@@ -187,26 +182,22 @@ public class CdiBeanContainerExtendedAccessImpl
 		}
 
 		@Override
-		public ContainedBeanImplementor findRegistered(String key) {
-			return CdiBeanContainerExtendedAccessImpl.this.findRegistered( key );
-		}
-
-		@Override
-		public void registerContainedBean(String key, ContainedBeanImplementor bean) {
-		}
-
-		@Override
-		public <B> ContainedBean<B> getBean(Class<B> beanType, BeanLifecycleStrategy lifecycleStrategy, BeanInstanceProducer fallbackProducer) {
-			return CdiBeanContainerExtendedAccessImpl.this.getBean( beanType, lifecycleStrategy, fallbackProducer );
+		public <B> ContainedBean<B> getBean(
+				Class<B> beanType,
+				LifecycleOptions lifecycleOptions,
+				BeanInstanceProducer fallbackProducer) {
+			// todo (5.3) : should this throw an exception instead?
+			return CdiBeanContainerExtendedAccessImpl.this.getBean( beanType, lifecycleOptions, fallbackProducer );
 		}
 
 		@Override
 		public <B> ContainedBean<B> getBean(
-				String name,
+				String beanName,
 				Class<B> beanType,
-				BeanLifecycleStrategy lifecycleStrategy,
+				LifecycleOptions lifecycleOptions,
 				BeanInstanceProducer fallbackProducer) {
-			return CdiBeanContainerExtendedAccessImpl.this.getBean( name, beanType, lifecycleStrategy, fallbackProducer );
+			// todo (5.3) : should this throw an exception instead?
+			return CdiBeanContainerExtendedAccessImpl.this.getBean( beanName, beanType, lifecycleOptions, fallbackProducer );
 		}
 
 		@Override

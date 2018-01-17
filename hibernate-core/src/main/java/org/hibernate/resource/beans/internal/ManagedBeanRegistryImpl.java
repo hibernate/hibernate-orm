@@ -8,9 +8,7 @@ package org.hibernate.resource.beans.internal;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
-import org.hibernate.resource.beans.container.internal.JpaCompliantLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.container.spi.FallbackContainedBean;
@@ -23,7 +21,7 @@ import org.hibernate.service.spi.Stoppable;
  *
  * @author Steve Ebersole
  */
-public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, Stoppable {
+public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContainer.LifecycleOptions, Stoppable {
 	private Map<String,ManagedBean<?>> registrations = new HashMap<>();
 
 	private final BeanContainer beanContainer;
@@ -35,6 +33,16 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, Stoppable {
 	@Override
 	public BeanContainer getBeanContainer() {
 		return beanContainer;
+	}
+
+	@Override
+	public boolean canUseCachedReferences() {
+		return true;
+	}
+
+	@Override
+	public boolean useJpaCompliantCreation() {
+		return true;
 	}
 
 	@Override
@@ -52,7 +60,7 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, Stoppable {
 		else {
 			final ContainedBean<T> containedBean = beanContainer.getBean(
 					beanClass,
-					JpaCompliantLifecycleStrategy.INSTANCE,
+					this,
 					FallbackBeanInstanceProducer.INSTANCE
 			);
 
@@ -87,7 +95,7 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, Stoppable {
 			final ContainedBean<T> containedBean = beanContainer.getBean(
 					beanName,
 					beanContract,
-					JpaCompliantLifecycleStrategy.INSTANCE,
+					this,
 					FallbackBeanInstanceProducer.INSTANCE
 			);
 
@@ -104,11 +112,6 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, Stoppable {
 		return bean;
 	}
 
-	@SuppressWarnings("WeakerAccess")
-	protected void forEachBean(Consumer<ManagedBean<?>> consumer) {
-		registrations.values().forEach( consumer );
-	}
-
 	@Override
 	public void stop() {
 		if ( beanContainer != null ) {
@@ -121,7 +124,7 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, Stoppable {
 		private final Class<B> beanClass;
 		private final ContainedBean<B> containedBean;
 
-		public ContainedBeanManagedBeanAdapter(Class<B> beanClass, ContainedBean<B> containedBean) {
+		private ContainedBeanManagedBeanAdapter(Class<B> beanClass, ContainedBean<B> containedBean) {
 			this.beanClass = beanClass;
 			this.containedBean = containedBean;
 		}

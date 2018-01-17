@@ -13,7 +13,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.resource.beans.container.internal.CdiBeanContainerExtendedAccessImpl;
-import org.hibernate.resource.beans.container.internal.JpaCompliantLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
@@ -30,7 +29,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-public class ExtendedMixedAccessTest {
+public class ExtendedMixedAccessTest implements BeanContainer.LifecycleOptions {
 	@Test
 	public void testExtendedMixedAccess() {
 		final Helper.TestingExtendedBeanManager extendedBeanManager = Helper.createExtendedBeanManager();
@@ -52,7 +51,7 @@ public class ExtendedMixedAccessTest {
 
 			final ContainedBean<HostedBean> hostedBean = beanContainer.getBean(
 					HostedBean.class,
-					JpaCompliantLifecycleStrategy.INSTANCE,
+					this,
 					FallbackBeanInstanceProducer.INSTANCE
 			);
 
@@ -63,7 +62,7 @@ public class ExtendedMixedAccessTest {
 
 			final ContainedBean<NonHostedBean> nonHostedBean = beanContainer.getBean(
 					NonHostedBean.class,
-					JpaCompliantLifecycleStrategy.INSTANCE,
+					this,
 					FallbackBeanInstanceProducer.INSTANCE
 			);
 
@@ -72,5 +71,15 @@ public class ExtendedMixedAccessTest {
 
 			extendedBeanManager.notifyListenerShuttingDown( beanManager );
 		}
+	}
+
+	@Override
+	public boolean canUseCachedReferences() {
+		return true;
+	}
+
+	@Override
+	public boolean useJpaCompliantCreation() {
+		return true;
 	}
 }

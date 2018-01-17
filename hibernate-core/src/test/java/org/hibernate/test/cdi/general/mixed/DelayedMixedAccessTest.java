@@ -16,8 +16,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.event.spi.JpaIntegrator;
 import org.hibernate.resource.beans.container.internal.CdiBeanContainerBuilder;
 import org.hibernate.resource.beans.container.internal.CdiBeanContainerDelayedAccessImpl;
-import org.hibernate.resource.beans.container.internal.JpaCompliantLifecycleStrategy;
-import org.hibernate.resource.beans.container.spi.BeanContainerImplementor;
+import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.tool.schema.Action;
@@ -31,7 +30,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-public class DelayedMixedAccessTest {
+public class DelayedMixedAccessTest implements BeanContainer.LifecycleOptions {
+	@Override
+	public boolean canUseCachedReferences() {
+		return true;
+	}
+
+	@Override
+	public boolean useJpaCompliantCreation() {
+		return true;
+	}
+
 	@Test
 	public void testDelayedMixedAccess() {
 		try ( final SeContainer cdiContainer = Helper.createSeContainer() ) {
@@ -45,7 +54,7 @@ public class DelayedMixedAccessTest {
 					.applySetting( AvailableSettings.DELAY_CDI_ACCESS, "true" )
 					.build();
 
-			final BeanContainerImplementor beanContainer = CdiBeanContainerBuilder.fromBeanManagerReference(
+			final BeanContainer beanContainer = CdiBeanContainerBuilder.fromBeanManagerReference(
 					cdiContainer.getBeanManager(),
 					ssr
 			);
@@ -54,7 +63,7 @@ public class DelayedMixedAccessTest {
 
 			final ContainedBean<HostedBean> hostedBean = beanContainer.getBean(
 					HostedBean.class,
-					JpaCompliantLifecycleStrategy.INSTANCE,
+					this,
 					FallbackBeanInstanceProducer.INSTANCE
 			);
 
@@ -65,7 +74,7 @@ public class DelayedMixedAccessTest {
 
 			final ContainedBean<NonHostedBean> nonHostedBean = beanContainer.getBean(
 					NonHostedBean.class,
-					JpaCompliantLifecycleStrategy.INSTANCE,
+					this,
 					FallbackBeanInstanceProducer.INSTANCE
 			);
 

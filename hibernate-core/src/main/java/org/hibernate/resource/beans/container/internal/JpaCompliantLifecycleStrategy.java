@@ -13,7 +13,7 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionTarget;
 
-import org.hibernate.resource.beans.container.spi.BeanContainerImplementor;
+import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
@@ -42,30 +42,15 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <B> ContainedBeanImplementor<B> findRegisteredBean(
-			Class<B> beanClass,
-			BeanContainerImplementor container) {
-		return container.findRegistered( beanClass.getName() );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <B> ContainedBeanImplementor<B> findRegisteredBean(
-			String beanName,
-			Class<B> beanClass,
-			BeanContainerImplementor container) {
-		return container.findRegistered( beanClass.getName() + ':' + beanName );
-	}
-
-	@Override
 	public <B> ContainedBeanImplementor<B> createBean(
 			Class<B> beanClass,
 			BeanInstanceProducer fallbackProducer,
-			BeanContainerImplementor container) {
-		final BeanImpl<B> bean = new BeanImpl<>( beanClass, fallbackProducer, ( (CdiBasedBeanContainer) container ).getUsableBeanManager() );
-		container.registerContainedBean( beanClass.getName(), bean );
-		return bean;
+			BeanContainer beanContainer) {
+		return new BeanImpl<>(
+				beanClass,
+				fallbackProducer,
+				( (CdiBasedBeanContainer) beanContainer ).getUsableBeanManager()
+		);
 	}
 
 	@Override
@@ -73,11 +58,16 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 			String beanName,
 			Class<B> beanClass,
 			BeanInstanceProducer fallbackProducer,
-			BeanContainerImplementor container) {
-		final NamedBeanImpl<B> bean = new NamedBeanImpl<>( beanName, beanClass, fallbackProducer, ( (CdiBasedBeanContainer) container ).getUsableBeanManager() );
-		container.registerContainedBean( beanClass.getName(), bean );
-		return bean;
+			BeanContainer beanContainer) {
+		return new NamedBeanImpl<>(
+				beanName,
+				beanClass,
+				fallbackProducer,
+				( (CdiBasedBeanContainer) beanContainer ).getUsableBeanManager()
+		);
 	}
+
+
 
 	private static class BeanImpl<B> implements ContainedBeanImplementor<B> {
 		private final Class<B> beanType;

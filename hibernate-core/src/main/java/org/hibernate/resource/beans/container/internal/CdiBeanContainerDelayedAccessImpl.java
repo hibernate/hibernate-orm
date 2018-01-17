@@ -10,7 +10,6 @@ import javax.enterprise.inject.spi.BeanManager;
 
 import org.hibernate.resource.beans.container.spi.AbstractBeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
-import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
@@ -31,7 +30,7 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractBeanContainer {
 	}
 
 	@Override
-	protected <B> ContainedBean<B> createBean(
+	protected <B> ContainedBeanImplementor<B> createBean(
 			Class<B> beanType, 
 			BeanLifecycleStrategy lifecycleStrategy, 
 			BeanInstanceProducer fallbackProducer) {
@@ -39,7 +38,7 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractBeanContainer {
 	}
 
 	@Override
-	protected <B> ContainedBean<B> createBean(
+	protected <B> ContainedBeanImplementor<B> createBean(
 			String name,
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,

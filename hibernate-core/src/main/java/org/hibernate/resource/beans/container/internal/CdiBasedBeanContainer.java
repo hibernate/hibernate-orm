@@ -8,11 +8,11 @@ package org.hibernate.resource.beans.container.internal;
 
 import javax.enterprise.inject.spi.BeanManager;
 
-import org.hibernate.resource.beans.container.spi.BeanContainerImplementor;
+import org.hibernate.resource.beans.container.spi.BeanContainer;
 
 /**
  * @author Steve Ebersole
  */
-public interface CdiBasedBeanContainer extends BeanContainerImplementor {
+public interface CdiBasedBeanContainer extends BeanContainer {
 	BeanManager getUsableBeanManager();
 }

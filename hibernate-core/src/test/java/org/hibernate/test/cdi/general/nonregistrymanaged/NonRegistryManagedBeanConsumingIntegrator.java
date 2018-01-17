@@ -9,11 +9,9 @@ package org.hibernate.test.cdi.general.nonregistrymanaged;
 import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.resource.beans.container.internal.ContainerManagedLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
-import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -28,7 +26,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  *
  * @author Yoann Rodiere
  */
-public class NonRegistryManagedBeanConsumingIntegrator implements Integrator {
+public class NonRegistryManagedBeanConsumingIntegrator implements Integrator, BeanContainer.LifecycleOptions {
 	
 	private final BeanInstanceProducer fallbackBeanInstanceProducer;
 
@@ -50,6 +48,16 @@ public class NonRegistryManagedBeanConsumingIntegrator implements Integrator {
 	}
 
 	@Override
+	public boolean canUseCachedReferences() {
+		return false;
+	}
+
+	@Override
+	public boolean useJpaCompliantCreation() {
+		return false;
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public void integrate(Metadata metadata, SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
 		ManagedBeanRegistry registry = sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class );
@@ -60,68 +68,68 @@ public class NonRegistryManagedBeanConsumingIntegrator implements Integrator {
 
 		applicationScopedBean1 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheApplicationScopedBean.class,
-				ContainerManagedLifecycleStrategy.INSTANCE,
+				this,
 				fallbackBeanInstanceProducer
 		);
 		applicationScopedBean2 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheApplicationScopedBean.class,
-				ContainerManagedLifecycleStrategy.INSTANCE,
+				this,
 				fallbackBeanInstanceProducer
 		);
 		dependentBean1 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheDependentBean.class,
-				ContainerManagedLifecycleStrategy.INSTANCE,
+				this,
 				fallbackBeanInstanceProducer
 		);
 		dependentBean2 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheDependentBean.class,
-				ContainerManagedLifecycleStrategy.INSTANCE,
+				this,
 				fallbackBeanInstanceProducer
 		);
 		reflectionInstantiatedBean1 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheReflectionInstantiatedBean.class,
-				ContainerManagedLifecycleStrategy.INSTANCE,
+				this,
 				fallbackBeanInstanceProducer
 		);
 		reflectionInstantiatedBean2 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheReflectionInstantiatedBean.class,
-				ContainerManagedLifecycleStrategy.INSTANCE,
+				this,
 				fallbackBeanInstanceProducer
 		);
 		namedApplicationScopedBean1 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheMainNamedApplicationScopedBeanImpl.NAME,
 				TheNamedApplicationScopedBean.class,
-				ContainerManagedLifecycleStrategy.INSTANCE,
+				this,
 				fallbackBeanInstanceProducer
 		);
 		namedApplicationScopedBean2 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheMainNamedApplicationScopedBeanImpl.NAME,
 				TheNamedApplicationScopedBean.class,
-				ContainerManagedLifecycleStrategy.INSTANCE,
+				this,
 				fallbackBeanInstanceProducer
 		);
 		namedDependentBean1 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheMainNamedDependentBeanImpl.NAME,
 				TheNamedDependentBean.class,
-				ContainerManagedLifecycleStrategy.INSTANCE,
+				this,
 				fallbackBeanInstanceProducer
 		);
 		namedDependentBean2 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheMainNamedDependentBeanImpl.NAME,
 				TheNamedDependentBean.class,
-				ContainerManagedLifecycleStrategy.INSTANCE,
+				this,
 				fallbackBeanInstanceProducer
 		);
 		namedReflectionInstantiatedBean1 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheReflectionInstantiatedBean.class.getName(),
 				TheReflectionInstantiatedBean.class,
-				ContainerManagedLifecycleStrategy.INSTANCE,
+				this,
 				fallbackBeanInstanceProducer
 		);
 		namedReflectionInstantiatedBean2 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheReflectionInstantiatedBean.class.getName(),
 				TheReflectionInstantiatedBean.class,
-				ContainerManagedLifecycleStrategy.INSTANCE,
+				this,
 				fallbackBeanInstanceProducer
 		);
 	}

@@ -10,7 +10,7 @@ import javax.enterprise.context.ContextNotActiveException;
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.BeanManager;
 
-import org.hibernate.resource.beans.container.spi.BeanContainerImplementor;
+import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
@@ -36,27 +36,13 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 		// private constructor, do not use
 	}
 
-	@Override
-	public <B> ContainedBeanImplementor<B> findRegisteredBean(
-			Class<B> beanClass,
-			BeanContainerImplementor container) {
-		return null;
-	}
-
-	@Override
-	public <B> ContainedBeanImplementor<B> findRegisteredBean(
-			String beanName,
-			Class<B> beanClass,
-			BeanContainerImplementor container) {
-		return null;
-	}
 
 	@Override
 	public <B> ContainedBeanImplementor<B> createBean(
 			Class<B> beanClass,
 			BeanInstanceProducer fallbackProducer,
-			BeanContainerImplementor container) {
-		return new BeanImpl<>( beanClass, fallbackProducer, ( (CdiBasedBeanContainer) container ).getUsableBeanManager() );
+			BeanContainer beanContainer) {
+		return new BeanImpl<>( beanClass, fallbackProducer, ( (CdiBasedBeanContainer) beanContainer ).getUsableBeanManager() );
 	}
 
 	@Override
@@ -64,8 +50,8 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 			String beanName,
 			Class<B> beanClass,
 			BeanInstanceProducer fallbackProducer,
-			BeanContainerImplementor container) {
-		return new NamedBeanImpl<>( beanName, beanClass, fallbackProducer, ( (CdiBasedBeanContainer) container ).getUsableBeanManager() );
+			BeanContainer beanContainer) {
+		return new NamedBeanImpl<>( beanName, beanClass, fallbackProducer, ( (CdiBasedBeanContainer) beanContainer ).getUsableBeanManager() );
 	}
 
 

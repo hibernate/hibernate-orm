@@ -16,7 +16,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.resource.beans.container.spi.BeanContainerImplementor;
+import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistryInitiator;
 import org.hibernate.service.ServiceRegistry;
 
@@ -38,14 +38,14 @@ public class CdiBeanContainerBuilder {
 	private static final String BEAN_MANAGER_EXTENSION_FQN = "org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager";
 
 	@SuppressWarnings("unchecked")
-	public static BeanContainerImplementor fromBeanManagerReference(
+	public static BeanContainer fromBeanManagerReference(
 			Object beanManagerRef,
 			ServiceRegistry serviceRegistry) {
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		final Class beanManagerClass = ManagedBeanRegistryInitiator.cdiBeanManagerClass( classLoaderService );
 		final Class extendedBeanManagerClass = getHibernateClass( BEAN_MANAGER_EXTENSION_FQN );
 
-		final Class<? extends BeanContainerImplementor> containerClass;
+		final Class<? extends BeanContainer> containerClass;
 		final Class ctorArgType;
 
 		if ( extendedBeanManagerClass.isInstance( beanManagerRef ) ) {
@@ -66,7 +66,7 @@ public class CdiBeanContainerBuilder {
 		}
 
 		try {
-			final Constructor<? extends BeanContainerImplementor> ctor = containerClass.getDeclaredConstructor( ctorArgType );
+			final Constructor<? extends BeanContainer> ctor = containerClass.getDeclaredConstructor( ctorArgType );
 			try {
 				ReflectHelper.ensureAccessibility( ctor );
 				return ctor.newInstance( ctorArgType.cast( beanManagerRef ) );

@@ -7,7 +7,7 @@
 
 // build a map of the database settings to use.
 ext {
-        db = 'h2'
+        db = project.hasProperty('db') ? project.getProperty('db') : 'h2'
         dbBundle = [
                 h2 : [
                         'db.dialect' : 'org.hibernate.dialect.H2Dialect',

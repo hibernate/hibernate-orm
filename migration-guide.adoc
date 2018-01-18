@@ -9,7 +9,9 @@ earlier versions, see any other pertinent migration guides as well.
 5.3 represents a JPA 2.2 compatible version on top of 5.2
 
 
-== Changes to positional query parameter handling
+== Known changes
+
+=== Changes to positional query parameter handling
 
 This really breaks down into 2 related changes:
 
@@ -27,7 +29,8 @@ instead of zero-bade parameter binding to be consistent with JPA.  That can temp
 reverted by setting the `hibernate.query.sql.jdbc_style_params_base` setting to `true` which
 reverts to expecting zero-based binding.
 
-== Change in the `@TableGenerator` stored value
+
+=== Change in the `@TableGenerator` stored value
 
 In order to be compliant with JPA specifications, the value stored by Hibernate 5.3 in the Table used by the `javax.persistence.TableGenerator` is the last value generated.
 Previous versions of Hibernate instead stored the next value to be used.
@@ -35,7 +38,8 @@ Previous versions of Hibernate instead stored the next value to be used.
 For backward compatibility a new setting, `hibernate.id.generator.stored_last_used`, has been introduced that gives the opportunity to fall back to the old Hibernate behaviour.
 Existing applications migrating to 5.3 and using @TableGenerator have to set `hibernate.id.generator.stored_last_used` to `false`.
 
-== Drop hibernate-infinispan module
+
+=== Drop hibernate-infinispan module
 
 Support for using Infinispan as a Hibernate 2nd level cache provider has been moved to the Infinispan project so
 the hibernate-infinispan module has been dropped.
@@ -44,7 +48,4 @@ A relocation pom pointing to `org.infinispan:infinispan-hibernate-cache` is now 
 
 The relocation pom may be dropped in a future release.
 
-The infinispan support introduced a change in the package structure that requires
-changing the config parameter `hibernate.cache.region.factory_class` from `org.hibernate.cache.infinispan.InfinispanRegionFactory` to `org.infinispan.cache.hibernate.InfinispanRegionFactory`
-
-A request for adding backward compatibility RegionFacotry classes is open https://issues.jboss.org/browse/ISPN-8638.
+See also https://issues.jboss.org/browse/ISPN-8638.

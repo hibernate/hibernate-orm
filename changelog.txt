@@ -3,6 +3,81 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.3.0.Beta1 (January 17, 2018)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/31612/tab/release-report-all-issues
+
+** Sub-task
+    * [HHH-12133] - Create ManagedBeanRegistry and ManagedBean
+    * [HHH-12134] - Convert entity listener CDI support to use ManagedBean/MenagedBeanRepository
+    * [HHH-12135] - Support for AttributeConverters as CDI beans
+
+** Bug
+    * [HHH-1830] - Error during parse query on MS SQL
+    * [HHH-9965] - Pagination ignored on collection fetch join: Add the ability to throw an exception instead of loggin a warn
+    * [HHH-10575] - MapKeyColumn on Map<> association causes Insert constraint violation
+    * [HHH-11366] - Problem with Pax exam and injection
+    * [HHH-11913] - Schema generation ignores index DESC/ASC order
+    * [HHH-12075] - SQLQuery.executeUpdate() ignores SQLQuery.setTimeout()
+    * [HHH-12096] - Problem finding correlated getter-method for field access
+    * [HHH-12097] - EntityManagerFactory open/closed checks per JPA spec
+    * [HHH-12099] - Query#getLockMode ought to throw exception for non-SELECT
+    * [HHH-12106] - Database name not quoted at schema update
+    * [HHH-12116] - Positional parameters report position as name
+    * [HHH-12122] - Checking @OrderBy for special cases should perform case-insensitive checking
+    * [HHH-12125] - Support @GeneratedValue without explicit generator definition
+    * [HHH-12129] - Fix expected exceptions on various Query methods
+    * [HHH-12136] - Various improvements for ProcedureCall/StoredProcedureQuery
+    * [HHH-12150] - @MapKeyColumn referring to otherwise non-mapped column
+    * [HHH-12157] - TableGenerator defined on one class is not visible on another
+    * [HHH-12171] - Fix tests for hibernate-orm-modules
+    * [HHH-12173] - The new org.hibernate.resource.beans.spi.ExtendedBeanManager breaks compatibility with implementations of org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager
+    * [HHH-12175] - ParameterParser doesn't handle JPA positional parameters correctly
+    * [HHH-12203] - NUMERIC column type is not handled correctly on HANA
+    * [HHH-12212] - Derived Identifiers component column size not applied
+
+** New Feature
+    * [HHH-10294] - EntityGraph improvement: For each jpa attribute, generate also a String constant holding the attribute field name
+    * [HHH-10541] - Create Vibur DBCP connection pool module
+    * [HHH-12147] - Add support for JPA2.2 @TableGenerators and @SequenceGenerators
+    * [HHH-12148] - Add setting indicating if the value stored in the table used by the @TableGenerator is the last value generated or the next value to be used.
+
+** Task
+    * [HHH-12098] - Prep for 5.3
+    * [HHH-12117] - Make sure Hibernate returns null on failed attempt to create EMF
+    * [HHH-12155] - Update documentation regarding limitation of defining caching on just root entity
+    * [HHH-12167] - Add matrix testing configuration for HANA database
+    * [HHH-12176] - Relax the checkstyle requirement for file headers.
+    * [HHH-12177] - Drop hibernate-infinispan module - relocated
+    * [HHH-12183] - Upgrade Gradle to work with JDK 9.0.1.
+    * [HHH-12211] - Test failure on MariaDB when the database charset is configured to UTF8
+
+** Improvement
+    * [HHH-9641] - Resume uploading Javadoc JARs to Maven
+    * [HHH-11019] - Extend DelayedPostInsertIdentifier support to include checks for FlushMode (EXTENDED PC)
+    * [HHH-11798] - Provide method for overriding delete statement in GlobalTemporaryTableBulkIdStrategy
+    * [HHH-12095] - MavenEnhancePlugin causes compile phase run twice
+    * [HHH-12131] - Small memory improvement when parsing / transforming UUID
+    * [HHH-12139] - Allow Hibernate's Transaction act like JPA's EntityTransaction
+    * [HHH-12146] - Support enabling caching at any level within a mapped hierarchy
+    * [HHH-12164] - Upgrade the version of Hibernate Validator used for testing
+    * [HHH-12185] - Simplify SessionFactoryBuilder / SessionFactoryOptions handling
+    * [HHH-12187] - Drop custom javadoc css
+    * [HHH-12188] - Add Java 9 automatic module name hinting
+    * [HHH-12189] - Only call setAccessible() when member is not accessible
+    * [HHH-12190] - General tidying of Gradle scripts
+    * [HHH-12191] - Add Travis CI support
+    * [HHH-12216] - Improve logging for when Hibernate throws the "illegally attempted to associate a proxy with two open Sessions" Exception
+
+** Deprecation
+    * [HHH-12194] - Deprecate Environment-scoped settings
+
+** Remove Feature
+    * [HHH-12101] - Remove support for legacy HQL-style positional parameters
+    * [HHH-12110] - IllegalStateException should be thrown for some methods when called on a closed EntityManager
+    * [HHH-12118] - Removing handling of old JVM_HAS_TIMESTAMP_BUG
+
+
 
 Changes in 5.2.12.Final (October 19, 2017)
 ------------------------------------------------------------------------------------------------------------------------

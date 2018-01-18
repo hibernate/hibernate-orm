@@ -55,6 +55,7 @@ import static org.hibernate.internal.HEMLogging.messageLogger;
  */
 public class PersistenceXmlParser {
 	private static final EntityManagerMessageLogger LOG = messageLogger( PersistenceXmlParser.class );
+	private final Map<String,ParsedPersistenceXmlDescriptor> persistenceUnits;
 
 	/**
 	 * Find all persistence-units from all accessible {@code META-INF/persistence.xml} resources
@@ -68,8 +69,8 @@ public class PersistenceXmlParser {
 				ClassLoaderServiceImpl.fromConfigSettings( integration ),
 				PersistenceUnitTransactionType.RESOURCE_LOCAL
 		);
-
-		return new ArrayList<>( parser.doResolve( integration ).values() );
+		parser.doResolve( integration );
+		return new ArrayList<>( parser.getPersistenceUnits().values() );
 	}
 
 	/**
@@ -118,10 +119,11 @@ public class PersistenceXmlParser {
 				transactionType
 		);
 
-		final Map<String,ParsedPersistenceXmlDescriptor> persistenceUnits = parser.parsePersistenceXml( persistenceXmlUrl, integration );
-		assert persistenceUnits.size() == 1;
+		parser.parsePersistenceXml( persistenceXmlUrl, integration );
 
-		return persistenceUnits.values().iterator().next();
+		assert parser.getPersistenceUnits().size() == 1;
+
+		return parser.getPersistenceUnits().values().iterator().next();
 	}
 
 	/**
@@ -173,10 +175,10 @@ public class PersistenceXmlParser {
 				transactionType
 		);
 
-		final Map<String,ParsedPersistenceXmlDescriptor> persistenceUnits = parser.parsePersistenceXml( persistenceXmlUrl, integration );
-		assert persistenceUnits.containsKey( name );
+		parser.parsePersistenceXml( persistenceXmlUrl, integration );
+		assert parser.getPersistenceUnits().containsKey( name );
 
-		return persistenceUnits.get( name );
+		return parser.getPersistenceUnits().get( name );
 	}
 
 	/**
@@ -200,18 +202,23 @@ public class PersistenceXmlParser {
 	 *
 	 * @return Map of persistence-unit descriptors keyed by the PU name
 	 */
-	public static Map<String,ParsedPersistenceXmlDescriptor> parse(
+	public static Map<String, ParsedPersistenceXmlDescriptor> parse(
 			URL persistenceXmlUrl,
 			PersistenceUnitTransactionType transactionType,
-			Map integration) {
+			Map integration
+	) {
 		PersistenceXmlParser parser = new PersistenceXmlParser(
 				ClassLoaderServiceImpl.fromConfigSettings( integration ),
 				transactionType
 		);
 
-		return parser.doResolve( integration );
+		parser.doResolve( integration );
+		return parser.getPersistenceUnits();
 	}
 
+	private Map<String, ParsedPersistenceXmlDescriptor> getPersistenceUnits() {
+		return persistenceUnits;
+	}
 
 	private final ClassLoaderService classLoaderService;
 	private final PersistenceUnitTransactionType defaultTransactionType;
@@ -219,31 +226,30 @@ public class PersistenceXmlParser {
 	private PersistenceXmlParser(ClassLoaderService classLoaderService, PersistenceUnitTransactionType defaultTransactionType) {
 		this.classLoaderService = classLoaderService;
 		this.defaultTransactionType = defaultTransactionType;
+		this.persistenceUnits = new ConcurrentHashMap<>(  );
 	}
 
-	private Map<String,ParsedPersistenceXmlDescriptor> doResolve(Map integration) {
-		final Map<String,ParsedPersistenceXmlDescriptor> persistenceUnits = new ConcurrentHashMap<>();
-
+	private void doResolve(Map integration) {
 		final List<URL> xmlUrls = classLoaderService.locateResources( "META-INF/persistence.xml" );
 		if ( xmlUrls.isEmpty() ) {
 			LOG.unableToFindPersistenceXmlInClasspath();
 		}
 		else {
-			for ( URL xmlUrl : xmlUrls ) {
-				persistenceUnits.putAll( parsePersistenceXml( xmlUrl, integration ) );
-			}
+			parsePersistenceXml( xmlUrls, integration );
 		}
-
-		return persistenceUnits;
 	}
 
-	private Map<String,ParsedPersistenceXmlDescriptor> parsePersistenceXml(URL xmlUrl, Map integration) {
+	private void parsePersistenceXml(List<URL> xmlUrls, Map integration) {
+		for ( URL xmlUrl : xmlUrls ) {
+			 parsePersistenceXml( xmlUrl, integration );
+		}
+	}
+
+	private void parsePersistenceXml(URL xmlUrl, Map integration) {
 		LOG.tracef( "Attempting to parse persistence.xml file : %s", xmlUrl.toExternalForm() );
 
 		final Document doc = loadUrl( xmlUrl );
 		final Element top = doc.getDocumentElement();
-
-		final Map<String,ParsedPersistenceXmlDescriptor> persistenceUnits = new ConcurrentHashMap<>();
 
 		final NodeList children = top.getChildNodes();
 		for ( int i = 0; i < children.getLength() ; i++ ) {
@@ -285,7 +291,6 @@ public class PersistenceXmlParser {
 				}
 			}
 		}
-		return persistenceUnits;
 	}
 
 	private void decodeTransactionType(ParsedPersistenceXmlDescriptor persistenceUnit) {

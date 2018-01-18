@@ -8,14 +8,17 @@ package org.hibernate.test.stateless;
 
 import java.util.Date;
 
-import org.junit.Test;
-
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.query.NativeQuery;
 
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
+
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
@@ -38,14 +41,14 @@ public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 		Date initVersion = doc.getLastModified();
 		assertNotNull( initVersion );
 		tx.commit();
-		
+
 		tx = ss.beginTransaction();
 		doc.setText("blah blah blah .... blah");
 		ss.update(doc);
 		assertNotNull( doc.getLastModified() );
 		assertNotSame( doc.getLastModified(), initVersion );
 		tx.commit();
-		
+
 		tx = ss.beginTransaction();
 		doc.setText("blah blah blah .... blah blay");
 		ss.update(doc);
@@ -164,6 +167,18 @@ public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 		ss.delete( paper );
 		tx.commit();
 		ss.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12141" )
+	public void testInsertInStatelessSession() throws Exception {
+		doInHibernate( this::sessionFactory, session -> {
+			session.doWork( connection -> {
+				StatelessSession sls = sessionFactory().openStatelessSession(connection);
+				NativeQuery q = sls.createNativeQuery( "INSERT INTO paper (color) values ('red')");
+				q.executeUpdate();
+			} );
+		} );
 	}
 
 }

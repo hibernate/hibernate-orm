@@ -67,8 +67,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	private PersistenceContext temporaryPersistenceContext = new StatefulPersistenceContext( this );
 
+	private boolean connectionProvided;
+
 	StatelessSessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
+		connectionProvided = options.getConnection() != null;
 	}
 
 	@Override
@@ -646,6 +649,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( shouldAutoClose() && !isClosed() ) {
 			managedClose();
 		}
+	}
+
+	@Override
+	public boolean isTransactionInProgress() {
+		return connectionProvided || super.isTransactionInProgress();
 	}
 
 	@Override

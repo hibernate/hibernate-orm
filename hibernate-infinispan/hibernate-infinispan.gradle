@@ -21,9 +21,11 @@ ext {
 publishing {
 	publications {
 		relocationPom( MavenPublication ) {
-//			groupId 'org.hibernate'
-//			artifactId 'hibernate-infinispan'
-//
+			groupId 'org.hibernate'
+			artifactId 'hibernate-infinispan'
+
+			description project.description
+
 			pom.withXml {
 				def relocation = asNode().appendNode( 'distributionManagement' ).appendNode( 'relocation' )
 				relocation.appendNode( 'groupId', project.relocatedGroupId)

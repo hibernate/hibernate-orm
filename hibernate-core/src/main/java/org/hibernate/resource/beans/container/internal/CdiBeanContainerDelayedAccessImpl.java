@@ -8,7 +8,7 @@ package org.hibernate.resource.beans.container.internal;
 
 import javax.enterprise.inject.spi.BeanManager;
 
-import org.hibernate.resource.beans.container.spi.AbstractBeanContainer;
+import org.hibernate.resource.beans.container.spi.AbstractCdiBeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
@@ -17,7 +17,7 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unused")
-public class CdiBeanContainerDelayedAccessImpl extends AbstractBeanContainer {
+public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer {
 	private final BeanManager beanManager;
 
 	private CdiBeanContainerDelayedAccessImpl(BeanManager beanManager) {

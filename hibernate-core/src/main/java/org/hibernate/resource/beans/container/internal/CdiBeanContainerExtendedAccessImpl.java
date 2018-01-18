@@ -9,7 +9,7 @@ package org.hibernate.resource.beans.container.internal;
 import javax.enterprise.inject.spi.BeanManager;
 
 import org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager;
-import org.hibernate.resource.beans.container.spi.AbstractBeanContainer;
+import org.hibernate.resource.beans.container.spi.AbstractCdiBeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
@@ -22,7 +22,7 @@ import org.jboss.logging.Logger;
  */
 @SuppressWarnings("unused")
 public class CdiBeanContainerExtendedAccessImpl
-		extends AbstractBeanContainer
+		extends AbstractCdiBeanContainer
 		implements ExtendedBeanManager.LifecycleListener {
 
 	// NOTE : we continue to use the deprecated form for now since that is what WildFly needs for the time being still

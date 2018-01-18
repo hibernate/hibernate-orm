@@ -22,7 +22,7 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractBeanContainer implements CdiBasedBeanContainer {
+public abstract class AbstractCdiBeanContainer implements CdiBasedBeanContainer {
 	private Map<String,ContainedBeanImplementor<?>> beanCache = new HashMap<>();
 	private List<ContainedBeanImplementor<?>> registeredBeans = new ArrayList<>();
 

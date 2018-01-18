@@ -8,7 +8,7 @@ package org.hibernate.resource.beans.container.internal;
 
 import javax.enterprise.inject.spi.BeanManager;
 
-import org.hibernate.resource.beans.container.spi.AbstractBeanContainer;
+import org.hibernate.resource.beans.container.spi.AbstractCdiBeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
@@ -19,7 +19,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unused")
-public class CdiBeanContainerImmediateAccessImpl extends AbstractBeanContainer {
+public class CdiBeanContainerImmediateAccessImpl extends AbstractCdiBeanContainer {
 	private static final Logger log = Logger.getLogger( CdiBeanContainerImmediateAccessImpl.class );
 
 	private final BeanManager beanManager;

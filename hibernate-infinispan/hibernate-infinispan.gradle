@@ -7,6 +7,7 @@
 
 apply from: rootProject.file( 'gradle/base-information.gradle' )
 apply from: rootProject.file( 'gradle/publishing-repos.gradle' )
+apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
 
@@ -21,11 +22,6 @@ ext {
 publishing {
 	publications {
 		relocationPom( MavenPublication ) {
-			groupId 'org.hibernate'
-			artifactId 'hibernate-infinispan'
-
-			description project.description
-
 			pom.withXml {
 				def relocation = asNode().appendNode( 'distributionManagement' ).appendNode( 'relocation' )
 				relocation.appendNode( 'groupId', project.relocatedGroupId)

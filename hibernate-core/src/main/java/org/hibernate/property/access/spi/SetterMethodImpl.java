@@ -15,6 +15,7 @@ import org.hibernate.PropertyAccessException;
 import org.hibernate.PropertySetterAccessException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ReflectHelper;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -146,7 +147,7 @@ public class SetterMethodImpl implements Setter {
 		private Method resolveMethod() {
 			try {
 				final Method method = declaringClass.getDeclaredMethod( methodName, argumentType );
-				method.setAccessible( true );
+				ReflectHelper.ensureAccessibility( method );
 				return method;
 			}
 			catch (NoSuchMethodException e) {

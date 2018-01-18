@@ -74,7 +74,6 @@ class StatementPreparerImpl implements StatementPreparer {
 
 	@Override
 	public PreparedStatement prepareStatement(String sql, final boolean isCallable) {
-		jdbcCoordinator.executeBatch();
 		return buildPreparedStatementPreparationTemplate( sql, isCallable ).prepareStatement();
 	}
 

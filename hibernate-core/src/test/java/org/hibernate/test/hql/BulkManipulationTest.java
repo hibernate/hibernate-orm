@@ -369,8 +369,8 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 
 		Car c = (Car) s.createQuery( "from Car where owner = 'Kirsten'" ).uniqueResult();
 		c.setOwner( "NotKirsten" );
-		assertEquals( 0, s.getNamedQuery( "native-delete-car" ).setString( 0, "Kirsten" ).executeUpdate() );
-		assertEquals( 1, s.getNamedQuery( "native-delete-car" ).setString( 0, "NotKirsten" ).executeUpdate() );
+		assertEquals( 0, s.getNamedQuery( "native-delete-car" ).setString( 1, "Kirsten" ).executeUpdate() );
+		assertEquals( 1, s.getNamedQuery( "native-delete-car" ).setString( 1, "NotKirsten" ).executeUpdate() );
 
 
 		assertEquals(
@@ -904,37 +904,19 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testUpdateOnImplicitJoinFails() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-
-		Human human = new Human();
-		human.setName( new Name( "Steve", 'E', null ) );
-
-		Human mother = new Human();
-		mother.setName( new Name( "Jane", 'E', null ) );
-		human.setMother( mother );
-
-		s.save( human );
-		s.save( mother );
-		s.flush();
-
-		t.commit();
-
-		t = s.beginTransaction();
-		try {
-			s.createQuery( "update Human set mother.name.initial = :initial" ).setString( "initial", "F" ).executeUpdate();
-			fail( "update allowed across implicit join" );
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch( QueryException e ) {
-		}
-
-		s.createQuery( "delete Human where mother is not null" ).executeUpdate();
-		s.createQuery( "delete Human" ).executeUpdate();
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					try {
+						s.createQuery( "update Human set mother.name.initial = :initial" ).setString( "initial", "F" ).executeUpdate();
+						fail( "update allowed across implicit join" );
+					}
+					catch (IllegalArgumentException e) {
+						assertTyping( QueryException.class, e.getCause() );
+					}
+					catch( QueryException e ) {
+					}
+				}
+		);
 	}
 
 	@Test

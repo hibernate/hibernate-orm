@@ -28,6 +28,7 @@ public class HCANNHelper {
 		final Class<?> javaXMemberClass = JavaXMember.class;
 		try {
 			getMemberMethod = javaXMemberClass.getDeclaredMethod( "getMember" );
+			// NOTE : no need to check accessibility here - we know it is protected
 			getMemberMethod.setAccessible( true );
 		}
 		catch (NoSuchMethodException e) {

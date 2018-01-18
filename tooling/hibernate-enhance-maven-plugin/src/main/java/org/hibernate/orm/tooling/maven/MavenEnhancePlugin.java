@@ -48,7 +48,6 @@ import org.sonatype.plexus.build.incremental.BuildContext;
  * @author Luis Barreiro
  */
 @Mojo(name = "enhance", defaultPhase = LifecyclePhase.COMPILE, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
-@Execute(goal = "enhance", phase = LifecyclePhase.COMPILE)
 public class MavenEnhancePlugin extends AbstractMojo {
 
 	/**

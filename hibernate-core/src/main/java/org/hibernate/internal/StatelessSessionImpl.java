@@ -219,7 +219,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 //			);
 //		}
 
-		if ( persister.hasCache() ) {
+		if ( persister.canWriteToCache() ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey( id, persister, getFactory(), getTenantIdentifier() );
 			cache.evict( ck );

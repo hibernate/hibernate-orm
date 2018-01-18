@@ -252,7 +252,12 @@ public class QueryTranslatorImpl implements FilterTranslator {
 				LOG.debugf( "SQL: %s", sql );
 			}
 			gen.getParseErrorHandler().throwQueryException();
-			collectedParameterSpecifications = gen.getCollectedParameters();
+			if ( collectedParameterSpecifications == null ) {
+				collectedParameterSpecifications = gen.getCollectedParameters();
+			}
+			else {
+				collectedParameterSpecifications.addAll( gen.getCollectedParameters() );
+			}
 		}
 	}
 
@@ -371,7 +376,15 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 		QueryParameters queryParametersToUse;
 		if ( hasLimit && containsCollectionFetches() ) {
-			LOG.firstOrMaxResultsSpecifiedWithCollectionFetch();
+			boolean fail = session.getFactory().getSessionFactoryOptions().isFailOnPaginationOverCollectionFetchEnabled();
+			if (fail) {
+				throw new HibernateException("firstResult/maxResults specified with collection fetch. " +
+						"In memory pagination was about to be applied. " +
+						"Failing because 'Fail on pagination over collection fetch' is enabled.");
+			}
+			else {
+				LOG.firstOrMaxResultsSpecifiedWithCollectionFetch();
+			}
 			RowSelection selection = new RowSelection();
 			selection.setFetchSize( queryParameters.getRowSelection().getFetchSize() );
 			selection.setTimeout( queryParameters.getRowSelection().getTimeout() );
@@ -583,7 +596,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	@Override
 	public ParameterTranslations getParameterTranslations() {
 		if ( paramTranslations == null ) {
-			paramTranslations = new ParameterTranslationsImpl( getWalker().getParameters() );
+			paramTranslations = new ParameterTranslationsImpl( getWalker().getParameterSpecs() );
 		}
 		return paramTranslations;
 	}

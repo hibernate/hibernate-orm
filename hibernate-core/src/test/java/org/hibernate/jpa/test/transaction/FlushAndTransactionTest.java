@@ -7,6 +7,7 @@
 package org.hibernate.jpa.test.transaction;
 
 import java.util.List;
+import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.OptimisticLockException;
@@ -16,6 +17,7 @@ import javax.persistence.RollbackException;
 import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.Statistics;
@@ -226,6 +228,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		catch ( PersistenceException e ) {
 			//success
 		}
+
 		try {
 			em.getTransaction().commit();
 			fail( "Commit should be rollbacked" );
@@ -288,13 +291,6 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		em.close();
 	}
 
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Book.class
-		};
-	}
-
 	@Test
 	public void testSetRollbackOnlyAndFlush() throws Exception {
 		Book book = new Book();
@@ -313,4 +309,17 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		em.close();
 	}
 
+
+	@Override
+	public Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Book.class
+		};
+	}
+
+	@Override
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" );
+	}
 }

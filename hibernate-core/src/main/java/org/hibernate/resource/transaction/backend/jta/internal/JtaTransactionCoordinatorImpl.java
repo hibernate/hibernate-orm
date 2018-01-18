@@ -19,6 +19,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
+import org.hibernate.jpa.JpaCompliance;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
@@ -74,10 +75,11 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 			TransactionCoordinatorBuilder transactionCoordinatorBuilder,
 			TransactionCoordinatorOwner owner,
 			boolean autoJoinTransactions) {
-		this.observers = new ArrayList<TransactionObserver>();
 		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
 		this.transactionCoordinatorOwner = owner;
 		this.autoJoinTransactions = autoJoinTransactions;
+
+		this.observers = new ArrayList<>();
 
 		final JdbcSessionContext jdbcSessionContext = owner.getJdbcSessionOwner().getJdbcSessionContext();
 
@@ -100,13 +102,14 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 			boolean preferUserTransactions,
 			boolean performJtaThreadTracking,
 			TransactionObserver... observers) {
-		this.observers = new ArrayList<TransactionObserver>();
 		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
 		this.transactionCoordinatorOwner = owner;
 		this.autoJoinTransactions = autoJoinTransactions;
 		this.jtaPlatform = jtaPlatform;
 		this.preferUserTransactions = preferUserTransactions;
 		this.performJtaThreadTracking = performJtaThreadTracking;
+
+		this.observers = new ArrayList<>();
 
 		if ( observers != null ) {
 			Collections.addAll( this.observers, observers );
@@ -205,6 +208,15 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	public TransactionCoordinatorOwner getTransactionCoordinatorOwner(){
 		return this.transactionCoordinatorOwner;
+	}
+
+	@Override
+	public JpaCompliance getJpaCompliance() {
+		return transactionCoordinatorOwner.getJdbcSessionOwner()
+				.getJdbcSessionContext()
+				.getSessionFactory()
+				.getSessionFactoryOptions()
+				.getJpaCompliance();
 	}
 
 	@Override

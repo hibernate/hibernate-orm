@@ -115,7 +115,7 @@ public class NativeQueryOrdinalParametersTest extends BaseEntityManagerFunctiona
 		final String sqlString = "SELECT * FROM GAME g WHERE title = ?";
 		try {
 			NativeQuery sqlQuery = em.unwrap( Session.class ).createSQLQuery( sqlString );
-			sqlQuery.setString( 0, "Super Mario Brothers").setCacheable( true );
+			sqlQuery.setString( 1, "Super Mario Brothers").setCacheable( true );
 
 			List results = sqlQuery.list();
 			assertEquals( 1, results.size() );
@@ -126,7 +126,7 @@ public class NativeQueryOrdinalParametersTest extends BaseEntityManagerFunctiona
 			assertEquals( 1, list.size() );
 
 			sqlQuery = em.unwrap( Session.class ).createSQLQuery( sqlString );
-			sqlQuery.setString( 0, "Super Mario Brothers").setCacheable( true );
+			sqlQuery.setString( 1, "Super Mario Brothers").setCacheable( true );
 
 			results = sqlQuery.list();
 			assertEquals( 1, results.size() );

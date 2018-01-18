@@ -8,6 +8,7 @@ package org.hibernate.engine.query.spi;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -25,7 +26,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.internal.QuerySplitter;
 import org.hibernate.hql.spi.FilterTranslator;
+import org.hibernate.hql.spi.NamedParameterInformation;
 import org.hibernate.hql.spi.ParameterTranslations;
+import org.hibernate.hql.spi.PositionalParameterInformation;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.internal.CoreLogging;
@@ -58,6 +61,7 @@ public class HQLQueryPlan implements Serializable {
 
 	private final Set<String> enabledFilterNames;
 	private final boolean shallow;
+	private final SessionFactoryImplementor factory;
 
 	/**
 	* We'll check the trace level only once per instance
@@ -92,8 +96,9 @@ public class HQLQueryPlan implements Serializable {
 			EntityGraphQueryHint entityGraphQueryHint) {
 		this.sourceQuery = hql;
 		this.shallow = shallow;
+		this.factory = factory;
 
-		final Set<String> copy = new HashSet<String>();
+		final Set<String> copy = new HashSet<>();
 		copy.addAll( enabledFilters.keySet() );
 		this.enabledFilterNames = java.util.Collections.unmodifiableSet( copy );
 
@@ -101,8 +106,8 @@ public class HQLQueryPlan implements Serializable {
 		final int length = concreteQueryStrings.length;
 		this.translators = new QueryTranslator[length];
 
-		final List<String> sqlStringList = new ArrayList<String>();
-		final Set<Serializable> combinedQuerySpaces = new HashSet<Serializable>();
+		final List<String> sqlStringList = new ArrayList<>();
+		final Set<Serializable> combinedQuerySpaces = new HashSet<>();
 
 		final Map querySubstitutions = factory.getSessionFactoryOptions().getQuerySubstitutions();
 		final QueryTranslatorFactory queryTranslatorFactory = factory.getServiceRegistry().getService( QueryTranslatorFactory.class );
@@ -151,7 +156,7 @@ public class HQLQueryPlan implements Serializable {
 	}
 
 	public ParameterMetadataImpl getParameterMetadata() {
-		return parameterMetadata.getOrdinalParametersZeroBasedCopy();
+		return parameterMetadata;
 	}
 
 	public ReturnMetadata getReturnMetadata() {
@@ -377,46 +382,53 @@ public class HQLQueryPlan implements Serializable {
 	}
 
 	private ParameterMetadataImpl buildParameterMetadata(ParameterTranslations parameterTranslations, String hql) {
-		final long start = traceEnabled ? System.nanoTime() : 0;
-		final ParamLocationRecognizer recognizer = ParamLocationRecognizer.parseLocations( hql );
-
-		if ( traceEnabled ) {
-			final long end = System.nanoTime();
-			LOG.tracev( "HQL param location recognition took {0} nanoseconds ({1})", ( end - start ), hql );
+		final Map<Integer,OrdinalParameterDescriptor> ordinalParamDescriptors;
+		if ( parameterTranslations.getPositionalParameterInformationMap().isEmpty() ) {
+			ordinalParamDescriptors = Collections.emptyMap();
+		}
+		else {
+			final Map<Integer,OrdinalParameterDescriptor> temp = new HashMap<>();
+			for ( Map.Entry<Integer, PositionalParameterInformation> entry :
+					parameterTranslations.getPositionalParameterInformationMap().entrySet() ) {
+				final int position = entry.getKey();
+				temp.put(
+						position,
+						new OrdinalParameterDescriptor(
+								position,
+								position - 1,
+								entry.getValue().getExpectedType(),
+								entry.getValue().getSourceLocations()
+						)
+				);
+			}
+			ordinalParamDescriptors = Collections.unmodifiableMap( temp );
 		}
 
-		int ordinalParamCount = parameterTranslations.getOrdinalParameterCount();
-		final int[] locations = ArrayHelper.toIntArray( recognizer.getOrdinalParameterLocationList() );
-		if ( parameterTranslations.supportsOrdinalParameterMetadata() && locations.length != ordinalParamCount ) {
-			throw new HibernateException( "ordinal parameter mismatch" );
-		}
-		ordinalParamCount = locations.length;
 
-		final OrdinalParameterDescriptor[] ordinalParamDescriptors = new OrdinalParameterDescriptor[ordinalParamCount];
-		for ( int i = 0; i < ordinalParamCount; i++ ) {
-			ordinalParamDescriptors[ i ] = new OrdinalParameterDescriptor(
-					i,
-					parameterTranslations.supportsOrdinalParameterMetadata()
-							? parameterTranslations.getOrdinalParameterExpectedType( i )
-							: null,
-					locations[ i ]
-			);
+		final Map<String, NamedParameterDescriptor> namedParamDescriptorMap;
+
+		if ( parameterTranslations.getNamedParameterInformationMap().isEmpty() ) {
+			namedParamDescriptorMap = Collections.emptyMap();
+		}
+		else {
+			final Map<String, NamedParameterDescriptor> tmp = new HashMap<>();
+			for ( Map.Entry<String, NamedParameterInformation> namedEntry :
+					parameterTranslations.getNamedParameterInformationMap().entrySet() ) {
+				final String name = namedEntry.getKey();
+				tmp.put(
+						name,
+						new NamedParameterDescriptor(
+								name,
+								parameterTranslations.getNamedParameterInformation( name ).getExpectedType(),
+								namedEntry.getValue().getSourceLocations()
+						)
+				);
+			}
+
+			namedParamDescriptorMap = Collections.unmodifiableMap( tmp );
 		}
 
-		final Map<String, NamedParameterDescriptor> namedParamDescriptorMap = new HashMap<String, NamedParameterDescriptor>();
-		final Map<String, ParamLocationRecognizer.NamedParameterDescription> map = recognizer.getNamedParameterDescriptionMap();
-		for ( final String name : map.keySet() ) {
-			final ParamLocationRecognizer.NamedParameterDescription description = map.get( name );
-			namedParamDescriptorMap.put(
-					name,
-					new NamedParameterDescriptor(
-							name,
-							parameterTranslations.getNamedParameterExpectedType( name ),
-							description.buildPositionsArray(),
-							description.isJpaStyle()
-					)
-			);
-		}
+
 		return new ParameterMetadataImpl( ordinalParamDescriptors, namedParamDescriptorMap );
 	}
 

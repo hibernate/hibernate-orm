@@ -36,6 +36,10 @@ import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.convert.internal.AttributeConverterManager;
+import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
@@ -46,7 +50,7 @@ import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
-import org.hibernate.boot.spi.AttributeConverterAutoApplyHandler;
+import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -56,6 +60,7 @@ import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.CopyIdentifierComponentSecondPass;
 import org.hibernate.cfg.CreateKeySecondPass;
 import org.hibernate.cfg.FkSecondPass;
+import org.hibernate.cfg.IdGeneratorResolverSecondPass;
 import org.hibernate.cfg.JPAIndexHolder;
 import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
 import org.hibernate.cfg.PropertyData;
@@ -345,22 +350,19 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// attribute converters
 
 	@Override
-	public void addAttributeConverter(AttributeConverterDefinition definition) {
+	public void addAttributeConverter(Class<? extends AttributeConverter> converterClass) {
 		attributeConverterManager.addConverter(
-				AttributeConverterDescriptorImpl.create(
-						definition,
-						classmateContext
-				)
+				new ClassBasedConverterDescriptor( converterClass, getClassmateContext() )
 		);
 	}
 
 	@Override
-	public void addAttributeConverter(Class<? extends AttributeConverter> converterClass) {
-		addAttributeConverter( AttributeConverterDefinition.from( converterClass ) );
+	public void addAttributeConverter(ConverterDescriptor descriptor) {
+		attributeConverterManager.addConverter( descriptor );
 	}
 
 	@Override
-	public AttributeConverterAutoApplyHandler getAttributeConverterAutoApplyHandler() {
+	public ConverterAutoApplyHandler getAttributeConverterAutoApplyHandler() {
 		return attributeConverterManager;
 	}
 
@@ -441,10 +443,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		if ( defaultIdentifierGeneratorNames.contains( generator.getName() ) ) {
 			return;
 		}
-
 		final IdentifierGeneratorDefinition old = idGeneratorDefinitionMap.put( generator.getName(), generator );
 		if ( old != null ) {
-			log.duplicateGeneratorName( old.getName() );
+			if ( !old.equals( generator ) ) {
+				throw new IllegalArgumentException( "Duplicate generator name " + old.getName() );
+			}
+//			log.duplicateGeneratorName( old.getName() );
 		}
 	}
 
@@ -1442,6 +1446,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
+	private ArrayList<IdGeneratorResolverSecondPass> idGeneratorResolverSecondPassList;
 	private ArrayList<PkDrivenByDefaultMapsIdSecondPass> pkDrivenByDefaultMapsIdSecondPassList;
 	private ArrayList<SetSimpleValueTypeSecondPass> setSimpleValueTypeSecondPassList;
 	private ArrayList<CopyIdentifierComponentSecondPass> copyIdentifierComponentSecondPasList;
@@ -1460,7 +1465,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public void addSecondPass(SecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( secondPass instanceof PkDrivenByDefaultMapsIdSecondPass ) {
+		if ( secondPass instanceof IdGeneratorResolverSecondPass ) {
+			addIdGeneratorResolverSecondPass( (IdGeneratorResolverSecondPass) secondPass, onTopOfTheQueue );
+		}
+		else if ( secondPass instanceof PkDrivenByDefaultMapsIdSecondPass ) {
 			addPkDrivenByDefaultMapsIdSecondPass( (PkDrivenByDefaultMapsIdSecondPass) secondPass, onTopOfTheQueue );
 		}
 		else if ( secondPass instanceof SetSimpleValueTypeSecondPass ) {
@@ -1518,6 +1526,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		addSecondPass( secondPass, setSimpleValueTypeSecondPassList, onTopOfTheQueue );
 	}
 
+	private void addIdGeneratorResolverSecondPass(IdGeneratorResolverSecondPass secondPass, boolean onTopOfTheQueue) {
+		if ( idGeneratorResolverSecondPassList == null ) {
+			idGeneratorResolverSecondPassList = new ArrayList<>();
+		}
+		addSecondPass( secondPass, idGeneratorResolverSecondPassList, onTopOfTheQueue );
+	}
+
 	private void addCopyIdentifierComponentSecondPass(
 			CopyIdentifierComponentSecondPass secondPass,
 			boolean onTopOfTheQueue) {
@@ -1573,8 +1588,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		inSecondPass = true;
 
 		try {
+			processSecondPasses( idGeneratorResolverSecondPassList );
 			processSecondPasses( implicitColumnNamingSecondPassList );
-
 			processSecondPasses( pkDrivenByDefaultMapsIdSecondPassList );
 			processSecondPasses( setSimpleValueTypeSecondPassList );
 
@@ -2146,6 +2161,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 							"Cache override referenced a non-root entity : " + cacheRegionDefinition.getRole()
 					);
 				}
+				entityBinding.setCached( true );
 				( (RootClass) entityBinding ).setCacheRegionName( cacheRegionDefinition.getRegion() );
 				( (RootClass) entityBinding ).setCacheConcurrencyStrategy( cacheRegionDefinition.getUsage() );
 				( (RootClass) entityBinding ).setLazyPropertiesCacheable( cacheRegionDefinition.isCacheLazy() );

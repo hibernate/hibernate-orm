@@ -11,6 +11,8 @@ import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.internal.util.ReflectHelper;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import java.lang.reflect.Field;
@@ -31,7 +33,7 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 	public static Object getFieldByReflection(Object entity, String fieldName) {
 		try {
 			Field field = entity.getClass().getDeclaredField( fieldName );
-			field.setAccessible( true );
+			ReflectHelper.ensureAccessibility( field );
 			return field.get( entity );
 		}
 		catch (NoSuchFieldException | IllegalAccessException e) {

@@ -60,10 +60,10 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 	}
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
+	protected void applyMetadataSources(MetadataSources sources) {
+		super.applyMetadataSources( sources );
 
-		metadataSources.addAnnotatedClass( TheEntity.class );
+		sources.addAnnotatedClass( TheEntity.class );
 	}
 
 	@Test

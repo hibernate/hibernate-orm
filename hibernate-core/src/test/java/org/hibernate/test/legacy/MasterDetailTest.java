@@ -433,13 +433,19 @@ public class MasterDetailTest extends LegacyTestCase {
 		assertTrue( q.list().size()==2 );
 		q.setInteger("id2", -1);
 		assertTrue( q.list().size()==0 );
-		q = s.createFilter( master.getDetails(), "where this.id in (:ids)" );
+
 		list = new ArrayList();
 		list.add(did);
 		list.add( new Long(-1) );
+
+		q = s.createFilter( master.getDetails(), "where this.id in (:ids)" );
 		q.setParameterList("ids", list);
 		assertTrue( q.list().size()==1 );
+
+		q = s.createFilter( master.getDetails(), "where this.id in (:ids)" );
+		q.setParameterList("ids", list);
 		assertTrue( q.iterate().hasNext() );
+
 		assertTrue( s.createFilter( master.getDetails(), "where this.id > -1" ).list().size()==2 );
 		assertTrue( s.createFilter( master.getDetails(), "select this.master where this.id > -1" ).list().size()==2 );
 		assertTrue(

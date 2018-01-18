@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class
+            name="org.hibernate.query.hhh12076.TaskStatus"
+            table="wf_task_status"
+            lazy="false">
+
+        <cache usage="read-write"/>
+        <id name="id" type="java.lang.Long">
+            <column name="id"/>
+            <generator class="native"/>
+        </id>
+        <discriminator force="false" insert="true" not-null="true">
+            <column name="type"/>
+        </discriminator>
+        <version name="version" unsaved-value="null" type="java.lang.Integer">
+            <column name="version"/>
+        </version>
+        <property lazy="false" name="creationDate" type="timestamp" insert="false" update="false" generated="always">
+            <column name="creation_date"/>
+        </property>
+        <property lazy="false" name="modifiedDate" type="timestamp" insert="false" update="false" generated="always">
+            <column name="modified_date"/>
+        </property>
+
+        <property name="name" type="java.lang.String">
+            <column name="name" length="128" not-null="true"/>
+        </property>
+        <property name="displayName" type="java.lang.String">
+            <column name="display_name" length="128" not-null="true"/>
+        </property>
+        <property name="active" type="boolean">
+            <column name="active"/>
+        </property>
+        <property name="orderIndex" type="integer">
+            <column name="order_index"/>
+        </property>
+
+    </class>
+</hibernate-mapping>

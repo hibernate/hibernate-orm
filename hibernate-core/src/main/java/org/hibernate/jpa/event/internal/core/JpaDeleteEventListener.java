@@ -11,8 +11,8 @@ import java.io.Serializable;
 import org.hibernate.event.internal.DefaultDeleteEventListener;
 import org.hibernate.event.spi.DeleteEvent;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
-import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
+import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**

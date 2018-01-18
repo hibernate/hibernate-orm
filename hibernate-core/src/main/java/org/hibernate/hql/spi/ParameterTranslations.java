@@ -5,9 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.hql.spi;
-import java.util.Set;
 
-import org.hibernate.type.Type;
+import java.util.Map;
 
 /**
  * Defines available information about the parameters encountered during
@@ -16,18 +15,10 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public interface ParameterTranslations {
+	Map<String,NamedParameterInformation> getNamedParameterInformationMap();
+	Map<Integer,PositionalParameterInformation> getPositionalParameterInformationMap();
 
-	public boolean supportsOrdinalParameterMetadata();
+	PositionalParameterInformation getPositionalParameterInformation(int position);
 
-	public int getOrdinalParameterCount();
-
-	public int getOrdinalParameterSqlLocation(int ordinalPosition);
-
-	public Type getOrdinalParameterExpectedType(int ordinalPosition);
-
-	public Set getNamedParameterNames();
-
-	public int[] getNamedParameterSqlLocations(String name);
-
-	public Type getNamedParameterExpectedType(String name);
+	NamedParameterInformation getNamedParameterInformation(String name);
 }

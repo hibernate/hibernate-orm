@@ -7,6 +7,7 @@
 package org.hibernate.internal.util;
 
 import java.beans.Introspector;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -14,7 +15,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Locale;
 import java.util.regex.Pattern;
-
 import javax.persistence.Transient;
 
 import org.hibernate.AssertionFailure;
@@ -274,7 +274,7 @@ public final class ReflectHelper {
 
 		try {
 			Constructor<T> constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
-			constructor.setAccessible( true );
+			ensureAccessibility( constructor );
 			return constructor;
 		}
 		catch ( NoSuchMethodException nme ) {
@@ -334,7 +334,7 @@ public final class ReflectHelper {
 				}
 				if ( found ) {
 					numberOfMatchingConstructors ++;
-					candidate.setAccessible( true );
+					ensureAccessibility( candidate );
 					constructor = candidate;
 				}
 			}
@@ -377,8 +377,17 @@ public final class ReflectHelper {
 			);
 		}
 
-		field.setAccessible( true );
+		ensureAccessibility( field );
+
 		return field;
+	}
+
+	public static void ensureAccessibility(AccessibleObject accessibleObject) {
+		if ( accessibleObject.isAccessible() ) {
+			return;
+		}
+
+		accessibleObject.setAccessible( true );
 	}
 
 	private static Field locateField(Class clazz, String propertyName) {
@@ -424,7 +433,8 @@ public final class ReflectHelper {
 			);
 		}
 
-		getter.setAccessible( true );
+		ensureAccessibility( getter );
+
 		return getter;
 	}
 
@@ -600,7 +610,8 @@ public final class ReflectHelper {
 			);
 		}
 
-		setter.setAccessible( true );
+		ensureAccessibility( setter );
+
 		return setter;
 	}
 
@@ -635,5 +646,52 @@ public final class ReflectHelper {
 		}
 
 		return potentialSetter;
+	}
+
+	/**
+	 * Similar to {@link #getterMethodOrNull}, except that here we are just looking for the
+	 * corresponding getter for a field (defined as field access) if one exists.
+	 *
+	 * We do not look at supers, although conceivably the super could declare the method
+	 * as an abstract - but again, that is such an edge case...
+	 */
+	public static Method findGetterMethodForFieldAccess(Field field, String propertyName) {
+		for ( Method method : field.getDeclaringClass().getDeclaredMethods() ) {
+			// if the method has parameters, skip it
+			if ( method.getParameterCount() != 0 ) {
+				continue;
+			}
+
+			if ( Modifier.isStatic( method.getModifiers() ) ) {
+				continue;
+			}
+
+			if ( ! method.getReturnType().isAssignableFrom( field.getType() ) ) {
+				continue;
+			}
+
+			final String methodName = method.getName();
+
+			// try "get"
+			if ( methodName.startsWith( "get" ) ) {
+				final String stemName = methodName.substring( 3 );
+				final String decapitalizedStemName = Introspector.decapitalize( stemName );
+				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
+					return method;
+				}
+
+			}
+
+			// if not "get", then try "is"
+			if ( methodName.startsWith( "is" ) ) {
+				final String stemName = methodName.substring( 2 );
+				String decapitalizedStemName = Introspector.decapitalize( stemName );
+				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
+					return method;
+				}
+			}
+		}
+
+		return null;
 	}
 }

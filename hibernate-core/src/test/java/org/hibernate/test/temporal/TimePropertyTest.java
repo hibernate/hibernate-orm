@@ -58,13 +58,13 @@ public class TimePropertyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 
-		String queryString = "from TimePropertyTest$Entity where tAsDate = ?";
+		String queryString = "from TimePropertyTest$Entity where tAsDate = ?1";
 
 		if( SQLServerDialect.class.isAssignableFrom( getDialect().getClass() )) {
-			queryString = "from TimePropertyTest$Entity where tAsDate = cast ( ? as time )";
+			queryString = "from TimePropertyTest$Entity where tAsDate = cast ( ?1 as time )";
 		}
 
-		final Query queryWithParameter = s.createQuery( queryString ).setParameter( 0, eGotten.tAsDate );
+		final Query queryWithParameter = s.createQuery( queryString ).setParameter( 1, eGotten.tAsDate );
 		final Entity eQueriedWithParameter = (Entity) queryWithParameter.uniqueResult();
 		assertNotNull( eQueriedWithParameter );
 		s.getTransaction().commit();
@@ -73,7 +73,7 @@ public class TimePropertyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 
-		final Query query = s.createQuery( queryString ).setTime( 0, eGotten.tAsDate );
+		final Query query = s.createQuery( queryString ).setTime( 1, eGotten.tAsDate );
 		final Entity eQueried = (Entity) query.uniqueResult();
 		assertNotNull( eQueried );
 		s.getTransaction().commit();

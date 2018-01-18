@@ -70,12 +70,12 @@ public class EJBQLTest extends BaseCoreFunctionalTestCase {
 		QueryTranslatorImpl qt = compile( "from Animal a where a.bodyWeight = ?1" );
 		AST ast = ( AST ) qt.getSqlAST();
 
-		// make certain that the ejb3-positional param got recognized as a named param
+		// make certain that the ejb3-positional param got recognized as a positional param
 		List namedParams = ASTUtil.collectChildren(
 		        ast,
 		        new ASTUtil.FilterPredicate() {
 			        public boolean exclude(AST n) {
-				        return n.getType() != HqlSqlTokenTypes.NAMED_PARAM;
+				        return n.getType() != HqlSqlTokenTypes.PARAM;
 			        }
 		        }
 		);

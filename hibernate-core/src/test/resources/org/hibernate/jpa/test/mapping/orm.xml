@@ -9,6 +9,7 @@
     <persistence-unit-metadata>
         <persistence-unit-defaults>
             <delimited-identifiers/>
+            <cascade-persist/>
         </persistence-unit-defaults>
     </persistence-unit-metadata>
 </entity-mappings>

@@ -96,6 +96,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.event.service.spi.EventListenerGroup;
@@ -153,6 +154,7 @@ import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.MultiLoadOptions;
@@ -179,6 +181,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
+import org.hibernate.type.Type;
 
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
@@ -1446,6 +1449,7 @@ public final class SessionImpl
 
 	@Override
 	public void setFlushMode(FlushModeType flushModeType) {
+		checkOpen();
 		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
 	}
 
@@ -1754,8 +1758,13 @@ public final class SessionImpl
 		}
 
 		if ( parameters != null ) {
-			parameters.getPositionalParameterValues()[0] = entry.getLoadedKey();
-			parameters.getPositionalParameterTypes()[0] = entry.getLoadedPersister().getKeyType();
+			parameters.getNamedParameters().put(
+					CollectionFilterKeyParameterSpecification.PARAM_KEY,
+					new TypedValue(
+							entry.getLoadedPersister().getKeyType(),
+							entry.getLoadedKey()
+					)
+			);
 		}
 
 		return plan;
@@ -3805,21 +3814,25 @@ public final class SessionImpl
 
 	@Override
 	public Object getDelegate() {
+		checkOpen();
 		return this;
 	}
 
 	@Override
 	public SessionFactoryImplementor getEntityManagerFactory() {
+		checkOpen();
 		return getFactory();
 	}
 
 	@Override
 	public CriteriaBuilder getCriteriaBuilder() {
+		checkOpen();
 		return getFactory().getCriteriaBuilder();
 	}
 
 	@Override
 	public MetamodelImplementor getMetamodel() {
+		checkOpen();
 		return getFactory().getMetamodel();
 	}
 

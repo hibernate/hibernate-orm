@@ -609,6 +609,22 @@ public class JoinSequence {
 		}
 	}
 
+	public JoinSequence copyForCollectionProperty() {
+		JoinSequence copy = this.copy();
+		copy.joins.clear();
+		Iterator<Join> joinIterator = this.joins.iterator();
+		while ( joinIterator.hasNext() ) {
+			Join join = joinIterator.next();
+			copy.addJoin(
+					join.getAssociationType(),
+					join.getAlias(),
+					JoinType.INNER_JOIN,
+					join.getLHSColumns()
+			);
+		}
+		return copy;
+	}
+
 	@Override
 	public String toString() {
 		final StringBuilder buf = new StringBuilder();

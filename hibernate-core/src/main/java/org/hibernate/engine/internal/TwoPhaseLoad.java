@@ -183,7 +183,7 @@ public final class TwoPhaseLoad {
 		persister.setPropertyValues( entity, hydratedState );
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		if ( persister.hasCache() && session.getCacheMode().isPutEnabled() ) {
+		if ( persister.canWriteToCache() && session.getCacheMode().isPutEnabled() ) {
 
 			if ( debugEnabled ) {
 				LOG.debugf(

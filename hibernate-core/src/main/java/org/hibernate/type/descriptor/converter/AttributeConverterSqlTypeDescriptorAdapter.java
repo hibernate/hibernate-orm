@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import javax.persistence.AttributeConverter;
 import javax.persistence.PersistenceException;
 
+import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -35,12 +36,12 @@ import org.jboss.logging.Logger;
 public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescriptor {
 	private static final Logger log = Logger.getLogger( AttributeConverterSqlTypeDescriptorAdapter.class );
 
-	private final AttributeConverter converter;
+	private final JpaAttributeConverter converter;
 	private final SqlTypeDescriptor delegate;
 	private final JavaTypeDescriptor intermediateJavaTypeDescriptor;
 
 	public AttributeConverterSqlTypeDescriptorAdapter(
-			AttributeConverter converter,
+			JpaAttributeConverter converter,
 			SqlTypeDescriptor delegate,
 			JavaTypeDescriptor intermediateJavaTypeDescriptor) {
 		this.converter = converter;
@@ -74,7 +75,7 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 			public void bind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				final Object convertedValue;
 				try {
-					convertedValue = converter.convertToDatabaseColumn( value );
+					convertedValue = converter.toRelationalValue( value );
 				}
 				catch (PersistenceException pe) {
 					throw pe;
@@ -91,7 +92,7 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 			public void bind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException {
 				final Object convertedValue;
 				try {
-					convertedValue = converter.convertToDatabaseColumn( value );
+					convertedValue = converter.toRelationalValue( value );
 				}
 				catch (PersistenceException pe) {
 					throw pe;
@@ -136,7 +137,7 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 			@SuppressWarnings("unchecked")
 			private X doConversion(Object extractedValue) {
 				try {
-					X convertedValue = (X) converter.convertToEntityAttribute( extractedValue );
+					X convertedValue = (X) converter.toDomainValue( extractedValue );
 					log.debugf( "Converted value on extraction: %s -> %s", extractedValue, convertedValue );
 					return convertedValue;
 				}

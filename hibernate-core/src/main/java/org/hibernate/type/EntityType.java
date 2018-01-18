@@ -7,6 +7,7 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
@@ -260,6 +261,22 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException, SQLException {
 		return resolve( hydrate( rs, names, session, owner ), session, owner );
+	}
+
+	@Override
+	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SharedSessionContractImplementor session)
+			throws SQLException {
+		if ( settable.length > 0 ) {
+			requireIdentifierOrUniqueKeyType( session.getFactory() )
+					.nullSafeSet( st, getIdentifier( value, session ), index, settable, session );
+		}
+	}
+
+	@Override
+	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+			throws SQLException {
+		requireIdentifierOrUniqueKeyType( session.getFactory() )
+				.nullSafeSet( st, getIdentifier( value, session ), index, session );
 	}
 
 	/**
@@ -708,4 +725,15 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return result == null ? null : persistenceContext.proxyFor( result );
 	}
 
+	protected Type requireIdentifierOrUniqueKeyType(Mapping mapping) {
+		final Type fkTargetType = getIdentifierOrUniqueKeyType( mapping );
+		if ( fkTargetType == null ) {
+			throw new MappingException(
+					"Unable to determine FK target Type for many-to-one or one-to-one mapping: " +
+							"referenced-entity-name=[" + getAssociatedEntityName() +
+							"], referenced-entity-attribute-name=[" + getLHSPropertyName() + "]"
+			);
+		}
+		return fkTargetType;
+	}
 }

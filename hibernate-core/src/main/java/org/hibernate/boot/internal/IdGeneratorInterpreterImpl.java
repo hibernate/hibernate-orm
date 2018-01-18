@@ -16,6 +16,7 @@ import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BinderHelper;
+import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceHiLoGenerator;
@@ -109,13 +110,17 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 				}
 				default: {
 					// AUTO
+
+					if ( "increment".equalsIgnoreCase( context.getGeneratedValueGeneratorName() ) ) {
+						return IncrementGenerator.class.getName();
+					}
+
 					final Class javaType = context.getIdType();
 					if ( UUID.class.isAssignableFrom( javaType ) ) {
 						return UUIDGenerator.class.getName();
 					}
-					else {
-						return "native";
-					}
+
+					return "native";
 				}
 			}
 		}
@@ -217,13 +222,17 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 				}
 				default: {
 					// AUTO
+
+					if ( "increment".equalsIgnoreCase( context.getGeneratedValueGeneratorName() ) ) {
+						return IncrementGenerator.class.getName();
+					}
+
 					final Class javaType = context.getIdType();
 					if ( UUID.class.isAssignableFrom( javaType ) ) {
 						return UUIDGenerator.class.getName();
 					}
-					else {
-						return org.hibernate.id.enhanced.SequenceStyleGenerator.class.getName();
-					}
+
+					return org.hibernate.id.enhanced.SequenceStyleGenerator.class.getName();
 				}
 			}
 		}

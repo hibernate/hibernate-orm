@@ -144,7 +144,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			}
 		}
 
-		if ( persister.hasCache() ) {
+		if ( persister.canWriteToCache() ) {
 			Object previousVersion = null;
 			if ( persister.isVersionPropertyGenerated() ) {
 				// we need to grab the version value from the entity, otherwise

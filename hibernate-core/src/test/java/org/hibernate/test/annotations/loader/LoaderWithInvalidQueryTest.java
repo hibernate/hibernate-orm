@@ -57,13 +57,13 @@ public class LoaderWithInvalidQueryTest extends BaseEntityManagerFunctionalTestC
 		name = "invalid_sql",
 		query = "SELECT p " +
 				"FROM Person p " +
-				"WHERE p.id = ? and p.valid = true"
+				"WHERE p.id = ?1 and p.valid = true"
 	)
 	@NamedQuery(
 		name = "another_invalid_sql",
 		query = "SELECT p " +
 				"FROM _Person p " +
-				"WHERE p.id = ?"
+				"WHERE p.id = ?1"
 	)
 	public static class Person {
 

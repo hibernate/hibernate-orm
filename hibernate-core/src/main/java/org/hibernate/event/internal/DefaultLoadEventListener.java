@@ -385,7 +385,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		SoftLock lock = null;
 		final Object ck;
 		final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-		if ( persister.hasCache() ) {
+		if ( persister.canWriteToCache() ) {
 			ck = cache.generateCacheKey(
 					event.getEntityId(),
 					persister,
@@ -403,7 +403,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			entity = load( event, persister, keyToLoad, options );
 		}
 		finally {
-			if ( persister.hasCache() ) {
+			if ( persister.canWriteToCache() ) {
 				cache.unlockItem( source, ck, lock );
 			}
 		}
@@ -583,7 +583,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			final EntityKey entityKey) {
 
 		final SessionImplementor source = event.getSession();
-		final boolean useCache = persister.hasCache()
+		final boolean useCache = persister.canReadFromCache()
 				&& source.getCacheMode().isGetEnabled()
 				&& event.getLockMode().lessThan( LockMode.READ );
 

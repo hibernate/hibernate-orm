@@ -568,6 +568,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "OnDeleteUnidirectionalOneToManyParent")
+	@javax.persistence.Table(name = "OneToManyParent")
 	public static class OnDeleteUnidirectionalOneToManyParent {
 
 		@Id
@@ -581,6 +582,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "OnDeleteUnidirectionalOneToManyChild")
+	@javax.persistence.Table(name = "OneToManyChild")
 	public static class OnDeleteUnidirectionalOneToManyChild {
 
 		@Id
@@ -589,6 +591,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "OnDeleteUnidirectionalOneToMany")
+	@javax.persistence.Table(name = "OneToMany")
 	public static class OnDeleteUnidirectionalOneToMany {
 
 		@Id
@@ -600,6 +603,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "ParentUnawareChild")
+	@javax.persistence.Table(name = "Child")
 	public static class ParentUnawareChild {
 
 		@Id

@@ -215,7 +215,7 @@ public class BatchFetchQueue {
 
 	private boolean isCached(EntityKey entityKey, EntityPersister persister) {
 		final SharedSessionContractImplementor session = context.getSession();
-		if ( context.getSession().getCacheMode().isGetEnabled() && persister.hasCache() ) {
+		if ( context.getSession().getCacheMode().isGetEnabled() && persister.canReadFromCache() ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 			final Object key = cache.generateCacheKey(
 					entityKey.getIdentifier(),

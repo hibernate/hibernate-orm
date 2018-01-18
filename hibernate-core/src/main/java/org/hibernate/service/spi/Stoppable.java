@@ -15,5 +15,5 @@ public interface Stoppable {
 	/**
 	 * Stop phase notification
 	 */
-	public void stop();
+	void stop();
 }

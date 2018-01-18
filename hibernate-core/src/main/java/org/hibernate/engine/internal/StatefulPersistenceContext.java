@@ -1670,7 +1670,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void registerInsertedKey(EntityPersister persister, Serializable id) {
 		// we only are worried about registering these if the persister defines caching
-		if ( persister.hasCache() ) {
+		if ( persister.canWriteToCache() ) {
 			if ( insertedKeysMap == null ) {
 				insertedKeysMap = new HashMap<>();
 			}
@@ -1687,7 +1687,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id) {
 		// again, we only really care if the entity is cached
-		if ( persister.hasCache() ) {
+		if ( persister.canWriteToCache() ) {
 			if ( insertedKeysMap != null ) {
 				final List<Serializable> insertedEntityIds = insertedKeysMap.get( persister.getRootEntityName() );
 				if ( insertedEntityIds != null ) {

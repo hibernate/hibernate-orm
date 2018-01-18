@@ -29,7 +29,6 @@
         <module name="org.jboss.vfs"/>
         <module name="org.javassist" export="true"/>
         <module name="org.hibernate.commons-annotations"/>
-        <module name="org.hibernate.infinispan" services="import" optional="true" slot="${slot}"/>
         <module name="org.hibernate.jipijapa-hibernate5" services="import" slot="${slot}"/>
     </dependencies>
 </module>

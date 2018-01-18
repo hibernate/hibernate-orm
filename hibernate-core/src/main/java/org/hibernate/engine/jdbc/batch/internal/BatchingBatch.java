@@ -31,7 +31,8 @@ public class BatchingBatch extends AbstractBatchImpl {
 
 	// IMPL NOTE : Until HHH-5797 is fixed, there will only be 1 statement in a batch
 
-	private final int batchSize;
+	private int batchSize;
+	private final int configuredBatchSize;
 	private int batchPosition;
 	private boolean batchExecuted;
 	private int statementPosition;
@@ -52,6 +53,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 			throw new HibernateException( "attempting to batch an operation which cannot be batched" );
 		}
 		this.batchSize = batchSize;
+		this.configuredBatchSize = batchSize;
 	}
 
 	private String currentStatementSql;
@@ -60,7 +62,12 @@ public class BatchingBatch extends AbstractBatchImpl {
 	@Override
 	public PreparedStatement getBatchStatement(String sql, boolean callable) {
 		currentStatementSql = sql;
+		int previousBatchSize = getStatements().size();
 		currentStatement = super.getBatchStatement( sql, callable );
+		int currentBatchSize = getStatements().size();
+		if ( currentBatchSize > previousBatchSize ) {
+			this.batchSize = this.configuredBatchSize * currentBatchSize;
+		}
 		return currentStatement;
 	}
 
@@ -134,7 +141,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 
 	private void checkRowCounts(int[] rowCounts, PreparedStatement ps) throws SQLException, HibernateException {
 		final int numberOfRowCounts = rowCounts.length;
-		if ( numberOfRowCounts != batchPosition ) {
+		if ( batchPosition != 0 && numberOfRowCounts != batchPosition / getStatements().size() ) {
 			LOG.unexpectedRowCounts();
 		}
 		for ( int i = 0; i < numberOfRowCounts; i++ ) {

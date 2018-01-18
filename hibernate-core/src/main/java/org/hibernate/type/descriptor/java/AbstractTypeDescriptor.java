@@ -55,9 +55,17 @@ public abstract class AbstractTypeDescriptor<T> implements JavaTypeDescriptor<T>
 		return mutabilityPlan;
 	}
 
-	@Override
-	public Class<T> getJavaTypeClass() {
+	public Class<T> getJavaType() {
 		return type;
+	}
+
+	/**
+	 * @deprecated Use {@link #getJavaTypeClass()} instead
+	 */
+	@Override
+	@Deprecated
+	public Class<T> getJavaTypeClass() {
+		return getJavaType();
 	}
 
 	@Override

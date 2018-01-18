@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -65,7 +66,9 @@ public class SchemaUpdateHaltOnErrorTest {
 		}
 		catch ( Exception e ) {
 			SchemaManagementException cause = (SchemaManagementException) e;
-			assertEquals("Halting on error : Error executing DDL via JDBC Statement", cause.getMessage());
+
+			assertTrue( cause.getMessage().startsWith( "Halting on error : Error executing DDL" ) );
+			assertTrue( cause.getMessage().endsWith( "via JDBC Statement" ) );
 		}
 	}
 

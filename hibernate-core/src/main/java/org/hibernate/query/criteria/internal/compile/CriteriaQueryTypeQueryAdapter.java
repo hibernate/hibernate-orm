@@ -31,6 +31,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.RowSelection;
@@ -559,10 +560,26 @@ public class CriteriaQueryTypeQueryAdapter<X> implements QueryImplementor<X> {
 	}
 
 	@Override
+	public Query<X> setParameterList(int position, Collection values) {
+		ExplicitParameterInfo parameterInfo = locateParameterByPosition( position );
+		parameterInfo.validateDateBind();
+		jpqlQuery.setParameter( position, values );
+		return this;
+	}
+
+	@Override
 	public QueryImplementor<X> setParameterList(String name, Collection values, Type type) {
 		ExplicitParameterInfo parameterInfo = locateParameterByName( name );
 		parameterInfo.validateDateBind();
 		jpqlQuery.setParameter( name, values, type );
+		return this;
+	}
+
+	@Override
+	public Query<X> setParameterList(int position, Collection values, Type type) {
+		ExplicitParameterInfo parameterInfo = locateParameterByPosition( position );
+		parameterInfo.validateDateBind();
+		jpqlQuery.setParameter( position, values, type );
 		return this;
 	}
 
@@ -575,10 +592,26 @@ public class CriteriaQueryTypeQueryAdapter<X> implements QueryImplementor<X> {
 	}
 
 	@Override
+	public Query<X> setParameterList(int position, Object[] values, Type type) {
+		ExplicitParameterInfo parameterInfo = locateParameterByPosition( position );
+		parameterInfo.validateDateBind();
+		jpqlQuery.setParameter( position, values, type );
+		return this;
+	}
+
+	@Override
 	public QueryImplementor<X> setParameterList(String name, Object[] values) {
 		ExplicitParameterInfo parameterInfo = locateParameterByName( name );
 		parameterInfo.validateDateBind();
 		jpqlQuery.setParameter( name, values );
+		return this;
+	}
+
+	@Override
+	public Query<X> setParameterList(int position, Object[] values) {
+		ExplicitParameterInfo parameterInfo = locateParameterByPosition( position );
+		parameterInfo.validateDateBind();
+		jpqlQuery.setParameter( position, values );
 		return this;
 	}
 

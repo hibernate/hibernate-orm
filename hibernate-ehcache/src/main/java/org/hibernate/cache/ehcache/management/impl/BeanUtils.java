@@ -10,6 +10,8 @@ package org.hibernate.cache.ehcache.management.impl;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import org.hibernate.internal.util.ReflectHelper;
+
 /**
  * Reflective utilities for dealing with backward-incompatible change to statistics types in Hibernate 3.5.
  *
@@ -85,7 +87,7 @@ public class BeanUtils {
 		final Field field = getField( bean, propertyName );
 		if ( field != null ) {
 			try {
-				field.setAccessible( true );
+				ReflectHelper.ensureAccessibility( field );
 				return field.get( bean );
 			}
 			catch (Exception e) {

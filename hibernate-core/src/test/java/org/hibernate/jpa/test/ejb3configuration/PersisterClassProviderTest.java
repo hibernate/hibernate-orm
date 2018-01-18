@@ -412,6 +412,16 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public boolean canReadFromCache() {
+			return false;
+		}
+
+		@Override
+		public boolean canWriteToCache() {
+			return false;
+		}
+
+		@Override
 		public boolean hasCache() {
 			return false;
 		}

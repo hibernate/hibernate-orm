@@ -629,15 +629,6 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		this.withClauseFragment = withClauseFragment;
 	}
 
-	public boolean hasCacheablePersister() {
-		if ( getQueryableCollection() != null ) {
-			return getQueryableCollection().hasCache();
-		}
-		else {
-			return getQueryable().hasCache();
-		}
-	}
-
 	public void handlePropertyBeingDereferenced(Type propertySource, String propertyName) {
 		if ( getQueryableCollection() != null && CollectionProperties.isCollectionProperty( propertyName ) ) {
 			// propertyName refers to something like collection.size...

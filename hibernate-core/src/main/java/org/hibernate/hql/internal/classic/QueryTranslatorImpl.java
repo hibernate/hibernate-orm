@@ -38,7 +38,9 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.hql.internal.NameGenerator;
 import org.hibernate.hql.spi.FilterTranslator;
+import org.hibernate.hql.spi.NamedParameterInformation;
 import org.hibernate.hql.spi.ParameterTranslations;
+import org.hibernate.hql.spi.PositionalParameterInformation;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.IteratorImpl;
@@ -47,6 +49,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.BasicLoader;
 import org.hibernate.loader.spi.AfterLoadAction;
+import org.hibernate.param.CollectionFilterKeyParameterSpecification;
+import org.hibernate.param.ParameterBinder;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Loadable;
@@ -78,11 +82,14 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	private List returnedTypes = new ArrayList();
 	private final List fromTypes = new ArrayList();
 	private final List scalarTypes = new ArrayList();
-	private final Map namedParameters = new HashMap();
 	private final Map aliasNames = new HashMap();
 	private final Map oneToOneOwnerNames = new HashMap();
 	private final Map uniqueKeyOwnerReferences = new HashMap();
 	private final Map decoratedPropertyMappings = new HashMap();
+
+	private final Map<String,NamedParameterInformationImpl> namedParameters = new HashMap<>();
+	private final Map<Integer, PositionalParameterInformationImpl> ordinalParameters = new HashMap<>();
+	private final List<ParameterBinder> paramValueBinders = new ArrayList<>();
 
 	private final List scalarSelectTokens = new ArrayList();
 	private final List whereTokens = new ArrayList();
@@ -205,6 +212,12 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 
 		if ( !isCompiled() ) {
 			addFromAssociation( "this", collectionRole );
+			paramValueBinders.add(
+					new CollectionFilterKeyParameterSpecification(
+							collectionRole,
+							getFactory().getMetamodel().collectionPersister( collectionRole ).getKeyType()
+					)
+			);
 			compile( replacements, scalar );
 		}
 	}
@@ -530,20 +543,81 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		if ( superQuery != null ) {
 			superQuery.addNamedParameter( name );
 		}
-		Integer loc = parameterCount++;
-		Object o = namedParameters.get( name );
-		if ( o == null ) {
-			namedParameters.put( name, loc );
+
+		final Integer loc = parameterCount++;
+
+		final NamedParameterInformationImpl info = namedParameters.computeIfAbsent(
+				name,
+				k -> new NamedParameterInformationImpl( name )
+		);
+		paramValueBinders.add( info );
+		info.addSourceLocation( loc );
+	}
+
+	private enum OrdinalParameterStyle { LABELED, LEGACY }
+
+	private OrdinalParameterStyle ordinalParameterStyle;
+
+	private int legacyPositionalParameterCount = 0;
+
+	void addLegacyPositionalParameter() {
+		if ( superQuery != null ) {
+			superQuery.addLegacyPositionalParameter();
 		}
-		else if ( o instanceof Integer ) {
-			ArrayList list = new ArrayList( 4 );
-			list.add( o );
-			list.add( loc );
-			namedParameters.put( name, list );
+
+		if ( ordinalParameterStyle == null ) {
+			ordinalParameterStyle = OrdinalParameterStyle.LEGACY;
 		}
-		else {
-			( (ArrayList) o ).add( loc );
+		else if ( ordinalParameterStyle != OrdinalParameterStyle.LEGACY ) {
+			throw new QueryException( "Cannot mix legacy and labeled positional parameters" );
 		}
+
+		final Integer label = legacyPositionalParameterCount++;
+		final PositionalParameterInformationImpl paramInfo = new PositionalParameterInformationImpl( label );
+		ordinalParameters.put( label, paramInfo );
+		paramValueBinders.add( paramInfo );
+
+		final Integer loc = parameterCount++;
+		paramInfo.addSourceLocation( loc );
+
+	}
+
+	void addOrdinalParameter(int label) {
+		if ( superQuery != null ) {
+			superQuery.addOrdinalParameter( label );
+		}
+
+		if ( ordinalParameterStyle == null ) {
+			ordinalParameterStyle = OrdinalParameterStyle.LABELED;
+		}
+		else if ( ordinalParameterStyle != OrdinalParameterStyle.LABELED ) {
+			throw new QueryException( "Cannot mix legacy and labeled positional parameters" );
+		}
+
+		final Integer loc = parameterCount++;
+
+		final PositionalParameterInformationImpl  info = ordinalParameters.computeIfAbsent(
+				label,
+				k -> new PositionalParameterInformationImpl( label )
+		);
+
+		paramValueBinders.add( info );
+
+		info.addSourceLocation( loc );
+	}
+
+	@Override
+	protected int bindParameterValues(
+			PreparedStatement statement,
+			QueryParameters queryParameters,
+			int startIndex,
+			SharedSessionContractImplementor session) throws SQLException {
+
+		int span = 0;
+		for ( ParameterBinder binder : paramValueBinders ) {
+			span += binder.bind( statement, queryParameters, session, startIndex + span );
+		}
+		return span;
 	}
 
 	@Override
@@ -561,7 +635,6 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	}
 
 	private void renderSQL() throws QueryException, MappingException {
-
 		final int rtsize;
 		if ( returnedTypes.size() == 0 && scalarTypes.size() == 0 ) {
 			//ie no select clause in HQL
@@ -973,7 +1046,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		}
 
 		try {
-			final List<AfterLoadAction> afterLoadActions = new ArrayList<AfterLoadAction>();
+			final List<AfterLoadAction> afterLoadActions = new ArrayList<>();
 			final SqlStatementWrapper wrapper = executeQueryStatement(
 					queryParameters,
 					false,
@@ -1267,40 +1340,25 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	public ParameterTranslations getParameterTranslations() {
 		return new ParameterTranslations() {
 			@Override
-			public boolean supportsOrdinalParameterMetadata() {
-				// classic translator does not support collection of ordinal
-				// param metadata
-				return false;
+			@SuppressWarnings("unchecked")
+			public Map getNamedParameterInformationMap() {
+				return namedParameters;
 			}
 
 			@Override
-			public int getOrdinalParameterCount() {
-				return 0; // not known!
+			@SuppressWarnings("unchecked")
+			public Map getPositionalParameterInformationMap() {
+				return ordinalParameters;
 			}
 
 			@Override
-			public int getOrdinalParameterSqlLocation(int ordinalPosition) {
-				return 0; // not known!
+			public PositionalParameterInformation getPositionalParameterInformation(int position) {
+				return ordinalParameters.get( position );
 			}
 
 			@Override
-			public Type getOrdinalParameterExpectedType(int ordinalPosition) {
-				return null; // not known!
-			}
-
-			@Override
-			public Set getNamedParameterNames() {
-				return namedParameters.keySet();
-			}
-
-			@Override
-			public int[] getNamedParameterSqlLocations(String name) {
-				return getNamedParameterLocs( name );
-			}
-
-			@Override
-			public Type getNamedParameterExpectedType(String name) {
-				return null; // not known!
+			public NamedParameterInformation getNamedParameterInformation(String name) {
+				return namedParameters.get( name );
 			}
 		};
 	}

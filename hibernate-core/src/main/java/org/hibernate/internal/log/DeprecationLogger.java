@@ -238,4 +238,13 @@ public interface DeprecationLogger extends BasicLogger {
 					"or [hibernate.connection.release_mode]; use [hibernate.connection.handling_mode] instead"
 	)
 	void logUseOfDeprecatedConnectionHandlingSettings();
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000024,
+			value = "Application requested zero be used as the base for JDBC-style parameters found in native-queries; " +
+					"this is a *temporary* backwards-compatibility setting to help applications  using versions prior to " +
+					"5.3 in upgrading.  It will be removed in a later version."
+	)
+	void logUseOfDeprecatedZeroBasedJdbcStyleParams();
 }

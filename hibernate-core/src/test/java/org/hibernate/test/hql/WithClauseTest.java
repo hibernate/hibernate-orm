@@ -137,8 +137,8 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 		
 		s.beginTransaction();
 		
-		Query query = s.createQuery( "select a from SimpleEntityWithAssociation as e INNER JOIN e.associatedEntities as a WITH e.name=?" );
-		query.setParameter( 0, "entity1" );
+		Query query = s.createQuery( "select a from SimpleEntityWithAssociation as e INNER JOIN e.associatedEntities as a WITH e.name=?1" );
+		query.setParameter( 1, "entity1" );
 		List list = query.list();
 		assertEquals( list.size(), 1 );
 		

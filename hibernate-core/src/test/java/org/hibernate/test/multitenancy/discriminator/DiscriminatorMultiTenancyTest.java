@@ -21,6 +21,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
@@ -70,7 +71,9 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 		ms.addAnnotatedClass(Customer.class);
 
 		Metadata metadata = ms.buildMetadata();
-		((RootClass) metadata.getEntityBinding(Customer.class.getName())).setCacheConcurrencyStrategy("read-write");
+		final PersistentClass customerMapping = metadata.getEntityBinding( Customer.class.getName() );
+		customerMapping.setCached( true );
+		((RootClass) customerMapping ).setCacheConcurrencyStrategy( "read-write");
 
 		HibernateSchemaManagementTool tool = new HibernateSchemaManagementTool();
 		tool.injectServices(serviceRegistry);

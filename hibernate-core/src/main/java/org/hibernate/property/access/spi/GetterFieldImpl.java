@@ -33,7 +33,8 @@ public class GetterFieldImpl implements Getter {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.field = field;
-		this.getterMethod = ReflectHelper.getterMethodOrNull( containerClass, propertyName);
+
+		this.getterMethod = ReflectHelper.findGetterMethodForFieldAccess( field, propertyName );
 	}
 
 	@Override

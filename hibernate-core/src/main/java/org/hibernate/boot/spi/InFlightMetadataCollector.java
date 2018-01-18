@@ -20,6 +20,9 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
@@ -212,10 +215,30 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void addIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
 
-	void addAttributeConverter(AttributeConverterDefinition converter);
+	/**
+	 * @deprecated AttributeConverterDefinition forces early resolution of the
+	 * AttributeConverter instance, which precludes resolution of the converter
+	 * from {@link org.hibernate.resource.beans.spi.ManagedBeanRegistry} (CDI, etc).
+	 * Instead one of:
+	 * * {@link #addAttributeConverter(ConverterDescriptor)}
+	 * * {@link #addAttributeConverter(Class)}
+	 * * {@link #addAttributeConverter(Class)}
+	 */
+	@Deprecated
+	default void addAttributeConverter(AttributeConverterDefinition converter) {
+		addAttributeConverter(
+				new InstanceBasedConverterDescriptor(
+						converter.getAttributeConverter(),
+						getClassmateContext()
+				)
+		);
+	}
+
+	void addAttributeConverter(ConverterDescriptor descriptor);
+
 	void addAttributeConverter(Class<? extends AttributeConverter> converterClass);
 
-	AttributeConverterAutoApplyHandler getAttributeConverterAutoApplyHandler();
+	ConverterAutoApplyHandler getAttributeConverterAutoApplyHandler();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

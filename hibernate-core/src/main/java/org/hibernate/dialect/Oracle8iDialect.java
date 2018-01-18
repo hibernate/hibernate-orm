@@ -66,7 +66,7 @@ public class Oracle8iDialect extends Dialect {
 
 	private static final Pattern UNION_KEYWORD_PATTERN = Pattern.compile( "\\bunion\\b" );
 
-	private static final Pattern SQL_STATEMENT_TYPE_PATTERN = Pattern.compile("^\\s*(select|insert|update|delete)\\s+.*?");
+	private static final Pattern SQL_STATEMENT_TYPE_PATTERN = Pattern.compile("^(?:\\/\\*.*?\\*\\/)?\\s*(select|insert|update|delete)\\s+.*?");
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
@@ -393,6 +393,39 @@ public class Oracle8iDialect extends Dialect {
 	public String getCreateSequenceString(String sequenceName) {
 		//starts with 1, implicitly
 		return "create sequence " + sequenceName;
+	}
+
+	@Override
+	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) {
+		if ( initialValue < 0 && incrementSize > 0 ) {
+			return
+				String.format(
+						"%s minvalue %d start with %d increment by %d",
+						getCreateSequenceString( sequenceName ),
+						initialValue,
+						initialValue,
+						incrementSize
+				);
+		}
+		else if ( initialValue > 0 && incrementSize < 0 ) {
+			return
+				String.format(
+						"%s maxvalue %d start with %d increment by %d",
+						getCreateSequenceString( sequenceName ),
+						initialValue,
+						initialValue,
+						incrementSize
+				);
+		}
+		else {
+			return
+				String.format(
+						"%s start with %d increment by  %d",
+						getCreateSequenceString( sequenceName ),
+						initialValue,
+						incrementSize
+				);
+		}
 	}
 
 	@Override

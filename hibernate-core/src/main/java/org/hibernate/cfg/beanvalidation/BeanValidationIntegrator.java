@@ -52,7 +52,6 @@ public class BeanValidationIntegrator implements Integrator {
 			final Class activatorClass = BeanValidationIntegrator.class.getClassLoader().loadClass( ACTIVATOR_CLASS_NAME );
 			try {
 				final Method validateMethod = activatorClass.getMethod( VALIDATE_SUPPLIED_FACTORY_METHOD_NAME, Object.class );
-				validateMethod.setAccessible( true );
 				try {
 					validateMethod.invoke( null, object );
 				}

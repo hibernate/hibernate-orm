@@ -17,6 +17,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterc
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.Status;
@@ -72,9 +73,12 @@ public final class Cascade {
 	 * which is specific to each CascadingAction type
 	 */
 	public static void cascade(
-			final CascadingAction action, final CascadePoint cascadePoint,
-			final EventSource eventSource, final EntityPersister persister, final Object parent, final Object anything)
-			throws HibernateException {
+			final CascadingAction action,
+			final CascadePoint cascadePoint,
+			final EventSource eventSource,
+			final EntityPersister persister,
+			final Object parent,
+			final Object anything) throws HibernateException {
 
 		if ( persister.hasCascades() || action.requiresNoCascadeChecking() ) { // performance opt
 			final boolean traceEnabled = LOG.isTraceEnabled();

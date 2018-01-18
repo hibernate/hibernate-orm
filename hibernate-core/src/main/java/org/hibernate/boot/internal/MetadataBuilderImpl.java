@@ -25,6 +25,7 @@ import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
 import org.hibernate.annotations.common.util.StandardClassLoaderDelegateImpl;
+import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
@@ -39,9 +40,11 @@ import org.hibernate.boot.cfgxml.spi.MappingReference;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
@@ -56,6 +59,7 @@ import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.boot.spi.MetadataBuilderInitializer;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.MetadataSourcesContributor;
@@ -348,31 +352,79 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applyAttributeConverter(AttributeConverterDefinition definition) {
-		this.options.addAttributeConverterDefinition( definition );
+		this.options.addAttributeConverterInfo( definition );
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
-		applyAttributeConverter( AttributeConverterDefinition.from( attributeConverterClass ) );
+		options.addAttributeConverterInfo(
+				new AttributeConverterInfo() {
+					@Override
+					public Class<? extends AttributeConverter> getConverterClass() {
+						return attributeConverterClass;
+					}
+
+					@Override
+					public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
+						return new ClassBasedConverterDescriptor( attributeConverterClass, null, context.getMetadataCollector().getClassmateContext() );
+					}
+				}
+		);
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass, boolean autoApply) {
-		applyAttributeConverter( AttributeConverterDefinition.from( attributeConverterClass, autoApply ) );
+		options.addAttributeConverterInfo(
+				new AttributeConverterInfo() {
+					@Override
+					public Class<? extends AttributeConverter> getConverterClass() {
+						return attributeConverterClass;
+					}
+
+					@Override
+					public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
+						return new ClassBasedConverterDescriptor( attributeConverterClass, autoApply, context.getMetadataCollector().getClassmateContext() );
+					}
+				}
+		);
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter) {
-		applyAttributeConverter( AttributeConverterDefinition.from( attributeConverter ) );
+		options.addAttributeConverterInfo(
+				new AttributeConverterInfo() {
+					@Override
+					public Class<? extends AttributeConverter> getConverterClass() {
+						return attributeConverter.getClass();
+					}
+
+					@Override
+					public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
+						return new InstanceBasedConverterDescriptor( attributeConverter, null, context.getMetadataCollector().getClassmateContext() );
+					}
+				}
+		);
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter, boolean autoApply) {
-		applyAttributeConverter( AttributeConverterDefinition.from( attributeConverter, autoApply ) );
+		options.addAttributeConverterInfo(
+				new AttributeConverterInfo() {
+					@Override
+					public Class<? extends AttributeConverter> getConverterClass() {
+						return attributeConverter.getClass();
+					}
+
+					@Override
+					public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
+						return new InstanceBasedConverterDescriptor( attributeConverter, autoApply, context.getMetadataCollector().getClassmateContext() );
+					}
+				}
+		);
 		return this;
 	}
 
@@ -564,7 +616,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		private HashMap<String,SQLFunction> sqlFunctionMap;
 		private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-		private HashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
+		private HashMap<Class,AttributeConverterInfo> attributeConverterInfoMap;
 
 		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
 
@@ -891,24 +943,24 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		public List<AttributeConverterDefinition> getAttributeConverters() {
-			return attributeConverterDefinitionsByClass == null
-					? Collections.<AttributeConverterDefinition>emptyList()
-					: new ArrayList<AttributeConverterDefinition>( attributeConverterDefinitionsByClass.values() );
+		public List<AttributeConverterInfo> getAttributeConverters() {
+			return attributeConverterInfoMap != null
+					? new ArrayList<>( attributeConverterInfoMap.values() )
+					: Collections.emptyList();
 		}
 
-		public void addAttributeConverterDefinition(AttributeConverterDefinition definition) {
-			if ( this.attributeConverterDefinitionsByClass == null ) {
-				this.attributeConverterDefinitionsByClass = new HashMap<Class, AttributeConverterDefinition>();
+		void addAttributeConverterInfo(AttributeConverterInfo info) {
+			if ( this.attributeConverterInfoMap == null ) {
+				this.attributeConverterInfoMap = new HashMap<>();
 			}
 
-			final Object old = this.attributeConverterDefinitionsByClass.put( definition.getAttributeConverter().getClass(), definition );
+			final Object old = this.attributeConverterInfoMap.put( info.getConverterClass(), info );
 
 			if ( old != null ) {
 				throw new AssertionFailure(
 						String.format(
 								"AttributeConverter class [%s] registered multiple times",
-								definition.getAttributeConverter().getClass()
+								info.getConverterClass()
 						)
 				);
 			}

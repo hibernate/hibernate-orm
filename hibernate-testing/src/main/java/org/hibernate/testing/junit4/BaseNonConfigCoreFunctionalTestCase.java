@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -52,10 +53,11 @@ import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.cache.CachingRegionFactory;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.After;
 import org.junit.Before;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.fail;
 
 /**
@@ -252,21 +254,21 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected void afterStandardServiceRegistryBuilt(StandardServiceRegistry ssr) {
 	}
 
-	protected void applyMetadataSources(MetadataSources metadataSources) {
+	protected void applyMetadataSources(MetadataSources sources) {
 		for ( String mapping : getMappings() ) {
-			metadataSources.addResource( getBaseForMappings() + mapping );
+			sources.addResource( getBaseForMappings() + mapping );
 		}
 
 		for ( Class annotatedClass : getAnnotatedClasses() ) {
-			metadataSources.addAnnotatedClass( annotatedClass );
+			sources.addAnnotatedClass( annotatedClass );
 		}
 
 		for ( String annotatedPackage : getAnnotatedPackages() ) {
-			metadataSources.addPackage( annotatedPackage );
+			sources.addPackage( annotatedPackage );
 		}
 
 		for ( String ormXmlFile : getXmlFiles() ) {
-			metadataSources.addInputStream( Thread.currentThread().getContextClassLoader().getResourceAsStream( ormXmlFile ) );
+			sources.addInputStream( Thread.currentThread().getContextClassLoader().getResourceAsStream( ormXmlFile ) );
 		}
 	}
 
@@ -342,6 +344,7 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 
 			if ( !hasLob ) {
 				( ( RootClass) entityBinding ).setCacheConcurrencyStrategy( getCacheConcurrencyStrategy() );
+				entityBinding.setCached( true );
 			}
 		}
 
@@ -542,4 +545,14 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		}
 	}
 
+
+	public void inSession(Consumer<SessionImplementor> action) {
+		log.trace( "#inSession(action)" );
+		TransactionUtil2.inSession( sessionFactory(), action );
+	}
+
+	public void inTransaction(Consumer<SessionImplementor> action) {
+		log.trace( "#inTransaction(action)" );
+		TransactionUtil2.inTransaction( sessionFactory(), action );
+	}
 }

@@ -30,7 +30,7 @@ import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.TypeDefinition;
-import org.hibernate.boot.spi.AttributeConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.BinderHelper;
@@ -87,7 +87,7 @@ public class SimpleValueBinder {
 	private XProperty xproperty;
 	private AccessType accessType;
 
-	private AttributeConverterDescriptor attributeConverterDescriptor;
+	private ConverterDescriptor attributeConverterDescriptor;
 
 	public void setReferencedEntityName(String referencedEntityName) {
 		this.referencedEntityName = referencedEntityName;
@@ -135,7 +135,7 @@ public class SimpleValueBinder {
 
 	//TODO execute it lazily to be order safe
 
-	public void setType(XProperty property, XClass returnedClass, String declaringClassName, AttributeConverterDescriptor attributeConverterDescriptor) {
+	public void setType(XProperty property, XClass returnedClass, String declaringClassName, ConverterDescriptor attributeConverterDescriptor) {
 		if ( returnedClass == null ) {
 			// we cannot guess anything
 			return;
@@ -320,7 +320,7 @@ public class SimpleValueBinder {
 				.getDialect();
 	}
 
-	private void applyAttributeConverter(XProperty property, AttributeConverterDescriptor attributeConverterDescriptor) {
+	private void applyAttributeConverter(XProperty property, ConverterDescriptor attributeConverterDescriptor) {
 		if ( attributeConverterDescriptor == null ) {
 			return;
 		}

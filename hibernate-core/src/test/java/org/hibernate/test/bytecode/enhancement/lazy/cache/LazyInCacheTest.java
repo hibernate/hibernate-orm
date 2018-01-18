@@ -83,7 +83,7 @@ public class LazyInCacheTest extends BaseCoreFunctionalTestCase {
     private static class Order {
 
         @Id
-        @GeneratedValue( strategy = GenerationType.IDENTITY )
+        @GeneratedValue( strategy = GenerationType.AUTO )
         Long id;
 
         @OneToMany
@@ -102,7 +102,7 @@ public class LazyInCacheTest extends BaseCoreFunctionalTestCase {
     private static class Product {
 
         @Id
-        @GeneratedValue( strategy = GenerationType.IDENTITY )
+        @GeneratedValue( strategy = GenerationType.AUTO )
         Long id;
 
         String name;
@@ -113,7 +113,7 @@ public class LazyInCacheTest extends BaseCoreFunctionalTestCase {
     private static class Tag {
 
         @Id
-        @GeneratedValue( strategy = GenerationType.IDENTITY )
+        @GeneratedValue( strategy = GenerationType.AUTO )
         Long id;
 
         String name;

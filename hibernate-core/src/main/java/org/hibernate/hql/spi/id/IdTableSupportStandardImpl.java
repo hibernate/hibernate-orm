@@ -34,4 +34,9 @@ public class IdTableSupportStandardImpl implements IdTableSupport {
 	public String getDropIdTableCommand() {
 		return "drop table";
 	}
+	
+	@Override
+	public String getTruncateIdTableCommand() {
+		return "delete from";
+	}
 }

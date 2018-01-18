@@ -18,6 +18,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -31,6 +32,7 @@ import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
+import org.hibernate.param.ParameterBinder;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.junit.Test;
@@ -123,12 +125,7 @@ public class EntityWithNonLazyOneToManySetResultSetProcessorTest extends BaseCor
 											resultSet,
 											(SessionImplementor) workSession,
 											new QueryParameters(),
-											new NamedParameterContext() {
-												@Override
-												public int[] getNamedParameterLocations(String name) {
-													return new int[0];
-												}
-											},
+											Helper.parameterContext(),
 											true,
 											false,
 											null,

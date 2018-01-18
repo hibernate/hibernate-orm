@@ -9,7 +9,6 @@ package org.hibernate.loader.custom.sql;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +19,7 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.custom.CustomQuery;
+import org.hibernate.param.ParameterBinder;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.SQLLoadable;
 
@@ -40,7 +40,9 @@ public class SQLCustomQuery implements CustomQuery, Serializable {
 
 	private final String sql;
 	private final Set querySpaces = new HashSet();
-	private final Map namedParameterBindPoints = new HashMap();
+
+	private final List<ParameterBinder> paramValueBinders;
+
 	private final List customQueryReturns = new ArrayList();
 
 
@@ -52,8 +54,9 @@ public class SQLCustomQuery implements CustomQuery, Serializable {
 		return querySpaces;
 	}
 
-	public Map getNamedParameterBindPoints() {
-		return namedParameterBindPoints;
+	@Override
+	public List<ParameterBinder > getParameterValueBinders() {
+		return paramValueBinders;
 	}
 
 	public List getCustomQueryReturns() {
@@ -115,7 +118,8 @@ public class SQLCustomQuery implements CustomQuery, Serializable {
 
 		SQLQueryParser parser = new SQLQueryParser( sqlQuery, new ParserContext( aliasContext ), factory );
 		this.sql = parser.process();
-		this.namedParameterBindPoints.putAll( parser.getNamedParameters() );
+
+		this.paramValueBinders = parser.getParameterValueBinders();
 
 //		SQLQueryParser parser = new SQLQueryParser(
 //				sqlQuery,

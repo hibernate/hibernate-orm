@@ -9,13 +9,14 @@ hibernate-core:: The main (core) Hibernate module.  Defines its ORM features and
 hibernate-envers:: Hibernate's historical entity versioning feature
 hibernate-spatial:: Hibernate's Spatial/GIS data-type support
 hibernate-osgi:: Hibernate support for running in OSGi containers.
-hibernate-c3p0:: Integrates the link:$$http://www.mchange.com/projects/c3p0/$$[C3P0] connection pooling library into Hibernate
-hibernate-hikaricp:: Integrates the link:$$http://brettwooldridge.github.io/HikariCP/$$[HikariCP] connection pooling library into Hibernate
-hibernate-proxool:: Integrates the link:$$http://proxool.sourceforge.net/$$[Proxool] connection pooling library into Hibernate
-hibernate-jcache:: Integrates the link:$$https://jcp.org/en/jsr/detail?id=107$$[JCache] caching specification into Hibernate,
+hibernate-c3p0:: Integrates the http://www.mchange.com/projects/c3p0/[C3P0] connection pooling library into Hibernate
+hibernate-hikaricp:: Integrates the http://brettwooldridge.github.io/HikariCP/[HikariCP] connection pooling library into Hibernate
+hibernate-vibur:: Integrates the http://www.vibur.org/[Vibur DBCP] connection pooling library into Hibernate
+hibernate-proxool:: Integrates the http://proxool.sourceforge.net/[Proxool] connection pooling library into Hibernate
+hibernate-jcache:: Integrates the https://jcp.org/en/jsr/detail?id=107$$[JCache] caching specification into Hibernate,
 enabling any compliant implementation to become a second-level cache provider.
-hibernate-ehcache:: Integrates the link:$$http://ehcache.org/$$[Ehcache] caching library into Hibernate as a second-level cache provider.
-hibernate-infinispan:: Integrates the link:$$http://infinispan.org/$$[Infinispan] caching library into Hibernate as a second-level cache provider.
+hibernate-ehcache:: Integrates the http://ehcache.org/[Ehcache] caching library into Hibernate as a second-level cache provider.
+hibernate-infinispan:: Integrates the http://infinispan.org/[Infinispan] caching library into Hibernate as a second-level cache provider.
 
 
 === Release Bundle Downloads

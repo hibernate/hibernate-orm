@@ -8,8 +8,8 @@ package org.hibernate.jpa.event.internal.core;
 
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
-import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
-import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
+import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>

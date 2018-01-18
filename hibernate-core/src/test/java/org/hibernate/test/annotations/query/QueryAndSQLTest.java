@@ -351,7 +351,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.clear();
 		tx = s.beginTransaction();
 		Query q = s.getNamedQuery( "night.getAll.bySQL" );
-		q.setParameter( 0, 9990 );
+		q.setParameter( 1, 9990 );
 		List result = q.list();
 		assertEquals( 1, result.size() );
 		Night n2 = (Night) result.get( 0 );

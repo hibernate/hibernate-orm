@@ -28,12 +28,11 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.boot.internal.AttributeConverterDescriptorImpl;
-import org.hibernate.boot.spi.AttributeConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
 
 import org.jboss.logging.Logger;
 
@@ -76,7 +75,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	protected abstract AttributeConversionInfo locateAttributeConversionInfo(String path);
 
 	@Override
-	public AttributeConverterDescriptor resolveAttributeConverterDescriptor(XProperty property) {
+	public ConverterDescriptor resolveAttributeConverterDescriptor(XProperty property) {
 		AttributeConversionInfo info = locateAttributeConversionInfo( property );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
@@ -120,26 +119,17 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		}
 	}
 
-	protected AttributeConverterDescriptor makeAttributeConverterDescriptor(AttributeConversionInfo conversion) {
+	protected ConverterDescriptor makeAttributeConverterDescriptor(AttributeConversionInfo conversion) {
 		try {
-			AttributeConverterDefinition definition = new AttributeConverterDefinition( conversion.getConverterClass().newInstance(), false );
-			return AttributeConverterDescriptorImpl.create( definition, context.getMetadataCollector().getClassmateContext() );
+			return new ClassBasedConverterDescriptor(
+					conversion.getConverterClass(),
+					false,
+					context.getMetadataCollector().getClassmateContext()
+			);
 		}
 		catch (Exception e) {
 			throw new AnnotationException( "Unable to create AttributeConverter instance", e );
 		}
-	}
-
-	protected boolean areTypeMatch(Class converterDefinedType, Class propertyType) {
-		if ( converterDefinedType == null ) {
-			throw new AnnotationException( "AttributeConverter defined java type cannot be null" );
-		}
-		if ( propertyType == null ) {
-			throw new AnnotationException( "Property defined java type cannot be null" );
-		}
-
-		return converterDefinedType.equals( propertyType )
-				|| PrimitiveWrapperHelper.arePrimitiveWrapperEquivalents( converterDefinedType, propertyType );
 	}
 
 	@Override

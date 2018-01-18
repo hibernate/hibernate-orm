@@ -8,9 +8,9 @@ package org.hibernate.jpa.event.internal.core;
 
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
-import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
-import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
-import org.hibernate.jpa.event.spi.jpa.CallbackType;
+import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
+import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**

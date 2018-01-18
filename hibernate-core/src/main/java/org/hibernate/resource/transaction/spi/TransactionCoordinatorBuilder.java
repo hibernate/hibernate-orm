@@ -23,7 +23,7 @@ public interface TransactionCoordinatorBuilder extends Service {
 	/**
 	 * Access to options to are specific to each TransactionCoordinator instance
 	 */
-	static interface Options {
+	interface Options {
 		/**
 		 * Indicates whether an active transaction should be automatically joined.  Only relevant
 		 * for JTA-based TransactionCoordinator instances.

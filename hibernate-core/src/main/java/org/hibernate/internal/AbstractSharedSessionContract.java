@@ -361,7 +361,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public void markForRollbackOnly() {
-		accessTransaction().markRollbackOnly();
+		try {
+			accessTransaction().markRollbackOnly();
+		}
+		catch (Exception ignore) {
+		}
 	}
 
 	@Override
@@ -374,7 +378,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public Transaction getTransaction() throws HibernateException {
-		if ( getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+		if ( getFactory().getSessionFactoryOptions().getJpaCompliance().isJpaTransactionComplianceEnabled() ) {
 			// JPA requires that we throw IllegalStateException if this is called
 			// on a JTA EntityManager
 			if ( getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta() ) {
@@ -383,6 +387,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				}
 			}
 		}
+
 		return accessTransaction();
 	}
 
@@ -391,7 +396,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( this.currentHibernateTransaction == null || this.currentHibernateTransaction.getStatus() != TransactionStatus.ACTIVE ) {
 			this.currentHibernateTransaction = new TransactionImpl(
 					getTransactionCoordinator(),
-					getExceptionConverter()
+					getExceptionConverter(),
+					getFactory().getSessionFactoryOptions().getJpaCompliance()
 			);
 
 		}
@@ -526,6 +532,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public FlushModeType getFlushMode() {
+		checkOpen();
 		return FlushModeTypeHelper.getFlushModeType( this.flushMode );
 	}
 
@@ -667,6 +674,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return query;
 		}
 		catch (RuntimeException e) {
+			markForRollbackOnly();
 			throw exceptionConverter.convert( e );
 		}
 	}
@@ -745,14 +753,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public QueryImplementor createNamedQuery(String name) {
-		final QueryImplementor<Object> query = buildQueryFromName( name, null );
-		query.getParameterMetadata().setOrdinalParametersZeroBased( false );
-		return query;
+		return buildQueryFromName( name, null );
 	}
 
 	protected  <T> QueryImplementor<T> buildQueryFromName(String name, Class<T> resultType) {
+		checkOpen();
 		try {
-			checkOpen();
 			checkTransactionSynchStatus();
 			delayedAfterCompletion();
 
@@ -871,9 +877,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public NativeQueryImplementor createNativeQuery(String sqlString) {
-		final NativeQueryImpl query = (NativeQueryImpl) getNativeQueryImplementor( sqlString, false );
-		query.setZeroBasedParametersIndex( false );
-		return query;
+		return getNativeQueryImplementor( sqlString, false );
 	}
 
 	@Override
@@ -961,9 +965,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public NativeQueryImplementor getNamedSQLQuery(String name) {
-		final NativeQueryImpl nativeQuery = (NativeQueryImpl) getNamedNativeQuery( name );
-		nativeQuery.setZeroBasedParametersIndex( true );
-		return nativeQuery;
+		return getNamedNativeQuery( name );
 	}
 
 	@Override

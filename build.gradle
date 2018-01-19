@@ -58,16 +58,14 @@ task release {
 	}
 }
 
-//gradle.projectsEvaluated { g ->
-//	g.rootProject.subprojects { subproject ->
-//		Task releaseTask = subproject.tasks.findByName( 'release' )
-//		if ( releaseTask ) {
-//			releaseTask.dependsOn tasks.release
-//			tasks.release.dependsOn releaseTask
-//		}
-//	}
-//}
 
+task ciBuild
+if ( project.isSnapshot ) {
+	// only run the ci build tasks for SNAPSHOT versions
+	tasks.ciBuild.dependsOn clean
+	tasks.ciBuild.dependsOn test
+	tasks.ciBuild.dependsOn publish
+}
 
 task wrapper(type: Wrapper) {
 	gradleVersion = '4.4'

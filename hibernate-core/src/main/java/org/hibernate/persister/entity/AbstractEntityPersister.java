@@ -334,7 +334,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public String getDiscriminatorColumnReaderTemplate() {
-		return DISCRIMINATOR_ALIAS;
+		return Template.TEMPLATE + "." + DISCRIMINATOR_ALIAS;
 	}
 
 	protected String getDiscriminatorAlias() {

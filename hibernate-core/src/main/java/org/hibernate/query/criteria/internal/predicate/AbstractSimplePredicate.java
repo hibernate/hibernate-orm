@@ -48,9 +48,4 @@ public abstract class AbstractSimplePredicate
 		return render( isNegated(), renderingContext );
 	}
 
-	@Override
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
-
 }

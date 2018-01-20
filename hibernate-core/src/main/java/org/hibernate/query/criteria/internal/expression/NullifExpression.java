@@ -67,8 +67,4 @@ public class NullifExpression<T> extends ExpressionImpl<T> implements Serializab
 				+ ( (Renderable) getSecondaryExpression() ).render( renderingContext )
 				+ ")";
 	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
 }

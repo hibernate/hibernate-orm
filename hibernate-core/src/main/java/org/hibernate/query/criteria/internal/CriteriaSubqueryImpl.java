@@ -136,11 +136,6 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 		public String render(RenderingContext renderingContext) {
 			return subQuery.render( renderingContext );
 		}
-
-		@Override
-		public String renderProjection(RenderingContext renderingContext) {
-			return render( renderingContext );
-		}
 	}
 
 

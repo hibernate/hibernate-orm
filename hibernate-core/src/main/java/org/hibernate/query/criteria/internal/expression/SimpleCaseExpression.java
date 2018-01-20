@@ -116,6 +116,7 @@ public class SimpleCaseExpression<C,R>
 		Helper.possibleParameter( getOtherwiseResult(), registry );
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
 		return render(
 				renderingContext,
@@ -123,10 +124,19 @@ public class SimpleCaseExpression<C,R>
 		);
 	}
 
+	@Override
 	public String renderProjection(RenderingContext renderingContext) {
 		return render(
 				renderingContext,
 				(Renderable expression, RenderingContext context) -> expression.renderProjection( context )
+		);
+	}
+
+	@Override
+	public String renderGroupBy(RenderingContext renderingContext) {
+		return render(
+				renderingContext,
+				(Renderable expression, RenderingContext context) -> expression.renderGroupBy( context )
 		);
 	}
 

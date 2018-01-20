@@ -37,7 +37,7 @@ public interface RenderingContext {
 	 * Register a parameter that was not part of the criteria query (at least not as a parameter).
 	 *
 	 * @param literal The literal value
-	 * @param javaType The java type as whcih to handle the literal value.
+	 * @param javaType The java type as which to handle the literal value.
 	 *
 	 * @return The JPA-QL parameter name
 	 */

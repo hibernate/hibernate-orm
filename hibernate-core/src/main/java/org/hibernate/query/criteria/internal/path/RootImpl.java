@@ -90,11 +90,6 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 		prepareAlias( renderingContext );
 		return getAlias();
 	}
-
-	@Override
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
 	
 	public Set<TreatedRoot<? extends X>> getTreats() {
 		return treats;

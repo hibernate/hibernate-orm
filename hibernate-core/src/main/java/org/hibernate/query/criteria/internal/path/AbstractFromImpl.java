@@ -91,14 +91,9 @@ public abstract class AbstractFromImpl<Z, X>
 	}
 
 	@Override
-	public String renderProjection(RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		prepareAlias( renderingContext );
 		return getAlias();
-	}
-
-	@Override
-	public String render(RenderingContext renderingContext) {
-		return renderProjection( renderingContext );
 	}
 
 	@Override

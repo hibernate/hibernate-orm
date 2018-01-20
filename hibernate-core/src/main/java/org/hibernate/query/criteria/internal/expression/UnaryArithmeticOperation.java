@@ -59,9 +59,4 @@ public class UnaryArithmeticOperation<T>
 		return ( getOperation() == Operation.UNARY_MINUS ? '-' : '+' )
 				+ ( (Renderable) getOperand() ).render( renderingContext );
 	}
-
-	@Override
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
 }

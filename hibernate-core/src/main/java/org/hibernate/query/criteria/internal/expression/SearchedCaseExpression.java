@@ -119,6 +119,14 @@ public class SearchedCaseExpression<R>
 		);
 	}
 
+	@Override
+	public String renderGroupBy(RenderingContext renderingContext) {
+		return render(
+				renderingContext,
+				(Renderable expression, RenderingContext context) -> expression.renderGroupBy( context )
+		);
+	}
+
 	private String render(
 			RenderingContext renderingContext,
 			BiFunction<Renderable, RenderingContext, String> formatter) {

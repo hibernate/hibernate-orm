@@ -90,6 +90,11 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 	}
 
 	@Override
+	public String renderGroupBy(RenderingContext renderingContext) {
+		return renderProjection( renderingContext );
+	}
+
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	protected void resetJavaType(Class targetType) {
 		super.resetJavaType( targetType );

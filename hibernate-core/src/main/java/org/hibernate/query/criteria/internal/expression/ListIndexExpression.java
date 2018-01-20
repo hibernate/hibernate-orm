@@ -46,8 +46,4 @@ public class ListIndexExpression extends ExpressionImpl<Integer> implements Seri
 				+ origin.getPathIdentifier()
 				+ ")";
 	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
 }

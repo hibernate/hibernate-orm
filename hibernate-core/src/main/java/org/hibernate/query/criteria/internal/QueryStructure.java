@@ -253,7 +253,7 @@ public class QueryStructure<T> implements Serializable {
 			String sep = "";
 			for ( Expression grouping : getGroupings() ) {
 				jpaqlQuery.append( sep )
-						.append( ( (Renderable) grouping ).render( renderingContext ) );
+						.append( ( (Renderable) grouping ).renderGroupBy( renderingContext ) );
 				sep = ", ";
 			}
 

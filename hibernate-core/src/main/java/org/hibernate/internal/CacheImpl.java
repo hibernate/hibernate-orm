@@ -402,17 +402,16 @@ public class CacheImpl implements CacheImplementor {
 		// which Map contents are added to getAllSecondLevelCacheRegions.
 		// In addition, if there is a CollectionRegion and an EntityRegion with the same name, then we
 		// want the EntityRegion to be in the Map that gets returned.
-		final Map<String, Region> allCacheRegions = new HashMap<String, Region>(
-				2 + queryCaches.size() + otherRegionMap.size() + naturalIdRegionMap.size()
-						+ collectionRegionMap.size() + entityRegionMap.size()
-		);
-		allCacheRegions.put( updateTimestampsCache.getRegion().getName(), updateTimestampsCache.getRegion() );
-		allCacheRegions.put( queryCache.getRegion().getName(), queryCache.getRegion() );
-		// keys in queryCaches may not be equal to the Region names
-		// obtained from queryCaches values; we need to be sure we are adding
-		// the actual QueryCache region name as the key in allCacheRegions.
-		for ( QueryCache queryCacheValue : queryCaches.values() ) {
-			allCacheRegions.put( queryCacheValue.getRegion().getName(), queryCacheValue.getRegion() );
+		final Map<String, Region> allCacheRegions = new HashMap<String, Region>();
+		if ( settings.isQueryCacheEnabled() ) {
+			allCacheRegions.put( updateTimestampsCache.getRegion().getName(), updateTimestampsCache.getRegion() );
+			allCacheRegions.put( queryCache.getRegion().getName(), queryCache.getRegion() );
+			// keys in queryCaches may not be equal to the Region names
+			// obtained from queryCaches values; we need to be sure we are adding
+			// the actual QueryCache region name as the key in allCacheRegions.
+			for ( QueryCache queryCacheValue : queryCaches.values() ) {
+				allCacheRegions.put( queryCacheValue.getRegion().getName(), queryCacheValue.getRegion() );
+			}
 		}
 		allCacheRegions.putAll( otherRegionMap );
 		allCacheRegions.putAll( naturalIdRegionMap );

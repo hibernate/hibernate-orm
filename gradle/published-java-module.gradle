@@ -6,8 +6,9 @@
  */
 
 apply from: rootProject.file( 'gradle/java-module.gradle' )
+
 apply plugin: 'maven-publish'
-apply plugin: 'maven-publish-auth'
+
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 apply from: rootProject.file( 'gradle/publishing-repos.gradle' )
 

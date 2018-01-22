@@ -48,24 +48,25 @@ allprojects {
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Link together all release tasks
+// Release Task
 
-// relies on the fact that subprojects will appropriately define a release task
-//		themselves if they have any release-related activities to perform
 task release {
-	doFirst {
-		println "Starting version $project.hibernateVersion release"
-	}
+	description = "The task performed when we are performing a release build.  Relies on " +
+			"the fact that subprojects will appropriately define a release task " +
+			"themselves if they have any release-related activities to perform"
 }
 
 
-task ciBuild
-if ( project.isSnapshot ) {
-	// only run the ci build tasks for SNAPSHOT versions
-	tasks.ciBuild.dependsOn clean
-	tasks.ciBuild.dependsOn test
-	tasks.ciBuild.dependsOn publish
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// CI Build Task
+
+task ciBuild {
+	description = "The task performed when one of the 'main' jobs are triggered on the " +
+			"CI server.  Just as above, relies on the fact that subprojects will " +
+			"appropriately define a release task themselves if they have any tasks " +
+			"which should be performed from these CI jobs"
 }
+
 
 task wrapper(type: Wrapper) {
 	gradleVersion = '4.4'

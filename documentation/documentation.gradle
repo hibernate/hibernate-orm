@@ -63,6 +63,14 @@ dependencies {
 }
 
 
+if ( project.isSnapshot ) {
+	// only run the ci build tasks for SNAPSHOT versions
+	task ciBuild( dependsOn: [clean, test] )
+}
+else {
+	task release( dependsOn: [clean, test] )
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // grouping tasks - declaration, see below for task dependency definitions
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

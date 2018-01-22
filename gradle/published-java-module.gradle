@@ -8,8 +8,13 @@
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
-apply from: rootProject.file( 'gradle/publishing-repos.gradle' )
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
+apply from: rootProject.file( 'gradle/publishing-repos.gradle' )
+
+
+task ciBuild( dependsOn: [clean, test, publish] )
+
+task release( dependsOn: [clean, test, publish] )
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -62,6 +67,7 @@ jar {
 		instruction 'Hibernate-JpaVersion', project.jpaVersion
 	}
 }
+
 
 task sourcesJar(type: Jar) {
 	from project.sourceSets.main.allSource
@@ -143,9 +149,3 @@ model {
 
 task generatePomFile( dependsOn: 'generatePomFileForPublishedArtifactsPublication' )
 
-
-task release( dependsOn: publish ) {
-	doFirst {
-		println "Starting release for $project.name:$project.version"
-	}
-}

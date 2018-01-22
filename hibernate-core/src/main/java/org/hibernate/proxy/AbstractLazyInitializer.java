@@ -29,7 +29,7 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 public abstract class AbstractLazyInitializer implements LazyInitializer {
-	private static final Logger log = Logger.getLogger( AbstractLazyInitializer.class );
+	private static final Logger log = org.jboss.logging.Logger.getLogger( AbstractLazyInitializer.class );
 
 	private String entityName;
 	private Serializable id;
@@ -42,6 +42,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	private String sessionFactoryUuid;
 	private boolean allowLoadOutsideTransaction;
+
+	private boolean initializeProxyWhenAccessingIdentifier;
 
 	/**
 	 * For serialization from the non-pojo initializers (HHH-3309)
@@ -65,6 +67,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 		else {
 			setSession( session );
+			initializeProxyWhenAccessingIdentifier = session.getFactory().getSessionFactoryOptions()
+					.isJpaProxyComplianceEnabled();
 		}
 	}
 
@@ -75,6 +79,9 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	@Override
 	public final Serializable getIdentifier() {
+		if ( isUninitialized() && initializeProxyWhenAccessingIdentifier ) {
+			initialize();
+		}
 		return id;
 	}
 

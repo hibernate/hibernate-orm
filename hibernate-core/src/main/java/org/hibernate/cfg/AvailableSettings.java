@@ -886,6 +886,17 @@ public interface AvailableSettings {
 	 */
 	String LOG_JDBC_WARNINGS =  "hibernate.jdbc.log.warnings";
 
+	/**
+	 * Identifies an explicit {@link org.hibernate.resource.beans.container.spi.BeanContainer}
+	 * to be used.
+	 *
+	 * Note that for CDI-based containers setting this is not necessary - simply
+	 * pass the BeanManager to use via {@link #CDI_BEAN_MANAGER} and
+	 * optionally specify {@link #DELAY_CDI_ACCESS}.  This setting is more meant to
+	 * integrate non-CDI bean containers such as Spring.
+	 */
+	String BEAN_CONTAINER = "hibernate.resource.beans.container";
+
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1715,8 +1726,24 @@ public interface AvailableSettings {
 	String CRITERIA_LITERAL_HANDLING_MODE = "hibernate.criteria.literal_handling_mode";
 
 	/**
+	 * JPA spec says that an {@link javax.persistence.EntityNotFoundException}
+	 * should be thrown when accessing an entity Proxy which does not have an associated
+	 * table row in the database.
+	 *
+	 * Traditionally, Hibernate does not initialize an entity Proxy when accessing its
+	 * identifier since we already know the identifier value, hence we can save a database roundtrip.
+	 *
+	 * If enabled Hibernate will initialize the entity Proxy even when accessing its identifier.
+	 *
+	 * @since 5.2.13
+	 */
+	String JPA_PROXY_COMPLIANCE = "hibernate.jpa.compliance.proxy";
+
+	/**
 	 * Raises an exception when in-memory pagination over collection fetch is about to be performed.
 	 * Disabled by default. Set to true to enable.
+	 *
+	 * @since 5.2.13
 	 */
 	String FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH = "hibernate.query.fail_on_pagination_over_collection_fetch";
 }

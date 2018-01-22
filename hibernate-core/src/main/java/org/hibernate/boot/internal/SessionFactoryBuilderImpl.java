@@ -578,6 +578,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private Map<String, SQLFunction> sqlFunctions;
 
 		private boolean failOnPaginationOverCollectionFetchEnabled;
+		private boolean jpaProxyComplianceEnabled;
 
 		public SessionFactoryOptionsStateStandardImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -795,6 +796,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 			this.failOnPaginationOverCollectionFetchEnabled = ConfigurationHelper.getBoolean(
 					FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH,
+					configurationSettings,
+					false
+			);
+
+			this.jpaProxyComplianceEnabled = ConfigurationHelper.getBoolean(
+					JPA_PROXY_COMPLIANCE,
 					configurationSettings,
 					false
 			);
@@ -1256,6 +1263,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		public boolean isFailOnPaginationOverCollectionFetchEnabled() {
 			return this.failOnPaginationOverCollectionFetchEnabled;
 		}
+
+		@Override
+		public boolean isJpaProxyComplianceEnabled() {
+			return this.jpaProxyComplianceEnabled;
+		}
 	}
 
 	private static Supplier<? extends Interceptor> interceptorSupplier(Class<? extends Interceptor> clazz) {
@@ -1605,8 +1617,14 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	public LiteralHandlingMode getCriteriaLiteralHandlingMode() {
 		return options.getCriteriaLiteralHandlingMode();
 	}
+
 	@Override
 	public boolean isFailOnPaginationOverCollectionFetchEnabled() {
 		return options.isFailOnPaginationOverCollectionFetchEnabled();
+	}
+
+	@Override
+	public boolean isJpaProxyComplianceEnabled() {
+		return options.isJpaProxyComplianceEnabled();
 	}
 }

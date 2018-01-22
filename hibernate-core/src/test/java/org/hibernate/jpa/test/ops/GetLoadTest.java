@@ -179,7 +179,6 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12034")
-	@FailureExpected( jiraKey = "HHH-12034" )
 	public void testLoadIdNotFound_FieldBasedAccess() {
 		EntityManager em = getOrCreateEntityManager();
 		try {
@@ -192,10 +191,6 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 			assertFalse( Hibernate.isInitialized( proxy ) );
 
 			proxy.getId();
-			fail( "Should have failed because there is no Workload Entity with id == 999" );
-		}
-		catch (EntityNotFoundException ex) {
-			// expected
 		}
 		finally {
 			em.getTransaction().rollback();
@@ -205,7 +200,6 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12034")
-	@FailureExpected( jiraKey = "HHH-12034" )
 	public void testReferenceIdNotFound_FieldBasedAccess() {
 		EntityManager em = getOrCreateEntityManager();
 		try {
@@ -217,10 +211,6 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 			assertFalse( Hibernate.isInitialized( proxy ) );
 
 			proxy.getId();
-			fail( "Should have failed because there is no Workload Entity with id == 999" );
-		}
-		catch (EntityNotFoundException ex) {
-			// expected
 		}
 		finally {
 			em.getTransaction().rollback();
@@ -230,7 +220,6 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12034")
-	@FailureExpected( jiraKey = "HHH-12034" )
 	public void testLoadIdNotFound_PropertyBasedAccess() {
 		EntityManager em = getOrCreateEntityManager();
 		try {
@@ -243,10 +232,6 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 			assertFalse( Hibernate.isInitialized( proxy ) );
 
 			proxy.getId();
-			fail( "Should have failed because there is no Employee Entity with id == 999" );
-		}
-		catch (EntityNotFoundException ex) {
-			// expected
 		}
 		finally {
 			em.getTransaction().rollback();
@@ -256,7 +241,6 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12034")
-	@FailureExpected( jiraKey = "HHH-12034" )
 	public void testReferenceIdNotFound_PropertyBasedAccess() {
 		EntityManager em = getOrCreateEntityManager();
 		try {
@@ -268,10 +252,6 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 			assertFalse( Hibernate.isInitialized( proxy ) );
 
 			proxy.getId();
-			fail( "Should have failed because there is no Employee Entity with id == 999" );
-		}
-		catch (EntityNotFoundException ex) {
-			// expected
 		}
 		finally {
 			em.getTransaction().rollback();

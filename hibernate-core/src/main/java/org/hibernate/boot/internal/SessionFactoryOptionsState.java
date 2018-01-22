@@ -207,4 +207,8 @@ public interface SessionFactoryOptionsState {
 	default boolean isFailOnPaginationOverCollectionFetchEnabled() {
 		return false;
 	}
+
+	default boolean isJpaProxyComplianceEnabled() {
+		return false;
+	}
 }

@@ -21,8 +21,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.jboss.logging.Logger;
-
 /**
  * Convenience base class for lazy initialization handlers.  Centralizes the basic plumbing of doing lazy
  * initialization freeing subclasses to acts as essentially adapters to their intended entity mode and/or
@@ -44,6 +42,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	private String sessionFactoryUuid;
 	private boolean allowLoadOutsideTransaction;
+
+	private boolean initializeProxyWhenAccessingIdentifier;
 
 	/**
 	 * For serialization from the non-pojo initializers (HHH-3309)
@@ -67,6 +67,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 		else {
 			setSession( session );
+			initializeProxyWhenAccessingIdentifier = session.getFactory().getSessionFactoryOptions()
+					.getJpaCompliance().isJpaProxyComplianceEnabled();
 		}
 	}
 
@@ -77,6 +79,9 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	@Override
 	public final Serializable getIdentifier() {
+		if ( isUninitialized() && initializeProxyWhenAccessingIdentifier ) {
+			initialize();
+		}
 		return id;
 	}
 

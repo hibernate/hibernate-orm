@@ -924,6 +924,8 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * pass the BeanManager to use via {@link #CDI_BEAN_MANAGER} and
 	 * optionally specify {@link #DELAY_CDI_ACCESS}.  This setting is more meant to
 	 * integrate non-CDI bean containers such as Spring.
+	 *
+	 * @since 5.3
 	 */
 	String BEAN_CONTAINER = "hibernate.resource.beans.container";
 
@@ -1772,6 +1774,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * since it extends the JPA one.
 	 *
 	 * @see JpaCompliance#isJpaTransactionComplianceEnabled()
+	 * @since 5.3
 	 */
 	String JPA_TRANSACTION_COMPLIANCE = "hibernate.jpa.compliance.transaction";
 
@@ -1785,6 +1788,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * Deviations result in an exception if enabled
 	 *
 	 * @see JpaCompliance#isJpaQueryComplianceEnabled()
+	 * @since 5.3
 	 */
 	String JPA_QUERY_COMPLIANCE = "hibernate.jpa.compliance.query";
 
@@ -1797,6 +1801,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * is just missing (and its defaults will apply).
 	 *
 	 * @see JpaCompliance#isJpaListComplianceEnabled()
+	 * @since 5.3
 	 */
 	String JPA_LIST_COMPLIANCE	= "hibernate.jpa.compliance.list";
 
@@ -1810,8 +1815,24 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * exceptions when the spec says it should.
 	 *
 	 * @see JpaCompliance#isJpaClosedComplianceEnabled()
+	 * @since 5.3
 	 */
 	String JPA_CLOSED_COMPLIANCE = "hibernate.jpa.compliance.closed";
+
+	/**
+	 * JPA spec says that an {@link javax.persistence.EntityNotFoundException}
+	 * should be thrown when accessing an entity Proxy which does not have an associated
+	 * table row in the database.
+	 *
+	 * Traditionally, Hibernate does not initialize an entity Proxy when accessing its
+	 * identifier since we already know the identifier value, hence we can save a database roundtrip.
+	 *
+	 * If enabled Hibernate will initialize the entity Proxy even when accessing its identifier.
+	 *
+	 * @see JpaCompliance#isJpaProxyComplianceEnabled()
+	 * @since 5.2.13
+	 */
+	String JPA_PROXY_COMPLIANCE = "hibernate.jpa.compliance.proxy";
 
 	/**
 	 * True/False setting indicating if the value stored in the table used by the {@link javax.persistence.TableGenerator}
@@ -1819,12 +1840,15 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 *
 	 * The default value is true.
 	 *
+	 * @since 5.3
 	 */
 	String TABLE_GENERATOR_STORE_LAST_USED = "hibernate.id.generator.stored_last_used";
 
 	/**
 	 * Raises an exception when in-memory pagination over collection fetch is about to be performed.
 	 * Disabled by default. Set to true to enable.
+	 *
+	 * @since 5.2.13
 	 */
 	String FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH = "hibernate.query.fail_on_pagination_over_collection_fetch";
 }

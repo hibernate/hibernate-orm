@@ -20,6 +20,7 @@ public class JpaComplianceImpl implements JpaCompliance {
 	private boolean transactionCompliance;
 	private boolean listCompliance;
 	private boolean closedCompliance;
+	private boolean proxyCompliance;
 
 
 	@SuppressWarnings("ConstantConditions")
@@ -46,6 +47,11 @@ public class JpaComplianceImpl implements JpaCompliance {
 				configurationSettings,
 				jpaByDefault
 		);
+		proxyCompliance = ConfigurationHelper.getBoolean(
+				AvailableSettings.JPA_PROXY_COMPLIANCE,
+				configurationSettings,
+				jpaByDefault
+		);
 	}
 
 	@Override
@@ -68,6 +74,10 @@ public class JpaComplianceImpl implements JpaCompliance {
 		return closedCompliance;
 	}
 
+	@Override
+	public boolean isJpaProxyComplianceEnabled() {
+		return proxyCompliance;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Mutators

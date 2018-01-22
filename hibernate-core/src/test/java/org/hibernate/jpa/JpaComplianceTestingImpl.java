@@ -42,6 +42,7 @@ public class JpaComplianceTestingImpl implements JpaCompliance {
 	private boolean transactionCompliance;
 	private boolean listCompliance;
 	private boolean closedCompliance;
+	private boolean proxyCompliance;
 
 	@Override
 	public boolean isJpaQueryComplianceEnabled() {
@@ -63,4 +64,8 @@ public class JpaComplianceTestingImpl implements JpaCompliance {
 		return closedCompliance;
 	}
 
+	@Override
+	public boolean isJpaProxyComplianceEnabled() {
+		return proxyCompliance;
+	}
 }

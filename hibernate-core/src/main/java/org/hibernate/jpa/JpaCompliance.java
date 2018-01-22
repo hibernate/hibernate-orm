@@ -52,7 +52,7 @@ public interface JpaCompliance {
 	boolean isJpaListComplianceEnabled();
 
 	/**
-	 *JPA defines specific exceptions on specific methods when called on
+	 * JPA defines specific exceptions on specific methods when called on
 	 * {@link javax.persistence.EntityManager} and {@link javax.persistence.EntityManagerFactory}
 	 * when those objects have been closed.  This setting controls
 	 * whether the spec defined behavior or Hibernate's behavior will be used.
@@ -63,4 +63,18 @@ public interface JpaCompliance {
 	 * @return {@code true} indicates to behave in the spec-defined way
 	 */
 	boolean isJpaClosedComplianceEnabled();
+
+	/**
+	 * JPA spec says that an {@link javax.persistence.EntityNotFoundException}
+	 * should be thrown when accessing an entity Proxy which does not have an associated
+	 * table row in the database.
+	 *
+	 * Traditionally, Hibernate does not initialize an entity Proxy when accessing its
+	 * identifier since we already know the identifier value, hence we can save a database roundtrip.
+	 *
+	 * If enabled Hibernate will initialize the entity Proxy even when accessing its identifier.
+	 *
+	 * @return {@code true} indicates to behave in the spec-defined way
+	 */
+	boolean isJpaProxyComplianceEnabled();
 }

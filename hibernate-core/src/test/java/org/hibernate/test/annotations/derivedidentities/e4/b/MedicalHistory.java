@@ -25,7 +25,7 @@ public class MedicalHistory {
 
 	@MapsId
 	@JoinColumn(name = "FK")
-    @OneToOne(cascade= CascadeType.ALL)
+    @OneToOne(cascade= CascadeType.PERSIST)
 	Person patient;
 
 	@Temporal(TemporalType.DATE)

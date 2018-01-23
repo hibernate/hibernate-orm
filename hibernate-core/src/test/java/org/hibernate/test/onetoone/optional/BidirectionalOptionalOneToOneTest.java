@@ -34,7 +34,6 @@ public class BidirectionalOptionalOneToOneTest
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-9460" )
 	public void test() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {

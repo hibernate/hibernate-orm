@@ -40,20 +40,20 @@ import org.hibernate.jpamodelgen.MetaModelGenerationException;
 public final class TypeUtils {
 
 	public static final String DEFAULT_ANNOTATION_PARAMETER_NAME = "value";
-	private static final Map<String, String> PRIMITIVES = new HashMap<String, String>();
+	private static final Map<TypeKind, String> PRIMITIVES = new HashMap<TypeKind, String>();
 
 	static {
-		PRIMITIVES.put( "char", "Character" );
+		PRIMITIVES.put( TypeKind.CHAR, "Character" );
 
-		PRIMITIVES.put( "byte", "Byte" );
-		PRIMITIVES.put( "short", "Short" );
-		PRIMITIVES.put( "int", "Integer" );
-		PRIMITIVES.put( "long", "Long" );
+		PRIMITIVES.put( TypeKind.BYTE, "Byte" );
+		PRIMITIVES.put( TypeKind.SHORT, "Short" );
+		PRIMITIVES.put( TypeKind.INT, "Integer" );
+		PRIMITIVES.put( TypeKind.LONG, "Long" );
 
-		PRIMITIVES.put( "boolean", "Boolean" );
+		PRIMITIVES.put( TypeKind.BOOLEAN, "Boolean" );
 
-		PRIMITIVES.put( "float", "Float" );
-		PRIMITIVES.put( "double", "Double" );
+		PRIMITIVES.put( TypeKind.FLOAT, "Float" );
+		PRIMITIVES.put( TypeKind.DOUBLE, "Double" );
 	}
 
 	private TypeUtils() {
@@ -61,7 +61,7 @@ public final class TypeUtils {
 
 	public static String toTypeString(TypeMirror type) {
 		if ( type.getKind().isPrimitive() ) {
-			return PRIMITIVES.get( type.toString() );
+			return PRIMITIVES.get( type.getKind() );
 		}
 		return type.toString();
 	}

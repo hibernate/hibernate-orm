@@ -641,7 +641,7 @@ public class BinderHelper {
 			String generatorName,
 			MetadataBuildingContext buildingContext,
 			Map<String, IdentifierGeneratorDefinition> localGenerators) {
-		log.debugf( "#makeIdGenerator(%s, %s, %s, %s, ...)" );
+		log.debugf( "#makeIdGenerator(%s, %s, %s, %s, ...)", id, idXProperty, generatorType, generatorName );
 
 		Table table = id.getTable();
 		table.setIdentifierValue( id );

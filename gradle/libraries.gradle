@@ -16,6 +16,7 @@ ext {
     jnpVersion = '5.0.6.CR1'
 
     hibernateValidatorVersion = '6.0.7.Final'
+    validationApiVersion = '2.0.1.Final'
     elVersion = '3.0.1-b08'
 
     cdiVersion = '2.0'
@@ -58,7 +59,7 @@ ext {
             // javax
             jpa:            'javax.persistence:javax.persistence-api:2.2',
             jta:            'org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.0.1.Final',
-            validation:     'javax.validation:validation-api:1.1.0.Final',
+            validation:     "javax.validation:validation-api:${validationApiVersion}",
             jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.2.Final',
             interceptor:    'javax.interceptor:javax.interceptor-api:1.2',
 
@@ -114,9 +115,6 @@ ext {
             validator:       "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",
             // EL required by Hibernate Validator at test runtime
             expression_language: "org.glassfish:javax.el:${elVersion}",
-
-            // required by Hibernate Validator at test runtime
-            unified_el:      "org.glassfish:javax.el:3.0-b07",
 
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~  infinsipan
             infinispan:      "org.infinispan:infinispan-core:${infinispanVersion}",

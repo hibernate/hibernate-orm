@@ -185,7 +185,7 @@ public class PersistenceXmlParser {
 	 * <p/>
 	 * Parses a specific persistence.xml file...
 	 */
-	public static Map<String,ParsedPersistenceXmlDescriptor> parse(
+	public static Map<String, ParsedPersistenceXmlDescriptor> parse(
 			URL persistenceXmlUrl,
 			PersistenceUnitTransactionType transactionType) {
 		return parse( persistenceXmlUrl, transactionType, Collections.emptyMap() );
@@ -237,7 +237,7 @@ public class PersistenceXmlParser {
 
 	private void parsePersistenceXml(List<URL> xmlUrls, Map integration) {
 		for ( URL xmlUrl : xmlUrls ) {
-			 parsePersistenceXml( xmlUrl, integration );
+			parsePersistenceXml( xmlUrl, integration );
 		}
 	}
 

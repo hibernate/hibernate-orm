@@ -94,6 +94,7 @@ import org.hibernate.loader.entity.EntityLoader;
 import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
@@ -647,6 +648,7 @@ public abstract class AbstractEntityPersister
 				colAliases[k] = thing.getAlias( dialect, prop.getValue().getTable() );
 				if ( thing.isFormula() ) {
 					foundFormula = true;
+					( (Formula) thing ).setFormula( substituteBrackets( ( (Formula) thing ).getFormula() ) );
 					formulaTemplates[k] = thing.getTemplate( dialect, factory.getSqlFunctionRegistry() );
 				}
 				else {

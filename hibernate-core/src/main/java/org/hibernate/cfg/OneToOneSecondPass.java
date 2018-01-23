@@ -8,7 +8,6 @@ package org.hibernate.cfg;
 
 import java.util.Iterator;
 import java.util.Map;
-
 import javax.persistence.ConstraintMode;
 
 import org.hibernate.AnnotationException;
@@ -92,12 +91,19 @@ public class OneToOneSecondPass implements SecondPass {
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
 		//value.setLazy( fetchMode != FetchMode.JOIN );
 
-		if ( !optional ) value.setConstrained( true );
-		value.setForeignKeyType(
-				value.isConstrained()
-						? ForeignKeyDirection.FROM_PARENT
-						: ForeignKeyDirection.TO_PARENT
-		);
+		if ( !optional ) {
+			value.setConstrained( true );
+		}
+		if ( value.isReferenceToPrimaryKey() ) {
+			value.setForeignKeyType( ForeignKeyDirection.TO_PARENT );
+		}
+		else {
+			value.setForeignKeyType(
+					value.isConstrained()
+							? ForeignKeyDirection.FROM_PARENT
+							: ForeignKeyDirection.TO_PARENT
+			);
+		}
 		PropertyBinder binder = new PropertyBinder();
 		binder.setName( propertyName );
 		binder.setValue( value );

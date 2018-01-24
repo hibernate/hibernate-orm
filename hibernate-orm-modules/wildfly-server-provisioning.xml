@@ -1,0 +1,8 @@
+<server-provisioning xmlns="urn:wildfly:server-provisioning:1.1" copy-module-artifacts="true">
+	<feature-packs>
+		<feature-pack
+			groupId="org.wildfly"
+			artifactId="wildfly-feature-pack"
+			version="11.0.0.Final" />
+	</feature-packs>
+</server-provisioning>

@@ -68,6 +68,7 @@ configurations {
 }
 
 provision {
+       configuration = file('wildfly-server-provisioning.xml')
        destinationDir = file("$project.wildFlyInstallDir")
        override( 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api' ) {
               groupId = 'javax.persistence'

@@ -156,6 +156,10 @@ public class PutFromLoadValidator {
 		else {
 			throw log.pendingPutsMustHaveMaxIdle();
 		}
+
+		this.cache = cache;
+		this.pendingPuts = cacheManager.getCache(pendingPutsName);
+
 		CacheMode cacheMode = cache.getCacheConfiguration().clustering().cacheMode();
 		// Since we need to intercept both invalidations of entries that are in the cache and those
 		// that are not, we need to use custom interceptor, not listeners (which fire only for present entries).
@@ -166,9 +170,6 @@ public class PutFromLoadValidator {
 			}
 			addToCache(cache, this);
 		}
-
-		this.cache = cache;
-		this.pendingPuts = cacheManager.getCache(pendingPutsName);
 	}
 
 	/**

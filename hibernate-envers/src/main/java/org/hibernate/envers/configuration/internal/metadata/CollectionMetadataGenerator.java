@@ -76,7 +76,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.BagType;
 import org.hibernate.type.ComponentType;
-import org.hibernate.type.CustomType;
 import org.hibernate.type.ListType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.MapType;
@@ -878,7 +877,7 @@ public final class CollectionMetadataGenerator {
 	}
 
 	private String getMappedBy(Table collectionTable, PersistentClass referencedClass) {
-		return getMappedBy( referencedClass, new ValueHolder( collectionTable ) );
+		return getMappedBy( referencedClass, new ValueHolder( collectionTable, propertyValue.getMappedByProperty() ) );
 	}
 
 	private String getMappedBy(PersistentClass referencedClass, ValueHolder valueHolder) {
@@ -943,7 +942,11 @@ public final class CollectionMetadataGenerator {
 
 	@SuppressWarnings({"unchecked"})
 	private String searchMappedBy(PersistentClass referencedClass, Table collectionTable) {
-		final Iterator<Property> properties = referencedClass.getPropertyIterator();
+		return searchMappedBy( referencedClass.getPropertyIterator(), collectionTable );
+	}
+
+	@SuppressWarnings("unchecked")
+	private String searchMappedBy(Iterator<Property> properties, Table collectionTable) {
 		while ( properties.hasNext() ) {
 			final Property property = properties.next();
 			if ( property.getValue() instanceof Collection ) {
@@ -951,6 +954,17 @@ public final class CollectionMetadataGenerator {
 				//noinspection ObjectEquality
 				if ( ( (Collection) property.getValue() ).getCollectionTable() == collectionTable ) {
 					return property.getName();
+				}
+			}
+			else if ( property.getValue() instanceof Component ) {
+				// HHH-12240
+				// Should we find an embeddable, we should traverse it as well to see if the collection table
+				// happens to be an attribute inside the embeddable rather than directly on the entity.
+				final Component component = (Component) property.getValue();
+
+				final String mappedBy = searchMappedBy( component.getPropertyIterator(), collectionTable );
+				if ( mappedBy != null ) {
+					return property.getName() + "_" + mappedBy;
 				}
 			}
 		}
@@ -979,6 +993,13 @@ public final class CollectionMetadataGenerator {
 		return null;
 	}
 
+	private String getMappedByPropertyValue(ValueHolder valueHolder) {
+		if ( valueHolder.getMappedByProperty() != null ) {
+			return valueHolder.getMappedByProperty();
+		}
+		return null;
+	}
+
 	private PersistentClass getReferenceCollectionClass(Collection collectionValue) {
 		PersistentClass referencedClass = null;
 		if ( collectionValue.getElement() instanceof OneToMany ) {
@@ -1003,6 +1024,7 @@ public final class CollectionMetadataGenerator {
 	}
 
 	private class ValueHolder {
+		private String mappedByProperty;
 		private Collection collection;
 		private Table table;
 
@@ -1010,8 +1032,9 @@ public final class CollectionMetadataGenerator {
 			this.collection = collection;
 		}
 
-		public ValueHolder(Table table) {
+		public ValueHolder(Table table, String mappedByProperty) {
 			this.table = table;
+			this.mappedByProperty = mappedByProperty;
 		}
 
 		public Collection getCollection() {
@@ -1020,6 +1043,10 @@ public final class CollectionMetadataGenerator {
 
 		public Table getTable() {
 			return table;
+		}
+
+		public String getMappedByProperty() {
+			return mappedByProperty;
 		}
 	}
 

@@ -877,7 +877,7 @@ public final class CollectionMetadataGenerator {
 	}
 
 	private String getMappedBy(Table collectionTable, PersistentClass referencedClass) {
-		return getMappedBy( referencedClass, new ValueHolder( collectionTable, propertyValue.getMappedByProperty() ) );
+		return getMappedBy( referencedClass, new ValueHolder( collectionTable ) );
 	}
 
 	private String getMappedBy(PersistentClass referencedClass, ValueHolder valueHolder) {
@@ -993,13 +993,6 @@ public final class CollectionMetadataGenerator {
 		return null;
 	}
 
-	private String getMappedByPropertyValue(ValueHolder valueHolder) {
-		if ( valueHolder.getMappedByProperty() != null ) {
-			return valueHolder.getMappedByProperty();
-		}
-		return null;
-	}
-
 	private PersistentClass getReferenceCollectionClass(Collection collectionValue) {
 		PersistentClass referencedClass = null;
 		if ( collectionValue.getElement() instanceof OneToMany ) {
@@ -1024,7 +1017,6 @@ public final class CollectionMetadataGenerator {
 	}
 
 	private class ValueHolder {
-		private String mappedByProperty;
 		private Collection collection;
 		private Table table;
 
@@ -1032,9 +1024,8 @@ public final class CollectionMetadataGenerator {
 			this.collection = collection;
 		}
 
-		public ValueHolder(Table table, String mappedByProperty) {
+		public ValueHolder(Table table) {
 			this.table = table;
-			this.mappedByProperty = mappedByProperty;
 		}
 
 		public Collection getCollection() {
@@ -1043,10 +1034,6 @@ public final class CollectionMetadataGenerator {
 
 		public Table getTable() {
 			return table;
-		}
-
-		public String getMappedByProperty() {
-			return mappedByProperty;
 		}
 	}
 

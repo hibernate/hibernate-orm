@@ -1068,8 +1068,6 @@ public abstract class CollectionBinder {
 	}
 
 	public static String adjustUserSuppliedValueCollectionOrderingFragment(String orderByFragment) {
-		LOG.debugf( "#adjustUserSuppliedValueCollectionOrderingFragment(%)", orderByFragment );
-
 		if ( orderByFragment != null ) {
 			orderByFragment = orderByFragment.trim();
 			if ( orderByFragment.length() == 0 || orderByFragment.equalsIgnoreCase( "asc" ) ) {

@@ -1104,7 +1104,7 @@ public class ActionQueue {
 			for ( AbstractEntityInsertAction action : insertions ) {
 				BatchIdentifier batchIdentifier = new BatchIdentifier(
 						action.getEntityName(),
-						action.getSession().getFactory().getMetamodel().entityPersister( action.getEntityName() ).getRootEntityName()
+						action.getSession().getFactory().getEntityPersister( action.getEntityName() ).getRootEntityName()
 				);
 
 				// the entity associated with the current action.
@@ -1183,7 +1183,7 @@ public class ActionQueue {
 					if ( type.isEntityType() && value != null ) {
 						EntityType entityType = (EntityType) type;
 						String entityName = entityType.getName();
-						String rootEntityName = action.getSession().getFactory().getMetamodel().entityPersister( entityName ).getRootEntityName();
+						String rootEntityName = action.getSession().getFactory().getEntityPersister( entityName ).getRootEntityName();
 
 						if ( entityType.isOneToOne() &&
 								OneToOneType.class.cast( entityType ).getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT ) {
@@ -1204,7 +1204,7 @@ public class ActionQueue {
 						final SessionFactoryImplementor sessionFactory = action.getSession().getFactory();
 						if ( collectionType.getElementType( sessionFactory ).isEntityType() ) {
 							String entityName = collectionType.getAssociatedEntityName( sessionFactory );
-							String rootEntityName = action.getSession().getFactory().getMetamodel().entityPersister( entityName ).getRootEntityName();
+							String rootEntityName = action.getSession().getFactory().getEntityPersister( entityName ).getRootEntityName();
 							batchIdentifier.getChildEntityNames().add( entityName );
 							if ( !rootEntityName.equals( entityName ) ) {
 								batchIdentifier.getChildEntityNames().add( rootEntityName );

@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.lob">
+
+    <class name="LobAsLastValueEntity">
+        <id name="id" type="integer">
+            <generator class="increment"/>
+        </id>
+        <!-- property that maps to clob/blob/varbinary/nclob via sql types -->
+        <property name="details" type="string" length="4000">
+            <column name="details" sql-type="clob"/>
+        </property>
+        <!-- property that specifies hibernate type that internally maps to clob/blob/nclob sql types -->
+        <property name="title" length="4000" type="materialized_clob" />
+        <property name="name" type="string" length="120"/>
+    </class>
+
+</hibernate-mapping>

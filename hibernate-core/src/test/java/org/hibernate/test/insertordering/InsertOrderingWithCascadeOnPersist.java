@@ -20,14 +20,13 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.TableGenerator;
 
+import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
  * @author Chris Cranford
@@ -48,17 +47,24 @@ public class InsertOrderingWithCascadeOnPersist extends BaseCoreFunctionalTestCa
 	@Test
 	@TestForIssue(jiraKey = "HHH-11768")
 	public void testInsertOrderingAvoidingForeignKeyConstraintViolation() {
-		Long bidId = doInHibernate( this::sessionFactory, session -> {
+		Long bidId;
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 			// create MarketBid and Group
 			final MarketBidGroup group = new MarketBidGroup();
 			final MarketBid bid = new MarketBid();
 			bid.setGroup( group );
 			session.persist( bid );
-			return bid.getId();
-		} );
+			bidId = bid.getId();
+		}
+		session.getTransaction().commit();
+		session.close();
 
 		// This block resulted in a Foreign Key ConstraintViolation because the inserts were ordered incorrectly.
-		doInHibernate( this::sessionFactory, session -> {
+		session = openSession();
+		session.getTransaction().begin();
+		{
 			// Add marketResult to existing Bid
 			final MarketBid bid = session.load( MarketBid.class, bidId );
 			final MarketResult result = new MarketResult();
@@ -72,7 +78,9 @@ public class InsertOrderingWithCascadeOnPersist extends BaseCoreFunctionalTestCa
 			newResult.setMarketBid( newBid );
 			session.persist( newBid );
 			session.persist( newResult );
-		} );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Entity(name = "MarketBid")

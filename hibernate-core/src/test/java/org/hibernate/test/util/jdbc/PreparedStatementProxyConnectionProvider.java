@@ -31,7 +31,7 @@ public class PreparedStatementProxyConnectionProvider extends ConnectionProvider
 	private final Map<Connection, Connection> acquiredConnectionProxyByConnection = new LinkedHashMap<Connection,Connection>();
 	private final PreparedStatementObserver preparedStatementObserver;
 
-	public PreparedStatementProxyConnectionProvider(BasicPreparedStatementObserver preparedStatementObserver) {
+	public PreparedStatementProxyConnectionProvider(PreparedStatementObserver preparedStatementObserver) {
 		this.preparedStatementObserver = preparedStatementObserver;
 	}
 

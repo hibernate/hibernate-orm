@@ -21,14 +21,17 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 
+import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.test.util.jdbc.BasicPreparedStatementObserver;
+import org.hibernate.test.util.jdbc.PreparedStatementObserver;
+import org.hibernate.test.util.jdbc.PreparedStatementProxyConnectionProvider;
+import org.junit.Before;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -40,7 +43,11 @@ import static org.mockito.Mockito.verify;
 public class InsertOrderingWithMultipleManyToOne
 		extends BaseNonConfigCoreFunctionalTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	private static final PreparedStatementObserver preparedStatementObserver = new BasicPreparedStatementObserver();
+	private static final PreparedStatementProxyConnectionProvider connectionProvider = new PreparedStatementProxyConnectionProvider(
+			preparedStatementObserver
+	);
+
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -69,7 +76,9 @@ public class InsertOrderingWithMultipleManyToOne
 
 	@Test
 	public void testBatching() throws SQLException {
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 			Parent parent = new Parent();
 			session.persist(parent);
 
@@ -81,10 +90,12 @@ public class InsertOrderingWithMultipleManyToOne
 			childB.setParent(parent);
 			session.persist(childB);
 
-			connectionProvider.clear();
-		} );
+			preparedStatementObserver.clear();
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		assertEquals( 3, connectionProvider.getPreparedStatements().size() );
+		assertEquals( 3, preparedStatementObserver.getPreparedStatements().size() );
 		/*PreparedStatement addressPreparedStatement = connectionProvider.getPreparedStatement(
 				"insert into Address (ID) values (?)" );
 		verify( addressPreparedStatement, times( 2 ) ).addBatch();

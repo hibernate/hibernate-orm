@@ -20,7 +20,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 /**
  * @author Chris Cranford
  */
-@RequiresDialectFeature(DialectChecks.SupportsForceLobAsLastValue.class)
+@RequiresDialectFeature(DialectChecks.ForceLobAsLastValue.class)
 @TestForIssue(jiraKey = "HHH-8382")
 public class LobAsLastValueTest extends BaseCoreFunctionalTestCase {
 	@Override

@@ -7,37 +7,25 @@
 package org.hibernate.test.insertordering;
 
 import java.math.BigDecimal;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.SequenceGenerator;
 
+import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 /**
  * @author Vlad Mihalcea
@@ -70,7 +58,9 @@ public class InsertOrderingDuplicateTest
 	@Test
 	public void testBatching() throws SQLException {
 
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 			SaleDocumentSummary saleDocumentsummary = new SaleDocumentSummary();
 			session.persist(saleDocumentsummary);
 
@@ -90,7 +80,9 @@ public class InsertOrderingDuplicateTest
 			session.persist(correction);
 
 			saleDocument.setCorerctionSubject(correction);
-		} );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 

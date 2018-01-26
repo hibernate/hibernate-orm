@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.insertordering;
+package org.hibernate.jpa.test.insertordering;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +16,7 @@ import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -35,8 +36,6 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Chris Cranford
@@ -63,7 +62,9 @@ public class InsertOrderingWithSecondaryTable extends BaseEntityManagerFunctiona
 
 	@Test
 	public void testInheritanceWithSecondaryTable() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		EntityManager entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+		{
 			final TopLevelEntity top = new TopLevelEntity();
 
 			final GeographicArea area1 = new GeographicArea();
@@ -81,7 +82,9 @@ public class InsertOrderingWithSecondaryTable extends BaseEntityManagerFunctiona
 
 			entityManager.persist( top );
 			entityManager.flush();
-		} );
+		}
+		entityManager.getTransaction().commit();
+		entityManager.close();
 	}
 
 	@Entity

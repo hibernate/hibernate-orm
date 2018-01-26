@@ -235,4 +235,10 @@ abstract public class DialectChecks {
 			return dialect.dropConstraints();
 		}
 	}
+
+	public static class SupportsForceLobAsLastValue implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.forceLobAsLastValue();
+		}
+	}
 }

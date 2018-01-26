@@ -236,7 +236,7 @@ abstract public class DialectChecks {
 		}
 	}
 
-	public static class SupportsForceLobAsLastValue implements DialectCheck {
+	public static class ForceLobAsLastValue implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.forceLobAsLastValue();
 		}

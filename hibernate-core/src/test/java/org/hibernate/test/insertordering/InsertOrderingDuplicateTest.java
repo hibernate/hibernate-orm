@@ -61,12 +61,13 @@ public class InsertOrderingDuplicateTest
 		Session session = openSession();
 		session.getTransaction().begin();
 		{
-			SaleDocumentSummary saleDocumentsummary = new SaleDocumentSummary();
-			session.persist(saleDocumentsummary);
-
 			SaleDocumentItem saleDocumentItem = new SaleDocumentItem();
-			saleDocumentsummary.addItem( saleDocumentItem );
 			session.persist( saleDocumentItem );
+
+			SaleDocumentSummary saleDocumentsummary = new SaleDocumentSummary();
+			session.persist(saleDocumentsummary );
+
+			saleDocumentsummary.addItem( saleDocumentItem );
 
 			Product product = new Product();
 			session.persist(product);

@@ -3,6 +3,18 @@ Hibernate 5.1 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changed in 5.1.12.Final (January 26, 2018)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/31629
+https://hibernate.atlassian.net/issues/?jql=project%20%3D%2010031%20AND%20fixVersion%20%3D%2031629%20ORDER%20BY%20priority%20DESC%2C%20key%20ASC
+
+** Bug
+    * [HHH-11634] - ActionQueue#InsertActionSorter fails to generate right order
+    * [HHH-11714] - Entities with InheritanceType.SINGLE_TABLE and SecondaryTable are not being saved correctly
+    * [HHH-11768] - foreign key violation with order_inserts=true and cascading persist
+    * [HHH-11996] - order_inserts causing constraint violation
+    * [HHH-12233] - NPE in CacheImpl
+
 Changed in 5.1.11.Final (January 10, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/31001
@@ -22,7 +34,6 @@ https://hibernate.atlassian.net/issues/?jql=project%20%3D%2010031%20AND%20fixVer
 ** Improvement
     * [HHH-4959] - Concurrent HQL parsing blocks on ReflectHelper.classForName()
     * [HHH-11377] - ReflectHelper#getConstantValue should consider digits as well
-
 
 Changed in 5.1.10.Final (August 18, 2017)
 ------------------------------------------------------------------------------------------------------------------------

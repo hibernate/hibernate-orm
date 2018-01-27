@@ -86,8 +86,16 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		}
 		catch (ClassLoadingException ignore) {
 		}
-
-		// WebSphere ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		
+		// WebSphere Liberty ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		try {
+			classLoaderService.classForName(WebSphereLibertyJtaPlatform.TMF_CLASS_NAME);
+			return new WebSphereLibertyJtaPlatform();
+		}
+		catch (ClassLoadingException ignore) {
+		}
+		
+		// WebSphere traditional ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		for ( WebSphereJtaPlatform.WebSphereEnvironment webSphereEnvironment
 				: WebSphereJtaPlatform.WebSphereEnvironment.values() ) {
 			try {

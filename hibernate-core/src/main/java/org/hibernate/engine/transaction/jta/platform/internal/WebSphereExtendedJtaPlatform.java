@@ -32,7 +32,7 @@ import org.hibernate.HibernateException;
  *     <li>the WAS container in which Hibernate will be utilized</li>
  * </ul>
  * <p/>
- * This class is reported to work on WAS version 6 in any of the standard J2EE/JEE component containers.
+ * This class is reported to work on WAS version 6 in any of the standard J2EE/Java EE component containers.
  *
  * @author Gavin King
  * @author <a href="mailto:jesper@udby.com>Jesper Udby</a>
@@ -58,7 +58,7 @@ public class WebSphereExtendedJtaPlatform extends AbstractJtaPlatform {
 
 	@Override
 	public Object getTransactionIdentifier(Transaction transaction) {
-		// WebSphere, however, is not a sane JEE/JTA container...
+		// WebSphere, however, is not a sane Java EE/JTA container...
 		return transaction.hashCode();
 	}
 

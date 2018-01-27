@@ -84,6 +84,7 @@ import org.hibernate.engine.transaction.jta.platform.internal.SapNetWeaverJtaPla
 import org.hibernate.engine.transaction.jta.platform.internal.SunOneJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.internal.EntityCopyAllowedLoggedObserver;
@@ -340,6 +341,13 @@ public class StrategySelectorBuilder {
 				WeblogicJtaPlatform.class,
 				"Weblogic",
 				"org.hibernate.service.jta.platform.internal.WeblogicJtaPlatform"
+		);
+		
+		addJtaPlatforms(
+				strategySelector,
+				WebSphereLibertyJtaPlatform.class,
+				"WebSphereLiberty",
+				"org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform"
 		);
 
 		addJtaPlatforms(

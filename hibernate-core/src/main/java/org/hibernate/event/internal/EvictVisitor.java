@@ -59,7 +59,7 @@ public class EvictVisitor extends AbstractVisitor {
 		}
 
 		PersistentCollection collection = (PersistentCollection) pc;
-		if ( collection.unsetSession( getSession() ) ) {
+		if ( collection != null && collection.unsetSession( getSession() ) ) {
 			evictCollection(collection);
 		}
 	}

@@ -49,6 +49,7 @@ import org.hibernate.test.cache.infinispan.util.JdbcResourceTransactionMock;
 import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
 import org.hibernate.test.cache.infinispan.util.TestSynchronization;
 import org.infinispan.Cache;
+import org.infinispan.commands.write.ClearCommand;
 import org.infinispan.test.TestingUtil;
 import org.jboss.logging.Logger;
 import org.hibernate.test.cache.infinispan.util.TestTimeService;
@@ -512,7 +513,7 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 				});
 			} else {
 				ExpectingInterceptor.get(remoteRegion.getCache())
-					.when((ctx, cmd) -> cmd instanceof InvalidateCommand)
+					.when((ctx, cmd) -> cmd instanceof InvalidateCommand || cmd instanceof ClearCommand)
 					.countDown(endInvalidationLatch);
 				cleanup.add(() -> ExpectingInterceptor.cleanup(remoteRegion.getCache()));
 			}

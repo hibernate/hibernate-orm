@@ -242,7 +242,7 @@ public abstract class BaseRegion implements Region {
 		// When we don't have transaction, we can do a clear operation (since we don't
 		// case about context) and can't do the one-by-one remove: remove() on tx cache
 		// requires transactional context.
-		if ( inTransaction ) {
+		if ( inTransaction && cache.getCacheConfiguration().transaction().transactionMode().isTransactional() ) {
 			log.tracef( "Transaction, clearing one element at the time" );
 			Caches.removeAll( localAndSkipLoadCache );
 		}

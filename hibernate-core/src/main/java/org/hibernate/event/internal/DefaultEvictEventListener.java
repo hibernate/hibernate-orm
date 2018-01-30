@@ -73,9 +73,8 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			li.unsetSession();
 		}
 		else {
-			EntityEntry e = persistenceContext.removeEntry( object );
+			EntityEntry e = persistenceContext.getEntry( object );
 			if ( e != null ) {
-				persistenceContext.removeEntity( e.getEntityKey() );
 				doEvict( object, e.getEntityKey(), e.getPersister(), source );
 			}
 			else {
@@ -119,7 +118,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 
 		// remove all collections for the entity from the session-level cache
 		if ( persister.hasCollections() ) {
-			new EvictVisitor( session ).process( object, persister );
+			new EvictVisitor( session, object ).process( object, persister );
 		}
 
 		// remove any snapshot, not really for memory management purposes, but
@@ -127,6 +126,9 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		// EntityEntry to take precedence
 		// This is now handled by removeEntity()
 		//session.getPersistenceContext().removeDatabaseSnapshot(key);
+		
+		session.getPersistenceContext().removeEntity( key );
+		session.getPersistenceContext().removeEntry( object );
 
 		Cascade.cascade( CascadingActions.EVICT, CascadePoint.AFTER_EVICT, session, persister, object );
 	}

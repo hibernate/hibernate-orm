@@ -7,6 +7,7 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
@@ -25,9 +26,12 @@ import org.hibernate.type.CollectionType;
  */
 public class EvictVisitor extends AbstractVisitor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EvictVisitor.class );
+	
+	private Object owner;
 
-	EvictVisitor(EventSource session) {
+	EvictVisitor(EventSource session, Object owner) {
 		super(session);
+		this.owner = owner;
 	}
 
 	@Override
@@ -38,6 +42,7 @@ public class EvictVisitor extends AbstractVisitor {
 
 		return null;
 	}
+	
 	public void evictCollection(Object value, CollectionType type) {
 		final Object pc;
 		if ( type.hasHolder() ) {
@@ -45,6 +50,9 @@ public class EvictVisitor extends AbstractVisitor {
 		}
 		else if ( value instanceof PersistentCollection ) {
 			pc = value;
+		}
+		else if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+			pc = (PersistentCollection) type.resolve( value, getSession(), this.owner );
 		}
 		else {
 			return; //EARLY EXIT!
@@ -75,5 +83,10 @@ public class EvictVisitor extends AbstractVisitor {
 					new CollectionKey( ce.getLoadedPersister(), ce.getLoadedKey() )
 			);
 		}
+	}
+	
+	@Override
+	boolean includeEntityProperty(Object[] values, int i) {
+		return true;
 	}
 }

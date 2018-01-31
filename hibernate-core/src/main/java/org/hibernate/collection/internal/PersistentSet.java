@@ -206,6 +206,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 		if ( exists == null ) {
 			initialize( true );
 			if ( set.remove( value ) ) {
+				elementRemoved = true;
 				dirty();
 				return true;
 			}
@@ -214,6 +215,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 			}
 		}
 		else if ( exists ) {
+			elementRemoved = true;
 			queueOperation( new SimpleRemove( value ) );
 			return true;
 		}
@@ -266,6 +268,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 		if ( coll.size() > 0 ) {
 			initialize( true );
 			if ( set.removeAll( coll ) ) {
+				elementRemoved = true;
 				dirty();
 				return true;
 			}

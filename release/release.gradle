@@ -239,5 +239,5 @@ artifacts {
     bundles distZip
 }
 
-task release( dependsOn: uploadBundlesSourceForge )
+task release( dependsOn: [uploadDocumentation, uploadBundlesSourceForge] )
 

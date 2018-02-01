@@ -39,10 +39,9 @@ else {
 		user = project.bintrayUser
 		key = project.bintrayKey
 
-		repo = 'artifacts'
-
 		pkg {
 			userOrg = 'hibernate'
+			repo = 'artifacts'
 			name = 'hibernate-orm'
 
 			version {

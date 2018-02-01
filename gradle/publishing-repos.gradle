@@ -12,7 +12,6 @@ apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
 apply plugin: 'com.jfrog.bintray'
 
-apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
 ext {
 	bintrayUser = project.hasProperty( 'PERSONAL_BINTRAY_USER' ) ? project.property( 'PERSONAL_BINTRAY_USER' ) : null

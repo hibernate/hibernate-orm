@@ -7,13 +7,16 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.collection.spi.CollectionClassification;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -23,12 +26,12 @@ public abstract class AbstractSqmCollectionIndexReference
 		extends AbstractSqmNavigableReference
 		implements SqmCollectionIndexReference {
 
-	private final SqmPluralAttributeReference attributeBinding;
+	private final SqmPluralAttributeReference attributeReference;
 	private final PluralPersistentAttribute pluralAttributeReference;
 	private final NavigablePath propertyPath;
 
 	public AbstractSqmCollectionIndexReference(SqmPluralAttributeReference pluralAttributeBinding) {
-		this.attributeBinding = pluralAttributeBinding;
+		this.attributeReference = pluralAttributeBinding;
 		this.pluralAttributeReference = pluralAttributeBinding.getReferencedNavigable();
 
 		assert pluralAttributeReference.getPersistentCollectionDescriptor().getCollectionClassification() == CollectionClassification.MAP
@@ -37,13 +40,13 @@ public abstract class AbstractSqmCollectionIndexReference
 		this.propertyPath = pluralAttributeBinding.getNavigablePath().append( "{keys}" );
 	}
 
-	public SqmPluralAttributeReference getPluralAttributeBinding() {
-		return attributeBinding;
+	public SqmPluralAttributeReference getPluralAttributeReference() {
+		return attributeReference;
 	}
 
 	@Override
 	public ExpressableType getExpressableType() {
-		return getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionDescriptor().getIndexDescriptor();
+		return getPluralAttributeReference().getReferencedNavigable().getPersistentCollectionDescriptor().getIndexDescriptor();
 	}
 
 	@Override
@@ -53,7 +56,7 @@ public abstract class AbstractSqmCollectionIndexReference
 
 	@Override
 	public SqmPluralAttributeReference getSourceReference() {
-		return attributeBinding;
+		return attributeReference;
 	}
 
 	@Override
@@ -73,19 +76,19 @@ public abstract class AbstractSqmCollectionIndexReference
 
 	@Override
 	public String asLoggableText() {
-		return "KEY(" + attributeBinding.asLoggableText() + ")";
+		return "KEY(" + attributeReference.asLoggableText() + ")";
 	}
 
 
 	@Override
 	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
-		return getPluralAttributeBinding();
+		return getPluralAttributeReference();
 	}
 
 	@Override
 	public String getUniqueIdentifier() {
 		// for most index classifications, the uid should point to the "collection table"...
-		return getPluralAttributeBinding().getUniqueIdentifier();
+		return getPluralAttributeReference().getUniqueIdentifier();
 	}
 
 	@Override
@@ -93,7 +96,7 @@ public abstract class AbstractSqmCollectionIndexReference
 		// for most index classifications, the "identification variable" (alias)
 		// 		associated with the index should point to the identification variable
 		// 		for the collection reference
-		return getPluralAttributeBinding().getIdentificationVariable();
+		return getPluralAttributeReference().getIdentificationVariable();
 	}
 
 	@Override
@@ -116,4 +119,45 @@ public abstract class AbstractSqmCollectionIndexReference
 	public Class getJavaType() {
 		return getReferencedNavigable().getJavaType();
 	}
+
+	@Override
+	public SemanticPathPart resolvePathPart(
+			String name,
+			String currentContextKey,
+			boolean isTerminal,
+			Navigable.SqmReferenceCreationContext context) {
+		if ( getExportedFromElement() == null ) {
+			context.getNavigableJoinBuilder().buildNavigableJoinIfNecessary(
+					this,
+					false
+			);
+		}
+
+		return getPluralAttributeReference().getReferencedNavigable()
+				.getPersistentCollectionDescriptor()
+				.getIndexDescriptor()
+				.createSqmExpression( getPluralAttributeReference().getExportedFromElement(), getPluralAttributeReference(), context );
+	}
+
+	@Override
+	public SqmRestrictedCollectionElementReference resolveIndexedAccess(
+			SqmExpression selector,
+			String currentContextKey,
+			boolean isTerminal,
+			Navigable.SqmReferenceCreationContext context) {
+		throw new UnsupportedOperationException(  );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo (6.0) : this is probably not right depending how we intend the logical join to element/index table
+	@Override
+	public SqmFrom getExportedFromElement() {
+		return getPluralAttributeReference().getExportedFromElement();
+	}
+
+	@Override
+	public void injectExportedFromElement(SqmFrom sqmFrom) {
+		getPluralAttributeReference().injectExportedFromElement( sqmFrom );
+	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }

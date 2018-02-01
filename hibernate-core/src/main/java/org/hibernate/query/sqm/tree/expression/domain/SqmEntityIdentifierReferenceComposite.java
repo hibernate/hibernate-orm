@@ -8,8 +8,11 @@ package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierComposite;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -108,5 +111,32 @@ public class SqmEntityIdentifierReferenceComposite
 	@Override
 	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
 		throw new RuntimeException( "These methods need to be re-thought" );
+	}
+
+	@Override
+	public SemanticPathPart resolvePathPart(
+			String name,
+			String currentContextKey,
+			boolean isTerminal,
+			Navigable.SqmReferenceCreationContext context) {
+		if ( getExportedFromElement() == null ) {
+			context.getNavigableJoinBuilder().buildNavigableJoinIfNecessary(
+					this,
+					false
+			);
+		}
+
+		return getReferencedNavigable().getEmbeddedDescriptor()
+				.findNavigable( name )
+				.createSqmExpression( getExportedFromElement(), this, context );
+	}
+
+	@Override
+	public SqmRestrictedCollectionElementReference resolveIndexedAccess(
+			SqmExpression selector,
+			String currentContextKey,
+			boolean isTerminal,
+			Navigable.SqmReferenceCreationContext context) {
+		throw new UnsupportedOperationException(  );
 	}
 }

@@ -6,6 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
 /**
  * @author Steve Ebersole
  */
@@ -14,5 +18,26 @@ public abstract class AbstractSpecificSqmElementReference
 		implements SqmNavigableReference, SqmRestrictedCollectionElementReference {
 	public AbstractSpecificSqmElementReference(SqmPluralAttributeReference pluralAttributeBinding) {
 		super( pluralAttributeBinding );
+	}
+
+	@Override
+	public SemanticPathPart resolvePathPart(
+			String name,
+			String currentContextKey,
+			boolean isTerminal,
+			Navigable.SqmReferenceCreationContext context) {
+		return getPluralAttributeReference().getReferencedNavigable()
+				.getPersistentCollectionDescriptor()
+				.getElementDescriptor()
+				.createSqmExpression( getPluralAttributeReference().getExportedFromElement(), getPluralAttributeReference(), context );
+	}
+
+	@Override
+	public SqmRestrictedCollectionElementReference resolveIndexedAccess(
+			SqmExpression selector,
+			String currentContextKey,
+			boolean isTerminal,
+			Navigable.SqmReferenceCreationContext context) {
+		throw new UnsupportedOperationException(  );
 	}
 }

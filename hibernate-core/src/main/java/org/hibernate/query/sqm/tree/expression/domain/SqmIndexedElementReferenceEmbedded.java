@@ -25,7 +25,7 @@ public class SqmIndexedElementReferenceEmbedded
 
 	@Override
 	public CollectionElementEmbedded getReferencedNavigable() {
-		return (CollectionElementEmbedded) getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor();
+		return (CollectionElementEmbedded) getPluralAttributeReference().getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor();
 	}
 
 	@Override
@@ -40,11 +40,12 @@ public class SqmIndexedElementReferenceEmbedded
 
 	@Override
 	public SqmFrom getExportedFromElement() {
-		return getPluralAttributeBinding().getExportedFromElement();
+		return getPluralAttributeReference().getExportedFromElement();
 	}
 
 	@Override
 	public void injectExportedFromElement(SqmFrom sqmFrom) {
 		throw new NotYetImplementedException( "Cannot inject SqmFrom element into a CompositeBinding" );
 	}
+
 }

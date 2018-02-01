@@ -11,11 +11,13 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.internal.QueryInterpretationsImpl;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.internal.SemanticQueryProducerImpl;
 import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Aggregation and encapsulation of the components Hibernate uses
@@ -86,6 +88,20 @@ public class QueryEngine {
 
 	public SqmFunctionRegistry getSqmFunctionRegistry() {
 		return sqmFunctionRegistry;
+	}
+
+	public EntityDescriptor findEntityByName(String name) {
+		final Map<String,String> importMap = getSessionFactory().getTypeConfiguration().getImportMap();
+		if ( importMap.containsKey( name ) ) {
+			name = importMap.get( name );
+		}
+
+		final EntityDescriptor entityPersister = getSessionFactory().getTypeConfiguration().resolveEntityDescriptor( name );
+		if ( entityPersister != null ) {
+			return entityPersister;
+		}
+
+		return null;
 	}
 
 	public void close() {

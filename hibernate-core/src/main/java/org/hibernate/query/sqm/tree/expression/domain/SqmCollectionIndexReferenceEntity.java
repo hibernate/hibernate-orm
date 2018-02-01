@@ -9,6 +9,9 @@ package org.hibernate.query.sqm.tree.expression.domain;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndexEntity;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 
@@ -30,7 +33,7 @@ public class SqmCollectionIndexReferenceEntity
 
 	@Override
 	public EntityValuedNavigable getReferencedNavigable() {
-		return (CollectionIndexEntity) getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionDescriptor().getIndexDescriptor();
+		return (CollectionIndexEntity) getPluralAttributeReference().getReferencedNavigable().getPersistentCollectionDescriptor().getIndexDescriptor();
 	}
 
 	@Override
@@ -71,4 +74,24 @@ public class SqmCollectionIndexReferenceEntity
 		return super.getUniqueIdentifier();
 	}
 
+	@Override
+	public SemanticPathPart resolvePathPart(
+			String name,
+			String currentContextKey,
+			boolean isTerminal,
+			Navigable.SqmReferenceCreationContext context) {
+		return getPluralAttributeReference().getReferencedNavigable()
+				.getPersistentCollectionDescriptor()
+				.getIndexDescriptor()
+				.createSqmExpression( exportedFromElement, getPluralAttributeReference(), context );
+	}
+
+	@Override
+	public SqmRestrictedCollectionElementReference resolveIndexedAccess(
+			SqmExpression selector,
+			String currentContextKey,
+			boolean isTerminal,
+			Navigable.SqmReferenceCreationContext context) {
+		return null;
+	}
 }

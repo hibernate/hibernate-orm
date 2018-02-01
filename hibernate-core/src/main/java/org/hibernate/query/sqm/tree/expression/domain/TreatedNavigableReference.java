@@ -4,19 +4,22 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm.produce.internal.hql.navigable;
+package org.hibernate.query.sqm.tree.expression.domain;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.AbstractSqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.query.sqm.tree.from.SqmDowncast;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmFromExporter;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
@@ -40,14 +43,14 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 public class TreatedNavigableReference
 		extends AbstractSqmNavigableReference
 		implements SqmNavigableReference, SqmNavigableContainerReference {
-	private final SqmNavigableReference baseBinding;
+	private final SqmNavigableReference baseReference;
 	private final EntityValuedExpressableType subclassIndicator;
 
-	public TreatedNavigableReference(SqmNavigableReference baseBinding, EntityValuedExpressableType subclassIndicator) {
-		this.baseBinding = baseBinding;
+	public TreatedNavigableReference(SqmNavigableReference baseReference, EntityValuedExpressableType subclassIndicator) {
+		this.baseReference = baseReference;
 		this.subclassIndicator = subclassIndicator;
 
-		baseBinding.addDowncast( new SqmDowncast( subclassIndicator.getEntityDescriptor() ) );
+		baseReference.addDowncast( new SqmDowncast( subclassIndicator.getEntityDescriptor() ) );
 	}
 
 	public EntityValuedExpressableType getSubclassIndicator() {
@@ -79,12 +82,12 @@ public class TreatedNavigableReference
 
 	@Override
 	public SqmNavigableContainerReference getSourceReference() {
-		return baseBinding.getSourceReference();
+		return baseReference.getSourceReference();
 	}
 
 	@Override
 	public NavigablePath getNavigablePath() {
-		return baseBinding.getNavigablePath();
+		return baseReference.getNavigablePath();
 	}
 
 	@Override
@@ -99,22 +102,22 @@ public class TreatedNavigableReference
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return baseBinding.accept( walker );
+		return baseReference.accept( walker );
 	}
 
 	@Override
 	public String asLoggableText() {
-		return "TREAT( " + baseBinding.asLoggableText() + " AS " + subclassIndicator.asLoggableText() + " )";
+		return "TREAT( " + baseReference.asLoggableText() + " AS " + subclassIndicator.asLoggableText() + " )";
 	}
 
 	@Override
 	public SqmFrom getExportedFromElement() {
-		return ( (SqmFromExporter) baseBinding ).getExportedFromElement();
+		return baseReference.getExportedFromElement();
 	}
 
 	@Override
 	public void injectExportedFromElement(SqmFrom sqmFrom) {
-		( (SqmFromExporter) baseBinding ).injectExportedFromElement( sqmFrom );
+		baseReference.injectExportedFromElement( sqmFrom );
 	}
 
 	@Override
@@ -135,5 +138,29 @@ public class TreatedNavigableReference
 	@Override
 	public Class getJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
+	}
+
+	@Override
+	public SemanticPathPart resolvePathPart(
+			String name,
+			String currentContextKey,
+			boolean isTerminal,
+			Navigable.SqmReferenceCreationContext context) {
+		if ( getExportedFromElement() == null ) {
+			context.getNavigableJoinBuilder().buildNavigableJoinIfNecessary(
+					this,
+					false
+			);
+		}
+		return baseReference.resolvePathPart( name, currentContextKey, isTerminal, context );
+	}
+
+	@Override
+	public SqmRestrictedCollectionElementReference resolveIndexedAccess(
+			SqmExpression selector,
+			String currentContextKey,
+			boolean isTerminal,
+			Navigable.SqmReferenceCreationContext context) {
+		return baseReference.resolveIndexedAccess( selector, currentContextKey, isTerminal, context );
 	}
 }

@@ -14,7 +14,7 @@ import org.hibernate.query.sqm.tree.from.SqmFromExporter;
  *
  * @author Steve Ebersole
  */
-public interface SqmAttributeReference extends SqmNavigableReference, SqmFromExporter {
+public interface SqmAttributeReference extends SqmNavigableReference {
 	@Override
 	PersistentAttribute getReferencedNavigable();
 }

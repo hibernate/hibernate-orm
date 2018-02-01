@@ -6,6 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 
@@ -30,5 +33,26 @@ public abstract class AbstractSpecificSqmCollectionIndexReference extends Abstra
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitMaxIndexFunction( this );
+	}
+
+	@Override
+	public SemanticPathPart resolvePathPart(
+			String name,
+			String currentContextKey,
+			boolean isTerminal,
+			Navigable.SqmReferenceCreationContext context) {
+		return getPluralAttributeReference().getReferencedNavigable()
+				.getPersistentCollectionDescriptor()
+				.getIndexDescriptor()
+				.createSqmExpression( getPluralAttributeReference().getExportedFromElement(), getPluralAttributeReference(), context );
+	}
+
+	@Override
+	public SqmRestrictedCollectionElementReference resolveIndexedAccess(
+			SqmExpression selector,
+			String currentContextKey,
+			boolean isTerminal,
+			Navigable.SqmReferenceCreationContext context) {
+		throw new UnsupportedOperationException(  );
 	}
 }

@@ -35,7 +35,7 @@ public class OrderByResolutionContext implements ResolutionContext, FromElementL
 	}
 
 	@Override
-	public SqmNavigableReference findNavigableBindingByIdentificationVariable(String identificationVariable) {
+	public SqmNavigableReference findNavigableReferenceByIdentificationVariable(String identificationVariable) {
 		for ( SqmFromElementSpace fromElementSpace : fromClause.getFromElementSpaces() ) {
 			if ( fromElementSpace.getRoot().getIdentificationVariable().equals( identificationVariable ) ) {
 				return fromElementSpace.getRoot().getNavigableReference();
@@ -53,7 +53,7 @@ public class OrderByResolutionContext implements ResolutionContext, FromElementL
 	}
 
 	@Override
-	public SqmNavigableReference findNavigableBindingExposingAttribute(String attributeName) {
+	public SqmNavigableReference findNavigableReferenceExposingAttribute(String attributeName) {
 		for ( SqmFromElementSpace fromElementSpace : fromClause.getFromElementSpaces() ) {
 			if ( exposesAttribute( fromElementSpace.getRoot(), attributeName ) ) {
 				return fromElementSpace.getRoot().getNavigableReference();

@@ -8,20 +8,14 @@ package org.hibernate.sql.ast.produce.ordering.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
-import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.internal.hql.SemanticQueryBuilder;
 import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlParser;
-import org.hibernate.query.sqm.produce.internal.hql.navigable.NavigableBindingResolver;
-import org.hibernate.query.sqm.produce.internal.hql.navigable.PathHelper;
 import org.hibernate.query.sqm.produce.spi.ParsingContext;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
-import org.hibernate.sql.results.spi.QueryResultProducer;
 
 import org.jboss.logging.Logger;
 
@@ -43,18 +37,16 @@ public class OrderByFragmentParser extends SemanticQueryBuilder {
 				.visitOrderByClause( orderByClauseContext );
 	}
 
-	private final SqmFrom sqmFromBase;
-
-	private final NavigableBindingResolver navigableBindingResolver;
 	private final List<SqmSortSpecification> sqmSortSpecifications = new ArrayList<>();
 
 
 	public OrderByFragmentParser(TranslationContext translationContext, PersistentCollectionDescriptor collectionDescriptor) {
 		super( new ParsingContext( translationContext.getSessionFactory() ) );
-		this.sqmFromBase = new SqmFromImpl( getParsingContext(), collectionDescriptor );
 
-		this.navigableBindingResolver = new PathResolverImpl( getParsingContext(), sqmFromBase );
-		primeStack( getPathResolverStack(), navigableBindingResolver );
+		final SqmFrom sqmFromBase = new SqmFromImpl( getParsingContext(), collectionDescriptor );
+
+		getAttributeJoinBuilderStack().push( new NavigableJoinBuilderRoot( this ) );
+		getSemanticPathPartStack().push( new SemanticPathPartRoot( sqmFromBase ) );
 
 		primeStack( getParameterDeclarationContextStack(), () -> false );
 	}
@@ -64,33 +56,6 @@ public class OrderByFragmentParser extends SemanticQueryBuilder {
 		final SqmSortSpecification spec = super.visitSortSpecification( ctx );
 		sqmSortSpecifications.add( spec );
 		return spec;
-	}
-
-	@Override
-	public SqmNavigableReference visitPathExpression(HqlParser.PathExpressionContext ctx) {
-		final String pathText = ctx.path().getText();
-		final String[] pathSplits = PathHelper.split( pathText );
-		final SqmNavigableReference resolvedNavigableReference = navigableBindingResolver.resolvePath( pathSplits );
-
-		if ( resolvedNavigableReference != null ) {
-			return resolvedNavigableReference;
-		}
-
-		if ( pathSplits.length > 1 ) {
-			throw new SemanticException(
-					String.format(
-							Locale.ROOT,
-							"Encountered compound path expression [%s] (relative to [%s]) " +
-									"which did not resolve to navigable reference; " +
-									"and due to being compound, the path cannot be column name",
-							pathText,
-							sqmFromBase
-					)
-			);
-		}
-
-		// otherwise assume we have a column name
-		return new SqmColumnReference( sqmFromBase, pathSplits[0] );
 	}
 
 	public List<SqmSortSpecification> getSqmSortSpecifications() {

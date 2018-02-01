@@ -20,6 +20,10 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.domain.SqmIndexedElementReferenceEntity;
+import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
@@ -91,6 +95,14 @@ public class CollectionElementEntityImpl<J>
 	@Override
 	public ElementClassification getClassification() {
 		return elementClassification;
+	}
+
+	@Override
+	public SqmRestrictedCollectionElementReference createIndexedAccessReference(
+			SqmPluralAttributeReference pluralAttributeReference,
+			SqmExpression selector,
+			SqmReferenceCreationContext creationContext) {
+		return new SqmIndexedElementReferenceEntity( pluralAttributeReference, selector );
 	}
 
 	@Override

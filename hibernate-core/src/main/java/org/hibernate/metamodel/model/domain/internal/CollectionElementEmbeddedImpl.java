@@ -19,6 +19,10 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.domain.SqmIndexedElementReferenceEmbedded;
+import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
@@ -67,6 +71,14 @@ public class CollectionElementEmbeddedImpl<J>
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
 		// visit our sub-navigables
 		getEmbeddedDescriptor().visitNavigables( visitor );
+	}
+
+	@Override
+	public SqmRestrictedCollectionElementReference createIndexedAccessReference(
+			SqmPluralAttributeReference pluralAttributeReference,
+			SqmExpression selector,
+			SqmReferenceCreationContext creationContext) {
+		return new SqmIndexedElementReferenceEmbedded( pluralAttributeReference, selector );
 	}
 
 //	@Override

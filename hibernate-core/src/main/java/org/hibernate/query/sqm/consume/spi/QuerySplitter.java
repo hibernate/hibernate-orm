@@ -56,7 +56,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -307,10 +307,10 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public SqmAttributeJoin visitQualifiedAttributeJoinFromElement(SqmAttributeJoin joinedFromElement) {
+		public SqmNavigableJoin visitQualifiedAttributeJoinFromElement(SqmNavigableJoin joinedFromElement) {
 			final SqmSingularAttributeReference existingCopy = (SqmSingularAttributeReference) navigableBindingCopyMap.get( joinedFromElement.getNavigableReference() );
 			if ( existingCopy != null ) {
-				return (SqmAttributeJoin) existingCopy.getExportedFromElement();
+				return (SqmNavigableJoin) existingCopy.getExportedFromElement();
 			}
 
 			if ( currentFromElementSpaceCopy == null ) {
@@ -324,7 +324,7 @@ public class QuerySplitter {
 			return makeCopy( joinedFromElement );
 		}
 
-		private SqmAttributeJoin makeCopy(SqmAttributeJoin fromElement) {
+		private SqmNavigableJoin makeCopy(SqmNavigableJoin fromElement) {
 			assert fromElement.getAttributeReference().getSourceReference() != null;
 
 			if ( fromElement == null ) {
@@ -347,7 +347,7 @@ public class QuerySplitter {
 					null
 			);
 
-			final SqmAttributeJoin copy = new SqmAttributeJoin(
+			final SqmNavigableJoin copy = new SqmNavigableJoin(
 					sourceBindingCopy.getExportedFromElement(),
 					attributeBindingCopy,
 					fromElement.getUniqueIdentifier(),
@@ -497,7 +497,7 @@ public class QuerySplitter {
 
 			assert !navigableBindingCopyMap.containsKey( attributeReference );
 
-			final SqmAttributeJoin originalJoin = (SqmAttributeJoin) sqmFromSqmCopyMap.get( attributeReference.getExportedFromElement() );
+			final SqmNavigableJoin originalJoin = (SqmNavigableJoin) sqmFromSqmCopyMap.get( attributeReference.getExportedFromElement() );
 			final SqmNavigableContainerReference sourceBindingCopy = (SqmNavigableContainerReference) navigableBindingCopyMap.get(
 					attributeReference.getSourceReference()
 			);

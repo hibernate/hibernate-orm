@@ -78,7 +78,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmUpperFunction;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
@@ -209,7 +209,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitQualifiedAttributeJoinFromElement(SqmAttributeJoin joinedFromElement) {
+	public T visitQualifiedAttributeJoinFromElement(SqmNavigableJoin joinedFromElement) {
 		return (T) joinedFromElement;
 	}
 

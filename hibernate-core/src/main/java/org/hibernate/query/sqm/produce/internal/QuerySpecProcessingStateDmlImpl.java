@@ -17,10 +17,9 @@ import org.hibernate.query.sqm.produce.spi.ParsingContext;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.spi.AbstractQuerySpecProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
@@ -50,14 +49,14 @@ public class QuerySpecProcessingStateDmlImpl extends AbstractQuerySpecProcessing
 	}
 
 	@Override
-	public SqmNavigableReference findNavigableBindingByIdentificationVariable(String identificationVariable) {
+	public SqmNavigableReference findNavigableReferenceByIdentificationVariable(String identificationVariable) {
 		return fromClause.fromElementSpace.getRoot().getIdentificationVariable().equals( identificationVariable )
 				? fromClause.fromElementSpace.getRoot().getNavigableReference()
 				: null;
 	}
 
 	@Override
-	public SqmNavigableReference findNavigableBindingExposingAttribute(String attributeName) {
+	public SqmNavigableReference findNavigableReferenceExposingAttribute(String attributeName) {
 		if ( rootExposesAttribute( attributeName ) ) {
 			return fromClause.fromElementSpace.getRoot().getNavigableReference();
 		}
@@ -145,16 +144,16 @@ public class QuerySpecProcessingStateDmlImpl extends AbstractQuerySpecProcessing
 		}
 
 		@Override
-		public SqmAttributeJoin buildAttributeJoin(
-				SqmAttributeReference attributeBinding,
+		public SqmNavigableJoin buildNavigableJoin(
+				SqmNavigableReference navigableReference,
 				String alias,
 				EntityValuedExpressableType subclassIndicator,
 				SqmJoinType joinType,
 				boolean fetched,
 				boolean canReuseImplicitJoins) {
-			if ( EmbeddedValuedNavigable.class.isInstance( attributeBinding.getReferencedNavigable() ) ) {
-				return super.buildAttributeJoin(
-						attributeBinding,
+			if ( EmbeddedValuedNavigable.class.isInstance( navigableReference.getReferencedNavigable() ) ) {
+				return super.buildNavigableJoin(
+						navigableReference,
 						alias,
 						subclassIndicator,
 						joinType,

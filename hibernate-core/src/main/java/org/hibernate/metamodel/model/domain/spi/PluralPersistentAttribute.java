@@ -8,6 +8,9 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 
 /**
@@ -41,4 +44,10 @@ public interface PluralPersistentAttribute<O,C,E>
 	default Type<E> getElementType() {
 		return getPersistentCollectionDescriptor().getElementDescriptor();
 	}
+
+	@Override
+	SqmPluralAttributeReference createSqmExpression(
+			SqmFrom sourceSqmFrom,
+			SqmNavigableContainerReference containerReference,
+			SqmReferenceCreationContext creationContext);
 }

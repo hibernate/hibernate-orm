@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -205,8 +206,8 @@ public abstract class AbstractEntityDescriptor<J>
 		return bindings;
 	}
 
-	private JoinedTableBinding generateJoinedTableBinding(MappedTableJoin mappedTableJoin, RuntimeModelCreationContext creationContext) {
-		final Table joinedTable = resolveTable( mappedTableJoin.getMappedTable(), creationContext );
+	private JoinedTableBinding generateJoinedTableBinding(MappedTableJoin bootJoinTable, RuntimeModelCreationContext creationContext) {
+		final Table joinedTable = resolveTable( bootJoinTable.getMappedTable(), creationContext );
 
 		// todo (6.0) : resolve "join predicate" as ForeignKey.ColumnMappings
 		//		see note on MappedTableJoin regarding what to expose there
@@ -217,15 +218,9 @@ public abstract class AbstractEntityDescriptor<J>
 				//		the referring table
 				joinedTable,
 				getPrimaryTable(),
-				resolveJoinedTableForeignKey( mappedTableJoin, creationContext ),
-				mappedTableJoin.isOptional()
+				creationContext.getDatabaseObjectResolver().resolveForeignKey( bootJoinTable.getJoinMapping() ),
+				bootJoinTable.isOptional()
 		);
-	}
-
-	private ForeignKey resolveJoinedTableForeignKey(
-			MappedTableJoin bootJoinTable,
-			RuntimeModelCreationContext creationContext) {
-		return creationContext.getDatabaseObjectResolver().resolveForeignKey( bootJoinTable.getJoinMapping() );
 	}
 
 	private static <T> IdentifiableJavaDescriptor<T> resolveJavaTypeDescriptorFromJavaTypeMapping(
@@ -603,7 +598,7 @@ public abstract class AbstractEntityDescriptor<J>
 		return group;
 	}
 
-	private TableReference resolvePrimaryTableReference(SqlAliasBase sqlAliasBase) {
+	protected TableReference resolvePrimaryTableReference(SqlAliasBase sqlAliasBase) {
 		return new TableReference( getPrimaryTable(), sqlAliasBase.generateNewAlias() );
 	}
 
@@ -618,7 +613,7 @@ public abstract class AbstractEntityDescriptor<J>
 		}
 	}
 
-	private TableReferenceJoin createTableReferenceJoin(
+	protected TableReferenceJoin createTableReferenceJoin(
 			JoinedTableBinding joinedTableBinding,
 			TableReference rootTableReference,
 			SqlAliasBase sqlAliasBase,
@@ -841,5 +836,16 @@ public abstract class AbstractEntityDescriptor<J>
 	@Override
 	public Object getVersion(Object object) throws HibernateException {
 		return null;
+	}
+
+	@Override
+	public String toString() {
+		return String.format(
+				Locale.ROOT,
+				"%s(`%s`)@%s",
+				getClass().getSimpleName(),
+				getEntityName(),
+				hashCode()
+		);
 	}
 }

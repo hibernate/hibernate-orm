@@ -21,7 +21,7 @@ public interface FromElementLocator {
 	 *
 	 * @return matching FromElement, or {@code null}
 	 */
-	SqmNavigableReference findNavigableBindingByIdentificationVariable(String identificationVariable);
+	SqmNavigableReference findNavigableReferenceByIdentificationVariable(String identificationVariable);
 
 	/**
 	 * Find a FromElement which exposes the given attribute.  Will search any parent contexts
@@ -30,5 +30,5 @@ public interface FromElementLocator {
 	 *
 	 * @return matching FromElement, or {@code null}
 	 */
-	SqmNavigableReference findNavigableBindingExposingAttribute(String attributeName);
+	SqmNavigableReference findNavigableReferenceExposingAttribute(String attributeName);
 }

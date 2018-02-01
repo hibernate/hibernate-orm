@@ -8,16 +8,18 @@ package org.hibernate.query.sqm.produce.internal;
 
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.query.sqm.StrictJpaComplianceViolation;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
+import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.spi.AliasRegistry;
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
 import org.hibernate.query.sqm.produce.spi.ParsingContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -136,41 +138,68 @@ public class FromElementBuilder {
 		return join;
 	}
 
-	public SqmAttributeJoin buildAttributeJoin(
-			SqmAttributeReference attributeBinding,
+	public SqmNavigableJoin buildNavigableJoin(
+			SqmNavigableReference navigableReference,
 			String alias,
 			EntityValuedExpressableType subclassIndicator,
 			SqmJoinType joinType,
 			boolean fetched,
 			boolean canReuseImplicitJoins) {
-		assert attributeBinding != null;
+		log.tracef( getClass().getSimpleName() + "#buildNavigableJoin : " + navigableReference );
+
+		assert navigableReference != null;
 		assert joinType != null;
-		assert attributeBinding.getSourceReference() != null;
+		assert navigableReference.getSourceReference() != null;
 
-		if ( fetched && canReuseImplicitJoins ) {
-			throw new ParsingException( "Illegal combination of [fetched] and [canReuseImplicitJoins=true] passed to #buildAttributeJoin" );
+		if ( parsingContext.getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
+			if ( !ImplicitAliasGenerator.isImplicitAlias( alias ) ) {
+				if ( SqmSingularAttributeReference.class.isInstance( navigableReference )
+						&& SqmFromExporter.class.isInstance( navigableReference ) ) {
+					if ( fetched ) {
+						throw new StrictJpaComplianceViolation(
+								"Encountered aliased fetch join, but strict JPQL compliance was requested",
+								StrictJpaComplianceViolation.Type.ALIASED_FETCH_JOIN
+						);
+					}
+				}
+			}
 		}
 
-		if ( alias != null && canReuseImplicitJoins ) {
-			throw new ParsingException( "Unexpected combination of [non-null alias] and [canReuseImplicitJoins=true] passed to #buildAttributeJoin" );
-		}
+		boolean reuseImplicitJoins = canReuseImplicitJoins;
 
-		// todo : validate alias & fetched?  JPA at least disallows specifying an alias for fetched associations
+		if ( reuseImplicitJoins ) {
+			if ( fetched ) {
+				log.debugf( "Bypassing implicit join re-use due to reference being fetched : " + navigableReference.getNavigablePath().getFullPath() );
+				reuseImplicitJoins = false;
+			}
+			if ( !ImplicitAliasGenerator.isImplicitAlias( alias ) ) {
+				log.debugf( "Bypassing implicit join re-use due to reference being aliased (" + alias + ") : " + navigableReference
+						.getNavigablePath().getFullPath() );
+				reuseImplicitJoins = false;
+			}
+		}
 
 		if ( alias == null ) {
 			alias = parsingContext.getImplicitAliasGenerator().buildUniqueImplicitAlias();
 			log.debugf(
 					"Generated implicit alias [%s] for attribute join [%s.%s]",
 					alias,
-					attributeBinding.getSourceReference().getExportedFromElement().getIdentificationVariable(),
-					attributeBinding.getReferencedNavigable().getAttributeName()
+					navigableReference.getSourceReference().getExportedFromElement().getIdentificationVariable(),
+					navigableReference.getReferencedNavigable().getNavigableName()
 			);
 		}
 
-		SqmAttributeJoin join = null;
-		if ( canReuseImplicitJoins ) {
-			final SqmNavigableReference navigableBinding = parsingContext.getCachedNavigableBinding( attributeBinding.getSourceReference(), attributeBinding.getReferencedNavigable() );
-			join = (SqmAttributeJoin) NavigableBindingHelper.resolveExportedFromElement( navigableBinding );
+		SqmNavigableJoin join = null;
+		SqmNavigableReference cachedNavigableReference = null;
+		if ( reuseImplicitJoins ) {
+			cachedNavigableReference = parsingContext.getCachedNavigableBinding(
+					navigableReference.getSourceReference(),
+					navigableReference.getReferencedNavigable()
+			);
+			if ( cachedNavigableReference != null ) {
+				join = (SqmNavigableJoin) cachedNavigableReference.getExportedFromElement();
+				log.debugf( "Found re-usable join [%s] : %s", cachedNavigableReference, join );
+			}
 		}
 
 		final EntityDescriptor indicatedSubclassDescriptor = subclassIndicator == null
@@ -178,9 +207,9 @@ public class FromElementBuilder {
 				: subclassIndicator.getEntityDescriptor();
 
 		if ( join == null ) {
-			join = new SqmAttributeJoin(
-					attributeBinding.getSourceReference().getExportedFromElement(),
-					attributeBinding,
+			join = new SqmNavigableJoin(
+					navigableReference.getSourceReference().getExportedFromElement(),
+					navigableReference,
 					parsingContext.makeUniqueIdentifier(),
 					alias,
 					indicatedSubclassDescriptor,
@@ -188,21 +217,27 @@ public class FromElementBuilder {
 					fetched
 			);
 
-			if ( canReuseImplicitJoins ) {
-				parsingContext.cacheNavigableBinding( attributeBinding );
+			if ( reuseImplicitJoins ) {
+				parsingContext.cacheNavigableBinding( navigableReference );
+				if ( cachedNavigableReference != null ) {
+					cachedNavigableReference.injectExportedFromElement( join );
+				}
 			}
 
 			parsingContext.registerFromElementByUniqueId( join );
 			registerAlias( join );
 
-			if ( !EmbeddedValuedNavigable.class.isInstance( attributeBinding.getReferencedNavigable() ) ) {
+			if ( !EmbeddedValuedNavigable.class.isInstance( navigableReference.getReferencedNavigable() ) ) {
 				// it's a composite-valued navigable, create a join but do not register it
 				//		as
 
 				// unless this is a collection element or index...
 
-				attributeBinding.getSourceReference().getExportedFromElement().getContainingSpace().addJoin( join );
+				navigableReference.getSourceReference().getExportedFromElement().getContainingSpace().addJoin( join );
 			}
+		}
+		else {
+			navigableReference.injectExportedFromElement( join );
 		}
 
 		return join;

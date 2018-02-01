@@ -75,7 +75,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmUpperFunction;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
@@ -557,7 +557,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public Object visitQualifiedAttributeJoinFromElement(SqmAttributeJoin joinedFromElement) {
+	public Object visitQualifiedAttributeJoinFromElement(SqmNavigableJoin joinedFromElement) {
 		final TableGroup existing = fromClauseIndex.findResolvedTableGroup( joinedFromElement );
 		if ( existing != null ) {
 			return existing;

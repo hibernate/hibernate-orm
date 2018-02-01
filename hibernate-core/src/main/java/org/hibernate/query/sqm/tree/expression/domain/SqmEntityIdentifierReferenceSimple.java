@@ -8,9 +8,14 @@ package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -99,4 +104,35 @@ public class SqmEntityIdentifierReferenceSimple
 	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
 		throw new NotYetImplementedFor6Exception(  );
 	}
+
+	@Override
+	public SemanticPathPart resolvePathPart(
+			String name,
+			String currentContextKey,
+			boolean isTerminal,
+			Navigable.SqmReferenceCreationContext context) {
+		throw new SemanticException( "Basic identifier cannot be rde-referenced" );
+	}
+
+	@Override
+	public SqmRestrictedCollectionElementReference resolveIndexedAccess(
+			SqmExpression selector,
+			String currentContextKey,
+			boolean isTerminal,
+			Navigable.SqmReferenceCreationContext context) {
+		throw new UnsupportedOperationException(  );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo (6.0) : this is probably not right depending how we intend the logical join to element/index table
+	@Override
+	public SqmFrom getExportedFromElement() {
+		return getSourceReference().getExportedFromElement();
+	}
+
+	@Override
+	public void injectExportedFromElement(SqmFrom sqmFrom) {
+		getSourceReference().injectExportedFromElement( sqmFrom );
+	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }

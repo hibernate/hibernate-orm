@@ -31,7 +31,6 @@ import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
-import org.hibernate.testing.junit5.FailureExpected;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.endsWith;
@@ -176,7 +175,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		);
 
 		final AbstractSqmCollectionIndexReference mapKeyPathExpression = (AbstractSqmCollectionIndexReference) statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode();
-		final PluralPersistentAttribute attribute = mapKeyPathExpression.getPluralAttributeBinding().getReferencedNavigable();
+		final PluralPersistentAttribute attribute = mapKeyPathExpression.getPluralAttributeReference().getReferencedNavigable();
 		assertThat( attribute.getPersistentCollectionDescriptor().getCollectionClassification(), is( collectionClassification ) );
 		assertThat( attribute.getPersistentCollectionDescriptor().getIndexDescriptor().getClassification(), is( indexClassification) );
 		assertThat( mapKeyPathExpression.getExpressableType(), sameInstance( attribute.getPersistentCollectionDescriptor().getIndexDescriptor() ) );

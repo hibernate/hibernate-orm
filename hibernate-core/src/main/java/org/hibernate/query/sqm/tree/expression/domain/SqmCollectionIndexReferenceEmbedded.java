@@ -28,7 +28,7 @@ public class SqmCollectionIndexReferenceEmbedded
 
 	@Override
 	public SqmFrom getExportedFromElement() {
-		return getPluralAttributeBinding().getExportedFromElement();
+		return getPluralAttributeReference().getExportedFromElement();
 	}
 
 	@Override
@@ -43,6 +43,6 @@ public class SqmCollectionIndexReferenceEmbedded
 
 	@Override
 	public Class getJavaType() {
-		return getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionDescriptor().getIndexDescriptor().getJavaType();
+		return getPluralAttributeReference().getReferencedNavigable().getPersistentCollectionDescriptor().getIndexDescriptor().getJavaType();
 	}
 }

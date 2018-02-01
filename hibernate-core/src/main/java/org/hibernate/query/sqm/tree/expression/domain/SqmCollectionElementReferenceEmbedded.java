@@ -27,7 +27,7 @@ public class SqmCollectionElementReferenceEmbedded
 
 	@Override
 	public SqmFrom getExportedFromElement() {
-		return getPluralAttributeBinding().getExportedFromElement();
+		return getPluralAttributeReference().getExportedFromElement();
 	}
 
 	@Override

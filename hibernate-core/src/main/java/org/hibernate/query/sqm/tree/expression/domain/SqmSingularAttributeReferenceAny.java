@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 
 /**
  * @author Steve Ebersole
@@ -20,7 +20,7 @@ public class SqmSingularAttributeReferenceAny extends AbstractSqmSingularAttribu
 		super( navigableContainerReference, referencedNavigable );
 	}
 
-	public SqmSingularAttributeReferenceAny(SqmAttributeJoin fromElement) {
+	public SqmSingularAttributeReferenceAny(SqmNavigableJoin fromElement) {
 		super( fromElement );
 	}
 

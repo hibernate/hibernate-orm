@@ -13,7 +13,6 @@ import java.util.Map;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.query.sqm.produce.internal.hql.navigable.TreatedNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmDowncast;
 
 /**
@@ -76,5 +75,10 @@ public abstract class AbstractSqmNavigableReference implements SqmNavigableRefer
 		else {
 			return downcastMap.values();
 		}
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + '@' + Integer.toHexString( System.identityHashCode( this ) ) + "(" + getNavigablePath().getFullPath() + ")";
 	}
 }

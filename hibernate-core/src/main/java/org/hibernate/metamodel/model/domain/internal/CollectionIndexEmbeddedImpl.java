@@ -19,6 +19,11 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReferenceEmbedded;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
@@ -73,5 +78,13 @@ public class CollectionIndexEmbeddedImpl<J>
 	@Override
 	public List<Column> getColumns() {
 		return columns;
+	}
+
+	@Override
+	public SqmNavigableReference createSqmExpression(
+			SqmFrom sourceSqmFrom,
+			SqmNavigableContainerReference containerReference,
+			SqmReferenceCreationContext creationContext) {
+		return new SqmCollectionIndexReferenceEmbedded( (SqmPluralAttributeReference) containerReference );
 	}
 }

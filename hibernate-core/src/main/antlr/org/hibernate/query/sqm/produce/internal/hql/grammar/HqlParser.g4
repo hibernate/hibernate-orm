@@ -121,12 +121,18 @@ selectClause
 selectionList
 	: selection (COMMA selection)*
 	;
-
 selection
 	// I have noticed that without this predicate, Antlr will sometimes
 	// interpret `select a.b from Something ...` as `from` being the
 	// select-expression alias
-	: (dynamicInstantiation | jpaSelectObjectSyntax | expression) (resultIdentifier)?
+	: selectExpression (resultIdentifier)?
+	;
+
+selectExpression
+	:	dynamicInstantiation
+	|	jpaSelectObjectSyntax
+	|	mapEntrySelection
+	|	expression
 	;
 
 resultIdentifier
@@ -134,11 +140,10 @@ resultIdentifier
 	| IDENTIFIER
 	;
 
-//selectExpression
-//	:	dynamicInstantiation
-//	|	jpaSelectObjectSyntax
-//	|	expression
-//	;
+
+mapEntrySelection
+	: ENTRY LEFT_PAREN path RIGHT_PAREN
+	;
 
 dynamicInstantiation
 	: NEW dynamicInstantiationTarget LEFT_PAREN dynamicInstantiationArgs RIGHT_PAREN
@@ -148,52 +153,6 @@ dynamicInstantiationTarget
 	: LIST
 	| MAP
 	| dotIdentifierSequence
-	;
-
-dotIdentifierSequence
-	: identifier (DOT identifier)*
-	;
-
-// todo (6.0) : there is a lot of complexity here regarding certain types of paths
-//		- e.g. ENTRY | KEY | VALUE | ELEMENTS are all "collection qualifiers" refering to
-//			specific "parts" of the collection (Map.Entry, etc).  Some can be limited by
-//			usage - e.g. I believe ENTRY(someMapReference) can only be used in the SELECT clause
-//			according to JPA.  If we also believe that limitatation for HQL (I can see
-// 			e.g. allowing to use this to define a "tuple") then this can be moved into
-//			the selection rule to help clarify this rule and pathRoot
-path
-	// a SimplePath may be any number of things like:
-	//		* Class FQN
-	//		* Java constant (enum/static)
-	//		* a simple dotIdentifierSequence-style path
-	// :(
-	: dotIdentifierSequence												# SimplePath
-	// a Map.Entry cannot be further dereferenced
-	| ENTRY LEFT_PAREN pathAsMap RIGHT_PAREN							# MapEntryPath
-	// only one index-access is allowed per path
-	| path LEFT_BRACKET expression RIGHT_BRACKET (pathTerminal)?		# IndexedPath
-	| pathRoot (pathTerminal)?											# CompoundPath
-	;
-
-pathRoot
-	: identifier																			# SimplePathRoot
-	| TREAT LEFT_PAREN dotIdentifierSequence AS dotIdentifierSequence RIGHT_PAREN			# TreatedPathRoot
-	| KEY LEFT_PAREN pathAsMap RIGHT_PAREN													# MapKeyPathRoot
-	| (VALUE | ELEMENTS) LEFT_PAREN collectionReference RIGHT_PAREN				   			# CollectionValuePathRoot
-	;
-
-pathTerminal
-	: (DOT identifier)+
-	;
-
-collectionReference
-// having as a separate rule allows us to validate that the path indeed resolves to a Collection attribute
-	: path
-	;
-
-pathAsMap
-// having as a separate rule allows us to validate that the path indeed resolves to a Map attribute
-	: path
 	;
 
 dynamicInstantiationArgs
@@ -211,6 +170,64 @@ dynamicInstantiationArgExpression
 
 jpaSelectObjectSyntax
 	:	OBJECT LEFT_PAREN identifier RIGHT_PAREN
+	;
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Path structures
+
+dotIdentifierSequence
+	: identifier (DOT dotIdentifierSequence)?
+	;
+
+/**
+ * A path which needs to be resolved semantically
+ */
+path
+	: syntacticNavigablePath
+	| nonSyntacticNavigablePath
+	;
+
+/**
+ * Rule for path case where we syntactically know that a path is a
+ * navigable path because it starts with one of the special cases:
+ *
+ * 		* TREAT
+ * 		* ELEMENTS or VALUE (collection)
+ * 		* KEY (map)
+ */
+syntacticNavigablePath
+	: (treatedNavigablePath | collectionElementNavigablePath | mapKeyNavigablePath)
+	;
+
+/**
+ * The main path rule.  Recognition for all normal path structures including
+ * class, field and enum references as well as navigable paths.
+ *
+ * NOTE : this rule does *not* cover the special syntactic navigable path
+ * cases: TREAT, KEY, ELEMENTS, VALUES
+ */
+nonSyntacticNavigablePath
+	: dotIdentifierSequence (semanticNavigablePathFragment)?
+	;
+
+treatedNavigablePath
+	: TREAT LEFT_PAREN path AS dotIdentifierSequence RIGHT_PAREN ( (AS identifier) | (DOT nonSyntacticNavigablePath) )?
+	;
+
+
+collectionElementNavigablePath
+	: (VALUE | ELEMENTS) LEFT_PAREN path RIGHT_PAREN (DOT nonSyntacticNavigablePath)?
+	;
+
+mapKeyNavigablePath
+	: KEY LEFT_PAREN path RIGHT_PAREN (DOT nonSyntacticNavigablePath)?
+	;
+
+semanticNavigablePathFragment
+	: LEFT_BRACKET expression RIGHT_BRACKET (DOT nonSyntacticNavigablePath)?
 	;
 
 
@@ -330,6 +347,9 @@ expression
 	| expression ASTERISK expression			# MultiplicationExpression
 	| expression SLASH expression				# DivisionExpression
 	| expression PERCENT expression				# ModuloExpression
+	// todo (6.0) : should these unary plus/minus rules only apply to literals?
+	//		if so, move the MINUS / PLUS recognition to the `literal` rule
+	//		specificcally for numeric literals
 	| MINUS expression							# UnaryMinusExpression
 	| PLUS expression							# UnaryPlusExpression
 	| caseStatement								# CaseExpression

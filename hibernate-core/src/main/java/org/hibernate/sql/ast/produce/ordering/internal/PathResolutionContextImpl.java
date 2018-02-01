@@ -47,13 +47,13 @@ public class PathResolutionContextImpl implements ResolutionContext, FromElement
 	}
 
 	@Override
-	public SqmNavigableReference findNavigableBindingByIdentificationVariable(String identificationVariable) {
+	public SqmNavigableReference findNavigableReferenceByIdentificationVariable(String identificationVariable) {
 		// order-by fragments should generally not reference identification variables
 		throw new SemanticException( "@javax.persistence.OrderBy fragments should no reference identification variable" );
 	}
 
 	@Override
-	public SqmNavigableReference findNavigableBindingExposingAttribute(String attributeName) {
+	public SqmNavigableReference findNavigableReferenceExposingAttribute(String attributeName) {
 		assert StringHelper.isNotEmpty( attributeName );
 
 		// validate that the attribute name is defined by the from-element

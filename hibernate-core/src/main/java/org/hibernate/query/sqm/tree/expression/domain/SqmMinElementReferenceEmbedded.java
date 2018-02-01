@@ -29,7 +29,7 @@ public class SqmMinElementReferenceEmbedded
 
 	@Override
 	public CollectionElement getExpressableType() {
-		return getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor();
+		return getPluralAttributeReference().getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor();
 	}
 
 	@Override

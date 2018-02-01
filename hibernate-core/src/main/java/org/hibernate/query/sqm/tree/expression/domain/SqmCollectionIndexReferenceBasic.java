@@ -18,7 +18,7 @@ public class SqmCollectionIndexReferenceBasic extends AbstractSqmCollectionIndex
 
 	@Override
 	public BasicCollectionIndex getReferencedNavigable() {
-		return (BasicCollectionIndex) getPluralAttributeBinding().getReferencedNavigable()
+		return (BasicCollectionIndex) getPluralAttributeReference().getReferencedNavigable()
 				.getPersistentCollectionDescriptor()
 				.getIndexDescriptor();
 	}

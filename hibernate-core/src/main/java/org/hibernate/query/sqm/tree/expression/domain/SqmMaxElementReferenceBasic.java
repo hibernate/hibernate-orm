@@ -36,17 +36,17 @@ public class SqmMaxElementReferenceBasic
 
 	@Override
 	public String asLoggableText() {
-		return "MAXELEMENT( " + getPluralAttributeBinding().asLoggableText() + ")";
+		return "MAXELEMENT( " + getPluralAttributeReference().asLoggableText() + ")";
 	}
 
 	@Override
 	public SqmPluralAttributeReference getSourceReference() {
-		return  getPluralAttributeBinding();
+		return  getPluralAttributeReference();
 	}
 
 	@Override
 	public BasicCollectionElement getReferencedNavigable() {
-		return (BasicCollectionElement) getPluralAttributeBinding().getReferencedNavigable()
+		return (BasicCollectionElement) getPluralAttributeReference().getReferencedNavigable()
 				.getPersistentCollectionDescriptor()
 				.getElementDescriptor();
 	}

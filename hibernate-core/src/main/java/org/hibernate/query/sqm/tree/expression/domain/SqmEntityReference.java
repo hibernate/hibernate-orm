@@ -7,8 +7,12 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
@@ -135,4 +139,36 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 		return containerReference;
 	}
 
+	@Override
+	public SemanticPathPart resolvePathPart(
+			String name,
+			String currentContextKey,
+			boolean isTerminal,
+			Navigable.SqmReferenceCreationContext context) {
+		if ( getExportedFromElement() == null ) {
+			context.getNavigableJoinBuilder().buildNavigableJoinIfNecessary(
+					this,
+					false
+			);
+		}
+		final SqmNavigableReference navigableReference = entityReference.getEntityDescriptor()
+				.findNavigable( name )
+				.createSqmExpression( exportedFromElement, this, context );
+		if ( context.getNavigableJoinBuilder().isJoinable( navigableReference ) ) {
+			context.getNavigableJoinBuilder().buildNavigableJoinIfNecessary(
+					navigableReference,
+					isTerminal
+			);
+		}
+		return navigableReference;
+	}
+
+	@Override
+	public SqmRestrictedCollectionElementReference resolveIndexedAccess(
+			SqmExpression selector,
+			String currentContextKey,
+			boolean isTerminal,
+			Navigable.SqmReferenceCreationContext context) {
+		throw new SemanticException( "Entity reference cannot be index-accessed" );
+	}
 }

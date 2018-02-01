@@ -9,8 +9,9 @@ package org.hibernate.query.sqm.tree.expression.domain;
 /**
  * @author Steve Ebersole
  */
-public class SqmCollectionElementReferenceBasic extends AbstractSqmCollectionElementReference implements
-		SqmCollectionElementReference {
+public class SqmCollectionElementReferenceBasic
+		extends AbstractSqmCollectionElementReference
+		implements SqmCollectionElementReference {
 	public SqmCollectionElementReferenceBasic(SqmPluralAttributeReference pluralAttributeBinding) {
 		super( pluralAttributeBinding );
 	}

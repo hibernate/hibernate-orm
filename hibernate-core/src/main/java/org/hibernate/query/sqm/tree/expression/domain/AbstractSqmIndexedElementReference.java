@@ -32,12 +32,12 @@ public abstract class AbstractSqmIndexedElementReference
 
 	@Override
 	public SqmPluralAttributeReference getSourceReference() {
-		return getPluralAttributeBinding();
+		return getPluralAttributeReference();
 	}
 
 	@Override
 	public Navigable getReferencedNavigable() {
-		return getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor();
+		return getPluralAttributeReference().getReferencedNavigable().getPersistentCollectionDescriptor().getElementDescriptor();
 	}
 
 	@Override
@@ -62,20 +62,20 @@ public abstract class AbstractSqmIndexedElementReference
 
 	@Override
 	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
-		return getPluralAttributeBinding();
+		return getPluralAttributeReference();
 	}
 
 	@Override
 	public String getUniqueIdentifier() {
 		// for most element classifications, the uid should point to the "collection table"...
-		return getPluralAttributeBinding().getUniqueIdentifier();
+		return getPluralAttributeReference().getUniqueIdentifier();
 	}
 
 	@Override
 	public String getIdentificationVariable() {
 		// for most element classifications, the "identification variable" (alias)
 		// 		associated with elements is the identification variable for the collection reference
-		return getPluralAttributeBinding().getIdentificationVariable();
+		return getPluralAttributeReference().getIdentificationVariable();
 	}
 
 	@Override

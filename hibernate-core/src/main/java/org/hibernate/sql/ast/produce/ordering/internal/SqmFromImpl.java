@@ -6,18 +6,24 @@
  */
 package org.hibernate.sql.ast.produce.ordering.internal;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.ParsingContext;
-import org.hibernate.query.sqm.tree.expression.domain.AbstractSqmNavigableReference;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
+import org.hibernate.query.sqm.tree.from.SqmDowncast;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
@@ -89,7 +95,8 @@ public class SqmFromImpl implements SqmFrom {
 		);
 	}
 
-	private class SqmNavigableReferenceImpl extends AbstractSqmNavigableReference {
+	private class SqmNavigableReferenceImpl implements SqmNavigableContainerReference {
+		private final NavigablePath navigablePath = new NavigablePath( collectionDescriptor.getNavigableRole().getFullPath() );
 
 		@Override
 		public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
@@ -150,23 +157,68 @@ public class SqmFromImpl implements SqmFrom {
 		}
 
 		@Override
-		public Navigable getReferencedNavigable() {
-			return null;
+		public NavigableContainer getReferencedNavigable() {
+			return collectionDescriptor;
 		}
 
 		@Override
 		public NavigablePath getNavigablePath() {
-			return null;
+			return navigablePath;
+		}
+
+		@Override
+		public SqmNavigableReference treatAs(EntityDescriptor target) {
+			throw new UnsupportedOperationException(  );
+		}
+
+		@Override
+		public void addDowncast(SqmDowncast downcast) {
+			throw new UnsupportedOperationException(  );
+		}
+
+		@Override
+		public Collection<SqmDowncast> getDowncasts() {
+			return Collections.emptyList();
 		}
 
 		@Override
 		public PersistenceType getPersistenceType() {
-			return null;
+			return collectionDescriptor.getElementDescriptor().getPersistenceType();
 		}
 
 		@Override
 		public Class getJavaType() {
-			return null;
+			return collectionDescriptor.getJavaType();
+		}
+
+
+		@Override
+		public SemanticPathPart resolvePathPart(
+				String name,
+				String currentContextKey,
+				boolean isTerminal,
+				Navigable.SqmReferenceCreationContext context) {
+			final Navigable navigable = collectionDescriptor.findNavigable( name );
+			return navigable.createSqmExpression( SqmFromImpl.this, this, context );
+		}
+
+		@Override
+		public SqmRestrictedCollectionElementReference resolveIndexedAccess(
+				SqmExpression selector,
+				String currentContextKey,
+				boolean isTerminal,
+				Navigable.SqmReferenceCreationContext context) {
+			throw new UnsupportedOperationException(  );
+		}
+
+		@Override
+		public SqmFrom getExportedFromElement() {
+			return SqmFromImpl.this;
+		}
+
+		@Override
+		public void injectExportedFromElement(SqmFrom sqmFrom) {
+			throw new UnsupportedOperationException(  );
 		}
 	}
 }

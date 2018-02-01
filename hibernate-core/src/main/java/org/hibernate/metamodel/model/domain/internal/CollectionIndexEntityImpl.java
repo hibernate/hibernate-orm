@@ -20,6 +20,11 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionIndexReferenceEntity;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
@@ -94,6 +99,14 @@ public class CollectionIndexEntityImpl<J>
 	@Override
 	public EntityJavaDescriptor<J> getJavaTypeDescriptor() {
 		return getEntityDescriptor().getJavaTypeDescriptor();
+	}
+
+	@Override
+	public SqmNavigableReference createSqmExpression(
+			SqmFrom sourceSqmFrom,
+			SqmNavigableContainerReference containerReference,
+			SqmReferenceCreationContext creationContext) {
+		return new SqmCollectionIndexReferenceEntity( (SqmPluralAttributeReference) containerReference );
 	}
 
 	@Override

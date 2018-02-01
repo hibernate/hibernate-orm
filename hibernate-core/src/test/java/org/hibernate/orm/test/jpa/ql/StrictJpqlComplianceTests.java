@@ -40,8 +40,14 @@ public class StrictJpqlComplianceTests extends LenientJpqlComplianceTests {
 		assertThat( violation.getType(), is( getCurrentViolationBeingChecked() ) );
 	}
 
-	@Override
 	@Test
+	@Override
+	public void testAliasedFetchJoin() {
+		super.testAliasedFetchJoin();
+	}
+
+	@Test
+	@Override
 	@FailureExpected( "Need to add strict-compliance checking for indexed element access" )
 	public void testIndexedElementReference() {
 		super.testIndexedElementReference();

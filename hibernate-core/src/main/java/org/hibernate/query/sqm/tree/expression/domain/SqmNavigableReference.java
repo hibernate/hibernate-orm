@@ -11,8 +11,10 @@ import java.util.Collection;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmDowncast;
+import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
 
 /**
@@ -27,7 +29,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
  *
  * @author Steve Ebersole
  */
-public interface SqmNavigableReference extends SqmExpression, NavigableReferenceInfo {
+public interface SqmNavigableReference extends SqmExpression, NavigableReferenceInfo, SqmFromExporter, SemanticPathPart {
 	// todo (6.0) : does NavigableReferenceInfo serve any purpose?
 	//		considering that NavigableReference is not really part of the SQL AST
 	//		not sure of the benefit of having a contract that serves to expose the

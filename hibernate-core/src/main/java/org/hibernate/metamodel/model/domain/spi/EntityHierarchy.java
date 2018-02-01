@@ -46,6 +46,8 @@ public interface EntityHierarchy {
 	 */
 	NaturalIdDescriptor getNaturalIdDescriptor();
 
+	// todo (6.0) : remove parameterized types on SPIs
+
 	/**
 	 * Retrieve the descriptor for the hierarchy's discriminator, if one.  May
 	 * return {@code null}.

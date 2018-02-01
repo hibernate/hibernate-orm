@@ -10,10 +10,12 @@ import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.query.sqm.produce.path.spi.NavigableJoinBuilder;
+import org.hibernate.query.sqm.produce.spi.ParsingContext;
+import org.hibernate.query.sqm.produce.spi.QuerySpecProcessingState;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
@@ -73,10 +75,9 @@ public interface Navigable<T> extends DomainType<T> {
 	}
 
 	interface SqmReferenceCreationContext {
-		// org.hibernate.query.sqm.produce.spi.ParsingContext?
-		// org.hibernate.query.sqm.produce.spi.ResolutionContext?
-		// a new `SqmNodeCreationContext`?
-		TableGroupResolver getTableGroupResolver();
+		ParsingContext getParsingContext();
+		QuerySpecProcessingState getQuerySpecProcessingState();
+		NavigableJoinBuilder getNavigableJoinBuilder();
 	}
 
 	default QueryResult createQueryResult(

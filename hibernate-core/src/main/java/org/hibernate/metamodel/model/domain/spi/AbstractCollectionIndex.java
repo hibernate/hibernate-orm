@@ -7,9 +7,15 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.JoinType;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.results.spi.QueryResult;
+import org.hibernate.sql.results.spi.QueryResultCreationContext;
 
 /**
  * @author Steve Ebersole

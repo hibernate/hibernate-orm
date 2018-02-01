@@ -21,39 +21,39 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class SqmAttributeJoin
+public class SqmNavigableJoin
 		extends AbstractSqmJoin
 		implements SqmQualifiedJoin {
-	private static final Logger log = Logger.getLogger( SqmAttributeJoin.class );
+	private static final Logger log = Logger.getLogger( SqmNavigableJoin.class );
 
 	private final SqmFrom lhs;
-	private final SqmAttributeReference attributeBinding;
+	private final SqmNavigableReference navigableReference;
 	private final boolean fetched;
 
 	private SqmPredicate onClausePredicate;
 
-	public SqmAttributeJoin(
+	public SqmNavigableJoin(
 			SqmFrom lhs,
-			SqmAttributeReference attributeBinding,
+			SqmNavigableReference navigableReference,
 			String uid,
 			String alias,
 			EntityDescriptor intrinsicSubclassIndicator,
 			SqmJoinType joinType,
 			boolean fetched) {
 		super(
-				attributeBinding.getSourceReference().getExportedFromElement().getContainingSpace(),
+				navigableReference.getSourceReference().getExportedFromElement().getContainingSpace(),
 				uid,
 				alias,
-				attributeBinding,
+				navigableReference,
 				intrinsicSubclassIndicator,
 				joinType
 		);
 		this.lhs = lhs;
 
-		this.attributeBinding = attributeBinding;
+		this.navigableReference = navigableReference;
 		this.fetched = fetched;
 
-		attributeBinding.injectExportedFromElement( this );
+		navigableReference.injectExportedFromElement( this );
 	}
 
 	public SqmFrom getLhs() {
@@ -61,7 +61,7 @@ public class SqmAttributeJoin
 	}
 
 	public SqmAttributeReference getAttributeReference() {
-		return attributeBinding;
+		return (SqmAttributeReference) navigableReference;
 	}
 
 	@Override
@@ -95,6 +95,6 @@ public class SqmAttributeJoin
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return attributeBinding.getJavaTypeDescriptor();
+		return navigableReference.getJavaTypeDescriptor();
 	}
 }

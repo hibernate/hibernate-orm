@@ -16,11 +16,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
@@ -51,7 +50,7 @@ public class FromClauseIndex implements TableGroupResolver {
 	private final Map<NavigableReference,String> uidBySourceNavigableReference = new HashMap<>();
 	private final Map<String,SqmFrom> sqmFromByUid = new HashMap<>();
 	private final Map<SqmFrom, TableGroup> tableGroupBySqmFromXref = new HashMap<>();
-	private Map<String, List<SqmAttributeJoin>> sqmFetchesByParentUid;
+	private Map<String, List<SqmNavigableJoin>> sqmFetchesByParentUid;
 
 	@Override
 	public TableGroup resolveTableGroup(String uid) {
@@ -89,8 +88,8 @@ public class FromClauseIndex implements TableGroupResolver {
 			);
 		}
 
-		if ( fromElement instanceof SqmAttributeJoin ) {
-			final SqmAttributeJoin sqmAttributeJoin = (SqmAttributeJoin) fromElement;
+		if ( fromElement instanceof SqmNavigableJoin ) {
+			final SqmNavigableJoin sqmAttributeJoin = (SqmNavigableJoin) fromElement;
 			if ( sqmAttributeJoin.isFetched() ) {
 				final String fetchParentUid = sqmAttributeJoin.getNavigableReference().getNavigableContainerReferenceInfo().getUniqueIdentifier();
 
@@ -98,7 +97,7 @@ public class FromClauseIndex implements TableGroupResolver {
 					sqmFetchesByParentUid = new HashMap<>();
 				}
 
-				List<SqmAttributeJoin> fetches = sqmFetchesByParentUid.computeIfAbsent(
+				List<SqmNavigableJoin> fetches = sqmFetchesByParentUid.computeIfAbsent(
 						fetchParentUid,
 						k -> new ArrayList<>()
 				);
@@ -129,12 +128,12 @@ public class FromClauseIndex implements TableGroupResolver {
 		return tableGroupBySqmFromXref.containsKey( fromElement );
 	}
 
-	public List<SqmAttributeJoin> findFetchesByParentUniqueIdentifier(String uniqueIdentifier) {
+	public List<SqmNavigableJoin> findFetchesByParentUniqueIdentifier(String uniqueIdentifier) {
 		if ( sqmFetchesByParentUid == null ) {
 			return Collections.emptyList();
 		}
 
-		final List<SqmAttributeJoin> fetches = sqmFetchesByParentUid.get( uniqueIdentifier );
+		final List<SqmNavigableJoin> fetches = sqmFetchesByParentUid.get( uniqueIdentifier );
 		if ( fetches == null ) {
 			return Collections.emptyList();
 		}
@@ -144,7 +143,7 @@ public class FromClauseIndex implements TableGroupResolver {
 		}
 	}
 
-	private boolean noDuplicates(List<SqmAttributeJoin> fetches, String uniqueIdentifier) {
+	private boolean noDuplicates(List<SqmNavigableJoin> fetches, String uniqueIdentifier) {
 		final Set<String> uniqueUids = fetches.stream()
 				.map( SqmFrom::getUniqueIdentifier )
 				.collect( Collectors.toSet() );

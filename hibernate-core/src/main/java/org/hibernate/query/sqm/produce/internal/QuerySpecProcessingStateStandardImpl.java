@@ -60,12 +60,12 @@ public class QuerySpecProcessingStateStandardImpl extends AbstractQuerySpecProce
 	}
 
 	@Override
-	public SqmNavigableReference findNavigableBindingByIdentificationVariable(String identificationVariable) {
+	public SqmNavigableReference findNavigableReferenceByIdentificationVariable(String identificationVariable) {
 		return fromElementBuilder.getAliasRegistry().findFromElementByAlias( identificationVariable );
 	}
 
 	@Override
-	public SqmNavigableReference findNavigableBindingExposingAttribute(String name) {
+	public SqmNavigableReference findNavigableReferenceExposingAttribute(String name) {
 		SqmNavigableReference found = null;
 		for ( SqmFromElementSpace space : fromClause.getFromElementSpaces() ) {
 			if ( definesAttribute( space.getRoot().getNavigableReference(), name ) ) {
@@ -88,7 +88,7 @@ public class QuerySpecProcessingStateStandardImpl extends AbstractQuerySpecProce
 		if ( found == null ) {
 			if ( getContainingQueryState() != null ) {
 				log.debugf( "Unable to resolve unqualified attribute [%s] in local SqmFromClause; checking containingQueryState" );
-				found = getContainingQueryState().findNavigableBindingExposingAttribute( name );
+				found = getContainingQueryState().findNavigableReferenceExposingAttribute( name );
 			}
 		}
 

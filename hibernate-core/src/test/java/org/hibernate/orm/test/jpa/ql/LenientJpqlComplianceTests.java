@@ -122,6 +122,14 @@ public class LenientJpqlComplianceTests extends BaseSqmUnitTest {
 				"select value(b) from EntityOfSets e join e.setOfBasics b",
 				VALUE_FUNCTION_ON_NON_MAP
 		);
+		test(
+				"select elements(b) from EntityOfLists e join e.listOfBasics b",
+				VALUE_FUNCTION_ON_NON_MAP
+		);
+		test(
+				"select elements(b) from EntityOfSets e join e.setOfBasics b",
+				VALUE_FUNCTION_ON_NON_MAP
+		);
 	}
 
 	@Test

@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
@@ -111,8 +111,8 @@ public class FetchGraphBuilder {
 		);
 		final TableGroup parentTableGroup = builder.getFromClauseIndex().resolveTableGroup( parentUid );
 
-		final List<SqmAttributeJoin> fetchedJoins = builder.getFromClauseIndex().findFetchesByParentUniqueIdentifier( parentUid );
-		for ( SqmAttributeJoin fetchedJoin : fetchedJoins ) {
+		final List<SqmNavigableJoin> fetchedJoins = builder.getFromClauseIndex().findFetchesByParentUniqueIdentifier( parentUid );
+		for ( SqmNavigableJoin fetchedJoin : fetchedJoins ) {
 			assert fetchedJoin.isFetched();
 
 			final String fetchedAttributeName = fetchedJoin.getAttributeReference()

@@ -162,7 +162,7 @@ public class PluralPersistentAttributeImpl implements PluralPersistentAttribute 
 	}
 
 	@Override
-	public SqmNavigableReference createSqmExpression(
+	public SqmPluralAttributeReference createSqmExpression(
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
 			SqmReferenceCreationContext creationContext) {

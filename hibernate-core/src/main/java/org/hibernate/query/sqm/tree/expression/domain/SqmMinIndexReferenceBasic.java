@@ -21,7 +21,7 @@ public class SqmMinIndexReferenceBasic
 
 	@Override
 	public ExpressableType getExpressableType() {
-		return getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionDescriptor().getIndexDescriptor();
+		return getPluralAttributeReference().getReferencedNavigable().getPersistentCollectionDescriptor().getIndexDescriptor();
 	}
 
 	@Override
@@ -36,6 +36,6 @@ public class SqmMinIndexReferenceBasic
 
 	@Override
 	public String asLoggableText() {
-		return "MININDEX(" + getPluralAttributeBinding().asLoggableText() + ")";
+		return "MININDEX(" + getPluralAttributeReference().asLoggableText() + ")";
 	}
 }

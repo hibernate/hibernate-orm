@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -26,7 +26,7 @@ public abstract class AbstractSqmAttributeReference<A extends PersistentAttribut
 	private final A attribute;
 	private final NavigablePath navigablePath;
 
-	private SqmAttributeJoin join;
+	private SqmNavigableJoin join;
 
 	public AbstractSqmAttributeReference(SqmNavigableContainerReference sourceReference, A attribute) {
 		if ( sourceReference == null ) {
@@ -43,7 +43,7 @@ public abstract class AbstractSqmAttributeReference<A extends PersistentAttribut
 	}
 
 	@SuppressWarnings("unchecked")
-	public AbstractSqmAttributeReference(SqmAttributeJoin join) {
+	public AbstractSqmAttributeReference(SqmNavigableJoin join) {
 		this(
 				join.getNavigableReference().getSourceReference(),
 				(A) join.getAttributeReference().getReferencedNavigable()
@@ -54,9 +54,11 @@ public abstract class AbstractSqmAttributeReference<A extends PersistentAttribut
 	@Override
 	public void injectExportedFromElement(SqmFrom attributeJoin) {
 		if ( this.join != null && this.join != attributeJoin ) {
-			throw new IllegalArgumentException( "Attempting to create multiple SqmFrom references for a single AttributeBinding" );
+			throw new IllegalArgumentException(
+					"Attempting to create multiple SqmFrom references for a single attribute reference : " + getNavigablePath().getFullPath()
+			);
 		}
-		this.join = (SqmAttributeJoin) attributeJoin;
+		this.join = (SqmNavigableJoin) attributeJoin;
 	}
 
 	@Override

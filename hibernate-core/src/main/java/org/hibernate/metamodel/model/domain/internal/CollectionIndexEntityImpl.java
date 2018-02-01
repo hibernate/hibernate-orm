@@ -47,7 +47,7 @@ public class CollectionIndexEntityImpl<J>
 
 	public CollectionIndexEntityImpl(
 			PersistentCollectionDescriptor persister,
-			IndexedCollection mappingBinding,
+			IndexedCollection bootCollectionMapping,
 			RuntimeModelCreationContext creationContext) {
 		super( persister );
 

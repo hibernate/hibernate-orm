@@ -21,9 +21,13 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReferenceEntity;
 import org.hibernate.query.sqm.tree.expression.domain.SqmIndexedElementReferenceEntity;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
@@ -130,10 +134,13 @@ public class CollectionElementEntityImpl<J>
 		getEntityDescriptor().applyTableReferenceJoins( lhs, joinType, sqlAliasBase, joinCollector, tableGroupContext );
 	}
 
-//	@Override
-//	public List<Column> getColumns() {
-//		throw new NotYetImplementedFor6Exception();
-//	}
+	@Override
+	public SqmNavigableReference createSqmExpression(
+			SqmFrom sourceSqmFrom,
+			SqmNavigableContainerReference containerReference,
+			SqmReferenceCreationContext creationContext) {
+		return new SqmCollectionElementReferenceEntity( (SqmPluralAttributeReference) containerReference );
+	}
 
 	@Override
 	public QueryResult createQueryResult(

@@ -6,26 +6,23 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionElement;
 import org.hibernate.metamodel.model.domain.spi.BasicCollectionElement;
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReferenceBasic;
 import org.hibernate.query.sqm.tree.expression.domain.SqmIndexedElementReferenceBasic;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeReference;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
 import org.hibernate.sql.results.spi.QueryResult;
 import org.hibernate.sql.results.spi.QueryResultCreationContext;
@@ -82,6 +79,14 @@ public class BasicCollectionElementImpl<J>
 	@Override
 	public ElementClassification getClassification() {
 		return ElementClassification.BASIC;
+	}
+
+	@Override
+	public SqmNavigableReference createSqmExpression(
+			SqmFrom sourceSqmFrom,
+			SqmNavigableContainerReference containerReference,
+			SqmReferenceCreationContext creationContext) {
+		return new SqmCollectionElementReferenceBasic( (SqmPluralAttributeReference) containerReference );
 	}
 
 	@Override

@@ -37,12 +37,12 @@ public class CollectionIndexEmbeddedImpl<J>
 
 	public CollectionIndexEmbeddedImpl(
 			PersistentCollectionDescriptor persister,
-			IndexedCollection mapping,
+			IndexedCollection bootCollectionMapping,
 			RuntimeModelCreationContext creationContext) {
 		super( persister );
 
 		this.embeddedPersister = creationContext.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
-				(EmbeddedValueMappingImplementor) mapping.getIndex(),
+				(EmbeddedValueMappingImplementor) bootCollectionMapping.getIndex(),
 				persister,
 				null,
 				NAVIGABLE_NAME,

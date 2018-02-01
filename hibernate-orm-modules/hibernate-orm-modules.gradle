@@ -161,8 +161,9 @@ publishing {
     }
 }
 
-task release( dependsOn: createModulesZip )
 
+task ciBuild( dependsOn: [clean, test, publish] )
+task release( dependsOn: [clean, test, publish] )
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -194,12 +195,4 @@ processTestResources {
     ])
 }
 
-
-if ( project.isSnapshot ) {
-    // only run the ci build tasks for SNAPSHOT versions
-    task ciBuild( dependsOn: [clean, test] )
-}
-else {
-    task release( dependsOn: [clean, test] )
-}
 

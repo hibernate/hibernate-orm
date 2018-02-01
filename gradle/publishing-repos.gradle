@@ -15,8 +15,8 @@ apply plugin: 'com.jfrog.bintray'
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
 ext {
-	bintrayUser = project.property( 'PERSONAL_BINTRAY_USER' )
-	bintrayKey = project.property( 'PERSONAL_BINTRAY_API_KEY' )
+	bintrayUser = project.hasProperty( 'PERSONAL_BINTRAY_USER' ) ? project.property( 'PERSONAL_BINTRAY_USER' ) : null
+	bintrayKey = project.hasProperty( 'PERSONAL_BINTRAY_API_KEY' ) ? project.property( 'PERSONAL_BINTRAY_API_KEY' ) : null
 }
 
 

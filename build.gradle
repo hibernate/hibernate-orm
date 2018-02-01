@@ -57,6 +57,13 @@ task release {
 			"themselves if they have any release-related activities to perform"
 }
 
+task publish {
+	description = "The task performed when we want to just publish maven artifacts.  Relies on " +
+			"the fact that subprojects will have a task named pubappropriately define a release task " +
+			"themselves if they have any release-related activities to perform"
+}
+
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // CI Build Task

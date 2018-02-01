@@ -13,11 +13,6 @@ apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 apply from: rootProject.file( 'gradle/publishing-repos.gradle' )
 
 
-task ciBuild( dependsOn: [clean, test, publish] )
-
-task release( dependsOn: [clean, test, publish] )
-
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Jar
 
@@ -142,6 +137,10 @@ publishing {
 	}
 }
 
+bintray {
+	publications = ['publishedArtifacts']
+}
+
 model {
 	tasks.generatePomFileForPublishedArtifactsPublication {
 		destination = file( "${buildDir}/generated-pom.xml" )
@@ -149,4 +148,9 @@ model {
 }
 
 task generatePomFile( dependsOn: 'generatePomFileForPublishedArtifactsPublication' )
+
+
+task ciBuild( dependsOn: [clean, test, publish] )
+
+task release( dependsOn: [clean, test, bintrayUpload] )
 

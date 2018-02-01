@@ -3,6 +3,46 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+
+
+Changes in 5.3.0.Beta2 (February 1, 2018)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-1268] - Unidirection OneToMany causes duplicate key entry violation when removing from list
+    * [HHH-11587] - Reordering items in List throws a constraint violation
+    * [HHH-11845] - Warn user when multiple persistence-units use the same name
+    * [HHH-12107] - ClassCastException when using L2Cache with "structured_cache"=true
+    * [HHH-12227] - {h-schema} tag is not replaced in @Formula
+    * [HHH-12238] - aliasToBean throws confusing ClassCastException if class lacks setters
+    * [HHH-12240] - mapped attribute link to the attribute in the embeddable attribute in the referenced entity is not supported
+    * [HHH-12241] - BinderHelper:644 logdebugf FAILS
+    * [HHH-12244] - The validation-api in libraries.gradle should be 2.0.1.Final, not 1.1.0.Final
+    * [HHH-12245] - The metamodel generator does not handle primitive types very well
+    * [HHH-12246] - Gradle build fails with Java 9
+    * [HHH-12249] - Wrong format in debug message of  CollectionBinder
+    * [HHH-12256] - org.hibernate.test.lazyload.JtaLazyLoadingTest is not using JTA
+    * [HHH-12266] - The release task does not upload the documentation
+
+** New Feature
+    * [HHH-12252] - New module for Agroal connection pool integration
+    * [HHH-12264] - Updated Vibur dependency from 21.2 to 21.3
+
+** Task
+    * [HHH-12172] - Move to BinTray for publishing artifacts
+    * [HHH-12231] - Use the org.wildfly.build.provision Gradle plugin to fetch WildFly instances for integration testing
+    * [HHH-12250] - Avoid WildFly thin servers as they require Maven settings
+    * [HHH-12267] - Update migration guide to cover Generators name scope changes
+
+** Improvement
+    * [HHH-11571] - Please update Hibernate with awareness of WebSphere Liberty transaction manager
+    * [HHH-12034] - According to JPA, a Proxy should be loaded even when accessing the identifier
+    * [HHH-12258] - Make credentials masking consistent
+
+
+
+
+
 Changes in 5.3.0.Beta1 (January 17, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/31612/tab/release-report-all-issues

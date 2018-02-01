@@ -153,7 +153,7 @@ task createModulesZip(type: Zip, dependsOn: [copyAndExpandModuleXml]) {
 
 publishing {
     publications {
-        mavenZip( MavenPublication ) {
+        publishedArtifacts {
             artifact( createModulesZip ) {
                 classifier artifactClassifier
             }
@@ -163,7 +163,7 @@ publishing {
 
 
 task ciBuild( dependsOn: [clean, test, publish] )
-task release( dependsOn: [clean, test, publish] )
+task release( dependsOn: [clean, test, bintrayUpload] )
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

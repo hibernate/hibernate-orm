@@ -7,10 +7,9 @@
 
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 
-apply plugin: 'maven-publish'
-
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 apply from: rootProject.file( 'gradle/publishing-repos.gradle' )
+
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -121,7 +120,7 @@ javadoc {
 
 publishing {
 	publications {
-		publishedArtifacts( MavenPublication ) {
+		publishedArtifacts {
 			from components.java
 
 			artifact( sourcesJar ) {
@@ -136,19 +135,6 @@ publishing {
 		}
 	}
 }
-
-bintray {
-	publications = ['publishedArtifacts']
-}
-
-model {
-	tasks.generatePomFileForPublishedArtifactsPublication {
-		destination = file( "${buildDir}/generated-pom.xml" )
-	}
-}
-
-task generatePomFile( dependsOn: 'generatePomFileForPublishedArtifactsPublication' )
-
 
 task ciBuild( dependsOn: [clean, test, publish] )
 

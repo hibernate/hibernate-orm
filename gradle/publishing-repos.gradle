@@ -7,58 +7,67 @@
 
 apply from: rootProject.file( 'gradle/base-information.gradle' )
 
+
 apply plugin: 'maven-publish'
+apply plugin: 'maven-publish-auth'
+apply plugin: 'com.jfrog.bintray'
 
-if ( project.isSnapshot ) {
-	// For SNAPSHOT builds all we need to define is to add the JBoss SNAPSHOT server as
-	// a publishing repository - NOTE that the plugin applies security over the
-	// JBoss SNAPSHOT repo via a local user's Maven `settings.xml`
+apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
-	apply plugin: 'maven-publish-auth'
+ext {
+	bintrayUser = project.property( 'PERSONAL_BINTRAY_USER' )
+	bintrayKey = project.property( 'PERSONAL_BINTRAY_API_KEY' )
+}
 
-	publishing {
-		repositories {
-			maven {
-				name 'jboss-snapshots-repository'
-				url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
-			}
+
+publishing {
+	publications {
+		publishedArtifacts( MavenPublication )
+	}
+
+	repositories {
+		maven {
+			name 'jboss-snapshots-repository'
+			url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
 		}
 	}
 }
-else {
-	// otherwise, set up the bintray plugin for publishing the release artifacts to Bintray
 
-	apply plugin: 'com.jfrog.bintray'
+bintray {
+	user = project.bintrayUser
+	key = project.bintrayKey
 
-	ext {
-		bintrayUser = project.property( 'PERSONAL_BINTRAY_USER' )
-		bintrayKey = project.property( 'PERSONAL_BINTRAY_API_KEY' )
-	}
+	publications = ['publishedArtifacts']
 
-	bintray {
-		user = project.bintrayUser
-		key = project.bintrayKey
+	pkg {
+		userOrg = 'hibernate'
+		repo = 'artifacts'
+		name = 'hibernate-orm'
 
-		pkg {
-			userOrg = 'hibernate'
-			repo = 'artifacts'
-			name = 'hibernate-orm'
+		publish = true
 
-			version {
-				name = project.version
-				released  = new Date()
-				vcsTag = project.version
-				gpg {
-					sign = true
-				}
-				attributes = [
+		version {
+			name = project.version
+			released  = new Date()
+			vcsTag = project.version
+			gpg {
+				sign = true
+			}
+			attributes = [
 					'jpa': '2.2',
 					'family': project.hibernateMajorMinorVersion
-				]
+			]
+			mavenCentralSync {
+				sync = true
 			}
 		}
-
-		publish = false
 	}
-
 }
+
+model {
+	tasks.generatePomFileForPublishedArtifactsPublication {
+		destination = file( "${buildDir}/generated-pom.xml" )
+	}
+}
+
+task generatePomFile( dependsOn: 'generatePomFileForPublishedArtifactsPublication' )

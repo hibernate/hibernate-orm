@@ -21,7 +21,7 @@ ext {
 
 publishing {
 	publications {
-		relocationPom( MavenPublication ) {
+		publishedArtifacts {
 			pom.withXml {
 				def relocation = asNode().appendNode( 'distributionManagement' ).appendNode( 'relocation' )
 				relocation.appendNode( 'groupId', project.relocatedGroupId)
@@ -32,4 +32,4 @@ publishing {
 	}
 }
 
-task release( dependsOn: publish )
+task release( dependsOn: bintrayUpload )

@@ -21,7 +21,7 @@ import org.hibernate.tool.schema.spi.Exporter;
  * @author Steve Ebersole
  */
 public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
-	private static final String  COLUMN_MISMATCH_MSG = "Number of referencing columns [%s] did not " +
+	private static final String COLUMN_MISMATCH_MSG = "Number of referencing columns [%s] did not " +
 			"match number of referenced columns [%s] in foreign-key [%s] from [%s] to [%s]";
 
 	private final Dialect dialect;
@@ -32,11 +32,11 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 
 	@Override
 	public String[] getSqlCreateStrings(ForeignKey foreignKey, Metadata metadata) {
-		if ( ! dialect.hasAlterTable() ) {
+		if ( !dialect.hasAlterTable() ) {
 			return NO_COMMANDS;
 		}
-		
-		if ( ! foreignKey.isCreationEnabled() ) {
+
+		if ( !foreignKey.isCreationEnabled() ) {
 			return NO_COMMANDS;
 		}
 
@@ -45,8 +45,8 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 		}
 
 		final int numberOfColumns = foreignKey.getColumnSpan();
-		final String[] columnNames = new String[ numberOfColumns ];
-		final String[] targetColumnNames = new String[ numberOfColumns ];
+		final String[] columnNames = new String[numberOfColumns];
+		final String[] targetColumnNames = new String[numberOfColumns];
 
 		final Iterator targetItr;
 		if ( foreignKey.isReferenceToPrimaryKey() ) {
@@ -127,11 +127,11 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 
 	@Override
 	public String[] getSqlDropStrings(ForeignKey foreignKey, Metadata metadata) {
-		if ( ! dialect.hasAlterTable() ) {
+		if ( !dialect.hasAlterTable() ) {
 			return NO_COMMANDS;
 		}
 
-		if ( ! foreignKey.isCreationEnabled() ) {
+		if ( !foreignKey.isCreationEnabled() ) {
 			return NO_COMMANDS;
 		}
 
@@ -145,8 +145,21 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 				dialect
 		);
 		return new String[] {
-				dialect.getAlterTableString( sourceTableName )
-						+ dialect.getDropForeignKeyString() + foreignKey.getName()
+				getSqlDropStrings( sourceTableName, foreignKey, dialect )
 		};
 	}
+
+	private String getSqlDropStrings(String tableName, ForeignKey foreignKey, Dialect dialect) {
+		final StringBuilder buf = new StringBuilder( dialect.getAlterTableString( tableName ) );
+		buf.append( dialect.getDropForeignKeyString() );
+		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
+			buf.append( "if exists " );
+		}
+		buf.append( dialect.quote( foreignKey.getName() ) );
+		if ( dialect.supportsIfExistsAfterConstraintName() ) {
+			buf.append( " if exists" );
+		}
+		return buf.toString();
+	}
+
 }

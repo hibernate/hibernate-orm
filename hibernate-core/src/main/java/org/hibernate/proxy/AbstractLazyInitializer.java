@@ -43,8 +43,6 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private String sessionFactoryUuid;
 	private boolean allowLoadOutsideTransaction;
 
-	private boolean initializeProxyWhenAccessingIdentifier;
-
 	/**
 	 * For serialization from the non-pojo initializers (HHH-3309)
 	 */
@@ -67,8 +65,6 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 		else {
 			setSession( session );
-			initializeProxyWhenAccessingIdentifier = session.getFactory().getSessionFactoryOptions()
-					.getJpaCompliance().isJpaProxyComplianceEnabled();
 		}
 	}
 
@@ -79,10 +75,16 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	@Override
 	public final Serializable getIdentifier() {
-		if ( isUninitialized() && initializeProxyWhenAccessingIdentifier ) {
+		if ( isUninitialized() && isInitializeProxyWhenAccessingIdentifier() ) {
 			initialize();
 		}
 		return id;
+	}
+
+	private boolean isInitializeProxyWhenAccessingIdentifier() {
+		return session != null && session.getFactory()
+				.getSessionFactoryOptions()
+				.getJpaCompliance().isJpaProxyComplianceEnabled();
 	}
 
 	@Override

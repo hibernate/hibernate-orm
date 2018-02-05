@@ -1,5 +1,3 @@
-import org.apache.tools.ant.filters.ReplaceTokens
-
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -8,7 +6,8 @@ import org.apache.tools.ant.filters.ReplaceTokens
  */
 
 plugins {
-  id "org.wildfly.build.provision" version "0.0.3"
+  id "org.wildfly.build.provision"   version '0.0.5'
+  id "org.wildfly.build.featurepack" version '0.0.5'
 }
 
 apply from: rootProject.file( 'gradle/base-information.gradle' )
@@ -28,171 +27,123 @@ project.tasks.jar.enabled = false
 project.tasks.javadoc.enabled = false
 
 ext {
-    // NOTE : `wildflyVersion` comes from libraries.gradle...
+	// NOTE : `wildflyVersion` comes from libraries.gradle...
 
-    // Exact ORM version, e.g. "5.1.1.Final"
-    slot = rootProject.hibernateVersion
-    // Just the minor ORM version, e.g. "5.1"; Is used as an alias for the exact version
-    minorSlot = rootProject.hibernateMajorMinorVersion
-
-    // "10" for WildFly 10.x, "11" for 11.x, etc
-    wildFlyMajorVersion = project.wildflyVersion.split( '\\.' )[0]
-
-    artifactClassifier = "wildfly-${wildFlyMajorVersion}-dist"
-
-    moduleXmlStagingDir = file( "$buildDir/tmp/modules" )
-
-    wildFlyInstallDirBase = "$rootProject.buildDir.absolutePath/wildfly"
-	// this is just a "guess" as to the root directory inside the dist zip
-	// todo : Would be better to actually ask the zip
-    wildFlyInstallDir = "$wildFlyInstallDirBase/wildfly-${wildflyVersion}"
-
-    expandedModuleProperties = [
-            slot: slot,
-            minorSlot: minorSlot,
-            version: project.hibernateVersion,
-            wildflyVersion: wildflyVersion,
-            byteBuddyVersion: byteBuddyVersion
-    ]
+	// "10" for WildFly 10.x, "11" for 11.x, etc
+	wildFlyMajorVersion = project.wildflyVersion.split( '\\.' )[0]
+	artifactClassifier = "wildfly-${wildFlyMajorVersion}-dist"
+	wildFlyInstallDir = "$rootProject.buildDir/wildfly"
+	fpackStagingDir = file( "target/featurepack" ) //Target build directory for the Feature Pack
 }
 
-description = "Hibernate ORM modules for WildFly ${project.wildFlyMajorVersion}"
+description = "Feature Pack of Hibernate ORM modules for WildFly ${project.wildFlyMajorVersion}"
 
 configurations {
-    jipijapa {
-        transitive = false
-    }
+	featurePack {
+		description = "Dependencies to be included in the published Feature Pack"
+	}
+	provisioning {
+		description = "Dependencies which should be made available to the provisioning of WildFly"
+	}
+}
 
-    wildflyJPA22Patch
-    byteBuddy
+repositories {
+	mavenLocal()
+	mavenCentral()
+	maven {
+		name 'jboss-nexus'
+		url "http://repository.jboss.org/nexus/content/groups/public/"
+	}
+}
+
+//This builds the WildFly Feature Packs which define the Hibernate ORM modules
+// # Definitions of the modules are in /module-templates
+// # Versions of the included libraries are defined in the "featurePack" configuration (below)
+// # See the "variables" option to replace tokens in the module definitions
+// # This just creates the exploded feature pack: does NOT create a zip nor a publication, which are handled by other tasks below.
+featurepack {
+	moduleTemplates = file( 'module-templates' ) //where to find the templates for module.xml files to generate
+	destinationDir = project.fpackStagingDir
+	configurationName 'featurePack'
+	// Variables to be replaced in the template. N.B. not all variables need to be replaced!
+	// Exact ORM version, e.g. "5.3.0.Final"
+	variables['slot'] = rootProject.hibernateVersion
+	// Just the minor ORM version, e.g. "5.3"; Is used as an alias for the exact version
+	variables['minorSlot'] = rootProject.hibernateMajorMinorVersion
+	//Dependency on another Feature Pack:
+	dependency "org.wildfly:wildfly-feature-pack:${project.wildflyVersion}" // It will assume it is "zip" by default
+}
+
+task createFeaturePackZip( type: Zip, dependsOn: [featurepack] ) {
+	baseName 'hibernate-orm-modules'
+	from project.fpackStagingDir
 }
 
 provision {
-       configuration = file('wildfly-server-provisioning.xml')
-       destinationDir = file("$project.wildFlyInstallDir")
-       override( 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api' ) {
-              groupId = 'javax.persistence'
-              artifactId = 'javax.persistence-api'
-              version = '2.2'
-       }
+	dependsOn( createFeaturePackZip )
+	dependsOn( ":hibernate-envers:jar")
+	dependsOn( ":hibernate-core:jar")
+	configuration = file( 'wildfly-server-provisioning.xml' )
+	destinationDir = file( "$project.wildFlyInstallDir" )
+	//Replace the JPA API with version 2.2 in the provisioned WildFly server:
+	override( 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api' ) {
+		groupId = 'javax.persistence'
+		artifactId = 'javax.persistence-api'
+		version = '2.2'
+	}
+	//TODO: explore overriding any other library we might need?
+	override( 'org.hibernate.common:hibernate-commons-annotations' ) {
+		version = '5.0.2.Final'
+	}
+	variables['wildfly.version'] = project.wildflyVersion
+	variables['hibernate-orm.version'] = rootProject.hibernateVersion
 }
 
 dependencies {
-    jipijapa "org.wildfly:jipijapa-hibernate5:${wildflyVersion}"
-    byteBuddy libraries.byteBuddy
+	testCompile project( ":hibernate-core" )
+	testCompile project( ":hibernate-envers" )
+	testCompile libraries.junit
+	testCompile libraries.arquillian_junit_container
+	testCompile libraries.arquillian_protocol_servlet
+	testCompile libraries.shrinkwrap_descriptors_api_javaee
+	testCompile libraries.shrinkwrap_descriptors_impl_javaee
+	testCompile libraries.wildfly_arquillian_container_managed
 
-    testCompile project( ":hibernate-core" )
-    testCompile project( ":hibernate-envers" )
-    testCompile libraries.junit
-    testCompile libraries.arquillian_junit_container
-    testCompile libraries.arquillian_protocol_servlet
-    testCompile libraries.shrinkwrap_descriptors_api_javaee
-    testCompile libraries.shrinkwrap_descriptors_impl_javaee
-    testCompile libraries.wildfly_arquillian_container_managed
-}
-
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// tasks related to creating and publishing the module zip
-
-task copyAndExpandModuleXml(type: Copy) {
-    description 'Performs a copy of the XML files defining the module into a staging directory for the purpose of performing token-replacement'
-
-    inputs.properties( expandedModuleProperties as Map )
-
-    into moduleXmlStagingDir
-    expand( expandedModuleProperties as Map )
-
-    into( 'org/hibernate/' + slot ) {
-        from 'src/main/modules/org/hibernate/core'
-    }
-
-    into( 'org/hibernate/infinispan/' + slot ) {
-        from 'src/main/modules/org/hibernate/infinispan'
-    }
-
-    into( 'org/hibernate/jipijapa-hibernate5/' + slot ) {
-        from 'src/main/modules/org/hibernate/jipijapa-hibernate5'
-    }
-
-    // create alias for the short name
-    into( 'org/hibernate/' + minorSlot ) {
-        from 'src/main/aliases/org/hibernate/core'
-    }
-
-    into( 'org/hibernate/infinispan/' + minorSlot ) {
-        from 'src/main/aliases/org/hibernate/infinispan'
-    }
-
-    into( 'org/hibernate/jipijapa-hibernate5/' + minorSlot ) {
-        from 'src/main/aliases/org/hibernate/jipijapa-hibernate5'
-    }
-}
-
-task createModulesZip(type: Zip, dependsOn: [copyAndExpandModuleXml]) {
-    baseName 'hibernate-orm-modules'
-    classifier artifactClassifier
-
-    from moduleXmlStagingDir
-
-    into( 'org/hibernate/' + slot ) {
-        from parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
-        from parent.project( 'hibernate-envers' ).configurations.archives.allArtifacts.files
-        // also need Byte Buddy's jar
-        from configurations.byteBuddy
-    }
-
-    into( 'org/hibernate/infinispan/' + slot ) {
-        from parent.project( 'hibernate-infinispan' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') && !file.name.endsWith('-tests.jar') }
-    }
-
-    into( 'org/hibernate/jipijapa-hibernate5/' + slot ) {
-        from configurations.jipijapa
-    }
+	featurePack libraries.byteBuddy
+	featurePack project( ":hibernate-core" )
+	featurePack project( ":hibernate-envers" )
+	featurePack "org.wildfly:jipijapa-hibernate5:${wildflyVersion}"
 }
 
 publishing {
-    publications {
-        publishedArtifacts {
-            artifact( createModulesZip ) {
-                classifier artifactClassifier
-            }
-        }
-    }
+	publications {
+		publishedArtifacts {
+			artifact( createFeaturePackZip ) {
+			}
+		}
+	}
 }
-
 
 task ciBuild( dependsOn: [clean, test, publish] )
 task release( dependsOn: [clean, test, bintrayUpload] )
 
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // tasks related to in-container (Arquillian + WF) testing
 
-task installWildFly( dependsOn: [createModulesZip, provision] ) {
-    description = 'Downloads the WildFly distribution, installs it into a local directory, includes present version of Hibernate ORM, JPA 2.2 : ready for integration tests'
-
-    doLast {
-        // install the Hibernate ORM modules from the current build
-        copy {
-            duplicatesStrategy DuplicatesStrategy.EXCLUDE
-            from zipTree( createModulesZip.archivePath )
-            into "${project.wildFlyInstallDir}/modules"
-        }
-    }
+task prepareWildFlyForTests( dependsOn: [provision] ) {
+	description = 'Downloads the WildFly distribution, installs it into a local directory, includes present version of Hibernate ORM, JPA 2.2 : ready for integration tests'
 }
 
-task installHibernateModule( dependsOn: [createModulesZip, installWildFly])
-
-task prepareWildFlyForTests( dependsOn: [installHibernateModule] )
 
 test.dependsOn prepareWildFlyForTests
 
 processTestResources {
-    expand([
-			wildFlyInstallDir: project.wildFlyInstallDir,
-			arquillianDeploymentExportDir: "${rootProject.buildDir.absolutePath}/arquillian-deployments"
-    ])
+	expand(
+			[
+					wildFlyInstallDir            : project.wildFlyInstallDir,
+					arquillianDeploymentExportDir: "${rootProject.buildDir.absolutePath}/arquillian-deployments"
+			]
+	)
 }
 
 

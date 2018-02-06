@@ -4,10 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-plugins {
-    id "com.jfrog.bintray" version "1.7"
-}
-
 apply plugin: 'base'
 apply plugin: 'idea'
 apply plugin: 'distribution'
@@ -244,75 +240,7 @@ artifacts {
     bundles distZip
 }
 
-String binTrayUser = null
-String binTrayApiKey = null
-
-if ( project.hasProperty( "BINTRAY_USER" ) ) {
-    binTrayUser = project.property( "BINTRAY_USER" ) as String;
-}
-if ( binTrayUser == null ) {
-    binTrayUser = System.getProperty( "BINTRAY_USER" );
-}
-if ( binTrayUser == null ) {
-    binTrayUser = System.getenv( "BINTRAY_USER" );
-}
-if ( binTrayUser == null ) {
-    binTrayUser = 'UNDEFINED'
-}
-
-if ( project.hasProperty( "BINTRAY_APIKEY" ) ) {
-    binTrayApiKey = project.property( "BINTRAY_APIKEY" ) as String;
-}
-if ( binTrayApiKey == null ) {
-    binTrayApiKey = System.getProperty( "BINTRAY_APIKEY" );
-}
-if ( binTrayApiKey == null ) {
-    binTrayApiKey = System.getenv( "BINTRAY_APIKEY" );
-}
-if ( binTrayApiKey == null ) {
-    binTrayApiKey = 'UNDEFINED'
-}
-
-bintray {
-    user = binTrayUser
-    key = binTrayApiKey
-
-    publish = true
-
-    configurations = ['bundles']
-
-    pkg {
-        userOrg = 'hibernate'
-        repo = 'bundles'
-        name = 'hibernate-orm'
-
-        version {
-            name = project.version
-            desc = "The ${project.version} release of the Hibernate ORM project"
-
-            gpg {
-                sign = true
-                passphrase = 'hibernate'
-            }
-        }
-    }
-}
-
-bintrayUpload.dependsOn buildBundles
-
-bintrayUpload {
-    doFirst {
-        if ( version.endsWith( "SNAPSHOT" ) ) {
-            logger.error( "Cannot perform upload of SNAPSHOT bundles to BinTray" );
-            throw new RuntimeException( "Cannot perform upload of SNAPSHOT bundles to BinTray" )
-        }
-        else {
-            logger.lifecycle( "Uploading release bundles to BinTray..." )
-        }
-    }
-}
-
-task uploadBundles(dependsOn: [bintrayUpload, uploadBundlesSourceForge]) {
+task uploadBundles(dependsOn: uploadBundlesSourceForge) {
     description = 'Performs all release bundle uploads'
 }
 

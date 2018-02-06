@@ -4,6 +4,96 @@ Hibernate 5 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.2.13.Final (February 6, 2018)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/31606
+
+** Bug
+    * [HHH-5274] - HQL-Insert with Select and Sub-Select fails
+    * [HHH-5645] - Criteria.createAlias with specified criterion results in wrong parameters passed into SQL statement
+    * [HHH-5757] - OneToOne SQL missing parameter
+    * [HHH-9158] - cascade-persist in orm.xml does not apply to annotation-based relationships
+    * [HHH-9331] - Aggregate functions for subqueries not working
+    * [HHH-9933] - Uninitialized PersistentSet with lazy="extra" doesn't respect added elements
+    * [HHH-9965] - Pagination ignored on collection fetch join: Add the ability to throw an exception instead of loggin a warn
+    * [HHH-10418] - ClassCastException thrown in SessionFactoryImpl for named regions containing both entity and collection
+    * [HHH-10575] - MapKeyColumn on Map<> association causes Insert constraint violation
+    * [HHH-10677] - ClusteredTimestampsRegionImpl: Local Timestamp cache is not updated right after cache.put(key, value)
+    * [HHH-11028] - {h-schema} is not replaced in SQLDelete, SQLInsert and SQLUpdate
+    * [HHH-11117] - LazyPropertyInitializer$1 cannot be cast to [B when calling Session.merge() on compile time enhanced composed entities
+    * [HHH-11721] - PreInsertEventListener that just vetoed ends up throwing NullPointerException because the entity is still managed
+    * [HHH-11805] - JACC cannot be enabled
+    * [HHH-11845] - Warn user when multiple persistence-units use the same name
+    * [HHH-11871] - Skip Metamodel attribute generation for non-Java Bean property methods
+    * [HHH-11913] - Schema generation ignores index DESC/ASC order
+    * [HHH-11986] - @LazyGroup is ignored on LazyToOne association with 'mappedBy'
+    * [HHH-12007] - Executing JPA query results in persistence of new/unmanaged entity
+    * [HHH-12036] - Inefficient Infinispan cache invalidation for bulk operations
+    * [HHH-12046] - Bogus conflict detected between instance and static methods with same property name
+    * [HHH-12047] - JDK 9: java.io.IOException: invalid constant type: 19 at 5
+    * [HHH-12051] - changed non-updatable attributes mark enhanced entity dirty
+    * [HHH-12054] - 'Detached entity passed to persist' during merge when enableLazyInitialization  is set to true
+    * [HHH-12062] - @AttributeAccessor is ignored
+    * [HHH-12063] - @AttributeAccessor is ignored by Envers audit entities
+    * [HHH-12067] - NativeQueryTupleTransformer doesn't handle null values in returned ResultSet
+    * [HHH-12068] - -AaddSuppressWarningsAnnotation=true relies on compiler-specific behavior and is therefore broken
+    * [HHH-12072] - BasicFormatterImpl throws a NPE if native SQL begins with a parentheses
+    * [HHH-12074] - order_inserts: flush during transaction causes incorrect insert ordering and subsequent constraint violation
+    * [HHH-12075] - SQLQuery.executeUpdate() ignores SQLQuery.setTimeout()
+    * [HHH-12082] - Fix some errors and formatting issues in the User Guide
+    * [HHH-12083] - InsertOrderingWithBidirectionalOneToManyFlushProblem fails on SAP HANA
+    * [HHH-12086] - Batch order_inserts: flush during transaction causes incorrect insert ordering and subsequent constraint violation
+    * [HHH-12087] - Pagination does not work with Oracle views
+    * [HHH-12096] - Problem finding correlated getter-method for field access
+    * [HHH-12105] - Batch order_inserts: flush during transaction causes incorrect insert ordering and subsequent constraint violation
+    * [HHH-12107] - ClassCastException when using L2Cache with "structured_cache"=true
+    * [HHH-12108] - Fix tests failing on Oracle
+    * [HHH-12111] - Oracle does not support positive/negative initial sequence values for descending/ascending sequences unless MAXVALUE/MINVALUE is defined as well
+    * [HHH-12112] - The query optimizer hint fails on Oracle
+    * [HHH-12114] - Union-select aliases not injected before "clazz_" conditions in HQL query
+    * [HHH-12115] - No Dialect mapping for JDBC type: 1899073220 in Wildfly (AttributeConverter and Short)
+    * [HHH-12119] - NativeQueryTupleTransformer discards case of alias names.
+    * [HHH-12132] - HANA boolean type mapping doesn't work for existing schema definitions
+    * [HHH-12150] - @MapKeyColumn referring to otherwise non-mapped column
+    * [HHH-12157] - TableGenerator defined on one class is not visible on another
+    * [HHH-12159] - WARN: HHH000274: Unable to apply constraints on DDL
+    * [HHH-12197] - On commit, Hibernate reopens and closes additional connection
+    * [HHH-12203] - NUMERIC column type is not handled correctly on HANA
+    * [HHH-12212] - Derived Identifiers component column size not applied
+    * [HHH-12248] - Clustered 2nd level cache sometimes throws NullPointerException when new node starts up
+    * [HHH-12256] - org.hibernate.test.lazyload.JtaLazyLoadingTest is not using JTA
+    * [HHH-12271] - SchemaDropperImpl does not drop constraints with IF EXISTS
+
+** Task
+    * [HHH-12048] - Upgrade to Javassist version 3.22.0-GA
+    * [HHH-12055] - Revert to using the Javassist version included in WildFly 11
+    * [HHH-12060] - Update to WildFly 11.0.0.Final
+    * [HHH-12158] - No longer need a custom repository to fetch geolatte 1.2
+    * [HHH-12167] - Add matrix testing configuration for HANA database
+    * [HHH-12211] - Test failure on MariaDB when the database charset is configured to UTF8
+
+** Improvement
+    * [HHH-2558] - Allow batching inserts for multi-table entities
+    * [HHH-5797] - Improve batching for entity updates or deletes that use secondary tables
+    * [HHH-10485] - Lazy collections fetched with EntityGraph load with JOIN
+    * [HHH-11571] - Please update Hibernate with awareness of WebSphere Liberty transaction manager
+    * [HHH-12034] - According to JPA, a Proxy should be loaded even when accessing the identifier
+    * [HHH-12052] - Move PooledConnections inside DriverManagerConnectionProviderImpl
+    * [HHH-12058] - Criteria LiteralHandlingMode can only be configured programatically. We need to support String-based configurations as well.
+    * [HHH-12064] - Issue with unidirectional one-to-many association with a join column that references a column that is not the primary key
+    * [HHH-12073] - Change BaseUnitTestCase Logger to protected
+    * [HHH-12081] - Update to JBoss Logger 3.3.1.Final and related tooling 2.1.0.Final
+    * [HHH-12113] - The JDBC batch sorting algorithm can be simplified due to latest modifications
+    * [HHH-12120] - Update StandardDialectResolver to reflect the latest Dialects of PostgreSQL and MySQL
+    * [HHH-12138] - HANA dialect doesn't support procedure parameter mode REF_CURSOR
+    * [HHH-12140] - Allow session scoped interceptors to be managed by DI providers (e.g Spring)
+    * [HHH-12192] - Include the causing DDL-statement into the message of org.hibernate.tool.schema.spi.CommandAcceptanceException
+    * [HHH-12258] - Make credentials masking consistent
+
+** Remove Feature
+    * [HHH-12110] - IllegalStateException should be thrown for some methods when called on a closed EntityManager
+
+
 Changes in 5.2.12.Final (October 19, 2017)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/31000

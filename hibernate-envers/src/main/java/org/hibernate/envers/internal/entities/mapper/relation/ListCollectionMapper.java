@@ -8,8 +8,10 @@ package org.hibernate.envers.internal.entities.mapper.relation;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -24,6 +26,7 @@ import org.hibernate.envers.tools.Pair;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public final class ListCollectionMapper extends AbstractCollectionMapper<List> implements PropertyMapper {
 	private final MiddleComponentData elementComponentData;
@@ -94,5 +97,22 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
 				indexValuePair.getSecond()
 		);
 		indexComponentData.getComponentMapper().mapToMapFromObject( session, idData, data, indexValuePair.getFirst() );
+	}
+
+	@Override
+	protected Set<Object> buildCollectionChangeSet(Object eventCollection, Collection collection) {
+		final Set<Object> changeSet = new HashSet<>();
+		if ( eventCollection != null ) {
+			for ( Object entry : collection ) {
+				if ( entry != null ) {
+					final Pair pair = Pair.class.cast( entry );
+					if ( pair.getSecond() == null ) {
+						continue;
+					}
+					changeSet.add( entry );
+				}
+			}
+		}
+		return changeSet;
 	}
 }

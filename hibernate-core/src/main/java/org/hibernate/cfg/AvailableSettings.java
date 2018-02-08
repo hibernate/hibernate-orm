@@ -1764,7 +1764,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 *
 	 * The default value is `true` meaning that {@link GeneratedValue#generator()} will be used as the
 	 * sequence/table name by default.  Users migrating from earlier versions using the legacy
-	 * `hibernate_sequence` name should disable this setting,
+	 * `hibernate_sequence` name should disable this setting.
 	 */
 	String PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME = "hibernate.model.generator_name_as_sequence_name";
 
@@ -1781,7 +1781,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	/**
 	 * Controls whether Hibernate's handling of {@link javax.persistence.Query}
 	 * (JPQL, Criteria and native-query) should strictly follow the JPA spec.
-	 * Tis includes both in terms of parsing or translating a query as well
+	 * This includes both in terms of parsing or translating a query as well
 	 * as calls to the {@link javax.persistence.Query} methods throwing spec
 	 * defined exceptions where as Hibernate might not.
 	 *
@@ -1797,7 +1797,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * ({@link org.hibernate.collection.internal.PersistentBag}) as a List
 	 * ({@link org.hibernate.collection.internal.PersistentList}) or as a bag.
 	 *
-	 * If enabled, we will recognize it as a List where {@link @{@link javax.persistence.OrderColumn}}
+	 * If enabled, we will recognize it as a List where {@link javax.persistence.OrderColumn}
 	 * is just missing (and its defaults will apply).
 	 *
 	 * @see JpaCompliance#isJpaListComplianceEnabled()
@@ -1820,7 +1820,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String JPA_CLOSED_COMPLIANCE = "hibernate.jpa.compliance.closed";
 
 	/**
-	 * JPA spec says that an {@link javax.persistence.EntityNotFoundException}
+	 * The JPA spec says that a {@link javax.persistence.EntityNotFoundException}
 	 * should be thrown when accessing an entity Proxy which does not have an associated
 	 * table row in the database.
 	 *

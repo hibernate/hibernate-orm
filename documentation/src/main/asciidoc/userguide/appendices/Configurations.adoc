@@ -19,7 +19,7 @@ strategy Class name::
   The class name (`java.lang.String`) of the strategy implementation to use
 
 [[configurations-general]]
-=== General Configuration
+=== General configuration
 
 `*hibernate.dialect*` (e.g. `org.hibernate.dialect.PostgreSQL94Dialect`)::
 The classname of a Hibernate https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html[`Dialect`] from which Hibernate can generate SQL optimized for a particular relational database.
@@ -33,6 +33,43 @@ Supply a custom strategy for the scoping of the _current_ `Session`.
 The definition of what exactly _current_ means is controlled by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/spi/CurrentSessionContext.html[`CurrentSessionContext`] implementation in use.
 +
 Note that for backwards compatibility, if a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/spi/CurrentSessionContext.html[`CurrentSessionContext`] is not configured but JTA is configured this will default to the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/internal/JTASessionContext.html[`JTASessionContext`].
+
+[[configurations-jpa-compliance]]
+=== JPA compliance
+
+`*hibernate.jpa.compliance.transaction*` (e.g. `true` or `false` (default value))::
+This setting controls if Hibernate  `Transaction` should behave as defined by the spec for JPA's `javax.persistence.EntityTransaction`
+since it extends the JPA one.
+
+`*hibernate.jpa.compliance.query*` (e.g. `true` or `false` (default value))::
+Controls whether Hibernate's handling of `javax.persistence.Query` (JPQL, Criteria and native-query) should strictly follow the JPA spec.
++
+This includes both in terms of parsing or translating a query as well as calls to the `javax.persistence.Query` methods throwing spec
+defined exceptions where as Hibernate might not.
+
+`*hibernate.jpa.compliance.list*` (e.g. `true` or `false` (default value))::
+Controls whether Hibernate should recognize what it considers a "bag" (`org.hibernate.collection.internal.PersistentBag`)
+as a List (`org.hibernate.collection.internal.PersistentList`) or as a bag.
++
+If enabled, we will recognize it as a List where `javax.persistence.OrderColumn`
+is just missing (and its defaults will apply).
+
+`*hibernate.jpa.compliance.closed*` (e.g. `true` or `false` (default value))::
+JPA defines specific exceptions upon calling specific methods on `javax.persistence.EntityManager` and `javax.persistence.EntityManagerFactory`
+objects which have been closed previously.
++
+This setting controls whether the JPA spec defined behavior or the Hibernate behavior will be used.
++
+If enabled, Hibernate will operate in the JPA specified way, throwing exceptions when the spec says it should.
+
+`*hibernate.jpa.compliance.proxy*` (e.g. `true` or `false` (default value))::
+The JPA spec says that a `javax.persistence.EntityNotFoundException` should be thrown when accessing an entity Proxy
+which does not have an associated table row in the database.
++
+Traditionally, Hibernate does not initialize an entity Proxy when accessing its identifier since we already know the identifier value,
+hence we can save a database roundtrip.
++
+If enabled Hibernate will initialize the entity Proxy even when accessing its identifier.
 
 [[configurations-database-connection]]
 === Database connection properties
@@ -188,6 +225,17 @@ When a generator specified an increment-size and an optimizer was not explicitly
 
 `*hibernate.id.generator.stored_last_used*` (e.g. `true` (default value) or `false`)::
 If true, the value stored in the table used by the `@TableGenerator` is the last value used, if false the value is the next value to be used.
+
+`*hibernate.model.generator_name_as_sequence_name*` (e.g. `true` (default value) or `false`)::
+If true, the value specified by the `generator` attribute of the `@GeneratedValue` annotation should be used as the sequence/table name when no matching
+`@SequenceGenerator` or `TableGenerator` is found.
++
+The default value is `true` meaning that `@GeneratedValue.generator()` will be used as the sequence/table name by default.
+Users migrating from earlier versions using the legacy `hibernate_sequence` name should disable this setting.
+
+`*hibernate.ejb.identifier_generator_strategy_provider*` (e.g. fully-qualified class name or an actual the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/spi/IdentifierGeneratorStrategyProvider.html[`IdentifierGeneratorStrategyProvider`] instance)::
+This setting allows you to provide an instance or the class implementing the `org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider` interface,
+so you can provide a set of https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/id/IdentifierGenerator.html[`IdentifierGenerator`] strategies allowing to override the Hibernate Core default ones.
 
 ==== Quoting options
 
@@ -416,6 +464,11 @@ Always use constants with the `org.hibernate.query.criteria.LiteralHandlingMode#
 +
 Valid options are defined by the `org.hibernate.query.criteria.LiteralHandlingMode` enum.
 The default value is `org.hibernate.query.criteria.LiteralHandlingMode#AUTO`.
+
+`*hibernate.query.fail_on_pagination_over_collection_fetch*` (e.g. `true` or `false` (default value))::
+Raises an exception when in-memory pagination over collection fetch is about to be performed.
++
+Disabled by default. Set to true to enable.
 
 ==== Multi-table bulk HQL operations
 
@@ -648,8 +701,18 @@ Examples of this include a JTA transaction timeout handled by a background reape
 +
 The ability to handle this situation requires checking the Thread ID every time Session is called, so enabling this can certainly have a performance impact.
 
-`*hibernate.transaction.factory_class*`::
- This is a legacy setting that's been deprecated and you should use the `hibernate.transaction.jta.platform` instead.
+[line-through]#`*hibernate.transaction.factory_class*`#::
++
+WARNING: This is a legacy setting that's been deprecated and you should use the `hibernate.transaction.jta.platform` instead.
+
+`*hibernate.jta.allowTransactionAccess*`(e.g. `true` (default value) or `false`)::
+It allows access to the underlying `org.hibernate.Transaction` even when using JTA
+since the JPA specification prohibits this behavior.
++
+If this configuration property is set to `true`, access is granted to the underlying `org.hibernate.Transaction`.
+If it's set to `false`, you won't be able to access the `org.hibernate.Transaction`.
++
+The default behavior is to allow access unless the `Session` is bootstrapped via JPA.
 
 [[configurations-multi-tenancy]]
 === Multi-tenancy settings
@@ -838,7 +901,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 `*hibernate.session.events.auto*`::
 Fully qualified class name implementing the `SessionEventListener` interface.
 
-`*hibernate.session_factory.interceptor` or `hibernate.ejb.interceptor*` (e.g. `org.hibernate.EmptyInterceptor` (default value))::
+`*hibernate.session_factory.interceptor*` (e.g. `org.hibernate.EmptyInterceptor` (default value))::
 Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Interceptor[`Interceptor`] implementation to be applied to every `Session` created by the current `org.hibernate.SessionFactory`
 +
 Can reference:
@@ -847,12 +910,34 @@ Can reference:
 * `Interceptor` implementation `Class` object reference
 * `Interceptor` implementation class name
 
-`*hibernate.ejb.interceptor.session_scoped*` (e.g. fully-qualified class name or class reference)::
+[line-through]#`*hibernate.ejb.interceptor*`# (e.g. `hibernate.session_factory.interceptor` (default value))::
++
+WARNING: Deprecated setting. Use `hibernate.session_factory.session_scoped_interceptor` instead.
+
+`*hibernate.session_factory.session_scoped_interceptor*` (e.g. fully-qualified class name or class reference)::
+Names a `org.hibernate.Interceptor` implementation to be applied to the `org.hibernate.SessionFactory` and propagated to each `Session` created from the `SessionFactory`.
++
+This setting identifies an `Interceptor` implementation that is to be applied to every `Session` opened from the `SessionFactory`,
+but unlike `hibernate.session_factory.interceptor`, a unique instance of the `Interceptor` is
+used for each `Session`.
++
+Can reference:
++
+* `Interceptor` instance
+* `Interceptor` implementation `Class` object reference
+* `java.util.function.Supplier` instance which is used to retrieve the `Interceptor` instance.
++
+NOTE: Specifically, this setting cannot name an `Interceptor` instance.
+
+[line-through]#`*hibernate.ejb.interceptor.session_scoped*`# (e.g. fully-qualified class name or class reference)::
++
+WARNING: Deprecated setting. Use `hibernate.session_factory.session_scoped_interceptor` instead.
++
 An optional Hibernate interceptor.
 +
 The interceptor instance is specific to a given Session instance (and hence is not thread-safe) has to implement `org.hibernate.Interceptor` and have a no-arg constructor.
 +
-This property can not be combined with `hibernate.ejb.interceptor`.
+This property cannot be combined with `hibernate.ejb.interceptor`.
 
 `*hibernate.ejb.session_factory_observer*` (e.g. fully-qualified class name or class reference)::
 Specifies a `SessionFactoryObserver` to be applied to the SessionFactory. The class must have a no-arg constructor.
@@ -979,6 +1064,14 @@ skipUnsupported::: Do the population, but ignore any non-JPA features that would
 
 `*hibernate.delay_cdi_access*` (e.g. `true` or `false` (default value))::
 Defines delayed access to CDI `BeanManager`. Starting in 5.1 the preferred means for CDI bootstrapping is through https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/event/spi/jpa/ExtendedBeanManager.html[`ExtendedBeanManager`].
+
+`*hibernate.resource.beans.container*` (e.g. fully-qualified class name)::
+Identifies an explicit `org.hibernate.resource.beans.container.spi.BeanContainer` to be used.
++
+Note that, for CDI-based containers, setting this is not necessary.
+Simply pass the `BeanManager` to use via `javax.persistence.bean.manager` and optionally specify `hibernate.delay_cdi_access`.
++
+This setting is more meant to integrate non-CDI bean containers such as Spring.
 
 `*hibernate.allow_update_outside_transaction*` (e.g. `true` or `false` (default value))::
 Setting that allows to perform update operations outside of a transaction boundary.

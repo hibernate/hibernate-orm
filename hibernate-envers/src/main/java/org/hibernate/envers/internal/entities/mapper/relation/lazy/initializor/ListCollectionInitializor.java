@@ -19,6 +19,7 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
  * Initializes a map.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class ListCollectionInitializor extends AbstractCollectionInitializor<List> {
 	private final MiddleComponentData elementComponentData;
@@ -42,11 +43,19 @@ public class ListCollectionInitializor extends AbstractCollectionInitializor<Lis
 	@Override
 	@SuppressWarnings({"unchecked"})
 	protected List initializeCollection(int size) {
-		// Creating a list of the given capacity with all elements null initially. This ensures that we can then
-		// fill the elements safely using the <code>List.set</code> method.
+		// There are two types of List collections that this class may generate
+		//
+		// 		1. Those which are not-indexed, thus the entries in the list are equal to the size argument passed.
+		//		2. Those which are indexed, thus the entries in the list are based on the highest result-set index value.
+		//		   In this use case, the supplied size value is irrelevant other than to minimize allocations.
+		//
+		// So what we're going to do is to build an ArrayList based on the supplied size as the best of the two
+		// worlds.  When adding elements to the collection, we cannot make any assumption that the slot for which
+		// we are inserting is valid, so we must continually expand the list as needed for (2); however we can
+		// avoid unnecessary memory allocations by using the size parameter as an optimization for both (1) and (2).
 		final List list = new ArrayList( size );
 		for ( int i = 0; i < size; i++ ) {
-			list.add( null );
+			list.add( i, null );
 		}
 		return list;
 	}
@@ -58,22 +67,39 @@ public class ListCollectionInitializor extends AbstractCollectionInitializor<Lis
 		// otherwise it will be a List
 		Object elementData = collectionRow;
 		Object indexData = collectionRow;
-		if ( collectionRow instanceof java.util.List ) {
-			elementData = ( (List) collectionRow ).get( elementComponentData.getComponentIndex() );
-			indexData = ( (List) collectionRow ).get( indexComponentData.getComponentIndex() );
+		if ( java.util.List.class.isInstance( collectionRow ) ) {
+			final java.util.List row = java.util.List.class.cast( collectionRow );
+			elementData = row.get( elementComponentData.getComponentIndex() );
+			indexData = row.get( indexComponentData.getComponentIndex() );
 		}
-		final Object element = elementData instanceof Map
-				? elementComponentData.getComponentMapper().mapToObjectFromFullMap(
-						entityInstantiator,
-						(Map<String, Object>) elementData, null, revision
-				)
-				: elementData;
+
+		final Object element;
+		if ( Map.class.isInstance( elementData ) ) {
+			element = elementComponentData.getComponentMapper().mapToObjectFromFullMap(
+					entityInstantiator,
+					(Map<String, Object>) elementData,
+					null,
+					revision
+			);
+		}
+		else {
+			element = elementData;
+		}
 
 		final Object indexObj = indexComponentData.getComponentMapper().mapToObjectFromFullMap(
 				entityInstantiator,
-				(Map<String, Object>) indexData, element, revision
+				(Map<String, Object>) indexData,
+				element,
+				revision
 		);
+
 		final int index = ( (Number) indexObj ).intValue();
+
+		// This is copied from PersistentList#readFrom
+		// For the indexed list use case to make sure the slot that we're going to set actually exists.
+		for ( int i = collection.size(); i <= index; ++i ) {
+			collection.add( i, null );
+		}
 
 		collection.set( index, element );
 	}

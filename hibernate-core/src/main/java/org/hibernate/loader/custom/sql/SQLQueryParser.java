@@ -87,7 +87,7 @@ public class SQLQueryParser {
 		for ( int curr = 0; curr < sqlQuery.length(); curr = right + 1 ) {
 			if ( ( left = sqlQuery.indexOf( '{', curr ) ) < 0 ) {
 				// No additional open braces found in the string, append the
-				// rest of the string in its entirty and quit this loop
+				// rest of the string in its entirety and quit this loop
 				result.append( sqlQuery.substring( curr ) );
 				break;
 			}
@@ -168,6 +168,9 @@ public class SQLQueryParser {
 						result.append( '{' ).append(aliasPath).append( '}' );
 					}
 				}
+			}
+			else {
+				result.append( '{' ).append(aliasPath).append( '}' );
 			}
 		}
 

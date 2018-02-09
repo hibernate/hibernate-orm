@@ -41,6 +41,7 @@ public class FromElementBuilder {
 	//		we are dealing with result-variables (selection aliases)
 
 	private static final Logger log = Logger.getLogger( FromElementBuilder.class );
+	private static final boolean log_trace_enabled = log.isTraceEnabled();
 
 	private final ParsingContext parsingContext;
 	private final AliasRegistry aliasRegistry;
@@ -145,7 +146,9 @@ public class FromElementBuilder {
 			SqmJoinType joinType,
 			boolean fetched,
 			boolean canReuseImplicitJoins) {
-		log.tracef( getClass().getSimpleName() + "#buildNavigableJoin : " + navigableReference );
+		if ( log_trace_enabled ) {
+			log.tracef( "#buildNavigableJoin( %s )", navigableReference );
+		}
 
 		assert navigableReference != null;
 		assert joinType != null;
@@ -192,7 +195,7 @@ public class FromElementBuilder {
 		SqmNavigableJoin join = null;
 		SqmNavigableReference cachedNavigableReference = null;
 		if ( reuseImplicitJoins ) {
-			cachedNavigableReference = parsingContext.getCachedNavigableBinding(
+			cachedNavigableReference = parsingContext.getCachedNavigableReference(
 					navigableReference.getSourceReference(),
 					navigableReference.getReferencedNavigable()
 			);
@@ -218,7 +221,7 @@ public class FromElementBuilder {
 			);
 
 			if ( reuseImplicitJoins ) {
-				parsingContext.cacheNavigableBinding( navigableReference );
+				parsingContext.cacheNavigableReference( navigableReference );
 				if ( cachedNavigableReference != null ) {
 					cachedNavigableReference.injectExportedFromElement( join );
 				}

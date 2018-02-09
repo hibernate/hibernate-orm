@@ -56,6 +56,12 @@ public interface SqmNavigableReference extends SqmExpression, NavigableReference
 
 	SqmNavigableReference treatAs(EntityDescriptor target);
 
+	// todo (6.0) : Resolving a SqmNavigableReference through its container is probably a better way to handle Downcast, in many ways:
+	// 		1) can centralize handling for both implicit and explicit down-casting (add downcast
+	//		2) can centralize handling for JpaCompliance checking wrt implicit downcasts
+	//
+	// todo (6.0) : actually this (^^) can already happen via SemanticPathPart during resolve
+
 	void addDowncast(SqmDowncast downcast);
 
 	Collection<SqmDowncast> getDowncasts();

@@ -79,6 +79,6 @@ public abstract class AbstractSqmNavigableReference implements SqmNavigableRefer
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + '@' + Integer.toHexString( System.identityHashCode( this ) ) + "(" + getNavigablePath().getFullPath() + ")";
+		return super.toString() + "(" + getNavigablePath().getFullPath() + ")";
 	}
 }

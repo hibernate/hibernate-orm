@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.internal.NavigableBindingHelper;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
@@ -34,6 +35,7 @@ public class ParsingContext {
 	private final Map<String,SqmFrom> globalFromElementMap = new HashMap<>();
 
 	private Map<SqmNavigableContainerReference,Map<Navigable,SqmNavigableReference>> navigableReferenceMapBySource;
+	private Map<NavigablePath,SqmNavigableReference> navigableReferenceByPath;
 
 	public ParsingContext(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -62,44 +64,58 @@ public class ParsingContext {
 		globalFromElementMap.get( uid );
 	}
 
-	public void cacheNavigableBinding(SqmNavigableReference binding) {
-		assert binding.getSourceReference() != null;
+	public void cacheNavigableReference(SqmNavigableReference reference) {
+		assert reference.getSourceReference() != null;
 
-		Map<Navigable, SqmNavigableReference> navigableBindingMap = null;
-		if ( navigableReferenceMapBySource == null ) {
-			navigableReferenceMapBySource = new HashMap<>();
-		}
-		else {
-			navigableBindingMap = navigableReferenceMapBySource.get( binding.getSourceReference() );
+		if ( navigableReferenceByPath == null ) {
+			navigableReferenceByPath = new HashMap<>();
 		}
 
-		if ( navigableBindingMap == null ) {
-			navigableBindingMap = new HashMap<>();
-			navigableReferenceMapBySource.put( binding.getSourceReference(), navigableBindingMap );
-		}
+		final SqmNavigableReference previous = navigableReferenceByPath.put( reference.getNavigablePath(), reference );
 
-		final SqmNavigableReference previous = navigableBindingMap.put( binding.getReferencedNavigable(), binding );
+//		Map<Navigable, SqmNavigableReference> navigableReferenceMap = null;
+//		if ( navigableReferenceMapBySource == null ) {
+//			navigableReferenceMapBySource = new HashMap<>();
+//		}
+//		else {
+//			navigableReferenceMap = navigableReferenceMapBySource.get( reference.getSourceReference() );
+//		}
+//
+//		if ( navigableReferenceMap == null ) {
+//			navigableReferenceMap = new HashMap<>();
+//			navigableReferenceMapBySource.put( reference.getSourceReference(), navigableReferenceMap );
+//		}
+//
+//		final SqmNavigableReference previous = navigableReferenceMap.put( reference.getReferencedNavigable(), reference );
 		if ( previous != null ) {
+			// todo (6.0) : should this be an exception instead?
 			log.debugf(
-					"Caching NavigableBinding [%s] over-wrote previous cache entry [%s]",
-					binding,
+					"Caching SqmNavigableReference [%s] over-wrote previous [%s]",
+					reference,
 					previous
 			);
 		}
 	}
 
-	public SqmNavigableReference getCachedNavigableBinding(SqmNavigableContainerReference source, Navigable navigable) {
-		if ( navigableReferenceMapBySource == null ) {
+	public SqmNavigableReference getCachedNavigableReference(SqmNavigableContainerReference source, Navigable navigable) {
+		if ( navigableReferenceByPath == null ) {
 			return null;
 		}
 
-		final Map<Navigable, SqmNavigableReference> navigableBindingMap = navigableReferenceMapBySource.get( source );
+		final NavigablePath path = source.getNavigablePath().append( navigable.getNavigableName() );
+		return navigableReferenceByPath.get( path );
 
-		if ( navigableBindingMap == null ) {
-			return null;
-		}
-
-		return navigableBindingMap.get( navigable );
+//		if ( navigableReferenceMapBySource == null ) {
+//			return null;
+//		}
+//
+//		final Map<Navigable, SqmNavigableReference> navigableBindingMap = navigableReferenceMapBySource.get( source );
+//
+//		if ( navigableBindingMap == null ) {
+//			return null;
+//		}
+//
+//		return navigableBindingMap.get( navigable );
 	}
 
 	public SqmNavigableReference findOrCreateNavigableReference(

@@ -6,6 +6,8 @@
  */
 package org.hibernate.query;
 
+import java.util.Objects;
+
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 
@@ -84,5 +86,22 @@ public class NavigablePath {
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + '[' + fullPath + ']';
+	}
+
+	@Override
+	public int hashCode() {
+		return fullPath.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		NavigablePath path = (NavigablePath) o;
+		return Objects.equals( getFullPath(), path.getFullPath() );
 	}
 }

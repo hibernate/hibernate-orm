@@ -20,9 +20,10 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 @SuppressWarnings("WeakerAccess")
 public class HqlParseTreePrinter extends HqlParserBaseListener {
 	private static final Logger HQL_LOGGER = Logger.getLogger( "org.hibernate.sqm.hql.parseTree" );
+	private static final boolean LOG_DEBUG_ENABLED = HQL_LOGGER.isDebugEnabled();
 
 	public static void logStatementParseTree(HqlParser parser) {
-		if ( !HQL_LOGGER.isDebugEnabled() ) {
+		if ( !LOG_DEBUG_ENABLED ) {
 			return;
 		}
 
@@ -31,7 +32,7 @@ public class HqlParseTreePrinter extends HqlParserBaseListener {
 	}
 
 	public static void logOrderByParseTree(HqlParser parser) {
-		if ( !HQL_LOGGER.isDebugEnabled() ) {
+		if ( !LOG_DEBUG_ENABLED ) {
 			return;
 		}
 

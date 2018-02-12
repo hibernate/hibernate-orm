@@ -37,6 +37,10 @@ public enum TransactionStatus {
 	 */
 	FAILED_COMMIT,
 	/**
+	 * The transaction attempted to rollback, but failed.
+	 */
+	FAILED_ROLLBACK,
+	/**
 	 * Status code indicating a transaction that has begun the second
 	 * phase of the two-phase commit protocol, but not yet completed
 	 * this phase.

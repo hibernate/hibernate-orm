@@ -16,6 +16,7 @@ import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BinderHelper;
+import org.hibernate.cfg.schema.SchemaNamingProviderLocator;
 import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -189,9 +190,12 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 			definitionBuilder.setName( sequenceGeneratorAnnotation.name() );
 
 			definitionBuilder.setStrategy( "seqhilo" );
+			
+			//compute dynamic sequence name
+			String sequenceName=SchemaNamingProviderLocator.resolveSequenceName(sequenceGeneratorAnnotation.sequenceName());
 
-			if ( !BinderHelper.isEmptyAnnotationValue( sequenceGeneratorAnnotation.sequenceName() ) ) {
-				definitionBuilder.addParam( org.hibernate.id.SequenceGenerator.SEQUENCE, sequenceGeneratorAnnotation.sequenceName() );
+			if ( !BinderHelper.isEmptyAnnotationValue( sequenceName ) ) {
+				definitionBuilder.addParam( org.hibernate.id.SequenceGenerator.SEQUENCE, sequenceName );
 			}
 			//FIXME: work on initialValue() through SequenceGenerator.PARAMETERS
 			//		steve : or just use o.h.id.enhanced.SequenceStyleGenerator

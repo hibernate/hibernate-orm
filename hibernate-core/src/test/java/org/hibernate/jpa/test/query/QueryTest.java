@@ -704,6 +704,138 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.close();
 		}
 	}
+	
+	/**
+	 * Collection parameters are internally rewritten to named parameters (one named parameter by
+	 * collection item) and HQL parser rejects mixed positional and named parameters queries.
+	 */
+	@Test
+	@TestForIssue(jiraKey = "HHH-12290")
+	public void testParameterCollectionAndPositional() {
+		final Item item = new Item( "Mouse", "Micro$oft mouse" );
+		final Item item2 = new Item( "Computer", "Dell computer" );
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			em.persist( item );
+			em.persist( item2 );
+			assertTrue( em.contains( item ) );
+			em.getTransaction().commit();
+
+			em.getTransaction().begin();
+			Query q = em.createQuery( "select item from Item item where item.name in ?1 and descr = ?2" );
+			//test hint in value and string
+			q.setHint( "org.hibernate.fetchSize", 10 );
+			q.setHint( "org.hibernate.fetchSize", "10" );
+			List params = new ArrayList();
+			params.add( item.getName() );
+			params.add( item2.getName() );
+			q.setParameter( 1, params );
+			q.setParameter( 2, item2.getDescr() );
+			List result = q.getResultList();
+			assertNotNull( result );
+			assertEquals( 1, result.size() );
+		}
+		catch (Exception e){
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			throw e;
+		}
+		finally {
+			em.close();
+		}
+	}
+	
+	/**
+	 * Collection parameters are internally rewritten to named parameters (one named parameter by
+	 * collection item) and HQL parser rejects mixed positional and named parameters queries.
+	 */
+	@Test
+	@TestForIssue(jiraKey = "HHH-12290")
+	public void testParameterCollectionParenthesesAndPositional() {
+		final Item item = new Item( "Mouse", "Micro$oft mouse" );
+		final Item item2 = new Item( "Computer", "Dell computer" );
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			em.persist( item );
+			em.persist( item2 );
+			assertTrue( em.contains( item ) );
+			em.getTransaction().commit();
+
+			em.getTransaction().begin();
+			Query q = em.createQuery( "select item from Item item where item.name in (?1) and descr = ?2" );
+			//test hint in value and string
+			q.setHint( "org.hibernate.fetchSize", 10 );
+			q.setHint( "org.hibernate.fetchSize", "10" );
+			List params = new ArrayList();
+			// for this case, 1-item collection is OK, but 2 or more is broken
+			// as 1-item collection are not "rewritten"
+			params.add( item.getName() );
+			params.add( item2.getName() );
+			q.setParameter( 1, params );
+			q.setParameter( 2, item2.getDescr() );
+			List result = q.getResultList();
+			assertNotNull( result );
+			assertEquals( 1, result.size() );
+		}
+		catch (Exception e){
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			throw e;
+		}
+		finally {
+			em.close();
+		}
+	}
+	
+	/**
+	 * Collection parameters are internally rewritten to named parameters (one named parameter by
+	 * collection item) and HQL parser rejects mixed positional and named parameters queries.
+	 */
+	@Test
+	@TestForIssue(jiraKey = "HHH-12290")
+	public void testParameterCollectionSingletonParenthesesAndPositional() {
+		final Item item = new Item( "Mouse", "Micro$oft mouse" );
+		final Item item2 = new Item( "Computer", "Dell computer" );
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			em.persist( item );
+			em.persist( item2 );
+			assertTrue( em.contains( item ) );
+			em.getTransaction().commit();
+
+			em.getTransaction().begin();
+			Query q = em.createQuery( "select item from Item item where item.name in (?1) and descr = ?2" );
+			//test hint in value and string
+			q.setHint( "org.hibernate.fetchSize", 10 );
+			q.setHint( "org.hibernate.fetchSize", "10" );
+			List params = new ArrayList();
+			// for this case, 1-item collection is OK, but 2 or more is broken
+			// as 1-item collection are not "rewritten"
+			params.add( item2.getName() );
+			q.setParameter( 1, params );
+			q.setParameter( 2, item2.getDescr() );
+			List result = q.getResultList();
+			assertNotNull( result );
+			assertEquals( 1, result.size() );
+		}
+		catch (Exception e){
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			throw e;
+		}
+		finally {
+			em.close();
+		}
+	}
 
 	@Test
 	public void testParameterList() throws Exception {

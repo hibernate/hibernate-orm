@@ -113,6 +113,9 @@ public class QueryParameterBindingValidator {
 			}
 			return false;
 		}
+		else if ( value == null) {
+			return true;
+		}
 		else if ( expectedType.isInstance( value ) ) {
 			return true;
 		}

@@ -12,13 +12,10 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
-import org.hibernate.query.NativeQuery;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
@@ -168,18 +165,5 @@ public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		ss.close();
 	}
-
-	@Test
-	@TestForIssue( jiraKey = "HHH-12141" )
-	public void testInsertInStatelessSession() throws Exception {
-		doInHibernate( this::sessionFactory, session -> {
-			session.doWork( connection -> {
-				StatelessSession sls = sessionFactory().openStatelessSession(connection);
-				NativeQuery q = sls.createNativeQuery( "INSERT INTO paper (color) values ('red')");
-				q.executeUpdate();
-			} );
-		} );
-	}
-
 }
 

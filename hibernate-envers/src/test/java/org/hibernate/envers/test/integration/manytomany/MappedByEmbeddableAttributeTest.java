@@ -9,6 +9,7 @@ package org.hibernate.envers.test.integration.manytomany;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -17,7 +18,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
-import org.hibernate.envers.AuditReader;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -25,8 +27,10 @@ import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
 
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Chris Cranford
@@ -136,6 +140,30 @@ public class MappedByEmbeddableAttributeTest extends BaseEnversJPAFunctionalTest
 			this.aList = aList;
 		}
 	}
+	
+	private static class EntityBNameMatcher extends BaseMatcher<EntityB> {
+
+		private final String expectedValue;
+
+		public EntityBNameMatcher(String name) {
+			this.expectedValue = name;
+		}
+
+		@Override
+		public boolean matches(Object item) {
+			if ( !( item instanceof EntityB ) ) {
+				return false;
+			}
+
+			EntityB entityB = (EntityB) item;
+			return Objects.equals( entityB.getName(), this.expectedValue );
+		}
+
+		@Override
+		public void describeTo(Description description) {
+			description.appendText( "an instance of " ).appendText( EntityB.class.getName() ).appendText( " named " ).appendValue( this.expectedValue );
+		}
+	}
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -188,8 +216,8 @@ public class MappedByEmbeddableAttributeTest extends BaseEnversJPAFunctionalTest
 
 		EntityA rev3 = getAuditReader().find( EntityA.class, this.aId, 3 );
 		assertEquals( 2, rev3.getContainer().getbList().size() );
-		assertEquals( "B-Updated", rev3.getContainer().getbList().get( 0 ).getName() );
-		assertEquals( "B2", rev3.getContainer().getbList().get( 1 ).getName() );
+		assertThat( rev3.getContainer().getbList(), hasItem( new EntityBNameMatcher( "B-Updated" ) ) );
+		assertThat( rev3.getContainer().getbList(), hasItem( new EntityBNameMatcher( "B2" ) ) );
 
 	}
 

@@ -398,7 +398,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			Type keyType = getPersister( session ).getKeyType();
 			Class returnedClass = keyType.getReturnedClass();
 
-			if ( !returnedClass.equals( entityEntry.getPersister().getMappedClass() ) && !returnedClass.isInstance( id ) ) {
+			if ( !returnedClass.isInstance( id ) ) {
 				id = keyType.semiResolve(
 						entityEntry.getLoadedValue( foreignKeyPropertyName ),
 						session,

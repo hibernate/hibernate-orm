@@ -178,7 +178,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			Join join = (Join) joinIter.next();
 			qualifiedTableNames[j] = determineTableName( join.getTable(), jdbcEnvironment );
 			isInverseTable[j] = join.isInverse();
-			isNullableTable[j] = join.isOptional();
+			isNullableTable[j] = join.isOptional()
+					|| creationContext.getSessionFactory()
+							.getSessionFactoryOptions()
+							.getJpaCompliance()
+							.isJpaCacheComplianceEnabled();
 			cascadeDeleteEnabled[j] = join.getKey().isCascadeDeleteEnabled() &&
 					factory.getDialect().supportsCascadeDelete();
 
@@ -244,7 +248,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			isConcretes.add( persistentClass.isClassOrSuperclassJoin( join ) );
 			isDeferreds.add( join.isSequentialSelect() );
 			isInverses.add( join.isInverse() );
-			isNullables.add( join.isOptional() );
+			isNullables.add(
+					join.isOptional() || creationContext.getSessionFactory()
+							.getSessionFactoryOptions()
+							.getJpaCompliance()
+							.isJpaCacheComplianceEnabled()
+			);
 			isLazies.add( lazyAvailable && join.isLazy() );
 			if ( join.isSequentialSelect() && !persistentClass.isClassOrSuperclassJoin( join ) ) {
 				hasDeferred = true;

@@ -95,6 +95,7 @@ import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
@@ -152,6 +153,7 @@ public abstract class AbstractEntityPersister
 	private final SessionFactoryImplementor factory;
 	private final boolean canReadFromCache;
 	private final boolean canWriteToCache;
+	private final boolean invalidateCache;
 	private final EntityRegionAccessStrategy cacheAccessStrategy;
 	private final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy;
 	private final boolean isLazyPropertiesCacheable;
@@ -845,6 +847,50 @@ public abstract class AbstractEntityPersister
 
 		this.cacheEntryHelper = buildCacheEntryHelper();
 
+		if ( creationContext.getSessionFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
+			this.invalidateCache = canWriteToCache && determineWhetherToInvalidateCache( persistentClass, creationContext );
+		}
+		else {
+			this.invalidateCache = false;
+		}
+
+	}
+
+	@SuppressWarnings("RedundantIfStatement")
+	private boolean determineWhetherToInvalidateCache(
+			PersistentClass persistentClass,
+			PersisterCreationContext creationContext) {
+		if ( hasFormulaProperties() ) {
+			return true;
+		}
+
+		if ( isVersioned() ) {
+			return false;
+		}
+
+		if ( entityMetamodel.isDynamicUpdate() ) {
+			return false;
+		}
+
+		// We need to check whether the user may have circumvented this logic (JPA TCK)
+		final boolean complianceEnabled = creationContext.getSessionFactory()
+				.getSessionFactoryOptions()
+				.getJpaCompliance()
+				.isJpaCacheComplianceEnabled();
+		if ( complianceEnabled ) {
+			// The JPA TCK (inadvertently, but still...) requires that we cache
+			// entities with secondary tables even though Hibernate historically
+			// invalidated them
+			return false;
+		}
+
+		if ( persistentClass.getJoinClosureSpan() >= 1 ) {
+			// todo : this should really consider optionality of the secondary tables in count
+			//		non-optional tables do not cause this bypass
+			return true;
+		}
+
+		return false;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1273,8 +1319,7 @@ public abstract class AbstractEntityPersister
 	 * item.
 	 */
 	public boolean isCacheInvalidationRequired() {
-		return hasFormulaProperties() ||
-				( !isVersioned() && ( entityMetamodel.isDynamicUpdate() || getTableSpan() > 1 ) );
+		return invalidateCache;
 	}
 
 	public boolean isLazyPropertiesCacheable() {

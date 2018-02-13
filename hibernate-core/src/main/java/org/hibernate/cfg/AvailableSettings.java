@@ -1835,6 +1835,12 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String JPA_PROXY_COMPLIANCE = "hibernate.jpa.compliance.proxy";
 
 	/**
+	 * @see JpaCompliance#isJpaCacheComplianceEnabled()
+	 * @since 5.3
+	 */
+	String JPA_CACHING_COMPLIANCE = "hibernate.jpa.compliance.caching";
+
+	/**
 	 * True/False setting indicating if the value stored in the table used by the {@link javax.persistence.TableGenerator}
 	 * is the last value generated or the next value to be used.
 	 *

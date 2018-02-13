@@ -21,6 +21,7 @@ public class JpaComplianceImpl implements JpaCompliance {
 	private boolean listCompliance;
 	private boolean closedCompliance;
 	private boolean proxyCompliance;
+	private boolean cachingCompliance;
 
 
 	@SuppressWarnings("ConstantConditions")
@@ -52,6 +53,11 @@ public class JpaComplianceImpl implements JpaCompliance {
 				configurationSettings,
 				jpaByDefault
 		);
+		cachingCompliance = ConfigurationHelper.getBoolean(
+				AvailableSettings.JPA_CACHING_COMPLIANCE,
+				configurationSettings,
+				jpaByDefault
+		);
 	}
 
 	@Override
@@ -79,6 +85,11 @@ public class JpaComplianceImpl implements JpaCompliance {
 		return proxyCompliance;
 	}
 
+	@Override
+	public boolean isJpaCacheComplianceEnabled() {
+		return cachingCompliance;
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Mutators
 
@@ -96,5 +107,13 @@ public class JpaComplianceImpl implements JpaCompliance {
 
 	public void setClosedCompliance(boolean closedCompliance) {
 		this.closedCompliance = closedCompliance;
+	}
+
+	public void setProxyCompliance(boolean proxyCompliance) {
+		this.proxyCompliance = proxyCompliance;
+	}
+
+	public void setCachingCompliance(boolean cachingCompliance) {
+		this.cachingCompliance = cachingCompliance;
 	}
 }

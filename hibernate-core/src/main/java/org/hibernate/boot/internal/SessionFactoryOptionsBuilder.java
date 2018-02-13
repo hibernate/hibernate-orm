@@ -1212,6 +1212,14 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.jpaCompliance.setClosedCompliance( enabled );
 	}
 
+	public void enableJpaProxyCompliance(boolean enabled) {
+		this.jpaCompliance.setProxyCompliance( enabled );
+	}
+
+	public void enableJpaCachingCompliance(boolean enabled) {
+		this.jpaCompliance.setCachingCompliance( enabled );
+	}
+
 	public void markAsJpaBootstrap() {
 		this.jpaBootstrap = true;
 	}

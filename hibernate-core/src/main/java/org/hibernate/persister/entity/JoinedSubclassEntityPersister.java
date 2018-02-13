@@ -243,7 +243,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		while ( joinItr.hasNext() ) {
 			Join join = (Join) joinItr.next();
 
-			isNullableTable[tableIndex++] = join.isOptional();
+			isNullableTable[tableIndex++] = join.isOptional() ||
+					creationContext.getSessionFactory()
+							.getSessionFactoryOptions()
+							.getJpaCompliance()
+							.isJpaCacheComplianceEnabled();
+
 
 			Table table = join.getTable();
 			final String tableName = determineTableName( table, jdbcEnvironment );

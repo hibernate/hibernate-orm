@@ -77,4 +77,16 @@ public interface JpaCompliance {
 	 * @return {@code true} indicates to behave in the spec-defined way
 	 */
 	boolean isJpaProxyComplianceEnabled();
+
+	/**
+	 * Should Hibernate comply with all aspects of caching as defined by JPA?  Or can
+	 * it deviate to perform things it believes will be "better"?
+	 *
+	 * @implNote Effects include marking all secondary tables as non-optional.  The reason
+	 * being that optional secondary tables can lead to entity cache being invalidated rather
+	 * than updated.
+	 *
+	 * @return {@code true} says to act the spec-defined way.
+	 */
+	boolean isJpaCacheComplianceEnabled();
 }

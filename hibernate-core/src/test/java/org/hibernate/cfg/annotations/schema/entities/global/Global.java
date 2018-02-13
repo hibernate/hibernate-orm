@@ -13,10 +13,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.SequenceGenerator;
 
-import org.hibernate.annotations.Table;
-import org.springframework.data.annotation.AccessType;
-import org.springframework.data.annotation.AccessType.Type;
 
 /**
  * Exemple of global schema data.
@@ -36,7 +37,7 @@ public class Global {
 	public Global() {
 	}
 
-	public Global(String id) {
+	public Global(Long id) {
 		this.id = id;
 	}
 

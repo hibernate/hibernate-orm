@@ -12,8 +12,10 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-
-import org.hibernate.annotations.Table;
+import javax.persistence.Table;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.SequenceGenerator;
 import org.hibernate.cfg.annotations.schema.entities.global.Global;
 
 /**
@@ -36,7 +38,7 @@ public class Dynamic {
 	public Dynamic() {
 	}
 
-	public Dynamic(String id) {
+	public Dynamic(Long id) {
 		this.id = id;
 	}
 

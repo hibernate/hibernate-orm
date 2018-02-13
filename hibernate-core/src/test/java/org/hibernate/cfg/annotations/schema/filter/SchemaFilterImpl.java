@@ -25,8 +25,8 @@ public class SchemaFilterImpl implements SchemaFilter {
 		}
 		String schemaName = schema.getText();
 		boolean included = isSchemaNameFiltered( schemaName );
-		log.debug( "testing namespace {} for schema {} : included={}",
-				namespace.getName(), schemaName, included );
+//		log.debugf( "testing namespace {} for schema {} : included={}",
+//				namespace.getName(), schemaName, included );
 		return included;
 
 	}
@@ -43,7 +43,7 @@ public class SchemaFilterImpl implements SchemaFilter {
 
 	@Override
 	public boolean includeSequence(Sequence sequence) {
-		log.debug( "testing sequence {}", sequence );
+//		log.debugf( "testing sequence {}", sequence );
 		String sequenceName = sequence.getName().getObjectName().getText();
 
 		Identifier schemaNameIdentifier = sequence.getName().getSchemaName();
@@ -56,8 +56,8 @@ public class SchemaFilterImpl implements SchemaFilter {
 			included = isSchemaNameFiltered( getLocator()
 					.getSchemaForSequence( sequenceName ) );
 		}
-		log.debug( "testing sequence {}  for schema {} : included={}", sequenceName,
-				schemaName, included );
+//		log.debugf( "testing sequence {}  for schema {} : included={}", sequenceName,
+//				schemaName, included );
 
 		return included;
 	}
@@ -72,8 +72,8 @@ public class SchemaFilterImpl implements SchemaFilter {
 			// then filter on table name
 			included = isSchemaNameFiltered( getLocator().getSchemaForTable( tableName ) );
 		}
-		log.debug( "testing table {}  for schema {} : included={}", tableName,
-				schemaName, included );
+//		log.debugf( "testing table {}  for schema {} : included={}", tableName,
+//				schemaName, included );
 		return included;
 	}
 	

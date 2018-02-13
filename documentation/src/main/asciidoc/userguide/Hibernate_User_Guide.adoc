@@ -1,4 +1,4 @@
-= Hibernate ORM {majorMinorVersion} User Guide
+= Hibernate ORM {fullVersion} User Guide
 Steve Ebersole, Vlad Mihalcea, Andrea Boriero, Brett Meyer, Radim Vansa
 :toc:
 :toclevels: 3

@@ -58,6 +58,11 @@ ext {
     hibernateTargetVersion = '5.1.13-SNAPSHOT'
 
     osgiExportVersion = hibernateTargetVersion.replaceAll( '-SNAPSHOT', '.SNAPSHOT' )
+
+	final String[] versionComponents = hibernateTargetVersion.split( '\\.' );
+	hibernateFullVersion = hibernateTargetVersion
+	hibernateMajorMinorVersion = versionComponents[0] + '.' + versionComponents[1]
+	hibernateMajorVersion = versionComponents[0]
 }
 
 idea {

@@ -591,7 +591,7 @@ public final class AnnotationBinder {
 
 			//compute dynamic schema name
 			//schema = tabAnn.schema();
-			schema = SchemaNamingProviderLocator.resolvevSchemaName(tabAnn.schema(),table);
+			schema = SchemaNamingProviderLocator.resolveSchemaName(tabAnn.schema(),table);
 
 			catalog = tabAnn.catalog();
 			uniqueConstraints = TableBinder.buildUniqueConstraintHolders( tabAnn.uniqueConstraints() );
@@ -2437,7 +2437,7 @@ public final class AnnotationBinder {
 		if ( assocTable != null || collectionTable != null ) {
 
 			final String catalog;
-			final String schema;
+			String schema;
 			final String tableName;
 			final UniqueConstraint[] uniqueConstraints;
 			final JoinColumn[] joins;
@@ -2458,9 +2458,9 @@ public final class AnnotationBinder {
 			else {
 				catalog = assocTable.catalog();
 				//compute dynamic schema name
-				//schema = assocTable.schema();
-				schema = SchemaNamingProviderLocator.resolveSchemaName(schema, tableName);
+				schema = assocTable.schema();
 				tableName = assocTable.name();
+				schema = SchemaNamingProviderLocator.resolveSchemaName(schema, tableName);
 				uniqueConstraints = assocTable.uniqueConstraints();
 				joins = assocTable.joinColumns();
 				inverseJoins = assocTable.inverseJoinColumns();

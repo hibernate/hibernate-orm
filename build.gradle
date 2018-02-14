@@ -39,6 +39,10 @@ allprojects {
 			name "jboss-snapshots"
 			url "http://snapshots.jboss.org/maven2/"
 		}
+		maven {
+			name 'jboss-nexus-public'
+			url 'https://repository.jboss.org/nexus/content/groups/public/'
+		}
 	}
 
 	// minimize changes, at least for now (gradle uses 'build' by default)..

@@ -112,6 +112,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public String getCurrentSchemaCommand() {
+		return "SELECT SCHEMA_NAME()";
+	}
+
+	@Override
 	public char openQuote() {
 		return '[';
 	}

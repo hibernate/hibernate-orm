@@ -672,4 +672,9 @@ public class Oracle8iDialect extends Dialect {
 	public boolean canCreateSchema() {
 		return false;
 	}
+
+	@Override
+	public String getCurrentSchemaCommand() {
+		return "SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') FROM DUAL";
+	}
 }

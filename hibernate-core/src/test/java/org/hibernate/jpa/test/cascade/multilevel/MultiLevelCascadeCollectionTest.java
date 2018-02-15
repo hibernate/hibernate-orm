@@ -28,6 +28,7 @@ import javax.persistence.Table;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -62,8 +63,8 @@ public class MultiLevelCascadeCollectionTest extends BaseEntityManagerFunctional
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12291" )
-	public void testHibernateDeleteEntityWithoutCallingToString() throws Exception {
+	@FailureExpected( jiraKey = "HHH-12291" )
+	public void testHibernateDeleteEntityWithoutInitializingCollections() throws Exception {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			MainEntity mainEntity = entityManager.find(MainEntity.class, 99427L);
 
@@ -158,8 +159,6 @@ public class MultiLevelCascadeCollectionTest extends BaseEntityManagerFunctional
 
 		@Id
 		@Column(name = "SUB_ID")
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "subIdNumSequence")
-		@SequenceGenerator(name = "subIdNumSequence", sequenceName = "SEQ_SUB_ID", allocationSize = 1)
 		private Long subIdNum;
 
 		@Column(name = "IND_NUM")

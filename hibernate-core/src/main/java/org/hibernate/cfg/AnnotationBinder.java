@@ -2457,9 +2457,9 @@ public final class AnnotationBinder {
 			}
 			else {
 				catalog = assocTable.catalog();
-				//compute dynamic schema name
 				schema = assocTable.schema();
 				tableName = assocTable.name();
+				//compute dynamic schema name
 				schema = SchemaNamingProviderLocator.resolveSchemaName(schema, tableName);
 				uniqueConstraints = assocTable.uniqueConstraints();
 				joins = assocTable.joinColumns();

@@ -12,7 +12,9 @@ description = 'Integration for Agroal as a ConnectionProvider for Hibernate ORM'
 dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.agroal_api )
+
     runtime( libraries.agroal_pool )
+
     testCompile project( ':hibernate-testing' )
     testCompile(libraries.mockito)
 }

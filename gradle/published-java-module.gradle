@@ -136,7 +136,7 @@ publishing {
 	}
 }
 
-task ciBuild( dependsOn: [clean, test, publish] )
+task ciBuild( dependsOn: [test, publish] )
 
-task release( dependsOn: [clean, test, bintrayUpload] )
+task release( dependsOn: [test, bintrayUpload] )
 

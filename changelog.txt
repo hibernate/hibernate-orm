@@ -5,8 +5,36 @@ Note: Please refer to JIRA to learn more about each issue.
 
 
 
+Changes in 5.3.0.CR1 (February 15, 2018)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31633/tab/release-report-done
+
+** Bug
+    * [HHH-8916] - SQLServer2005LimitHandler bind top parameter to wrong position
+    * [HHH-10961] - Update address of Free Software Foundation
+    * [HHH-12114] - Union-select aliases not injected before "clazz_" conditions in HQL query
+    * [HHH-12141] - SQL insert in stateless session causes javax.persistence.TransactionRequiredException
+    * [HHH-12271] - SchemaDropperImpl does not drop constraints with IF EXISTS
+    * [HHH-12286] - Update Vibur dependency from 21.3 to 22.0
+    * [HHH-12289] - One call of the SessionImpl#listeners( ) method from SessionImpl#autoFlushIfRequired() is useless.
+    * [HHH-12294] - Regression after fixing HHH-12064
+
+** Task
+    * [HHH-12293] - Upgrade to Hibernate Commons Annotations 5.0.2.Final
+
+** Improvement
+    * [HHH-12236] - Document 5.3 changes
+    * [HHH-12280] - Resolve {alias} in @Formula like Restrictions.sqlRestriction()
+    * [HHH-12282] - Allow disabling of invalidation of second-level cache entries for multi-table entities
+
+
+
+
 Changes in 5.3.0.Beta2 (February 1, 2018)
 ------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31621/tab/release-report-done
 
 ** Bug
     * [HHH-1268] - Unidirection OneToMany causes duplicate key entry violation when removing from list

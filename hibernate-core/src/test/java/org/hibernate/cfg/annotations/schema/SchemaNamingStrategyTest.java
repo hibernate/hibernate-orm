@@ -22,8 +22,10 @@ import org.hibernate.cfg.schema.SchemaNamingDefaultProvider;
 import org.hibernate.cfg.schema.SchemaNamingProviderLocator;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase.TestingPersistenceUnitDescriptorImpl;
 import org.hibernate.query.NativeQueryWithParenthesesTest.Person;
 
 import javax.persistence.EntityManagerFactory;
@@ -32,7 +34,6 @@ import org.hibernate.tool.hbm2ddl.SchemaExport.Action;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
 /**
@@ -40,9 +41,9 @@ import org.junit.Test;
  *
  * @author Benoit Besson
  */
-public class SchemaNamingStrategyTest extends /* BaseEntityManagerFunctionalTestCase */ BaseUnitTestCase {
+public class SchemaNamingStrategyTest extends BaseEntityManagerFunctionalTestCase {
 
-	// @Override
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] { Global.class, Dynamic.class };
 	}
@@ -74,6 +75,11 @@ public class SchemaNamingStrategyTest extends /* BaseEntityManagerFunctionalTest
 		//
 		// } );
 	}
+	
+	//copied from superclass as it is not provided as protected
+	private PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
+		return new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
+	}
 
 	private void exportSchema(Class<? extends SchemaFilter> schemaFilterProviderClass) throws IOException {
 
@@ -83,9 +89,8 @@ public class SchemaNamingStrategyTest extends /* BaseEntityManagerFunctionalTest
 
 		// configure NamingStrategy
 		{
-			PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter();
 			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap
-					.getEntityManagerFactoryBuilder(adapter, Collections.emptyMap());
+					.getEntityManagerFactoryBuilder(buildPersistenceUnitDescriptor(), buildSettings());
 			// extract metadata
 			MetadataImplementor metadata = builder.getMetadata();
 

@@ -298,7 +298,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			return schemaNameResolver.resolveSchemaName( databaseMetaData.getConnection(), dialect );
 		}
 		catch (Exception e) {
-			// for now, just ignore the exception.
+			log.debugf( "Unable to resolve connection default schema : " + e.getMessage() );
 			return null;
 		}
 	}

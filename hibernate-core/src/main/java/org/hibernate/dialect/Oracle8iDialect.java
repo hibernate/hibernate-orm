@@ -744,6 +744,11 @@ public class Oracle8iDialect extends Dialect {
 	}
 
 	@Override
+	public String getCurrentSchemaCommand() {
+		return "SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') FROM DUAL";
+	}
+
+	@Override
 	public boolean supportsPartitionBy() {
 		return true;
 	}

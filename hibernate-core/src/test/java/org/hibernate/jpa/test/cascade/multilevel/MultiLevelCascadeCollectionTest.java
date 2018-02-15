@@ -28,19 +28,19 @@ import javax.persistence.Table;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
-public class MultiLevelCascadeToStringTest extends BaseEntityManagerFunctionalTestCase {
+public class MultiLevelCascadeCollectionTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( MultiLevelCascadeToStringTest.class );
+	private static final Logger log = Logger.getLogger( MultiLevelCascadeCollectionTest.class );
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -62,7 +62,7 @@ public class MultiLevelCascadeToStringTest extends BaseEntityManagerFunctionalTe
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-12291" )
+	@TestForIssue( jiraKey = "HHH-12291" )
 	public void testHibernateDeleteEntityWithoutCallingToString() throws Exception {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			MainEntity mainEntity = entityManager.find(MainEntity.class, 99427L);
@@ -78,7 +78,7 @@ public class MultiLevelCascadeToStringTest extends BaseEntityManagerFunctionalTe
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12294" )
-	public void testHibernateDeleteEntityCallingToString() throws Exception {
+	public void testHibernateDeleteEntityInitializeCollections() throws Exception {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			MainEntity mainEntity = entityManager.find(MainEntity.class, 99427L);
 
@@ -87,9 +87,11 @@ public class MultiLevelCascadeToStringTest extends BaseEntityManagerFunctionalTe
 
 			Optional<SubEntity> subEntityToRemove =  mainEntity.getSubEntities().stream()
 					.filter(subEntity -> "123A".equals(subEntity.getIndNum())).findFirst();
-			if(subEntityToRemove.isPresent()) {
-				log.infof("Entity to be removed: %s", subEntityToRemove.get());
-				mainEntity.removeSubEntity(subEntityToRemove.get());
+			if ( subEntityToRemove.isPresent() ) {
+				SubEntity subEntity = subEntityToRemove.get();
+				assertEquals( 1, subEntity.getSubSubEntities().size() );
+				assertEquals( 0, subEntity.getAnotherSubSubEntities().size() );
+				mainEntity.removeSubEntity( subEntity );
 			}
 		} );
 	}
@@ -238,17 +240,6 @@ public class MultiLevelCascadeToStringTest extends BaseEntityManagerFunctionalTe
 
 			return Objects.hash(super.hashCode(), subIdNum);
 		}
-
-		@Override
-		public String toString() {
-			return "SubEntity{" +
-					"subIdNum=" + subIdNum +
-					", indNum='" + indNum + '\'' +
-					", familyIdentifier='" + familyIdentifier + '\'' +
-					", subSubEntities=" + subSubEntities +
-					", anotherSubSubEntities=" + anotherSubSubEntities +
-					'}';
-		}
 	}
 
 	@Entity
@@ -273,7 +264,6 @@ public class MultiLevelCascadeToStringTest extends BaseEntityManagerFunctionalTe
 				@JoinColumn(name = "ID_NUM", referencedColumnName = "ID_NUM", insertable = false, updatable = false),
 				@JoinColumn(name = "PERSON", referencedColumnName = "FAMILY_IDENTIFIER", insertable = false, updatable = false)
 		})
-		@Id
 		private SubEntity subEntity;
 
 		public Long getIdNum() {
@@ -406,7 +396,6 @@ public class MultiLevelCascadeToStringTest extends BaseEntityManagerFunctionalTe
 				@JoinColumn(name = "ID_NUM", referencedColumnName = "ID_NUM"),
 				@JoinColumn(name = "IND_NUM", referencedColumnName = "IND_NUM")
 		})
-		@Id
 		private SubEntity subEntity;
 
 		public Long getIdNum() {

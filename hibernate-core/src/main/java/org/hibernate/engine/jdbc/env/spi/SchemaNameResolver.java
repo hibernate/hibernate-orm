@@ -25,5 +25,5 @@ public interface SchemaNameResolver {
 	 *
 	 * @return The name of the schema (may be null).
 	 */
-	public String resolveSchemaName(Connection connection, Dialect dialect) throws SQLException;
+	String resolveSchemaName(Connection connection, Dialect dialect) throws SQLException;
 }

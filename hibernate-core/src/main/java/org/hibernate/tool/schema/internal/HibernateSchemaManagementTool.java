@@ -104,10 +104,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	}
 
 	private JdbcMetadaAccessStrategy determineJdbcMetadaAccessStrategy(Map options) {
-		if ( options == null ) {
-			return JdbcMetadaAccessStrategy.interpretHbm2ddlSetting( null );
-		}
-		return JdbcMetadaAccessStrategy.interpretHbm2ddlSetting( options.get( AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY ) );
+		return JdbcMetadaAccessStrategy.interpretSetting( options );
 	}
 
 	GenerationTarget[] buildGenerationTargets(

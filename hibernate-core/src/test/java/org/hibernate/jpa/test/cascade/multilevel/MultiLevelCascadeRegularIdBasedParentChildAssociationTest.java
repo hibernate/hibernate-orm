@@ -65,7 +65,7 @@ public class MultiLevelCascadeRegularIdBasedParentChildAssociationTest extends B
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12291" )
-	public void testHibernateDeleteEntityWithoutCallingToString() throws Exception {
+	public void testHibernateDeleteEntityWithoutInitializingCollections() throws Exception {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Parent mainEntity = entityManager.find( Parent.class, 1L);
 

@@ -13,6 +13,8 @@ import java.util.Objects;
 import java.util.Optional;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -39,9 +41,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
-public class MultiLevelCascadeCollectionTest extends BaseEntityManagerFunctionalTestCase {
+public class MultiLevelCascadeCollectionEmbeddableTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( MultiLevelCascadeCollectionTest.class );
+	private static final Logger log = Logger.getLogger( MultiLevelCascadeCollectionEmbeddableTest.class );
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -243,20 +245,10 @@ public class MultiLevelCascadeCollectionTest extends BaseEntityManagerFunctional
 
 	@Entity
 	@Table(name = "ANOTHER_SUB_SUB_TABLE")
-	@IdClass(AnotherSubSubEntity.AnotherSubSubEntityId.class)
 	public static class AnotherSubSubEntity implements Serializable {
 
-		@Id
-		@Column(name = "ID_NUM", insertable = false, updatable = false)
-		private Long idNum;
-
-		@Id
-		@Column(name = "PERSON", insertable = false, updatable = false)
-		private String person;
-
-		@Id
-		@Column(name = "SOURCE_CODE")
-		private String sourceCode;
+		@EmbeddedId
+		private AnotherSubSubEntityId id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumns({
@@ -264,6 +256,34 @@ public class MultiLevelCascadeCollectionTest extends BaseEntityManagerFunctional
 				@JoinColumn(name = "PERSON", referencedColumnName = "FAMILY_IDENTIFIER", insertable = false, updatable = false)
 		})
 		private SubEntity subEntity;
+	}
+
+	@Embeddable
+	public static class AnotherSubSubEntityId implements Serializable {
+
+		@Column(name = "ID_NUM", insertable = false, updatable = false)
+		private Long idNum;
+
+		@Column(name = "PERSON", insertable = false, updatable = false)
+		private String person;
+
+		@Column(name = "SOURCE_CODE")
+		private String sourceCode;
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+			AnotherSubSubEntityId that = (AnotherSubSubEntityId) o;
+			return Objects.equals(idNum, that.idNum) &&
+					Objects.equals(person, that.person) &&
+					Objects.equals(sourceCode, that.sourceCode);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(idNum, person, sourceCode);
+		}
 
 		public Long getIdNum() {
 			return idNum;
@@ -288,114 +308,34 @@ public class MultiLevelCascadeCollectionTest extends BaseEntityManagerFunctional
 		public void setSourceCode(String sourceCode) {
 			this.sourceCode = sourceCode;
 		}
-
-		public SubEntity getSubEntity() {
-			return subEntity;
-		}
-
-		public void setSubEntity(SubEntity subEntity) {
-			idNum = Optional.ofNullable(subEntity).map( SubEntity::getMainEntity).map( MainEntity::getIdNum).orElse( null);
-			person = Optional.ofNullable(subEntity).map( SubEntity::getFamilyIdentifier).orElse( null);
-			this.subEntity = subEntity;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			AnotherSubSubEntity that = (AnotherSubSubEntity) o;
-			return Objects.equals(idNum, that.idNum) &&
-					Objects.equals(person, that.person) &&
-					Objects.equals(sourceCode, that.sourceCode);
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(idNum, person, sourceCode);
-		}
-
-		@Override
-		public String toString() {
-			return "AnotherSubSubEntity{" +
-					"idNum=" + idNum +
-					", person='" + person + '\'' +
-					", sourceCode='" + sourceCode + '\'' +
-					'}';
-		}
-
-		public static class AnotherSubSubEntityId implements Serializable {
-
-			private Long idNum;
-
-			private String person;
-
-			private String sourceCode;
-
-			@Override
-			public boolean equals(Object o) {
-				if (this == o) return true;
-				if (o == null || getClass() != o.getClass()) return false;
-				AnotherSubSubEntityId that = (AnotherSubSubEntityId) o;
-				return Objects.equals(idNum, that.idNum) &&
-						Objects.equals(person, that.person) &&
-						Objects.equals(sourceCode, that.sourceCode);
-			}
-
-			@Override
-			public int hashCode() {
-				return Objects.hash(idNum, person, sourceCode);
-			}
-
-			public Long getIdNum() {
-				return idNum;
-			}
-
-			public void setIdNum(Long idNum) {
-				this.idNum = idNum;
-			}
-
-			public String getPerson() {
-				return person;
-			}
-
-			public void setPerson(String person) {
-				this.person = person;
-			}
-
-			public String getSourceCode() {
-				return sourceCode;
-			}
-
-			public void setSourceCode(String sourceCode) {
-				this.sourceCode = sourceCode;
-			}
-		}
-
 	}
 
 	@Entity
 	@Table(name = "SUB_SUB_TABLE")
-	@IdClass(SubSubEntity.SubSubEntityId.class)
-	public static class SubSubEntity implements Serializable {
+	public static class SubSubEntity {
 
-		@Id
-		@Column(name = "ID_NUM", insertable = false, updatable = false)
-		private Long idNum;
-
-		@Id
-		@Column(name = "CODE")
-		private String code;
-
-		@Id
-		@Column(name = "IND_NUM", insertable = false, updatable = false)
-		private String indNum;
+		@EmbeddedId
+		private SubSubEntityId id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumns({
-				@JoinColumn(name = "ID_NUM", referencedColumnName = "ID_NUM"),
-				@JoinColumn(name = "IND_NUM", referencedColumnName = "IND_NUM")
+				@JoinColumn(name = "ID_NUM", referencedColumnName = "ID_NUM", insertable = false, updatable = false),
+				@JoinColumn(name = "IND_NUM", referencedColumnName = "IND_NUM", insertable = false, updatable = false)
 		})
 		private SubEntity subEntity;
+	}
+
+	@Embeddable
+	public static class SubSubEntityId implements Serializable {
+
+		@Column(name = "ID_NUM")
+		private Long idNum;
+
+		@Column(name = "CODE")
+		private String code;
+
+		@Column(name = "IND_NUM")
+		private String indNum;
 
 		public Long getIdNum() {
 			return idNum;
@@ -421,22 +361,11 @@ public class MultiLevelCascadeCollectionTest extends BaseEntityManagerFunctional
 			this.indNum = indNum;
 		}
 
-		public SubEntity getSubEntity() {
-			return subEntity;
-		}
-
-		public void setSubEntity(SubEntity subEntity) {
-			idNum = Optional.ofNullable(subEntity).map( SubEntity::getMainEntity).map( MainEntity::getIdNum).orElse( null);
-			code = Optional.ofNullable(subEntity).map( SubEntity::getIndNum).orElse( null);
-			this.subEntity = subEntity;
-		}
-
 		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
-			if (!super.equals(o)) return false;
-			SubSubEntity that = (SubSubEntity) o;
+			SubSubEntityId that = (SubSubEntityId) o;
 			return Objects.equals(idNum, that.idNum) &&
 					Objects.equals(code, that.code) &&
 					Objects.equals(indNum, that.indNum);
@@ -444,67 +373,8 @@ public class MultiLevelCascadeCollectionTest extends BaseEntityManagerFunctional
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(super.hashCode(), idNum, code, indNum);
+
+			return Objects.hash(idNum, code, indNum);
 		}
-
-		@Override
-		public String toString() {
-			return "SubSubEntity{" +
-					"idNum=" + idNum +
-					", code='" + code + '\'' +
-					", indNum='" + indNum + '\'' +
-					'}';
-		}
-
-		public static class SubSubEntityId implements Serializable {
-
-			private Long idNum;
-
-			private String code;
-
-			private String indNum;
-
-			public Long getIdNum() {
-				return idNum;
-			}
-
-			public void setIdNum(Long idNum) {
-				this.idNum = idNum;
-			}
-
-			public String getCode() {
-				return code;
-			}
-
-			public void setCode(String code) {
-				this.code = code;
-			}
-
-			public String getIndNum() {
-				return indNum;
-			}
-
-			public void setIndNum(String indNum) {
-				this.indNum = indNum;
-			}
-
-			@Override
-			public boolean equals(Object o) {
-				if (this == o) return true;
-				if (o == null || getClass() != o.getClass()) return false;
-				SubSubEntityId that = (SubSubEntityId) o;
-				return Objects.equals(idNum, that.idNum) &&
-						Objects.equals(code, that.code) &&
-						Objects.equals(indNum, that.indNum);
-			}
-
-			@Override
-			public int hashCode() {
-
-				return Objects.hash(idNum, code, indNum);
-			}
-		}
-
-
 	}
 }

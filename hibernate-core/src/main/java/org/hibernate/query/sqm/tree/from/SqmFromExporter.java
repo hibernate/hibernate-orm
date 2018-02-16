@@ -11,5 +11,4 @@ package org.hibernate.query.sqm.tree.from;
  */
 public interface SqmFromExporter {
 	SqmFrom getExportedFromElement();
-	void injectExportedFromElement(SqmFrom sqmFrom);
 }

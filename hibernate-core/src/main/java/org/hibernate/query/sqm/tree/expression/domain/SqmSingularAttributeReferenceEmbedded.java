@@ -8,6 +8,8 @@ package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 
 /**
@@ -16,14 +18,14 @@ import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 public class SqmSingularAttributeReferenceEmbedded
 		extends AbstractSqmSingularAttributeReference
 		implements SqmEmbeddableTypedReference {
+	private final SqmNavigableJoin join;
+
 	public SqmSingularAttributeReferenceEmbedded(
 			SqmNavigableContainerReference domainReferenceBinding,
-			SingularPersistentAttributeEmbedded boundNavigable) {
+			SingularPersistentAttributeEmbedded boundNavigable,
+			SqmCreationContext creationContext) {
 		super( domainReferenceBinding, boundNavigable );
-	}
-
-	public SqmSingularAttributeReferenceEmbedded(SqmNavigableJoin fromElement) {
-		super( fromElement );
+		this.join = creationContext.getCurrentFromElementBuilder().buildNavigableJoin( this );
 	}
 
 	@Override
@@ -34,6 +36,11 @@ public class SqmSingularAttributeReferenceEmbedded
 	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.EMBEDDABLE;
+	}
+
+	@Override
+	public SqmFrom getExportedFromElement() {
+		return join;
 	}
 
 	@Override

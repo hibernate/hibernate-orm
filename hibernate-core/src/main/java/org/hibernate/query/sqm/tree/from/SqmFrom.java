@@ -30,4 +30,6 @@ public interface SqmFrom extends TableGroupInfo, SqmVisitableNode, SqmTypedNode 
 	 * would represent the `p` reference in the SELECT clause.
 	 */
 	SqmNavigableReference getNavigableReference();
+
+	UsageDetails getUsageDetails();
 }

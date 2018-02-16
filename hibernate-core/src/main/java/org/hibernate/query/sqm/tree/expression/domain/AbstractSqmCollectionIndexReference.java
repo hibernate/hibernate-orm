@@ -13,6 +13,7 @@ import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -125,14 +126,7 @@ public abstract class AbstractSqmCollectionIndexReference
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
-		if ( getExportedFromElement() == null ) {
-			context.getNavigableJoinBuilder().buildNavigableJoinIfNecessary(
-					this,
-					false
-			);
-		}
-
+			SqmCreationContext context) {
 		return getPluralAttributeReference().getReferencedNavigable()
 				.getPersistentCollectionDescriptor()
 				.getIndexDescriptor()
@@ -144,7 +138,7 @@ public abstract class AbstractSqmCollectionIndexReference
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		throw new UnsupportedOperationException(  );
 	}
 
@@ -153,11 +147,6 @@ public abstract class AbstractSqmCollectionIndexReference
 	@Override
 	public SqmFrom getExportedFromElement() {
 		return getPluralAttributeReference().getExportedFromElement();
-	}
-
-	@Override
-	public void injectExportedFromElement(SqmFrom sqmFrom) {
-		getPluralAttributeReference().injectExportedFromElement( sqmFrom );
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }

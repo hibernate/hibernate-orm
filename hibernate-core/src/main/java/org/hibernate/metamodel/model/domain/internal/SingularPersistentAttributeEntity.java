@@ -15,7 +15,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.mapping.ToOne;
-import org.hibernate.metamodel.model.creation.internal.Utils;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractNonIdSingularPersistentAttribute;
@@ -29,6 +28,7 @@ import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey.ColumnMappings;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReferenceEntity;
@@ -207,11 +207,14 @@ public class SingularPersistentAttributeEntity<O,J>
 	public SqmNavigableReference createSqmExpression(
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
-			SqmReferenceCreationContext creationContext) {
-		return new SqmSingularAttributeReferenceEntity(
+			SqmCreationContext creationContext) {
+		final SqmSingularAttributeReferenceEntity reference = new SqmSingularAttributeReferenceEntity(
 				containerReference,
-				this
+				this,
+				creationContext
 		);
+
+		return reference;
 	}
 
 	@Override

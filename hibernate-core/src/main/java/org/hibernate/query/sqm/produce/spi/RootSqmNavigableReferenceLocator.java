@@ -9,11 +9,12 @@ package org.hibernate.query.sqm.produce.spi;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 
 /**
+ * Defines the ability to locate
  * Context for PathResolver implementations to locate FromElements
  *
  * @author Steve Ebersole
  */
-public interface FromElementLocator {
+public interface RootSqmNavigableReferenceLocator {
 	/**
 	 * Find a FromElement by its identification variable (JPA term for alias).  Will search any parent contexts
 	 *
@@ -24,11 +25,11 @@ public interface FromElementLocator {
 	SqmNavigableReference findNavigableReferenceByIdentificationVariable(String identificationVariable);
 
 	/**
-	 * Find a FromElement which exposes the given attribute.  Will search any parent contexts
+	 * Find a FromElement which exposes the given Navigable by name.  Will search any parent contexts
 	 *
-	 * @param attributeName The name of the attribute to find a FromElement for
+	 * @param navigableName The name of the Navigable to find a FromElement for
 	 *
 	 * @return matching FromElement, or {@code null}
 	 */
-	SqmNavigableReference findNavigableReferenceExposingAttribute(String attributeName);
+	SqmNavigableReference findNavigableReferenceExposingNavigable(String navigableName);
 }

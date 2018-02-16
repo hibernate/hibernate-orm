@@ -6,9 +6,11 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 /**
  * @author Steve Ebersole
@@ -16,12 +18,14 @@ import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 public class SqmSingularAttributeReferenceAny extends AbstractSqmSingularAttributeReference {
 	public SqmSingularAttributeReferenceAny(
 			SqmNavigableContainerReference navigableContainerReference,
-			SingularPersistentAttribute referencedNavigable) {
+			SingularPersistentAttribute referencedNavigable,
+			SqmCreationContext creationContext) {
 		super( navigableContainerReference, referencedNavigable );
 	}
 
-	public SqmSingularAttributeReferenceAny(SqmNavigableJoin fromElement) {
-		super( fromElement );
+	@Override
+	public SqmFrom getExportedFromElement() {
+		throw new NotYetImplementedFor6Exception(  );
 	}
 
 	@Override

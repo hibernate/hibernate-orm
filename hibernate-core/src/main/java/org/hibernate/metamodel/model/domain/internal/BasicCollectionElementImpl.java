@@ -14,13 +14,11 @@ import org.hibernate.metamodel.model.domain.spi.BasicCollectionElement;
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReferenceBasic;
-import org.hibernate.query.sqm.tree.expression.domain.SqmIndexedElementReferenceBasic;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.results.internal.ScalarQueryResultImpl;
@@ -85,19 +83,8 @@ public class BasicCollectionElementImpl<J>
 	public SqmNavigableReference createSqmExpression(
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
-			SqmReferenceCreationContext creationContext) {
+			SqmCreationContext creationContext) {
 		return new SqmCollectionElementReferenceBasic( (SqmPluralAttributeReference) containerReference );
-	}
-
-	@Override
-	public SqmRestrictedCollectionElementReference createIndexedAccessReference(
-			SqmPluralAttributeReference pluralAttributeReference,
-			SqmExpression selector,
-			SqmReferenceCreationContext creationContext) {
-		return new SqmIndexedElementReferenceBasic(
-				pluralAttributeReference,
-				selector
-		);
 	}
 
 	@Override

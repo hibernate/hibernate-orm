@@ -8,6 +8,8 @@ package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 
@@ -44,14 +46,20 @@ import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 public class SqmSingularAttributeReferenceEntity
 		extends AbstractSqmSingularAttributeReference
 		implements SqmEntityTypedReference {
+	private final SqmNavigableJoin navigableJoin;
+
 	public SqmSingularAttributeReferenceEntity(
-			SqmNavigableContainerReference domainReferenceBinding,
-			SingularPersistentAttributeEntity boundNavigable) {
-		super( domainReferenceBinding, boundNavigable );
+			SqmNavigableContainerReference containerReference,
+			SingularPersistentAttributeEntity referencedAttribute,
+			SqmCreationContext creationContext) {
+		super( containerReference, referencedAttribute );
+		this.navigableJoin = creationContext.getCurrentFromElementBuilder()
+				.buildNavigableJoin( this );
 	}
 
-	public SqmSingularAttributeReferenceEntity(SqmNavigableJoin fromElement) {
-		super( fromElement );
+	@Override
+	public SqmFrom getExportedFromElement() {
+		return navigableJoin;
 	}
 
 	@Override

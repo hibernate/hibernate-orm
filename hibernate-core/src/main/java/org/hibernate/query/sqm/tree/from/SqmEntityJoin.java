@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -19,6 +20,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 public class SqmEntityJoin
 		extends AbstractSqmJoin
 		implements SqmQualifiedJoin {
+	private final SqmEntityReference joinedEntityReference;
 	private SqmPredicate onClausePredicate;
 
 	public SqmEntityJoin(
@@ -26,29 +28,24 @@ public class SqmEntityJoin
 			String uid,
 			String alias,
 			EntityDescriptor joinedEntityDescriptor,
-			SqmJoinType joinType) {
+			SqmJoinType joinType,
+			SqmCreationContext creationContext) {
 		super(
 				fromElementSpace,
 				uid,
 				alias,
-				new SqmEntityReference( joinedEntityDescriptor ),
-				joinedEntityDescriptor,
 				joinType
 		);
-		getEntityBinding().injectExportedFromElement( this );
+		this.joinedEntityReference = new SqmEntityReference( joinedEntityDescriptor, this, creationContext );
 	}
 
 	@Override
 	public SqmEntityReference getNavigableReference() {
-		return getEntityBinding();
-	}
-
-	public SqmEntityReference getEntityBinding() {
-		return (SqmEntityReference) super.getNavigableReference();
+		return joinedEntityReference;
 	}
 
 	public String getEntityName() {
-		return getEntityBinding().getReferencedNavigable().getEntityName();
+		return getNavigableReference().getReferencedNavigable().getEntityName();
 	}
 
 	@Override

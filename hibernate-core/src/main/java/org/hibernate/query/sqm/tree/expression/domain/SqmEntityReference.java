@@ -7,11 +7,11 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
@@ -32,23 +32,18 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 		implements SqmNavigableReference, SqmNavigableContainerReference, SqmEntityTypedReference {
 	private static final Logger log = Logger.getLogger( SqmEntityReference.class );
 
-	private final SqmNavigableContainerReference containerReference;
-	private final EntityValuedExpressableType entityReference;
-	private NavigablePath propertyPath;
+	private final EntityDescriptor entityDescriptor;
+	private final SqmFrom exportedFromElement;
 
-	private SqmFrom exportedFromElement;
+	private final NavigablePath propertyPath;
 
-	public SqmEntityReference(EntityValuedExpressableType entityReference) {
-		this.entityReference = entityReference;
-		this.containerReference = null;
-		this.propertyPath = new NavigablePath( null, entityReference.getEntityName() );
-	}
-
-	public SqmEntityReference(SqmNavigableContainerReference containerReference, EntityValuedExpressableType entityReference) {
-		this.containerReference = containerReference;
-		this.entityReference = entityReference;
-
-		this.propertyPath = new NavigablePath( containerReference.getNavigablePath(), entityReference.getEntityName() );
+	public SqmEntityReference(
+			EntityDescriptor entityDescriptor,
+			SqmFrom sqmFrom,
+			SqmCreationContext creationContext) {
+		this.entityDescriptor = entityDescriptor;
+		this.exportedFromElement = sqmFrom;
+		this.propertyPath = new NavigablePath( null, this.entityDescriptor.getEntityName() + '(' + sqmFrom.getIdentificationVariable() + ')' );
 	}
 
 	@Override
@@ -57,25 +52,13 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 	}
 
 	@Override
-	public void injectExportedFromElement(SqmFrom sqmFrom) {
-		log.debugf(
-				"Injecting SqmFrom [%s] into EntityBindingImpl [%s], was [%s]",
-				sqmFrom,
-				this,
-				this.exportedFromElement
-		);
-		exportedFromElement = sqmFrom;
-		propertyPath = new NavigablePath( null, entityReference.getEntityName() + "(" + sqmFrom.getIdentificationVariable() + ")" );
-	}
-
-	@Override
 	public SqmNavigableContainerReference getSourceReference() {
-		return containerReference;
+		return null;
 	}
 
 	@Override
 	public EntityValuedExpressableType getReferencedNavigable() {
-		return entityReference;
+		return entityDescriptor;
 	}
 
 	@Override
@@ -111,7 +94,7 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 
 	@Override
 	public String asLoggableText() {
-		return entityReference.asLoggableText();
+		return entityDescriptor.asLoggableText();
 	}
 
 	@Override
@@ -136,7 +119,7 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 
 	@Override
 	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
-		return containerReference;
+		return null;
 	}
 
 	@Override
@@ -144,23 +127,10 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
-		if ( getExportedFromElement() == null ) {
-			context.getNavigableJoinBuilder().buildNavigableJoinIfNecessary(
-					this,
-					false
-			);
-		}
-		final SqmNavigableReference navigableReference = entityReference.getEntityDescriptor()
+			SqmCreationContext context) {
+		return entityDescriptor.getEntityDescriptor()
 				.findNavigable( name )
 				.createSqmExpression( exportedFromElement, this, context );
-		if ( context.getNavigableJoinBuilder().isJoinable( navigableReference ) ) {
-			context.getNavigableJoinBuilder().buildNavigableJoinIfNecessary(
-					navigableReference,
-					isTerminal
-			);
-		}
-		return navigableReference;
 	}
 
 	@Override
@@ -168,7 +138,7 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		throw new SemanticException( "Entity reference cannot be index-accessed" );
 	}
 }

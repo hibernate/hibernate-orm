@@ -12,7 +12,6 @@ import java.util.List;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.sqm.produce.internal.hql.SemanticQueryBuilder;
 import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlParser;
-import org.hibernate.query.sqm.produce.spi.ParsingContext;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
@@ -41,11 +40,10 @@ public class OrderByFragmentParser extends SemanticQueryBuilder {
 
 
 	public OrderByFragmentParser(TranslationContext translationContext, PersistentCollectionDescriptor collectionDescriptor) {
-		super( new ParsingContext( translationContext.getSessionFactory() ) );
+		super( translationContext.getSessionFactory() );
 
-		final SqmFrom sqmFromBase = new SqmFromImpl( getParsingContext(), collectionDescriptor );
+		final SqmFrom sqmFromBase = new SqmFromImpl( this, collectionDescriptor );
 
-		getAttributeJoinBuilderStack().push( new NavigableJoinBuilderRoot( this ) );
 		getSemanticPathPartStack().push( new SemanticPathPartRoot( sqmFromBase ) );
 
 		primeStack( getParameterDeclarationContextStack(), () -> false );

@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -25,7 +25,7 @@ public abstract class AbstractSpecificSqmElementReference
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		return getPluralAttributeReference().getReferencedNavigable()
 				.getPersistentCollectionDescriptor()
 				.getElementDescriptor()
@@ -37,7 +37,7 @@ public abstract class AbstractSpecificSqmElementReference
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		throw new UnsupportedOperationException(  );
 	}
 }

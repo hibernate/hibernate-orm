@@ -11,7 +11,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.query.sqm.AliasCollisionException;
-import org.hibernate.query.sqm.produce.internal.NavigableBindingHelper;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -20,7 +19,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
  * @author Andrea Boriero
  */
 public class AliasRegistry {
-	private Map<String, SqmNavigableReference> navigableBindingsByAlias = new HashMap<>();
+	private Map<String, SqmFrom> fromElementsByAlias = new HashMap<>();
 	private Map<String, SqmSelection> selectionsByAlias = new HashMap<>();
 
 	private AliasRegistry parent;
@@ -43,17 +42,17 @@ public class AliasRegistry {
 		}
 	}
 
-	public void registerAlias(SqmNavigableReference binding) {
-		final SqmFrom exportedFromElement = NavigableBindingHelper.resolveExportedFromElement( binding );
-		final SqmNavigableReference old = navigableBindingsByAlias.put( exportedFromElement.getIdentificationVariable(), binding );
-		if ( old != null ) {
+	public void registerAlias(SqmFrom sqmFrom) {
+		final String alias = sqmFrom.getIdentificationVariable();
+		final SqmFrom previous = fromElementsByAlias.put( alias, sqmFrom );
+		if ( previous != null ) {
 			throw new AliasCollisionException(
 					String.format(
 							Locale.ENGLISH,
 							"Alias [%s] used for multiple from-clause-elements : %s, %s",
-							exportedFromElement.getIdentificationVariable(),
-							old,
-							binding
+							alias,
+							previous,
+							sqmFrom
 					)
 			);
 		}
@@ -64,12 +63,15 @@ public class AliasRegistry {
 	}
 
 	public SqmNavigableReference findFromElementByAlias(String alias) {
-		if ( navigableBindingsByAlias.containsKey( alias ) ) {
-			return navigableBindingsByAlias.get( alias );
+		final SqmFrom registered = fromElementsByAlias.get( alias );
+		if ( registered != null ) {
+			return registered.getNavigableReference();
 		}
-		else if ( parent != null ) {
+
+		if ( parent != null ) {
 			return parent.findFromElementByAlias( alias );
 		}
+
 		return null;
 	}
 
@@ -84,8 +86,10 @@ public class AliasRegistry {
 					)
 			);
 		}
-		final SqmNavigableReference binding = navigableBindingsByAlias.get( alias );
-		if ( binding != null ) {
+
+		final SqmFrom registeredFromElement = fromElementsByAlias.get( alias );
+		if ( registeredFromElement != null ) {
+			final SqmNavigableReference binding = registeredFromElement.getNavigableReference();
 			if ( !selection.getSelectableNode().getJavaTypeDescriptor().equals( binding.getJavaTypeDescriptor() ) ) {
 				throw new AliasCollisionException(
 						String.format(

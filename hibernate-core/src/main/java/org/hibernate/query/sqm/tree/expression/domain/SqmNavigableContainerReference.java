@@ -7,8 +7,9 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
-import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
+import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
 
 /**
  * @author Steve Ebersole
@@ -17,4 +18,12 @@ public interface SqmNavigableContainerReference
 		extends SqmNavigableReference, NavigableContainerReferenceInfo, SqmFromExporter {
 	@Override
 	NavigableContainer getReferencedNavigable();
+
+	default SqmNavigableReference resolveSubNavigableReference(String navigableName, SqmCreationContext creationContext) {
+		return getReferencedNavigable().findNavigable( navigableName ).createSqmExpression(
+				getExportedFromElement(),
+				this,
+				creationContext
+		);
+	}
 }

@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityIdentifierReferenceComposite;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityTypedReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
@@ -29,7 +30,7 @@ public interface EntityIdentifierComposite<O,J>
 	default SqmNavigableReference createSqmExpression(
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
-			SqmReferenceCreationContext creationContext) {
+			SqmCreationContext creationContext) {
 		return new SqmEntityIdentifierReferenceComposite(
 				(SqmEntityTypedReference) containerReference,
 				this

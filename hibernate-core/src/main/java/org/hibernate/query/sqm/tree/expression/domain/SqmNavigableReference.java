@@ -6,14 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import java.util.Collection;
-
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.from.SqmDowncast;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
 
@@ -50,19 +46,4 @@ public interface SqmNavigableReference extends SqmExpression, NavigableReference
 	 * relative to a "query root".
 	 */
 	NavigablePath getNavigablePath();
-
-
-	// JPA downcast (TREAT .. AS ..) support
-
-	SqmNavigableReference treatAs(EntityDescriptor target);
-
-	// todo (6.0) : Resolving a SqmNavigableReference through its container is probably a better way to handle Downcast, in many ways:
-	// 		1) can centralize handling for both implicit and explicit down-casting (add downcast
-	//		2) can centralize handling for JpaCompliance checking wrt implicit downcasts
-	//
-	// todo (6.0) : actually this (^^) can already happen via SemanticPathPart during resolve
-
-	void addDowncast(SqmDowncast downcast);
-
-	Collection<SqmDowncast> getDowncasts();
 }

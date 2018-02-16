@@ -8,8 +8,6 @@ package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
@@ -26,8 +24,6 @@ public abstract class AbstractSqmAttributeReference<A extends PersistentAttribut
 	private final A attribute;
 	private final NavigablePath navigablePath;
 
-	private SqmNavigableJoin join;
-
 	public AbstractSqmAttributeReference(SqmNavigableContainerReference sourceReference, A attribute) {
 		if ( sourceReference == null ) {
 			throw new IllegalArgumentException( "Source for AttributeBinding cannot be null" );
@@ -40,25 +36,6 @@ public abstract class AbstractSqmAttributeReference<A extends PersistentAttribut
 		this.attribute = attribute;
 
 		this.navigablePath = sourceReference.getNavigablePath().append( attribute.getAttributeName() );
-	}
-
-	@SuppressWarnings("unchecked")
-	public AbstractSqmAttributeReference(SqmNavigableJoin join) {
-		this(
-				join.getNavigableReference().getSourceReference(),
-				(A) join.getAttributeReference().getReferencedNavigable()
-		);
-		injectExportedFromElement( join );
-	}
-
-	@Override
-	public void injectExportedFromElement(SqmFrom attributeJoin) {
-		if ( this.join != null && this.join != attributeJoin ) {
-			throw new IllegalArgumentException(
-					"Attempting to create multiple SqmFrom references for a single attribute reference : " + getNavigablePath().getFullPath()
-			);
-		}
-		this.join = (SqmNavigableJoin) attributeJoin;
 	}
 
 	@Override
@@ -88,11 +65,6 @@ public abstract class AbstractSqmAttributeReference<A extends PersistentAttribut
 	}
 
 	@Override
-	public SqmFrom getExportedFromElement() {
-		return join;
-	}
-
-	@Override
 	public ExpressableType getExpressableType() {
 		return getReferencedNavigable();
 	}
@@ -109,11 +81,6 @@ public abstract class AbstractSqmAttributeReference<A extends PersistentAttribut
 
 	@Override
 	public String asLoggableText() {
-		if ( join == null || join.getIdentificationVariable() == null ) {
-			return getClass().getSimpleName() + '(' + sourceReference.asLoggableText() + '.' + attribute.getAttributeName() + ")";
-		}
-		else {
-			return getClass().getSimpleName() + '(' + sourceReference.asLoggableText() + '.' + attribute.getAttributeName() + " : " + join.getIdentificationVariable() + ")";
-		}
+		return getClass().getSimpleName() + '(' + sourceReference.asLoggableText() + '.' + attribute.getAttributeName() + " : " + getExportedFromElement().getIdentificationVariable() + ")";
 	}
 }

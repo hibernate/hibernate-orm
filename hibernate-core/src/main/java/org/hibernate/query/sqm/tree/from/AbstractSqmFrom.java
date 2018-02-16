@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 
 /**
  * Convenience base class for FromElement implementations
@@ -18,31 +17,18 @@ public abstract class AbstractSqmFrom implements SqmFrom {
 	private final SqmFromElementSpace fromElementSpace;
 	private final String uid;
 	private final String alias;
-	private final SqmNavigableReference binding;
-	private final EntityDescriptor subclassIndicator;
+
+	private final UsageDetailsImpl usageDetails = new UsageDetailsImpl( this );
 
 	protected AbstractSqmFrom(
 			SqmFromElementSpace fromElementSpace,
 			String uid,
-			String alias,
-			SqmNavigableReference binding,
-			EntityDescriptor subclassIndicator) {
+			String alias) {
 		this.fromElementSpace = fromElementSpace;
 		this.uid = uid;
 		this.alias = alias;
-		this.binding = binding;
-		this.subclassIndicator = subclassIndicator;
 	}
 
-	@Override
-	public SqmNavigableReference getNavigableReference() {
-		return binding;
-	}
-
-//	@Override
-//	public SqmNavigableSource getReferencedNavigable() {
-//		return binding.getReferencedNavigable();
-//	}
 
 	@Override
 	public SqmFromElementSpace getContainingSpace() {
@@ -60,7 +46,12 @@ public abstract class AbstractSqmFrom implements SqmFrom {
 	}
 
 	@Override
+	public UsageDetails getUsageDetails() {
+		return usageDetails;
+	}
+
+	@Override
 	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
-		return subclassIndicator;
+		return (EntityDescriptor) getUsageDetails().getIntrinsicSubclassIndicator();
 	}
 }

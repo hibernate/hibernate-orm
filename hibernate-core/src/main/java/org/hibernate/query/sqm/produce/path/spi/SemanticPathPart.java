@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.produce.path.spi;
 
-import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
@@ -27,11 +27,11 @@ public interface SemanticPathPart {
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context);
+			SqmCreationContext context);
 
 	SqmRestrictedCollectionElementReference resolveIndexedAccess(
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context);
+			SqmCreationContext context);
 }

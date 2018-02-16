@@ -8,9 +8,9 @@ package org.hibernate.query.sqm.produce.path.internal;
 
 import java.util.Locale;
 
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SemanticException;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
@@ -29,8 +29,7 @@ public class SemanticPathPartJoinPredicate extends SemanticPathPartRoot {
 	protected void validateNavigablePathRoot(
 			SqmNavigableReference navigableReference,
 			String currentContextKey,
-			Navigable.SqmReferenceCreationContext context) {
-		context.getNavigableJoinBuilder().buildNavigableJoinIfNecessary( navigableReference, false );
+			SqmCreationContext context) {
 		final SqmFrom sqmFrom = navigableReference.getExportedFromElement();
 		if ( sqmFrom == null ) {
 			throw new ParsingException(

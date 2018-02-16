@@ -7,15 +7,13 @@
 package org.hibernate.query.sqm.produce.internal;
 
 import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.query.sqm.produce.spi.AliasRegistry;
-import org.hibernate.query.sqm.produce.spi.FromElementLocator;
-import org.hibernate.query.sqm.produce.spi.ParsingContext;
 import org.hibernate.query.sqm.produce.spi.AbstractQuerySpecProcessingState;
 import org.hibernate.query.sqm.produce.spi.QuerySpecProcessingState;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
-import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 
 import org.jboss.logging.Logger;
@@ -32,22 +30,11 @@ public class QuerySpecProcessingStateStandardImpl extends AbstractQuerySpecProce
 
 	private final SqmFromClause fromClause;
 
-	private final FromElementBuilder fromElementBuilder;
-
-	public QuerySpecProcessingStateStandardImpl(ParsingContext parsingContext, QuerySpecProcessingState containingQueryState) {
-		super( parsingContext, containingQueryState );
+	public QuerySpecProcessingStateStandardImpl(SqmCreationContext creationContext, QuerySpecProcessingState containingQueryState) {
+		super( creationContext, containingQueryState );
 
 		this.fromClause = new SqmFromClause();
 
-		if ( containingQueryState == null ) {
-			this.fromElementBuilder = new FromElementBuilder( parsingContext, new AliasRegistry() );
-		}
-		else {
-			this.fromElementBuilder = new FromElementBuilder(
-					parsingContext,
-					new AliasRegistry( containingQueryState.getFromElementBuilder().getAliasRegistry() )
-			);
-		}
 	}
 
 	public SqmFromClause getFromClause() {
@@ -55,30 +42,25 @@ public class QuerySpecProcessingStateStandardImpl extends AbstractQuerySpecProce
 	}
 
 	@Override
-	public FromElementBuilder getFromElementBuilder() {
-		return fromElementBuilder;
-	}
-
-	@Override
 	public SqmNavigableReference findNavigableReferenceByIdentificationVariable(String identificationVariable) {
-		return fromElementBuilder.getAliasRegistry().findFromElementByAlias( identificationVariable );
+		return getSqmCreationContext().getCurrentQuerySpecProcessingState().getAliasRegistry().findFromElementByAlias( identificationVariable );
 	}
 
 	@Override
-	public SqmNavigableReference findNavigableReferenceExposingAttribute(String name) {
+	public SqmNavigableReference findNavigableReferenceExposingNavigable(String navigableName) {
 		SqmNavigableReference found = null;
 		for ( SqmFromElementSpace space : fromClause.getFromElementSpaces() ) {
-			if ( definesAttribute( space.getRoot().getNavigableReference(), name ) ) {
+			if ( definesAttribute( space.getRoot().getNavigableReference(), navigableName ) ) {
 				if ( found != null ) {
-					throw new IllegalStateException( "Multiple from-elements expose unqualified attribute : " + name );
+					throw new IllegalStateException( "Multiple from-elements expose unqualified attribute : " + navigableName );
 				}
 				found = space.getRoot().getNavigableReference();
 			}
 
 			for ( SqmJoin join : space.getJoins() ) {
-				if ( definesAttribute( join.getNavigableReference(), name ) ) {
+				if ( definesAttribute( join.getNavigableReference(), navigableName ) ) {
 					if ( found != null ) {
-						throw new IllegalStateException( "Multiple from-elements expose unqualified attribute : " + name );
+						throw new IllegalStateException( "Multiple from-elements expose unqualified attribute : " + navigableName );
 					}
 					found = join.getNavigableReference();
 				}
@@ -87,8 +69,8 @@ public class QuerySpecProcessingStateStandardImpl extends AbstractQuerySpecProce
 
 		if ( found == null ) {
 			if ( getContainingQueryState() != null ) {
-				log.debugf( "Unable to resolve unqualified attribute [%s] in local SqmFromClause; checking containingQueryState" );
-				found = getContainingQueryState().findNavigableReferenceExposingAttribute( name );
+				log.debugf( "Unable to resolve unqualified attribute [%s] in local SqmFromClause; checking containingQueryState", navigableName );
+				found = getContainingQueryState().findNavigableReferenceExposingNavigable( navigableName );
 			}
 		}
 
@@ -107,10 +89,5 @@ public class QuerySpecProcessingStateStandardImpl extends AbstractQuerySpecProce
 	private boolean definesAttribute(SqmNavigableContainerReference sourceBinding, String name) {
 		final Navigable navigable = sourceBinding.getReferencedNavigable().findNavigable( name );
 		return navigable != null;
-	}
-
-	@Override
-	public FromElementLocator getFromElementLocator() {
-		return this;
 	}
 }

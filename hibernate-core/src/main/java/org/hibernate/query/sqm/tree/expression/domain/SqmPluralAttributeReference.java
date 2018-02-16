@@ -7,11 +7,11 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 
@@ -24,17 +24,20 @@ public class SqmPluralAttributeReference
 		extends AbstractSqmAttributeReference<PluralPersistentAttribute>
 		implements SqmNavigableContainerReference {
 
-	public SqmPluralAttributeReference(SqmNavigableContainerReference lhs, PluralPersistentAttribute attribute) {
-		super( lhs, attribute );
-	}
+	private final SqmNavigableJoin join;
 
-	public SqmPluralAttributeReference(SqmNavigableJoin join) {
-		super( join );
+	public SqmPluralAttributeReference(
+			SqmNavigableContainerReference containerReference,
+			PluralPersistentAttribute attribute,
+			SqmCreationContext creationContext) {
+		super( containerReference, attribute );
+
+		this.join = creationContext.getCurrentFromElementBuilder().buildNavigableJoin( this );
 	}
 
 	@Override
 	public SqmNavigableJoin getExportedFromElement() {
-		return (SqmNavigableJoin) super.getExportedFromElement();
+		return join;
 	}
 
 	@Override
@@ -67,14 +70,7 @@ public class SqmPluralAttributeReference
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
-		if ( getExportedFromElement() == null ) {
-			context.getNavigableJoinBuilder().buildNavigableJoinIfNecessary(
-					this,
-					false
-			);
-		}
-
+			SqmCreationContext context) {
 		return getReferencedNavigable().getPersistentCollectionDescriptor()
 				.findNavigable( name )
 				.createSqmExpression( getExportedFromElement(), this, context );
@@ -85,7 +81,7 @@ public class SqmPluralAttributeReference
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		return null;
 	}
 }

@@ -7,9 +7,9 @@
 package org.hibernate.query.sqm.produce.path.internal;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.sqm.produce.SqmProductionException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 
@@ -29,18 +29,21 @@ public class SemanticPathPartNamedEntity implements SemanticPathPart {
 		return entityDescriptor;
 	}
 
-
 	@Override
 	public SemanticPathPart resolvePathPart(
 			String name,
-			String currentContextKey, boolean isTerminal, Navigable.SqmReferenceCreationContext context) {
+			String currentContextKey,
+			boolean isTerminal,
+			SqmCreationContext context) {
 		throw new SqmProductionException( "Cannot dereference an entity name" );
 	}
 
 	@Override
 	public SqmRestrictedCollectionElementReference resolveIndexedAccess(
 			SqmExpression selector,
-			String currentContextKey, boolean isTerminal, Navigable.SqmReferenceCreationContext context) {
+			String currentContextKey,
+			boolean isTerminal,
+			SqmCreationContext context) {
 		throw new SqmProductionException( "Cannot dereference an entity name" );
 	}
 }

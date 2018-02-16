@@ -10,9 +10,7 @@ import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.query.sqm.produce.path.spi.NavigableJoinBuilder;
-import org.hibernate.query.sqm.produce.spi.ParsingContext;
-import org.hibernate.query.sqm.produce.spi.QuerySpecProcessingState;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -53,31 +51,14 @@ public interface Navigable<T> extends DomainType<T> {
 	 */
 	void visitNavigable(NavigableVisitationStrategy visitor);
 
-
-	// todo (6.0) : Use (pass in) Selection instead of expression+alias
-	// todo (6.0) : ^^ Actually get rid of Selection :)
-	// todo (6.0) : another option (thinking this is the best one) is to ask Navigable to generate an SqmExpression (SqmNavigableReference) given some form of `SqmFrom` and a QueryResult given a `SqmNavigableReference`
-	//		- in addition to the creation of QueryResults, we'd also need a method for "non-root" Navigables
-	// 			to be able to generate Fetches (`Fetchable`?)
-	//		the overall flow would be:
-	//			1) Navigable -> SqmNavigableReference
-	//			2) ( (QueryResultProducer) SqmNavigableReference ) -> QueryResult
-	//			3) ( (Fetchable) Navigable ) -> Fetch(FetchParent)
-	//
-	// see NavigableBindingHelper.createNavigableBinding
-	//
-	//		something like:
 	default SqmNavigableReference createSqmExpression(
+			// todo (6.0) : remove `sourceSqmFrom` - we should be able to deduce this based on the `containerReference` and this implementation
+			//		and passing it in here makes it impossible for the SqmNavigableReference to create these as proper
+			//		via SqmFromElementBuilder (`creationContext#getCurrent
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
-			SqmReferenceCreationContext creationContext) {
+			SqmCreationContext creationContext) {
 		throw new NotYetImplementedFor6Exception(  );
-	}
-
-	interface SqmReferenceCreationContext {
-		ParsingContext getParsingContext();
-		QuerySpecProcessingState getQuerySpecProcessingState();
-		NavigableJoinBuilder getNavigableJoinBuilder();
 	}
 
 	default QueryResult createQueryResult(

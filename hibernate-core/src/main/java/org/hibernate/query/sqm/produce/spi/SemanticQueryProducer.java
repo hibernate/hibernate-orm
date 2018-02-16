@@ -20,8 +20,8 @@ import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 /**
  * Main entry point into building semantic queries.
  *
- * @see {@link SessionFactoryImplementor#getQueryEngine()} ->
- * {@link QueryEngine#getSemanticQueryProducer()}
+ * @see SessionFactoryImplementor#getQueryEngine()
+ * @see QueryEngine#getSemanticQueryProducer()
  *
  * @author Steve Ebersole
  */

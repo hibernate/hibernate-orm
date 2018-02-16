@@ -9,10 +9,10 @@ package org.hibernate.query.sqm.produce.path.internal;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.SqmProductionException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 
@@ -37,7 +37,7 @@ public class SemanticPathPartNamedPackage implements SemanticPathPart {
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		final String childName = namedPackage.getName() + '.' + name;
 
 		final Package childPackage = Package.getPackage( childName );
@@ -45,13 +45,9 @@ public class SemanticPathPartNamedPackage implements SemanticPathPart {
 			return new SemanticPathPartNamedPackage( childPackage );
 		}
 
-		// todo (6.0) : it could also be a qualified entity-name which ought to be checked prior to checking as a Class
-
-
 		// it could also be a Class name within this package
 		try {
-			final Class namedClass = context.getParsingContext()
-					.getSessionFactory()
+			final Class namedClass = context.getSessionFactory()
 					.getServiceRegistry()
 					.getService( ClassLoaderService.class )
 					.classForName( childName );
@@ -68,7 +64,9 @@ public class SemanticPathPartNamedPackage implements SemanticPathPart {
 	@Override
 	public SqmRestrictedCollectionElementReference resolveIndexedAccess(
 			SqmExpression selector,
-			String currentContextKey, boolean isTerminal, Navigable.SqmReferenceCreationContext context) {
+			String currentContextKey,
+			boolean isTerminal,
+			SqmCreationContext context) {
 		throw new SemanticException( "Illegal attempt to dereference package name using index-access" );
 	}
 

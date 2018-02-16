@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -16,25 +17,21 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class SqmRoot extends AbstractSqmFrom {
+	private final SqmEntityReference entityReference;
+
 	public SqmRoot(
 			SqmFromElementSpace fromElementSpace,
 			String uid,
 			String alias,
-			EntityValuedExpressableType entityReference) {
-		super(
-				fromElementSpace,
-				uid,
-				alias,
-				new SqmEntityReference( entityReference ),
-				null
-		);
-
-		getNavigableReference().injectExportedFromElement( this );
+			EntityValuedExpressableType entityReference,
+			SqmCreationContext creationContext) {
+		super( fromElementSpace, uid, alias );
+		this.entityReference = new SqmEntityReference( entityReference.getEntityDescriptor(), this, creationContext );
 	}
 
 	@Override
 	public SqmEntityReference getNavigableReference() {
-		return (SqmEntityReference) super.getNavigableReference();
+		return entityReference;
 	}
 
 	public String getEntityName() {

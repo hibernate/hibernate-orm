@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.ast.produce.ordering.internal;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
@@ -18,15 +16,16 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
-import org.hibernate.query.sqm.produce.spi.ParsingContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
-import org.hibernate.query.sqm.tree.from.SqmDowncast;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
+import org.hibernate.query.sqm.tree.from.UsageDetails;
+import org.hibernate.query.sqm.tree.from.UsageDetailsImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -41,11 +40,13 @@ public class SqmFromImpl implements SqmFrom {
 	private final String uid;
 	private final String alias;
 
-	protected SqmFromImpl(ParsingContext parsingContext, PersistentCollectionDescriptor collectionDescriptor) {
+	private final UsageDetailsImpl usageDetails = new UsageDetailsImpl( this );
+
+	protected SqmFromImpl(SqmCreationContext creationContext, PersistentCollectionDescriptor collectionDescriptor) {
 		this.collectionDescriptor = collectionDescriptor;
 		this.space = createFromElementSpace();
 		this.uid = generateUid();
-		this.alias = parsingContext.getImplicitAliasGenerator().buildUniqueImplicitAlias();
+		this.alias = creationContext.getImplicitAliasGenerator().generateUniqueImplicitAlias();
 		this.navRef = new SqmNavigableReferenceImpl();
 	}
 
@@ -79,13 +80,18 @@ public class SqmFromImpl implements SqmFrom {
 	}
 
 	@Override
+	public UsageDetails getUsageDetails() {
+		return usageDetails;
+	}
+
+	@Override
 	public String getIdentificationVariable() {
 		return alias;
 	}
 
 	@Override
 	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
-		return null;
+		return (EntityDescriptor) getUsageDetails().getIntrinsicSubclassIndicator();
 	}
 
 	@Override
@@ -167,21 +173,6 @@ public class SqmFromImpl implements SqmFrom {
 		}
 
 		@Override
-		public SqmNavigableReference treatAs(EntityDescriptor target) {
-			throw new UnsupportedOperationException(  );
-		}
-
-		@Override
-		public void addDowncast(SqmDowncast downcast) {
-			throw new UnsupportedOperationException(  );
-		}
-
-		@Override
-		public Collection<SqmDowncast> getDowncasts() {
-			return Collections.emptyList();
-		}
-
-		@Override
 		public PersistenceType getPersistenceType() {
 			return collectionDescriptor.getElementDescriptor().getPersistenceType();
 		}
@@ -197,7 +188,7 @@ public class SqmFromImpl implements SqmFrom {
 				String name,
 				String currentContextKey,
 				boolean isTerminal,
-				Navigable.SqmReferenceCreationContext context) {
+				SqmCreationContext context) {
 			final Navigable navigable = collectionDescriptor.findNavigable( name );
 			return navigable.createSqmExpression( SqmFromImpl.this, this, context );
 		}
@@ -207,18 +198,13 @@ public class SqmFromImpl implements SqmFrom {
 				SqmExpression selector,
 				String currentContextKey,
 				boolean isTerminal,
-				Navigable.SqmReferenceCreationContext context) {
+				SqmCreationContext context) {
 			throw new UnsupportedOperationException(  );
 		}
 
 		@Override
 		public SqmFrom getExportedFromElement() {
 			return SqmFromImpl.this;
-		}
-
-		@Override
-		public void injectExportedFromElement(SqmFrom sqmFrom) {
-			throw new UnsupportedOperationException(  );
 		}
 	}
 }

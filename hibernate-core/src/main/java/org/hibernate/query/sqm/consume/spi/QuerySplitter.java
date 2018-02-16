@@ -11,11 +11,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.sqm.ParsingException;
-import org.hibernate.query.sqm.produce.internal.NavigableBindingHelper;
+import org.hibernate.query.sqm.produce.spi.CurrentSqmFromElementSpaceCoordAccess;
+import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
+import org.hibernate.query.sqm.produce.spi.QuerySpecProcessingState;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmFromBuilder;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
@@ -56,12 +61,12 @@ import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
-import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
+import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.internal.SqmSelectStatementImpl;
 import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
@@ -131,7 +136,7 @@ public class QuerySplitter {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static class UnmappedPolymorphismReplacer extends BaseSemanticQueryWalker {
+	private static class UnmappedPolymorphismReplacer extends BaseSemanticQueryWalker implements SqmCreationContext {
 		private final SqmRoot unmappedPolymorphicFromElement;
 		private final EntityDescriptor mappedDescriptor;
 
@@ -248,7 +253,8 @@ public class QuerySplitter {
 						currentFromElementSpaceCopy,
 						rootEntityFromElement.getUniqueIdentifier(),
 						rootEntityFromElement.getIdentificationVariable(),
-						mappedDescriptor
+						mappedDescriptor,
+						this
 				);
 			}
 			else {
@@ -256,7 +262,8 @@ public class QuerySplitter {
 						currentFromElementSpaceCopy,
 						rootEntityFromElement.getUniqueIdentifier(),
 						rootEntityFromElement.getIdentificationVariable(),
-						rootEntityFromElement.getNavigableReference().getReferencedNavigable().getEntityDescriptor()
+						rootEntityFromElement.getNavigableReference().getReferencedNavigable().getEntityDescriptor(),
+						this
 				);
 			}
 			navigableBindingCopyMap.put( rootEntityFromElement.getNavigableReference(), copy.getNavigableReference() );
@@ -278,7 +285,8 @@ public class QuerySplitter {
 					currentFromElementSpaceCopy,
 					joinedFromElement.getUniqueIdentifier(),
 					joinedFromElement.getIdentificationVariable(),
-					joinedFromElement.getNavigableReference().getReferencedNavigable().getEntityDescriptor()
+					joinedFromElement.getNavigableReference().getReferencedNavigable().getEntityDescriptor(),
+					this
 			);
 			navigableBindingCopyMap.put( joinedFromElement.getNavigableReference(), copy.getNavigableReference() );
 			return copy;
@@ -300,7 +308,8 @@ public class QuerySplitter {
 					joinedFromElement.getUniqueIdentifier(),
 					joinedFromElement.getIdentificationVariable(),
 					joinedFromElement.getNavigableReference().getReferencedNavigable().getEntityDescriptor(),
-					joinedFromElement.getJoinType()
+					joinedFromElement.getJoinType(),
+					this
 			);
 			navigableBindingCopyMap.put( joinedFromElement.getNavigableReference(), copy.getNavigableReference() );
 			return copy;
@@ -339,20 +348,17 @@ public class QuerySplitter {
 				throw new ParsingException( "Could not determine attribute join's LHS for copy" );
 			}
 
-			assert NavigableBindingHelper.resolveExportedFromElement( sourceBindingCopy ).getContainingSpace() == currentFromElementSpaceCopy;
+			assert sourceBindingCopy.getExportedFromElement().getContainingSpace() == currentFromElementSpaceCopy;
 
-			final SqmAttributeReference attributeBindingCopy = (SqmAttributeReference) NavigableBindingHelper.createNavigableBinding(
-					sourceBindingCopy,
-					fromElement.getAttributeReference().getReferencedNavigable(),
-					null
-			);
+			final SqmAttributeReference attributeBindingCopy = (SqmAttributeReference) fromElement.getNavigableReference()
+					.getReferencedNavigable()
+					.createSqmExpression( sourceBindingCopy.getExportedFromElement(), sourceBindingCopy, this );
 
 			final SqmNavigableJoin copy = new SqmNavigableJoin(
 					sourceBindingCopy.getExportedFromElement(),
 					attributeBindingCopy,
 					fromElement.getUniqueIdentifier(),
 					fromElement.getIdentificationVariable(),
-					fromElement.getIntrinsicSubclassEntityMetadata(),
 					fromElement.getJoinType(),
 					fromElement.isFetched()
 			);
@@ -498,17 +504,18 @@ public class QuerySplitter {
 			assert !navigableBindingCopyMap.containsKey( attributeReference );
 
 			final SqmNavigableJoin originalJoin = (SqmNavigableJoin) sqmFromSqmCopyMap.get( attributeReference.getExportedFromElement() );
-			final SqmNavigableContainerReference sourceBindingCopy = (SqmNavigableContainerReference) navigableBindingCopyMap.get(
+			final SqmNavigableContainerReference sourceNavRef = (SqmNavigableContainerReference) navigableBindingCopyMap.get(
 					attributeReference.getSourceReference()
 			);
 
-			if ( sourceBindingCopy == null ) {
+			if ( sourceNavRef == null ) {
 				throw new ParsingException( "Could not resolve NavigableSourceBinding copy during query splitting" );
 			}
 
-			final SqmSingularAttributeReference attributeBindingCopy = NavigableBindingHelper.createSingularAttributeBinding(
-					sourceBindingCopy,
-					(SingularPersistentAttribute) attributeReference.getReferencedNavigable()
+			final SqmAttributeReference attributeBindingCopy = (SqmAttributeReference) sourceNavRef.getReferencedNavigable().createSqmExpression(
+					sourceNavRef.getExportedFromElement(),
+					sourceNavRef,
+					this
 			);
 			navigableBindingCopyMap.put( attributeReference, attributeBindingCopy );
 			return attributeBindingCopy;
@@ -798,6 +805,55 @@ public class QuerySplitter {
 					// assume already validated
 					( (SqmExpression) expression.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode() ).getExpressableType()
 			);
+		}
+
+		@Override
+		public QuerySpecProcessingState getCurrentQuerySpecProcessingState() {
+			// todo (6.0) : not sure these are needed
+			throw new NotYetImplementedFor6Exception(  );
+		}
+
+		@Override
+		public SqmFromElementSpace getCurrentFromElementSpace() {
+			// todo (6.0) : not sure these are needed
+			throw new NotYetImplementedFor6Exception(  );
+		}
+
+		@Override
+		public SqmFromBuilder getCurrentFromElementBuilder() {
+			// todo (6.0) : not sure these are needed
+			throw new NotYetImplementedFor6Exception(  );
+		}
+
+		@Override
+		public CurrentSqmFromElementSpaceCoordAccess getCurrentSqmFromElementSpaceCoordAccess() {
+			// todo (6.0) : not sure these are needed
+			throw new NotYetImplementedFor6Exception(  );
+		}
+
+		@Override
+		public String generateUniqueIdentifier() {
+			// todo (6.0) : not sure these are needed
+			throw new NotYetImplementedFor6Exception(  );
+		}
+
+		@Override
+		public ImplicitAliasGenerator getImplicitAliasGenerator() {
+			// todo (6.0) : not sure these are needed
+			throw new NotYetImplementedFor6Exception(  );
+		}
+
+		@Override
+		public void cacheNavigableReference(SqmNavigableReference reference) {
+			// todo (6.0) : not sure these are needed
+			throw new NotYetImplementedFor6Exception(  );
+		}
+
+		@Override
+		public SqmNavigableReference getCachedNavigableReference(
+				SqmNavigableContainerReference source, Navigable navigable) {
+			// todo (6.0) : not sure these are needed
+			throw new NotYetImplementedFor6Exception(  );
 		}
 	}
 

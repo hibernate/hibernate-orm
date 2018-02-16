@@ -8,9 +8,9 @@ package org.hibernate.query.sqm.produce.path.internal;
 
 import java.lang.reflect.Field;
 
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 
@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionEle
 public class SemanticPathPartNamedClass implements SemanticPathPart {
 	private final Class theClass;
 
+	@SuppressWarnings("WeakerAccess")
 	public SemanticPathPartNamedClass(Class theClass) {
 		this.theClass = theClass;
 	}
@@ -30,7 +31,9 @@ public class SemanticPathPartNamedClass implements SemanticPathPart {
 	@SuppressWarnings("unchecked")
 	public SemanticPathPart resolvePathPart(
 			String name,
-			String currentContextKey, boolean isTerminal, Navigable.SqmReferenceCreationContext context) {
+			String currentContextKey,
+			boolean isTerminal,
+			SqmCreationContext context) {
 		if ( theClass.isEnum() ) {
 			try {
 				final Enum enumValue = Enum.valueOf( theClass, name );
@@ -53,7 +56,9 @@ public class SemanticPathPartNamedClass implements SemanticPathPart {
 	@Override
 	public SqmRestrictedCollectionElementReference resolveIndexedAccess(
 			SqmExpression selector,
-			String currentContextKey, boolean isTerminal, Navigable.SqmReferenceCreationContext context) {
+			String currentContextKey,
+			boolean isTerminal,
+			SqmCreationContext context) {
 		throw new SemanticException( "Illegal attempt to dereference package name using index-access" );
 	}
 }

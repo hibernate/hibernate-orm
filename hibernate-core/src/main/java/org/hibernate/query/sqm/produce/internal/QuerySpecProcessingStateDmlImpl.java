@@ -10,20 +10,19 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.query.sqm.produce.spi.AliasRegistry;
-import org.hibernate.query.sqm.produce.spi.FromElementLocator;
-import org.hibernate.query.sqm.produce.spi.ParsingContext;
+import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.sqm.ParsingException;
+import org.hibernate.query.sqm.produce.SqmProductionException;
 import org.hibernate.query.sqm.produce.spi.AbstractQuerySpecProcessingState;
-import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmFromBuilder;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
-import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 /**
@@ -34,13 +33,13 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 public class QuerySpecProcessingStateDmlImpl extends AbstractQuerySpecProcessingState {
 	private final DmlFromClause fromClause;
 
-	private final FromElementBuilder fromElementBuilder;
+	private final SqmFromBuilder fromElementBuilder;
 
-	public QuerySpecProcessingStateDmlImpl(ParsingContext parsingContext) {
+	public QuerySpecProcessingStateDmlImpl(SqmCreationContext creationContext) {
 		// implicitly no outer query, so pass null
-		super( parsingContext, null );
+		super( creationContext, null );
 		this.fromClause = new DmlFromClause();
-		this.fromElementBuilder = new DmlFromElementBuilder( parsingContext, new AliasRegistry() );
+		this.fromElementBuilder = new DmlFromElementBuilder( creationContext );
 	}
 
 	@Override
@@ -56,8 +55,8 @@ public class QuerySpecProcessingStateDmlImpl extends AbstractQuerySpecProcessing
 	}
 
 	@Override
-	public SqmNavigableReference findNavigableReferenceExposingAttribute(String attributeName) {
-		if ( rootExposesAttribute( attributeName ) ) {
+	public SqmNavigableReference findNavigableReferenceExposingNavigable(String navigableName) {
+		if ( rootExposesAttribute( navigableName ) ) {
 			return fromClause.fromElementSpace.getRoot().getNavigableReference();
 		}
 		else {
@@ -67,16 +66,6 @@ public class QuerySpecProcessingStateDmlImpl extends AbstractQuerySpecProcessing
 
 	private boolean rootExposesAttribute(String attributeName) {
 		return null != fromClause.fromElementSpace.getRoot().getNavigableReference().getReferencedNavigable().findNavigable( attributeName );
-	}
-
-	@Override
-	public FromElementLocator getFromElementLocator() {
-		return this;
-	}
-
-	@Override
-	public FromElementBuilder getFromElementBuilder() {
-		return fromElementBuilder;
 	}
 
 	public DmlSqmFromElementSpace getDmlFromElementSpace() {
@@ -123,45 +112,28 @@ public class QuerySpecProcessingStateDmlImpl extends AbstractQuerySpecProcessing
 		}
 	}
 
-	public static class DmlFromElementBuilder extends FromElementBuilder {
-		public DmlFromElementBuilder(ParsingContext parsingContext, AliasRegistry aliasRegistry) {
-			super( parsingContext, aliasRegistry );
+	public static class DmlFromElementBuilder extends SqmFromBuilderStandard {
+		public DmlFromElementBuilder(SqmCreationContext creationContext) {
+			super( creationContext );
 		}
 
 		@Override
-		public SqmCrossJoin makeCrossJoinedFromElement(
-				SqmFromElementSpace fromElementSpace, String uid, EntityValuedExpressableType entityType, String alias) {
-			throw new ParsingException( "DML from-clause cannot define joins" );
+		public SqmCrossJoin buildCrossJoin(EntityValuedNavigable navigable) {
+			throw new SqmProductionException( "DML from-clause cannot define joins" );
 		}
 
 		@Override
-		public SqmEntityJoin buildEntityJoin(
-				SqmFromElementSpace fromElementSpace,
-				String alias,
-				EntityValuedExpressableType entityType,
-				SqmJoinType joinType) {
-			throw new ParsingException( "DML from-clause cannot define joins" );
+		public SqmEntityJoin buildEntityJoin(EntityValuedNavigable navigable) {
+			throw new SqmProductionException( "DML from-clause cannot define joins" );
 		}
 
 		@Override
-		public SqmNavigableJoin buildNavigableJoin(
-				SqmNavigableReference navigableReference,
-				String alias,
-				EntityValuedExpressableType subclassIndicator,
-				SqmJoinType joinType,
-				boolean fetched,
-				boolean canReuseImplicitJoins) {
+		public SqmNavigableJoin buildNavigableJoin(SqmNavigableReference navigableReference) {
 			if ( EmbeddedValuedNavigable.class.isInstance( navigableReference.getReferencedNavigable() ) ) {
-				return super.buildNavigableJoin(
-						navigableReference,
-						alias,
-						subclassIndicator,
-						joinType,
-						fetched,
-						canReuseImplicitJoins
-				);
+				return super.buildNavigableJoin( navigableReference );
 			}
-			throw new ParsingException( "DML from-clause cannot define joins" );
+
+			throw new SqmProductionException( "DML from-clause cannot define joins" );
 		}
 	}
 }

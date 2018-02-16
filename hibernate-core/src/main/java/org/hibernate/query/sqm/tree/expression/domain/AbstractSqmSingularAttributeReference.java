@@ -12,8 +12,8 @@ import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 
 /**
  * @author Steve Ebersole
@@ -25,11 +25,6 @@ public abstract class AbstractSqmSingularAttributeReference
 			SqmNavigableContainerReference navigableContainerReference,
 			SingularPersistentAttribute referencedNavigable) {
 		super( navigableContainerReference, referencedNavigable );
-	}
-
-
-	public AbstractSqmSingularAttributeReference(SqmNavigableJoin fromElement) {
-		super( fromElement );
 	}
 
 	@Override
@@ -57,19 +52,12 @@ public abstract class AbstractSqmSingularAttributeReference
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		if ( ! NavigableContainer.class.isInstance( getReferencedNavigable() ) ) {
 			throw new SemanticException(
 					"Cannot dereference non-container Navigable [" +
 							getNavigablePath().getFullPath() + " (" +
 							getReferencedNavigable().getClass().getName() + ")"
-			);
-		}
-
-		if ( getExportedFromElement() == null ) {
-			context.getNavigableJoinBuilder().buildNavigableJoinIfNecessary(
-					this,
-					false
 			);
 		}
 
@@ -82,13 +70,11 @@ public abstract class AbstractSqmSingularAttributeReference
 							" (" + getSourceReference().getClass().getName() + ")"
 			);
 		}
-		final SqmNavigableReference navigableReference = navigable.createSqmExpression(
+		return navigable.createSqmExpression(
 				getExportedFromElement(),
 				(SqmNavigableContainerReference) this,
 				context
 		);
-		context.getNavigableJoinBuilder().buildNavigableJoinIfNecessary( navigableReference, isTerminal );
-		return navigableReference;
 	}
 
 	@Override
@@ -96,7 +82,7 @@ public abstract class AbstractSqmSingularAttributeReference
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		throw new UnsupportedOperationException(  );
 	}
 }

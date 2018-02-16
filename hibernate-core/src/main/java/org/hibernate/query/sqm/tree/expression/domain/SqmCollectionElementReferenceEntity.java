@@ -47,17 +47,6 @@ public class SqmCollectionElementReferenceEntity
 	}
 
 	@Override
-	public void injectExportedFromElement(SqmFrom sqmFrom) {
-		log.debugf(
-				"Injecting SqmFrom [%s] into CollectionElementBindingEntity [%s], was [%s]",
-				sqmFrom,
-				this,
-				this.exportedFromElement
-		);
-		exportedFromElement = sqmFrom;
-	}
-
-	@Override
 	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
 		// todo (6.0) : override this to account for implicit or explicit Downcasts
 		return super.getIntrinsicSubclassEntityMetadata();

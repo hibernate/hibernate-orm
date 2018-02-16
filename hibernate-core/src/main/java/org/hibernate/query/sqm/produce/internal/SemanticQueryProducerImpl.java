@@ -10,6 +10,7 @@ import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.QueryException;
@@ -17,13 +18,11 @@ import org.hibernate.query.sqm.produce.internal.hql.HqlParseTreeBuilder;
 import org.hibernate.query.sqm.produce.internal.hql.HqlParseTreePrinter;
 import org.hibernate.query.sqm.produce.internal.hql.SemanticQueryBuilder;
 import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlParser;
-import org.hibernate.query.sqm.produce.spi.ParsingContext;
 import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
-import org.hibernate.NotYetImplementedFor6Exception;
 
 /**
  * Standard implementation of SemanticQueryInterpreter
@@ -39,7 +38,7 @@ public class SemanticQueryProducerImpl implements SemanticQueryProducer {
 
 	@Override
 	public SqmStatement interpret(String query) {
-		final ParsingContext parsingContext = new ParsingContext( sessionFactory );
+//		final ParsingContext parsingContext = ;
 
 		// first, ask Antlr to build the parse tree
 		final HqlParser parser = HqlParseTreeBuilder.INSTANCE.parseHql( query );
@@ -49,7 +48,7 @@ public class SemanticQueryProducerImpl implements SemanticQueryProducer {
 
 		// then we perform semantic analysis and build the semantic representation...
 		try {
-			return SemanticQueryBuilder.buildSemanticModel( parser.statement(), parsingContext );
+			return SemanticQueryBuilder.buildSemanticModel( parser.statement(), sessionFactory );
 		}
 		catch (QueryException e) {
 			throw e;

@@ -9,13 +9,11 @@ package org.hibernate.query.sqm.tree.expression.domain;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndexEntity;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-
-import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
@@ -23,8 +21,6 @@ import org.jboss.logging.Logger;
 public class SqmCollectionIndexReferenceEntity
 		extends AbstractSqmCollectionIndexReference
 		implements SqmNavigableContainerReference, SqmEntityTypedReference {
-	private static final Logger log = Logger.getLogger( SqmCollectionIndexReferenceEntity.class );
-
 	private SqmFrom exportedFromElement;
 
 	public SqmCollectionIndexReferenceEntity(SqmPluralAttributeReference pluralAttributeBinding) {
@@ -52,17 +48,6 @@ public class SqmCollectionIndexReferenceEntity
 	}
 
 	@Override
-	public void injectExportedFromElement(SqmFrom sqmFrom) {
-		log.debugf(
-				"Injecting SqmFrom [%s] into CollectionElementBindingEntity [%s], was [%s]",
-				sqmFrom,
-				this,
-				this.exportedFromElement
-		);
-		exportedFromElement = sqmFrom;
-	}
-
-	@Override
 	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
 		// todo (6.0) : override this to account for implicit or explicit Downcasts
 		return super.getIntrinsicSubclassEntityMetadata();
@@ -79,7 +64,7 @@ public class SqmCollectionIndexReferenceEntity
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		return getPluralAttributeReference().getReferencedNavigable()
 				.getPersistentCollectionDescriptor()
 				.getIndexDescriptor()
@@ -91,7 +76,7 @@ public class SqmCollectionIndexReferenceEntity
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
-		return null;
+			SqmCreationContext context) {
+		throw new UnsupportedOperationException(  );
 	}
 }

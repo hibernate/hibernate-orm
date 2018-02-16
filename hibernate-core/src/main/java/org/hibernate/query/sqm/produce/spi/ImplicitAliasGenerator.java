@@ -12,15 +12,15 @@ package org.hibernate.query.sqm.produce.spi;
  * @author Steve Ebersole
  */
 public class ImplicitAliasGenerator {
-	private int unaliasedCount = 0;
+	private int unAliasedCount = 0;
 
 	/**
 	 * Builds a unique implicit alias.
 	 *
 	 * @return The generated alias.
 	 */
-	public synchronized String buildUniqueImplicitAlias() {
-		return "<gen:" + unaliasedCount++ + ">";
+	public synchronized String generateUniqueImplicitAlias() {
+		return "<gen:" + unAliasedCount++ + ">";
 	}
 
 	/**

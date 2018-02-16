@@ -9,16 +9,12 @@ package org.hibernate.query.sqm.tree.expression.domain;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 
-import org.jboss.logging.Logger;
-
 /**
  * @author Steve Ebersole
  */
 public class SqmMinIndexReferenceEntity
 		extends AbstractSpecificSqmCollectionIndexReference
 		implements SqmMinIndexReference, SqmEntityTypedReference {
-	private static final Logger log = Logger.getLogger( SqmMinIndexReferenceEntity.class );
-
 	private SqmFrom exportedFromElement;
 
 	public SqmMinIndexReferenceEntity(SqmPluralAttributeReference pluralAttributeBinding) {
@@ -43,16 +39,5 @@ public class SqmMinIndexReferenceEntity
 	@Override
 	public SqmFrom getExportedFromElement() {
 		return exportedFromElement;
-	}
-
-	@Override
-	public void injectExportedFromElement(SqmFrom sqmFrom) {
-		log.debugf(
-				"Injecting SqmFrom [%s] into MinIndexBindingEmbeddable [%s], was [%s]",
-				sqmFrom,
-				this,
-				this.exportedFromElement
-		);
-		exportedFromElement = sqmFrom;
 	}
 }

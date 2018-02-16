@@ -11,15 +11,12 @@ import org.hibernate.metamodel.model.domain.spi.CollectionElementEmbedded;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
-import org.jboss.logging.Logger;
-
 /**
  * @author Steve Ebersole
  */
 public class SqmMinElementReferenceEmbedded
 		extends AbstractSpecificSqmElementReference
 		implements SqmMinElementReference, SqmEmbeddableTypedReference {
-	private static final Logger log = Logger.getLogger( SqmMinElementReferenceEmbedded.class );
 
 	private SqmFrom exportedFromElement;
 
@@ -50,16 +47,5 @@ public class SqmMinElementReferenceEmbedded
 	@Override
 	public SqmFrom getExportedFromElement() {
 		return exportedFromElement;
-	}
-
-	@Override
-	public void injectExportedFromElement(SqmFrom sqmFrom) {
-		log.debugf(
-				"Injecting SqmFrom [%s] into MinElementBindingEmbedded [%s], was [%s]",
-				sqmFrom,
-				this,
-				this.exportedFromElement
-		);
-		exportedFromElement = sqmFrom;
 	}
 }

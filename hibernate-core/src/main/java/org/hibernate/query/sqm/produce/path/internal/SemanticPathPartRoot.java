@@ -7,10 +7,10 @@
 package org.hibernate.query.sqm.produce.path.internal;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
-import org.hibernate.query.sqm.produce.spi.FromElementLocator;
+import org.hibernate.query.sqm.produce.spi.RootSqmNavigableReferenceLocator;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
@@ -24,11 +24,11 @@ public class SemanticPathPartRoot implements SemanticPathPart {
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		// At this point we have a "root reference"... the first path part in
 		// a potential series of path parts
 
-		final FromElementLocator fromElementLocator = context.getQuerySpecProcessingState();
+		final RootSqmNavigableReferenceLocator fromElementLocator = context.getCurrentQuerySpecProcessingState();
 
 		// this root reference could be any of:
 		// 		1) a from-element alias
@@ -40,19 +40,20 @@ public class SemanticPathPartRoot implements SemanticPathPart {
 		final SqmNavigableReference aliasedFromElement = fromElementLocator.findNavigableReferenceByIdentificationVariable( name );
 		if ( aliasedFromElement != null ) {
 			validateNavigablePathRoot( aliasedFromElement,currentContextKey, context );
+			context.getCurrentSqmFromElementSpaceCoordAccess().setCurrentSqmFromElementSpace( aliasedFromElement.getExportedFromElement().getContainingSpace() );
 			return aliasedFromElement;
 		}
 
 		// #2
-		final SqmNavigableReference unqualifiedAttributeOwner = fromElementLocator.findNavigableReferenceExposingAttribute( name );
+		final SqmNavigableReference unqualifiedAttributeOwner = fromElementLocator.findNavigableReferenceExposingNavigable( name );
 		if ( unqualifiedAttributeOwner != null ) {
 			validateNavigablePathRoot( unqualifiedAttributeOwner,currentContextKey, context );
+			context.getCurrentSqmFromElementSpaceCoordAccess().setCurrentSqmFromElementSpace( unqualifiedAttributeOwner.getExportedFromElement().getContainingSpace() );
 			return unqualifiedAttributeOwner.resolvePathPart( name, currentContextKey, false, context );
 		}
 
 		// #3
-		final EntityDescriptor entityByName = context.getParsingContext()
-				.getSessionFactory()
+		final EntityDescriptor entityByName = context.getSessionFactory()
 				.getTypeConfiguration()
 				.findEntityDescriptor( name );
 		if ( entityByName != null ) {
@@ -71,7 +72,7 @@ public class SemanticPathPartRoot implements SemanticPathPart {
 	protected void validateNavigablePathRoot(
 			SqmNavigableReference unqualifiedAttributeOwner,
 			String currentContextKey,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		// here for inheritors
 	}
 
@@ -80,7 +81,7 @@ public class SemanticPathPartRoot implements SemanticPathPart {
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		throw new SemanticException( "Path cannot start with index-access" );
 	}
 }

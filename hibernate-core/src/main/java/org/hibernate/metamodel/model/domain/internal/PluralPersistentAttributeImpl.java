@@ -23,8 +23,8 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.spi.ColumnReferenceQualifier;
@@ -165,11 +165,8 @@ public class PluralPersistentAttributeImpl implements PluralPersistentAttribute 
 	public SqmPluralAttributeReference createSqmExpression(
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
-			SqmReferenceCreationContext creationContext) {
-		return new SqmPluralAttributeReference(
-				containerReference,
-				this
-		);
+			SqmCreationContext creationContext) {
+		return new SqmPluralAttributeReference( containerReference, this, creationContext );
 	}
 
 	@Override

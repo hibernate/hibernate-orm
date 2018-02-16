@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -16,25 +17,25 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class SqmCrossJoin extends AbstractSqmFrom implements SqmJoin {
+	private final SqmEntityReference joinedEntiytReference;
 
 	public SqmCrossJoin(
 			SqmFromElementSpace fromElementSpace,
 			String uid,
 			String alias,
-			EntityDescriptor entityReference) {
+			EntityDescriptor entityDescriptor,
+			SqmCreationContext creationContext) {
 		super(
 				fromElementSpace,
 				uid,
-				alias,
-				new SqmEntityReference( entityReference ),
-				entityReference
+				alias
 		);
-		getNavigableReference().injectExportedFromElement( this );
+		this.joinedEntiytReference = new SqmEntityReference( entityDescriptor, this, creationContext );
 	}
 
 	@Override
 	public SqmEntityReference getNavigableReference() {
-		return (SqmEntityReference) super.getNavigableReference();
+		return joinedEntiytReference;
 	}
 
 	public String getEntityName() {

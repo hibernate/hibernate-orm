@@ -6,15 +6,11 @@
  */
 package org.hibernate.query.sqm.produce.spi;
 
-import org.hibernate.query.sqm.produce.internal.FromElementBuilder;
+import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 
 /**
- * Defines a context for performing path resolutions
- *
  * @author Steve Ebersole
  */
-public interface ResolutionContext {
-	FromElementLocator getFromElementLocator();
-	FromElementBuilder getFromElementBuilder();
-	ParsingContext getParsingContext();
+public interface CurrentSqmFromElementSpaceCoordAccess {
+	void setCurrentSqmFromElementSpace(SqmFromElementSpace space);
 }

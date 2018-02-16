@@ -10,16 +10,12 @@ import org.hibernate.metamodel.model.domain.spi.CollectionElementEntity;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
-import org.jboss.logging.Logger;
-
 /**
  * @author Steve Ebersole
  */
 public class SqmMinElementReferenceEntity
 		extends AbstractSpecificSqmElementReference
 		implements SqmMinElementReference, SqmEntityTypedReference {
-	private static final Logger log = Logger.getLogger( SqmMinElementReferenceEntity.class );
-
 	private SqmFrom exportedFromElement;
 
 	public SqmMinElementReferenceEntity(SqmPluralAttributeReference pluralAttributeBinding) {
@@ -44,17 +40,6 @@ public class SqmMinElementReferenceEntity
 	@Override
 	public SqmFrom getExportedFromElement() {
 		return exportedFromElement;
-	}
-
-	@Override
-	public void injectExportedFromElement(SqmFrom sqmFrom) {
-		log.debugf(
-				"Injecting SqmFrom [%s] into MinElementBindingEntity [%s], was [%s]",
-				sqmFrom,
-				this,
-				this.exportedFromElement
-		);
-		exportedFromElement = sqmFrom;
 	}
 
 	@Override

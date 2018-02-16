@@ -6,19 +6,16 @@
  */
 package org.hibernate.sql.ast.produce.ordering.internal;
 
-import java.util.Collection;
-
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
-import org.hibernate.query.sqm.tree.from.SqmDowncast;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
@@ -97,21 +94,6 @@ public class SqmColumnReference implements SqmExpression, SqmNavigableReference 
 	}
 
 	@Override
-	public SqmNavigableReference treatAs(EntityDescriptor target) {
-		throw new UnsupportedOperationException( "Explicit column reference cannot be TREAT'ed" );
-	}
-
-	@Override
-	public void addDowncast(SqmDowncast downcast) {
-		throw new UnsupportedOperationException( "Explicit column reference cannot be TREAT'ed" );
-	}
-
-	@Override
-	public Collection<SqmDowncast> getDowncasts() {
-		throw new UnsupportedOperationException( "Explicit column reference cannot be TREAT'ed" );
-	}
-
-	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;
 	}
@@ -141,7 +123,7 @@ public class SqmColumnReference implements SqmExpression, SqmNavigableReference 
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		throw new UnsupportedOperationException(  );
 	}
 
@@ -150,21 +132,12 @@ public class SqmColumnReference implements SqmExpression, SqmNavigableReference 
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		throw new UnsupportedOperationException(  );
 	}
 
 	@Override
 	public SqmFrom getExportedFromElement() {
 		return sqmFromBase;
-	}
-
-	@Override
-	public void injectExportedFromElement(SqmFrom sqmFrom) {
-		if ( sqmFrom == sqmFromBase ) {
-			// ignore
-		}
-
-		throw new ParsingException( "Cannot inject new SqmFrom into SqmColumnReference" );
 	}
 }

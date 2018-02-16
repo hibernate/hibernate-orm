@@ -9,7 +9,8 @@ package org.hibernate.query.sqm.tree.expression.domain;
 import org.hibernate.metamodel.model.domain.internal.BasicSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 /**
  * @author Steve Ebersole
@@ -17,17 +18,19 @@ import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 public class SqmSingularAttributeReferenceBasic extends AbstractSqmSingularAttributeReference {
 	public SqmSingularAttributeReferenceBasic(
 			SqmNavigableContainerReference sourceBinding,
-			BasicSingularPersistentAttribute boundNavigable) {
+			BasicSingularPersistentAttribute boundNavigable,
+			SqmCreationContext creationContext) {
 		super( sourceBinding, boundNavigable );
-	}
-
-	public SqmSingularAttributeReferenceBasic(SqmNavigableJoin fromElement) {
-		super( fromElement );
 	}
 
 	@Override
 	public BasicSingularPersistentAttribute getReferencedNavigable() {
 		return (BasicSingularPersistentAttribute) super.getReferencedNavigable();
+	}
+
+	@Override
+	public SqmFrom getExportedFromElement() {
+		return getSourceReference().getExportedFromElement();
 	}
 
 	@Override

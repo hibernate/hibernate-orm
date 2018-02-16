@@ -19,13 +19,11 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReferenceEmbedded;
-import org.hibernate.query.sqm.tree.expression.domain.SqmIndexedElementReferenceEmbedded;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
@@ -81,20 +79,8 @@ public class CollectionElementEmbeddedImpl<J>
 	public SqmNavigableReference createSqmExpression(
 			SqmFrom sourceSqmFrom,
 			SqmNavigableContainerReference containerReference,
-			SqmReferenceCreationContext creationContext) {
+			SqmCreationContext creationContext) {
 		return new SqmCollectionElementReferenceEmbedded( (SqmPluralAttributeReference) containerReference );
 	}
 
-	@Override
-	public SqmRestrictedCollectionElementReference createIndexedAccessReference(
-			SqmPluralAttributeReference pluralAttributeReference,
-			SqmExpression selector,
-			SqmReferenceCreationContext creationContext) {
-		return new SqmIndexedElementReferenceEmbedded( pluralAttributeReference, selector );
-	}
-
-//	@Override
-//	public List<Column> getColumns() {
-//		return columnList;
-//	}
 }

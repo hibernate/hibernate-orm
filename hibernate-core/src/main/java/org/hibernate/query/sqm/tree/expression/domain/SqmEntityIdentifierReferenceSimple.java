@@ -6,14 +6,14 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -110,7 +110,7 @@ public class SqmEntityIdentifierReferenceSimple
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		throw new SemanticException( "Basic identifier cannot be rde-referenced" );
 	}
 
@@ -119,7 +119,7 @@ public class SqmEntityIdentifierReferenceSimple
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		throw new UnsupportedOperationException(  );
 	}
 
@@ -128,11 +128,6 @@ public class SqmEntityIdentifierReferenceSimple
 	@Override
 	public SqmFrom getExportedFromElement() {
 		return getSourceReference().getExportedFromElement();
-	}
-
-	@Override
-	public void injectExportedFromElement(SqmFrom sqmFrom) {
-		getSourceReference().injectExportedFromElement( sqmFrom );
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }

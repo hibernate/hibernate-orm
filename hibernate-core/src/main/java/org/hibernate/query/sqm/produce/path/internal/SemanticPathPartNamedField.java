@@ -9,9 +9,9 @@ package org.hibernate.query.sqm.produce.path.internal;
 import java.lang.reflect.Field;
 import java.util.Locale;
 
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 
@@ -23,6 +23,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionEle
 public class SemanticPathPartNamedField implements SemanticPathPart {
 	private final Field theField;
 
+	@SuppressWarnings("WeakerAccess")
 	public SemanticPathPartNamedField(Field theField) {
 		this.theField = theField;
 	}
@@ -32,7 +33,7 @@ public class SemanticPathPartNamedField implements SemanticPathPart {
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		throw new SemanticException(
 				String.format(
 						Locale.ROOT,
@@ -46,7 +47,9 @@ public class SemanticPathPartNamedField implements SemanticPathPart {
 	@Override
 	public SqmRestrictedCollectionElementReference resolveIndexedAccess(
 			SqmExpression selector,
-			String currentContextKey, boolean isTerminal, Navigable.SqmReferenceCreationContext context) {
+			String currentContextKey,
+			boolean isTerminal,
+			SqmCreationContext context) {
 		throw new SemanticException(
 				String.format(
 						Locale.ROOT,

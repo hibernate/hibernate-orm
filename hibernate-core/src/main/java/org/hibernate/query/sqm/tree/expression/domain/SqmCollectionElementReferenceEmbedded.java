@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.CollectionElementEmbedded;
-import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 /**
@@ -28,10 +27,5 @@ public class SqmCollectionElementReferenceEmbedded
 	@Override
 	public SqmFrom getExportedFromElement() {
 		return getPluralAttributeReference().getExportedFromElement();
-	}
-
-	@Override
-	public void injectExportedFromElement(SqmFrom sqmFrom) {
-		throw new NotYetImplementedException( "Cannot inject SqmFrom element into a CompositeBinding" );
 	}
 }

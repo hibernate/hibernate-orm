@@ -9,16 +9,12 @@ package org.hibernate.query.sqm.tree.expression.domain;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
-import org.jboss.logging.Logger;
-
 /**
  * @author Steve Ebersole
  */
 public class SqmMaxIndexReferenceEmbedded
 		extends AbstractSpecificSqmCollectionIndexReference
 		implements SqmMaxIndexReference, SqmEmbeddableTypedReference {
-	private static final Logger log = Logger.getLogger( SqmMaxIndexReferenceEmbedded.class );
-
 	private SqmFrom exportedFromElement;
 
 	public SqmMaxIndexReferenceEmbedded(SqmPluralAttributeReference pluralAttributeBinding) {
@@ -33,16 +29,5 @@ public class SqmMaxIndexReferenceEmbedded
 	@Override
 	public SqmFrom getExportedFromElement() {
 		return exportedFromElement;
-	}
-
-	@Override
-	public void injectExportedFromElement(SqmFrom sqmFrom) {
-		log.debugf(
-				"Injecting SqmFrom [%s] into MaxIndexBindingEmbedded [%s], was [%s]",
-				sqmFrom,
-				this,
-				this.exportedFromElement
-		);
-		exportedFromElement = sqmFrom;
 	}
 }

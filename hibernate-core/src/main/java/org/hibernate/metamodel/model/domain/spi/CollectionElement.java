@@ -6,10 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
-
 /**
  * @author Steve Ebersole
  */
@@ -26,11 +22,6 @@ public interface CollectionElement<J> extends Navigable<J> {
 	}
 
 	ElementClassification getClassification();
-
-	SqmRestrictedCollectionElementReference createIndexedAccessReference(
-			SqmPluralAttributeReference pluralAttributeReference,
-			SqmExpression selector,
-			SqmReferenceCreationContext creationContext);
 
 	// todo (6.0) : another place to consider removing generic access to columns
 	//List<Column> getColumns();

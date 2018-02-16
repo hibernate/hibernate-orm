@@ -11,16 +11,12 @@ import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
-import org.jboss.logging.Logger;
-
 /**
  * @author Steve Ebersole
  */
 public class SqmIndexedElementReferenceEntity
 		extends AbstractSqmIndexedElementReference
 		implements SqmRestrictedCollectionElementReferenceEntity {
-	private static final Logger log = Logger.getLogger( SqmIndexedElementReferenceEntity.class );
-
 	private SqmFrom exportedFromElement;
 
 	public SqmIndexedElementReferenceEntity(
@@ -47,17 +43,6 @@ public class SqmIndexedElementReferenceEntity
 	@Override
 	public SqmFrom getExportedFromElement() {
 		return exportedFromElement;
-	}
-
-	@Override
-	public void injectExportedFromElement(SqmFrom sqmFrom) {
-		log.debugf(
-				"Injecting SqmFrom [%s] into CollectionElementBindingEntity [%s], was [%s]",
-				sqmFrom,
-				this,
-				this.exportedFromElement
-		);
-		exportedFromElement = sqmFrom;
 	}
 
 	@Override

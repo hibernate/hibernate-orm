@@ -14,17 +14,24 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public abstract class AbstractQuerySpecProcessingState implements QuerySpecProcessingState {
-	private final ParsingContext parsingContext;
+	private final SqmCreationContext creationContext;
+	private final AliasRegistry aliasRegistry;
 	private final QuerySpecProcessingState containingQueryState;
 	private List<QuerySpecProcessingState> subQueryStateList;
 
-	public AbstractQuerySpecProcessingState(ParsingContext parsingContext, QuerySpecProcessingState containingQueryState) {
-		this.parsingContext = parsingContext;
+	public AbstractQuerySpecProcessingState(SqmCreationContext creationContext, QuerySpecProcessingState containingQueryState) {
+		this.creationContext = creationContext;
 		this.containingQueryState = containingQueryState;
-		if ( containingQueryState != null ) {
+
+		if ( containingQueryState == null ) {
+			this.aliasRegistry = new AliasRegistry();
+		}
+		else {
+			this.aliasRegistry = new AliasRegistry( containingQueryState.getAliasRegistry() );
 			( (AbstractQuerySpecProcessingState) containingQueryState ).registerSubQueryState( this );
 		}
 	}
+
 
 	private void registerSubQueryState(QuerySpecProcessingState subQueryState) {
 		if ( subQueryStateList == null ) {
@@ -36,8 +43,13 @@ public abstract class AbstractQuerySpecProcessingState implements QuerySpecProce
 	}
 
 	@Override
-	public ParsingContext getParsingContext() {
-		return parsingContext;
+	public SqmCreationContext getSqmCreationContext() {
+		return creationContext;
+	}
+
+	@Override
+	public AliasRegistry getAliasRegistry() {
+		return aliasRegistry;
 	}
 
 	@Override

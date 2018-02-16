@@ -8,10 +8,10 @@ package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierComposite;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
@@ -35,11 +35,6 @@ public class SqmEntityIdentifierReferenceComposite
 	@Override
 	public SqmFrom getExportedFromElement() {
 		return sourceBinding.getExportedFromElement();
-	}
-
-	@Override
-	public void injectExportedFromElement(SqmFrom sqmFrom) {
-		sourceBinding.injectExportedFromElement( sqmFrom );
 	}
 
 	@Override
@@ -118,14 +113,7 @@ public class SqmEntityIdentifierReferenceComposite
 			String name,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
-		if ( getExportedFromElement() == null ) {
-			context.getNavigableJoinBuilder().buildNavigableJoinIfNecessary(
-					this,
-					false
-			);
-		}
-
+			SqmCreationContext context) {
 		return getReferencedNavigable().getEmbeddedDescriptor()
 				.findNavigable( name )
 				.createSqmExpression( getExportedFromElement(), this, context );
@@ -136,7 +124,7 @@ public class SqmEntityIdentifierReferenceComposite
 			SqmExpression selector,
 			String currentContextKey,
 			boolean isTerminal,
-			Navigable.SqmReferenceCreationContext context) {
+			SqmCreationContext context) {
 		throw new UnsupportedOperationException(  );
 	}
 }

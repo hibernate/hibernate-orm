@@ -11,16 +11,12 @@ import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
-import org.jboss.logging.Logger;
-
 /**
  * @author Steve Ebersole
  */
 public class SqmMaxElementReferenceEntity
 		extends AbstractSpecificSqmElementReference
 		implements SqmRestrictedCollectionElementReferenceEntity, SqmMaxElementReference {
-	private static final Logger log = Logger.getLogger( SqmMaxElementReferenceEntity.class );
-
 	private SqmFrom exportedFromElement;
 
 	public SqmMaxElementReferenceEntity(SqmPluralAttributeReference pluralAttributeBinding) {
@@ -45,17 +41,6 @@ public class SqmMaxElementReferenceEntity
 	@Override
 	public SqmFrom getExportedFromElement() {
 		return exportedFromElement;
-	}
-
-	@Override
-	public void injectExportedFromElement(SqmFrom sqmFrom) {
-		log.debugf(
-				"Injecting SqmFrom [%s] into MaxElementBindingEntity [%s], was [%s]",
-				sqmFrom,
-				this,
-				this.exportedFromElement
-		);
-		exportedFromElement = sqmFrom;
 	}
 
 	@Override

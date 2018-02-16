@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
@@ -37,24 +36,21 @@ public class SqmNavigableJoin
 			SqmNavigableReference navigableReference,
 			String uid,
 			String alias,
-			EntityDescriptor intrinsicSubclassIndicator,
 			SqmJoinType joinType,
 			boolean fetched) {
 		super(
 				navigableReference.getSourceReference().getExportedFromElement().getContainingSpace(),
 				uid,
 				alias,
-				navigableReference,
-				intrinsicSubclassIndicator,
 				joinType
 		);
 		this.lhs = lhs;
 
 		this.navigableReference = navigableReference;
 		this.fetched = fetched;
-
-		navigableReference.injectExportedFromElement( this );
 	}
+
+
 
 	public SqmFrom getLhs() {
 		return lhs;

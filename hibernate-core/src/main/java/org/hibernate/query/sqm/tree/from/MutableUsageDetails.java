@@ -6,20 +6,40 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 
 /**
  * @author Steve Ebersole
  */
 public interface MutableUsageDetails extends UsageDetails {
+	/**
+	 * Marks the SqmFrom as being "used" in the from-clause, although that
+	 * really indicates that it was defined/created in the from-clause too
+	 */
 	void usedInFromClause();
 
+	/**
+	 * todo (6.0) : figure out how to best handle calling this
+	 *
+	 * -> is it enough to do it just for the actually selected NavigableReference?
+	 * 	or should it be set for any of the "intermediate" NavigableReferences (joins) too?
+	 *
+	 * 		select o.customer from Order o
+	 * 		select o.customer.shippingAddress from Order o
+	 *
+	 * 	In the first, clearly `o.customer` is "used in the select".  But what
+	 * 	about the second?  Is `o.customer` "used in the select" here too?  If so (and
+	 * 	I think that is correct) then it cannot be as simple as calling it on the
+	 * 	final navigable reference selected - it has to be called on all of its
+	 * 	containers too.
+	 *
+	 * 	Anyway... how to best handle this...?
+	 */
 	void usedInSelectClause();
 
-	void usedInOrderByClause();
-
 	/**
+	 * todo (6.0) : implement appropriate calls to this
 	 * todo (6.0) : this could be used to handle implicit downcasts
 	 */
 	void addReferencedNavigable(Navigable navigable);
@@ -29,6 +49,6 @@ public interface MutableUsageDetails extends UsageDetails {
 	 */
 	void addDownCast(
 			boolean intrinsic,
-			IdentifiableTypeDescriptor downcastType,
+			ManagedTypeDescriptor downcastType,
 			DowncastLocation downcastLocation);
 }

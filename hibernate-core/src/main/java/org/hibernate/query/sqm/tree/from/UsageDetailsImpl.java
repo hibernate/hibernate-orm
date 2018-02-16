@@ -11,7 +11,6 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 
@@ -19,24 +18,20 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
  * @author Steve Ebersole
  */
 public class UsageDetailsImpl implements MutableUsageDetails {
-	private final SqmFrom sqmFrom;
-
 	private boolean usedInFrom;
 	private boolean usedInSelect;
-	private boolean usedInOrderBy;
 
-	private IdentifiableTypeDescriptor intrinsicSubclassIndicator;
+	private ManagedTypeDescriptor intrinsicSubclassIndicator;
 
 	// todo (6.0) : is it important to "bind" these together?
 	//		does it matter where which subclass downcast comes from?  If so, what about multi-treats in different locations?
 
-	private Set<IdentifiableTypeDescriptor> incidentalSubclassIndicators;
+	private Set<ManagedTypeDescriptor> incidentalSubclassIndicators;
 	private EnumSet<DowncastLocation> downcastLocations;
 
 	private Set<Navigable> referencedNavigables;
 
 	public UsageDetailsImpl(SqmFrom sqmFrom) {
-		this.sqmFrom = sqmFrom;
 		if ( sqmFrom instanceof SqmRoot || sqmFrom instanceof SqmCrossJoin || sqmFrom instanceof SqmEntityJoin ) {
 			// these tyes can only originate from FROM clause
 			usedInFrom = true;
@@ -57,28 +52,23 @@ public class UsageDetailsImpl implements MutableUsageDetails {
 	}
 
 	@Override
-	public boolean isUsedInWhere() {
-		return true;
-	}
-
-	@Override
 	public ManagedTypeDescriptor getIntrinsicSubclassIndicator() {
-		return null;
+		return intrinsicSubclassIndicator;
 	}
 
 	@Override
 	public Collection<ManagedTypeDescriptor> getIncidentalSubclassIndicators() {
-		return null;
+		return incidentalSubclassIndicators;
 	}
 
 	@Override
 	public EnumSet<DowncastLocation> getDowncastLocations() {
-		return null;
+		return downcastLocations;
 	}
 
 	@Override
 	public Collection<Navigable> getReferencedNavigables() {
-		return null;
+		return referencedNavigables;
 	}
 
 
@@ -97,14 +87,9 @@ public class UsageDetailsImpl implements MutableUsageDetails {
 	}
 
 	@Override
-	public void usedInOrderByClause() {
-		this.usedInOrderBy = true;
-	}
-
-	@Override
 	public void addDownCast(
 			boolean intrinsic,
-			IdentifiableTypeDescriptor downcastType,
+			ManagedTypeDescriptor downcastType,
 			DowncastLocation downcastLocation) {
 		if ( intrinsic ) {
 			this.intrinsicSubclassIndicator = downcastType;

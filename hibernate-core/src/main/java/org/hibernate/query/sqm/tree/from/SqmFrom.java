@@ -31,5 +31,8 @@ public interface SqmFrom extends TableGroupInfo, SqmVisitableNode, SqmTypedNode 
 	 */
 	SqmNavigableReference getNavigableReference();
 
+	/**
+	 * Details about how this SqmFrom is used in the query.
+	 */
 	UsageDetails getUsageDetails();
 }

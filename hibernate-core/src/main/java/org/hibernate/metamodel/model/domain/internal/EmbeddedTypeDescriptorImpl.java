@@ -95,13 +95,13 @@ public class EmbeddedTypeDescriptorImpl<T>
 
 	@Override
 	public void finishInitialization(
-			ManagedTypeMappingImplementor mappingDescriptor,
+			ManagedTypeMappingImplementor bootDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		super.finishInitialization( mappingDescriptor, creationContext );
+		super.finishInitialization( bootDescriptor, creationContext );
 
 		this.representationStrategy = creationContext.getMetadata().getMetadataBuildingOptions()
 				.getManagedTypeRepresentationResolver()
-				.resolveStrategy( mappingDescriptor, this, creationContext);
+				.resolveStrategy( bootDescriptor, this, creationContext);
 	}
 
 	@Override

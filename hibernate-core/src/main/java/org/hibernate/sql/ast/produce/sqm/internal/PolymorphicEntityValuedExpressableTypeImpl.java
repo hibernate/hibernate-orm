@@ -238,7 +238,7 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements EntityDesc
 
 	@Override
 	public void finishInitialization(
-			ManagedTypeMappingImplementor bootModelDescriptor,
+			ManagedTypeMappingImplementor bootDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		// nothing to do here
 	}

@@ -16,6 +16,7 @@ import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorClassResolver;
 import org.hibernate.metamodel.model.domain.NavigableResolutionException;
+import org.hibernate.metamodel.model.domain.internal.JoinedEntityDescriptor;
 import org.hibernate.metamodel.model.domain.internal.SingleTableEntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
@@ -56,8 +57,7 @@ public class StandardRuntimeModelDescriptorClassResolver implements RuntimeModel
 	}
 
 	public Class<? extends EntityDescriptor> joinedSubclassEntityDescriptor() {
-		throw new NotYetImplementedException(  );
-//		return JoinedSubclassEntityPersister.class;
+		return JoinedEntityDescriptor.class;
 	}
 
 	public Class<? extends EntityDescriptor> unionSubclassEntityDescriptor() {

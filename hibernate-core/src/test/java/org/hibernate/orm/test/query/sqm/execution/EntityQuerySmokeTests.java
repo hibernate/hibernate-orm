@@ -162,6 +162,13 @@ public class EntityQuerySmokeTests extends SessionFactoryBasedFunctionalTest {
 		);
 	}
 
+	@Test
+	public void testJoinedSubclassRoot() {
+		sessionFactoryScope().inSession(
+				session -> session.createQuery( "select p from Payment p" ).list()
+		);
+	}
+
 	@Override
 	protected boolean exportSchema() {
 		return true;

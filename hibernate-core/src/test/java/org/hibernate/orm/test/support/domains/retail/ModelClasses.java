@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.support.domains.retail;
 
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.orm.test.support.MonetaryAmountConverter;
 
 /**
  * @author Steve Ebersole
@@ -18,7 +19,10 @@ public class ModelClasses {
 			Vendor.class,
 			Product.class,
 			Order.class,
-			LineItem.class
+			LineItem.class,
+			Payment.class,
+			CashPayment.class,
+			CardPayment.class
 	};
 
 	public static void applyRetailModel(MetadataSources sources) {

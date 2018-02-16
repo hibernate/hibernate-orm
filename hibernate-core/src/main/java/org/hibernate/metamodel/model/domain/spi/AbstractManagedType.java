@@ -80,9 +80,9 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void finishInitialization(
-			ManagedTypeMappingImplementor mappingDescriptor,
+			ManagedTypeMappingImplementor bootDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		final int declaredAttributeCount = mappingDescriptor.getDeclaredPersistentAttributes().size();
+		final int declaredAttributeCount = bootDescriptor.getDeclaredPersistentAttributes().size();
 
 		declaredAttributes = CollectionHelper.arrayList( declaredAttributeCount );
 		declaredAttributesByName = CollectionHelper.concurrentMap( declaredAttributeCount );
@@ -101,13 +101,13 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 			attributes = CollectionHelper.arrayList( declaredAttributeCount );
 		}
 
-		final List<PersistentAttributeMapping> sortedAttributeMappings = new ArrayList<>( mappingDescriptor.getDeclaredPersistentAttributes() );
+		final List<PersistentAttributeMapping> sortedAttributeMappings = new ArrayList<>( bootDescriptor.getDeclaredPersistentAttributes() );
 		sortedAttributeMappings.sort( Comparator.comparing( PersistentAttributeMapping::getName ) );
 
 		for ( PersistentAttributeMapping attributeMapping : sortedAttributeMappings ) {
 			final PersistentAttribute persistentAttribute = attributeMapping.makeRuntimeAttribute(
 					this,
-					mappingDescriptor,
+					bootDescriptor,
 					SingularPersistentAttribute.Disposition.NORMAL,
 					creationContext
 			);

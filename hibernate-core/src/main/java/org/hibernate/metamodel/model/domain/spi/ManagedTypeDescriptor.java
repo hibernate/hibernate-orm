@@ -43,7 +43,7 @@ public interface ManagedTypeDescriptor<T>
 	 * todo (6.0) : document the expectations of "at this point"
 	 */
 	void finishInitialization(
-			ManagedTypeMappingImplementor bootModelDescriptor,
+			ManagedTypeMappingImplementor bootDescriptor,
 			RuntimeModelCreationContext creationContext);
 
 	TypeConfiguration getTypeConfiguration();

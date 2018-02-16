@@ -230,9 +230,9 @@ public abstract class AbstractEntityDescriptor<J>
 
 	@Override
 	public void finishInitialization(
-			ManagedTypeMappingImplementor mappingDescriptor,
+			ManagedTypeMappingImplementor bootDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		super.finishInitialization( mappingDescriptor, creationContext );
+		super.finishInitialization( bootDescriptor, creationContext );
 
 		log.debugf(
 				"Completed initialization of descriptor [%s] for entity [%s (%s)]",

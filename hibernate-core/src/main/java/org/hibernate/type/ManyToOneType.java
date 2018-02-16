@@ -246,7 +246,7 @@ public class ManyToOneType extends EntityType {
 			return null;
 		}
 		else {
-			return resolveIdentifier( id, session );
+			return resolveIdentifier( id, session, null );
 		}
 	}
 

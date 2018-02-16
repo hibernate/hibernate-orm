@@ -275,11 +275,6 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
-	/**
-	 * fetch-profiles should have no effect what-so-ever on the direct results of the HQL query.
-	 *
-	 * TODO : this is actually not strictly true.  what we should have happen is to subsequently load those fetches
-	 */
 	@Test
 	public void testHQL() {
 		performWithStandardData(
@@ -292,8 +287,8 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 						List sections = session.createQuery( "from CourseOffering" ).list();
 						int sectionCount = sections.size();
 						assertEquals( "unexpected CourseOffering count", 1, sectionCount );
-						assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
-						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
+						assertEquals( 4, sessionFactory().getStatistics().getEntityLoadCount() );
+						assertEquals( 2, sessionFactory().getStatistics().getEntityFetchCount() );
 						session.getTransaction().commit();
 						session.close();
 					}

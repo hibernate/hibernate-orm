@@ -452,9 +452,14 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 */
 	@Override
 	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+		return resolve(value, session, owner, null);
+	}
+
+	@Override
+	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) throws HibernateException {
 		if ( value != null && !isNull( owner, session ) ) {
 			if ( isReferenceToPrimaryKey() ) {
-				return resolveIdentifier( (Serializable) value, session );
+				return resolveIdentifier( (Serializable) value, session, overridingEager );
 			}
 			else if ( uniqueKeyPropertyName != null ) {
 				return loadByUniqueKey( getAssociatedEntityName(), uniqueKeyPropertyName, value, session );
@@ -664,10 +669,13 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 *
 	 * @throws org.hibernate.HibernateException Indicates problems performing the load.
 	 */
-	protected final Object resolveIdentifier(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+	protected final Object resolveIdentifier(Serializable id, SharedSessionContractImplementor session, Boolean overridingEager) throws HibernateException {
+
 		boolean isProxyUnwrapEnabled = unwrapProxy &&
 				getAssociatedEntityPersister( session.getFactory() )
 						.isInstrumented();
+
+		boolean eager = overridingEager != null ? overridingEager : this.eager;
 
 		Object proxyOrEntity = session.internalLoad(
 				getAssociatedEntityName(),
@@ -682,6 +690,10 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 
 		return proxyOrEntity;
+	}
+
+	protected final Object resolveIdentifier(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+		return resolveIdentifier( id, session, null );
 	}
 
 	protected boolean isNull(Object owner, SharedSessionContractImplementor session) {

@@ -286,7 +286,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			final Serializable key = (Serializable) getPersister(session)
 					.getKeyType()
 					.assemble( cached, session, owner);
-			return resolveKey( key, session, owner );
+			return resolveKey( key, session, owner, null );
 		}
 	}
 
@@ -452,14 +452,19 @@ public abstract class CollectionType extends AbstractType implements Association
 	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 
-		return resolveKey( getKeyOfOwner( owner, session ), session, owner );
+		return resolve(value, session, owner, null);
 	}
 
-	private Object resolveKey(Serializable key, SharedSessionContractImplementor session, Object owner) {
+	@Override
+	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) throws HibernateException {
+		return resolveKey( getKeyOfOwner( owner, session ), session, owner, overridingEager );
+	}
+
+	private Object resolveKey(Serializable key, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) {
 		// if (key==null) throw new AssertionFailure("owner identifier unknown when re-assembling
 		// collection reference");
 		return key == null ? null : // TODO: can this case really occur??
-			getCollection( key, session, owner );
+			getCollection( key, session, owner, overridingEager );
 	}
 
 	@Override
@@ -745,7 +750,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @param owner The collection owner
 	 * @return The collection
 	 */
-	public Object getCollection(Serializable key, SharedSessionContractImplementor session, Object owner) {
+	public Object getCollection(Serializable key, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) {
 
 		CollectionPersister persister = getPersister( session );
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
@@ -772,10 +777,11 @@ public abstract class CollectionType extends AbstractType implements Association
 					persistenceContext.addUninitializedCollection( persister, collection, key );
 
 					// some collections are not lazy:
+					boolean eager = overridingEager != null ? overridingEager : !persister.isLazy();
 					if ( initializeImmediately() ) {
 						session.initializeCollection( collection, false );
 					}
-					else if ( !persister.isLazy() ) {
+					else if ( eager ) {
 						persistenceContext.addNonLazyCollection( collection );
 					}
 

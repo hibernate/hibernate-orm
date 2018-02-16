@@ -15,8 +15,11 @@ import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
+import org.hibernate.engine.profile.Fetch;
+import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -144,9 +147,12 @@ public final class TwoPhaseLoad {
 			);
 		}
 
+		String entityName = persister.getEntityName();
+		String[] propertyNames = persister.getPropertyNames();
 		final Type[] types = persister.getPropertyTypes();
 		for ( int i = 0; i < hydratedState.length; i++ ) {
 			final Object value = hydratedState[i];
+			Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i] );
 			if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 				// IMPLEMENTATION NOTE: This is a lazy property on a bytecode-enhanced entity.
 				// hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY so that
@@ -157,12 +163,12 @@ public final class TwoPhaseLoad {
 					// HHH-10989: We need to resolve the collection so that a CollectionReference is added to StatefulPersistentContext.
 					// As mentioned above, hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY
 					// so do not assign the resolved, unitialized PersistentCollection back to hydratedState[i].
-					types[i].resolve( value, session, entity );
+					types[i].resolve( value, session, entity, overridingEager );
 				}
 			}
-			else if ( value!= PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+			else if ( value != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				// we know value != LazyPropertyInitializer.UNFETCHED_PROPERTY
-				hydratedState[i] = types[i].resolve( value, session, entity );
+				hydratedState[i] = types[i].resolve( value, session, entity, overridingEager );
 			}
 		}
 
@@ -288,7 +294,54 @@ public final class TwoPhaseLoad {
 			factory.getStatistics().loadEntity( persister.getEntityName() );
 		}
 	}
-	
+
+	/**
+	 * Check if eager of the association is overriden by anything.
+	 *
+	 * @param session session
+	 * @param entityName entity name
+	 * @param associationName association name
+	 *
+	 * @return null if there is no overriding, true if it is overridden to eager and false if it is overridden to lazy
+	 */
+	private static Boolean getOverridingEager(
+			SharedSessionContractImplementor session,
+			String entityName,
+			String associationName,
+			Type type) {
+		if ( type.isAssociationType() || type.isCollectionType() ) {
+			Boolean overridingEager = isEagerFetchProfile( session, entityName + "." + associationName );
+
+			if ( LOG.isDebugEnabled() ) {
+				if ( overridingEager != null ) {
+					LOG.debugf(
+							"Overriding eager fetching using active fetch profile. EntityName: %s, associationName: %s, eager fetching: %s",
+							entityName,
+							associationName,
+							overridingEager
+					);
+				}
+			}
+
+			return overridingEager;
+		}
+		return null;
+	}
+
+	private static Boolean isEagerFetchProfile(SharedSessionContractImplementor session, String role) {
+		LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
+
+		for ( String fetchProfileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
+			FetchProfile fp = session.getFactory().getFetchProfile( fetchProfileName );
+			Fetch fetch = fp.getFetchByRole( role );
+			if ( fetch != null && Fetch.Style.JOIN == fetch.getStyle() ) {
+				return true;
+			}
+		}
+		
+		return null;
+	}
+
 	/**
 	 * PostLoad cannot occur during initializeEntity, as that call occurs *before*
 	 * the Set collections are added to the persistence context by Loader.
@@ -296,7 +349,7 @@ public final class TwoPhaseLoad {
 	 * postLoad if it acts upon the collection.
 	 *
 	 * HHH-6043
-	 * 
+	 *
 	 * @param entity The entity
 	 * @param session The Session
 	 * @param postLoadEvent The (re-used) post-load event
@@ -305,7 +358,7 @@ public final class TwoPhaseLoad {
 			final Object entity,
 			final SharedSessionContractImplementor session,
 			final PostLoadEvent postLoadEvent) {
-		
+
 		if ( session.isEventSource() ) {
 			final PersistenceContext persistenceContext
 					= session.getPersistenceContext();

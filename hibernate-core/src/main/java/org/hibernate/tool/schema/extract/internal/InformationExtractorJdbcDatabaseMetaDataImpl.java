@@ -309,7 +309,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsCatalogs() ) {
 			if ( catalog == null ) {
-				catalogFilter = "";
+				catalogFilter = null;
 			}
 			else {
 				catalogToUse = catalog;
@@ -322,7 +322,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsSchemas() ) {
 			if ( schema == null ) {
-				schemaFilter = "";
+				schemaFilter = null;
 			}
 			else {
 				schemaToUse = schema;

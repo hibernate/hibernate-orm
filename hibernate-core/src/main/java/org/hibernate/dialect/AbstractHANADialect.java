@@ -91,14 +91,10 @@ import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NCharTypeDescriptor;
 import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NVarcharTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
  * An abstract base class for HANA dialects. <br/>
@@ -422,11 +418,9 @@ public abstract class AbstractHANADialect extends Dialect {
 		private static final long serialVersionUID = -379042275442752102L;
 
 		final int maxLobPrefetchSize;
-		final boolean useUnicodeStringTypes;
 
-		public HANAClobTypeDescriptor(int maxLobPrefetchSize, boolean useUnicodeStringTypes) {
+		public HANAClobTypeDescriptor(int maxLobPrefetchSize) {
 			this.maxLobPrefetchSize = maxLobPrefetchSize;
-			this.useUnicodeStringTypes = useUnicodeStringTypes;
 		}
 
 		@Override
@@ -476,14 +470,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 				@Override
 				protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-					Clob rsClob;
-					if ( HANAClobTypeDescriptor.this.useUnicodeStringTypes ) {
-						rsClob = rs.getNClob( name );
-					}
-					else {
-						rsClob = rs.getClob( name );
-					}
-
+					Clob rsClob = rs.getClob( name );
 					if ( rsClob == null || rsClob.length() < HANAClobTypeDescriptor.this.maxLobPrefetchSize ) {
 						return javaTypeDescriptor.wrap( rsClob, options );
 					}
@@ -505,10 +492,6 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		public int getMaxLobPrefetchSize() {
 			return this.maxLobPrefetchSize;
-		}
-
-		public boolean isUseUnicodeStringTypes() {
-			return this.useUnicodeStringTypes;
 		}
 	}
 
@@ -683,21 +666,17 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	private static final String MAX_LOB_PREFETCH_SIZE_PARAMETER_NAME = new String( "hibernate.dialect.hana.max_lob_prefetch_size" );
 	private static final String USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME = new String( "hibernate.dialect.hana.use_legacy_boolean_type" );
-	private static final String USE_UNICODE_STRING_TYPES_PARAMETER_NAME = new String( "hibernate.dialect.hana.use_unicode_string_types" );
 
 	private static final int MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE = 1024;
 	private static final Boolean USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE = Boolean.FALSE;
-	private static final Boolean USE_UNICODE_STRING_TYPES_DEFAULT_VALUE = Boolean.FALSE;
 
 	private HANANClobTypeDescriptor nClobTypeDescriptor = new HANANClobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
 
 	private HANABlobTypeDescriptor blobTypeDescriptor = new HANABlobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
 
-	private HANAClobTypeDescriptor clobTypeDescriptor = new HANAClobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE,
-			USE_UNICODE_STRING_TYPES_DEFAULT_VALUE );
+	private HANAClobTypeDescriptor clobTypeDescriptor = new HANAClobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
 
 	private boolean useLegacyBooleanType = USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE.booleanValue();
-	private boolean useUnicodeStringTypes = USE_UNICODE_STRING_TYPES_DEFAULT_VALUE.booleanValue();
 
 	/*
 	 * Tables named "TYPE" need to be quoted
@@ -757,19 +736,15 @@ public abstract class AbstractHANADialect extends Dialect {
 		registerColumnType( Types.LONGVARBINARY, "blob" );
 
 		registerColumnType( Types.CHAR, "varchar(1)" );
-		registerColumnType( Types.NCHAR, "nvarchar(1)" );
 		registerColumnType( Types.VARCHAR, 5000, "varchar($l)" );
 		registerColumnType( Types.LONGVARCHAR, 5000, "varchar($l)" );
 		registerColumnType( Types.NVARCHAR, 5000, "nvarchar($l)" );
-		registerColumnType( Types.LONGNVARCHAR, 5000, "nvarchar($l)" );
 
 		// for longer values map to clob/nclob
 		registerColumnType( Types.LONGVARCHAR, "clob" );
 		registerColumnType( Types.VARCHAR, "clob" );
-		registerColumnType( Types.LONGNVARCHAR, "nclob" );
 		registerColumnType( Types.NVARCHAR, "nclob" );
 		registerColumnType( Types.CLOB, "clob" );
-		registerColumnType( Types.NCLOB, "nclob" );
 
 		registerColumnType( Types.BOOLEAN, "boolean" );
 
@@ -1113,10 +1088,6 @@ public abstract class AbstractHANADialect extends Dialect {
 				return SmallIntTypeDescriptor.INSTANCE;
 			case Types.BOOLEAN:
 				return this.useLegacyBooleanType ? BitTypeDescriptor.INSTANCE : BooleanTypeDescriptor.INSTANCE;
-			case Types.VARCHAR:
-				return this.useUnicodeStringTypes ? NVarcharTypeDescriptor.INSTANCE : VarcharTypeDescriptor.INSTANCE;
-			case Types.CHAR:
-				return this.useUnicodeStringTypes ? NCharTypeDescriptor.INSTANCE : CharTypeDescriptor.INSTANCE;
 			default:
 				return super.getSqlTypeDescriptorOverride( sqlCode );
 		}
@@ -1533,31 +1504,12 @@ public abstract class AbstractHANADialect extends Dialect {
 			this.blobTypeDescriptor = new HANABlobTypeDescriptor( maxLobPrefetchSize );
 		}
 
-		boolean useUnicodeStringTypes = configurationService.getSetting( USE_UNICODE_STRING_TYPES_PARAMETER_NAME, StandardConverters.BOOLEAN,
-				USE_UNICODE_STRING_TYPES_DEFAULT_VALUE ).booleanValue();
-
-		if ( useUnicodeStringTypes ) {
-			registerColumnType( Types.CHAR, "nvarchar(1)" );
-			registerColumnType( Types.VARCHAR, 5000, "nvarchar($l)" );
-			registerColumnType( Types.LONGVARCHAR, 5000, "nvarchar($l)" );
-
-			// for longer values map to clob/nclob
-			registerColumnType( Types.LONGVARCHAR, "nclob" );
-			registerColumnType( Types.VARCHAR, "nclob" );
-			registerColumnType( Types.CLOB, "nclob" );
-		}
-
-		if ( this.clobTypeDescriptor.getMaxLobPrefetchSize() != maxLobPrefetchSize
-				|| this.clobTypeDescriptor.isUseUnicodeStringTypes() != useUnicodeStringTypes ) {
-			this.clobTypeDescriptor = new HANAClobTypeDescriptor( maxLobPrefetchSize, useUnicodeStringTypes );
+		if ( this.clobTypeDescriptor.getMaxLobPrefetchSize() != maxLobPrefetchSize ) {
+			this.clobTypeDescriptor = new HANAClobTypeDescriptor( maxLobPrefetchSize );
 		}
 
 		this.useLegacyBooleanType = configurationService.getSetting( USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME, StandardConverters.BOOLEAN,
 				USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE ).booleanValue();
-
-		if ( this.useLegacyBooleanType ) {
-			registerColumnType( Types.BOOLEAN, "tinyint" );
-		}
 	}
 
 	public SqlTypeDescriptor getBlobTypeDescriptor() {

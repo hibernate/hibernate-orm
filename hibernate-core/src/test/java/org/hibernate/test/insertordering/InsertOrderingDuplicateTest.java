@@ -150,6 +150,7 @@ public class InsertOrderingDuplicateTest
 		@GeneratedValue
 		private Long id;
 
+		@Column(name = "sale_number")
 		private String number;
 
 		@OneToMany(fetch = FetchType.LAZY, mappedBy = "saleDocument")
@@ -285,6 +286,8 @@ public class InsertOrderingDuplicateTest
 		@Id
 		@GeneratedValue
 		private Long id;
+
+		@Column(name = "sale_number")
 		private String number;
 
 		@OneToMany(fetch = FetchType.LAZY, mappedBy = "summary")

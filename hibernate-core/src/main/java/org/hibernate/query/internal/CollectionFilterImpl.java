@@ -62,7 +62,7 @@ public class CollectionFilterImpl extends org.hibernate.query.internal.AbstractP
 	public Iterator iterate() throws HibernateException {
 		getQueryParameterBindings().verifyParametersBound( false );
 
-		final String expandedQuery = getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() );
+		final String expandedQuery = getQueryParameterBindings().expandParameters( getQueryString(), getProducer() );
 		return getProducer().iterateFilter(
 				collection,
 				expandedQuery,
@@ -74,7 +74,7 @@ public class CollectionFilterImpl extends org.hibernate.query.internal.AbstractP
 	public List list() throws HibernateException {
 		getQueryParameterBindings().verifyParametersBound( false );
 
-		final String expandedQuery = getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() );
+		final String expandedQuery = getQueryParameterBindings().expandParameters( getQueryString(), getProducer() );
 		return getProducer().listFilter(
 				collection,
 				expandedQuery,

@@ -95,7 +95,7 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	}
 
 	@Override
-	public String expandListValuedParameters(String queryString, SharedSessionContractImplementor producer) {
+	public String expandParameters(String queryString, SharedSessionContractImplementor producer) {
 		return queryString;
 	}
 

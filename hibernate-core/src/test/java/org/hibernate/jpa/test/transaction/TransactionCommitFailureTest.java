@@ -21,7 +21,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.jpa.test.SettingsGenerator;
 
@@ -48,10 +47,12 @@ public class TransactionCommitFailureTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		final Map settings = basicSettings();
-		emf = Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).build();
+		// static variables need to be initialized before the EMF is set up, because they can be referenced during EMF setup via the connection provider.
 		transactionFailureTrigger = new AtomicBoolean();
 		connectionIsOpen = new AtomicBoolean();
+		
+		final Map settings = basicSettings();
+		emf = Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).build();
 	}
 
 	@After

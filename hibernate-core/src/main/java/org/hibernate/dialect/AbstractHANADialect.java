@@ -72,6 +72,8 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
@@ -108,6 +110,8 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
  * @author Andrew Clemons <andrew.clemons@sap.com>
  */
 public abstract class AbstractHANADialect extends Dialect {
+
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractHANADialect.class );
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 
@@ -1497,8 +1501,11 @@ public abstract class AbstractHANADialect extends Dialect {
 					}
 				}
 			}
-			catch (SQLException e) {
-				// ignore
+			catch (Exception e) {
+				LOG.debug(
+						"An error occurred while trying to determing the value of the HANA parameter indexserver.ini / session / max_lob_prefetch_size. Using the default value "
+								+ maxLobPrefetchSizeDefault,
+						e );
 			}
 			finally {
 				if ( conn != null ) {

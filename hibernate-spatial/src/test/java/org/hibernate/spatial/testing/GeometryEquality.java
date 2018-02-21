@@ -1,7 +1,5 @@
 package org.hibernate.spatial.testing;
 
-import com.vividsolutions.jts.geom.Geometry;
-
 /**
  * Created by Karel Maesen, Geovise BVBA on 15/02/2018.
  */

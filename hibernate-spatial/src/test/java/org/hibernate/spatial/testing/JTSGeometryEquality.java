@@ -33,7 +33,7 @@ public class JTSGeometryEquality implements GeometryEquality<Geometry> {
 		}
 
 		if ( geom1 instanceof GeometryCollection ) {
-			if ( !(geom2 instanceof GeometryCollection) ) {
+			if ( !( geom2 instanceof GeometryCollection ) ) {
 				return false;
 			}
 			GeometryCollection expectedCollection = (GeometryCollection) geom1;
@@ -62,7 +62,7 @@ public class JTSGeometryEquality implements GeometryEquality<Geometry> {
 	 */
 	private boolean equalSRID(Geometry geom1, Geometry geom2) {
 		return geom1.getSRID() == geom2.getSRID() ||
-				(geom1.getSRID() < 1 && geom2.getSRID() < 1);
+				( geom1.getSRID() < 1 && geom2.getSRID() < 1 );
 	}
 
 	/**
@@ -101,6 +101,6 @@ public class JTSGeometryEquality implements GeometryEquality<Geometry> {
 	}
 
 	private boolean testCoordinateEquality(Coordinate c1, Coordinate c2) {
-		return (Double.isNaN( c1.z ) || !(c1.z != c2.z)) && c1.x == c2.x && c1.y == c2.y;
+		return ( Double.isNaN( c1.z ) || !( c1.z != c2.z ) ) && c1.x == c2.x && c1.y == c2.y;
 	}
 }

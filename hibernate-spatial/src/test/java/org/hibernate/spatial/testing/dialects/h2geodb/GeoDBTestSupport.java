@@ -22,7 +22,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: Oct 2, 2010
+ * creation-date: Oct 2, 2010
  */
 public class GeoDBTestSupport extends TestSupport {
 

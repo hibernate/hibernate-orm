@@ -24,8 +24,10 @@ public class EnvelopeAdapter {
 
 	/**
 	 * Converts the specified {@code Envelope} to a {@code Polygon} having the specified srid.
+	 *
 	 * @param env The envelope to convert
 	 * @param srid The srid for the polygon
+	 *
 	 * @return The Polygon
 	 */
 	public static Polygon toPolygon(Envelope env, int srid) {

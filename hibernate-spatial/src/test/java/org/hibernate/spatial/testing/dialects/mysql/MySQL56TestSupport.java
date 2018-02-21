@@ -11,7 +11,7 @@ import org.hibernate.spatial.testing.DataSourceUtils;
 
 /**
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 10/9/13
+ * creation-date: 10/9/13
  */
 public class MySQL56TestSupport extends MySQLTestSupport {
 

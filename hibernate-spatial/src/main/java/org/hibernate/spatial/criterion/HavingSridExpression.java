@@ -20,7 +20,6 @@ import org.hibernate.type.StandardBasicTypes;
  * A {@code Criterion} constraining a geometry property to have a specified SRID.
  *
  * @author Karel Maesen, Geovise BVBA
- *
  */
 public class HavingSridExpression implements Criterion {
 

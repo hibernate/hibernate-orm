@@ -6,11 +6,6 @@
  */
 package org.hibernate.spatial.integration.jts;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.integration.AbstractTestStoreRetrieve;
@@ -20,6 +15,11 @@ import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.TestDataElement;
 
 import org.hibernate.testing.Skip;
+
+import org.jboss.logging.Logger;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.io.ParseException;
 
 /**
  * This testsuite-suite class verifies whether the <code>Geometry</code>s retrieved

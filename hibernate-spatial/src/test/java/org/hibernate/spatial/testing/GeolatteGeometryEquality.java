@@ -7,12 +7,12 @@ import org.geolatte.geom.Position;
 /**
  * Created by Karel Maesen, Geovise BVBA on 15/02/2018.
  */
-public class GeolatteGeometryEquality<P extends Position> implements GeometryEquality<Geometry<P>>{
+public class GeolatteGeometryEquality<P extends Position> implements GeometryEquality<Geometry<P>> {
 
 	private final org.geolatte.geom.GeometryEquality delegate;
 
-	public GeolatteGeometryEquality(){
-		this( new GeometryPointEquality());
+	public GeolatteGeometryEquality() {
+		this( new GeometryPointEquality() );
 	}
 
 	public GeolatteGeometryEquality(org.geolatte.geom.GeometryEquality delegate) {

@@ -28,6 +28,18 @@ public class TestData implements List<TestDataElement> {
 
 	;
 
+	public static TestData fromFile(String fileName) {
+		TestDataReader reader = new TestDataReader();
+		return fromFile( fileName, reader );
+	}
+
+	public static TestData fromFile(String fileName, TestDataReader reader) {
+		List<TestDataElement> elements = reader.read( fileName );
+		TestData testData = new TestData();
+		testData.testDataElements = elements;
+		return testData;
+	}
+
 	public int size() {
 		return testDataElements.size();
 	}
@@ -126,18 +138,6 @@ public class TestData implements List<TestDataElement> {
 
 	public List<TestDataElement> subList(int fromIndex, int toIndex) {
 		return testDataElements.subList( fromIndex, toIndex );
-	}
-
-	public static TestData fromFile(String fileName) {
-		TestDataReader reader = new TestDataReader();
-		return fromFile( fileName, reader );
-	}
-
-	public static TestData fromFile(String fileName, TestDataReader reader) {
-		List<TestDataElement> elements = reader.read( fileName );
-		TestData testData = new TestData();
-		testData.testDataElements = elements;
-		return testData;
 	}
 
 }

@@ -36,20 +36,20 @@ class SDOObjectProperty implements SQLFunction {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @see org.hibernate.dialect.function.SQLFunction#hasArguments()
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @see org.hibernate.dialect.function.SQLFunction#hasArguments()
+	 */
 
 	public boolean hasArguments() {
 		return true;
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @see org.hibernate.dialect.function.SQLFunction#hasParenthesesIfNoArguments()
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @see org.hibernate.dialect.function.SQLFunction#hasParenthesesIfNoArguments()
+	 */
 
 	public boolean hasParenthesesIfNoArguments() {
 		return false;
@@ -60,11 +60,11 @@ class SDOObjectProperty implements SQLFunction {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @see org.hibernate.dialect.function.SQLFunction#render(java.util.List,
-		  *      org.hibernate.engine.SessionFactoryImplementor)
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @see org.hibernate.dialect.function.SQLFunction#render(java.util.List,
+	 *      org.hibernate.engine.SessionFactoryImplementor)
+	 */
 
 	public String render(Type firstArgtype, List args, SessionFactoryImplementor factory)
 			throws QueryException {

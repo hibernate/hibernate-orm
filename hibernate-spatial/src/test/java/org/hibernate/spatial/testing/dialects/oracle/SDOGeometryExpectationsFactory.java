@@ -7,15 +7,15 @@
 
 package org.hibernate.spatial.testing.dialects.oracle;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
-
-import org.geolatte.geom.jts.JTS;
 import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.dialect.oracle.SDOGeometryValueExtractor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.NativeSQLStatement;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
+import org.geolatte.geom.jts.JTS;
 
 /**
  * Expectations factory for Oracle 10g (SDOGeometry).
@@ -24,7 +24,10 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
  */
 public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory {
 
-	private final SDOGeometryValueExtractor decoder = new SDOGeometryValueExtractor( JTSGeometryJavaTypeDescriptor.INSTANCE, null );
+	private final SDOGeometryValueExtractor decoder = new SDOGeometryValueExtractor(
+			JTSGeometryJavaTypeDescriptor.INSTANCE,
+			null
+	);
 
 	public SDOGeometryExpectationsFactory(DataSourceUtils dataSourceUtils) {
 		super( dataSourceUtils );
@@ -253,6 +256,6 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 
 	@Override
 	protected Geometry decode(Object o) {
-		return ( o != null) ? JTS.to(decoder.convert(o)) : null;
+		return ( o != null ) ? JTS.to( decoder.convert( o ) ) : null;
 	}
 }

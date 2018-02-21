@@ -12,7 +12,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.geolatte.geom.Point;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -21,14 +20,15 @@ import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
-public class HANAPointTypeDescriptor implements SqlTypeDescriptor {
+import org.geolatte.geom.Point;
 
-	private static final long serialVersionUID = -6978798264716544804L;
+public class HANAPointTypeDescriptor implements SqlTypeDescriptor {
 
 	/**
 	 * An instance of the descrtiptor
 	 */
 	public static final HANAPointTypeDescriptor INSTANCE = new HANAPointTypeDescriptor();
+	private static final long serialVersionUID = -6978798264716544804L;
 
 	@Override
 	public int getSqlType() {

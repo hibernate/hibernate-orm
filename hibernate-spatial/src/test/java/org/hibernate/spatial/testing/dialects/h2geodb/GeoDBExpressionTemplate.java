@@ -22,16 +22,17 @@ public class GeoDBExpressionTemplate implements SQLExpressionTemplate {
 	static final String SQL_TEMPLATE = "insert into GEOMTEST (id, type, geom) values (%d, '%s', ST_GeomFromText('%s', %d))";
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.SQLExpressionTemplate#toInsertSql(org.
-		  * hibernatespatial.test.TestDataElement)
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.SQLExpressionTemplate#toInsertSql(org.
+	 * hibernatespatial.test.TestDataElement)
+	 */
 	public String toInsertSql(TestDataElement testDataElement) {
 		String wkt = WktUtility.getWkt( testDataElement.wkt );
 		int srid = WktUtility.getSRID( testDataElement.wkt );
 		return String
-				.format( SQL_TEMPLATE,
+				.format(
+						SQL_TEMPLATE,
 						testDataElement.id,
 						testDataElement.type,
 						wkt,

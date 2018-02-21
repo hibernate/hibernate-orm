@@ -86,7 +86,12 @@ public class OracleSpatialRestrictions {
 	 * @return The Criterion
 	 */
 	@SuppressWarnings("serial")
-	public static Criterion SDONN(String propertyName, Geometry geom, Double distance, Integer numResults, String unit) {
+	public static Criterion SDONN(
+			String propertyName,
+			Geometry geom,
+			Double distance,
+			Integer numResults,
+			String unit) {
 		if ( distance == null && numResults == null && unit == null ) {
 			return SDONN( propertyName, geom, null );
 		}
@@ -163,7 +168,12 @@ public class OracleSpatialRestrictions {
 	 * @return The Criterion
 	 */
 	@SuppressWarnings("serial")
-	public static Criterion SDORelate(String propertyName, Geometry geom, RelationshipMask[] mask, Double minResolution, Double maxResolution) {
+	public static Criterion SDORelate(
+			String propertyName,
+			Geometry geom,
+			RelationshipMask[] mask,
+			Double minResolution,
+			Double maxResolution) {
 		final SDOParameterMap param = new SDOParameterMap();
 		param.setMask( RelationshipMask.booleanCombination( mask ) );
 		param.setMinResolution( minResolution );
@@ -208,7 +218,11 @@ public class OracleSpatialRestrictions {
 	 *
 	 * @return The Criterion
 	 */
-	public static Criterion SDOWithinDistance(String propertyName, Geometry geom, Double distance, SDOParameterMap param) {
+	public static Criterion SDOWithinDistance(
+			String propertyName,
+			Geometry geom,
+			Double distance,
+			SDOParameterMap param) {
 		if ( param == null ) {
 			param = new SDOParameterMap();
 		}
@@ -229,11 +243,11 @@ abstract class OracleSpatialCriterion implements Criterion {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @see org.hibernate.criterion.Criterion#getTypedValues(org.hibernate.Criteria,
-		  *      org.hibernate.criterion.CriteriaQuery)
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @see org.hibernate.criterion.Criterion#getTypedValues(org.hibernate.Criteria,
+	 *      org.hibernate.criterion.CriteriaQuery)
+	 */
 
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 		return new TypedValue[] {

@@ -10,8 +10,6 @@ import java.io.Serializable;
 import java.sql.Types;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.function.SQLFunction;
@@ -19,6 +17,8 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
+
+import org.jboss.logging.Logger;
 
 /**
  * A Spatial Dialect for Oracle 10g/11g that uses the "native" SDO spatial operators.
@@ -97,7 +97,7 @@ public class OracleSpatialSDO10gDialect extends Oracle10gDialect implements Spat
 
 	@Override
 	public boolean supports(SpatialFunction function) {
-		return !function.equals( SpatialFunction.crosses ) && (getFunctions().get( function.toString() ) != null);
+		return !function.equals( SpatialFunction.crosses ) && ( getFunctions().get( function.toString() ) != null );
 	}
 
 

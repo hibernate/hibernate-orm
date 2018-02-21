@@ -20,9 +20,9 @@ public class HANAExpressionTemplate implements SQLExpressionTemplate {
 
 	@Override
 	public String toInsertSql(TestDataElement testDataElement) {
-		Integer srid = Integer.valueOf(WktUtility.getSRID(testDataElement.wkt));
-		String wkt = WktUtility.getWkt(testDataElement.wkt);
-		return String.format(SQL_TEMPLATE, Integer.valueOf(testDataElement.id), testDataElement.type, wkt, srid);
+		Integer srid = Integer.valueOf( WktUtility.getSRID( testDataElement.wkt ) );
+		String wkt = WktUtility.getWkt( testDataElement.wkt );
+		return String.format( SQL_TEMPLATE, Integer.valueOf( testDataElement.id ), testDataElement.type, wkt, srid );
 	}
 
 }

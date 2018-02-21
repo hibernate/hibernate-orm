@@ -29,52 +29,88 @@ public class HANASpatialDialect extends HANAColumnStoreDialect implements Spatia
 		registerColumnType( HANAGeometryTypeDescriptor.INSTANCE.getSqlType(), "ST_GEOMETRY" );
 		registerColumnType( HANAPointTypeDescriptor.INSTANCE.getSqlType(), "ST_POINT" );
 
-		registerFunction( SpatialFunction.asbinary.name(),
-				new HANASpatialFunction( "ST_AsBinary", StandardBasicTypes.MATERIALIZED_BLOB, false ) );
-		registerFunction( SpatialFunction.astext.name(),
-				new HANASpatialFunction( "ST_AsText", StandardBasicTypes.MATERIALIZED_CLOB, false ) );
+		registerFunction(
+				SpatialFunction.asbinary.name(),
+				new HANASpatialFunction( "ST_AsBinary", StandardBasicTypes.MATERIALIZED_BLOB, false )
+		);
+		registerFunction(
+				SpatialFunction.astext.name(),
+				new HANASpatialFunction( "ST_AsText", StandardBasicTypes.MATERIALIZED_CLOB, false )
+		);
 		registerFunction( SpatialFunction.boundary.name(), new HANASpatialFunction( "ST_Boundary", false ) );
 		registerFunction( SpatialFunction.buffer.name(), new HANASpatialFunction( "ST_Buffer", false ) );
-		registerFunction( SpatialFunction.contains.name(),
-				new HANASpatialFunction( "ST_Contains", StandardBasicTypes.NUMERIC_BOOLEAN, true ) );
+		registerFunction(
+				SpatialFunction.contains.name(),
+				new HANASpatialFunction( "ST_Contains", StandardBasicTypes.NUMERIC_BOOLEAN, true )
+		);
 		registerFunction( SpatialFunction.convexhull.name(), new HANASpatialFunction( "ST_ConvexHull", false ) );
-		registerFunction( SpatialFunction.crosses.name(),
-				new HANASpatialFunction( "ST_Crosses", StandardBasicTypes.NUMERIC_BOOLEAN, true ) );
+		registerFunction(
+				SpatialFunction.crosses.name(),
+				new HANASpatialFunction( "ST_Crosses", StandardBasicTypes.NUMERIC_BOOLEAN, true )
+		);
 		registerFunction( SpatialFunction.difference.name(), new HANASpatialFunction( "ST_Difference", true ) );
-		registerFunction( SpatialFunction.dimension.name(),
-				new HANASpatialFunction( "ST_Dimension ", StandardBasicTypes.INTEGER, false ) );
-		registerFunction( SpatialFunction.disjoint.name(),
-				new HANASpatialFunction( "ST_Disjoint", StandardBasicTypes.NUMERIC_BOOLEAN, true ) );
-		registerFunction( SpatialFunction.distance.name(),
-				new HANASpatialFunction( "ST_Distance", StandardBasicTypes.DOUBLE, true ) );
-		registerFunction( SpatialFunction.dwithin.name(),
-				new HANASpatialFunction( "ST_WithinDistance", StandardBasicTypes.NUMERIC_BOOLEAN, true ) );
+		registerFunction(
+				SpatialFunction.dimension.name(),
+				new HANASpatialFunction( "ST_Dimension ", StandardBasicTypes.INTEGER, false )
+		);
+		registerFunction(
+				SpatialFunction.disjoint.name(),
+				new HANASpatialFunction( "ST_Disjoint", StandardBasicTypes.NUMERIC_BOOLEAN, true )
+		);
+		registerFunction(
+				SpatialFunction.distance.name(),
+				new HANASpatialFunction( "ST_Distance", StandardBasicTypes.DOUBLE, true )
+		);
+		registerFunction(
+				SpatialFunction.dwithin.name(),
+				new HANASpatialFunction( "ST_WithinDistance", StandardBasicTypes.NUMERIC_BOOLEAN, true )
+		);
 		registerFunction( SpatialFunction.envelope.name(), new HANASpatialFunction( "ST_Envelope", true ) );
-		registerFunction( SpatialFunction.equals.name(),
-				new HANASpatialFunction( "ST_Equals", StandardBasicTypes.NUMERIC_BOOLEAN, true ) );
+		registerFunction(
+				SpatialFunction.equals.name(),
+				new HANASpatialFunction( "ST_Equals", StandardBasicTypes.NUMERIC_BOOLEAN, true )
+		);
 		registerFunction( SpatialFunction.extent.name(), new HANASpatialAggregate( "ST_EnvelopeAggr" ) );
-		registerFunction( SpatialFunction.geometrytype.name(),
-				new HANASpatialFunction( "ST_GeometryType", StandardBasicTypes.STRING, false ) );
+		registerFunction(
+				SpatialFunction.geometrytype.name(),
+				new HANASpatialFunction( "ST_GeometryType", StandardBasicTypes.STRING, false )
+		);
 		registerFunction( SpatialFunction.geomunion.name(), new HANASpatialFunction( "ST_Union", true ) );
 		registerFunction( SpatialFunction.intersection.name(), new HANASpatialFunction( "ST_Intersection", true ) );
-		registerFunction( SpatialFunction.intersects.name(),
-				new HANASpatialFunction( "ST_Intersects", StandardBasicTypes.NUMERIC_BOOLEAN, true ) );
-		registerFunction( SpatialFunction.isempty.name(),
-				new HANASpatialFunction( "ST_IsEmpty", StandardBasicTypes.NUMERIC_BOOLEAN, false ) );
-		registerFunction( SpatialFunction.issimple.name(),
-				new HANASpatialFunction( "ST_IsSimple", StandardBasicTypes.NUMERIC_BOOLEAN, false ) );
-		registerFunction( SpatialFunction.overlaps.name(),
-				new HANASpatialFunction( "ST_Overlaps", StandardBasicTypes.NUMERIC_BOOLEAN, true ) );
-		registerFunction( SpatialFunction.relate.name(),
-				new HANASpatialFunction( "ST_Relate", StandardBasicTypes.NUMERIC_BOOLEAN, true ) );
-		registerFunction( SpatialFunction.srid.name(),
-				new HANASpatialFunction( "ST_SRID", StandardBasicTypes.INTEGER, false ) );
+		registerFunction(
+				SpatialFunction.intersects.name(),
+				new HANASpatialFunction( "ST_Intersects", StandardBasicTypes.NUMERIC_BOOLEAN, true )
+		);
+		registerFunction(
+				SpatialFunction.isempty.name(),
+				new HANASpatialFunction( "ST_IsEmpty", StandardBasicTypes.NUMERIC_BOOLEAN, false )
+		);
+		registerFunction(
+				SpatialFunction.issimple.name(),
+				new HANASpatialFunction( "ST_IsSimple", StandardBasicTypes.NUMERIC_BOOLEAN, false )
+		);
+		registerFunction(
+				SpatialFunction.overlaps.name(),
+				new HANASpatialFunction( "ST_Overlaps", StandardBasicTypes.NUMERIC_BOOLEAN, true )
+		);
+		registerFunction(
+				SpatialFunction.relate.name(),
+				new HANASpatialFunction( "ST_Relate", StandardBasicTypes.NUMERIC_BOOLEAN, true )
+		);
+		registerFunction(
+				SpatialFunction.srid.name(),
+				new HANASpatialFunction( "ST_SRID", StandardBasicTypes.INTEGER, false )
+		);
 		registerFunction( SpatialFunction.symdifference.name(), new HANASpatialFunction( "ST_SymDifference", true ) );
-		registerFunction( SpatialFunction.touches.name(),
-				new HANASpatialFunction( "ST_Touches", StandardBasicTypes.NUMERIC_BOOLEAN, true ) );
+		registerFunction(
+				SpatialFunction.touches.name(),
+				new HANASpatialFunction( "ST_Touches", StandardBasicTypes.NUMERIC_BOOLEAN, true )
+		);
 		registerFunction( SpatialFunction.transform.name(), new HANASpatialFunction( "ST_Transform", false ) );
-		registerFunction( SpatialFunction.within.name(),
-				new HANASpatialFunction( "ST_Within", StandardBasicTypes.NUMERIC_BOOLEAN, true ) );
+		registerFunction(
+				SpatialFunction.within.name(),
+				new HANASpatialFunction( "ST_Within", StandardBasicTypes.NUMERIC_BOOLEAN, true )
+		);
 	}
 
 	@Override
@@ -118,7 +154,8 @@ public class HANASpatialDialect extends HANAColumnStoreDialect implements Spatia
 					}
 
 				},
-				Boolean.FALSE ).booleanValue();
+				Boolean.FALSE
+		).booleanValue();
 
 		if ( determineCrsIdFromDatabase ) {
 			typeContributions.contributeType( new GeolatteGeometryType( HANAGeometryTypeDescriptor.CRS_LOADING_INSTANCE ) );

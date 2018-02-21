@@ -15,11 +15,9 @@ import org.hibernate.spatial.dialect.oracle.criterion.OracleSpatialAggregate;
  */
 class SpatialAggregate {
 
-	private boolean aggregateType;
-
-	private String aggregateSyntax;
-
 	private static final String SDO_AGGR = "SDO_AGGR_";
+	private boolean aggregateType;
+	private String aggregateSyntax;
 
 	SpatialAggregate() {
 	}

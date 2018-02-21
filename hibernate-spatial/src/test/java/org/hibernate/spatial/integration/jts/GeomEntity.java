@@ -11,15 +11,14 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
-import org.geolatte.geom.codec.Wkt;
-import org.geolatte.geom.codec.WktDecoder;
-import org.geolatte.geom.jts.JTS;
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.spatial.integration.GeomEntityLike;
 import org.hibernate.spatial.testing.TestDataElement;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.io.ParseException;
+import org.geolatte.geom.codec.WktDecoder;
+import org.geolatte.geom.jts.JTS;
 
 import static org.hibernate.spatial.integration.DecodeUtil.getWktDecoder;
 
@@ -37,6 +36,16 @@ public class GeomEntity implements GeomEntityLike<Geometry> {
 	private String type;
 
 	private Geometry geom;
+
+	public static GeomEntity createFrom(TestDataElement element, Dialect dialect) throws ParseException {
+		WktDecoder decoder = getWktDecoder( dialect );
+		Geometry geom = JTS.to( decoder.decode( element.wkt ) );
+		GeomEntity result = new GeomEntity();
+		result.setId( element.id );
+		result.setGeom( geom );
+		result.setType( element.type );
+		return result;
+	}
 
 	public Integer getId() {
 		return id;
@@ -60,16 +69,6 @@ public class GeomEntity implements GeomEntityLike<Geometry> {
 
 	public void setGeom(Geometry geom) {
 		this.geom = geom;
-	}
-
-	public static GeomEntity createFrom(TestDataElement element, Dialect dialect) throws ParseException {
-		WktDecoder decoder = getWktDecoder( dialect );
-		Geometry geom = JTS.to( decoder.decode( element.wkt ) );
-		GeomEntity result = new GeomEntity();
-		result.setId( element.id );
-		result.setGeom( geom );
-		result.setType( element.type );
-		return result;
 	}
 
 	@Override

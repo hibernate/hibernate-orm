@@ -19,7 +19,6 @@ import org.hibernate.spatial.SpatialFunction;
  * A {@code Criterion} constraining a geometry property to be (non-)empty.
  *
  * @author Karel Maesen, Geovise BVBA
- *
  */
 public class IsEmptyExpression implements Criterion {
 
@@ -42,7 +41,10 @@ public class IsEmptyExpression implements Criterion {
 	@Override
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 		final String column = ExpressionUtil.findColumn( propertyName, criteria, criteriaQuery );
-		final SpatialDialect spatialDialect = ExpressionUtil.getSpatialDialect( criteriaQuery, SpatialFunction.isempty );
+		final SpatialDialect spatialDialect = ExpressionUtil.getSpatialDialect(
+				criteriaQuery,
+				SpatialFunction.isempty
+		);
 		return spatialDialect.getIsEmptySQL( column, isEmpty );
 	}
 

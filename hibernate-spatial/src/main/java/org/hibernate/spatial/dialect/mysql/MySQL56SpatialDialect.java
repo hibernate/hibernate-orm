@@ -27,7 +27,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Extends the MySQL5Dialect by including support for the spatial operators.
- *
+ * <p>
  * This <code>SpatialDialect</code> uses the ST_* spatial operators that operate on exact geometries which have been
  * added in MySQL version 5.6.1. Previous versions of MySQL only supported operators that operated on Minimum Bounding
  * Rectangles (MBR's). This dialect my therefore produce different results than the other MySQL spatial dialects.

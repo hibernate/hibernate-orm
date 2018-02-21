@@ -12,15 +12,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Struct;
 
-
-import org.geolatte.geom.Geometry;
-import org.geolatte.geom.codec.db.oracle.Decoders;
-import org.geolatte.geom.codec.db.oracle.SDOGeometry;
-
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.codec.db.oracle.Decoders;
+import org.geolatte.geom.codec.db.oracle.SDOGeometry;
 
 
 //TODO -- requires cleanup and must be made package local
@@ -29,7 +28,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * ValueExtractor for SDO_GEOMETRY
  *
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 8/22/11
+ * creation-date: 8/22/11
  */
 public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 

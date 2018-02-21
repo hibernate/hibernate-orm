@@ -8,6 +8,8 @@ package org.hibernate.spatial.dialect.postgis;
 
 import java.sql.SQLException;
 
+import org.junit.Test;
+
 import org.geolatte.geom.ByteOrder;
 import org.geolatte.geom.C2D;
 import org.geolatte.geom.G2D;
@@ -18,9 +20,9 @@ import org.geolatte.geom.crs.CoordinateReferenceSystem;
 import org.geolatte.geom.crs.CoordinateReferenceSystems;
 import org.postgresql.util.PGobject;
 
-import org.junit.Test;
-
-import static org.geolatte.geom.builder.DSL.*;
+import static org.geolatte.geom.builder.DSL.c;
+import static org.geolatte.geom.builder.DSL.g;
+import static org.geolatte.geom.builder.DSL.linestring;
 import static org.junit.Assert.assertEquals;
 
 /**

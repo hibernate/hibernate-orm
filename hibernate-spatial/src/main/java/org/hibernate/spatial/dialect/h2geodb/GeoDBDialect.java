@@ -11,8 +11,6 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.service.ServiceRegistry;
-
-
 import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialDialect;
@@ -151,7 +149,7 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 
 	@Override
 	public boolean supports(SpatialFunction function) {
-		return function != SpatialFunction.difference && (getFunctions().get( function.toString() ) != null);
+		return function != SpatialFunction.difference && ( getFunctions().get( function.toString() ) != null );
 	}
 
 }

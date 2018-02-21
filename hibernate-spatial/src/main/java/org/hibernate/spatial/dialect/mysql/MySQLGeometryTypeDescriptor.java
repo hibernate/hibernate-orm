@@ -13,13 +13,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.geolatte.geom.ByteBuffer;
-import org.geolatte.geom.ByteOrder;
-import org.geolatte.geom.Geometry;
-import org.geolatte.geom.codec.Wkb;
-import org.geolatte.geom.codec.WkbDecoder;
-import org.geolatte.geom.codec.WkbEncoder;
-
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -27,6 +20,13 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+
+import org.geolatte.geom.ByteBuffer;
+import org.geolatte.geom.ByteOrder;
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.codec.Wkb;
+import org.geolatte.geom.codec.WkbDecoder;
+import org.geolatte.geom.codec.WkbEncoder;
 
 /**
  * Descriptor for MySQL Geometries.

@@ -7,8 +7,6 @@
 
 package org.hibernate.spatial.criterion;
 
-import com.vividsolutions.jts.geom.Geometry;
-
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.criterion.CriteriaQuery;
@@ -16,15 +14,16 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
-
 import org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect;
 import org.hibernate.type.StandardBasicTypes;
+
+import com.vividsolutions.jts.geom.Geometry;
 
 /**
  * A {@code Criterion} constraining a geometry property to be within a specified distance of a search geometry.
  *
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 2/1/11
+ * creation-date: 2/1/11
  */
 public class DWithinExpression implements Criterion {
 
@@ -59,9 +58,12 @@ public class DWithinExpression implements Criterion {
 
 	@Override
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
-		final SpatialDialect spatialDialect = ExpressionUtil.getSpatialDialect( criteriaQuery, SpatialFunction.dwithin );
+		final SpatialDialect spatialDialect = ExpressionUtil.getSpatialDialect(
+				criteriaQuery,
+				SpatialFunction.dwithin
+		);
 		TypedValue typedDistanceValue = new TypedValue( StandardBasicTypes.DOUBLE, distance );
-		if ( spatialDialect instanceof OracleSpatial10gDialect) {
+		if ( spatialDialect instanceof OracleSpatial10gDialect ) {
 			typedDistanceValue = new TypedValue( StandardBasicTypes.STRING, "distance=" + distance );
 		}
 		return new TypedValue[] {

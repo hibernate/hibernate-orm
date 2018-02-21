@@ -6,10 +6,10 @@
  */
 package org.hibernate.spatial;
 
-import com.vividsolutions.jts.geom.Geometry;
-
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+
+import com.vividsolutions.jts.geom.Geometry;
 
 /**
  * A {@code Type} that maps between the database geometry type and JTS {@code Geometry}.

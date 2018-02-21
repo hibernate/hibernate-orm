@@ -16,7 +16,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: Sep 30, 2010
+ * creation-date: Sep 30, 2010
  */
 public abstract class TestSupport {
 

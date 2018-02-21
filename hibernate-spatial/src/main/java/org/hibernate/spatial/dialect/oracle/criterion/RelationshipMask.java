@@ -64,6 +64,7 @@ public enum RelationshipMask {
 	 * Combines the passed "{@code RelationshipMask}s
 	 *
 	 * @param masks The array of masks to combine
+	 *
 	 * @return A {@code String} representing the combined relationship mask
 	 */
 	public static String booleanCombination(RelationshipMask[] masks) {

@@ -8,7 +8,7 @@ package org.hibernate.spatial;
 
 /**
  * Enumerates the supported spatial relations.
- *
+ * <p>
  * <p>Most of these relations are defined in "OpenGIS Simple Features Specification for SQL, rev. 1.1  (OGC 99-049),
  * section 2.1.13.3. "</p>
  *
@@ -58,7 +58,7 @@ public interface SpatialRelation {
 
 	/**
 	 * The bounding box of the first geometry intersects the bounding box of the second
-	 *
+	 * <p>
 	 * <p>This relation is not defined in OGC 99-049, it corresponds to the Postgis '&&' operator.</p>
 	 */
 	public static int FILTER = 8;

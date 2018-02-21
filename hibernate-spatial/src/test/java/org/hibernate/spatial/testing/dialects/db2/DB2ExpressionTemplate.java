@@ -27,7 +27,7 @@ import org.hibernate.spatial.testing.WktUtility;
 
 /**
  * @author David Adler
- *         creation-date: 5/22/2014 
+ * creation-date: 5/22/2014
  */
 public class DB2ExpressionTemplate implements SQLExpressionTemplate {
 

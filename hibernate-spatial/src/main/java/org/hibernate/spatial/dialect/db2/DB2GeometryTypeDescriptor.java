@@ -13,10 +13,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.geolatte.geom.Geometry;
-import org.geolatte.geom.codec.db.db2.Db2ClobDecoder;
-import org.geolatte.geom.codec.db.db2.Db2ClobEncoder;
-
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -24,6 +20,10 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.codec.db.db2.Db2ClobDecoder;
+import org.geolatte.geom.codec.db.db2.Db2ClobEncoder;
 
 /**
  * Type Descriptor for the DB2 Geometry type (as Clob)
@@ -103,8 +103,8 @@ public class DB2GeometryTypeDescriptor implements SqlTypeDescriptor {
 		}
 
 		if ( object instanceof Clob ) {
-			Db2ClobDecoder decoder = new Db2ClobDecoder(srid);
-			return  decoder.decode( (Clob) object );
+			Db2ClobDecoder decoder = new Db2ClobDecoder( srid );
+			return decoder.decode( (Clob) object );
 		}
 
 		throw new IllegalStateException( "Object of type " + object.getClass()

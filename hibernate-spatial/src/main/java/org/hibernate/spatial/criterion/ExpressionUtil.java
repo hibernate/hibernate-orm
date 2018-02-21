@@ -18,7 +18,7 @@ import org.hibernate.spatial.SpatialFunction;
  * This class assists in the formation of a SQL-fragment in the various spatial query expressions.
  *
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 2/15/11
+ * creation-date: 2/15/11
  */
 public class ExpressionUtil {
 
@@ -58,7 +58,9 @@ public class ExpressionUtil {
 	 * @param propertyName The property path
 	 * @param criteria The criteria
 	 * @param criteriaQuery The criteria query
+	 *
 	 * @return The column name
+	 *
 	 * @throws HibernateException If the property could not be resolved, or more than one column is mapped by the property path.
 	 */
 	public static String findColumn(String propertyName, Criteria criteria, CriteriaQuery criteriaQuery) {

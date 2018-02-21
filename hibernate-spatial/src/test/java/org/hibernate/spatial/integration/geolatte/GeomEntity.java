@@ -23,14 +23,18 @@ import static org.hibernate.spatial.integration.DecodeUtil.getWktDecoder;
 
 /**
  * Test class used in unit testing.
- *
+ * <p>
  * Not that this is Entity class uses raw Geometries, because in test classes a wide variety of SRIDs and
  * coordinate spaces are mixed. (This creates notable problems for Oracle, which is very, very strict in what it accepts)
- *
  */
 @Entity
 @Table(name = "geomtest")
 public class GeomEntity implements GeomEntityLike<Geometry> {
+
+	@Id
+	private Integer id;
+	private String type;
+	private Geometry geom;
 
 	static GeomEntity createFrom(TestDataElement element, Dialect dialect) throws WktDecodeException {
 		WktDecoder decoder = getWktDecoder( dialect );
@@ -41,14 +45,6 @@ public class GeomEntity implements GeomEntityLike<Geometry> {
 		result.setType( element.type );
 		return result;
 	}
-
-
-	@Id
-	private Integer id;
-
-	private String type;
-
-	private Geometry geom;
 
 	@Override
 	public Integer getId() {
@@ -92,7 +88,7 @@ public class GeomEntity implements GeomEntityLike<Geometry> {
 
 		GeomEntity geomEntity = (GeomEntity) o;
 
-		if ( ! id.equals(geomEntity.id) ) {
+		if ( !id.equals( geomEntity.id ) ) {
 			return false;
 		}
 

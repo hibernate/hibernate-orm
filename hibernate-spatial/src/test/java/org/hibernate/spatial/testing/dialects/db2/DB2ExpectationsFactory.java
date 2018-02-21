@@ -24,29 +24,30 @@ package org.hibernate.spatial.testing.dialects.db2;
 import java.sql.SQLException;
 import java.util.Map;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
-import org.geolatte.geom.jts.JTS;
-
 import org.hibernate.spatial.dialect.db2.DB2GeometryTypeDescriptor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.NativeSQLStatement;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
+import org.geolatte.geom.jts.JTS;
 
 /**
  * This class provides the DB2 native spatial queries to generate the
  * results which will be compared with the HQL spatial results.
  *
  * @author David Adler, Adtech Geospatial
- *         creation-date: 5/22/2014
+ * creation-date: 5/22/2014
  */
 public class DB2ExpectationsFactory extends AbstractExpectationsFactory {
+
+	private final DB2GeometryTypeDescriptor desc = new DB2GeometryTypeDescriptor( 4326 );
 
 	public DB2ExpectationsFactory(DataSourceUtils utils) {
 		super( utils );
 	}
 
-	private final DB2GeometryTypeDescriptor desc = new DB2GeometryTypeDescriptor(4326);
 	/**
 	 * Returns the expected extent of all testsuite-suite geometries.
 	 *
@@ -124,7 +125,7 @@ public class DB2ExpectationsFactory extends AbstractExpectationsFactory {
 	protected NativeSQLStatement createNativeBufferStatement(Double distance) {
 		return createNativeSQLStatement(
 				"select t.id, DB2GSE.ST_buffer(t.geom,?) from GeomTest t where DB2GSE.ST_SRID(t.geom) = 4326",
-				new Object[] {distance}
+				new Object[] { distance }
 		);
 	}
 

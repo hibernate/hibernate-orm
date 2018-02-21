@@ -10,14 +10,14 @@
  */
 package org.hibernate.spatial.testing.dialects.h2geodb;
 
+import org.hibernate.spatial.testing.AbstractExpectationsFactory;
+import org.hibernate.spatial.testing.NativeSQLStatement;
+
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 import org.geolatte.geom.ByteBuffer;
 import org.geolatte.geom.codec.Wkb;
 import org.geolatte.geom.jts.JTS;
-
-import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.NativeSQLStatement;
 
 /**
  * A Factory class that generates expected {@link org.hibernate.spatial.testing.NativeSQLStatement}s for GeoDB
@@ -55,7 +55,7 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	protected NativeSQLStatement createNativeBufferStatement(Double distance) {
 		return createNativeSQLStatement(
 				"select t.id, ST_Buffer(t.geom,?) from GEOMTEST t where ST_SRID(t.geom) = 4326",
-				new Object[] {distance}
+				new Object[] { distance }
 		);
 	}
 
@@ -208,11 +208,11 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeSridStatement()
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeSridStatement()
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeSridStatement() {

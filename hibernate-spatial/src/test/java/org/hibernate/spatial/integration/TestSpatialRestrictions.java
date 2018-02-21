@@ -11,8 +11,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -24,9 +22,10 @@ import org.hibernate.spatial.integration.jts.GeomEntity;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 
+import org.hibernate.testing.Skip;
 import org.junit.Test;
 
-import org.hibernate.testing.Skip;
+import org.jboss.logging.Logger;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.fail;

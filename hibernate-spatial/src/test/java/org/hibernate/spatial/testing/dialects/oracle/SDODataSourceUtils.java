@@ -15,7 +15,12 @@ import org.hibernate.spatial.testing.SQLExpressionTemplate;
 
 public class SDODataSourceUtils extends DataSourceUtils {
 
-	public SDODataSourceUtils(String jdbcDriver, String jdbcUrl, String jdbcUser, String jdbcPass, SQLExpressionTemplate sqlExpressionTemplate) {
+	public SDODataSourceUtils(
+			String jdbcDriver,
+			String jdbcUrl,
+			String jdbcUser,
+			String jdbcPass,
+			SQLExpressionTemplate sqlExpressionTemplate) {
 		super( jdbcDriver, jdbcUrl, jdbcUser, jdbcPass, sqlExpressionTemplate );
 	}
 
@@ -26,7 +31,7 @@ public class SDODataSourceUtils extends DataSourceUtils {
 			setGeomMetaDataTo2D();
 			createIndex();
 		}
-		catch ( SQLException e ) {
+		catch (SQLException e) {
 			throw new RuntimeException( e );
 		}
 

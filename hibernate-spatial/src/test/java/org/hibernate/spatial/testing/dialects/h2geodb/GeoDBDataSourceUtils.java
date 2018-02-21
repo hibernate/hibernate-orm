@@ -29,8 +29,9 @@ import org.hibernate.spatial.testing.SQLExpressionTemplate;
  */
 public class GeoDBDataSourceUtils extends DataSourceUtils {
 
-	public GeoDBDataSourceUtils(String jdbcDriver, String jdbcUrl, String jdbcUser, String jdbcPass,
-								SQLExpressionTemplate sqlExpressionTemplate)
+	public GeoDBDataSourceUtils(
+			String jdbcDriver, String jdbcUrl, String jdbcUser, String jdbcPass,
+			SQLExpressionTemplate sqlExpressionTemplate)
 			throws SQLException, IOException {
 		super( jdbcDriver, jdbcUrl, jdbcUser, jdbcPass, sqlExpressionTemplate );
 		Connection conn = this.getConnection();
@@ -46,16 +47,16 @@ public class GeoDBDataSourceUtils extends DataSourceUtils {
 			Method m = geoDB.getDeclaredMethod( "InitGeoDB", new Class[] { Connection.class } );
 			m.invoke( null, conn );
 		}
-		catch ( ClassNotFoundException e ) {
+		catch (ClassNotFoundException e) {
 			throw new RuntimeException( errorMsg, e );
 		}
-		catch ( NoSuchMethodException e ) {
+		catch (NoSuchMethodException e) {
 			throw new RuntimeException( errorMsg, e );
 		}
-		catch ( InvocationTargetException e ) {
+		catch (InvocationTargetException e) {
 			throw new RuntimeException( errorMsg, e );
 		}
-		catch ( IllegalAccessException e ) {
+		catch (IllegalAccessException e) {
 			throw new RuntimeException( errorMsg, e );
 		}
 	}

@@ -14,7 +14,7 @@ import org.hibernate.type.Type;
 
 /**
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 4/8/13
+ * creation-date: 4/8/13
  */
 class SqlServerMethod extends StandardSQLFunction {
 

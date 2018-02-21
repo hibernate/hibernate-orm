@@ -14,56 +14,55 @@ import org.hibernate.type.StandardBasicTypes;
  * An {@code Iterable} over the spatial functions supported by MySQL.
  *
  * @author Karel Maesen, Geovise BVBA
- *
  */
 class MySQLSpatialFunctions extends SpatialFunctionsRegistry {
 
-	MySQLSpatialFunctions(){
+	MySQLSpatialFunctions() {
 		functionMap.put(
 				"dimension", new StandardSQLFunction(
-				"dimension",
-				StandardBasicTypes.INTEGER
-		)
+						"dimension",
+						StandardBasicTypes.INTEGER
+				)
 		);
 		functionMap.put(
 				"geometrytype", new StandardSQLFunction(
-				"geometrytype", StandardBasicTypes.STRING
-		)
+						"geometrytype", StandardBasicTypes.STRING
+				)
 		);
 		functionMap.put(
 				"srid", new StandardSQLFunction(
-				"srid",
-				StandardBasicTypes.INTEGER
-		)
+						"srid",
+						StandardBasicTypes.INTEGER
+				)
 		);
 		functionMap.put(
 				"envelope", new StandardSQLFunction(
-				"envelope"
-		)
+						"envelope"
+				)
 		);
 		functionMap.put(
 				"astext", new StandardSQLFunction(
-				"astext",
-				StandardBasicTypes.STRING
-		)
+						"astext",
+						StandardBasicTypes.STRING
+				)
 		);
 		functionMap.put(
 				"asbinary", new StandardSQLFunction(
-				"asbinary",
-				StandardBasicTypes.BINARY
-		)
+						"asbinary",
+						StandardBasicTypes.BINARY
+				)
 		);
 		functionMap.put(
 				"isempty", new StandardSQLFunction(
-				"isempty",
-				StandardBasicTypes.BOOLEAN
-		)
+						"isempty",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		functionMap.put(
 				"issimple", new StandardSQLFunction(
-				"issimple",
-				StandardBasicTypes.BOOLEAN
-		)
+						"issimple",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 //		functionMap.put(
 //				"boundary", new StandardSQLFunction(
@@ -74,51 +73,51 @@ class MySQLSpatialFunctions extends SpatialFunctionsRegistry {
 		// Register functions for spatial relation constructs
 		functionMap.put(
 				"overlaps", new StandardSQLFunction(
-				"overlaps",
-				StandardBasicTypes.BOOLEAN
-		)
+						"overlaps",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		functionMap.put(
 				"intersects", new StandardSQLFunction(
-				"intersects",
-				StandardBasicTypes.BOOLEAN
-		)
+						"intersects",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		functionMap.put(
 				"equals", new StandardSQLFunction(
-				"equals",
-				StandardBasicTypes.BOOLEAN
-		)
+						"equals",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		functionMap.put(
 				"contains", new StandardSQLFunction(
-				"contains",
-				StandardBasicTypes.BOOLEAN
-		)
+						"contains",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		functionMap.put(
 				"crosses", new StandardSQLFunction(
-				"crosses",
-				StandardBasicTypes.BOOLEAN
-		)
+						"crosses",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		functionMap.put(
 				"disjoint", new StandardSQLFunction(
-				"disjoint",
-				StandardBasicTypes.BOOLEAN
-		)
+						"disjoint",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		functionMap.put(
 				"touches", new StandardSQLFunction(
-				"touches",
-				StandardBasicTypes.BOOLEAN
-		)
+						"touches",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		functionMap.put(
 				"within", new StandardSQLFunction(
-				"within",
-				StandardBasicTypes.BOOLEAN
-		)
+						"within",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 //		functionMap.put(
 //				"relate", new StandardSQLFunction(

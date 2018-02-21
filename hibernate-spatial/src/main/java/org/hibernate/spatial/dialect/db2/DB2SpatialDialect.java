@@ -305,7 +305,7 @@ public class DB2SpatialDialect extends DB2Dialect implements SpatialDialect {
 
 	@Override
 	public boolean supports(SpatialFunction function) {
-		return (getFunctions().get( function.toString() ) != null);
+		return ( getFunctions().get( function.toString() ) != null );
 	}
 
 	@Override

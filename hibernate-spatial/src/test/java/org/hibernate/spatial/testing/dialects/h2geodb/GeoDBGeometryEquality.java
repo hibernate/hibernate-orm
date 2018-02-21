@@ -10,10 +10,10 @@
  */
 package org.hibernate.spatial.testing.dialects.h2geodb;
 
+import org.hibernate.spatial.testing.JTSGeometryEquality;
+
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
-
-import org.hibernate.spatial.testing.JTSGeometryEquality;
 
 /**
  * Extends the test for {@link Geometry} equality, because GeoDB uses JTS

@@ -35,7 +35,8 @@ public class HANASpatialUtils {
 		String tableName = null;
 		String columnName = null;
 		for ( int i = 1; i <= rs.getMetaData().getColumnCount(); i++ ) {
-			if ( name.equals( rs.getMetaData().getColumnLabel( i ) ) || name.toUpperCase().equals( rs.getMetaData().getColumnLabel( i ) ) ) {
+			if ( name.equals( rs.getMetaData().getColumnLabel( i ) ) ||
+					name.toUpperCase().equals( rs.getMetaData().getColumnLabel( i ) ) ) {
 				tableName = rs.getMetaData().getTableName( i );
 				columnName = rs.getMetaData().getColumnName( i );
 			}
@@ -53,16 +54,17 @@ public class HANASpatialUtils {
 		int typeCode = (int) buffer.getUInt();
 
 		Connection connection = rs.getStatement().getConnection();
-		
+
 		// Check if SRID is set
 		if ( ( typeCode & POSTGIS_SRID_FLAG ) != POSTGIS_SRID_FLAG ) {
 			// No SRID set => try to get SRID from the database
-			try ( PreparedStatement psSrid = connection
-					.prepareStatement( "SELECT SRS_ID FROM SYS.ST_GEOMETRY_COLUMNS WHERE SCHEMA_NAME=CURRENT_SCHEMA AND TABLE_NAME=? AND COLUMN_NAME=?" ) ) {
+			try (PreparedStatement psSrid = connection
+					.prepareStatement(
+							"SELECT SRS_ID FROM SYS.ST_GEOMETRY_COLUMNS WHERE SCHEMA_NAME=CURRENT_SCHEMA AND TABLE_NAME=? AND COLUMN_NAME=?" )) {
 				psSrid.setString( 1, tableName );
 				psSrid.setString( 2, columnName );
 
-				try ( ResultSet rsSrid = psSrid.executeQuery() ) {
+				try (ResultSet rsSrid = psSrid.executeQuery()) {
 					if ( rsSrid.next() ) {
 						int crsId = rsSrid.getInt( 1 );
 						buffer = addCrsId( buffer.toByteArray(), orderByte, typeCode, crsId );

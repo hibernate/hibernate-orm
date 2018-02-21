@@ -7,15 +7,14 @@
 
 package org.hibernate.spatial.testing.dialects.sqlserver;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
-
-import org.geolatte.geom.codec.db.sqlserver.Decoders;
-import org.geolatte.geom.jts.JTS;
-
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.NativeSQLStatement;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
+import org.geolatte.geom.codec.db.sqlserver.Decoders;
+import org.geolatte.geom.jts.JTS;
 
 
 /**
@@ -129,7 +128,7 @@ public class SqlServerExpectationsFactory extends AbstractExpectationsFactory {
 
 	@Override
 	protected Geometry decode(Object o) {
-		return JTS.to( Decoders.decode((byte[]) o) );
+		return JTS.to( Decoders.decode( (byte[]) o ) );
 	}
 
 	@Override

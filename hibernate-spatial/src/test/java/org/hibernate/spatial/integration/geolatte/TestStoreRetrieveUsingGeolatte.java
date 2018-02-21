@@ -6,15 +6,9 @@
  */
 package org.hibernate.spatial.integration.geolatte;
 
-import org.geolatte.geom.Geometry;
-import org.geolatte.geom.codec.WktDecodeException;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.integration.AbstractTestStoreRetrieve;
-import org.hibernate.spatial.integration.GeomEntityLike;
 import org.hibernate.spatial.testing.GeolatteGeometryEquality;
 import org.hibernate.spatial.testing.GeometryEquality;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
@@ -22,9 +16,10 @@ import org.hibernate.spatial.testing.TestDataElement;
 
 import org.hibernate.testing.Skip;
 
-import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.jboss.logging.Logger;
+
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.codec.WktDecodeException;
 
 /**
  * This testsuite-suite class verifies whether the <code>Geometry</code>s retrieved

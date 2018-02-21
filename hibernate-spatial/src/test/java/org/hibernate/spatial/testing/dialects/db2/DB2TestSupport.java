@@ -35,7 +35,8 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 public class DB2TestSupport extends TestSupport {
 
 	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
-		if ( "org.hibernate.spatial.integration.TestSpatialFunctions".equals( testcase.getClass().getCanonicalName() ) ) {
+		if ( "org.hibernate.spatial.integration.TestSpatialFunctions".equals( testcase.getClass()
+																					  .getCanonicalName() ) ) {
 			return TestData.fromFile( "db2/test-db2nozm-only-polygon.xml" );
 		}
 		return TestData.fromFile( "db2/test-db2nozm-data-set.xml" );

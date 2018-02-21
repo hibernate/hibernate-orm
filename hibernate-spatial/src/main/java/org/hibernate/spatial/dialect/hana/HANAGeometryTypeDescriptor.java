@@ -12,7 +12,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.geolatte.geom.Geometry;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -21,13 +20,13 @@ import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
-public class HANAGeometryTypeDescriptor implements SqlTypeDescriptor {
+import org.geolatte.geom.Geometry;
 
-	private static final long serialVersionUID = -6978798264716544804L;
+public class HANAGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 	public static final HANAGeometryTypeDescriptor CRS_LOADING_INSTANCE = new HANAGeometryTypeDescriptor( true );
 	public static final HANAGeometryTypeDescriptor INSTANCE = new HANAGeometryTypeDescriptor( false );
-
+	private static final long serialVersionUID = -6978798264716544804L;
 	final boolean determineCrsIdFromDatabase;
 
 	public HANAGeometryTypeDescriptor(boolean determineCrsIdFromDatabase) {

@@ -4,12 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//import org.geolatte.geom.C3DM;
-//import org.geolatte.geom.Geometry;
-//import org.geolatte.geom.GeometryEquality;
-//import org.geolatte.geom.GeometryPointEquality;
-import org.geolatte.geom.codec.WktDecodeException;
-
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -21,9 +15,16 @@ import org.hibernate.spatial.testing.TestDataElement;
 
 import org.junit.Test;
 
+import org.geolatte.geom.codec.WktDecodeException;
+
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+//import org.geolatte.geom.C3DM;
+//import org.geolatte.geom.Geometry;
+//import org.geolatte.geom.GeometryEquality;
+//import org.geolatte.geom.GeometryPointEquality;
 
 /**
  * Created by Karel Maesen, Geovise BVBA on 15/02/2018.
@@ -73,7 +74,7 @@ public abstract class AbstractTestStoreRetrieve<G, E extends GeomEntityLike<G>> 
 			}
 			tx.commit();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			if ( tx != null ) {
 				tx.rollback();
 			}
@@ -116,7 +117,7 @@ public abstract class AbstractTestStoreRetrieve<G, E extends GeomEntityLike<G>> 
 				tx.commit();
 			}
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			if ( tx != null ) {
 				tx.rollback();
 			}
@@ -142,7 +143,7 @@ public abstract class AbstractTestStoreRetrieve<G, E extends GeomEntityLike<G>> 
 			session.save( entity );
 			tx.commit();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			if ( tx != null ) {
 				tx.rollback();
 			}
@@ -169,7 +170,7 @@ public abstract class AbstractTestStoreRetrieve<G, E extends GeomEntityLike<G>> 
 			assertNull( entity.getGeom() );
 			tx.commit();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			if ( tx != null ) {
 				tx.rollback();
 			}

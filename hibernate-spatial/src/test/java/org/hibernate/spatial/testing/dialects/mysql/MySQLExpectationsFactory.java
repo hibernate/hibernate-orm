@@ -7,16 +7,16 @@
 
 package org.hibernate.spatial.testing.dialects.mysql;
 
+import org.hibernate.spatial.testing.AbstractExpectationsFactory;
+import org.hibernate.spatial.testing.DataSourceUtils;
+import org.hibernate.spatial.testing.NativeSQLStatement;
+
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 import org.geolatte.geom.ByteBuffer;
 import org.geolatte.geom.codec.Wkb;
 import org.geolatte.geom.codec.WkbDecoder;
 import org.geolatte.geom.jts.JTS;
-
-import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
-import org.hibernate.spatial.testing.NativeSQLStatement;
 
 
 /**
@@ -235,7 +235,7 @@ public class MySQLExpectationsFactory extends AbstractExpectationsFactory {
 		if ( bytes == null ) {
 			return null;
 		}
-		ByteBuffer buffer = ByteBuffer.from( (byte[])bytes );
+		ByteBuffer buffer = ByteBuffer.from( (byte[]) bytes );
 		WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.MYSQL_WKB );
 		return JTS.to( decoder.decode( buffer ) );
 	}

@@ -170,7 +170,7 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 	 * @return True if this <code>SpatialDialect</code> supports the spatial function specified by the function parameter.
 	 */
 	@Override
-	public boolean supports( SpatialFunction function) {
-		return (postgisFunctions.get( function.toString() ) != null);
+	public boolean supports(SpatialFunction function) {
+		return ( postgisFunctions.get( function.toString() ) != null );
 	}
 }

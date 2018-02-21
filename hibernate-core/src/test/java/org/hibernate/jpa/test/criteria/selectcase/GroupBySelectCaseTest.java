@@ -45,8 +45,8 @@ public class GroupBySelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 			CriteriaQuery<Tuple> query = cb.createTupleQuery();
 			Root<Person> from = query.from( Person.class );
 
-			Predicate childPredicate = cb.between( from.get( Person_.AGE ), 0, 10 );
-			Predicate teenagerPredicate = cb.between( from.get( Person_.AGE ), 11, 20 );
+			Predicate childPredicate = cb.between( from.get( "age" ), 0, 10 );
+			Predicate teenagerPredicate = cb.between( from.get( "age" ), 11, 20 );
 			CriteriaBuilder.Case<String> selectCase = cb.selectCase();
 			selectCase.when( childPredicate, "child" )
 					.when( teenagerPredicate, "teenager" )
@@ -70,8 +70,8 @@ public class GroupBySelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 			CriteriaQuery<Tuple> query = cb.createTupleQuery();
 			Root<Person> from = query.from( Person.class );
 
-			Predicate childPredicate = cb.between( from.get( Person_.AGE ), 0, 10 );
-			Predicate teenagerPredicate = cb.between( from.get( Person_.AGE ), 11, 20 );
+			Predicate childPredicate = cb.between( from.get( "age" ), 0, 10 );
+			Predicate teenagerPredicate = cb.between( from.get( "age" ), 11, 20 );
 			CriteriaBuilder.Case<String> selectCase = cb.selectCase();
 			selectCase.when( childPredicate, "child" )
 					.when( teenagerPredicate, "teenager" )

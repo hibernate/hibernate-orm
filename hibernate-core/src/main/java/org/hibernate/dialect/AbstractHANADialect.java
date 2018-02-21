@@ -1503,7 +1503,7 @@ public abstract class AbstractHANADialect extends Dialect {
 			}
 			catch (Exception e) {
 				LOG.debug(
-						"An error occurred while trying to determing the value of the HANA parameter indexserver.ini / session / max_lob_prefetch_size. Using the default value "
+						"An error occurred while trying to determine the value of the HANA parameter indexserver.ini / session / max_lob_prefetch_size. Using the default value "
 								+ maxLobPrefetchSizeDefault,
 						e );
 			}

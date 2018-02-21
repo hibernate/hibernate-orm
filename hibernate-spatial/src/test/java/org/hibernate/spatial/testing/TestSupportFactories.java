@@ -10,6 +10,7 @@ package org.hibernate.spatial.testing;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.spatial.SpatialDialect;
+import org.hibernate.spatial.testing.dialects.db2.DB2TestSupport;
 import org.hibernate.spatial.testing.dialects.h2geodb.GeoDBTestSupport;
 import org.hibernate.spatial.testing.dialects.hana.HANATestSupport;
 import org.hibernate.spatial.testing.dialects.mysql.MySQL56TestSupport;
@@ -79,6 +80,10 @@ public class TestSupportFactories {
 		}
 		if ( "org.hibernate.spatial.dialect.hana.HANASpatialDialect".equals( canonicalName ) ) {
 			return HANATestSupport.class;
+		}
+
+		if ("org.hibernate.spatial.dialect.db2.DB2SpatialDialect".equals( canonicalName )) {
+			return DB2TestSupport.class;
 		}
 		throw new IllegalArgumentException( "Dialect not known in test suite" );
 	}

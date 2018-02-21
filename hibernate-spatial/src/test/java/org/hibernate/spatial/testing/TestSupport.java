@@ -27,8 +27,8 @@ public abstract class TestSupport {
 		return new DataSourceUtils( driver(), url(), user(), passwd(), getSQLExpressionTemplate() );
 	}
 
-	public GeometryEquality createGeometryEquality() {
-		return new GeometryEquality();
+	public JTSGeometryEquality createGeometryEquality() {
+		return new JTSGeometryEquality();
 	}
 
 	public abstract TestData createTestData(BaseCoreFunctionalTestCase testcase);

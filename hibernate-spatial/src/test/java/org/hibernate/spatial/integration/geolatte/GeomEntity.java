@@ -11,14 +11,15 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.spatial.integration.GeomEntityLike;
 import org.hibernate.spatial.testing.TestDataElement;
 
 import org.geolatte.geom.Geometry;
-import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.codec.WktDecodeException;
 import org.geolatte.geom.codec.WktDecoder;
+
+import static org.hibernate.spatial.integration.DecodeUtil.getWktDecoder;
 
 /**
  * Test class used in unit testing.
@@ -29,7 +30,18 @@ import org.geolatte.geom.codec.WktDecoder;
  */
 @Entity
 @Table(name = "geomtest")
-public class GeomEntity {
+public class GeomEntity implements GeomEntityLike<Geometry> {
+
+	static GeomEntity createFrom(TestDataElement element, Dialect dialect) throws WktDecodeException {
+		WktDecoder decoder = getWktDecoder( dialect );
+		Geometry geom = decoder.decode( element.wkt );
+		GeomEntity result = new GeomEntity();
+		result.setId( element.id );
+		result.setGeom( geom );
+		result.setType( element.type );
+		return result;
+	}
+
 
 	@Id
 	private Integer id;
@@ -38,45 +50,36 @@ public class GeomEntity {
 
 	private Geometry geom;
 
+	@Override
 	public Integer getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(Integer id) {
 		this.id = id;
 	}
 
+	@Override
 	public String getType() {
 		return type;
 	}
 
+	@Override
 	public void setType(String type) {
 		this.type = type;
 	}
 
+	@Override
 	public Geometry getGeom() {
 		return geom;
 	}
 
+	@Override
 	public void setGeom(Geometry geom) {
 		this.geom = geom;
 	}
 
-	public static GeomEntity createFrom(TestDataElement element, Dialect dialect) throws WktDecodeException {
-		WktDecoder decoder = null;
-		if (dialect instanceof AbstractHANADialect) {
-			decoder = Wkt.newDecoder( Wkt.Dialect.HANA_EWKT );
-		}
-		else {
-			decoder = Wkt.newDecoder( Wkt.Dialect.POSTGIS_EWKT_1 );
-		}
-		Geometry geom = decoder.decode( element.wkt );
-		GeomEntity result = new GeomEntity();
-		result.setId( element.id );
-		result.setGeom( geom );
-		result.setType( element.type );
-		return result;
-	}
 
 	@Override
 	public boolean equals(Object o) {

@@ -42,7 +42,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 
 	protected TestData testData;
 	protected DataSourceUtils dataSourceUtils;
-	protected GeometryEquality geometryEquality;
+	protected JTSGeometryEquality geometryEquality;
 	protected AbstractExpectationsFactory expectationsFactory;
 
 	/**

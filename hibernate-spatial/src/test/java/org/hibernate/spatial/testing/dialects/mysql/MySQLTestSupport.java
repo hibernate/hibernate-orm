@@ -10,7 +10,7 @@ package org.hibernate.spatial.testing.dialects.mysql;
 
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
-import org.hibernate.spatial.testing.GeometryEquality;
+import org.hibernate.spatial.testing.JTSGeometryEquality;
 import org.hibernate.spatial.testing.SQLExpressionTemplate;
 import org.hibernate.spatial.testing.TestData;
 import org.hibernate.spatial.testing.TestSupport;
@@ -34,7 +34,7 @@ public class MySQLTestSupport extends TestSupport {
 	}
 
 	@Override
-	public GeometryEquality createGeometryEquality() {
+	public JTSGeometryEquality createGeometryEquality() {
 		return new MySQLGeometryEquality();
 	}
 

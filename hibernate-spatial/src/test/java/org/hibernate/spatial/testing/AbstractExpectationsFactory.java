@@ -785,7 +785,8 @@ public abstract class AbstractExpectationsFactory {
 		try {
 			cn = createConnection();
 			preparedStatement = nativeSQLStatement.prepare( cn );
-			LOG.info( "Native SQL is: " + preparedStatement.toString() );
+			LOG.info( "Native SQL is: " + nativeSQLStatement.toString() );
+
 			results = preparedStatement.executeQuery();
 			while ( results.next() ) {
 				int id = results.getInt( 1 );
@@ -851,6 +852,9 @@ public abstract class AbstractExpectationsFactory {
 			public PreparedStatement prepare(Connection connection) throws SQLException {
 				return connection.prepareStatement( sql );
 			}
+			public String toString() {
+				return sql;
+			}
 		};
 	}
 
@@ -862,6 +866,9 @@ public abstract class AbstractExpectationsFactory {
 					pstmt.setString( i, wkt );
 				}
 				return pstmt;
+			}
+			public String toString(){
+				return String.format("sql; %s, wkt: %s", sql, wkt);
 			}
 		};
 	}
@@ -875,6 +882,9 @@ public abstract class AbstractExpectationsFactory {
 					pstmt.setObject( i++, param );
 				}
 				return pstmt;
+			}
+			public String toString(){
+				return sql;
 			}
 		};
 	}

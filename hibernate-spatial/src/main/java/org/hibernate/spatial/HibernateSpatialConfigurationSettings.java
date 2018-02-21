@@ -19,10 +19,19 @@ public class HibernateSpatialConfigurationSettings implements Serializable {
 	private HibernateSpatialConfigurationSettings() {
 		//prevent this object from being instantiated
 	}
+
 	/**
-	 * The canonical class name to use as Oracle ConnectionFinder implementation.
+	 * The canonical class name of the Oracle ConnectionFinder implementation that will be used by the
+	 * Oracle spatial dialects
 	 */
+
 	public static final String CONNECTION_FINDER = "hibernate.spatial.connection_finder";
+
+	/**
+	 * SRID to use for the DB2 Spatial Dialects.
+	 *
+	 */
+	public static final String DB2_DEFAULT_SRID = "hibernate.spatial.db2.srid";
 
 
 

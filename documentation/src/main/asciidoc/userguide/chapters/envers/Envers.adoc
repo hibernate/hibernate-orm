@@ -1152,6 +1152,31 @@ include::{extrasdir}/envers-querying-entity-relation-nested-join-multiple-restri
 ----
 ====
 
+[[envers-querying-revision-entities]]
+=== Querying for revision information without loading entities
+
+It may sometimes be useful to load information about revisions to find out who performed specific revisions or
+to know what entity names were modified but the change log about the related audited entities isn't needed.
+This API allows an efficient way to get the revision information entity log without instantiating the actual
+entities themselves.
+
+Here is a simple example:
+
+[source,java]
+----
+AuditQuery query = getAuditReader().createQuery()
+    .forRevisionsOfEntity( DefaultRevisionEntity.class, true )
+    .add( AuditEntity.revisionNumber().between( 1, 25 ) );
+----
+
+This query will return all revision information entities for revisions between 1 and 25 including those which are
+related to deletions.  If deletions are not of interest, you would pass `false` as the second argument.
+
+Note this this query uses the `DefaultRevisionEntity` class type.  The class provided will vary depending on the
+configuration properties used to configure Envers or if you supply your own revision entity.  Typically users who
+will use this API will likely be providing a custom revision entity implementation to obtain custom information
+being maintained per revision.
+
 [[envers-conditional-auditing]]
 === Conditional auditing
 

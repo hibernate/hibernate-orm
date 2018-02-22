@@ -31,6 +31,7 @@ ext {
 
 	// "10" for WildFly 10.x, "11" for 11.x, etc
 	wildFlyMajorVersion = project.wildflyVersion.split( '\\.' )[0]
+	bytebuddyVersion = project.byteBuddyVersion
 	artifactClassifier = "wildfly-${wildFlyMajorVersion}-dist"
 	wildFlyInstallDir = "$rootProject.buildDir/wildfly"
 	fpackStagingDir = file( "target/featurepack" ) //Target build directory for the Feature Pack
@@ -70,6 +71,7 @@ featurepack {
 	variables['slot'] = rootProject.hibernateVersion
 	// Just the minor ORM version, e.g. "5.3"; Is used as an alias for the exact version
 	variables['minorSlot'] = rootProject.hibernateMajorMinorVersion
+	variables['bytebuddySlot'] = bytebuddyVersion
 	//Dependency on another Feature Pack:
 	dependency "org.wildfly:wildfly-feature-pack:${project.wildflyVersion}" // It will assume it is "zip" by default
 }

@@ -127,7 +127,7 @@ public class SpecialOneToOneType extends OneToOneType {
 			return null;
 		}
 		else {
-			return resolveIdentifier(id, session);
+			return resolveIdentifier(id, session, null);
 		}
 	}
 	

@@ -5,7 +5,7 @@
   ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
   ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
   -->
-<module xmlns="urn:jboss:module:1.3" name="org.hibernate" slot="${slot}">
+<module xmlns="urn:jboss:module:1.3" name="org.hibernate.orm" slot="${slot}">
     <resources>
         <artifact name="${org.hibernate:hibernate-core}"/>
         <artifact name="${org.hibernate:hibernate-envers}"/>
@@ -29,6 +29,6 @@
         <module name="org.jboss.vfs"/>
         <module name="org.javassist" export="true"/>
         <module name="org.hibernate.commons-annotations"/>
-        <module name="org.hibernate.jipijapa-hibernate5" services="import" slot="${slot}"/>
+        <module name="org.hibernate.orm.jipijapa-hibernate5" services="import" slot="${slot}"/>
     </dependencies>
 </module>

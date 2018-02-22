@@ -6,6 +6,6 @@
   ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
   -->
 <module-alias xmlns="urn:jboss:module:1.3"
-    name="org.hibernate.jipijapa-hibernate5" slot="${minorSlot}"
-    target-name="org.hibernate.jipijapa-hibernate5" target-slot="${slot}"
+    name="org.hibernate.orm.jipijapa-hibernate5" slot="${minorSlot}"
+    target-name="org.hibernate.orm.jipijapa-hibernate5" target-slot="${slot}"
 />

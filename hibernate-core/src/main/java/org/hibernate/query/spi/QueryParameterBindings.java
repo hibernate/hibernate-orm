@@ -26,7 +26,7 @@ public interface QueryParameterBindings {
 	<T> QueryParameterBinding<T> getBinding(int position);
 
 	void verifyParametersBound(boolean callable);
-	String expandParameters(String queryString, SharedSessionContractImplementor producer);
+	String expandListValuedParameters(String queryString, SharedSessionContractImplementor producer);
 
 	<T> QueryParameterListBinding<T> getQueryParameterListBinding(QueryParameter<T> parameter);
 	<T> QueryParameterListBinding<T> getQueryParameterListBinding(String name);

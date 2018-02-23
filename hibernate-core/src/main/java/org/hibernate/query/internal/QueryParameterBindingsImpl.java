@@ -105,9 +105,9 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@SuppressWarnings("WeakerAccess")
 	protected QueryParameterBinding makeBinding(QueryParameter queryParameter) {
-		assert !parameterBindingMap.containsKey( queryParameter );
+		assert ! parameterBindingMap.containsKey( queryParameter );
 
-		if ( !parameterMetadata.containsReference( queryParameter ) ) {
+		if ( ! parameterMetadata.containsReference( queryParameter ) ) {
 			throw new IllegalArgumentException(
 					"Cannot create binding for parameter reference [" + queryParameter + "] - reference is not a parameter of this query"
 			);
@@ -124,7 +124,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		return new QueryParameterBindingImpl( bindType, sessionFactory, shouldValidateBindingValue() );
 	}
 
-	@SuppressWarnings({ "unchecked", "WeakerAccess" })
+	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	protected <T> QueryParameterListBinding<T> makeListBinding(QueryParameter<T> param) {
 		if ( parametersConvertedToListBindings == null ) {
 			parametersConvertedToListBindings = new HashSet<>();
@@ -146,7 +146,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings( "unchecked" )
 	public boolean isBound(QueryParameter parameter) {
 		final QueryParameterBinding binding = getBinding( parameter );
 
@@ -158,7 +158,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		QueryParameterBinding<T> binding = parameterBindingMap.get( parameter );
 
 		if ( binding == null ) {
-			if ( !parameterMetadata.containsReference( parameter ) ) {
+			if ( ! parameterMetadata.containsReference( parameter ) ) {
 				throw new IllegalArgumentException(
 						"Could not resolve QueryParameter reference [" + parameter + "] to QueryParameterBinding"
 				);
@@ -398,10 +398,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	@Deprecated
 	@SuppressWarnings("unchecked")
 	private <T> QueryParameterListBinding<T> transformQueryParameterBindingToQueryParameterListBinding(QueryParameter<T> queryParameter) {
-		log.debugf(
-				"Converting QueryParameterBinding to QueryParameterListBinding for given QueryParameter : %s",
-				queryParameter
-		);
+		log.debugf( "Converting QueryParameterBinding to QueryParameterListBinding for given QueryParameter : %s", queryParameter );
 
 		getAndRemoveBinding( queryParameter );
 
@@ -498,60 +495,11 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
-	public String expandParameters(final String queryString, SharedSessionContractImplementor session) {
+	public String expandListValuedParameters(String queryString, SharedSessionContractImplementor session) {
 		if ( queryString == null ) {
 			return null;
 		}
-		String expandedQuery = expandListValuedParameters( new String( queryString ), session );
-		return namePositionParameters( expandedQuery );
-	}
 
-	private String namePositionParameters(String queryString) {
-		int i = 0;
-		for ( Map.Entry<QueryParameter, QueryParameterBinding> entry : getSortedPositionalParamBindingMap().entrySet() ) {
-			final QueryParameter sourceParam = entry.getKey();
-			final Object bindValue = entry.getValue().getBindValue();
-			final String sourceToken =
-					"?" + OrdinalParameterDescriptor.class.cast( sourceParam ).getPosition();
-
-			final int loc = queryString.indexOf( sourceToken );
-
-			if ( loc < 0 ) {
-				continue;
-			}
-
-			final String beforePlaceholder = queryString.substring( 0, loc );
-			final String afterPlaceholder = queryString.substring( loc + sourceToken.length() );
-			final StringBuilder namedParam = new StringBuilder();
-			final String syntheticName = "x" + '_' + i;
-
-			namedParam.append( ":" ).append( syntheticName );
-
-			final QueryParameter syntheticParam = new NamedParameterDescriptor(
-					syntheticName,
-					sourceParam.getType(),
-					sourceParam.getSourceLocations()
-			);
-
-			final QueryParameterBinding syntheticBinding = makeBinding( entry.getValue().getBindType() );
-			syntheticBinding.setBindValue( bindValue );
-			parameterBindingMap.remove( sourceParam );
-			parameterBindingMap.put( syntheticParam, syntheticBinding );
-
-			i++;
-			queryString = StringHelper.replace(
-					beforePlaceholder,
-					afterPlaceholder,
-					sourceToken,
-					namedParam.toString(),
-					true,
-					true
-			);
-		}
-		return queryString;
-	}
-
-	private String expandListValuedParameters(String queryString, SharedSessionContractImplementor session) {
 		if ( parameterListBindingMap == null || parameterListBindingMap.isEmpty() ) {
 			return queryString;
 		}
@@ -565,11 +513,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 		// HHH-1123
 		// Some DBs limit number of IN expressions.  For now, warn...
-		final Dialect dialect = session.getFactory()
-				.getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getJdbcEnvironment()
-				.getDialect();
+		final Dialect dialect = session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getJdbcEnvironment().getDialect();
 		final int inExprLimit = dialect.getInExpressionCountLimit();
 
 		for ( Map.Entry<QueryParameter, QueryParameterListBinding> entry : parameterListBindingMap.entrySet() ) {
@@ -577,12 +521,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			final Collection bindValues = entry.getValue().getBindValues();
 
 			if ( inExprLimit > 0 && bindValues.size() > inExprLimit ) {
-				log.tooManyInExpressions(
-						dialect.getClass().getName(),
-						inExprLimit,
-						sourceParam.getName(),
-						bindValues.size()
-				);
+				log.tooManyInExpressions( dialect.getClass().getName(), inExprLimit, sourceParam.getName(), bindValues.size() );
 			}
 
 			final String sourceToken;
@@ -664,6 +603,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		if ( parameterListBindingMap != null ) {
 			parameterListBindingMap.clear();
 		}
+
 		return queryString;
 	}
 }

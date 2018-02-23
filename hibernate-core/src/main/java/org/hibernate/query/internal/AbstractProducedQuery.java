@@ -1373,7 +1373,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	public QueryParameters getQueryParameters() {
-		final String expandedQuery = getQueryParameterBindings().expandParameters( getQueryString(), getProducer() );
+		final String expandedQuery = getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() );
 		return makeQueryParametersForExecution( expandedQuery );
 	}
 
@@ -1442,7 +1442,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			return EmptyIterator.INSTANCE;
 		}
 		return getProducer().iterate(
-				getQueryParameterBindings().expandParameters( getQueryString(), getProducer() ),
+				getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() ),
 				getQueryParameters()
 		);
 	}
@@ -1467,7 +1467,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		if (getMaxResults() == 0){
 			return EmptyScrollableResults.INSTANCE;
 		}
-		final String query = getQueryParameterBindings().expandParameters( getQueryString(), getProducer() );
+		final String query = getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() );
 		QueryParameters queryParameters = makeQueryParametersForExecution( query );
 		queryParameters.setScrollMode( scrollMode );
 		return getProducer().scroll( query, queryParameters );
@@ -1530,7 +1530,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			}
 		}
 
-		final String expandedQuery = getQueryParameterBindings().expandParameters( getQueryString(), getProducer() );
+		final String expandedQuery = getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() );
 		return getProducer().list(
 				expandedQuery,
 				makeQueryParametersForExecution( expandedQuery )
@@ -1610,7 +1610,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	protected int doExecuteUpdate() {
-		final String expandedQuery = getQueryParameterBindings().expandParameters( getQueryString(), getProducer() );
+		final String expandedQuery = getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() );
 		return getProducer().executeUpdate(
 				expandedQuery,
 				makeQueryParametersForExecution( expandedQuery )

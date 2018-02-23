@@ -173,7 +173,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 
 	private NativeSQLQuerySpecification generateQuerySpecification() {
 		return new NativeSQLQuerySpecification(
-				getQueryParameterBindings().expandParameters( getQueryString(), getProducer() ),
+				getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() ),
 				queryReturns.toArray( new NativeSQLQueryReturn[queryReturns.size()] ),
 				querySpaces
 		);

@@ -95,7 +95,6 @@ import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
-import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
@@ -3454,7 +3453,7 @@ public abstract class AbstractEntityPersister
 	public void update(
 			final Serializable id,
 			final Object[] fields,
-			final int[] dirtyFields,
+			int[] dirtyFields,
 			final boolean hasDirtyCollection,
 			final Object[] oldFields,
 			final Object oldVersion,
@@ -3464,12 +3463,25 @@ public abstract class AbstractEntityPersister
 
 		// apply any pre-update in-memory value generation
 		if ( getEntityMetamodel().hasPreUpdateGeneratedValues() ) {
-			final InMemoryValueGenerationStrategy[] strategies = getEntityMetamodel().getInMemoryValueGenerationStrategies();
-			for ( int i = 0; i < strategies.length; i++ ) {
-				if ( strategies[i] != null && strategies[i].getGenerationTiming().includesUpdate() ) {
-					fields[i] = strategies[i].getValueGenerator().generateValue( (Session) session, object );
-					setPropertyValue( object, i, fields[i] );
-					// todo : probably best to add to dirtyFields if not-null
+			final InMemoryValueGenerationStrategy[] valueGenerationStrategies =
+					getEntityMetamodel().getInMemoryValueGenerationStrategies();
+
+			int valueGenerationStrategiesSize = valueGenerationStrategies.length;
+			if ( valueGenerationStrategiesSize != 0 ) {
+				int[] fieldsPreUpdateNeeded = new int[valueGenerationStrategiesSize];
+				for ( int i = 0; i < valueGenerationStrategiesSize; i++ ) {
+					if ( valueGenerationStrategies[i] != null &&
+							valueGenerationStrategies[i].getGenerationTiming().includesUpdate() ) {
+						fields[i] = valueGenerationStrategies[i].getValueGenerator().generateValue(
+								(Session) session,
+								object
+						);
+						setPropertyValue( object, i, fields[i] );
+						fieldsPreUpdateNeeded[i] = i;
+					}
+				}
+				if ( fieldsPreUpdateNeeded.length != 0 && dirtyFields != null ) {
+					dirtyFields = ArrayHelper.join( fieldsPreUpdateNeeded, dirtyFields );
 				}
 			}
 		}

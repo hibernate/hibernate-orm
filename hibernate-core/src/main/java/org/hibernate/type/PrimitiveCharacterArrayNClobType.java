@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
  * @author Emmanuel Bernard
  */
 public class PrimitiveCharacterArrayNClobType extends AbstractSingleColumnStandardBasicType<char[]> {
-	public static final CharacterArrayClobType INSTANCE = new CharacterArrayClobType();
+	public static final CharacterArrayNClobType INSTANCE = new CharacterArrayNClobType();
 
 	public PrimitiveCharacterArrayNClobType() {
 		super( NClobTypeDescriptor.DEFAULT, PrimitiveCharacterArrayTypeDescriptor.INSTANCE );

@@ -6,8 +6,11 @@
  */
 package org.hibernate.loader.plan.exec.internal;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.AssertionFailure;
@@ -16,6 +19,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.plan.exec.process.internal.CollectionReferenceInitializerImpl;
 import org.hibernate.loader.plan.exec.process.internal.EntityReferenceInitializerImpl;
 import org.hibernate.loader.plan.exec.process.spi.ReaderCollector;
@@ -38,6 +42,7 @@ import org.hibernate.loader.plan.spi.QuerySpace;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -257,14 +262,59 @@ public class LoadQueryJoinAndFetchProcessor {
 				getJoinedAssociationTypeOrNull( join )
 		);
 
-		joinFragment.addJoin(
-				joinable.getTableName(),
-				rhsTableAlias,
-				join.resolveAliasedLeftHandSideJoinConditionColumns( lhsTableAlias ),
-				join.resolveNonAliasedRightHandSideJoinConditionColumns(),
-				join.isRightHandSideRequired() ? JoinType.INNER_JOIN : JoinType.LEFT_OUTER_JOIN,
-				additionalJoinConditions
-		);
+		String[] joinColumns = join.resolveAliasedLeftHandSideJoinConditionColumns( lhsTableAlias );
+		if ( joinColumns.length == 0 ) {
+			// When no columns are available, this is a special join that involves multiple subtypes
+			AbstractEntityPersister persister = (AbstractEntityPersister) ( (EntityQuerySpace) join.getLeftHandSide() ).getEntityPersister();
+			Set<String> subclassEntityNames = (Set<String>) persister.getEntityMetamodel()
+					.getSubclassEntityNames();
+			// We will collect all the join columns from the LHS subtypes here
+			List<String[]> polymorphicJoinColumns = new ArrayList<>( subclassEntityNames.size() );
+
+			OUTER:
+			for ( String subclassEntityName : subclassEntityNames ) {
+				AbstractEntityPersister subclassPersister = (AbstractEntityPersister) factory.getMetamodel()
+						.entityPersister( subclassEntityName );
+				joinColumns = subclassPersister.toColumns(
+						lhsTableAlias,
+						( (JoinDefinedByMetadata) join ).getJoinedPropertyName()
+				);
+
+				if ( joinColumns.length == 0 ) {
+					// The subtype does not have a "concrete" mapping for the property path
+					continue;
+				}
+
+				// Check for duplicates like this since we will mostly have just a few candidates
+				for ( String[] existingColumns : polymorphicJoinColumns ) {
+					if ( Arrays.deepEquals( existingColumns, joinColumns ) ) {
+						continue OUTER;
+					}
+				}
+				polymorphicJoinColumns.add( joinColumns );
+			}
+
+			String[][] polyJoinColumns = ArrayHelper.to2DStringArray( polymorphicJoinColumns );
+
+			joinFragment.addJoin(
+					joinable.getTableName(),
+					rhsTableAlias,
+					polyJoinColumns,
+					join.resolveNonAliasedRightHandSideJoinConditionColumns(),
+					join.isRightHandSideRequired() ? JoinType.INNER_JOIN : JoinType.LEFT_OUTER_JOIN,
+					additionalJoinConditions
+			);
+		}
+		else {
+			joinFragment.addJoin(
+					joinable.getTableName(),
+					rhsTableAlias,
+					joinColumns,
+					join.resolveNonAliasedRightHandSideJoinConditionColumns(),
+					join.isRightHandSideRequired() ? JoinType.INNER_JOIN : JoinType.LEFT_OUTER_JOIN,
+					additionalJoinConditions
+			);
+		}
 		joinFragment.addJoins(
 				joinable.fromJoinFragment( rhsTableAlias, false, true ),
 				joinable.whereJoinFragment( rhsTableAlias, false, true )

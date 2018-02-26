@@ -11,15 +11,24 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.sql.Template;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.ManyToOneType;
+import org.hibernate.type.OneToOneType;
+import org.hibernate.type.SpecialOneToOneType;
 import org.hibernate.type.Type;
 
 /**
@@ -109,6 +118,23 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		return result;
 	}
 
+	private void logDuplicateRegistration(String path, Type existingType, Type type) {
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev(
+					"Skipping duplicate registration of path [{0}], existing type = [{1}], incoming type = [{2}]",
+					path,
+					existingType,
+					type
+			);
+		}
+	}
+
+	/**
+	 * Only kept around for compatibility reasons since this seems to be API.
+	 *
+	 * @deprecated Use {@link #addPropertyPath(String, Type, String[], String[], String[], String[], Mapping)} instead
+	 */
+	@Deprecated
 	protected void addPropertyPath(
 			String path,
 			Type type,
@@ -116,15 +142,96 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			String[] columnReaders,
 			String[] columnReaderTemplates,
 			String[] formulaTemplates) {
-		// TODO : not quite sure yet of the difference, but this is only needed from annotations for @Id @ManyToOne support
-		if ( typesByPropertyPath.containsKey( path ) ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Skipping duplicate registration of path [{0}], existing type = [{1}], incoming type = [{2}]",
+		addPropertyPath( path, type, columns, columnReaders, columnReaderTemplates, formulaTemplates, null );
+	}
+
+	protected void addPropertyPath(
+			String path,
+			Type type,
+			String[] columns,
+			String[] columnReaders,
+			String[] columnReaderTemplates,
+			String[] formulaTemplates,
+			Mapping factory) {
+		Type existingType = typesByPropertyPath.get( path );
+		if ( existingType != null ) {
+			// If types match or the new type is not an association type, there is nothing for us to do
+			if ( type == existingType || !( type instanceof AssociationType ) ) {
+				logDuplicateRegistration(
 						path,
-						typesByPropertyPath.get( path ),
+						existingType,
 						type
 				);
+				return;
+			}
+
+			// Workaround for org.hibernate.cfg.annotations.PropertyBinder.bind() adding a component for *ToOne ids
+			if ( !( existingType instanceof AssociationType ) ) {
+				logDuplicateRegistration(
+						path,
+						existingType,
+						type
+				);
+				return;
+			}
+
+			Type newType;
+			MetadataImplementor metadata = (MetadataImplementor) factory;
+
+			if ( type instanceof AnyType ) {
+				// TODO: not sure how to handle any types
+				throw new UnsupportedOperationException( "Not yet implemented!" );
+			}
+			else if ( type instanceof CollectionType ) {
+				Collection thisCollection = metadata.getCollectionBinding( ( (CollectionType) existingType ).getRole() );
+				Collection otherCollection = metadata.getCollectionBinding( ( (CollectionType) type ).getRole() );
+
+				if ( thisCollection == otherCollection ) {
+					logDuplicateRegistration(
+							path,
+							existingType,
+							type
+					);
+					return;
+				}
+
+				Collection commonCollection = getSuperCollection(
+						metadata,
+						thisCollection.getOwner(),
+						otherCollection.getOwner(),
+						thisCollection.getReferencedPropertyName()
+				);
+
+				newType = commonCollection.getType();
+			}
+			else if ( type instanceof EntityType ) {
+				EntityType entityType1 = (EntityType) existingType;
+				EntityType entityType2 = (EntityType) type;
+
+				if ( entityType1.getAssociatedEntityName().equals( entityType2.getAssociatedEntityName() ) ) {
+					logDuplicateRegistration(
+							path,
+							existingType,
+							type
+					);
+					return;
+				}
+
+				newType = getCommonType( metadata, entityType1, entityType2 );
+			}
+			else {
+				throw new IllegalStateException( "Unexpected association type: " + type );
+			}
+
+			typesByPropertyPath.put( path, newType );
+			// Set everything to empty to signal action has to be taken!
+			// org.hibernate.hql.internal.ast.tree.DotNode.dereferenceEntityJoin() is reacting to this
+			String[] empty = new String[0];
+			columnsByPropertyPath.put( path, empty );
+			columnReadersByPropertyPath.put( path, empty );
+			columnReaderTemplatesByPropertyPath.put( path, empty );
+			if ( formulaTemplates != null ) {
+				formulaTemplatesByPropertyPath.put( path, empty );
 			}
 			return;
 		}
@@ -135,6 +242,102 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		if ( formulaTemplates != null ) {
 			formulaTemplatesByPropertyPath.put( path, formulaTemplates );
 		}
+	}
+
+	private Type getCommonType(MetadataImplementor metadata, EntityType entityType1, EntityType entityType2) {
+		PersistentClass thisClass = metadata.getEntityBinding( entityType1.getAssociatedEntityName() );
+		PersistentClass otherClass = metadata.getEntityBinding( entityType2.getAssociatedEntityName() );
+		PersistentClass commonClass = getCommonPersistentClass( thisClass, otherClass );
+
+		// Create a copy of the type but with the common class
+		if ( entityType1 instanceof ManyToOneType ) {
+			ManyToOneType t = (ManyToOneType) entityType1;
+			return new ManyToOneType( t, commonClass.getEntityName() );
+		}
+		else if ( entityType1 instanceof SpecialOneToOneType ) {
+			SpecialOneToOneType t = (SpecialOneToOneType) entityType1;
+			return new SpecialOneToOneType( t, commonClass.getEntityName() );
+		}
+		else if ( entityType1 instanceof OneToOneType ) {
+			OneToOneType t = (OneToOneType) entityType1;
+			return new OneToOneType( t, commonClass.getEntityName() );
+		}
+		else {
+			throw new IllegalStateException( "Unexpected entity type: " + entityType1 );
+		}
+	}
+
+	private PersistentClass getCommonPersistentClass(PersistentClass clazz1, PersistentClass clazz2) {
+		while ( !clazz2.getMappedClass().isAssignableFrom( clazz1.getMappedClass() ) ) {
+			clazz2 = clazz2.getSuperclass();
+		}
+		return clazz2;
+	}
+
+	private Collection getSuperCollection(MetadataImplementor metadata, PersistentClass clazz1, PersistentClass commonPersistentClass, String propertyName) {
+		Class<?> c1 = clazz1.getMappedClass();
+		Class<?> c2 = commonPersistentClass.getMappedClass();
+		MappedSuperclass commonMappedSuperclass = null;
+
+		// First we traverse up the clazz2/commonPersistentClass super types until we find a common type
+		while ( !c2.isAssignableFrom( c1 ) ) {
+			if ( commonPersistentClass == null) {
+				if ( commonMappedSuperclass.getSuperPersistentClass() == null ) {
+					commonMappedSuperclass = commonMappedSuperclass.getSuperMappedSuperclass();
+					commonPersistentClass = null;
+				}
+				else {
+					commonPersistentClass = commonMappedSuperclass.getSuperPersistentClass();
+					commonMappedSuperclass = null;
+				}
+			}
+			else {
+				if ( commonPersistentClass.getSuperclass() == null ) {
+					commonMappedSuperclass = commonPersistentClass.getSuperMappedSuperclass();
+					commonPersistentClass = null;
+				}
+				else {
+					commonPersistentClass = commonPersistentClass.getSuperclass();
+					commonMappedSuperclass = null;
+				}
+			}
+		}
+
+		// Then we traverse it's types up as long as possible until we find a type that has a collection binding
+		while ( c2 != Object.class ) {
+			if ( commonMappedSuperclass != null ) {
+				Collection collection = metadata.getCollectionBinding( commonMappedSuperclass.getMappedClass().getName() + "." + propertyName );
+				if ( collection != null ) {
+					return collection;
+				}
+
+				if ( commonMappedSuperclass.getSuperPersistentClass() == null ) {
+					commonMappedSuperclass = commonMappedSuperclass.getSuperMappedSuperclass();
+					commonPersistentClass = null;
+				}
+				else {
+					commonPersistentClass = commonMappedSuperclass.getSuperPersistentClass();
+					commonMappedSuperclass = null;
+				}
+			}
+			else {
+				Collection collection = metadata.getCollectionBinding( commonPersistentClass.getEntityName() + "." + propertyName );
+				if ( collection != null ) {
+					return collection;
+				}
+
+				if ( commonPersistentClass.getSuperclass() == null ) {
+					commonMappedSuperclass = commonPersistentClass.getSuperMappedSuperclass();
+					commonPersistentClass = null;
+				}
+				else {
+					commonPersistentClass = commonPersistentClass.getSuperclass();
+					commonMappedSuperclass = null;
+				}
+			}
+		}
+
+		return null;
 	}
 
 	/*protected void initPropertyPaths(
@@ -189,7 +392,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		}
 
 		if ( path != null ) {
-			addPropertyPath( path, type, columns, columnReaders, columnReaderTemplates, formulaTemplates );
+			addPropertyPath( path, type, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
 		}
 
 		if ( type.isComponentType() ) {
@@ -242,14 +445,14 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		if ( etype.isReferenceToPrimaryKey() ) {
 			if ( !hasNonIdentifierPropertyNamedId ) {
 				String idpath1 = extendPath( path, EntityPersister.ENTITY_ID );
-				addPropertyPath( idpath1, idtype, columns, columnReaders, columnReaderTemplates, null );
+				addPropertyPath( idpath1, idtype, columns, columnReaders, columnReaderTemplates, null, factory );
 				initPropertyPaths( idpath1, idtype, columns, columnReaders, columnReaderTemplates, null, factory );
 			}
 		}
 
 		if ( idPropName != null ) {
 			String idpath2 = extendPath( path, idPropName );
-			addPropertyPath( idpath2, idtype, columns, columnReaders, columnReaderTemplates, null );
+			addPropertyPath( idpath2, idtype, columns, columnReaders, columnReaderTemplates, null, factory );
 			initPropertyPaths( idpath2, idtype, columns, columnReaders, columnReaderTemplates, null, factory );
 		}
 	}

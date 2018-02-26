@@ -6,6 +6,11 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.hql.internal.CollectionProperties;
@@ -16,6 +21,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -483,11 +489,6 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		boolean useFoundFromElement = found && canReuse( classAlias, elem );
 
 		if ( !useFoundFromElement ) {
-			// If this is an implied join in a from element, then use the impled join type which is part of the
-			// tree parser's state (set by the gramamar actions).
-			JoinSequence joinSequence = getSessionFactoryHelper()
-					.createJoinSequence( impliedJoin, propertyType, tableAlias, joinType, joinColumns );
-
 			// If the lhs of the join is a "component join", we need to go back to the
 			// first non-component-join as the origin to properly link aliases and
 			// join columns
@@ -501,24 +502,88 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 			String role = lhsFromElement.getClassName() + "." + propertyName;
 
-			FromElementFactory factory = new FromElementFactory(
-					currentFromClause,
-					lhsFromElement,
-					joinPath,
-					classAlias,
-					joinColumns,
-					impliedJoin
-			);
-			elem = factory.createEntityJoin(
-					associatedEntityName,
-					tableAlias,
-					joinSequence,
-					fetch,
-					getWalker().isInFrom(),
-					propertyType,
-					role,
-					joinPath
-			);
+			if ( joinColumns.length == 0 ) {
+				// When no columns are available, this is a special join that involves multiple subtypes
+				String lhsTableAlias = getLhs().getFromElement().getTableAlias();
+
+				AbstractEntityPersister persister = (AbstractEntityPersister) lhsFromElement.getEntityPersister();
+				Set<String> subclassEntityNames = (Set<String>) persister.getEntityMetamodel()
+						.getSubclassEntityNames();
+				// We will collect all the join columns from the LHS subtypes here
+				List<String[]> polymorphicJoinColumns = new ArrayList<>( subclassEntityNames.size() );
+
+				OUTER:
+				for ( String subclassEntityName : subclassEntityNames ) {
+					AbstractEntityPersister subclassPersister = (AbstractEntityPersister) getSessionFactoryHelper().getFactory()
+							.getMetamodel()
+							.entityPersister( subclassEntityName );
+					joinColumns = subclassPersister.toColumns( lhsTableAlias, propertyPath );
+
+					if ( joinColumns.length == 0 ) {
+						// The subtype does not have a "concrete" mapping for the property path
+						continue;
+					}
+
+					// Check for duplicates like this since we will mostly have just a few candidates
+					for ( String[] existingColumns : polymorphicJoinColumns ) {
+						if ( Arrays.deepEquals( existingColumns, joinColumns ) ) {
+							continue OUTER;
+						}
+					}
+					polymorphicJoinColumns.add( joinColumns );
+				}
+
+				String[][] polyJoinColumns = ArrayHelper.to2DStringArray( polymorphicJoinColumns );
+
+				// Special join sequence that uses the poly join columns
+				JoinSequence joinSequence = getSessionFactoryHelper()
+						.createJoinSequence( impliedJoin, propertyType, tableAlias, joinType, polyJoinColumns );
+
+				FromElementFactory factory = new FromElementFactory(
+						currentFromClause,
+						lhsFromElement,
+						joinPath,
+						classAlias,
+						new String[0],
+						impliedJoin
+				);
+
+				elem = factory.createEntityJoin(
+						associatedEntityName,
+						tableAlias,
+						joinSequence,
+						fetch,
+						getWalker().isInFrom(),
+						propertyType,
+						role,
+						joinPath
+				);
+			}
+			else {
+				// If this is an implied join in a from element, then use the impled join type which is part of the
+				// tree parser's state (set by the gramamar actions).
+				JoinSequence joinSequence = getSessionFactoryHelper()
+						.createJoinSequence( impliedJoin, propertyType, tableAlias, joinType, joinColumns );
+
+				FromElementFactory factory = new FromElementFactory(
+						currentFromClause,
+						lhsFromElement,
+						joinPath,
+						classAlias,
+						joinColumns,
+						impliedJoin
+				);
+				elem = factory.createEntityJoin(
+						associatedEntityName,
+						tableAlias,
+						joinSequence,
+						fetch,
+						getWalker().isInFrom(),
+						propertyType,
+						role,
+						joinPath
+				);
+			}
 		}
 		else {
 			// NOTE : addDuplicateAlias() already performs nullness checks on the alias.

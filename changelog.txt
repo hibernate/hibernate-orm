@@ -4,6 +4,41 @@ Hibernate 5 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.2.14.Final (February 27, 2018)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/31635
+
+** Bug
+    * [HHH-8916] - SQLServer2005LimitHandler bind top parameter to wrong position
+    * [HHH-9460] - Removing non-optional bidirectional @OneToOne association with cascade
+    * [HHH-10333] - Schema validation: incorrect use of schema and catalog filters
+    * [HHH-11286] - Schema-validation fails with Oracle
+    * [HHH-11440] - In hibernate 5.2.4 hbm2ddl.auto=validate does not work with oracle
+    * [HHH-11544] - Joins over type variable defined relations is non-deterministic
+    * [HHH-11901] - Map with null values cannot be audited
+    * [HHH-11981] - Association query causes QueryException: Named parameter [revision] not set.
+    * [HHH-12059] - hibernate.hbm2ddl.auto=update stopped working in Oracle since 5.1.4
+    * [HHH-12092] - Bad PrimitiveCharacterArrayNClobType INSTANCE typo
+    * [HHH-12141] - SQL insert in stateless session causes javax.persistence.TransactionRequiredException
+    * [HHH-12225] - NullPointerException When Using type(<Class>) in HQL
+    * [HHH-12230] - SelectCase does not work when simultaneously exists in select and group by sections
+    * [HHH-12260] - Detach of entity with lazy-loaded collection and orphan removal leads to exception during flush of session
+    * [HHH-12273] - Load Proxy by its identifier should consider the Session UUID
+    * [HHH-12285] - DB connection exception on rollback causes connection leak
+    * [HHH-12289] - One call of the SessionImpl#listeners( ) method from SessionImpl#autoFlushIfRequired() is useless.
+    * [HHH-12292] - QueryParameterBindingValidator does not allow null values in Object arrays
+    * [HHH-12294] - Regression after fixing HHH-12064
+    * [HHH-12304] - MappingException occurs when a custom enum type is applied to an audited property.
+    * [HHH-12313] - org.hibernate.jpa.test.transaction.TransactionCommitFailureTest fails on HANA
+
+** Task
+    * [HHH-12277] - Remove Gradle Bintray publishing task
+
+** Improvement
+    * [HHH-12280] - Resolve {alias} in @Formula like Restrictions.sqlRestriction()
+    * [HHH-12302] - Schema creation uses non-unicode string types on SAP HANA
+
+
 Changes in 5.2.13.Final (February 6, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/31606

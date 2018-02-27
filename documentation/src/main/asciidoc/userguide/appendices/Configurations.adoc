@@ -387,8 +387,8 @@ Enable lazy loading feature in runtime bytecode enhancement. This way, even basi
 `*hibernate.enhancer.enableAssociationManagement*` (e.g. `true` or `false` (default value))::
 Enable association management feature in runtime bytecode enhancement which automatically synchronizes a bidirectional association when only one side is changed.
 
-`*hibernate.bytecode.provider*` (e.g. `javassist` (default value))::
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/BytecodeProvider.html[`BytecodeProvider`] built-in implementation flavor. Currently, only `javassist` is supported.
+`*hibernate.bytecode.provider*` (e.g. `bytebuddy` (default value))::
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/BytecodeProvider.html[`BytecodeProvider`] built-in implementation flavor. Currently, only `bytebuddy` and `javassist` are valid values.
 
 `*hibernate.bytecode.use_reflection_optimizer*` (e.g. `true` or `false` (default value))::
 Should we use reflection optimization? The reflection optimizer implements the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/ReflectionOptimizer.html[`ReflectionOptimizer`] interface and improves entity instantiation and property getter/setter calls.

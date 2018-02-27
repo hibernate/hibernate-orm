@@ -317,7 +317,7 @@ public final class Environment implements AvailableSettings {
 
 	public static final String BYTECODE_PROVIDER_NAME_JAVASSIST = "javassist";
 	public static final String BYTECODE_PROVIDER_NAME_BYTEBUDDY = "bytebuddy";
-	public static final String BYTECODE_PROVIDER_NAME_DEFAULT = BYTECODE_PROVIDER_NAME_JAVASSIST;
+	public static final String BYTECODE_PROVIDER_NAME_DEFAULT = BYTECODE_PROVIDER_NAME_BYTEBUDDY;
 
 	public static BytecodeProvider buildBytecodeProvider(Properties properties) {
 		String provider = ConfigurationHelper.getString( BYTECODE_PROVIDER, properties, BYTECODE_PROVIDER_NAME_DEFAULT );

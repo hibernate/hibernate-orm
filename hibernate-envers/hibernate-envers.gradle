@@ -12,6 +12,8 @@ description = 'Hibernate\'s entity version (audit/history) support'
 
 dependencies {
     compile( project( ':hibernate-core' ) )
+    //Ideally javassist should be only an optional dependency but it's currently required by Envers: see HHH-12327
+    compile( libraries.javassist )
 
     provided( [group: 'org.hibernate', name: 'hibernate-tools', version: '3.2.0.ga'] )
     provided( libraries.ant )
@@ -19,7 +21,6 @@ dependencies {
 
     testCompile( project( ':hibernate-testing' ) )
     testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )
-    testRuntime( libraries.javassist )
     testRuntime( libraries.byteBuddy )
 }
 

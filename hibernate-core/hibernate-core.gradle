@@ -37,9 +37,10 @@ dependencies {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     compile( libraries.jpa )
-    compile( libraries.javassist )
-    // provided until 6.0 when we make it the default and drop Javassist support
-    provided( libraries.byteBuddy )
+    // Not wanting a transitive dependency on javassist anymore as it's not the default anymore:
+    provided( libraries.javassist )
+    // Could be made optional?
+    compile( libraries.byteBuddy )
     compile( libraries.antlr )
     compile( libraries.jta )
     compile( libraries.jandex )

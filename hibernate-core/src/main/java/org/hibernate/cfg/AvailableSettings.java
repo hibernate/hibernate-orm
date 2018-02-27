@@ -1123,6 +1123,9 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String CHECK_NULLABILITY = "hibernate.check_nullability";
 
 
+	/**
+	 * Pick which bytecode enhancing library to use. Currently supports javassist and bytebuddy, bytebuddy being the default since version 5.3.
+	 */
 	String BYTECODE_PROVIDER = "hibernate.bytecode.provider";
 
 	String JPAQL_STRICT_COMPLIANCE= "hibernate.query.jpaql_strict_compliance";

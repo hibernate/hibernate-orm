@@ -33,7 +33,6 @@ dependencies {
     testRuntime( libraries.expression_language )
 
     testRuntime('jaxen:jaxen:1.1')
-    testRuntime(libraries.javassist)
     testRuntime(libraries.byteBuddy)
 }
 

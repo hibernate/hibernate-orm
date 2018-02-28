@@ -24,9 +24,9 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static com.sun.tools.internal.ws.wsdl.parser.Util.fail;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 @TestForIssue( jiraKey = "HHH-12297")
 public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {

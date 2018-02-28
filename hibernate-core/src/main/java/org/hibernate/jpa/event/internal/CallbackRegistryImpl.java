@@ -9,6 +9,7 @@ package org.hibernate.jpa.event.internal;
 import java.util.HashMap;
 import javax.persistence.PersistenceException;
 
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.event.spi.Callback;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackType;
@@ -43,8 +44,10 @@ public class CallbackRegistryImpl implements CallbackRegistry, CallbackBuilder.C
 		}
 
 		final HashMap<Class, Callback[]> map = determineAppropriateCallbackMap( callbacks[0].getCallbackType() );
-		if ( map.containsKey( entityClass ) ) {
-			throw new PersistenceException( "Error build callback listeners; entity [" + entityClass.getName() + " was already processed" );
+		Callback[] entityCallbacks = map.get( entityClass );
+
+		if ( entityCallbacks != null ) {
+			callbacks = ArrayHelper.join( entityCallbacks, callbacks );
 		}
 		map.put( entityClass, callbacks );
 	}

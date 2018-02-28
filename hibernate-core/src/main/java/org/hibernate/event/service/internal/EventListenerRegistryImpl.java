@@ -8,6 +8,7 @@ package org.hibernate.event.service.internal;
 
 import java.lang.reflect.Array;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -46,6 +47,7 @@ import org.hibernate.jpa.event.internal.CallbackBuilderLegacyImpl;
 import org.hibernate.jpa.event.internal.CallbackRegistryImpl;
 import org.hibernate.jpa.event.spi.CallbackBuilder;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
@@ -148,6 +150,19 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 				continue;
 			}
 			callbackBuilder.buildCallbacksForEntity( persistentClass.getClassName(), callbackRegistry );
+
+			for ( Iterator propertyIterator = persistentClass.getDeclaredPropertyIterator();
+					propertyIterator.hasNext(); ) {
+				Property property = (Property) propertyIterator.next();
+
+				if ( property.getType().isComponentType() ) {
+					callbackBuilder.buildCallbacksForEmbeddable(
+							property,
+							persistentClass.getClassName(),
+							callbackRegistry
+					);
+				}
+			}
 		}
 	}
 

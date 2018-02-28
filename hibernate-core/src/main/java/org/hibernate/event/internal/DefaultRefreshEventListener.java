@@ -10,7 +10,11 @@ import java.io.Serializable;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
+import javax.persistence.LockModeType;
+
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
@@ -168,7 +172,15 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 		String previousFetchProfile = source.getLoadQueryInfluencers().getInternalFetchProfile();
 		source.getLoadQueryInfluencers().setInternalFetchProfile( "refresh" );
-		Object result = persister.load( id, object, event.getLockOptions(), source );
+
+		// Use the entity's current LockMode if it is greater than event.getLockMode()
+		final LockMode currentLockMode = e == null ? null : e.getLockMode();
+		LockOptions lockOptionsToUse = event.getLockOptions();
+		if ( currentLockMode != null && currentLockMode.greaterThan( event.getLockMode() ) ) {
+			lockOptionsToUse = LockOptions.copy( event.getLockOptions(), new LockOptions() );
+			lockOptionsToUse.setLockMode( currentLockMode );
+		}
+		Object result = persister.load( id, object, lockOptionsToUse, source );
 		// Keep the same read-only/modifiable setting for the entity that it had before refreshing;
 		// If it was transient, then set it to the default for the source.
 		if ( result != null ) {

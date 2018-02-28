@@ -565,16 +565,7 @@ public final class ReflectHelper {
 		}
 	}
 
-	public static Method setterMethodOrNull(Class containerJavaType, String propertyName, Class propertyJavaType) {
-		try {
-			return findSetterMethod( containerJavaType, propertyName, propertyJavaType );
-		}
-		catch (PropertyNotFoundException e) {
-			return null;
-		}
-	}
-
-	public static Method findSetterMethod(Class containerClass, String propertyName, Class propertyType) {
+	public static Method setterMethodOrNull(final Class containerClass, final  String propertyName, final Class propertyType) {
 		Class checkClass = containerClass;
 		Method setter = null;
 
@@ -598,7 +589,14 @@ public final class ReflectHelper {
 //				}
 //			}
 		}
+		else {
+			ensureAccessibility( setter );
+		}
+		return setter; // might be null
+	}
 
+	public static Method findSetterMethod(final Class containerClass, final String propertyName, final Class propertyType) {
+		final Method setter = setterMethodOrNull( containerClass, propertyName, propertyType );
 		if ( setter == null ) {
 			throw new PropertyNotFoundException(
 					String.format(
@@ -609,9 +607,6 @@ public final class ReflectHelper {
 					)
 			);
 		}
-
-		ensureAccessibility( setter );
-
 		return setter;
 	}
 

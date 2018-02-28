@@ -6,12 +6,17 @@
  */
 package org.hibernate.test.locking;
 
+import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
+
+import javax.persistence.LockModeType;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Session;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -21,6 +26,7 @@ import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -136,7 +142,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 			// shouldn't throw an exception
 			session.createQuery( "SELECT a.value FROM A a where a.id = :id" )
 					.setLockMode( "a", LockMode.NONE )
-					.setParameter( "id", 1L )
+					.setParameter( "id", id )
 					.list();
 		} );
 	}
@@ -151,6 +157,75 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 					.setParameter( "value", "it" )
 					.list();
 		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12257")
+	public void testRefreshLockedEntity() {
+		doInHibernate( this::sessionFactory, session -> {
+			A a = session.get( A.class, id, LockMode.PESSIMISTIC_READ );
+			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+			session.refresh( a );
+			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+			session.refresh( A.class.getName(), a );
+			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+			session.refresh( a, Collections.emptyMap() );
+			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+			session.refresh( a, null, Collections.emptyMap() );
+			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12257")
+	public void testRefreshWithExplicitLowerLevelLockMode() {
+		doInHibernate( this::sessionFactory, session -> {
+						   A a = session.get( A.class, id, LockMode.PESSIMISTIC_READ );
+						   checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+						   session.refresh( a, LockMode.READ );
+						   checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+						   session.refresh( a, LockModeType.READ );
+						   checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+						   session.refresh( a, LockModeType.READ, Collections.emptyMap() );
+						   checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+					   } );
+	}
+
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12257")
+	public void testRefreshWithExplicitHigherLevelLockMode() {
+		doInHibernate( this::sessionFactory, session -> {
+						   A a = session.get( A.class, id );
+						   checkLockMode( a, LockMode.READ, session );
+						   session.refresh( a, LockMode.UPGRADE_NOWAIT );
+						   checkLockMode( a, LockMode.UPGRADE_NOWAIT, session );
+						   session.refresh( a, LockModeType.PESSIMISTIC_READ );
+						   checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+						   session.refresh( a, LockModeType.PESSIMISTIC_WRITE, Collections.emptyMap() );
+						   checkLockMode( a, LockMode.PESSIMISTIC_WRITE, session );
+					   } );
+	}
+
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12257")
+	public void testRefreshAfterUpdate() {
+		doInHibernate( this::sessionFactory, session -> {
+			A a = session.get( A.class, id );
+			checkLockMode( a, LockMode.READ, session );
+			a.setValue( "new value" );
+			session.flush();
+			checkLockMode( a, LockMode.WRITE, session );
+			session.refresh( a );
+			checkLockMode( a, LockMode.WRITE, session );
+		} );
+	}
+
+	private void checkLockMode(Object entity, LockMode expectedLockMode, Session session) {
+		final LockMode lockMode =
+				( (SharedSessionContractImplementor) session ).getPersistenceContext().getEntry( entity ).getLockMode();
+		assertEquals( expectedLockMode, lockMode );
 	}
 
 	private void nowAttemptToUpdateRow() {

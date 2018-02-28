@@ -1,14 +1,15 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.jpa.event.internal.jpa;
 
 import java.util.HashMap;
 import javax.persistence.PersistenceException;
 
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.event.spi.jpa.Callback;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
 import org.hibernate.jpa.event.spi.jpa.CallbackType;
@@ -43,8 +44,10 @@ public class CallbackRegistryImpl implements CallbackRegistry, CallbackBuilder.C
 		}
 
 		final HashMap<Class, Callback[]> map = determineAppropriateCallbackMap( callbacks[0].getCallbackType() );
-		if ( map.containsKey( entityClass ) ) {
-			throw new PersistenceException( "Error build callback listeners; entity [" + entityClass.getName() + " was already processed" );
+		Callback[] entityCallbacks = map.get( entityClass );
+
+		if ( entityCallbacks != null ) {
+			callbacks = ArrayHelper.join( entityCallbacks, callbacks );
 		}
 		map.put( entityClass, callbacks );
 	}

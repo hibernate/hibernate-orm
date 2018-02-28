@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpa.event.spi;
 
+import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -46,6 +47,7 @@ import org.hibernate.jpa.event.spi.jpa.CallbackBuilder;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactoryBuilder;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
@@ -140,6 +142,19 @@ public class JpaIntegrator implements Integrator {
 				continue;
 			}
 			callbackBuilder.buildCallbacksForEntity( persistentClass.getClassName(), callbackRegistry );
+
+			for ( Iterator propertyIterator = persistentClass.getDeclaredPropertyIterator();
+					propertyIterator.hasNext(); ) {
+				Property property = (Property) propertyIterator.next();
+
+				if ( property.getType().isComponentType() ) {
+					callbackBuilder.buildCallbacksForEmbeddable(
+							property,
+							persistentClass.getClassName(),
+							callbackRegistry
+					);
+				}
+			}
 		}
 
 		for ( EventType eventType : EventType.values() ) {

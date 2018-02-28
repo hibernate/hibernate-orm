@@ -1,10 +1,12 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.jpa.event.spi.jpa;
+
+import org.hibernate.mapping.Property;
 
 /**
  * Contract for walking an entity hierarchy and building a list of JPA callbacks
@@ -26,7 +28,14 @@ public interface CallbackBuilder {
 		void registerCallbacks(Class entityClass, Callback[] callbacks);
 	}
 
-	void buildCallbacksForEntity(String entityName, CallbackRegistrar callbackRegistrar);
+	void buildCallbacksForEntity(String entityClassName, CallbackRegistrar callbackRegistrar);
+
+	default void buildCallbacksForEmbeddable(
+			Property embeddableProperty,
+			String entityClassName,
+			CallbackRegistrar callbackRegistrar) {
+		//For backward compatibility.
+	}
 
 	void release();
 }

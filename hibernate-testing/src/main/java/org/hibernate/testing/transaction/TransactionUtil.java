@@ -573,7 +573,6 @@ public class TransactionUtil {
 					connection.setNetworkTimeout( Executors.newSingleThreadExecutor(), (int) millis );
 				}
 				catch (Throwable ignore) {
-					ignore.fillInStackTrace();
 				}
 			}
 		} );

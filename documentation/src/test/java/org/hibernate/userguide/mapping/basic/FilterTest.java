@@ -124,7 +124,6 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 						.getSingleResult();
 			}
 			catch (NoResultException expected) {
-				expected.fillInStackTrace();
 			}
 		} );
 

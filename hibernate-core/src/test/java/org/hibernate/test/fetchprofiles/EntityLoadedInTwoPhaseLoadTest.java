@@ -83,7 +83,7 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 		};
 	}
 
-	@Entity(name = "Finish")
+	@Entity(name = "FinishEntity")
 	public static class Finish {
 
 		@Id
@@ -117,7 +117,7 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity(name = "Mid")
+	@Entity(name = "MidEntity")
 	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
 			@FetchProfile.FetchOverride(entity = Mid.class, association = "finish", mode = FetchMode.JOIN)
 	})
@@ -155,7 +155,7 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 
 	}
 
-	@Entity(name = "Start")
+	@Entity(name = "StartEntity")
 	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
 			@FetchProfile.FetchOverride(entity = Start.class, association = "via1", mode = FetchMode.JOIN),
 			@FetchProfile.FetchOverride(entity = Start.class, association = "via2", mode = FetchMode.JOIN)
@@ -206,7 +206,7 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 
 	}
 
-	@Entity(name = "Via1")
+	@Entity(name = "Via1Entity")
 	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
 			@FetchProfile.FetchOverride(entity = Via1.class, association = "mid", mode = FetchMode.JOIN)
 	})
@@ -244,7 +244,7 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 
 	}
 
-	@Entity(name = "Via2")
+	@Entity(name = "Via2Entity")
 	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
 			@FetchProfile.FetchOverride(entity = Via2.class, association = "mid", mode = FetchMode.JOIN)
 	})

@@ -52,7 +52,7 @@ public class ByteBuddyInterceptor extends BasicLazyInitializer implements ProxyC
 			result = this.invoke( thisMethod, args, proxy );
 		}
 		catch (Throwable t) {
-			throw new Exception( t.getCause() );
+			throw t instanceof RuntimeException ? t : new Exception( t.getCause() );
 		}
 		if ( result == INVOKE_IMPLEMENTATION ) {
 			Object target = getImplementation();

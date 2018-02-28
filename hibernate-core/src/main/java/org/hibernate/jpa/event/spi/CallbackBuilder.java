@@ -6,6 +6,8 @@
  */
 package org.hibernate.jpa.event.spi;
 
+import org.hibernate.mapping.Property;
+
 /**
  * Contract for walking an entity hierarchy and building a list of JPA callbacks
  *
@@ -26,5 +28,12 @@ public interface CallbackBuilder {
 		void registerCallbacks(Class entityClass, Callback[] callbacks);
 	}
 
-	void buildCallbacksForEntity(String entityName, CallbackRegistrar callbackRegistrar);
+	void buildCallbacksForEntity(String entityClassName, CallbackRegistrar callbackRegistrar);
+
+	default void buildCallbacksForEmbeddable(
+			Property embeddableProperty,
+			String entityClassName,
+			CallbackRegistrar callbackRegistrar) {
+		//For backward compatibility.
+	}
 }

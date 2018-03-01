@@ -142,6 +142,10 @@ public class BasicTypeRegistry implements Serializable {
 			if ( key == null ) {
 				continue;
 			}
+			//Use String#intern here as there's high chances of duplicates combined with long term usage:
+			//just running our testsuite would generate 210,000 instances for the String "java.lang.Class" alone.
+			//Incidentally this might help with map lookup efficiency too.
+			key = key.intern();
 			LOG.debugf( "Adding type registration %s -> %s", key, type );
 			final Type old = registry.put( key, type );
 			if ( old != null && old != type ) {

@@ -13,8 +13,6 @@ import org.junit.Test;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
-import org.jboss.logging.Logger;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -49,6 +47,7 @@ public class BasicFormatterTest extends BaseUnitTestCase {
 		assertNoLoss(
 				"(select p.pid from Address where city = 'Boston') union (select p.pid from Address where city = 'Taipei')"
 		);
+		assertNoLoss( "select group0.[order] as order0 from [Group] group0 where group0.[order]=?1" );
 	}
 
 	private void assertNoLoss(String query) {

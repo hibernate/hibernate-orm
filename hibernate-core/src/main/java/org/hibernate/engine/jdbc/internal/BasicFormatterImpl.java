@@ -127,7 +127,17 @@ public class BasicFormatterImpl implements Formatter {
 						t = tokens.nextToken();
 						token += t;
 					}
-					while ( !"\"".equals( t ) );
+					while ( !"\"".equals( t )  && tokens.hasMoreTokens() );
+				}
+				// SQL Server uses "[" and "]" to escape reserved words
+				// see SQLServerDialect.openQuote and SQLServerDialect.closeQuote
+				else if ( "[".equals( token ) ) {
+					String t;
+					do {
+						t = tokens.nextToken();
+						token += t;
+					}
+					while ( !"]".equals( t ) && tokens.hasMoreTokens());
 				}
 
 				if ( afterByOrSetOrFromOrSelect && ",".equals( token ) ) {

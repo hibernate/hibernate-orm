@@ -6,11 +6,9 @@
  */
 package org.hibernate.engine.query.spi;
 
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
+import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 
 /**
  * @author Steve Ebersole
@@ -22,11 +20,8 @@ public class NativeQueryInterpreterInitiator implements SessionFactoryServiceIni
 	public static final NativeQueryInterpreterInitiator INSTANCE = new NativeQueryInterpreterInitiator();
 
 	@Override
-	public NativeQueryInterpreter initiateService(
-			SessionFactoryImplementor sessionFactory,
-			SessionFactoryOptions sessionFactoryOptions,
-			ServiceRegistryImplementor registry) {
-		return new NativeQueryInterpreterStandardImpl( sessionFactory );
+	public NativeQueryInterpreter initiateService(SessionFactoryServiceInitiatorContext context) {
+		return new NativeQueryInterpreterStandardImpl( context.getSessionFactory() );
 	}
 
 	@Override

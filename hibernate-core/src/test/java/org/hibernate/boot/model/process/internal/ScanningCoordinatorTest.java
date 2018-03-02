@@ -8,7 +8,7 @@ import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -33,7 +33,7 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 
 	private ManagedResourcesImpl managedResources = Mockito.mock( ManagedResourcesImpl.class );
 	private ScanResult scanResult = Mockito.mock( ScanResult.class );
-	private MetadataBuildingOptions options = Mockito.mock( MetadataBuildingOptions.class );
+	private BootstrapContext bootstrapContext = Mockito.mock( BootstrapContext.class );
 	private XmlMappingBinderAccess xmlMappingBinderAccess = Mockito.mock( XmlMappingBinderAccess.class );
 
 	private ScanEnvironment scanEnvironment = Mockito.mock( ScanEnvironment.class );
@@ -51,8 +51,8 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 	public void init(){
 		Mockito.reset( scanEnvironment );
 
-		when( options.getScanEnvironment() ).thenReturn( scanEnvironment );
-		when( options.getServiceRegistry() ).thenReturn( serviceRegistry );
+		when( bootstrapContext.getScanEnvironment() ).thenReturn( scanEnvironment );
+		when( bootstrapContext.getServiceRegistry() ).thenReturn( serviceRegistry );
 		when( serviceRegistry.getService( ClassLoaderService.class ) ).thenReturn( classLoaderService );
 
 		when( scanEnvironment.getExplicitlyListedClassNames() ).thenReturn(
@@ -70,7 +70,7 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 		ScanningCoordinator.INSTANCE.applyScanResultsToManagedResources(
 				managedResources,
 				scanResult,
-				options,
+				bootstrapContext,
 				xmlMappingBinderAccess
 		);
 		assertEquals( "Unable to resolve class [a.b.C] named in persistence unit [null]", triggerable.triggerMessage() );
@@ -84,7 +84,7 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 		ScanningCoordinator.INSTANCE.applyScanResultsToManagedResources(
 				managedResources,
 				scanResult,
-				options,
+				bootstrapContext,
 				xmlMappingBinderAccess
 		);
 		assertEquals( "Unable to resolve class [a.b.C] named in persistence unit [http://http://hibernate.org/]", triggerable.triggerMessage() );

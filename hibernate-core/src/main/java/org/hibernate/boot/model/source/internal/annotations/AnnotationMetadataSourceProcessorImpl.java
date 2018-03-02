@@ -67,7 +67,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		this.rootMetadataBuildingContext = rootMetadataBuildingContext;
 		this.jandexView = jandexView;
 
-		this.reflectionManager = rootMetadataBuildingContext.getBuildingOptions().getReflectionManager();
+		this.reflectionManager = rootMetadataBuildingContext.getBootstrapContext().getReflectionManager();
 
 		if ( CollectionHelper.isNotEmpty( managedResources.getAnnotatedPackageNames() ) ) {
 			annotatedPackages.addAll( managedResources.getAnnotatedPackageNames() );

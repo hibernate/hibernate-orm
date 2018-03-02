@@ -7,7 +7,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -23,8 +23,8 @@ public class List extends IndexedCollection {
 		return true;
 	}
 
-	public List(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
+	public List(MetadataBuildingContext buildingContext, PersistentClass owner) {
+		super( buildingContext, owner );
 	}
 
 	public CollectionType getDefaultCollectionType() throws MappingException {

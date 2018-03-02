@@ -1,4 +1,4 @@
-/*
+	/*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
@@ -12,13 +12,12 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
-import org.hibernate.envers.internal.tools.MapProxyTool;
-import org.hibernate.envers.internal.tools.StringTools;
 
 /**
  * Multi mapper for dynamic components (it knows that component is a map, not a class)
  *
  * @author Lukasz Zuchowski (author at zuchos dot com)
+ * @author Chris Cranford
  */
 public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 
@@ -26,6 +25,22 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 
 	public MultiDynamicComponentMapper(PropertyData dynamicComponentData) {
 		this.dynamicComponentData = dynamicComponentData;
+	}
+
+	@Override
+	public void addComposite(PropertyData propertyData, PropertyMapper propertyMapper) {
+		// delegate to the super implementation and then mark the property mapper as a dynamic-component map.
+		super.addComposite( propertyData, propertyMapper );
+		propertyMapper.markAsDynamicComponentMap();
+	}
+
+	@Override
+	public void add(PropertyData propertyData) {
+		final SinglePropertyMapper single = new SinglePropertyMapper();
+		single.add( propertyData );
+
+		// delegate to our implementation of #addComposite for specialized behavior.
+		addComposite( propertyData, single );
 	}
 
 	@Override
@@ -96,7 +111,6 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void mapToEntityFromMap(
 			EnversService enversService,
 			Object obj,
@@ -104,22 +118,8 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 			Object primaryKey,
 			AuditReaderImplementor versionsReader,
 			Number revision) {
-		Object mapProxy = MapProxyTool.newInstanceOfBeanProxyForMap(
-				generateClassName( data, dynamicComponentData.getBeanName() ),
-				(Map) obj,
-				properties.keySet(),
-				enversService.getClassLoaderService()
-		);
 		for ( PropertyMapper mapper : properties.values() ) {
-			mapper.mapToEntityFromMap( enversService, mapProxy, data, primaryKey, versionsReader, revision );
+			mapper.mapToEntityFromMap( enversService, obj, data, primaryKey, versionsReader, revision );
 		}
 	}
-
-	private String generateClassName(Map data, String dynamicComponentPropertyName) {
-		return ( data.get( "$type$" ) + StringTools.capitalizeFirst( dynamicComponentPropertyName ) ).replaceAll(
-				"_",
-				""
-		);
-	}
-
 }

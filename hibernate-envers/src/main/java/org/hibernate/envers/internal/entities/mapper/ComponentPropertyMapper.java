@@ -29,7 +29,7 @@ import org.hibernate.property.access.spi.Setter;
  * @author Lukasz Zuchowski (author at zuchos dot com)
  * @author Chris Cranford
  */
-public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperBuilder {
+public class ComponentPropertyMapper extends AbstractPropertyMapper implements CompositeMapperBuilder {
 	private final PropertyData propertyData;
 	private final MultiPropertyMapper delegate;
 	private final Class componentClass;
@@ -122,27 +122,33 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 				new PrivilegedAction<Object>() {
 					@Override
 					public Object run() {
-						final Setter setter = ReflectionTools.getSetter(
-								obj.getClass(),
-								propertyData,
-								enversService.getServiceRegistry()
-						);
+						try {
+							final Object subObj = ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
 
-						if ( isAllPropertiesNull( data ) ) {
-							// single property, but default value need not be null, so we'll set it to null anyway
-							setter.set( obj, null, null );
-						}
-						else {
-							// set the component
-							try {
-								final Object subObj = ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
-								setter.set( obj, subObj, null );
-
+							if ( isDynamicComponentMap() ) {
+								( (Map) obj ).put( propertyData.getBeanName(), subObj );
 								delegate.mapToEntityFromMap( enversService, subObj, data, primaryKey, versionsReader, revision );
 							}
-							catch ( Exception e ) {
-								throw new AuditException( e );
+							else {
+								final Setter setter = ReflectionTools.getSetter(
+										obj.getClass(),
+										propertyData,
+										enversService.getServiceRegistry()
+								);
+
+								if ( isAllPropertiesNull( data ) ) {
+									// single property, but default value need not be null, so we'll set it to null anyway
+									setter.set( obj, null, null );
+								}
+								else {
+									// set the component
+									setter.set( obj, subObj, null );
+									delegate.mapToEntityFromMap( enversService, subObj, data, primaryKey, versionsReader, revision );
+								}
 							}
+						}
+						catch ( Exception e ) {
+							throw new AuditException( e );
 						}
 
 						return null;

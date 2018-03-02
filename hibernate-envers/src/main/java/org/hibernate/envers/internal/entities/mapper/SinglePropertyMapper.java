@@ -33,7 +33,7 @@ import org.hibernate.property.access.spi.SetterFieldImpl;
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Chris Cranford
  */
-public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder {
+public class SinglePropertyMapper extends AbstractPropertyMapper implements SimpleMapperBuilder {
 	private PropertyData propertyData;
 
 	public SinglePropertyMapper(PropertyData propertyData) {
@@ -97,27 +97,34 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 			return;
 		}
 
-		AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						final Setter setter = ReflectionTools.getSetter(
-								obj.getClass(),
-								propertyData,
-								enversService.getServiceRegistry()
-						);
+		final Object value = data.get( propertyData.getName() );
 
-						final Object value = data.get( propertyData.getName() );
+		if ( isDynamicComponentMap() ) {
+			@SuppressWarnings("unchecked")
+			final Map<String, Object> map = (Map<String, Object>) obj;
+			map.put( propertyData.getBeanName(), value );
+		}
+		else {
+			AccessController.doPrivileged(
+					new PrivilegedAction<Object>() {
+						@Override
+						public Object run() {
+							final Setter setter = ReflectionTools.getSetter(
+									obj.getClass(),
+									propertyData,
+									enversService.getServiceRegistry()
+							);
 
-						// We only set a null value if the field is not primitive. Otherwise, we leave it intact.
-						if ( value != null || !isPrimitive( setter, propertyData, obj.getClass() ) ) {
-							setter.set( obj, value, null );
+							// We only set a null value if the field is not primitive. Otherwise, we leave it intact.
+							if ( value != null || !isPrimitive( setter, propertyData, obj.getClass() ) ) {
+								setter.set( obj, value, null );
+							}
+
+							return null;
 						}
-
-						return null;
 					}
-				}
-		);
+			);
+		}
 	}
 
 	private boolean isPrimitive(Setter setter, PropertyData propertyData, Class<?> cls) {

@@ -29,7 +29,7 @@ import org.hibernate.property.access.spi.Getter;
  * @author Lukasz Zuchowski (author at zuchos dot com)
  * @author Chris Cranford
  */
-public class MultiPropertyMapper implements ExtendedPropertyMapper {
+public class MultiPropertyMapper extends AbstractPropertyMapper implements ExtendedPropertyMapper {
 	protected final Map<PropertyData, PropertyMapper> properties;
 	private final Map<String, PropertyData> propertyDatas;
 

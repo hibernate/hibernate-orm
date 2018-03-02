@@ -28,8 +28,8 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
+import org.hibernate.envers.internal.entities.mapper.AbstractPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
-import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
@@ -42,7 +42,7 @@ import org.hibernate.property.access.spi.Setter;
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Chris Cranford
  */
-public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
+public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper {
 	protected final CommonCollectionMapperData commonCollectionMapperData;
 	protected final Class<? extends T> collectionClass;
 	protected final boolean ordinalInId;
@@ -256,45 +256,68 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 			final AuditReaderImplementor versionsReader,
 			final Number revision) {
 		final String revisionTypePropertyName = enversService.getAuditEntitiesConfiguration().getRevisionTypePropName();
-		AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						final Setter setter = ReflectionTools.getSetter(
-								obj.getClass(),
-								commonCollectionMapperData.getCollectionReferencingPropertyData(),
-								enversService.getServiceRegistry()
-						);
-
-						try {
-							setter.set(
-									obj,
-									proxyConstructor.newInstance(
-											getInitializor(
-													enversService,
-													versionsReader,
-													primaryKey,
-													revision,
-													RevisionType.DEL.equals( data.get( revisionTypePropertyName ) )
-											)
-									),
-									null
+		if ( isDynamicComponentMap() ) {
+			@SuppressWarnings("unchecked")
+			final Map<String, Object> map = (Map<String, Object>) obj;
+			try {
+				map.put(
+						commonCollectionMapperData.getCollectionReferencingPropertyData().getBeanName(),
+						proxyConstructor.newInstance(
+								getInitializor(
+										enversService,
+										versionsReader,
+										primaryKey,
+										revision,
+										RevisionType.DEL.equals( data.get( revisionTypePropertyName ) )
+								)
+						)
+				);
+			}
+			catch ( Exception e ) {
+				throw new AuditException( e );
+			}
+		}
+		else {
+			AccessController.doPrivileged(
+					new PrivilegedAction<Object>() {
+						@Override
+						public Object run() {
+							final Setter setter = ReflectionTools.getSetter(
+									obj.getClass(),
+									commonCollectionMapperData.getCollectionReferencingPropertyData(),
+									enversService.getServiceRegistry()
 							);
-						}
-						catch (InstantiationException e) {
-							throw new AuditException( e );
-						}
-						catch (IllegalAccessException e) {
-							throw new AuditException( e );
-						}
-						catch (InvocationTargetException e) {
-							throw new AuditException( e );
-						}
 
-						return null;
+							try {
+								setter.set(
+										obj,
+										proxyConstructor.newInstance(
+												getInitializor(
+														enversService,
+														versionsReader,
+														primaryKey,
+														revision,
+														RevisionType.DEL.equals( data.get( revisionTypePropertyName ) )
+												)
+										),
+										null
+								);
+							}
+							catch ( InstantiationException e ) {
+								throw new AuditException( e );
+							}
+							catch ( IllegalAccessException e ) {
+								throw new AuditException( e );
+							}
+							catch ( InvocationTargetException e ) {
+								throw new AuditException( e );
+							}
+
+							return null;
+						}
 					}
-				}
-		);
+			);
+		}
 	}
 
 	/**

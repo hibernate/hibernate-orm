@@ -16,7 +16,6 @@ dependencies {
     compile( libraries.byteman )
     compile( libraries.byteman_install )
     compile( libraries.byteman_bmunit )
-    compile( libraries.javassist )
     compile( libraries.xapool )
     compile( libraries.log4j )
     compile ( libraries.jboss_jta ) {

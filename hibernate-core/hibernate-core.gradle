@@ -37,8 +37,8 @@ dependencies {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     compile( libraries.jpa )
-    // Not wanting a transitive dependency on javassist anymore as it's not the default anymore:
-    provided( libraries.javassist )
+    // Javassist is no longer the default enhancer but still required for other purposes, e.g. Scanning
+    compile( libraries.javassist )
     // Could be made optional?
     compile( libraries.byteBuddy )
     compile( libraries.antlr )

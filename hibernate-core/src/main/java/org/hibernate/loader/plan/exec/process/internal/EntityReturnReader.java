@@ -65,4 +65,8 @@ public class EntityReturnReader implements ReturnReader {
 
 		return entityInstance;
 	}
+
+	protected EntityReturn getEntityReturn() {
+		return entityReturn;
+	}
 }

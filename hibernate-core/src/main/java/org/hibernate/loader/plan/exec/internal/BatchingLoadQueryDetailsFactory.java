@@ -7,6 +7,7 @@
 package org.hibernate.loader.plan.exec.internal;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.plan.exec.process.internal.EntityReturnReader;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.CollectionReturn;
@@ -64,7 +65,8 @@ public class BatchingLoadQueryDetailsFactory {
 				aliasResolutionContext,
 				rootReturn,
 				buildingParameters,
-				factory
+				factory,
+				new EntityReturnReader( rootReturn )
 		);
 	}
 

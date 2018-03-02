@@ -65,7 +65,8 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 			AliasResolutionContextImpl aliasResolutionContext,
 			EntityReturn rootReturn,
 			QueryBuildingParameters buildingParameters,
-			SessionFactoryImplementor factory) {
+			SessionFactoryImplementor factory,
+			EntityReturnReader entityReturnReader) {
 		super(
 				loadPlan,
 				aliasResolutionContext,
@@ -79,7 +80,7 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 				rootReturn.getEntityPersister()
 		);
 		this.readerCollector = new EntityLoaderReaderCollectorImpl(
-				new EntityReturnReader( rootReturn ),
+				entityReturnReader,
 				new EntityReferenceInitializerImpl( rootReturn, entityReferenceAliases, true )
 		);
 		generate();
@@ -94,7 +95,8 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 				new AliasResolutionContextImpl( initialEntityLoadQueryDetails.getSessionFactory() ),
 				(EntityReturn) initialEntityLoadQueryDetails.getRootReturn(),
 				buildingParameters,
-				initialEntityLoadQueryDetails.getSessionFactory()
+				initialEntityLoadQueryDetails.getSessionFactory(),
+				(EntityReturnReader) initialEntityLoadQueryDetails.getReaderCollector().getReturnReader()
 		);
 	}
 
@@ -103,7 +105,7 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 				CollectionHelper.isNotEmpty( readerCollector.getNonArrayCollectionReferenceInitializers() );
 	}
 
-	private EntityReturn getRootEntityReturn() {
+	protected EntityReturn getRootEntityReturn() {
 		return (EntityReturn) getRootReturn();
 	}
 

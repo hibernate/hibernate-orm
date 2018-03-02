@@ -17,8 +17,8 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.PropertyData;
+import org.hibernate.envers.internal.entities.mapper.AbstractPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
-import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.property.access.spi.Setter;
@@ -30,7 +30,7 @@ import org.hibernate.service.ServiceRegistry;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Chris Cranford
  */
-public abstract class AbstractToOneMapper implements PropertyMapper {
+public abstract class AbstractToOneMapper extends AbstractPropertyMapper {
 	private final ServiceRegistry serviceRegistry;
 	private final PropertyData propertyData;
 
@@ -90,21 +90,28 @@ public abstract class AbstractToOneMapper implements PropertyMapper {
 	}
 
 	protected void setPropertyValue(Object targetObject, Object value) {
-		AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						final Setter setter = ReflectionTools.getSetter(
-								targetObject.getClass(),
-								propertyData,
-								serviceRegistry
-						);
-						setter.set( targetObject, value, null );
+		if ( isDynamicComponentMap() ) {
+			@SuppressWarnings("unchecked")
+			final Map<String, Object> map = (Map<String, Object>) targetObject;
+			map.put( propertyData.getBeanName(), value );
+		}
+		else {
+			AccessController.doPrivileged(
+					new PrivilegedAction<Object>() {
+						@Override
+						public Object run() {
+							final Setter setter = ReflectionTools.getSetter(
+									targetObject.getClass(),
+									propertyData,
+									serviceRegistry
+							);
+							setter.set( targetObject, value, null );
 
-						return null;
+							return null;
+						}
 					}
-				}
-		);
+			);
+		}
 	}
 
 	/**

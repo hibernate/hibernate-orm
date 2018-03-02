@@ -25,7 +25,7 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Chris Cranford
  */
-public class SubclassPropertyMapper implements ExtendedPropertyMapper {
+public class SubclassPropertyMapper extends AbstractPropertyMapper implements ExtendedPropertyMapper {
 	private ExtendedPropertyMapper main;
 	private ExtendedPropertyMapper parentMapper;
 

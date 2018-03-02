@@ -50,6 +50,7 @@ import org.hibernate.TypeHelper;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
@@ -192,15 +193,19 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private transient StatisticsImplementor statisticsImplementor;
 
 
-	public SessionFactoryImpl(final MetadataImplementor metadata, SessionFactoryOptions options) {
+	public SessionFactoryImpl(
+			final BootstrapContext bootstrapContext,
+			final MetadataImplementor metadata,
+			SessionFactoryOptions options) {
 		LOG.debug( "Building session factory" );
 
 		this.sessionFactoryOptions = options;
 		this.settings = new Settings( options, metadata );
 
-		this.serviceRegistry = options.getServiceRegistry()
+		this.serviceRegistry = options
+				.getServiceRegistry()
 				.getService( SessionFactoryServiceRegistryFactory.class )
-				.buildServiceRegistry( this, options );
+				.buildServiceRegistry( this, bootstrapContext, options );
 
 		final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.getService( CfgXmlAccessService.class );
 

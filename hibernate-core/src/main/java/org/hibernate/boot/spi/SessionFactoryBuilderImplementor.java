@@ -15,19 +15,6 @@ import org.hibernate.boot.SessionFactoryBuilder;
  * @author Steve Ebersole
  */
 public interface SessionFactoryBuilderImplementor extends SessionFactoryBuilder {
-	/**
-	 * Indicates that the SessionFactory being built comes from JPA bootstrapping.
-	 * Internally {@code false} is the assumed value.  We only need to call this to
-	 * mark that as true.
-	 *
-	 * @deprecated (since 5.2) In fact added in 5.2 as part of consolidating JPA support
-	 * directly into Hibernate contracts (SessionFactory, Session); intended to provide
-	 * transition help in cases where we need to know the difference in JPA/native use for
-	 * various reasons.
-	 */
-	@Deprecated
-	void markAsJpaBootstrap();
-
 	void disableJtaTransactionAccess();
 
 	default void disableRefreshDetachedEntity() {

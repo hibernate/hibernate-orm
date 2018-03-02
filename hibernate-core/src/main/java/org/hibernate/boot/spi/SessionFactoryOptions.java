@@ -68,14 +68,12 @@ public interface SessionFactoryOptions {
 	Object getValidatorFactoryReference();
 
 	/**
-	 * @deprecated (since 5.2) In fact added in 5.2 as part of consolidating JPA support
-	 * directly into Hibernate contracts (SessionFactory, Session); intended to provide
-	 * transition help in cases where we need to know the difference in JPA/native use for
-	 * various reasons.
+	 * Was building of the SessionFactory initiated through JPA bootstrapping, or
+	 * through Hibernate's native bootstrapping?
 	 *
-	 * @see SessionFactoryBuilderImplementor#markAsJpaBootstrap
+	 * @return {@code true} indicates the SessionFactory was built through JPA
+	 * bootstrapping; {@code false} indicates it was built through native bootstrapping.
 	 */
-	@Deprecated
 	boolean isJpaBootstrap();
 
 	boolean isJtaTransactionAccessEnabled();

@@ -95,12 +95,6 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	}
 
 	@Override
-	public MetadataBuilder applyReflectionManager(ReflectionManager reflectionManager) {
-		delegate.applyReflectionManager( reflectionManager );
-		return getThis();
-	}
-
-	@Override
 	public MetadataBuilder applySharedCacheMode(SharedCacheMode cacheMode) {
 		delegate.applySharedCacheMode( cacheMode );
 		return getThis();

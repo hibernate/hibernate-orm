@@ -11,7 +11,7 @@ import java.util.Objects;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
@@ -23,7 +23,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class OneToMany implements Value {
-	private final MetadataImplementor metadata;
+	private final MetadataBuildingContext buildingContext;
 	private final Table referencingTable;
 
 	private String referencedEntityName;
@@ -31,18 +31,18 @@ public class OneToMany implements Value {
 	private boolean embedded;
 	private boolean ignoreNotFound;
 
-	public OneToMany(MetadataImplementor metadata, PersistentClass owner) throws MappingException {
-		this.metadata = metadata;
+	public OneToMany(MetadataBuildingContext buildingContext, PersistentClass owner) throws MappingException {
+		this.buildingContext = buildingContext;
 		this.referencingTable = ( owner == null ) ? null : owner.getTable();
 	}
 
 	@Override
 	public ServiceRegistry getServiceRegistry() {
-		return metadata.getMetadataBuildingOptions().getServiceRegistry();
+		return buildingContext.getBootstrapContext().getServiceRegistry();
 	}
 
 	private EntityType getEntityType() {
-		return metadata.getTypeResolver().getTypeFactory().manyToOne(
+		return buildingContext.getMetadataCollector().getTypeResolver().getTypeFactory().manyToOne(
 				getReferencedEntityName(),
 				true,
 				null,

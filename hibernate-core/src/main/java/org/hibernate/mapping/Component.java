@@ -19,6 +19,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -51,23 +52,23 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	private java.util.Map<EntityMode,String> tuplizerImpls;
 
-	public Component(MetadataImplementor metadata, PersistentClass owner) throws MappingException {
+	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
 	}
 
-	public Component(MetadataImplementor metadata, Component component) throws MappingException {
+	public Component(MetadataBuildingContext metadata, Component component) throws MappingException {
 		this( metadata, component.getTable(), component.getOwner() );
 	}
 
-	public Component(MetadataImplementor metadata, Join join) throws MappingException {
+	public Component(MetadataBuildingContext metadata, Join join) throws MappingException {
 		this( metadata, join.getTable(), join.getPersistentClass() );
 	}
 
-	public Component(MetadataImplementor metadata, Collection collection) throws MappingException {
+	public Component(MetadataBuildingContext metadata, Collection collection) throws MappingException {
 		this( metadata, collection.getCollectionTable(), collection.getOwner() );
 	}
 
-	public Component(MetadataImplementor metadata, Table table, PersistentClass owner) throws MappingException {
+	public Component(MetadataBuildingContext metadata, Table table, PersistentClass owner) throws MappingException {
 		super( metadata, table );
 		this.owner = owner;
 	}
@@ -121,7 +122,9 @@ public class Component extends SimpleValue implements MetaAttributable {
 	}
 
 	public Class getComponentClass() throws MappingException {
-		final ClassLoaderService classLoaderService = getMetadata().getMetadataBuildingOptions()
+		final ClassLoaderService classLoaderService = getMetadataBuildingContext()
+				.getBootstrapContext()
+				.getMetadataBuildingOptions()
 				.getServiceRegistry()
 				.getService( ClassLoaderService.class );
 		try {
@@ -167,7 +170,10 @@ public class Component extends SimpleValue implements MetaAttributable {
 	@Override
 	public Type getType() throws MappingException {
 		// TODO : temporary initial step towards HHH-1907
-		final ComponentMetamodel metamodel = new ComponentMetamodel( this, getMetadata().getMetadataBuildingOptions() );
+		final ComponentMetamodel metamodel = new ComponentMetamodel(
+				this,
+				getMetadataBuildingContext().getBootstrapContext()
+		);
 		final TypeFactory factory = getMetadata().getTypeResolver().getTypeFactory();
 		return isEmbedded() ? factory.embeddedComponent( metamodel ) : factory.component( metamodel );
 	}

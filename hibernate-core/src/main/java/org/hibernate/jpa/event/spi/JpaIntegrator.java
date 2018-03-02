@@ -13,6 +13,7 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
@@ -123,12 +124,14 @@ public class JpaIntegrator implements Integrator {
 		}
 
 		// handle JPA "entity listener classes"...
-		final ReflectionManager reflectionManager = ( (MetadataImpl) metadata ).getMetadataBuildingOptions()
-				.getReflectionManager();
 
 		this.callbackRegistry = new CallbackRegistryImpl();
 
-		final CallbackBuilder callbackBuilder = new CallbackBuilderLegacyImpl( serviceRegistry.getService( ManagedBeanRegistry.class ), reflectionManager );
+		final CallbackBuilder callbackBuilder = new CallbackBuilderLegacyImpl(
+				serviceRegistry.getService( ManagedBeanRegistry.class ),
+				//bootstrapContext.getReflectionManager()
+				null
+		);
 
 		for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
 			if ( persistentClass.getClassName() == null ) {

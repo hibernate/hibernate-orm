@@ -277,8 +277,8 @@ public class BinderHelper {
 			if ( properties != null ) {
                         //todo how about properties.size() == 1, this should be much simpler
 				Component embeddedComp = columnOwner instanceof PersistentClass ?
-						new Component( context.getMetadataCollector(), (PersistentClass) columnOwner ) :
-						new Component( context.getMetadataCollector(), (Join) columnOwner );
+						new Component( context, (PersistentClass) columnOwner ) :
+						new Component( context, (Join) columnOwner );
 				embeddedComp.setEmbedded( true );
 				embeddedComp.setComponentClassName( embeddedComp.getOwner().getClassName() );
 				for (Property property : properties) {
@@ -895,7 +895,8 @@ public class BinderHelper {
 					new IdGeneratorStrategyInterpreter.GeneratorNameDeterminationContext() {
 						@Override
 						public Class getIdType() {
-							return buildingContext.getBuildingOptions()
+							return buildingContext
+									.getBootstrapContext()
 									.getReflectionManager()
 									.toClass( idXProperty.getType() );
 						}
@@ -946,7 +947,7 @@ public class BinderHelper {
 			boolean optional,
 			MetadataBuildingContext context) {
 		//All FK columns should be in the same table
-		Any value = new Any( context.getMetadataCollector(), columns[0].getTable() );
+		Any value = new Any( context, columns[0].getTable() );
 		AnyMetaDef metaAnnDef = inferredData.getProperty().getAnnotation( AnyMetaDef.class );
 
 		if ( metaAnnDef != null ) {
@@ -1077,7 +1078,7 @@ public class BinderHelper {
 
 		if ( retrieve ) {
 			return context.getMetadataCollector().getMappedSuperclass(
-					context.getBuildingOptions().getReflectionManager().toClass( declaringClass )
+					context.getBootstrapContext().getReflectionManager().toClass( declaringClass )
 			);
 		}
 		else {
@@ -1096,7 +1097,7 @@ public class BinderHelper {
 			MetadataBuildingContext buildingContext) {
 		final XClass persistentXClass;
 		try {
-			persistentXClass = buildingContext.getBuildingOptions().getReflectionManager()
+			persistentXClass = buildingContext.getBootstrapContext().getReflectionManager()
 					.classForName( propertyHolder.getPersistentClass().getClassName() );
 		}
 		catch ( ClassLoadingException e ) {

@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -45,7 +46,7 @@ public class ComponentMetamodel implements Serializable {
 	private final boolean createEmptyCompositesEnabled;
 
 //	public ComponentMetamodel(Component component, SessionFactoryImplementor sessionFactory) {
-	public ComponentMetamodel(Component component, MetadataBuildingOptions metadataBuildingOptions) {
+	public ComponentMetamodel(Component component, BootstrapContext bootstrapContext) {
 //		this.sessionFactory = sessionFactory;
 		this.role = component.getRoleName();
 		this.isKey = component.isKey();
@@ -63,7 +64,7 @@ public class ComponentMetamodel implements Serializable {
 		entityMode = component.hasPojoRepresentation() ? EntityMode.POJO : EntityMode.MAP;
 
 		// todo : move this to SF per HHH-3517; also see HHH-1907 and ComponentMetamodel
-		final ComponentTuplizerFactory componentTuplizerFactory = new ComponentTuplizerFactory( metadataBuildingOptions );
+		final ComponentTuplizerFactory componentTuplizerFactory = new ComponentTuplizerFactory( bootstrapContext );
 		final String tuplizerClassName = component.getTuplizerImplClassName( entityMode );
 		this.componentTuplizer = tuplizerClassName == null ? componentTuplizerFactory.constructDefaultTuplizer(
 				entityMode,

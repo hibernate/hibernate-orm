@@ -6,6 +6,7 @@
  */
 package org.hibernate.service.spi;
 
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.Service;
@@ -25,11 +26,14 @@ public interface SessionFactoryServiceRegistryFactory extends Service {
 	 * for grabbing a reference for later use.  However, care should be taken when invoking on
 	 * the session factory until after it has been fully initialized.
 	 * @param sessionFactoryOptions The build options.
+	 * @param bootstrapContext The (still active) BootstrapContext.
+	 * @param sessionFactoryOptions The build options.
 	 *
 	 * @return The registry
 	 */
 	SessionFactoryServiceRegistry buildServiceRegistry(
 			SessionFactoryImplementor sessionFactory,
+			BootstrapContext bootstrapContext,
 			SessionFactoryOptions sessionFactoryOptions);
 
 }

@@ -9,7 +9,7 @@ package org.hibernate.mapping;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.PrimitiveType;
 
@@ -21,8 +21,8 @@ import org.hibernate.type.PrimitiveType;
 public class Array extends List {
 	private String elementClassName;
 
-	public Array(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
+	public Array(MetadataBuildingContext buildingContext, PersistentClass owner) {
+		super( buildingContext, owner );
 	}
 
 	public Class getElementClass() throws MappingException {

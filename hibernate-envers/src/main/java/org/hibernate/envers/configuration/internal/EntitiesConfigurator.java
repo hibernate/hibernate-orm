@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.envers.configuration.internal.metadata.AuditEntityNameRegister;
 import org.hibernate.envers.configuration.internal.metadata.AuditMetadataGenerator;
 import org.hibernate.envers.configuration.internal.metadata.EntityXmlMappingData;
@@ -34,7 +34,7 @@ import org.dom4j.Element;
  */
 public class EntitiesConfigurator {
 	public EntitiesConfigurations configure(
-			MetadataImplementor metadata,
+			InFlightMetadataCollector metadata,
 			ServiceRegistry serviceRegistry,
 			ReflectionManager reflectionManager,
 			MappingCollector mappingCollector,

@@ -195,7 +195,7 @@ tasks.withType( Test.class ).all { task ->
 			'-XX:MetaspaceSize=512M'
 	]
 
-	task.maxHeapSize = '2G'
+	task.maxHeapSize = '4G'
 
 	task.systemProperties['hibernate.test.validatefailureexpected'] = true
 	task.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }

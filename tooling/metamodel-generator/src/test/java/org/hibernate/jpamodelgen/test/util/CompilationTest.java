@@ -22,7 +22,7 @@ public abstract class CompilationTest {
 
 	@After
 	public void cleanup() throws Exception {
-//		TestUtil.deleteProcessorGeneratedFiles();
+		TestUtil.deleteProcessorGeneratedFiles();
 	}
 }
 

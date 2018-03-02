@@ -6,8 +6,6 @@
  */
 apply plugin: 'version-injection'
 apply plugin: 'org.hibernate.build.gradle.xjc'
-apply plugin: 'java'
-apply plugin: 'maven'
 
 dependencies {
 	testCompile libraries.junit
@@ -63,20 +61,6 @@ jar {
 		           'Implementation-Version'   : version,
 		           'Specification-Title'      : name,
 		           'Specification-Version'    : version
-	}
-}
-
-//上传到nexus
-uploadArchives {
-	repositories {
-		mavenDeployer {
-			repository(url: "http://repo.51flashmall.com:8081/nexus/content/repositories/snapshots/") {
-				authentication(userName: "ztt", password: "helloztt")
-			}
-			pom.version = version
-			pom.artifactId = "hibernate-jpamodelgen"
-			pom.groupId = "com.huotu.hibernate"
-		}
 	}
 }
 

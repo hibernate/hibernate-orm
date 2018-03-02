@@ -1,15 +1,9 @@
 package org.hibernate.jpamodelgen.test.collectiontype;
 
-import org.hibernate.jpamodelgen.test.arraytype.Image;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.WithClasses;
-import org.hibernate.mapping.Collection;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
 /**
@@ -18,8 +12,9 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassG
 public class CollectionTest extends CompilationTest {
 
     @Test
-    @WithClasses(Goods.class)
+    @WithClasses({Goods.class, Product.class})
     public void testPrimitiveArray() {
-        assertMetamodelClassGeneratedFor( Goods.class );
+        assertMetamodelClassGeneratedFor(Product.class);
+        assertMetamodelClassGeneratedFor(Goods.class);
     }
 }

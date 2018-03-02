@@ -6,10 +6,8 @@
  */
 
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import java.util.List;
 
 /**
  * @author Hardy Ferentschik
@@ -18,8 +16,6 @@ import java.util.List;
 public class DefaultPackageEntity {
 	@Id
 	private long id;
-	@Column
-	private List<SimpleEntity> simpleEntityList;
 }
 
 

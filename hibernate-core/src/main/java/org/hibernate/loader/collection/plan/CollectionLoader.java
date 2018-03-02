@@ -9,7 +9,6 @@ package org.hibernate.loader.collection.plan;
 import java.sql.ResultSet;
 
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan.exec.query.internal.QueryBuildingParametersImpl;
@@ -83,7 +82,7 @@ public class CollectionLoader extends AbstractLoadPlanBasedCollectionInitializer
 			log.debugf(
 					"Static select for collection %s: %s",
 					collectionPersister.getRole(),
-					getStaticLoadQuery().getSqlStatement()
+					getStaticLoadQuery()
 			);
 		}
 	}

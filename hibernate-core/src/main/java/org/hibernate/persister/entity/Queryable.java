@@ -44,6 +44,13 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	public String propertySelectFragment(String alias, String suffix, boolean allProperties);
 
 	public SelectFragment propertySelectFragmentFragment(String alias, String suffix, boolean allProperties);
+
+	// TODO: provide default implementation
+	public String lazyGroupSelectFragment(
+			String tableAlias,
+			String suffix,
+			String fetchGroupName);
+
 	/**
 	 * Get the names of columns used to persist the identifier
 	 */

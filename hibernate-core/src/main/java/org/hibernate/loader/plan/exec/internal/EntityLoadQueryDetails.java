@@ -10,8 +10,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -20,7 +18,6 @@ import org.hibernate.loader.plan.exec.process.internal.AbstractRowReader;
 import org.hibernate.loader.plan.exec.process.internal.EntityReferenceInitializerImpl;
 import org.hibernate.loader.plan.exec.process.internal.EntityReturnReader;
 import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessingContextImpl;
-import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorHelper;
 import org.hibernate.loader.plan.exec.process.spi.EntityReferenceInitializer;
 import org.hibernate.loader.plan.exec.process.spi.ReaderCollector;
 import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
@@ -31,12 +28,9 @@ import org.hibernate.loader.plan.exec.spi.EntityReferenceAliases;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.QuerySpace;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.Queryable;
-import org.hibernate.type.CompositeType;
-import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
@@ -70,7 +64,8 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 			AliasResolutionContextImpl aliasResolutionContext,
 			EntityReturn rootReturn,
 			QueryBuildingParameters buildingParameters,
-			SessionFactoryImplementor factory) {
+			SessionFactoryImplementor factory,
+			EntityReturnReader entityReturnReader) {
 		super(
 				loadPlan,
 				aliasResolutionContext,
@@ -84,13 +79,13 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 				rootReturn.getEntityPersister()
 		);
 		this.readerCollector = new EntityLoaderReaderCollectorImpl(
-				new EntityReturnReader( rootReturn ),
+				entityReturnReader,
 				new EntityReferenceInitializerImpl( rootReturn, entityReferenceAliases, true )
 		);
 		generate();
 	}
 
-	private EntityReturn getRootEntityReturn() {
+	protected EntityReturn getRootEntityReturn() {
 		return (EntityReturn) getRootReturn();
 	}
 

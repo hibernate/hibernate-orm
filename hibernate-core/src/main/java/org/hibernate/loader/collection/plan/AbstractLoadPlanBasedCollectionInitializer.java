@@ -110,7 +110,7 @@ public abstract class AbstractLoadPlanBasedCollectionInitializer
 	}
 
 	@Override
-	protected LoadQueryDetails getStaticLoadQuery() {
+	protected LoadQueryDetails getLoadQueryDetails() {
 		return staticLoadQuery;
 	}
 

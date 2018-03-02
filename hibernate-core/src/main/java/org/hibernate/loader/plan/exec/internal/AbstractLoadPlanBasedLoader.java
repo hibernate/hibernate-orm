@@ -70,7 +70,11 @@ public abstract class AbstractLoadPlanBasedLoader {
 		return factory;
 	}
 
-	protected abstract LoadQueryDetails getStaticLoadQuery();
+	protected abstract LoadQueryDetails getLoadQueryDetails();
+
+	public String getStaticLoadQuery() {
+		return getLoadQueryDetails().getSqlStatement();
+	}
 
 	protected abstract int[] getNamedParameterLocs(String name);
 
@@ -160,7 +164,7 @@ public abstract class AbstractLoadPlanBasedLoader {
 			final boolean scroll,
 			List<AfterLoadAction> afterLoadActions,
 			final SharedSessionContractImplementor session) throws SQLException {
-		return executeQueryStatement( getStaticLoadQuery().getSqlStatement(), queryParameters, scroll, afterLoadActions, session );
+		return executeQueryStatement( getLoadQueryDetails().getSqlStatement(), queryParameters, scroll, afterLoadActions, session );
 	}
 
 	protected SqlStatementWrapper executeQueryStatement(

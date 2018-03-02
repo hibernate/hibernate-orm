@@ -12,8 +12,14 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.loader.plan.build.internal.FetchGraphLoadPlanBuildingStrategy;
+import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
+import org.hibernate.loader.plan.build.internal.LoadGraphLoadPlanBuildingStrategy;
+import org.hibernate.loader.plan.build.spi.LoadPlanBuildingAssociationVisitationStrategy;
+import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
 import org.hibernate.loader.plan.exec.query.internal.QueryBuildingParametersImpl;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
+import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.Type;
 
@@ -94,13 +100,27 @@ public class EntityLoader extends AbstractLoadPlanBasedEntityLoader  {
 		}
 	}
 
+	private final LoadQueryDetails staticLoadQuery;
+
 	private EntityLoader(
 			SessionFactoryImplementor factory,
 			OuterJoinLoadable persister,
 			String[] uniqueKeyColumnNames,
 			Type uniqueKeyType,
 			QueryBuildingParameters buildingParameters) throws MappingException {
-		super( persister, factory, uniqueKeyColumnNames, uniqueKeyType, buildingParameters );
+		super(
+				persister,
+				factory,
+				generateStrategy( persister.getFactory(), buildingParameters )
+		);
+		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
+				getLoadPlan(),
+				uniqueKeyColumnNames,
+				buildingParameters,
+				factory
+		);
+
+		;
 		if ( log.isDebugEnabled() ) {
 			if ( buildingParameters.getLockOptions() != null ) {
 				log.debugf(
@@ -108,7 +128,7 @@ public class EntityLoader extends AbstractLoadPlanBasedEntityLoader  {
 						getEntityName(),
 						buildingParameters.getLockOptions().getLockMode(),
 						buildingParameters.getLockOptions().getTimeOut(),
-						getStaticLoadQuery().getSqlStatement()
+						getStaticLoadQuery()
 				);
 			}
 			else if ( buildingParameters.getLockMode() != null ) {
@@ -116,9 +136,34 @@ public class EntityLoader extends AbstractLoadPlanBasedEntityLoader  {
 						"Static select for entity %s [%s]: %s",
 						getEntityName(),
 						buildingParameters.getLockMode(),
-						getStaticLoadQuery().getSqlStatement()
+						getStaticLoadQuery()
 				);
 			}
 		}
+	}
+
+	private static LoadPlanBuildingAssociationVisitationStrategy generateStrategy(
+			SessionFactoryImplementor factory,
+			QueryBuildingParameters buildingParameters) {
+		if ( buildingParameters.getQueryInfluencers().getFetchGraph() != null ) {
+			return new FetchGraphLoadPlanBuildingStrategy(
+					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
+			);
+		}
+		else if ( buildingParameters.getQueryInfluencers().getLoadGraph() != null ) {
+			return new LoadGraphLoadPlanBuildingStrategy(
+					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
+			);
+		}
+		else {
+			return  new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
+					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
+			);
+		}
+	}
+
+	@Override
+	protected LoadQueryDetails getLoadQueryDetails() {
+		return staticLoadQuery;
 	}
 }

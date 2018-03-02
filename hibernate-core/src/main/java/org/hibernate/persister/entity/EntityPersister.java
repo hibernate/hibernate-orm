@@ -60,6 +60,7 @@ import org.hibernate.type.VersionType;
  *     </li>
  * </ol>
  *
+ *
  * @author Gavin King
  * @author Steve Ebersole
  *

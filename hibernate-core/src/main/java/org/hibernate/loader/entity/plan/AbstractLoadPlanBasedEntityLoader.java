@@ -21,15 +21,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.UniqueEntityLoader;
-import org.hibernate.loader.plan.build.internal.FetchGraphLoadPlanBuildingStrategy;
-import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
-import org.hibernate.loader.plan.build.internal.LoadGraphLoadPlanBuildingStrategy;
 import org.hibernate.loader.plan.build.spi.LoadPlanBuildingAssociationVisitationStrategy;
 import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.AbstractLoadPlanBasedLoader;
-import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
-import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
-import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -45,51 +39,21 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractLoadPlanBasedEntityLoader.class );
 
 	private final OuterJoinLoadable entityPersister;
-	private final Type uniqueKeyType;
 	private final String entityName;
-
-	private final LoadQueryDetails staticLoadQuery;
+	private final LoadPlan loadPlan;
 
 	public AbstractLoadPlanBasedEntityLoader(
 			OuterJoinLoadable entityPersister,
 			SessionFactoryImplementor factory,
-			String[] uniqueKeyColumnNames,
-			Type uniqueKeyType,
-			QueryBuildingParameters buildingParameters) {
+			LoadPlanBuildingAssociationVisitationStrategy strategy) {
 		super( factory );
 		this.entityPersister = entityPersister;
-		this.uniqueKeyType = uniqueKeyType;
 		this.entityName = entityPersister.getEntityName();
-
-		final LoadPlanBuildingAssociationVisitationStrategy strategy;
-		if ( buildingParameters.getQueryInfluencers().getFetchGraph() != null ) {
-			strategy = new FetchGraphLoadPlanBuildingStrategy(
-					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
-			);
-		}
-		else if ( buildingParameters.getQueryInfluencers().getLoadGraph() != null ) {
-			strategy = new LoadGraphLoadPlanBuildingStrategy(
-					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
-			);
-		}
-		else {
-			strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
-					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
-			);
-		}
-
-		final LoadPlan plan = MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
-		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
-				plan,
-				uniqueKeyColumnNames,
-				buildingParameters,
-				factory
-		);
+		this.loadPlan = MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
 	}
 
-	@Override
-	protected LoadQueryDetails getStaticLoadQuery() {
-		return staticLoadQuery;
+	protected final LoadPlan getLoadPlan() {
+		return loadPlan;
 	}
 
 	protected String getEntityName() {
@@ -127,7 +91,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			result = executeLoad(
 					session,
 					qp,
-					staticLoadQuery,
+					getLoadQueryDetails(),
 					false,
 					null
 			);
@@ -136,7 +100,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not load an entity batch: " + MessageHelper.infoString( entityPersister, ids, getFactory() ),
-					staticLoadQuery.getSqlStatement()
+					getStaticLoadQuery()
 			);
 		}
 
@@ -167,7 +131,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			final List results = executeLoad(
 					session,
 					qp,
-					staticLoadQuery,
+					getLoadQueryDetails(),
 					false,
 					null
 			);
@@ -182,7 +146,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 							entityPersister.getIdentifierType(),
 							getFactory()
 					),
-					staticLoadQuery.getSqlStatement()
+					getStaticLoadQuery()
 			);
 		}
 

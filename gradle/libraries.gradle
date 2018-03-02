@@ -64,7 +64,7 @@ ext {
             interceptor:    'javax.interceptor:javax.interceptor-api:1.2',
 
             // logging
-            logging:        'org.jboss.logging:jboss-logging:3.3.1.Final',
+            logging:        'org.jboss.logging:jboss-logging:3.3.2.Final',
             logging_annotations: 'org.jboss.logging:jboss-logging-annotations:2.1.0.Final',
             logging_processor:  'org.jboss.logging:jboss-logging-processor:2.1.0.Final',
 

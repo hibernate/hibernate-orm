@@ -7,7 +7,7 @@
 package org.hibernate.envers.boot.internal;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 import org.hibernate.envers.configuration.internal.MappingCollector;
@@ -54,7 +54,7 @@ public interface EnversService extends Service {
 	 */
 	boolean isInitialized();
 
-	void initialize(MetadataImplementor metadata, MappingCollector mappingCollector);
+	void initialize(InFlightMetadataCollector metadata, MappingCollector mappingCollector);
 
 	XMLHelper getXmlHelper();
 

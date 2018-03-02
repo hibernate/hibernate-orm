@@ -31,6 +31,7 @@ import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.internal.StandardTimestampsRegionAccessFactory;
 import org.hibernate.cache.spi.RegionFactory;
@@ -228,8 +229,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean failOnPaginationOverCollectionFetchEnabled;
 
 	@SuppressWarnings({"WeakerAccess", "deprecation"})
-	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry) {
+	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
 		this.serviceRegistry = serviceRegistry;
+		this.jpaBootstrap = context.isJpaBootstrap();
 
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 		ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
@@ -240,8 +242,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		configurationSettings.putAll( jdbcServices.getJdbcEnvironment().getDialect().getDefaultProperties() );
 		//noinspection unchecked
 		configurationSettings.putAll( cfgService.getSettings() );
-		cfgService = new ConfigurationServiceImpl( configurationSettings );
-		( (ConfigurationServiceImpl) cfgService ).injectServices( (ServiceRegistryImplementor) serviceRegistry );
+		if ( cfgService == null ) {
+			cfgService = new ConfigurationServiceImpl( configurationSettings );
+			( (ConfigurationServiceImpl) cfgService ).injectServices( (ServiceRegistryImplementor) serviceRegistry );
+		}
 
 		this.beanManagerReference = configurationSettings.get( "javax.persistence.bean.manager" );
 		this.validatorFactoryReference = configurationSettings.get( "javax.persistence.validation.factory" );
@@ -1179,7 +1183,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void applySqlFunction(String registrationName, SQLFunction sqlFunction) {
 		if ( this.sqlFunctions == null ) {
-			this.sqlFunctions = new HashMap<String, SQLFunction>();
+			this.sqlFunctions = new HashMap<>();
 		}
 		this.sqlFunctions.put( registrationName, sqlFunction );
 	}
@@ -1218,10 +1222,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void enableJpaCachingCompliance(boolean enabled) {
 		this.jpaCompliance.setCachingCompliance( enabled );
-	}
-
-	public void markAsJpaBootstrap() {
-		this.jpaBootstrap = true;
 	}
 
 	public void disableRefreshDetachedEntity() {

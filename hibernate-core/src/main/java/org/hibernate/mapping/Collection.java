@@ -17,6 +17,7 @@ import java.util.Objects;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
@@ -37,7 +38,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public static final String DEFAULT_ELEMENT_COLUMN_NAME = "elt";
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";
 
-	private final MetadataImplementor metadata;
+	private final MetadataBuildingContext buildingContext;
 	private PersistentClass owner;
 
 	private KeyValue key;
@@ -87,13 +88,13 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	private String loaderName;
 
-	protected Collection(MetadataImplementor metadata, PersistentClass owner) {
-		this.metadata = metadata;
+	protected Collection(MetadataBuildingContext buildingContext, PersistentClass owner) {
+		this.buildingContext = buildingContext;
 		this.owner = owner;
 	}
 
 	public MetadataImplementor getMetadata() {
-		return metadata;
+		return buildingContext.getMetadataCollector();
 	}
 
 	@Override
@@ -377,7 +378,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 			return getDefaultCollectionType();
 		}
 		else {
-			return metadata.getTypeResolver()
+			return getMetadata().getTypeResolver()
 					.getTypeFactory()
 					.customCollection( typeName, typeParameters, role, referencedPropertyName );
 		}

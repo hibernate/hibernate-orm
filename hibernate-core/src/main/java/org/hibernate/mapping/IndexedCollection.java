@@ -9,7 +9,7 @@ package org.hibernate.mapping;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 
 /**
@@ -23,8 +23,8 @@ public abstract class IndexedCollection extends Collection {
 
 	private Value index;
 
-	public IndexedCollection(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
+	public IndexedCollection(MetadataBuildingContext buildingContext, PersistentClass owner) {
+		super( buildingContext, owner );
 	}
 
 	public Value getIndex() {

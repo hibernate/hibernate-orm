@@ -58,6 +58,7 @@ import org.hibernate.type.TypeResolver;
  * @since 5.0
  */
 public interface InFlightMetadataCollector extends Mapping, MetadataImplementor {
+	BootstrapContext getBootstrapContext();
 
 	/**
 	 * Add the PersistentClass for an entity mapping.
@@ -230,7 +231,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 		addAttributeConverter(
 				new InstanceBasedConverterDescriptor(
 						converter.getAttributeConverter(),
-						getClassmateContext()
+						getBootstrapContext().getClassmateContext()
 				)
 		);
 	}
@@ -301,8 +302,6 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	NaturalIdUniqueKeyBinder locateNaturalIdUniqueKeyBinder(String entityName);
 	void registerNaturalIdUniqueKeyBinder(String entityName, NaturalIdUniqueKeyBinder ukBinder);
-
-	ClassmateContext getClassmateContext();
 
 	interface DelayedPropertyReferenceHandler extends Serializable {
 		void process(InFlightMetadataCollector metadataCollector);

@@ -258,7 +258,7 @@ public class Helper {
 			MetadataBuildingContext buildingContext,
 			String attributeOwnerClassName,
 			String attributeName) {
-		final Class attributeOwnerClass = buildingContext.getClassLoaderAccess().classForName( attributeOwnerClassName );
+		final Class attributeOwnerClass = buildingContext.getBootstrapContext().getClassLoaderAccess().classForName( attributeOwnerClassName );
 		return reflectedPropertyClass(
 				buildingContext,
 				attributeOwnerClass,

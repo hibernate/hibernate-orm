@@ -6,14 +6,14 @@
  */
 package org.hibernate.mapping;
 
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 
 /**
  * A primitive array has a primary key consisting of the key columns + index column.
  */
 public class PrimitiveArray extends Array {
-	public PrimitiveArray(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
+	public PrimitiveArray(MetadataBuildingContext buildingContext, PersistentClass owner) {
+		super( buildingContext, owner );
 	}
 
 	public boolean isPrimitiveArray() {

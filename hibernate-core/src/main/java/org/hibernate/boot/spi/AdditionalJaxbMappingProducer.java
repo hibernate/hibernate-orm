@@ -22,7 +22,7 @@ import org.jboss.jandex.IndexView;
 @Deprecated
 public interface AdditionalJaxbMappingProducer {
 	Collection<MappingDocument> produceAdditionalMappings(
-			MetadataImplementor metadata,
+			InFlightMetadataCollector metadata,
 			IndexView jandexIndex,
 			MappingBinder mappingBinder,
 			MetadataBuildingContext buildingContext);

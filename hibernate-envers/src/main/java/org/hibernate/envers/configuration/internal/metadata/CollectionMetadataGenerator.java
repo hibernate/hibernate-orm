@@ -621,7 +621,9 @@ public final class CollectionMetadataGenerator {
 
 			final Element parentXmlMapping = xmlMapping.getParent();
 			final ComponentAuditingData auditData = new ComponentAuditingData();
-			final ReflectionManager reflectionManager = mainGenerator.getMetadata().getMetadataBuildingOptions().getReflectionManager();
+			final ReflectionManager reflectionManager = mainGenerator.getMetadata()
+					.getBootstrapContext()
+					.getReflectionManager();
 
 			new ComponentAuditedPropertiesReader(
 					ModificationStore.FULL,

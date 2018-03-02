@@ -125,7 +125,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 		try {
 			if ( mappedClass == null ) {
-				mappedClass = metadataBuildingContext.getClassLoaderAccess().classForName( className );
+				mappedClass = metadataBuildingContext.getBootstrapContext().getClassLoaderAccess().classForName( className );
 			}
 			return mappedClass;
 		}
@@ -140,7 +140,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		}
 		try {
 			if ( proxyInterface == null ) {
-				proxyInterface = metadataBuildingContext.getClassLoaderAccess().classForName( proxyInterfaceName );
+				proxyInterface = metadataBuildingContext.getBootstrapContext().getClassLoaderAccess().classForName( proxyInterfaceName );
 			}
 			return proxyInterface;
 		}

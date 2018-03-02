@@ -228,7 +228,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		this.managedResources = MetadataBuildingProcess.prepare(
 				metadataSources,
-				metamodelBuilder.getMetadataBuildingOptions()
+				metamodelBuilder.getBootstrapContext()
 		);
 
 		withValidatorFactory( configurationValues.get( org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY ) );
@@ -785,6 +785,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			MergedSettings mergedSettings,
 			StandardServiceRegistry ssr,
 			List<AttributeConverterDefinition> attributeConverterDefinitions) {
+		( (MetadataBuilderImplementor) metamodelBuilder ).getBootstrapContext().markAsJpaBootstrap();
+
 		if ( persistenceUnit.getTempClassLoader() != null ) {
 			metamodelBuilder.applyTempClassLoader( persistenceUnit.getTempClassLoader() );
 		}
@@ -858,7 +860,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	private MetadataImplementor metadata() {
 		if ( this.metadata == null ) {
-			this.metadata = MetadataBuildingProcess.complete( managedResources, metamodelBuilder.getMetadataBuildingOptions() );
+			this.metadata = MetadataBuildingProcess.complete(
+					managedResources,
+					metamodelBuilder.getBootstrapContext(),
+					metamodelBuilder.getMetadataBuildingOptions()
+			);
 		}
 		return metadata;
 	}
@@ -897,7 +903,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	protected void populate(SessionFactoryBuilder sfBuilder, StandardServiceRegistry ssr) {
-		( ( SessionFactoryBuilderImplementor) sfBuilder ).markAsJpaBootstrap();
+		metamodelBuilder.getBootstrapContext().markAsJpaBootstrap();
 
 		final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
 

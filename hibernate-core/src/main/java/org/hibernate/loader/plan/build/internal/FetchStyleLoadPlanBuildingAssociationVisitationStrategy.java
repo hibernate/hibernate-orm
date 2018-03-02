@@ -78,6 +78,10 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 		this.rootReturn = rootReturn;
 	}
 
+	protected Return getRootReturn() {
+		return rootReturn;
+	}
+
 	@Override
 	public void startingEntityIdentifier(EntityIdentifierDefinition identifierDefinition ) {
 		if ( vetoHandleAssociationAttribute ) {

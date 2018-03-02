@@ -15,25 +15,15 @@ import java.util.List;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.UniqueEntityLoader;
-import org.hibernate.loader.plan.build.internal.FetchGraphLoadPlanBuildingStrategy;
-import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
-import org.hibernate.loader.plan.build.internal.LoadGraphLoadPlanBuildingStrategy;
-import org.hibernate.loader.plan.build.spi.LoadPlanBuildingAssociationVisitationStrategy;
-import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.AbstractLoadPlanBasedLoader;
-import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
 import org.hibernate.loader.plan.exec.internal.EntityLoadQueryDetails;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
-import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
-import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
@@ -48,56 +38,14 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractLoadPlanBasedEntityLoader.class );
 
 	private final OuterJoinLoadable entityPersister;
-	private final Type uniqueKeyType;
 	private final String entityName;
-
-	private final EntityLoadQueryDetails staticLoadQuery;
 
 	public AbstractLoadPlanBasedEntityLoader(
 			OuterJoinLoadable entityPersister,
-			SessionFactoryImplementor factory,
-			String[] uniqueKeyColumnNames,
-			Type uniqueKeyType,
-			QueryBuildingParameters buildingParameters) {
+			SessionFactoryImplementor factory) {
 		super( factory );
 		this.entityPersister = entityPersister;
-		this.uniqueKeyType = uniqueKeyType;
 		this.entityName = entityPersister.getEntityName();
-
-		final LoadPlanBuildingAssociationVisitationStrategy strategy;
-
-		final EffectiveEntityGraph effectiveEntityGraph = buildingParameters.getQueryInfluencers().getEffectiveEntityGraph();
-		if ( effectiveEntityGraph.getSemantic() == GraphSemantic.FETCH ) {
-			strategy = new FetchGraphLoadPlanBuildingStrategy(
-					factory,
-					effectiveEntityGraph.getGraph(),
-					buildingParameters.getQueryInfluencers(),
-					buildingParameters.getLockOptions() != null ? buildingParameters.getLockOptions().getLockMode() : buildingParameters.getLockMode()
-			);
-		}
-		else if ( effectiveEntityGraph.getSemantic() == GraphSemantic.LOAD ) {
-			strategy = new LoadGraphLoadPlanBuildingStrategy(
-					factory,
-					effectiveEntityGraph.getGraph(),
-					buildingParameters.getQueryInfluencers(),
-					buildingParameters.getLockOptions() != null ? buildingParameters.getLockOptions().getLockMode() : buildingParameters.getLockMode()
-			);
-		}
-		else {
-			strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
-					factory,
-					buildingParameters.getQueryInfluencers(),
-					buildingParameters.getLockOptions() != null ? buildingParameters.getLockOptions().getLockMode() : buildingParameters.getLockMode()
-			);
-		}
-
-		final LoadPlan plan = MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
-		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
-				plan,
-				uniqueKeyColumnNames,
-				buildingParameters,
-				factory
-		);
 	}
 
 	protected AbstractLoadPlanBasedEntityLoader(
@@ -108,19 +56,10 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			QueryBuildingParameters buildingParameters) {
 		super( factory );
 		this.entityPersister = entityPersister;
-		this.uniqueKeyType = uniqueKeyType;
 		this.entityName = entityPersister.getEntityName();
-
-		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
-				entityLoaderQueryDetailsTemplate,
-				buildingParameters
-		);
 	}
 
-	@Override
-	protected LoadQueryDetails getStaticLoadQuery() {
-		return staticLoadQuery;
-	}
+	protected abstract EntityLoadQueryDetails getStaticLoadQuery();
 
 	protected String getEntityName() {
 		return entityName;
@@ -157,7 +96,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			result = executeLoad(
 					session,
 					qp,
-					staticLoadQuery,
+					getStaticLoadQuery(),
 					false,
 					null
 			);
@@ -166,7 +105,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not load an entity batch: " + MessageHelper.infoString( entityPersister, ids, getFactory() ),
-					staticLoadQuery.getSqlStatement()
+					getStaticLoadQuery().getSqlStatement()
 			);
 		}
 
@@ -197,7 +136,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			final List results = executeLoad(
 					session,
 					qp,
-					staticLoadQuery,
+					getStaticLoadQuery(),
 					false,
 					null
 			);
@@ -212,7 +151,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 							entityPersister.getIdentifierType(),
 							getFactory()
 					),
-					staticLoadQuery.getSqlStatement()
+					getStaticLoadQuery().getSqlStatement()
 			);
 		}
 
@@ -235,7 +174,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 		else if ( results.size() == 1 ) {
 			return results.get( 0 );
 		}
-		else if ( staticLoadQuery.hasCollectionInitializers() ) {
+		else if ( getStaticLoadQuery().hasCollectionInitializers() ) {
 			final Object row = results.get( 0 );
 			if ( row.getClass().isArray() ) {
 				// the logical type of the result list is List<Object[]>.  See if the contained

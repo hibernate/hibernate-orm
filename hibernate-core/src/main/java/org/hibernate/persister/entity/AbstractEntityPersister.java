@@ -96,6 +96,7 @@ import org.hibernate.loader.entity.CascadeEntityLoader;
 import org.hibernate.loader.entity.DynamicBatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.EntityLoader;
 import org.hibernate.loader.entity.UniqueEntityLoader;
+import org.hibernate.loader.entity.plan.LazyGroupLoader;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
@@ -247,7 +248,8 @@ public abstract class AbstractEntityPersister
 	// SQL strings
 	private String sqlVersionSelectString;
 	private String sqlSnapshotSelectString;
-	private Map<String,String> sqlLazySelectStringsByFetchGroup;
+	private Map<String,LazyGroupLoader> loaderByLazyGroupCacheDisabled;
+	private Map<String,LazyGroupLoader> loaderByLazyGroupCacheEnabled;
 
 	private String sqlIdentityInsertString;
 	private String sqlUpdateByRowIdString;
@@ -412,8 +414,36 @@ public abstract class AbstractEntityPersister
 		return sqlSnapshotSelectString;
 	}
 
-	protected String getSQLLazySelectString(String fetchGroup) {
-		return sqlLazySelectStringsByFetchGroup.get( fetchGroup );
+	/**
+	 * Returns the static SQL statement used for loading the specified {@code lazyGroup}.
+	 *
+	 * @param lazyGroup, the name of the lazy group\
+	 *
+	 * @return the returned value is the static SQL statement used to load the lazy group;
+	 *         if the second-level cache is enabled by , the returned value is the SQL statement used
+	 *         the cache is read-enabled; a different SQL statement may be used when the
+	 *         {@link org.hibernate.CacheMode} for the {@link Session} ({@link Session#getCacheMode()})
+	 *         is not read-enabled (e.g., {@link org.hibernate.CacheMode#PUT}.
+	 *
+	 * @deprecated Use getLazyGroupLoader().getStaticLoadQuery instead
+	 */
+	@Deprecated
+	protected String getSQLLazySelectString(String lazyGroup) {
+		return getLazyGroupLoader( lazyGroup, getFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() )
+				.getSqlStatement();
+	}
+
+	protected LazyGroupLoader getLazyGroupLoader(String lazyGroup, boolean isCacheReadEnabled) {
+		return isCacheReadEnabled ?
+				loaderByLazyGroupCacheEnabled.get( lazyGroup ) :
+				loaderByLazyGroupCacheDisabled.get( lazyGroup );
+	}
+
+	private LazyGroupLoader getLazyGroupLoader(String lazyGroup, SharedSessionContractImplementor session) {
+		return getLazyGroupLoader(
+				lazyGroup,
+				getFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() &&
+						session.getCacheMode().isGetEnabled() );
 	}
 
 	protected String[] getSQLDeleteStrings() {
@@ -967,58 +997,29 @@ public abstract class AbstractEntityPersister
 				Template.renderWhereStringTemplate( string, factory.getDialect(), factory.getSqlFunctionRegistry() );
 	}
 
-	protected Map<String,String> generateLazySelectStringsByFetchGroup() {
+	protected Map<String,LazyGroupLoader> generateLazySelectStringsByFetchGroup(boolean isCacheReadEnabled) {
 		final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
 		if ( !enhancementMetadata.isEnhancedForLazyLoading()
 				|| !enhancementMetadata.getLazyAttributesMetadata().hasLazyAttributes() ) {
 			return Collections.emptyMap();
 		}
 
-		Map<String,String> result = new HashMap<>();
+		if ( isCacheReadEnabled &&
+				!getFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
+			throw new IllegalStateException(
+					"isCacheReadEnabled cannot be true when the second-level cache is disabled"
+			);
+		}
+
+		Map<String,LazyGroupLoader> result = new HashMap<>();
 
 		final LazyAttributesMetadata lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
 		for ( String groupName : lazyAttributesMetadata.getFetchGroupNames() ) {
-			HashSet tableNumbers = new HashSet();
-			ArrayList columnNumbers = new ArrayList();
-			ArrayList formulaNumbers = new ArrayList();
-
-			for ( LazyAttributeDescriptor lazyAttributeDescriptor :
-					lazyAttributesMetadata.getFetchGroupAttributeDescriptors( groupName ) ) {
-				// all this only really needs to consider properties
-				// of this class, not its subclasses, but since we
-				// are reusing code used for sequential selects, we
-				// use the subclass closure
-				int propertyNumber = getSubclassPropertyIndex( lazyAttributeDescriptor.getName() );
-
-				int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
-				tableNumbers.add( tableNumber );
-
-				int[] colNumbers = subclassPropertyColumnNumberClosure[propertyNumber];
-				for ( int colNumber : colNumbers ) {
-					if ( colNumber != -1 ) {
-						columnNumbers.add( colNumber );
-					}
-				}
-				int[] formNumbers = subclassPropertyFormulaNumberClosure[propertyNumber];
-				for ( int formNumber : formNumbers ) {
-					if ( formNumber != -1 ) {
-						formulaNumbers.add( formNumber );
-					}
-				}
-			}
-
-			if ( columnNumbers.size() == 0 && formulaNumbers.size() == 0 ) {
-				// only one-to-one is lazy fetched
-				continue;
-			}
-
 			result.put(
 					groupName,
-					renderSelect(
-							ArrayHelper.toIntArray( tableNumbers ),
-							ArrayHelper.toIntArray( columnNumbers ),
-							ArrayHelper.toIntArray( formulaNumbers )
-					)
+					LazyGroupLoader.forFetchGroup( this, groupName )
+							.withCacheReadEnabled( isCacheReadEnabled )
+							.byPrimaryKey()
 			);
 		}
 
@@ -1156,97 +1157,11 @@ public abstract class AbstractEntityPersister
 		final String fetchGroup = getEntityMetamodel().getBytecodeEnhancementMetadata()
 				.getLazyAttributesMetadata()
 				.getFetchGroupName( fieldName );
-		final List<LazyAttributeDescriptor> fetchGroupAttributeDescriptors = getEntityMetamodel().getBytecodeEnhancementMetadata()
-				.getLazyAttributesMetadata()
-				.getFetchGroupAttributeDescriptors( fetchGroup );
+		final LazyGroupLoader loader = getLazyGroupLoader( fetchGroup, session );
+		final Object loadedEntity = loader.load( id, entity, session );
+		assert loadedEntity == entity;
 
-		final Set<String> initializedLazyAttributeNames = interceptor.getInitializedLazyAttributeNames();
-
-		final String lazySelect = getSQLLazySelectString( fetchGroup );
-
-		try {
-			Object result = null;
-			PreparedStatement ps = null;
-			try {
-				ResultSet rs = null;
-				try {
-					if ( lazySelect != null ) {
-						// null sql means that the only lazy properties
-						// are shared PK one-to-one associations which are
-						// handled differently in the Type#nullSafeGet code...
-						ps = session.getJdbcCoordinator()
-								.getStatementPreparer()
-								.prepareStatement( lazySelect );
-						getIdentifierType().nullSafeSet( ps, id, 1, session );
-						rs = session.getJdbcCoordinator().getResultSetReturn().extract( ps );
-						rs.next();
-					}
-					for ( LazyAttributeDescriptor fetchGroupAttributeDescriptor : fetchGroupAttributeDescriptors ) {
-						final boolean previousInitialized = initializedLazyAttributeNames.contains( fetchGroupAttributeDescriptor.getName() );
-
-						if ( previousInitialized ) {
-							// todo : one thing we should consider here is potentially un-marking an attribute as dirty based on the selected value
-							// 		we know the current value - getPropertyValue( entity, fetchGroupAttributeDescriptor.getAttributeIndex() );
-							// 		we know the selected value (see selectedValue below)
-							//		we can use the attribute Type to tell us if they are the same
-							//
-							//		assuming entity is a SelfDirtinessTracker we can also know if the attribute is
-							//			currently considered dirty, and if really not dirty we would do the un-marking
-							//
-							//		of course that would mean a new method on SelfDirtinessTracker to allow un-marking
-
-							// its already been initialized (e.g. by a write) so we don't want to overwrite
-							continue;
-						}
-
-
-						final Object selectedValue = fetchGroupAttributeDescriptor.getType().nullSafeGet(
-								rs,
-								lazyPropertyColumnAliases[fetchGroupAttributeDescriptor.getLazyIndex()],
-								session,
-								entity
-						);
-
-						final boolean set = initializeLazyProperty(
-								fieldName,
-								entity,
-								session,
-								entry,
-								fetchGroupAttributeDescriptor.getLazyIndex(),
-								selectedValue
-						);
-						if ( set ) {
-							result = selectedValue;
-							interceptor.attributeInitialized( fetchGroupAttributeDescriptor.getName() );
-						}
-
-					}
-				}
-				finally {
-					if ( rs != null ) {
-						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, ps );
-					}
-				}
-			}
-			finally {
-				if ( ps != null ) {
-					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
-					session.getJdbcCoordinator().afterStatementExecution();
-				}
-			}
-
-			LOG.trace( "Done initializing lazy properties" );
-
-			return result;
-
-		}
-		catch (SQLException sqle) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-					sqle,
-					"could not initialize lazy properties: " + MessageHelper.infoString( this, id, getFactory() ),
-					lazySelect
-			);
-		}
+		return getPropertyValue( entity, fieldName );
 	}
 
 	private Object initializeLazyPropertiesFromCache(
@@ -1459,6 +1374,56 @@ public abstract class AbstractEntityPersister
 		}
 
 		return select;
+	}
+
+	public String lazyGroupSelectFragment(
+			String tableAlias,
+			String suffix,
+			String fetchGroupName) {
+		SelectFragment select = new SelectFragment()
+				.setSuffix( suffix )
+				.setUsedAliases( getIdentifierAliases() );
+
+		final List<LazyAttributeDescriptor> lazyAttributeDescriptors  =
+				getEntityMetamodel().getBytecodeEnhancementMetadata().getLazyAttributesMetadata().
+						getFetchGroupAttributeDescriptors( fetchGroupName );
+
+		int[] columnTableNumbers = getSubclassColumnTableNumberClosure();
+		String[] columnAliases = getSubclassColumnAliasClosure();
+		String[] columnReaderTemplates = getSubclassColumnReaderTemplateClosure();
+
+		int[] formulaTableNumbers = getSubclassFormulaTableNumberClosure();
+		String[] formulaTemplates = getSubclassFormulaTemplateClosure();
+		String[] formulaAliases = getSubclassFormulaAliasClosure();
+
+		for ( LazyAttributeDescriptor lazyAttributeDescriptor : lazyAttributeDescriptors ) {
+
+			final int propertyNumber = lazyAttributeDescriptor.getAttributeIndex();
+
+			for ( int colNumber : subclassPropertyColumnNumberClosure[propertyNumber] ) {
+				if ( colNumber != -1 && subclassColumnSelectableClosure[colNumber] ) {
+					String subalias = generateTableAlias( tableAlias, columnTableNumbers[colNumber] );
+					select.addColumnTemplate( subalias, columnReaderTemplates[colNumber], columnAliases[colNumber] );
+				}
+			}
+
+			for ( int formNumber : subclassPropertyFormulaNumberClosure[propertyNumber] ) {
+				if ( formNumber != -1 ) {
+					String subalias = generateTableAlias( tableAlias, formulaTableNumbers[formNumber] );
+					select.addFormula( subalias, formulaTemplates[formNumber], formulaAliases[formNumber] );
+				}
+			}
+		}
+
+		if ( entityMetamodel.hasSubclasses() ) {
+			addDiscriminatorToSelect( select, tableAlias, suffix );
+		}
+
+		if ( hasRowId() ) {
+			select.addColumn( tableAlias, rowIdName, ROWID_ALIAS );
+		}
+
+		return select.toFragmentString();
 	}
 
 	public Object[] getDatabaseSnapshot(Serializable id, SharedSessionContractImplementor session)
@@ -3789,8 +3754,11 @@ public abstract class AbstractEntityPersister
 	protected void logStaticSQL() {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Static SQL for entity: %s", getEntityName() );
-			for ( Map.Entry<String, String> entry : sqlLazySelectStringsByFetchGroup.entrySet() ) {
-				LOG.debugf( " Lazy select (%s) : %s", entry.getKey(), entry.getValue() );
+			for ( Map.Entry<String, LazyGroupLoader> entry : loaderByLazyGroupCacheEnabled.entrySet() ) {
+				LOG.debugf( " Lazy group select with cache read-enabled (%s) : %s", entry.getKey(), entry.getValue() );
+			}
+			for ( Map.Entry<String, LazyGroupLoader> entry : loaderByLazyGroupCacheDisabled.entrySet() ) {
+				LOG.debugf( " Lazy group select with cache read-disabled (%s) : %s", entry.getKey(), entry.getValue() );
 			}
 			if ( sqlVersionSelectString != null ) {
 				LOG.debugf( " Version select: %s", sqlVersionSelectString );
@@ -4129,7 +4097,13 @@ public abstract class AbstractEntityPersister
 
 		//select SQL
 		sqlSnapshotSelectString = generateSnapshotSelectString();
-		sqlLazySelectStringsByFetchGroup = generateLazySelectStringsByFetchGroup();
+		loaderByLazyGroupCacheDisabled = generateLazySelectStringsByFetchGroup( false );
+		if ( getFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
+			loaderByLazyGroupCacheEnabled = generateLazySelectStringsByFetchGroup( true );
+		}
+		else {
+			loaderByLazyGroupCacheEnabled = Collections.EMPTY_MAP;
+		}
 		sqlVersionSelectString = generateSelectVersionString();
 		if ( hasInsertGeneratedProperties() ) {
 			sqlInsertGeneratedValuesSelectString = generateInsertGeneratedValuesSelectString();

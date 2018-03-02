@@ -9,12 +9,21 @@ package org.hibernate.loader.entity.plan;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.EntityLoadQueryDetails;
+import org.hibernate.loader.plan.build.internal.FetchGraphLoadPlanBuildingStrategy;
+import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
+import org.hibernate.loader.plan.build.internal.LoadGraphLoadPlanBuildingStrategy;
+import org.hibernate.loader.plan.build.spi.LoadPlanBuildingAssociationVisitationStrategy;
+import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
 import org.hibernate.loader.plan.exec.query.internal.QueryBuildingParametersImpl;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
+import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
@@ -116,13 +125,27 @@ public class EntityLoader extends AbstractLoadPlanBasedEntityLoader  {
 		}
 	}
 
+	private final EntityLoadQueryDetails staticLoadQuery;
+
 	private EntityLoader(
 			SessionFactoryImplementor factory,
 			OuterJoinLoadable persister,
 			String[] uniqueKeyColumnNames,
 			Type uniqueKeyType,
 			QueryBuildingParameters buildingParameters) throws MappingException {
-		super( persister, factory, uniqueKeyColumnNames, uniqueKeyType, buildingParameters );
+		super( persister, factory );
+
+		final LoadPlan loadPlan = MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan(
+				generateStrategy( persister.getFactory(), buildingParameters ),
+				persister
+		);
+		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
+				loadPlan,
+				uniqueKeyColumnNames,
+				buildingParameters,
+				factory
+		);
+
 		if ( log.isDebugEnabled() ) {
 			if ( buildingParameters.getLockOptions() != null ) {
 				log.debugf(
@@ -151,6 +174,11 @@ public class EntityLoader extends AbstractLoadPlanBasedEntityLoader  {
 			Type uniqueKeyType,
 			QueryBuildingParameters buildingParameters) throws MappingException {
 		super( persister, factory, entityLoaderTemplate.getStaticLoadQuery(), uniqueKeyType, buildingParameters );
+
+		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
+				entityLoaderTemplate.getStaticLoadQuery(),
+				buildingParameters
+		);
 		if ( log.isDebugEnabled() ) {
 			if ( buildingParameters.getLockOptions() != null ) {
 				log.debugf(
@@ -172,8 +200,46 @@ public class EntityLoader extends AbstractLoadPlanBasedEntityLoader  {
 		}
 	}
 
+	private static LoadPlanBuildingAssociationVisitationStrategy generateStrategy(
+			SessionFactoryImplementor factory,
+			QueryBuildingParameters buildingParameters) {
+		final EffectiveEntityGraph effectiveEntityGraph =
+				buildingParameters.getQueryInfluencers().getEffectiveEntityGraph();
+		final LoadPlanBuildingAssociationVisitationStrategy strategy;
+		if ( effectiveEntityGraph.getSemantic() == GraphSemantic.FETCH ) {
+			strategy = new FetchGraphLoadPlanBuildingStrategy(
+					factory,
+					effectiveEntityGraph.getGraph(),
+					buildingParameters.getQueryInfluencers(),
+					buildingParameters.getLockOptions() != null
+							? buildingParameters.getLockOptions().getLockMode()
+							: buildingParameters.getLockMode()
+			);
+		}
+		else if ( effectiveEntityGraph.getSemantic() == GraphSemantic.LOAD ) {
+			strategy = new LoadGraphLoadPlanBuildingStrategy(
+					factory,
+					effectiveEntityGraph.getGraph(),
+					buildingParameters.getQueryInfluencers(),
+					buildingParameters.getLockOptions() != null
+							? buildingParameters.getLockOptions().getLockMode()
+							: buildingParameters.getLockMode()
+			);
+		}
+		else {
+			strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
+					factory,
+					buildingParameters.getQueryInfluencers(),
+					buildingParameters.getLockOptions() != null
+							? buildingParameters.getLockOptions().getLockMode()
+							: buildingParameters.getLockMode()
+			);
+		}
+		return strategy;
+	}
+
 	@Override
 	protected EntityLoadQueryDetails getStaticLoadQuery() {
-		return (EntityLoadQueryDetails) super.getStaticLoadQuery();
+		return staticLoadQuery;
 	}
 }

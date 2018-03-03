@@ -22,13 +22,13 @@ import org.hibernate.internal.CoreMessageLogger;
  *
  * @author Steve Ebersole
  */
-public class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
+class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( PostCommitEventListenerGroupImpl.class );
 
 	private final Class extendedListenerContract;
 
-	public PostCommitEventListenerGroupImpl(EventType<T> eventType) {
-		super( eventType );
+	public PostCommitEventListenerGroupImpl(EventType<T> eventType, EventListenerRegistryImpl listenerRegistry) {
+		super( eventType, listenerRegistry );
 
 		if ( eventType == EventType.POST_COMMIT_DELETE ) {
 			this.extendedListenerContract = PostCommitDeleteEventListener.class;

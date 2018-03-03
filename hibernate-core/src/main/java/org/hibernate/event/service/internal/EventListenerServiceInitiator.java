@@ -25,6 +25,6 @@ public class EventListenerServiceInitiator implements SessionFactoryServiceIniti
 
 	@Override
 	public EventListenerRegistry initiateService(SessionFactoryServiceInitiatorContext context) {
-		return new EventListenerRegistryImpl();
+		return new EventListenerRegistryImpl( context.getBootstrapContext(), context.getSessionFactory() );
 	}
 }

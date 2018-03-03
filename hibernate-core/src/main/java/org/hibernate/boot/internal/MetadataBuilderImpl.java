@@ -173,14 +173,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		return this;
 	}
 
-//	@Override
-//	public MetadataBuilder applyReflectionManager(ReflectionManager reflectionManager) {
-//		bootstrapContext.
-//		this.options.reflectionManager = reflectionManager;
-//		this.options.reflectionManager.injectClassLoaderDelegate( this.options.getHcannClassLoaderDelegate() );
-//		return this;
-//	}
-
 	@Override
 	public MetadataBuilder applySharedCacheMode(SharedCacheMode sharedCacheMode) {
 		this.options.sharedCacheMode = sharedCacheMode;

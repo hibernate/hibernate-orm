@@ -76,6 +76,11 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 		}
 	}
 
+	@Override
+	public void release() {
+		// nothing to do
+	}
+
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	public Callback[] resolveCallbacks(XClass beanClass, CallbackType callbackType, ReflectionManager reflectionManager) {
 		List<Callback> callbacks = new ArrayList<>();

@@ -18,7 +18,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.event.spi.JpaIntegrator;
 import org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.tool.schema.Action;
@@ -168,7 +167,6 @@ public class NonRegistryManagedExtendedCdiSupportTest extends BaseUnitTestCase {
 	private SessionFactoryImplementor buildSessionFactory(ExtendedBeanManagerImpl standIn,
 			NonRegistryManagedBeanConsumingIntegrator beanConsumingIntegrator) {
 		BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
-				.applyIntegrator( new JpaIntegrator() )
 				.applyIntegrator( beanConsumingIntegrator )
 				.build();
 

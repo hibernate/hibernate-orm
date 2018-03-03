@@ -27,4 +27,6 @@ public interface CallbackBuilder {
 	}
 
 	void buildCallbacksForEntity(String entityName, CallbackRegistrar callbackRegistrar);
+
+	void release();
 }

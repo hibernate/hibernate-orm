@@ -15,6 +15,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+
 import javax.persistence.Parameter;
 
 import org.hibernate.QueryException;
@@ -64,7 +65,7 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 									"Unexpected gap in ordinal parameter labels [%s -> %s] : [%s]",
 									lastPosition,
 									sortedPosition,
-									StringHelper.join( ",", sortedPositions )
+									StringHelper.join( ",", sortedPositions.iterator() )
 							)
 					);
 				}
@@ -143,7 +144,7 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 							Locale.ROOT,
 							"Could not locate ordinal parameter [%s], expecting one of [%s]",
 							position,
-							StringHelper.join( ", ", ordinalDescriptorMap.keySet() )
+							StringHelper.join( ", ", ordinalDescriptorMap.keySet().iterator())
 					)
 			);
 		}
@@ -218,7 +219,7 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 							Locale.ROOT,
 							"Could not locate named parameter [%s], expecting one of [%s]",
 							name,
-							StringHelper.join( ", ", namedDescriptorMap.keySet() )
+							String.join( ", ", namedDescriptorMap.keySet() )
 					)
 			);
 		}

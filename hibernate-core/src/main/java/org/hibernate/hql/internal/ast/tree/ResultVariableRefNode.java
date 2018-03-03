@@ -7,7 +7,6 @@
 package org.hibernate.hql.internal.ast.tree;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.StringHelper;
 
 import antlr.SemanticException;
 
@@ -69,6 +68,6 @@ public class ResultVariableRefNode extends HqlSqlWalkerNode {
 	}
 
 	private String getColumnNamesString(int scalarColumnIndex) {
-		return StringHelper.join( ", ", getWalker().getSelectClause().getColumnNames()[scalarColumnIndex] );
+		return String.join( ", ", getWalker().getSelectClause().getColumnNames()[scalarColumnIndex] );
 	}
 }

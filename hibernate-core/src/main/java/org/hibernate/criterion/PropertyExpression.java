@@ -40,7 +40,7 @@ public class PropertyExpression implements Criterion {
 
 		final String[] comparisons = StringHelper.add( lhsColumns, getOp(), rhsColumns );
 		if ( comparisons.length > 1 ) {
-			return '(' + StringHelper.join( " and ", comparisons ) + ')';
+			return '(' + String.join( " and ", comparisons ) + ')';
 		}
 		else {
 			return comparisons[0];

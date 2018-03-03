@@ -82,7 +82,7 @@ public final class ConfigurationHelper {
 		if ( !defaultValue.equals( value ) && ArrayHelper.indexOf( otherSupportedValues, value ) == -1 ) {
 			throw new ConfigurationException(
 					"Unsupported configuration [name=" + name + ", value=" + value + "]. " +
-							"Choose value between: '" + defaultValue + "', '" + StringHelper.join( "', '", otherSupportedValues ) + "'."
+							"Choose value between: '" + defaultValue + "', '" + String.join( "', '", otherSupportedValues ) + "'."
 			);
 		}
 		return value;

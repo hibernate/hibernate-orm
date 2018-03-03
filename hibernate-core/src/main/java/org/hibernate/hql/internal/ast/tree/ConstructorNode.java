@@ -191,7 +191,7 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
 					? ( (PrimitiveType) constructorArgumentTypes[j] ).getPrimitiveClass().getName()
 					: constructorArgumentTypes[j].getReturnedClass().getName();
 		}
-		String formattedList = params.length == 0 ? "no arguments constructor" : StringHelper.join( ", ", params );
+		String formattedList = params.length == 0 ? "no arguments constructor" : String.join( ", ", params );
 		return String.format(
 				"Unable to locate appropriate constructor on class [%s]. Expected arguments are: %s",
 				className, formattedList

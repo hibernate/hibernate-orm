@@ -238,7 +238,7 @@ public class JoinProcessor implements SqlTokenTypes {
 				final FilterImpl filter = (FilterImpl) walker.getEnabledFilters().get( parts[0] );
 				final Object value = filter.getParameter( parts[1] );
 				final Type type = filter.getFilterDefinition().getParameterType( parts[1] );
-				final String typeBindFragment = StringHelper.join(
+				final String typeBindFragment = String.join(
 						",",
 						ArrayHelper.fillArray(
 								"?",
@@ -247,7 +247,7 @@ public class JoinProcessor implements SqlTokenTypes {
 				);
 				final String bindFragment;
 				if ( value != null && Collection.class.isInstance( value ) ) {
-					bindFragment = StringHelper.join(
+					bindFragment = String.join(
 							",",
 							ArrayHelper.fillArray( typeBindFragment, ( (Collection) value ).size() )
 					);

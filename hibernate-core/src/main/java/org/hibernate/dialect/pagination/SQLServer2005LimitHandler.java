@@ -221,7 +221,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		}
 
 		// In case of '*' or '{table}.*' expressions adding an alias breaks SQL syntax, returning '*'.
-		return selectsMultipleColumns ? "*" : StringHelper.join( ", ", aliases.iterator() );
+		return selectsMultipleColumns ? "*" : String.join( ", ", aliases );
 	}
 
 	/**

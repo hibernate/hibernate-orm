@@ -39,23 +39,6 @@ public final class StringHelper {
 		return string.length() - 1;
 	}
 
-	public static String join(String seperator, String[] strings) {
-		int length = strings.length;
-		if ( length == 0 ) {
-			return "";
-		}
-		// Allocate space for length * firstStringLength;
-		// If strings[0] is null, then its length is defined as 4, since that's the
-		// length of "null".
-		final int firstStringLength = strings[0] != null ? strings[0].length() : 4;
-		StringBuilder buf = new StringBuilder( length * firstStringLength )
-				.append( strings[0] );
-		for ( int i = 1; i < length; i++ ) {
-			buf.append( seperator ).append( strings[i] );
-		}
-		return buf.toString();
-	}
-
 	public static String joinWithQualifierAndSuffix(
 			String[] values,
 			String qualifier,
@@ -73,7 +56,7 @@ public final class StringHelper {
 		return buf.toString();
 	}
 
-	public static String join(String seperator, Iterator objects) {
+	public static String join(String seperator, Iterator<?> objects) {
 		StringBuilder buf = new StringBuilder();
 		if ( objects.hasNext() ) {
 			buf.append( objects.next() );
@@ -82,10 +65,6 @@ public final class StringHelper {
 			buf.append( seperator ).append( objects.next() );
 		}
 		return buf.toString();
-	}
-
-	public static String join(String separator, Iterable objects) {
-		return join( separator, objects.iterator() );
 	}
 
 	public static String[] add(String[] x, String sep, String[] y) {
@@ -838,18 +817,9 @@ public final class StringHelper {
 
 	public static <T> String join(Collection<T> values, Renderer<T> renderer) {
 		final StringBuilder buffer = new StringBuilder();
-		boolean firstPass = true;
 		for ( T value : values ) {
-			if ( firstPass ) {
-				firstPass = false;
-			}
-			else {
-				buffer.append( ", " );
-			}
-
-			buffer.append( renderer.render( value ) );
+			buffer.append( String.join(", ", renderer.render( value )) );
 		}
-
 		return buffer.toString();
 	}
 

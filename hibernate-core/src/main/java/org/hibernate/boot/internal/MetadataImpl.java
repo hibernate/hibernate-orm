@@ -38,7 +38,6 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
@@ -154,7 +153,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( activeFactoryNames != null && activeFactoryNames.size() > 1 ) {
 			throw new HibernateException(
 					"Multiple active SessionFactoryBuilderFactory definitions were discovered : " +
-							StringHelper.join( ", ", activeFactoryNames )
+							String.join(", ", activeFactoryNames)
 			);
 		}
 

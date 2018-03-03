@@ -7,7 +7,6 @@
 package org.hibernate.criterion;
 
 import org.hibernate.Criteria;
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * A comparison between several properties value in the outer query and the result of a multicolumn subquery.
@@ -29,7 +28,7 @@ public class PropertiesSubqueryExpression extends SubqueryExpression {
 		for ( int i = 0; i < sqlColumnNames.length; ++i ) {
 			sqlColumnNames[i] = outerQuery.getColumn( criteria, propertyNames[i] );
 		}
-		left.append( StringHelper.join( ", ", sqlColumnNames ) );
+		left.append( String.join( ", ", sqlColumnNames ) );
 		return left.append( ")" ).toString();
 	}
 }

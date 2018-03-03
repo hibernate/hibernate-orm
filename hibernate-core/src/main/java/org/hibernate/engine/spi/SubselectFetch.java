@@ -177,7 +177,7 @@ public class SubselectFetch {
 				? StringHelper.qualify( alias, loadable.getIdentifierColumnNames() )
 				: ( (PropertyMapping) loadable ).toColumns( alias, ukname );
 
-		return "select " + StringHelper.join( ", ", joinColumns ) + queryString;
+		return "select " + String.join( ", ", joinColumns ) + queryString;
 	}
 
 	@Override

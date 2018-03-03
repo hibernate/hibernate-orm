@@ -254,7 +254,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 	private void initText() {
 		String[] cols = getColumns();
-		String text = StringHelper.join( ", ", cols );
+		String text = String.join( ", ", cols );
 		boolean countDistinct = getWalker().isInCountDistinct()
 				&& getWalker().getSessionFactoryHelper().getFactory().getDialect().requiresParensForTupleDistinctCounts();
 		if ( cols.length > 1 &&

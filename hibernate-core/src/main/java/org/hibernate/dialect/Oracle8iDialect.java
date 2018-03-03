@@ -17,7 +17,6 @@ import java.util.regex.Pattern;
 
 import org.hibernate.JDBCException;
 import org.hibernate.QueryTimeoutException;
-import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.NvlFunction;

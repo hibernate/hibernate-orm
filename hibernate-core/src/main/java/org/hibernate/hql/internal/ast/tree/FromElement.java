@@ -23,7 +23,6 @@ import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.DynamicFilterParameterSpecification;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -329,7 +328,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 			return cols[0];
 		}
 		else {
-			return "(" + StringHelper.join( ", ", cols ) + ")";
+			return "(" + String.join( ", ", cols ) + ")";
 		}
 	}
 

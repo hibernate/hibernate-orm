@@ -10,7 +10,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
 import org.hibernate.loader.plan.exec.spi.CollectionReferenceAliases;
@@ -180,7 +179,7 @@ public class QuerySpaceTreePrinter {
 			printWriter.println(
 					TreePrinterHelper.INSTANCE.generateNodePrefix( depth + detailDepthOffset )
 							+ "suffixed key columns - {"
-							+ StringHelper.join( ", ", entityAliases.getColumnAliases().getSuffixedKeyAliases() )
+							+ String.join( ", ", entityAliases.getColumnAliases().getSuffixedKeyAliases() )
 							+ "}"
 			);
 		}
@@ -193,7 +192,7 @@ public class QuerySpaceTreePrinter {
 			printWriter.println(
 					TreePrinterHelper.INSTANCE.generateNodePrefix( depth + detailDepthOffset )
 							+ "suffixed key columns - {"
-							+ StringHelper.join( ", ", collectionReferenceAliases.getCollectionColumnAliases().getSuffixedKeyAliases() )
+							+ String.join( ", ", collectionReferenceAliases.getCollectionColumnAliases().getSuffixedKeyAliases() )
 							+ "}"
 			);
 			final EntityAliases elementAliases =
@@ -209,7 +208,7 @@ public class QuerySpaceTreePrinter {
 						TreePrinterHelper.INSTANCE.generateNodePrefix( depth + detailDepthOffset )
 								+ elementAliases.getSuffix()
 								+ "entity-element suffixed key columns - "
-								+ StringHelper.join( ", ", elementAliases.getSuffixedKeyAliases() )
+								+ String.join( ", ", elementAliases.getSuffixedKeyAliases() )
 				);
 			}
 		}

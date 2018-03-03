@@ -27,7 +27,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.hbm2ddl.ColumnMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
@@ -901,9 +900,9 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		@Override
 		public String toString() {
 			return "ForeignKeyKey{" +
-					"columns=" + StringHelper.join( ",", columns ) +
+					"columns=" + String.join( ",", columns ) +
 					", referencedClassName='" + referencedClassName + '\'' +
-					", referencedColumns=" + StringHelper.join( ",", referencedColumns ) +
+					", referencedColumns=" + String.join( ",", referencedColumns ) +
 					'}';
 		}
 	}

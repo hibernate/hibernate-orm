@@ -32,7 +32,7 @@ public abstract class CollectionJoinWalker extends JoinWalker {
 			if (columnNames.length>1) {
 				buf.append('(');
 			}
-			buf.append( StringHelper.join(", ", StringHelper.qualify(alias, columnNames) ) );
+			buf.append( String.join(", ", StringHelper.qualify(alias, columnNames) ) );
 			if (columnNames.length>1) {
 				buf.append(')');
 			}

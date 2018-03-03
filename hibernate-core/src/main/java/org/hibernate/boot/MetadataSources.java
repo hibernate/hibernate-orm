@@ -39,7 +39,6 @@ import org.hibernate.boot.spi.MetadataBuilderFactory;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SerializationException;
 import org.w3c.dom.Document;
@@ -161,7 +160,7 @@ public class MetadataSources implements Serializable {
 		if ( activeFactoryNames != null && activeFactoryNames.size() > 1 ) {
 			throw new HibernateException(
 					"Multiple active MetadataBuilder definitions were discovered : " +
-							StringHelper.join( ", ", activeFactoryNames )
+							String.join(", ", activeFactoryNames)
 			);
 		}
 

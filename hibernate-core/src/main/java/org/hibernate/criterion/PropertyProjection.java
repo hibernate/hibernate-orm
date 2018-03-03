@@ -7,7 +7,6 @@
 package org.hibernate.criterion;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.Type;
 
 /**
@@ -65,7 +64,7 @@ public class PropertyProjection extends SimpleProjection {
 			return super.toGroupSqlString( criteria, criteriaQuery );
 		}
 		else {
-			return StringHelper.join( ", ", criteriaQuery.getColumns( propertyName, criteria ) );
+			return String.join( ", ", criteriaQuery.getColumns( propertyName, criteria ) );
 		}
 	}
 

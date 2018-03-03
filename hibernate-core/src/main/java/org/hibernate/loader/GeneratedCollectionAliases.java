@@ -9,7 +9,6 @@ package org.hibernate.loader;
 import java.util.Collections;
 import java.util.Map;
 
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -116,7 +115,7 @@ public class GeneratedCollectionAliases implements CollectionAliases {
 			return null;
 		}
 
-		return StringHelper.join( ", ", aliases );
+		return String.join( ", ", aliases );
 	}
 
 	private String[] getUserProvidedAliases(String propertyPath, String[] defaultAliases) {

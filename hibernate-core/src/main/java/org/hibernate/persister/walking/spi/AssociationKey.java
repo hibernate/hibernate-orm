@@ -8,7 +8,6 @@ package org.hibernate.persister.walking.spi;
 
 import java.util.Arrays;
 
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * Used to uniquely identify a foreign key, so that we don't join it more than once creating circularities.  Note
@@ -63,7 +62,7 @@ public class AssociationKey {
 	@Override
 	public String toString() {
 		if ( str == null ) {
-			str = "AssociationKey(table=" + table + ", columns={" + StringHelper.join( ",", columns ) + "})";
+			str = "AssociationKey(table=" + table + ", columns={" + String.join( ",", columns ) + "})";
 		}
 		return str;
 	}

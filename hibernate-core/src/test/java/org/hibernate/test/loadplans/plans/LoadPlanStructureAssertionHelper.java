@@ -10,7 +10,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.loader.entity.EntityJoinWalker;
 import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
@@ -104,8 +103,8 @@ public class LoadPlanStructureAssertionHelper {
 		System.out.println( "----------------------------------------------------------------------------" );
 		System.out.println( );
 		System.out.println( "------ SUFFIXES ------------------------------------------------------------" );
-		System.out.println( "WALKER    : " + StringHelper.join( ", ",  walker.getSuffixes() ) + " : "
-									+ StringHelper.join( ", ", walker.getCollectionSuffixes() ) );
+		System.out.println( "WALKER    : " + String.join( ", ",  walker.getSuffixes() ) + " : "
+									+ String.join( ", ", walker.getCollectionSuffixes() ) );
 		System.out.println( "----------------------------------------------------------------------------" );
 		System.out.println( );
 	}

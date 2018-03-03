@@ -49,14 +49,14 @@ public class InExpression implements Criterion {
 			final String params = values.length > 0
 					? StringHelper.repeat( singleValueParam + ", ", values.length - 1 ) + singleValueParam
 					: "";
-			String cols = StringHelper.join( ", ", columns );
+			String cols = String.join( ", ", columns );
 			if ( columns.length > 1 ) {
 				cols = '(' + cols + ')';
 			}
 			return cols + " in (" + params + ')';
 		}
 		else {
-			String cols = " ( " + StringHelper.join( " = ? and ", columns ) + "= ? ) ";
+			String cols = " ( " + String.join( " = ? and ", columns ) + "= ? ) ";
 			cols = values.length > 0
 					? StringHelper.repeat( cols + "or ", values.length - 1 ) + cols
 					: "";

@@ -8,7 +8,6 @@ package org.hibernate.loader.custom;
 
 import java.util.Map;
 
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 
@@ -111,7 +110,7 @@ public class ColumnCollectionAliases implements CollectionAliases {
 			return null;
 		}
 
-		return StringHelper.join( ", ", aliases );
+		return String.join( ", ", aliases );
 	}
 
 	private String[] getUserProvidedAliases(String propertyPath, String[] defaultAliases) {

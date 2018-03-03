@@ -210,6 +210,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				.getService( SessionFactoryServiceRegistryFactory.class )
 				.buildServiceRegistry( this, bootstrapContext, options );
 
+		prepareEventListeners( metadata );
+
 		final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.getService( CfgXmlAccessService.class );
 
 		String sfName = settings.getSessionFactoryName();
@@ -393,6 +395,40 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 			close();
 			throw e;
+		}
+	}
+
+	private void prepareEventListeners(MetadataImplementor metadata) {
+		final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+
+		eventListenerRegistry.prepare( metadata );
+
+		for ( Map.Entry entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
+			if ( !String.class.isInstance( entry.getKey() ) ) {
+				continue;
+			}
+			final String propertyName = (String) entry.getKey();
+			if ( !propertyName.startsWith( org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
+				continue;
+			}
+			final String eventTypeName = propertyName.substring( org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX
+																		 .length() + 1 );
+			final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
+			final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
+			for ( String listenerImpl : ( (String) entry.getValue() ).split( " ," ) ) {
+				eventListenerGroup.appendListener( instantiate( listenerImpl, classLoaderService ) );
+			}
+		}
+	}
+
+	private Object instantiate(String listenerImpl, ClassLoaderService classLoaderService) {
+		try {
+			return classLoaderService.classForName( listenerImpl ).newInstance();
+		}
+		catch (Exception e) {
+			throw new HibernateException( "Could not instantiate requested listener [" + listenerImpl + "]", e );
 		}
 	}
 

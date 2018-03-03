@@ -17,7 +17,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.event.spi.JpaIntegrator;
 import org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager;
 import org.hibernate.tool.schema.Action;
 
@@ -47,9 +46,7 @@ public class ValidExtendedCdiSupportTest extends BaseUnitTestCase {
 
 		final ExtendedBeanManagerImpl standIn = new ExtendedBeanManagerImpl();
 
-		BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
-				.applyIntegrator( new JpaIntegrator() )
-				.build();
+		BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 
 		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )

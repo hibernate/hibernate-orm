@@ -471,7 +471,7 @@ public class CascadingActions {
 	 *
 	 * @return The children iterator.
 	 */
-	private static Iterator getAllElementsIterator(
+	public static Iterator getAllElementsIterator(
 			EventSource session,
 			CollectionType collectionType,
 			Object collection) {

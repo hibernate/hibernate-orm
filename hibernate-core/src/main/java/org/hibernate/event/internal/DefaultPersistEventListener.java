@@ -6,6 +6,7 @@
  */
 package org.hibernate.event.internal;
 
+import java.io.Serializable;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -23,6 +24,8 @@ import org.hibernate.event.spi.PersistEventListener;
 import org.hibernate.id.ForeignGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
+import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
@@ -34,7 +37,9 @@ import org.hibernate.proxy.LazyInitializer;
  *
  * @author Gavin King
  */
-public class DefaultPersistEventListener extends AbstractSaveEventListener implements PersistEventListener {
+public class DefaultPersistEventListener
+		extends AbstractSaveEventListener
+		implements PersistEventListener, CallbackRegistryConsumer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultPersistEventListener.class );
 
 	@Override
@@ -52,7 +57,6 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 	 *
 	 * @param event The create event to be handled.
 	 *
-	 * @throws HibernateException
 	 */
 	public void onPersist(PersistEvent event) throws HibernateException {
 		onPersist( event, new IdentityHashMap( 10 ) );
@@ -63,7 +67,6 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 	 *
 	 * @param event The create event to be handled.
 	 *
-	 * @throws HibernateException
 	 */
 	public void onPersist(PersistEvent event, Map createCache) throws HibernateException {
 		final SessionImplementor source = event.getSession();

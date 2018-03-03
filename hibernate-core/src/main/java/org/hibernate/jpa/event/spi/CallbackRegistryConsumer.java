@@ -6,15 +6,13 @@
  */
 package org.hibernate.jpa.event.spi;
 
-import org.hibernate.jpa.event.internal.core.HibernateEntityManagerEventListener;
-
 /**
  * Contract for injecting the registry of Callbacks into event listeners.
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public interface CallbackRegistryConsumer extends HibernateEntityManagerEventListener {
+public interface CallbackRegistryConsumer {
 	/**
 	 * Injection of the CallbackRegistry
 	 *

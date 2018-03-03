@@ -16,7 +16,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.event.spi.JpaIntegrator;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -43,9 +42,7 @@ public class DelayedCdiHostedConverterTest extends BaseUnitTestCase {
 				.disableDiscovery()
 				.addBeanClasses( MonitorBean.class, ConverterBean.class );
 		try ( final SeContainer cdiContainer = cdiInitializer.initialize() ) {
-			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
-					.applyIntegrator( new JpaIntegrator() )
-					.build();
+			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 
 			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )

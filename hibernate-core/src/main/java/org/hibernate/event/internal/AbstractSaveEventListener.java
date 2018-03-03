@@ -32,6 +32,8 @@ import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
+import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
@@ -45,11 +47,19 @@ import static org.hibernate.FlushMode.MANUAL;
  *
  * @author Steve Ebersole.
  */
-public abstract class AbstractSaveEventListener extends AbstractReassociateEventListener {
+public abstract class AbstractSaveEventListener
+		extends AbstractReassociateEventListener
+		implements CallbackRegistryConsumer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractSaveEventListener.class );
 
-	public static enum EntityState {
+	public enum EntityState {
 		PERSISTENT, TRANSIENT, DETACHED, DELETED
+	}
+
+	private CallbackRegistry callbackRegistry;
+
+	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
+		this.callbackRegistry = callbackRegistry;
 	}
 
 	/**
@@ -69,6 +79,8 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 			String entityName,
 			Object anything,
 			EventSource source) {
+		callbackRegistry.preCreate( entity );
+
 		return performSave(
 				entity,
 				requestedId,
@@ -101,6 +113,8 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 			Object anything,
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
+		callbackRegistry.preCreate( entity );
+
 		if ( entity instanceof SelfDirtinessTracker ) {
 			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
 		}

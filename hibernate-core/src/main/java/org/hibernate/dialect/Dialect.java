@@ -2130,13 +2130,13 @@ public abstract class Dialect implements ConversionContext {
 		res.append( " add constraint " )
 				.append( quote( constraintName ) )
 				.append( " foreign key (" )
-				.append( StringHelper.join( ", ", foreignKey ) )
+				.append( String.join( ", ", foreignKey ) )
 				.append( ") references " )
 				.append( referencedTable );
 
 		if ( !referencesPrimaryKey ) {
 			res.append( " (" )
-					.append( StringHelper.join( ", ", primaryKey ) )
+					.append( String.join( ", ", primaryKey ) )
 					.append( ')' );
 		}
 
@@ -2797,7 +2797,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The modified SQL
 	 */
 	public String getQueryHintString(String query, List<String> hintList) {
-		final String hints = StringHelper.join( ", ", hintList.iterator() );
+		final String hints = String.join( ", ", hintList );
 
 		if ( StringHelper.isEmpty( hints ) ) {
 			return query;

@@ -20,7 +20,6 @@ import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.AssignmentSpecification;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.UpdateStatement;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Update;
@@ -75,7 +74,7 @@ public class TableBasedUpdateHandlerImpl
 			final List<ParameterSpecification> parameterList = new ArrayList<>();
 			final Update update = new Update( dialect )
 					.setTableName( tableNames[tableIndex] )
-					.setWhere( "(" + StringHelper.join( ", ", columnNames[tableIndex] ) + ") IN (" + idSubselect + ")" );
+					.setWhere( "(" + String.join( ", ", columnNames[tableIndex] ) + ") IN (" + idSubselect + ")" );
 			if ( factory().getSessionFactoryOptions().isCommentsEnabled() ) {
 				update.setComment( "bulk update" );
 			}

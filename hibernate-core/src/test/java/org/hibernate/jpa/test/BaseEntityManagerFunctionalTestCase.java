@@ -24,7 +24,6 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -196,7 +195,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	protected void addMappings(Map settings) {
 		String[] mappings = getMappings();
 		if ( mappings != null ) {
-			settings.put( AvailableSettings.HBXML_FILES, StringHelper.join( ",", mappings ) );
+			settings.put( AvailableSettings.HBXML_FILES, String.join( ",", mappings ) );
 		}
 	}
 

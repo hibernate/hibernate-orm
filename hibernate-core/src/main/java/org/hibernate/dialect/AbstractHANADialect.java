@@ -75,7 +75,6 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -1457,7 +1456,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String getQueryHintString(String query, List<String> hints) {
-		return query + " with hint (" + StringHelper.join( ",", hints ) + ")";
+		return query + " with hint (" + String.join( ",", hints ) + ")";
 	}
 
 	@Override

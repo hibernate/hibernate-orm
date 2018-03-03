@@ -17,7 +17,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.SqlGenerator;
 import org.hibernate.hql.internal.ast.tree.DeleteStatement;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.Queryable;
@@ -81,9 +80,9 @@ public class DeleteExecutor extends BasicExecutor {
 						}
 						else {
 							final String idSubselect = "(select "
-									+ StringHelper.join( ", ", persister.getIdentifierColumnNames() ) + " from "
+									+ String.join( ", ", persister.getIdentifierColumnNames() ) + " from "
 									+ persister.getTableName() + idSubselectWhere + ")";
-							final String where = "(" + StringHelper.join( ", ", cPersister.getKeyColumnNames() )
+							final String where = "(" + String.join( ", ", cPersister.getKeyColumnNames() )
 									+ ") in " + idSubselect;
 							final Delete delete = new Delete().setTableName( cPersister.getTableName() ).setWhere( where );
 							if ( factory.getSessionFactoryOptions().isCommentsEnabled() ) {

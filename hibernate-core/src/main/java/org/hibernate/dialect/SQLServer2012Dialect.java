@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * Microsoft SQL Server 2012 Dialect

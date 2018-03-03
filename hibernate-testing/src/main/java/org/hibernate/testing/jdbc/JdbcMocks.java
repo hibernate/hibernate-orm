@@ -37,7 +37,7 @@ public class JdbcMocks {
 		private boolean supportsBatchUpdates = true;
 		private boolean dataDefinitionIgnoredInTransactions = false;
 		private boolean dataDefinitionCausesTransactionCommit = false;
-		private String sqlKeywords = StringHelper.join( ",", AnsiSqlKeywords.INSTANCE.sql2003() );
+		private String sqlKeywords = String.join( ",", AnsiSqlKeywords.INSTANCE.sql2003() );
 		private int sqlStateType = DatabaseMetaData.sqlStateXOpen;
 		private boolean locatorsUpdateCopy = false;
 		private boolean storesLowerCaseIdentifiers = true;

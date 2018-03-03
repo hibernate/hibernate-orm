@@ -15,7 +15,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.SqlGenerator;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.InsertSelect;
@@ -190,7 +189,7 @@ public abstract class AbstractTableBasedBulkIdHandler {
 	}
 
 	protected String generateIdSubselect(Queryable persister, IdTableInfo idTableInfo) {
-		return "select " + StringHelper.join( ", ", persister.getIdentifierColumnNames() ) +
+		return "select " + String.join( ", ", persister.getIdentifierColumnNames() ) +
 				" from " + idTableInfo.getQualifiedIdTableName();
 	}
 

@@ -346,7 +346,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 			printWriter.println(
 					TreePrinterHelper.INSTANCE.generateNodePrefix( depth+3 )
 							+ "suffixed key columns - "
-							+ StringHelper.join( ", ", entityAliases.getColumnAliases().getSuffixedKeyAliases() )
+							+ String.join( ", ", entityAliases.getColumnAliases().getSuffixedKeyAliases() )
 			);
 		}
 
@@ -358,7 +358,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 			printWriter.println(
 					TreePrinterHelper.INSTANCE.generateNodePrefix( depth+3 )
 							+ "suffixed key columns - "
-							+ StringHelper.join( ", ", collectionReferenceAliases.getCollectionColumnAliases().getSuffixedKeyAliases() )
+							+ String.join( ", ", collectionReferenceAliases.getCollectionColumnAliases().getSuffixedKeyAliases() )
 			);
 			final EntityReferenceAliases elementAliases = collectionReferenceAliases.getEntityElementAliases();
 			if ( elementAliases != null ) {
@@ -370,7 +370,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 						TreePrinterHelper.INSTANCE.generateNodePrefix( depth+3 )
 								+ elementAliases.getColumnAliases().getSuffix()
 								+ "entity-element suffixed key columns - "
-								+ StringHelper.join( ", ", elementAliases.getColumnAliases().getSuffixedKeyAliases() )
+								+ String.join( ", ", elementAliases.getColumnAliases().getSuffixedKeyAliases() )
 				);
 			}
 		}

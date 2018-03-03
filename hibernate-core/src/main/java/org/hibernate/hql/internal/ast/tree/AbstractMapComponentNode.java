@@ -10,7 +10,6 @@ import java.util.Map;
 
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
@@ -90,7 +89,7 @@ public abstract class AbstractMapComponentNode extends FromReferenceNode impleme
 	}
 
 	private void initText(String[] columns) {
-		String text = StringHelper.join( ", ", columns );
+		String text = String.join( ", ", columns );
 		if ( columns.length > 1 && getWalker().isComparativeExpressionClause() ) {
 			text = "(" + text + ")";
 		}

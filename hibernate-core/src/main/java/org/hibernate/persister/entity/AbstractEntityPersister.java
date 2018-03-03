@@ -1651,7 +1651,7 @@ public abstract class AbstractEntityPersister
 				fromJoinFragment( getRootAlias(), true, false );
 
 		String whereClause = new StringBuilder()
-				.append( StringHelper.join( "=? and ", aliasedIdColumns ) )
+				.append( String.join( "=? and ", aliasedIdColumns ) )
 				.append( "=?" )
 				.append( whereJoinFragment( getRootAlias(), true, false ) )
 				.toString();
@@ -1710,7 +1710,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		String[] aliasedIdColumns = StringHelper.qualify( getRootAlias(), getIdentifierColumnNames() );
-		String selectClause = StringHelper.join( ", ", aliasedIdColumns ) +
+		String selectClause = String.join( ", ", aliasedIdColumns ) +
 				concretePropertySelectFragment( getRootAlias(), getPropertyUpdateability() );
 
 		String fromClause = fromTableFragment( getRootAlias() ) +
@@ -1718,7 +1718,7 @@ public abstract class AbstractEntityPersister
 
 		String whereClause = new StringBuilder()
 				.append(
-						StringHelper.join(
+						String.join(
 								"=? and ",
 								aliasedIdColumns
 						)
@@ -3955,7 +3955,7 @@ public abstract class AbstractEntityPersister
 
 	protected String createWhereByKey(int tableNumber, String alias) {
 		//TODO: move to .sql package, and refactor with similar things!
-		return StringHelper.join(
+		return String.join(
 				"=? and ",
 				StringHelper.qualify( alias, getSubclassTableKeyColumns( tableNumber ) )
 		) + "=?";
@@ -5112,7 +5112,7 @@ public abstract class AbstractEntityPersister
 		String[] aliasedIdColumns = StringHelper.qualify( getRootAlias(), getIdentifierColumnNames() );
 		String whereClause = new StringBuilder()
 				.append(
-						StringHelper.join(
+						String.join(
 								"=? and ",
 								aliasedIdColumns
 						)
@@ -5323,10 +5323,10 @@ public abstract class AbstractEntityPersister
 			final String[] aliasedPropertyColumns = StringHelper.qualify( tableAlias, propertyColumnNames );
 
 			if ( valueNullness != null && valueNullness[valuesIndex] ) {
-				whereClause.append( StringHelper.join( " is null and ", aliasedPropertyColumns ) ).append( " is null" );
+				whereClause.append( String.join( " is null and ", aliasedPropertyColumns ) ).append( " is null" );
 			}
 			else {
-				whereClause.append( StringHelper.join( "=? and ", aliasedPropertyColumns ) ).append( "=?" );
+				whereClause.append( String.join( "=? and ", aliasedPropertyColumns ) ).append( "=?" );
 			}
 		}
 

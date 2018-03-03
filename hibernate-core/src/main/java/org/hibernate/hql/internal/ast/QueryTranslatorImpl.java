@@ -551,7 +551,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		if ( primaryOrdering != null ) {
 			// TODO : this is a bit dodgy, come up with a better way to check this (plus see above comment)
 			String [] idColNames = owner.getQueryable().getIdentifierColumnNames();
-			String expectedPrimaryOrderSeq = StringHelper.join(
+			String expectedPrimaryOrderSeq = String.join(
 					", ",
 					StringHelper.qualify( owner.getTableAlias(), idColNames )
 			);

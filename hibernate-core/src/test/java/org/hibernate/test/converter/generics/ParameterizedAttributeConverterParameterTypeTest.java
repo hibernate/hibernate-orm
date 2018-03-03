@@ -9,6 +9,7 @@ package org.hibernate.test.converter.generics;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 import javax.persistence.Entity;
@@ -126,7 +127,7 @@ public class ParameterizedAttributeConverterParameterTypeTest extends BaseUnitTe
 				return null;
 			}
 			else {
-				return StringHelper.join( ", ", attribute );
+				return StringHelper.join( ", ", attribute.iterator() );
 			}
 		}
 
@@ -160,7 +161,7 @@ public class ParameterizedAttributeConverterParameterTypeTest extends BaseUnitTe
 				return null;
 			}
 			else {
-				return StringHelper.join( ", ", attribute );
+				return String.join( ", ", attribute );
 			}
 		}
 

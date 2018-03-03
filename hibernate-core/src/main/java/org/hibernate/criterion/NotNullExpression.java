@@ -28,7 +28,7 @@ public class NotNullExpression implements Criterion {
 	@Override
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 		final String[] columns = criteriaQuery.findColumns( propertyName, criteria );
-		String result = StringHelper.join(
+		String result = String.join(
 				" or ",
 				StringHelper.suffix( columns, " is not null" )
 		);

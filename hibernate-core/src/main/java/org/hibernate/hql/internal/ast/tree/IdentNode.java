@@ -95,7 +95,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 	}
 	
 	private void initText(String[] columns) {
-		String text = StringHelper.join( ", ", columns );
+		String text = String.join( ", ", columns );
 		if ( columns.length > 1 && getWalker().isComparativeExpressionClause() ) {
 			text = "(" + text + ")";
 		}
@@ -216,7 +216,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 				setText( columnExpressions[0] );
 			}
 			else {
-				String joinedFragment = StringHelper.join( ", ", columnExpressions );
+				String joinedFragment = String.join( ", ", columnExpressions );
 				// avoid wrapping in parenthesis (explicit tuple treatment) if possible due to varied support for
 				// tuple syntax across databases..
 				final boolean shouldSkipWrappingInParenthesis =
@@ -277,7 +277,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 		String[] columns = getWalker().isSelectStatement()
 				? persister.toColumns(fromElement.getTableAlias(), property)
 				: persister.toColumns(property);
-		String text = StringHelper.join(", ", columns);
+		String text = String.join(", ", columns);
 		setText(columns.length == 1 ? text : "(" + text + ")");
 		setType(SqlTokenTypes.SQL_TOKEN);
 

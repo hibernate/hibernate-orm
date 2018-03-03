@@ -41,7 +41,6 @@ import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.CacheJoinFragment;
 import org.hibernate.sql.JoinFragment;
@@ -398,11 +397,11 @@ public class Cache71Dialect extends Dialect {
 				.append( " FOREIGN KEY " )
 				.append( constraintName )
 				.append( " (" )
-				.append( StringHelper.join( ", ", foreignKey ) )
+				.append( String.join( ", ", foreignKey ) )
 				.append( ") REFERENCES " )
 				.append( referencedTable )
 				.append( " (" )
-				.append( StringHelper.join( ", ", primaryKey ) )
+				.append( String.join( ", ", primaryKey ) )
 				.append( ") " )
 				.toString();
 	}

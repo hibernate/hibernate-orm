@@ -116,8 +116,8 @@ ext {
             informix:        'com.ibm.informix:jdbc:4.10.7.20160517',
             jboss_jta:       "org.jboss.jbossts:jbossjta:4.16.4.Final",
             xapool:          "com.experlog:xapool:1.5.0",
-            mockito:         'org.mockito:mockito-core:2.7.5',
-            mockito_inline:  'org.mockito:mockito-inline:2.7.5',
+            mockito:         'org.mockito:mockito-core:2.18.0',
+            mockito_inline:  'org.mockito:mockito-inline:2.18.0',
 
             validator:       "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",
             // EL required by Hibernate Validator at test runtime

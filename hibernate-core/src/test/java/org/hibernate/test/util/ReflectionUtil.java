@@ -49,6 +49,22 @@ public class ReflectionUtil {
 	}
 
 	/**
+	 * Get a field value from a given class
+	 * @param target Class whose field is being read
+	 * @param name field name
+	 * @return field value
+	 */
+	public static <T> T getStaticFieldValue(Class<?> target, String name) {
+		try {
+			Field field = getField(target, name);
+			return (T) field.get( null );
+		}
+		catch ( IllegalAccessException e ) {
+			throw new IllegalArgumentException( "Cannot set field " + name, e);
+		}
+	}
+
+	/**
 	 * Set target Object field to a certain value
 	 * @param target Object whose field is being set
 	 * @param field Object field to set
@@ -73,6 +89,22 @@ public class ReflectionUtil {
 		try {
 			Field field = getField(target.getClass(), fieldName);
 			field.set( target, value );
+		}
+		catch ( IllegalAccessException e ) {
+			throw new IllegalArgumentException("Field " + fieldName + " could not be set",  e );
+		}
+	}
+
+	/**
+	 * Set target Class field to a certain value
+	 * @param target Class whose field is being set
+	 * @param fieldName Class field name to set
+	 * @param value the new value for the given field
+	 */
+	public static void setStaticField(Class<?> target, String fieldName, Object value) {
+		try {
+			Field field = getField(target, fieldName);
+			field.set( null, value );
 		}
 		catch ( IllegalAccessException e ) {
 			throw new IllegalArgumentException("Field " + fieldName + " could not be set",  e );

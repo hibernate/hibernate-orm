@@ -131,8 +131,8 @@ ext {
             proxool:         "proxool:proxool:0.8.3",
             hikaricp:        "com.zaxxer:HikariCP:2.5.1",
             vibur:           "org.vibur:vibur-dbcp:22.0",
-            agroal_api:      "io.agroal:agroal-api:0.4-SNAPSHOT",
-            agroal_pool:     "io.agroal:agroal-pool:0.4-SNAPSHOT",
+            agroal_api:      "io.agroal:agroal-api:0.4",
+            agroal_pool:     "io.agroal:agroal-pool:0.4",
 
             cdi: "javax.enterprise:cdi-api:${cdiVersion}",
             weld: "org.jboss.weld.se:weld-se-shaded:${weldVersion}",

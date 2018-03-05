@@ -9,4 +9,8 @@
     <resources>
         <artifact name="${net.bytebuddy:byte-buddy}"/>
     </resources>
+    <dependencies>
+        <!-- ByteBuddy currently uses sun.misc.Unsafe -->
+        <module name="sun.jdk"/>
+    </dependencies>
 </module>

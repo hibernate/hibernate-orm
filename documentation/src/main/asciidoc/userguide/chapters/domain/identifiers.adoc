@@ -369,7 +369,7 @@ include::{extrasdir}/id/identifiers-generators-table-configured-mapping-example.
 
 Now, when inserting 3 `Product` entities, Hibernate generates the following statements:
 
-[[identifiers-generators-table-configured-persist-example]]]
+[[identifiers-generators-table-configured-persist-example]]
 .Configured table generator persist example
 ====
 [source,java]

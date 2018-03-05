@@ -37,6 +37,17 @@ public abstract class IndexedCollection extends Collection {
 		return true;
 	}
 
+	@Override
+	public boolean isSame(Collection other) {
+		return other instanceof IndexedCollection
+				&& isSame( (IndexedCollection) other );
+	}
+
+	public boolean isSame(IndexedCollection other) {
+		 return super.isSame( other )
+				 && isSame( index, other.index );
+	}
+
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			PrimaryKey pk = new PrimaryKey( getCollectionTable() );

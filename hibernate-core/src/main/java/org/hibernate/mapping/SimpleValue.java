@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.Objects;
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.FetchMode;
@@ -637,6 +638,24 @@ public class SimpleValue implements KeyValue {
 
 		type = sourceValue.type;
 		attributeConverterDescriptor = sourceValue.attributeConverterDescriptor;
+	}
+
+	@Override
+	public boolean isSame(Value other) {
+		return this == other || other instanceof SimpleValue && isSame( (SimpleValue) other );
+	}
+
+	protected static boolean isSame(Value v1, Value v2) {
+		return v1 == v2 || v1 != null && v2 != null && v1.isSame( v2 );
+	}
+
+	public boolean isSame(SimpleValue other) {
+		return Objects.equals( columns, other.columns )
+				&& Objects.equals( typeName, other.typeName )
+				&& Objects.equals( typeParameters, other.typeParameters )
+				&& Objects.equals( table, other.table )
+				&& Objects.equals( foreignKeyName, other.foreignKeyName )
+				&& Objects.equals( foreignKeyDefinition, other.foreignKeyDefinition );
 	}
 
 	@Override

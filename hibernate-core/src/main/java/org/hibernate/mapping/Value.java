@@ -40,6 +40,7 @@ public interface Value extends Serializable {
 	public boolean isValid(Mapping mapping) throws MappingException;
 	public void setTypeUsingReflection(String className, String propertyName) throws MappingException;
 	public Object accept(ValueVisitor visitor);
+	public boolean isSame(Value other);
 
 	ServiceRegistry getServiceRegistry();
 }

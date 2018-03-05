@@ -53,4 +53,15 @@ public class DependantValue extends SimpleValue {
 	public void setUpdateable(boolean updateable) {
 		this.updateable = updateable;
 	}
+
+	@Override
+	public boolean isSame(SimpleValue other) {
+		return other instanceof DependantValue && isSame( (DependantValue) other );
+	}
+
+	public boolean isSame(DependantValue other) {
+		return super.isSame( other )
+				&& isSame( wrappedValue, other.wrappedValue );
+	}
+
 }

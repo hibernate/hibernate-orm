@@ -33,6 +33,17 @@ public abstract class IdentifierCollection extends Collection {
 		return true;
 	}
 
+	@Override
+	public boolean isSame(Collection other) {
+		return other instanceof IdentifierCollection
+				&& isSame( (IdentifierCollection) other );
+	}
+
+	public boolean isSame(IdentifierCollection other) {
+		return super.isSame( other )
+				&& isSame( identifier, other.identifier );
+	}
+
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			PrimaryKey pk = new PrimaryKey( getCollectionTable() );

@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Objects;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -145,6 +146,20 @@ public class OneToOne extends ToOne {
 
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public boolean isSame(ToOne other) {
+		return other instanceof OneToOne && isSame( (OneToOne) other );
+	}
+
+	public boolean isSame(OneToOne other) {
+		return super.isSame( other )
+				&& Objects.equals( foreignKeyType, other.foreignKeyType )
+				&& isSame( identifier, other.identifier )
+				&& Objects.equals( propertyName, other.propertyName )
+				&& Objects.equals( entityName, other.entityName )
+				&& constrained == other.constrained;
 	}
 	
 }

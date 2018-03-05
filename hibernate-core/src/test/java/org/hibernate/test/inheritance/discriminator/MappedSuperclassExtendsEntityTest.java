@@ -54,13 +54,14 @@ public class MappedSuperclassExtendsEntityTest extends BaseCoreFunctionalTestCas
 	@Test
 	@TestForIssue(jiraKey = "HHH-12332")
 	public void testQueryingSingle() {
+		// Make sure that the produced query for th
 		doInHibernate( this::sessionFactory, s -> {
-			s.createQuery( "from TestEntity p" ).getResultList();
+			s.createQuery( "FROM TestEntity e JOIN e.parents p1 JOIN p1.entities JOIN p1.entities2 JOIN e.parents2 p2 JOIN p2.entities JOIN p2.entities2" ).getResultList();
 		} );
 	}
 
 	@Entity(name = "GrandParent")
-	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+	@Inheritance
 	@DiscriminatorColumn(name = "discriminator")
 	public static abstract class GrandParent implements Serializable {
 		private static final long serialVersionUID = 1L;
@@ -68,6 +69,8 @@ public class MappedSuperclassExtendsEntityTest extends BaseCoreFunctionalTestCas
         @Id
         @GeneratedValue
 		private Long id;
+		@ManyToMany(mappedBy = "parents2")
+		private List<TestEntity> entities2;
 
 		public GrandParent() {
 		}
@@ -78,6 +81,14 @@ public class MappedSuperclassExtendsEntityTest extends BaseCoreFunctionalTestCas
 
 		public void setId(Long id) {
 			this.id = id;
+		}
+
+		public List<TestEntity> getEntities2() {
+			return entities2;
+		}
+
+		public void setEntities2(List<TestEntity> entities2) {
+			this.entities2 = entities2;
 		}
 	}
 
@@ -105,6 +116,8 @@ public class MappedSuperclassExtendsEntityTest extends BaseCoreFunctionalTestCas
 		private Long id;
 		@ManyToMany
 		private List<GrandParent> parents;
+		@ManyToMany
+		private List<GrandParent> parents2;
 
 		public Long getId() {
 			return id;
@@ -122,6 +135,13 @@ public class MappedSuperclassExtendsEntityTest extends BaseCoreFunctionalTestCas
 			this.parents = parents;
 		}
 
+		public List<GrandParent> getParents2() {
+			return parents2;
+		}
+
+		public void setParents2(List<GrandParent> parents2) {
+			this.parents2 = parents2;
+		}
 	}
 
 	@Entity(name = "Child1")

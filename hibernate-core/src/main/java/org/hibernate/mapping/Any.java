@@ -7,6 +7,7 @@
 package org.hibernate.mapping;
 
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -68,5 +69,17 @@ public class Any extends SimpleValue {
 
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public boolean isSame(SimpleValue other) {
+		return other instanceof Any && isSame( (Any) other );
+	}
+
+	public boolean isSame(Any other) {
+		return super.isSame( other )
+				&& Objects.equals( identifierTypeName, other.identifierTypeName )
+				&& Objects.equals( metaTypeName, other.metaTypeName )
+				&& Objects.equals( metaValues, other.metaValues );
 	}
 }

@@ -437,10 +437,9 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		for ( Element element : elementsForProperty ) {
 			final boolean isBasic = "basic".equals( element.getName() );
 			final boolean isEmbedded = "embedded".equals( element.getName() );
+			final boolean isElementCollection = "element-collection".equals(element.getName());
 
-			// todo : can be collections too
-
-			final boolean canHaveConverts = isBasic || isEmbedded;
+			final boolean canHaveConverts = isBasic || isEmbedded || isElementCollection;
 
 			if ( !canHaveConverts ) {
 				continue;

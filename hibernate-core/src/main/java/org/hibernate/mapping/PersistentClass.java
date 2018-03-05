@@ -446,7 +446,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public Property getRecursiveProperty(String propertyPath) throws MappingException {
 		try {
-			return getRecursiveProperty( propertyPath, getPropertyIterator() );
+			return getRecursiveProperty( propertyPath, getPropertyClosureIterator() );
 		}
 		catch (MappingException e) {
 			throw new MappingException(

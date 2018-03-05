@@ -17,9 +17,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.*;
 import org.hibernate.sql.Template;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
@@ -186,7 +184,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 				Collection thisCollection = metadata.getCollectionBinding( ( (CollectionType) existingType ).getRole() );
 				Collection otherCollection = metadata.getCollectionBinding( ( (CollectionType) type ).getRole() );
 
-				if ( thisCollection == otherCollection ) {
+				if ( thisCollection.isSame( otherCollection ) ) {
 					logDuplicateRegistration(
 							path,
 							existingType,
@@ -195,14 +193,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 					return;
 				}
 
-				Collection commonCollection = getSuperCollection(
-						metadata,
-						thisCollection.getOwner(),
-						otherCollection.getOwner(),
-						thisCollection.getReferencedPropertyName()
-				);
-
-				newType = commonCollection.getType();
+                throw new IllegalStateException( "Collection mapping in abstract entity type with a type variable is unsupported! Couldn't add property '" + path + "' with type: " + type );
 			}
 			else if ( type instanceof EntityType ) {
 				EntityType entityType1 = (EntityType) existingType;
@@ -268,76 +259,10 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 	}
 
 	private PersistentClass getCommonPersistentClass(PersistentClass clazz1, PersistentClass clazz2) {
-		while ( !clazz2.getMappedClass().isAssignableFrom( clazz1.getMappedClass() ) ) {
+		while ( clazz2 != null && !clazz2.getMappedClass().isAssignableFrom( clazz1.getMappedClass() ) ) {
 			clazz2 = clazz2.getSuperclass();
 		}
 		return clazz2;
-	}
-
-	private Collection getSuperCollection(MetadataImplementor metadata, PersistentClass clazz1, PersistentClass commonPersistentClass, String propertyName) {
-		Class<?> c1 = clazz1.getMappedClass();
-		Class<?> c2 = commonPersistentClass.getMappedClass();
-		MappedSuperclass commonMappedSuperclass = null;
-
-		// First we traverse up the clazz2/commonPersistentClass super types until we find a common type
-		while ( !c2.isAssignableFrom( c1 ) ) {
-			if ( commonPersistentClass == null) {
-				if ( commonMappedSuperclass.getSuperPersistentClass() == null ) {
-					commonMappedSuperclass = commonMappedSuperclass.getSuperMappedSuperclass();
-					commonPersistentClass = null;
-				}
-				else {
-					commonPersistentClass = commonMappedSuperclass.getSuperPersistentClass();
-					commonMappedSuperclass = null;
-				}
-			}
-			else {
-				if ( commonPersistentClass.getSuperclass() == null ) {
-					commonMappedSuperclass = commonPersistentClass.getSuperMappedSuperclass();
-					commonPersistentClass = null;
-				}
-				else {
-					commonPersistentClass = commonPersistentClass.getSuperclass();
-					commonMappedSuperclass = null;
-				}
-			}
-		}
-
-		// Then we traverse it's types up as long as possible until we find a type that has a collection binding
-		while ( c2 != Object.class ) {
-			if ( commonMappedSuperclass != null ) {
-				Collection collection = metadata.getCollectionBinding( commonMappedSuperclass.getMappedClass().getName() + "." + propertyName );
-				if ( collection != null ) {
-					return collection;
-				}
-
-				if ( commonMappedSuperclass.getSuperPersistentClass() == null ) {
-					commonMappedSuperclass = commonMappedSuperclass.getSuperMappedSuperclass();
-					commonPersistentClass = null;
-				}
-				else {
-					commonPersistentClass = commonMappedSuperclass.getSuperPersistentClass();
-					commonMappedSuperclass = null;
-				}
-			}
-			else {
-				Collection collection = metadata.getCollectionBinding( commonPersistentClass.getEntityName() + "." + propertyName );
-				if ( collection != null ) {
-					return collection;
-				}
-
-				if ( commonPersistentClass.getSuperclass() == null ) {
-					commonMappedSuperclass = commonPersistentClass.getSuperMappedSuperclass();
-					commonPersistentClass = null;
-				}
-				else {
-					commonPersistentClass = commonPersistentClass.getSuperclass();
-					commonMappedSuperclass = null;
-				}
-			}
-		}
-
-		return null;
 	}
 
 	/*protected void initPropertyPaths(

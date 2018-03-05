@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Map;
 
 import org.hibernate.EntityMode;
@@ -194,6 +195,20 @@ public class Component extends SimpleValue implements MetaAttributable {
 	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public boolean isSame(SimpleValue other) {
+		return other instanceof Component && isSame( (Component) other );
+	}
+
+	public boolean isSame(Component other) {
+		return super.isSame( other )
+				&& Objects.equals( properties, other.properties )
+				&& Objects.equals( componentClassName, other.componentClassName )
+				&& embedded == other.embedded
+				&& Objects.equals( parentProperty, other.parentProperty )
+				&& Objects.equals( metaAttributes, other.metaAttributes );
 	}
 
 	@Override

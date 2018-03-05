@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Properties;
+import java.util.Objects;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
@@ -402,6 +403,27 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	public boolean isValid(Mapping mapping) throws MappingException {
 		return true;
+	}
+
+	@Override
+	public boolean isSame(Value other) {
+		return this == other || other instanceof Collection && isSame( (Collection) other );
+	}
+
+	protected static boolean isSame(Value v1, Value v2) {
+		return v1 == v2 || v1 != null && v2 != null && v1.isSame( v2 );
+	}
+
+	public boolean isSame(Collection other) {
+		return this == other || isSame( key, other.key )
+				&& isSame( element, other.element )
+				&& Objects.equals( collectionTable, other.collectionTable )
+				&& Objects.equals( where, other.where )
+				&& Objects.equals( manyToManyWhere, other.manyToManyWhere )
+				&& Objects.equals( referencedPropertyName, other.referencedPropertyName )
+				&& Objects.equals( mappedByProperty, other.mappedByProperty )
+				&& Objects.equals( typeName, other.typeName )
+				&& Objects.equals( typeParameters, other.typeParameters );
 	}
 
 	private void createForeignKeys() throws MappingException {

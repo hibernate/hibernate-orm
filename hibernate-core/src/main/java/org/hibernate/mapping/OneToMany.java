@@ -7,6 +7,7 @@
 package org.hibernate.mapping;
 
 import java.util.Iterator;
+import java.util.Objects;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
@@ -131,6 +132,16 @@ public class OneToMany implements Value {
 		return visitor.accept( this );
 	}
 
+	@Override
+	public boolean isSame(Value other) {
+		return this == other || other instanceof OneToMany && isSame( (OneToMany) other );
+	}
+
+	public boolean isSame(OneToMany other) {
+		return Objects.equals( referencingTable, other.referencingTable )
+				&& Objects.equals( referencedEntityName, other.referencedEntityName )
+				&& Objects.equals( associatedClass, other.associatedClass );
+	}
 
 	public boolean[] getColumnInsertability() {
 		//TODO: we could just return all false...

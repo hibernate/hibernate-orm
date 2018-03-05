@@ -14,6 +14,8 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.Type;
 
+import java.util.Objects;
+
 /**
  * A simple-point association (ie. a reference to another entity).
  * @author Gavin King
@@ -75,6 +77,18 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public boolean isSame(SimpleValue other) {
+		return other instanceof ToOne && isSame( (ToOne) other );
+	}
+
+	public boolean isSame(ToOne other) {
+		return super.isSame( other )
+				&& Objects.equals( referencedPropertyName, other.referencedPropertyName )
+				&& Objects.equals( referencedEntityName, other.referencedEntityName )
+				&& embedded == other.embedded;
 	}
 
 	public boolean isValid(Mapping mapping) throws MappingException {

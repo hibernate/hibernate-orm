@@ -181,7 +181,7 @@ An entity class is also allowed to override a callback method defined in a super
 [[events-default-listener]]
 === Default entity listeners
 
-The JPA specification allows you to define a default entity listener which is going to be applied for every entity in that particular system.
+The JPA specification allows you to define a default entity listener which is applied for every entity in that particular system.
 Default entity listeners can only be defined in XML mapping files.
 
 [[events-default-listener-mapping-example]]
@@ -210,7 +210,7 @@ include::{sourcedir}/BaseEntity.java[tags=events-default-listener-mapping-exampl
 include::{sourcedir}/DefaultEntityListenerTest.java[tags=events-default-listener-mapping-example]
 ----
 
-When persisting a `Person` or `Book` entity, the `createdOn` is going to be set by the `onPersist` method of the `DefaultEntityListener`.
+When persisting a `Person` or `Book` entity, the `createdOn` is set by the `onPersist` method of the `DefaultEntityListener`.
 
 [[events-default-listener-persist-example]]
 .Default event listner persist event
@@ -226,7 +226,7 @@ include::{extrasdir}/events-default-listener-persist-example.sql[]
 ----
 ====
 
-When updating a `Person` or `Book` entity, the `updatedOn` is going to be set by the `onUpdate` method of the `DefaultEntityListener`.
+When updating a `Person` or `Book` entity, the `updatedOn` is set by the `onUpdate` method of the `DefaultEntityListener`.
 
 [[events-default-listener-update-example]]
 .Default event listner update event
@@ -263,7 +263,7 @@ include::{sourcedir}/DefaultEntityListenerTest.java[tags=events-exclude-default-
 ====
 
 When persisting a `Publisher` entity,
-the `createdOn` is not going to be set by the `onPersist` method of the `DefaultEntityListener`
+the `createdOn` is not set by the `onPersist` method of the `DefaultEntityListener`
 because the `Publisher` entity was marked with the `@ExcludeDefaultListeners` and `@ExcludeSuperclassListeners` annotations.
 
 [[events-exclude-default-listener-persist-example]]

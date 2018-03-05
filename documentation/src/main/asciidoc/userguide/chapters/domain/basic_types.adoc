@@ -978,10 +978,10 @@ org.hibernate.AnnotationException: @Temporal should only be set on a java.util.D
 [[basic-datetime-time-zone]]
 ===== Using a specific time zone
 
-By default, Hibernate is going to use the https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-[`PreparedStatement.setTimestamp(int parameterIndex, java.sql.Timestamp)`] or
+By default, Hibernate uses the https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-[`PreparedStatement.setTimestamp(int parameterIndex, java.sql.Timestamp)`] or
 https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTime-int-java.sql.Time-[`PreparedStatement.setTime(int parameterIndex, java.sql.Time x)`] when saving a `java.sql.Timestamp` or a `java.sql.Time` property.
 
-When the time zone is not specified, the JDBC driver is going to use the underlying JVM default time zone, which might not be suitable if the application is used from all across the globe.
+When the time zone is not specified, the JDBC driver uses the underlying JVM default time zone, which might not be suitable if the application is used from all across the globe.
 For this reason, it is very common to use a single reference time zone (e.g. UTC) whenever saving/loading data from the database.
 
 One alternative would be to configure all JVMs to use the reference time zone:
@@ -1023,7 +1023,7 @@ Session session = sessionFactory()
     .openSession();
 ----
 
-With this configuration property in place, Hibernate is going to call the https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-java.util.Calendar-[`PreparedStatement.setTimestamp(int parameterIndex, java.sql.Timestamp, Calendar cal)`] or
+With this configuration property in place, Hibernate calls the https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-java.util.Calendar-[`PreparedStatement.setTimestamp(int parameterIndex, java.sql.Timestamp, Calendar cal)`] or
 https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTime-int-java.sql.Time-java.util.Calendar-[`PreparedStatement.setTime(int parameterIndex, java.sql.Time x, Calendar cal)`], where the `java.util.Calendar` references the time zone provided via the `hibernate.jdbc.time_zone` property.
 
 [[basic-jpa-convert]]
@@ -1034,7 +1034,7 @@ it also supports `AttributeConverter` as well.
 
 With a custom `AttributeConverter`, the application developer can map a given JDBC type to an entity basic type.
 
-In the following example, the `java.util.Period` is going to be mapped to a `VARCHAR` database column.
+In the following example, the `java.util.Period` is mapped to a `VARCHAR` database column.
 
 [[basic-jpa-convert-period-string-converter-example]]
 .`java.util.Period` custom `AttributeConverter`
@@ -1122,7 +1122,7 @@ On the other hand, consider the following example where the `Money` type is a mu
 include::{sourcedir}/converter/MoneyConverterTest.java[tags=basic-jpa-convert-money-converter-mapping-example]
 ----
 
-A mutable `Object` allows you to modify its internal structure, and Hibernate dirty checking mechanism is going to propagate the change to the database:
+A mutable `Object` allows you to modify its internal structure, and Hibernate dirty checking mechanism propagates the change to the database:
 
 [source, JAVA, indent=0]
 ----
@@ -1208,7 +1208,7 @@ include::{sourcedir}/basic/AutoQuotingTest.java[tags=basic-auto-quoting-example]
 ----
 ====
 
-When persisting a `Product` entity, Hibernate is going to quote all identifiers as in the following example:
+When persisting a `Product` entity, Hibernate quotes all identifiers as in the following example:
 
 ====
 [source, SQL, indent=0]
@@ -1255,7 +1255,7 @@ include::{sourcedir}/generated/GeneratedTest.java[tags=mapping-generated-Generat
 ----
 ====
 
-When the `Person` entity is persisted, Hibernate is going to fetch the calculated `fullName` column from the database,
+When the `Person` entity is persisted, Hibernate fetches the calculated `fullName` column from the database,
 which concatenates the first, middle, and last name.
 
 [[mapping-generated-Generated-persist-example]]
@@ -1273,7 +1273,7 @@ include::{extrasdir}/basic/mapping-generated-Generated-persist-example.sql[]
 ====
 
 The same goes when the `Person` entity is updated.
-Hibernate is going to fetch the calculated `fullName` column from the database after the entity is modified.
+Hibernate fetches the calculated `fullName` column from the database after the entity is modified.
 
 [[mapping-generated-Generated-update-example]]
 .`@Generated` update example
@@ -1309,7 +1309,7 @@ include::{sourcedir}/generated/GeneratorTypeTest.java[tags=mapping-generated-Gen
 ----
 ====
 
-When the `Person` entity is persisted, Hibernate is going to populate the `createdBy` column with the currently logged user.
+When the `Person` entity is persisted, Hibernate populates the `createdBy` column with the currently logged user.
 
 [[mapping-generated-GeneratorType-persist-example]]
 .`@Generated` persist example
@@ -1326,7 +1326,7 @@ include::{extrasdir}/basic/mapping-generated-GeneratorType-persist-example.sql[]
 ====
 
 The same goes when the `Person` entity is updated.
-Hibernate is going to populate the `updatedBy` column with the currently logged user.
+Hibernate populates the `updatedBy` column with the currently logged user.
 
 [[mapping-generated-GeneratorType-update-example]]
 .`@Generated` update example
@@ -1365,7 +1365,7 @@ include::{sourcedir}/generated/CreationTimestampTest.java[tags=mapping-generated
 ----
 ====
 
-When the `Event` entity is persisted, Hibernate is going to populate the underlying `timestamp` column with the current JVM timestamp value:
+When the `Event` entity is persisted, Hibernate populates the underlying `timestamp` column with the current JVM timestamp value:
 
 [[mapping-generated-CreationTimestamp-persist-example]]
 .`@CreationTimestamp` persist example
@@ -1404,7 +1404,7 @@ include::{sourcedir}/generated/UpdateTimestampTest.java[tags=mapping-generated-U
 ----
 ====
 
-When the `Bid` entity is persisted, Hibernate is going to populate the underlying `updated_on` column with the current JVM timestamp value:
+When the `Bid` entity is persisted, Hibernate populates the underlying `updated_on` column with the current JVM timestamp value:
 
 [[mapping-generated-UpdateTimestamp-persist-example]]
 .`@UpdateTimestamp` persist example
@@ -1420,7 +1420,7 @@ include::{extrasdir}/basic/mapping-generated-UpdateTimestamp-persist-example.sql
 ----
 ====
 
-When updating the `Bid` entity, Hibernate is going to modify the `updated_on` column with the current JVM timestamp value:
+When updating the `Bid` entity, Hibernate modifies the `updated_on` column with the current JVM timestamp value:
 
 [[mapping-generated-UpdateTimestamp-update-example]]
 .`@UpdateTimestamp` update example
@@ -1571,7 +1571,7 @@ include::{sourcedir}/basic/FormulaTest.java[tags=mapping-column-formula-example]
 ----
 ====
 
-When loading the `Account` entity, Hibernate is going to calculate the `interest` property using the configured `@Formula`:
+When loading the `Account` entity, Hibernate calculates the `interest` property using the configured `@Formula`:
 
 [[mapping-column-formula-persistence-example]]
 .Persisting an entity with a `@Formula` mapping
@@ -1623,7 +1623,7 @@ include::{extrasdir}/basic/mapping-where-persistence-example.sql[]
 ----
 ====
 
-When executing an `Account` entity query, Hibernate is going to filter out all records that are not active.
+When executing an `Account` entity query, Hibernate filters out all records that are not active.
 
 [[mapping-where-entity-query-example]]
 .Query entities mapped with `@Where`
@@ -1639,7 +1639,7 @@ include::{extrasdir}/basic/mapping-where-entity-query-example.sql[]
 ----
 ====
 
-When fetching the `debitAccounts` or the `creditAccounts` collections, Hibernate is going to apply the `@Where` clause filtering criteria to the associated child entities.
+When fetching the `debitAccounts` or the `creditAccounts` collections, Hibernate applies the `@Where` clause filtering criteria to the associated child entities.
 
 [[mapping-where-collection-query-example]]
 .Traversing collections mapped with `@Where`
@@ -1688,7 +1688,7 @@ include::{sourcedir}/basic/WhereJoinTableTest.java[tags=mapping-where-join-table
 ----
 ====
 
-When fetching the `currentWeekReaders` collection, Hibernate is going to find one one entry:
+When fetching the `currentWeekReaders` collection, Hibernate finds one entry:
 
 [[mapping-where-join-table-fetch-example]]
 .`@WhereJoinTable` fetch example
@@ -1730,9 +1730,9 @@ include::{extrasdir}/basic/mapping-filter-persistence-example.sql[]
 ----
 ====
 
-By default, without explicitly enabling the filter, Hibernate is going to fetch all `Account` entities.
+By default, without explicitly enabling the filter, Hibernate fetches all `Account` entities.
 If the filter is enabled and the filter parameter value is provided,
-then Hibernate is going to apply the filtering criteria to the associated `Account` entities.
+then Hibernate applies the filtering criteria to the associated `Account` entities.
 
 [[mapping-filter-entity-query-example]]
 .Query entities mapped with `@Filter`
@@ -1769,7 +1769,7 @@ As you can see from the example above, contrary to an entity query, the filter d
 ====
 
 Just like with entity queries, collections can be filtered as well, but only if the filter is explicitly enabled on the currently running Hibernate `Session`.
-This way, when fetching the `accounts` collections, Hibernate is going to apply the `@Filter` clause filtering criteria to the associated collection entries.
+This way, when fetching the `accounts` collections, Hibernate applies the `@Filter` clause filtering criteria to the associated collection entries.
 
 [[mapping-filter-collection-query-example]]
 .Traversing collections mapped with `@Filter`
@@ -1835,7 +1835,7 @@ include::{extrasdir}/basic/mapping-filter-join-table-persistence-example.sql[]
 ====
 
 The collections can be filtered if the associated filter is enabled on the currently running Hibernate `Session`.
-This way, when fetching the `accounts` collections, Hibernate is going to apply the `@FilterJoinTable` clause filtering criteria to the associated collection entries.
+This way, when fetching the `accounts` collections, Hibernate applies the `@FilterJoinTable` clause filtering criteria to the associated collection entries.
 
 [[mapping-filter-collection-query-example]]
 .Traversing collections mapped with `@FilterJoinTable`
@@ -1869,7 +1869,7 @@ include::{sourcedir}/basic/FilterSqlFragementAliasTest.java[tags=mapping-filter-
 ====
 
 Now, when fetching the `Account` entities and activating the filter,
-Hibernate is going to apply the right table aliases to the filter predicates:
+Hibernate applies the right table aliases to the filter predicates:
 
 [[mapping-filter-sql-fragment-alias-query-example]]
 .Fetching a collection filtered with `@SqlFragmentAlias`

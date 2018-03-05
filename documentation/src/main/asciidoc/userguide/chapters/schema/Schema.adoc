@@ -27,7 +27,7 @@ include::{sourcedir}/SchemaGenerationTest.java[tags=schema-generation-domain-mod
 ----
 ====
 
-If the `hibernate.hbm2ddl.auto` configuration is set to `create`, Hibernate is going to generate the following database schema:
+If the `hibernate.hbm2ddl.auto` configuration is set to `create`, Hibernate generates the following database schema:
 
 [[sql-schema-generation-domain-model-example]]
 .Auto-generated database schema
@@ -67,7 +67,7 @@ If we configure Hibernate to import the script above:
 ----
 ====
 
-Hibernate is going to execute the script file after the schema is automatically generated.
+Hibernate executes the script file after the schema is automatically generated.
 
 [[schema-generation-database-objects]]
 === Database objects
@@ -85,7 +85,7 @@ include::{sourcedir}/SchemaGenerationTest.hbm.xml[]
 ----
 ====
 
-When the `SessionFactory` is bootstrapped, Hibernate is going to execute the `database-object`, therefore creating the `sp_count_books` function.
+When the `SessionFactory` is bootstrapped, Hibernate executes the `database-object`, therefore creating the `sp_count_books` function.
 
 [[schema-generation-database-checks]]
 === Database-level checks
@@ -102,7 +102,7 @@ include::{sourcedir}/CheckTest.java[tag=schema-generation-database-checks-exampl
 ====
 
 Now, if you try to add a `Book` entity with an `isbn` attribute whose length is not 13 characters,
-a `ConstraintViolationException` is going to be thrown.
+a `ConstraintViolationException` is thrown.
 
 [[stag::schema-generation-database-checks-persist-example]]
 .Database check failure example
@@ -137,14 +137,14 @@ include::{extrasdir}/schema-generation-column-default-value-mapping-example.sql[
 ----
 ====
 
-In the mapping above, both the `name` and `clientId` table columns are going to use a `DEFAULT` value.
+In the mapping above, both the `name` and `clientId` table columns use a `DEFAULT` value.
 
 [NOTE]
 ====
 The entity is annotated with the `@DynamicInsert` annotation so that the `INSERT` statement does not include the entity attribute that have not been set.
 ====
 
-This way, when omitting the `name` and the `clientId` attribute, the database is going to set them according to their default values.
+This way, when omitting the `name` and the `clientId` attribute, the database sets them according to their default values.
 
 [[schema-generation-column-default-value-persist-example]]
 .`@ColumnDefault` mapping example

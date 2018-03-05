@@ -122,7 +122,7 @@ public class QueryHints {
 	/**
 	 * Hint to enable/disable the follow-on-locking mechanism provided by {@link org.hibernate.dialect.Dialect#useFollowOnLocking(QueryParameters)}.
 	 * A value of {@code true} enables follow-on-locking, whereas a value of {@code false} disables it.
-	 * If the value is {@code null}, the the {@code Dialect} strategy is going to be used instead.
+	 * If the value is {@code null}, the {@code Dialect} strategy is used instead.
 	 *
 	 * @since 5.2
 	 */

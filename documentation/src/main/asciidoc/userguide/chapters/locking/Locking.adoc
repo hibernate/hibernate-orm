@@ -147,7 +147,7 @@ include::{extrasdir}/locking-optimistic-version-timestamp-source-persist-example
 [[locking-optimistic-exclude-attribute]]
 ===== Excluding attributes
 
-By default, every entity attribute modification is going to trigger a version incrementation.
+By default, every entity attribute modification triggers a version incrementation.
 If there is an entity property which should not bump up the entity version,
 then you need to annotate it with the Hibernate https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLock.html[`@OptimisticLock`] annotation,
 as illustrated in the following example.
@@ -162,7 +162,7 @@ include::{sourcedir}/OptimisticLockTest.java[tags=locking-optimistic-exclude-att
 ====
 
 This way, if one tread modifies the `Phone` number while a second thread increments the `callCount` attribute,
-the two concurrent transactions are not going to conflict as illustrated by the following example.
+the two concurrent transactions will not conflict as illustrated by the following example.
 
 [[locking-optimistic-exclude-attribute-example]]
 .@OptimisticLock exlude attribute example
@@ -245,7 +245,7 @@ include::{extrasdir}/locking-optimistic-lock-type-all-update-example.sql[]
 
 As you can see, all the columns of the associated database row are used in the `WHERE` clause.
 If any column has changed after the row was loaded, there won't be any match, and a `StaleStateException` or an `OptimisticLockException`
-is going to be thrown.
+will be thrown.
 
 [NOTE]
 ====

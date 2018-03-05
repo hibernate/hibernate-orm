@@ -30,7 +30,7 @@ Appropriate DDL statements can also be generated with an Ant task in <<envers-ge
 ====
 
 Considering we have a `Customer` entity, when annotating it with the `Audited` annotation,
-Hibernate is going to generate the following tables using the `hibernate.hbm2ddl.auto` schema tool:
+Hibernate generates the following tables using the `hibernate.hbm2ddl.auto` schema tool:
 
 [[envers-audited-mapping-example]]
 .Basic Envers entity mapping
@@ -170,7 +170,7 @@ include::{sourcedir}/DefaultAuditTest.java[tags=envers-audited-rev3-example]
 You can use the
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/query/AuditQueryCreator.html#forEntitiesAtRevision-java.lang.Class-java.lang.String-java.lang.Number-boolean-[`forEntitiesAtRevision(Class<T> cls, String entityName, Number revision, boolean includeDeletions)`]
 method to get the deleted entity revision so that, instead of a `NoResultException`,
-all attributes, except for the entity identifier, are going to be `null`.
+all attributes, except for the entity identifier, will be `null`.
 
 [[envers-audited-rev4-example]]
 .Getting the third revision for the `Customer` entity without getting a `NoResultException`
@@ -385,7 +385,7 @@ then the mapping will looks as follows:
 />
 ----
 
-Once you configured the `ValidityAuditStrategy`, the following schema is going to be automatically generated:
+Once you configured the `ValidityAuditStrategy`, the following schema is automatically generated:
 
 [[envers-audited-validity-mapping-example]]
 .Envers schema for the `ValidityAuditStrategy`
@@ -581,7 +581,7 @@ include::{sourcedir}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modifie
 ====
 
 If the `Customer` entity class name is changed to `ApplicationCustomer`,
-Envers is going to insert a new record in the `REVCHANGES` table with the previous entity class name:
+Envers inserts a new record in the `REVCHANGES` table with the previous entity class name:
 
 [[envers-tracking-modified-entities-revchanges-after-rename-example]]
 .`Customer` entity after renaming
@@ -1235,7 +1235,7 @@ This task will generate the definitions of all entities, both of which are audit
 
 See the <<chapters/schema/Schema.adoc#schema-generation, Schema generation>> chapter for more info.
 
-For the following entities, Hibernate is going to generate the following database schema:
+For the following entities, Hibernate generates the following database schema:
 
 [[envers-generateschema-example]]
 .Filtering a nested join relation using multiple predicates

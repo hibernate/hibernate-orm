@@ -8,6 +8,7 @@ package org.hibernate.resource.transaction.spi;
 
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
+import org.hibernate.jpa.JpaCompliance;
 
 /**
  * Models the coordination of all transaction related flows.
@@ -15,6 +16,28 @@ import org.hibernate.engine.transaction.spi.TransactionObserver;
  * @author Steve Ebersole
  */
 public interface TransactionCoordinator {
+	/**
+	 * Access to the builder that generated this coordinator
+	 */
+	TransactionCoordinatorBuilder getTransactionCoordinatorBuilder();
+
+	/**
+	 * Get the delegate used by the local transaction driver to control the underlying transaction
+	 *
+	 * @return The control delegate.
+	 */
+	TransactionDriver getTransactionDriverControl();
+
+	/**
+	 * Get access to the local registry of Synchronization instances
+	 *
+	 * @return The local Synchronization registry
+	 */
+	SynchronizationRegistry getLocalSynchronizations();
+
+
+	JpaCompliance getJpaCompliance();
+
 	/**
 	 * Indicates an explicit request to join a transaction.  This is mainly intended to handle the JPA requirement
 	 * around {@link javax.persistence.EntityManager#joinTransaction()}, and generally speaking only has an impact in
@@ -34,20 +57,6 @@ public interface TransactionCoordinator {
 	 * Used by owner of the JdbcSession as a means to indicate that implicit joining should be done if needed.
 	 */
 	void pulse();
-
-	/**
-	 * Get the delegate used by the local transaction driver to control the underlying transaction
-	 *
-	 * @return The control delegate.
-	 */
-	TransactionDriver getTransactionDriverControl();
-
-	/**
-	 * Get access to the local registry of Synchronization instances
-	 *
-	 * @return The local Synchronization registry
-	 */
-	SynchronizationRegistry getLocalSynchronizations();
 
 	/**
 	 * Is this transaction still active?
@@ -84,12 +93,6 @@ public interface TransactionCoordinator {
 	 * @param observer The observer to remove.
 	 */
 	void removeObserver(TransactionObserver observer);
-
-	/**
-	 *
-	 * @return
-	 */
-	TransactionCoordinatorBuilder getTransactionCoordinatorBuilder();
 
 	void setTimeOut(int seconds);
 

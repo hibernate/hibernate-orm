@@ -17,14 +17,18 @@ import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.engine.query.ParameterRecognitionException;
 import org.hibernate.procedure.ProcedureCall;
 
 import org.hibernate.test.sql.hand.Employment;
 import org.hibernate.test.sql.hand.Organization;
 import org.hibernate.test.sql.hand.Person;
 
+import com.arjuna.ats.internal.jdbc.drivers.modifiers.list;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Abstract test case defining tests of stored procedure support.
@@ -50,21 +54,31 @@ public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 		Session s = openSession();
 
 		Query namedQuery = s.getNamedQuery( "paramhandling" );
-		namedQuery.setLong( 0, 10 );
-		namedQuery.setLong( 1, 20 );
+		namedQuery.setLong( 1, 10 );
+		namedQuery.setLong( 2, 20 );
 		List list = namedQuery.list();
 		Object[] o = ( Object[] ) list.get( 0 );
 		assertEquals( o[0], Long.valueOf( 10 ) );
 		assertEquals( o[1], Long.valueOf( 20 ) );
-
-		namedQuery = s.getNamedQuery( "paramhandling_mixed" );
-		namedQuery.setLong( 0, 10 );
-		namedQuery.setLong( "second", 20 );
-		list = namedQuery.list();
-		o = ( Object[] ) list.get( 0 );
-		assertEquals( o[0], Long.valueOf( 10 ) );
-		assertEquals( o[1], Long.valueOf( 20 ) );
 		s.close();
+	}
+
+	@Test
+	public void testMixedParameterHandling() throws HibernateException, SQLException {
+		inTransaction(
+				session -> {
+					try {
+						session.getNamedQuery( "paramhandling_mixed" );
+						fail( "Expecting an exception" );
+					}
+					catch (ParameterRecognitionException expected) {
+						// expected outcome
+					}
+					catch (Exception other) {
+						throw new AssertionError( "Expecting a ParameterRecognitionException, but encountered " + other.getClass().getSimpleName(), other );
+					}
+				}
+		);
 	}
 
 	@Test

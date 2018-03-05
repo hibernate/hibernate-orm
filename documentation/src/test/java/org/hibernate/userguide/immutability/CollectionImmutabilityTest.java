@@ -28,8 +28,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  */
 public class CollectionImmutabilityTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( CollectionImmutabilityTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

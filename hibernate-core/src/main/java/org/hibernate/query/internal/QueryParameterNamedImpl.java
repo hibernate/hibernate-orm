@@ -22,13 +22,11 @@ import org.hibernate.type.Type;
 public class QueryParameterNamedImpl<T> extends QueryParameterImpl<T> implements QueryParameter<T> {
 	private final String name;
 	private final int[] sourceLocations;
-	private final boolean jpaStyle;
 
-	public QueryParameterNamedImpl(String name, int[] sourceLocations, boolean jpaStyle, Type expectedType) {
+	public QueryParameterNamedImpl(String name, int[] sourceLocations, Type expectedType) {
 		super( expectedType );
 		this.name = name;
 		this.sourceLocations = sourceLocations;
-		this.jpaStyle = jpaStyle;
 	}
 
 	@Override
@@ -43,11 +41,6 @@ public class QueryParameterNamedImpl<T> extends QueryParameterImpl<T> implements
 
 	public int[] getSourceLocations() {
 		return sourceLocations;
-	}
-
-	@Override
-	public boolean isJpaPositionalParameter() {
-		return jpaStyle;
 	}
 
 	@Override

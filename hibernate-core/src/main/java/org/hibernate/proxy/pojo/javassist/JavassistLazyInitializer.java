@@ -67,7 +67,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 				result = this.invoke( thisMethod, args, proxy );
 			}
 			catch ( Throwable t ) {
-				throw new Exception( t.getCause() );
+				throw t instanceof RuntimeException ? t : new Exception( t.getCause() );
 			}
 			if ( result == INVOKE_IMPLEMENTATION ) {
 				Object target = getImplementation();

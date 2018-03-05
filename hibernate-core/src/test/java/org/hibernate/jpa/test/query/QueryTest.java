@@ -23,6 +23,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 
 import org.hibernate.Hibernate;
+import org.hibernate.QueryException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
@@ -139,17 +140,17 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		try {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
 			em.persist( item );
-			Query q = em.createQuery( "from Item i where i.intVal=?" );
-			q.setParameter( 0, null );
+			Query q = em.createQuery( "from Item i where i.intVal=?1" );
+			q.setParameter( 1, null );
 			List results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null and ? is null" );
-			q.setParameter( 0, null );
+			q = em.createQuery( "from Item i where i.intVal is null and ?1 is null" );
+			q.setParameter( 1, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null or i.intVal = ?" );
-			q.setParameter( 0, null );
+			q = em.createQuery( "from Item i where i.intVal is null or i.intVal = ?1" );
+			q.setParameter( 1, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
 		}
@@ -169,7 +170,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		try {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
 			em.persist( item );
-			Query q = em.createQuery( "from Item i where i.intVal=?" );
+			Query q = em.createQuery( "from Item i where i.intVal=?1" );
 			Parameter p = new Parameter() {
 				@Override
 				public String getName() {
@@ -178,7 +179,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 				@Override
 				public Integer getPosition() {
-					return 0;
+					return 1;
 				}
 
 				@Override
@@ -191,11 +192,11 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			List results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null and ? is null" );
+			q = em.createQuery( "from Item i where i.intVal is null and ?1 is null" );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null or i.intVal = ?" );
+			q = em.createQuery( "from Item i where i.intVal is null or i.intVal = ?1" );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
@@ -216,7 +217,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		try {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
 			em.persist( item );
-			Query q = em.createQuery( "from Item i where i.intVal=?" );
+			Query q = em.createQuery( "from Item i where i.intVal=?1" );
 			Parameter p = new Parameter() {
 				@Override
 				public String getName() {
@@ -225,7 +226,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 				@Override
 				public Integer getPosition() {
-					return 0;
+					return 1;
 				}
 
 				@Override
@@ -238,11 +239,11 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			List results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null and ? is null" );
+			q = em.createQuery( "from Item i where i.intVal is null and ?1 is null" );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createQuery( "from Item i where i.intVal is null or i.intVal = ?" );
+			q = em.createQuery( "from Item i where i.intVal is null or i.intVal = ?1" );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
@@ -688,9 +689,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			Query query = em.createQuery( "from Item item where item.name =?1 or item.descr = ?1" );
 			Parameter p1 = query.getParameter( 1 );
 			Assert.assertNotNull( p1 );
-			// in 5.2, '?<position' parameters are named while '?' are position-based.
-			Assert.assertNotNull( p1.getName() );
-			Assert.assertNull( p1.getPosition() );
+			Assert.assertNotNull( p1.getPosition() );
+			Assert.assertNull( p1.getName() );
 
 			em.getTransaction().commit();
 		}
@@ -745,7 +745,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			params.add( item.getName() );
 			params.add( item2.getName() );
 			// deprecated usage of positional parameter by String
-			q.setParameter( "1", params );
+			q.setParameter( 1, params );
 			result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 2, result.size() );
@@ -807,7 +807,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			params.add( item.getName() );
 			params.add( item2.getName() );
 			// deprecated usage of positional parameter by String
-			q.setParameter( "1", params );
+			q.setParameter( 1, params );
 			result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 2, result.size() );
@@ -1011,13 +1011,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			// next using jpa-style positional parameter, but as a name (which is how Hibernate core treats these
 			query = em.createQuery( "select w from Wallet w where w.brand = ?1" );
 			// deprecated usage of positional parameter by String
-			query.setParameter( "1", "Lacoste" );
-			w = (Wallet) query.getSingleResult();
-			assertNotNull( w );
-
-			// finally using hql-style positional parameter
-			query = em.createQuery( "select w from Wallet w where w.brand = ?" );
-			query.setParameter( 0, "Lacoste" );
+			query.setParameter( 1, "Lacoste" );
 			w = (Wallet) query.getSingleResult();
 			assertNotNull( w );
 
@@ -1047,8 +1041,19 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.persist( w );
 			em.flush();
 
-			// using jpa-style, position index should match syntax '?<position'.
-			Query jpaQuery = em.createQuery( "select w from Wallet w where w.brand = ?1 and w.model = ?3" );
+			// Gaps are not allowed
+			try {
+				Query jpaQuery = em.createQuery( "select w from Wallet w where w.brand = ?1 and w.model = ?3" );
+				fail( "expecting error regarding gap in positional param labels" );
+			}
+			catch ( IllegalArgumentException e ) {
+				assertNotNull( e.getCause() );
+				assertTyping( QueryException.class, e.getCause() );
+				assertTrue( e.getCause().getMessage().contains( "gap" ) );
+			}
+
+			// using jpa-style, position index should match syntax '?<position>'.
+			Query jpaQuery = em.createQuery( "select w from Wallet w where w.brand = ?1" );
 			jpaQuery.setParameter( 1, "Lacoste" );
 			try {
 				jpaQuery.setParameter( 2, "Expensive" );
@@ -1073,17 +1078,6 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			try {
 				Parameter<Integer> parameter = jpaQuery.getParameter( 1, Integer.class );
 				fail( "Should fail due to user error in parameters" );
-			}
-			catch (Exception e) {
-				assertTyping( IllegalArgumentException.class, e );
-			}
-
-			// using hql-style, should be 0-based
-			Query hqlQuery = em.createQuery( "select w from Wallet w where w.brand = ? and w.model = ?" );
-			try {
-				hqlQuery.setParameter( 1, "Lacoste" );
-				hqlQuery.setParameter( 2, "Expensive" );
-				fail( "Should fail due to a user error in parameters" );
 			}
 			catch (Exception e) {
 				assertTyping( IllegalArgumentException.class, e );

@@ -51,8 +51,4 @@ public class BasicFunctionExpression<X>
 	public String render(RenderingContext renderingContext) {
 		return getFunctionName() + "()";
 	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
 }

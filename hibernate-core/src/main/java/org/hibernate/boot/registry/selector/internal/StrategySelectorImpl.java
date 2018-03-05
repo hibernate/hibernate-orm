@@ -63,25 +63,29 @@ public class StrategySelectorImpl implements StrategySelector {
 
 		final Class old = namedStrategyImplementorMap.put( name, implementation );
 		if ( old == null ) {
-			log.trace(
-					String.format(
-							"Registering named strategy selector [%s] : [%s] -> [%s]",
-							strategy.getName(),
-							name,
-							implementation.getName()
-					)
-			);
+			if ( log.isTraceEnabled() ) {
+				log.trace(
+						String.format(
+								"Registering named strategy selector [%s] : [%s] -> [%s]",
+								strategy.getName(),
+								name,
+								implementation.getName()
+						)
+				);
+			}
 		}
 		else {
-			log.debug(
-					String.format(
-							"Registering named strategy selector [%s] : [%s] -> [%s] (replacing [%s])",
-							strategy.getName(),
-							name,
-							implementation.getName(),
-							old.getName()
-					)
-			);
+			if ( log.isDebugEnabled() ) {
+				log.debug(
+						String.format(
+								"Registering named strategy selector [%s] : [%s] -> [%s] (replacing [%s])",
+								strategy.getName(),
+								name,
+								implementation.getName(),
+								old.getName()
+						)
+				);
+			}
 		}
 	}
 

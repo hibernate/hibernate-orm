@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,8 +43,18 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	private static final Pattern ALIAS_PATTERN =
 			Pattern.compile( "(?![^\\[]*(\\]))\\S+\\s*(\\s(?i)as\\s)\\s*(\\S+)*\\s*$|(?![^\\[]*(\\]))\\s+(\\S+)$" );
 
+	// CTE pattern support
+	private static final String SPACE_NEWLINE_LINEFEED = "[\\s\\t\\n\\r]*";
+	private static final Pattern WITH_CTE = Pattern.compile( "(^" + SPACE_NEWLINE_LINEFEED + "WITH" + SPACE_NEWLINE_LINEFEED +")", Pattern.CASE_INSENSITIVE );
+	private static final Pattern WITH_EXPRESSION_NAME = Pattern.compile( "(^" + SPACE_NEWLINE_LINEFEED + "[a-zA-Z0-9]*" + SPACE_NEWLINE_LINEFEED +")", Pattern.CASE_INSENSITIVE  );
+	private static final Pattern WITH_COLUMN_NAMES_START = Pattern.compile( "(^" + SPACE_NEWLINE_LINEFEED + "\\()", Pattern.CASE_INSENSITIVE );
+	private static final Pattern WITH_COLUMN_NAMES_END = Pattern.compile( "(\\))", Pattern.CASE_INSENSITIVE );
+	private static final Pattern WITH_AS = Pattern.compile( "(^" + SPACE_NEWLINE_LINEFEED + "AS" + SPACE_NEWLINE_LINEFEED +")", Pattern.CASE_INSENSITIVE );
+	private static final Pattern WITH_COMMA = Pattern.compile( "(^" + SPACE_NEWLINE_LINEFEED + ",)", Pattern.CASE_INSENSITIVE );
+
 	// Flag indicating whether TOP(?) expression has been added to the original query.
 	private boolean topAdded;
+	private boolean isCTE;
 
 	/**
 	 * Constructs a SQLServer2005LimitHandler
@@ -103,23 +114,26 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 			sb.setLength( sb.length() - 1 );
 		}
 
-		if ( LimitHelper.hasFirstRow( selection ) ) {
-			final String selectClause = fillAliasInSelectClause( sb );
+		// checks the query buffer for CTE queries or simple SELECT statements
+		// returns the index where the injection should start.
+		final int offset = getStatementIndex( sb );
 
-			final int orderByIndex = shallowIndexOfPattern( sb, ORDER_BY_PATTERN, 0 );
-			if ( orderByIndex > 0 ) {
-				// ORDER BY requires using TOP.
-				addTopExpression( sb );
-			}
-
-			encloseWithOuterQuery( sb );
-
-			// Wrap the query within a with statement:
-			sb.insert( 0, "WITH query AS (" ).append( ") SELECT " ).append( selectClause ).append( " FROM query " );
-			sb.append( "WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?" );
+		if ( !LimitHelper.hasFirstRow( selection ) ) {
+			addTopExpression( sb, offset );
 		}
 		else {
-			addTopExpression( sb );
+			final String selectClause = fillAliasInSelectClause( sb, offset );
+
+			if ( shallowIndexOfPattern( sb, ORDER_BY_PATTERN, offset ) > 0 ) {
+				// ORDER BY requires using TOP
+				addTopExpression( sb, offset );
+			}
+
+			encloseWithOuterQuery( sb, offset );
+
+			sb.insert( offset, !isCTE ? "WITH query AS (" : ", query AS (" );
+			sb.append( ") SELECT " ).append( selectClause ).append( " FROM query " );
+			sb.append( "WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?" );
 		}
 
 		return sb.toString();
@@ -146,13 +160,14 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * method returns {@literal *}.
 	 *
 	 * @param sb SQL query.
+	 * @param offset the starting offset.
 	 *
 	 * @return List of aliases separated with comas or {@literal *}.
 	 */
-	protected String fillAliasInSelectClause(StringBuilder sb) {
+	protected String fillAliasInSelectClause(StringBuilder sb, int offset) {
 		final String separator = System.lineSeparator();
 		final List<String> aliases = new LinkedList<String>();
-		final int startPos = getSelectColumnsStartPosition( sb );
+		final int startPos = getSelectColumnsStartPosition( sb, offset );
 		int endPos = shallowIndexOfPattern( sb, FROM_PATTERN, startPos );
 
 		int nextComa = startPos;
@@ -213,10 +228,11 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * Get the start position for where the column list begins.
 	 *
 	 * @param sb the string builder sql.
+	 * @param offset the starting offset.
 	 * @return the start position where the column list begins.
 	 */
-	private int getSelectColumnsStartPosition(StringBuilder sb) {
-		final int startPos = getSelectStartPosition( sb );
+	private int getSelectColumnsStartPosition(StringBuilder sb, int offset) {
+		final int startPos = getSelectStartPosition( sb, offset );
 		// adjustment for 'select distinct ' and 'select '.
 		final String sql = sb.toString().substring( startPos ).toLowerCase();
 		if ( sql.startsWith( SELECT_DISTINCT_SPACE ) ) {
@@ -232,10 +248,11 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * Get the select start position.
 	 *
 	 * @param sb the string builder sql.
+	 * @param offset the starting offset in buffer.
 	 * @return the position where {@code select} is found.
 	 */
-	private int getSelectStartPosition(StringBuilder sb) {
-		return shallowIndexOfPattern( sb, SELECT_PATTERN, 0 );
+	private int getSelectStartPosition(StringBuilder sb, int offset) {
+		return shallowIndexOfPattern( sb, SELECT_PATTERN, offset );
 	}
 
 	/**
@@ -284,9 +301,10 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * Encloses original SQL statement with outer query that provides {@literal __hibernate_row_nr__} column.
 	 *
 	 * @param sql SQL query.
+	 * @param offset SQL query offset.
 	 */
-	protected void encloseWithOuterQuery(StringBuilder sql) {
-		sql.insert( 0, "SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " );
+	protected void encloseWithOuterQuery(StringBuilder sql, int offset) {
+		sql.insert( offset, "SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " );
 		sql.append( " ) inner_query " );
 	}
 
@@ -295,11 +313,12 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * {@link #bindLimitParametersAtStartOfQuery(RowSelection, PreparedStatement, int)} method.
 	 *
 	 * @param sql SQL query.
+	 * @param offset the offset where top expression pattern matching should begin.
 	 */
-	protected void addTopExpression(StringBuilder sql) {
+	protected void addTopExpression(StringBuilder sql, int offset) {
 		// We should use either of these which come first (SELECT or SELECT DISTINCT).
-		final int selectPos = shallowIndexOfPattern( sql, SELECT_PATTERN, 0 );
-		final int selectDistinctPos = shallowIndexOfPattern( sql, SELECT_DISTINCT_PATTERN, 0 );
+		final int selectPos = shallowIndexOfPattern( sql, SELECT_PATTERN, offset );
+		final int selectDistinctPos = shallowIndexOfPattern( sql, SELECT_DISTINCT_PATTERN, offset );
 		if ( selectPos == selectDistinctPos ) {
 			// Place TOP after SELECT DISTINCT
 			sql.insert( selectDistinctPos + SELECT_DISTINCT.length(), " TOP(?)" );
@@ -448,5 +467,147 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		boolean isWithinRange(int position) {
 			return position >= start && position <= end;
 		}
+	}
+
+	/**
+	 * Get the starting point for the limit handler to begin injecting and transforming the SQL.
+	 * For non-CTE queries, this is offset 0.  For CTE queries, this will be where the CTE's
+	 * SELECT clause begins (skipping all query definitions, column definitions and expressions).
+	 *
+	 * This method also sets {@code isCTE} if the query is parsed as a CTE query.
+	 *
+	 * @param sql The sql buffer.
+	 * @return the index where to begin parsing.
+	 */
+	private int getStatementIndex(StringBuilder sql) {
+		final Matcher matcher = WITH_CTE.matcher( sql.toString() );
+		if ( matcher.find() && matcher.groupCount() > 0 ) {
+			isCTE = true;
+			return locateQueryInCTEStatement( sql, matcher.end() );
+		}
+		return 0;
+	}
+
+	/**
+	 * Steps through the SQL buffer from the specified offset and performs a series of pattern matches.
+	 * The method locates where the CTE SELECT clause begins and returns that offset from the SQL buffer.
+	 *
+	 * @param sql The sql buffer.
+	 * @param offset The offset to begin pattern matching.
+	 *
+	 * @return the offset where the CTE SELECT clause begins.
+	 * @throws IllegalArgumentException if the parse of the CTE query fails.
+	 */
+	private int locateQueryInCTEStatement(StringBuilder sql, int offset) {
+		while ( true ) {
+			Matcher matcher = WITH_EXPRESSION_NAME.matcher( sql.substring( offset ) );
+			if ( matcher.find() && matcher.groupCount() > 0 ) {
+				offset += matcher.end();
+				matcher = WITH_COLUMN_NAMES_START.matcher( sql.substring( offset ) );
+				if ( matcher.find() && matcher.groupCount() > 0 ) {
+					offset += matcher.end();
+					matcher = WITH_COLUMN_NAMES_END.matcher( sql.substring( offset ) );
+					if ( matcher.find() && matcher.groupCount() > 0 ) {
+						offset += matcher.end();
+						offset += advanceOverCTEInnerQuery( sql, offset );
+						matcher = WITH_COMMA.matcher( sql.substring( offset ) );
+						if ( matcher.find() && matcher.groupCount() > 0 ) {
+							// another CTE fragment exists, re-start parse of CTE
+							offset += matcher.end();
+						}
+						else {
+							// last CTE fragment, we're at the start of the SQL.
+							return offset;
+						}
+					}
+					else {
+						throw new IllegalArgumentException(
+								String.format(
+										Locale.ROOT,
+										"Failed to parse CTE expression columns at offset %d, SQL [%s]",
+										offset,
+										sql.toString()
+								)
+						);
+					}
+				}
+				else {
+					matcher = WITH_AS.matcher( sql.substring( offset ) );
+					if ( matcher.find() && matcher.groupCount() > 0 ) {
+						offset += matcher.end();
+						offset += advanceOverCTEInnerQuery( sql, offset );
+						matcher = WITH_COMMA.matcher( sql.substring( offset ) );
+						if ( matcher.find() && matcher.groupCount() > 0 ) {
+							// another CTE fragment exists, re-start parse of CTE
+							offset += matcher.end();
+						}
+						else {
+							// last CTE fragment, we're at the start of the SQL.
+							return offset;
+						}
+					}
+					else {
+						throw new IllegalArgumentException(
+								String.format(
+										Locale.ROOT,
+										"Failed to locate AS keyword in CTE query at offset %d, SQL [%s]",
+										offset,
+										sql.toString()
+								)
+						);
+					}
+				}
+			}
+			else {
+				throw new IllegalArgumentException(
+						String.format(
+								Locale.ROOT,
+								"Failed to locate CTE expression name at offset %d, SQL [%s]",
+								offset,
+								sql.toString()
+						)
+				);
+			}
+		}
+	}
+
+	/**
+	 * Advances over the CTE inner query that is contained inside matching '(' and ')'.
+	 *
+	 * @param sql The sql buffer.
+	 * @param offset The offset where to begin advancing the position from.
+	 * @return the position immediately after the CTE inner query plus 1.
+	 *
+	 * @throws IllegalArgumentException if the matching parenthesis aren't detected at the end of the parse.
+	 */
+	private int advanceOverCTEInnerQuery(StringBuilder sql, int offset) {
+		int brackets = 0;
+		int index = offset;
+		boolean inString = false;
+		for ( ; index < sql.length(); ++index ) {
+			if ( sql.charAt( index ) == '\'' ) {
+				inString = true;
+			}
+			else if ( sql.charAt( index ) == '\'' && inString ) {
+				inString = false;
+			}
+			else if ( sql.charAt( index ) == '(' && !inString ) {
+				brackets++;
+			}
+			else if ( sql.charAt( index ) == ')' && !inString ) {
+				brackets--;
+				if ( brackets == 0 ) {
+					break;
+				}
+			}
+		}
+
+		if ( brackets > 0 ) {
+			throw new IllegalArgumentException(
+					"Failed to parse the CTE query inner query because closing ')' was not found."
+			);
+		}
+
+		return index - offset + 1;
 	}
 }

@@ -6,9 +6,6 @@
  */
 package org.hibernate.spatial.criterion;
 
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.criterion.CriteriaQuery;
@@ -18,6 +15,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.jts.EnvelopeAdapter;
+
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
 
 /**
  * A <code>Criterion</code> constraining a geometry property to have a bounding box that overlaps with

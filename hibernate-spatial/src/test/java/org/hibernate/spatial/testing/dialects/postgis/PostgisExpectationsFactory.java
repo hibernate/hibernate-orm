@@ -7,21 +7,17 @@
 
 package org.hibernate.spatial.testing.dialects.postgis;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
-import org.geolatte.geom.ByteBuffer;
-import org.geolatte.geom.codec.Wkb;
-import org.geolatte.geom.codec.WkbDecoder;
-import org.geolatte.geom.jts.JTS;
-import org.postgresql.util.PGobject;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.NativeSQLStatement;
+
+import org.jboss.logging.Logger;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
+import org.geolatte.geom.jts.JTS;
 
 /**
  * This class provides the expected return values to the testsuite-suite classes in this package.

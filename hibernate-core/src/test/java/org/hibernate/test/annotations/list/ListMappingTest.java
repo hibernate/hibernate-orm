@@ -84,7 +84,7 @@ public class ListMappingTest extends BaseUnitTestCase {
 			@Override
 			public void accept(String action) {
 				super.accept( action );
-				if ( action.startsWith( "create table t_line_item" ) ) {
+				if ( action.matches( "^create( (column|row))? table t_line_item.+" ) ) {
 					if ( action.contains( "position" ) ) {
 						found = true;
 					}

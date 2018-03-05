@@ -61,7 +61,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		for ( Queryable persister : affectedQueryables ) {
 			spacesList.addAll( Arrays.asList( (String[]) persister.getQuerySpaces() ) );
 
-			if ( persister.hasCache() ) {
+			if ( persister.canWriteToCache() ) {
 				entityCleanups.add( new EntityCleanup( persister.getCacheAccessStrategy() ) );
 			}
 			if ( persister.hasNaturalIdentifier() && persister.hasNaturalIdCache() ) {
@@ -105,7 +105,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			if ( affectedEntity( tableSpaces, entitySpaces ) ) {
 				spacesList.addAll( Arrays.asList( entitySpaces ) );
 
-				if ( persister.hasCache() ) {
+				if ( persister.canWriteToCache() ) {
 					entityCleanups.add( new EntityCleanup( persister.getCacheAccessStrategy() ) );
 				}
 				if ( persister.hasNaturalIdentifier() && persister.hasNaturalIdCache() ) {

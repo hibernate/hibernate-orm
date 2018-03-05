@@ -25,6 +25,7 @@ import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
@@ -437,7 +438,7 @@ class MetadataContext {
 					: metamodelClass.getDeclaredField( name );
 			try {
 				// should be public anyway, but to be sure...
-				field.setAccessible( true );
+				ReflectHelper.ensureAccessibility( field );
 				field.set( null, attribute );
 			}
 			catch (IllegalAccessException e) {

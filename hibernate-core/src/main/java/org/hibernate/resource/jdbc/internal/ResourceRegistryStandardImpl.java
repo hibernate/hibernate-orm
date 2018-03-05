@@ -25,12 +25,15 @@ import org.hibernate.JDBCException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.jdbc.ResourceRegistry;
+import org.hibernate.resource.jdbc.spi.JdbcObserver;
 
 /**
  * @author Steve Ebersole
  */
 public class ResourceRegistryStandardImpl implements ResourceRegistry {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( ResourceRegistryStandardImpl.class );
+
+	private final JdbcObserver jdbcObserver;
 
 	private final Map<Statement, Set<ResultSet>> xref = new HashMap<Statement, Set<ResultSet>>();
 	private final Set<ResultSet> unassociatedResultSets = new HashSet<ResultSet>();
@@ -40,6 +43,14 @@ public class ResourceRegistryStandardImpl implements ResourceRegistry {
 	private List<NClob> nclobs;
 
 	private Statement lastQuery;
+
+	public ResourceRegistryStandardImpl() {
+		this( null );
+	}
+
+	public ResourceRegistryStandardImpl(JdbcObserver jdbcObserver) {
+		this.jdbcObserver = jdbcObserver;
+	}
 
 	@Override
 	public boolean hasRegisteredResources() {
@@ -285,6 +296,10 @@ public class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void releaseResources() {
 		log.trace( "Releasing JDBC resources" );
 
+		if ( jdbcObserver != null ) {
+			jdbcObserver.jdbcReleaseRegistryResourcesStart();
+		}
+
 		for ( Map.Entry<Statement, Set<ResultSet>> entry : xref.entrySet() ) {
 			if ( entry.getValue() != null ) {
 				closeAll( entry.getValue() );
@@ -331,6 +346,9 @@ public class ResourceRegistryStandardImpl implements ResourceRegistry {
 			nclobs.clear();
 		}
 
+		if ( jdbcObserver != null )	{
+			jdbcObserver.jdbcReleaseRegistryResourcesEnd();
+		}
 	}
 
 	private boolean hasRegistered(Map resource) {

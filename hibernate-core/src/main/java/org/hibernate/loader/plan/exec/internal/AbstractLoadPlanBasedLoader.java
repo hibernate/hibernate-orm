@@ -180,7 +180,12 @@ public abstract class AbstractLoadPlanBasedLoader {
 		String sql = limitHandler.processSql( queryParameters.getFilteredSQL(), queryParameters.getRowSelection() );
 
 		// Adding locks and comments.
-		sql = preprocessSQL( sql, queryParameters, session.getJdbcServices().getJdbcEnvironment().getDialect(), afterLoadActions );
+		sql = session.getJdbcServices().getJdbcEnvironment().getDialect()
+				.addSqlHintOrComment(
+					sql,
+					queryParameters,
+					session.getFactory().getSessionFactoryOptions().isCommentsEnabled()
+				);
 
 		final PreparedStatement st = prepareQueryStatement( sql, queryParameters, limitHandler, scroll, session );
 		return new SqlStatementWrapper( st, getResultSet( st, queryParameters.getRowSelection(), limitHandler, queryParameters.hasAutoDiscoverScalarTypes(), session ) );
@@ -196,26 +201,6 @@ public abstract class AbstractLoadPlanBasedLoader {
 	protected LimitHandler getLimitHandler(RowSelection selection) {
 		final LimitHandler limitHandler = getFactory().getDialect().getLimitHandler();
 		return LimitHelper.useLimit( limitHandler, selection ) ? limitHandler : NoopLimitHandler.INSTANCE;
-	}
-
-	private String preprocessSQL(
-			String sql,
-			QueryParameters queryParameters,
-			Dialect dialect,
-			List<AfterLoadAction> afterLoadActions) {
-		return getFactory().getSettings().isCommentsEnabled()
-				? prependComment( sql, queryParameters )
-				: sql;
-	}
-
-	private String prependComment(String sql, QueryParameters parameters) {
-		final String comment = parameters.getComment();
-		if ( comment == null ) {
-			return sql;
-		}
-		else {
-			return "/* " + comment + " */ " + sql;
-		}
 	}
 
 	/**

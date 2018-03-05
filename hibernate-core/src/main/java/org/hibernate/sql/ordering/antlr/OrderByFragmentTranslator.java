@@ -36,6 +36,8 @@ public class OrderByFragmentTranslator {
 	 * @return The translation.
 	 */
 	public static OrderByTranslation translate(TranslationContext context, String fragment) {
+		LOG.tracef( "Beginning parsing of order-by fragment : " + fragment );
+
 		GeneratedOrderByLexer lexer = new GeneratedOrderByLexer( new StringReader( fragment ) );
 
 		// Perform the parsing (and some analysis/resolution).  Another important aspect is the collection

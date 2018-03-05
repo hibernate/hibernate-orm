@@ -8,12 +8,12 @@ package org.hibernate.cfg;
 
 import java.util.Iterator;
 import java.util.Map;
-
 import javax.persistence.ConstraintMode;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.PropertyBinder;
@@ -91,17 +91,30 @@ public class OneToOneSecondPass implements SecondPass {
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
 		//value.setLazy( fetchMode != FetchMode.JOIN );
 
-		if ( !optional ) value.setConstrained( true );
-		value.setForeignKeyType(
-				value.isConstrained()
-						? ForeignKeyDirection.FROM_PARENT
-						: ForeignKeyDirection.TO_PARENT
-		);
+		if ( !optional ) {
+			value.setConstrained( true );
+		}
+		if ( value.isReferenceToPrimaryKey() ) {
+			value.setForeignKeyType( ForeignKeyDirection.TO_PARENT );
+		}
+		else {
+			value.setForeignKeyType(
+					value.isConstrained()
+							? ForeignKeyDirection.FROM_PARENT
+							: ForeignKeyDirection.TO_PARENT
+			);
+		}
 		PropertyBinder binder = new PropertyBinder();
 		binder.setName( propertyName );
 		binder.setValue( value );
 		binder.setCascade( cascadeStrategy );
 		binder.setAccessType( inferredData.getDefaultAccess() );
+
+		final LazyGroup lazyGroupAnnotation = inferredData.getProperty().getAnnotation( LazyGroup.class );
+		if ( lazyGroupAnnotation != null ) {
+			binder.setLazyGroup( lazyGroupAnnotation.value() );
+		}
+
 		Property prop = binder.makeProperty();
 		prop.setOptional( optional );
 		if ( BinderHelper.isEmptyAnnotationValue( mappedBy ) ) {

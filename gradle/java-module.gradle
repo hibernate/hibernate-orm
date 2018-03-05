@@ -1,0 +1,361 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+import org.apache.tools.ant.filters.ReplaceTokens
+
+/**
+ * Support for modules that contain Java code
+ */
+
+apply from: rootProject.file( 'gradle/base-information.gradle' )
+apply from: rootProject.file( 'gradle/libraries.gradle' )
+apply from: rootProject.file( 'gradle/databases.gradle' )
+
+apply plugin: 'java'
+apply plugin: 'osgi'
+
+apply plugin: 'findbugs'
+apply plugin: 'checkstyle'
+apply plugin: 'build-dashboard'
+apply plugin: 'project-report'
+
+ext {
+	java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
+	java9ModuleName = "org.hibernate.orm.$project.java9ModuleNameBase"
+}
+
+
+sourceCompatibility = project.baselineJavaVersion
+targetCompatibility = project.baselineJavaVersion
+
+afterEvaluate {
+	if ( !project.description ) {
+		project.description = "The Hibernate ORM $project.name module"
+	}
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Configurations and Dependencies
+
+configurations {
+	provided {
+		description = 'Non-exported compile-time dependencies.'
+	}
+	jbossLoggingTool {
+		description = 'Dependencies for running the jboss-logging tooling.'
+	}
+	asciidoclet {
+		description = "Dependencies for Asciidoctor Javadoc taglet"
+	}
+}
+
+configurations.all*.exclude group: 'xml-apis', module: 'xml-apis'
+
+
+dependencies {
+	compile libraries.logging
+
+	provided libraries.logging_annotations
+
+	jbossLoggingTool( libraries.logging_processor )
+
+	testCompile( libraries.junit )
+	testCompile( libraries.byteman )
+	testCompile( libraries.byteman_install )
+	testCompile( libraries.byteman_bmunit )
+
+	testRuntime( libraries.log4j )
+	testRuntime( libraries.javassist )
+	testRuntime( libraries.byteBuddy )
+	testRuntime( libraries.woodstox )
+
+	//Databases
+	testRuntime( libraries.h2 )
+	testRuntime( libraries.hsqldb )
+	testRuntime( libraries.postgresql )
+	testRuntime( libraries.mysql )
+	testRuntime( libraries.mariadb )
+	testRuntime( libraries.mssql )
+	testRuntime( libraries.informix )
+
+	asciidoclet 'org.asciidoctor:asciidoclet:1.+'
+
+	if ( db.equalsIgnoreCase( 'oracle' ) ) {
+		testRuntime( libraries.oracle ) {
+			exclude group: 'com.oracle.jdbc', module: 'xmlparserv2'
+		}
+	}
+	else if ( db.equalsIgnoreCase( 'db2' ) ) {
+		testRuntime( libraries.db2 )
+	}
+	else if ( db.equalsIgnoreCase( 'hana' ) ) {
+		testRuntime( libraries.hana )
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Java 9 ftw!
+	if ( JavaVersion.current().isJava9Compatible() ) {
+		// The JDK used to run Gradle is Java 9+, and we assume that that is the same
+		//		JDK for executing tasks
+		compile( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
+		compile( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
+		compile( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
+		compile( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
+		compile( 'javax.annotation:jsr250-api:1.0' )
+
+		testCompile( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
+		testCompile( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
+		testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
+		testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
+		testCompile( 'javax.annotation:jsr250-api:1.0' )
+
+		testRuntime( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
+		testRuntime( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
+		testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
+		testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
+	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+	// Mac-specific
+	project.ext.toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
+	if ( project.toolsJar.exists() ) {
+		testCompile files( project.toolsJar )
+	}
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Compilation
+
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+}
+
+task compile(dependsOn: [compileJava, processResources, compileTestJava, processTestResources] )
+
+sourceSets.main {
+	compileClasspath += configurations.provided
+	compileClasspath += configurations.jbossLoggingTool
+}
+
+convention.findPlugin( JavaPluginConvention.class ).sourceSets.each { sourceSet ->
+	JavaCompile javaCompileTask = project.tasks.findByName( sourceSet.compileJavaTaskName ) as JavaCompile
+
+	// NOTE : this aptDir stuff is needed until we can have IntelliJ run annotation processors for us
+	//		which cannot happen until we can fold hibernate-testing back into hibernate-core/src/test
+	//		which cannot happen until... ugh
+	File aptDir = file( "${buildDir}/generated-src/apt/${sourceSet.name}" )
+	sourceSet.allJava.srcDir( aptDir )
+
+	javaCompileTask.options.compilerArgs += [
+			"-nowarn",
+			"-encoding", "UTF-8",
+			"-s", "${aptDir.absolutePath}"
+	]
+
+	javaCompileTask.doFirst {
+		aptDir.mkdirs()
+	}
+}
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// mac-specific stuff
+final File toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
+if ( ext.toolsJar.exists() ) {
+	dependencies{
+		testCompile files( toolsJar )
+	}
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Testing
+
+tasks.withType( Test.class ).all { task ->
+	if ( JavaVersion.current().isJava9Compatible() ) {
+		// Byteman needs this property to be set, https://developer.jboss.org/thread/274997
+		task.jvmArgs += ["-Djdk.attach.allowAttachSelf=true"]
+	}
+	task.jvmArgs += [
+			'-XX:+HeapDumpOnOutOfMemoryError',
+			"-XX:HeapDumpPath=${file( "${buildDir}/OOM-dump.hprof" ).absolutePath}",
+			'-XX:MetaspaceSize=512M'
+	]
+
+	task.maxHeapSize = '4G'
+
+	task.systemProperties['hibernate.test.validatefailureexpected'] = true
+	task.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }
+}
+
+processTestResources {
+	doLast {
+		copy {
+			from( sourceSets.test.java.srcDirs ) {
+				include '**/*.properties'
+				include '**/*.xml'
+			}
+			into sourceSets.test.java.outputDir
+		}
+		copy {
+			from file( 'src/test/resources' )
+			into file( "${buildDir}/resources/test" )
+			exclude 'src/test/resources/arquillian.xml'
+			exclude 'src/test/resources/hibernate.properties'
+		}
+		copy {
+			from file( 'src/test/resources/hibernate.properties' )
+			into file( "${buildDir}/resources/test" )
+			filter( ReplaceTokens, tokens: dbBundle[db] )
+		}
+	}
+}
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// IDE
+
+
+//idea {
+//	module {
+//		jdkName = project.sourceCompatibility
+//
+//		excludeDirs = [file( ".gradle" )]
+//		excludeDirs += file( "$buildDir/classes" )
+//		excludeDirs += file( "$buildDir/bundles" )
+//		excludeDirs += file( "$buildDir/packages" )
+//		excludeDirs += file( "$buildDir/dependency-cache" )
+//		excludeDirs += file( "$buildDir/libs" )
+//		excludeDirs += file( "$buildDir/reports" )
+//		excludeDirs += file( "$buildDir/test-results" )
+//		excludeDirs += file( "$buildDir/tmp" )
+//		excludeDirs += file( "$buildDir/matrix" )
+//		excludeDirs += file( "$buildDir/resources" )
+//
+//		downloadSources = true
+//		scopes.PROVIDED.plus += [configurations.provided]
+//	}
+//}
+//
+/*
+ The latest versions of IntelliJ copy and use the test resources into out/test/resources
+ this occurs before the placeholder in the test config file are substituted
+ with the testing values.
+
+ This behaviour prevents the execution of the hibernate tests from inside the IDE.
+
+ A solution is to enable the 'After Build' Execution of the copyResourcesToIntelliJOutFolder task
+ from the 'Gradle project' IntelliJ tool window ( The task can be found under hibernate-orm > Task > other)
+ */
+task copyResourcesToIntelliJOutFolder {
+	doLast {
+		copy {
+			from "$buildDir/resources/test"
+			into 'out/test/resources'
+		}
+	}
+}
+//
+//
+//
+//eclipse {
+//	jdt {
+//		sourceCompatibility = project.sourceCompatibility
+//		targetCompatibility = project.targetCompatibility
+//	}
+//	classpath {
+//		plusConfigurations.add( configurations.provided )
+//	}
+//}
+//
+//// eclipseClasspath will not add sources to classpath unless the dirs actually exist.
+//// TODO: Eclipse's annotation processor handling is also fairly stupid (and completely lacks in the
+//// Gradle plugin).  For now, just compile first in order to get the logging classes.
+//eclipseClasspath.dependsOn compile
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Report configs
+
+checkstyle {
+	sourceSets = [ project.sourceSets.main ]
+	configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
+	showViolations = false
+}
+// exclude generated java sources - by explicitly setting the base source dir
+checkstyleMain.source = 'src/main/java'
+
+// define a second checkstyle task for checking non-fatal violations
+task nonFatalCheckstyle(type:Checkstyle) {
+	source = project.sourceSets.main.java
+	classpath = project.configurations.checkstyle
+	showViolations = false
+	configFile = rootProject.file( 'shared/config/checkstyle/checkstyle-non-fatal.xml' )
+}
+
+if ( JavaVersion.current().isJava9Compatible() ) {
+	logger.warn( '[WARN] Disabling findbugs, it does not support JDK 9' )
+	findbugs {
+		sourceSets = []
+	}
+}
+else {
+	findbugs {
+		sourceSets = [project.sourceSets.main, project.sourceSets.test]
+		ignoreFailures = true
+		toolVersion = '3.0.1'
+		// for now we need to set this to low so that FindBugs will actually report the DM_CONVERT_CASE warning we care about
+		reportLevel = 'low'
+		// remove all low level bug warnings except DM_CONVERT_CASE
+		excludeFilterConfig = resources.text.fromString( excludeAllLowLevelBugsExcept( 'DM_CONVERT_CASE' ) )
+	}
+
+	// exclude generated java sources and cfg package is a mess mainly from annotation stuff
+	findbugsMain.doFirst {
+		classes = classes.filter {
+			!it.path.contains( 'org/hibernate/hql/internal/antlr' ) &&
+					!it.path.contains( 'org/hibernate/boot/jaxb/cfg/spi' ) &&
+					!it.path.contains( 'org/hibernate/sql/ordering/antlr/Generated' ) &&
+					!it.path.contains( 'org/hibernate/sql/ordering/antlr/OrderByTemplateTokenTypes' ) &&
+					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/Jaxb' ) &&
+					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/Adapter' ) &&
+					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/ObjectFactory' ) &&
+					!it.path.contains( 'org/hibernate/cfg' ) &&
+					!it.path.contains( '_\$logger' )
+		}
+	}
+}
+// because cfg package is a mess mainly from annotation stuff
+checkstyleMain.exclude '**/org/hibernate/cfg/**'
+checkstyleMain.exclude '**/org/hibernate/cfg/*'
+
+def excludeAllLowLevelBugsExcept(String[] bugTypes){
+	def writer = new StringWriter()
+	def xml = new groovy.xml.MarkupBuilder(writer);
+	xml.FindBugsFilter {
+		Match {
+			Confidence( value: '3' )
+			bugTypes.each { bug ->
+				Not {
+					Bug( pattern: "${bug}" )
+				}
+			}
+		}
+	}
+	return writer.toString(  )
+}

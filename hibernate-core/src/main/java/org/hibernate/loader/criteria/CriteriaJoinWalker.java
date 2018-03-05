@@ -135,7 +135,14 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 				resolvedJoinType = JoinType.NONE;
 			}
 			else {
-				FetchMode fetchMode = translator.getRootCriteria().getFetchMode( path.getFullPath() );
+				String fullPathWithAlias = path.getFullPath();
+				String rootAlias = translator.getRootCriteria().getAlias();
+				String rootAliasPathPrefix = rootAlias + ".";
+				if (rootAlias != null && !fullPathWithAlias.startsWith(rootAliasPathPrefix)) {
+					fullPathWithAlias = rootAliasPathPrefix + fullPathWithAlias;
+				}
+
+				FetchMode fetchMode = translator.getRootCriteria().getFetchMode( fullPathWithAlias );
 				if ( isDefaultFetchMode( fetchMode ) ) {
 					if ( persister != null ) {
 						if ( isJoinFetchEnabledByProfile( persister, path, propertyNumber ) ) {

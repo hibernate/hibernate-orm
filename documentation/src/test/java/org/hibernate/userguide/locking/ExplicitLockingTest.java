@@ -40,8 +40,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( ExplicitLockingTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

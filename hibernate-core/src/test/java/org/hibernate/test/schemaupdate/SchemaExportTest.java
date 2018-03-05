@@ -9,6 +9,8 @@ package org.hibernate.test.schemaupdate;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.EnumSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -159,6 +161,8 @@ public class SchemaExportTest extends BaseUnitTestCase {
 		schemaExport.execute( EnumSet.of( TargetType.SCRIPT ), SchemaExport.Action.CREATE, metadata );
 
 		String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertThat( fileContent, fileContent.toLowerCase().contains( "create table schema1.version" ), is( true ) );
+		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table schema1.version" );
+		Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
+		assertThat( fileContent, fileContentMatcher.find(), is( true ) );
 	}
 }

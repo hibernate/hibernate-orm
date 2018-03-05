@@ -8,6 +8,7 @@ package org.hibernate.envers.internal.entities;
 
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.internal.util.compare.EqualsHelper;
+import org.hibernate.type.Type;
 
 /**
  * Holds information on a property that is audited.
@@ -28,6 +29,7 @@ public class PropertyData {
 	// Synthetic properties are ones which are not part of the actual java model.
 	// They're properties used for bookkeeping by Hibernate
 	private boolean synthetic;
+	private Type propertyType;
 
 	/**
 	 * Copies the given property data, except the name.
@@ -55,6 +57,11 @@ public class PropertyData {
 		this.store = store;
 	}
 
+	private PropertyData(String name, String beanName, String accessType, ModificationStore store, Type propertyType) {
+		this( name, beanName, accessType, store );
+		this.propertyType = propertyType;
+	}
+
 	/**
 	 * @param name Name of the property.
 	 * @param beanName Name of the property in the bean.
@@ -74,6 +81,19 @@ public class PropertyData {
 		this.usingModifiedFlag = usingModifiedFlag;
 		this.modifiedFlagName = modifiedFlagName;
 		this.synthetic = synthetic;
+	}
+
+	public PropertyData(
+			String name,
+			String beanName,
+			String accessType,
+			ModificationStore store,
+			boolean usingModifiedFlag,
+			String modifiedFlagName,
+			boolean synthetic,
+			Type propertyType) {
+		this( name, beanName, accessType, store, usingModifiedFlag, modifiedFlagName, synthetic );
+		this.propertyType = propertyType;
 	}
 
 	public String getName() {
@@ -108,6 +128,10 @@ public class PropertyData {
 		return synthetic;
 	}
 
+	public Type getType() {
+		return propertyType;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
@@ -135,5 +159,15 @@ public class PropertyData {
 		result = 31 * result + (usingModifiedFlag ? 1 : 0);
 		result = 31 * result + (synthetic ? 1 : 0);
 		return result;
+	}
+
+	public static PropertyData forProperty(String propertyName, Type propertyType) {
+		return new PropertyData(
+				propertyName,
+				null,
+				null,
+				null,
+				propertyType
+		);
 	}
 }

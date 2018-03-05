@@ -56,7 +56,17 @@ public class BasicExecutor implements StatementExecutor {
 
 	@Override
 	public int execute(QueryParameters parameters, SharedSessionContractImplementor session) throws HibernateException {
-		return doExecute( parameters, session, sql, parameterSpecifications );
+		return doExecute(
+			parameters,
+			session,
+			session.getJdbcServices().getDialect()
+					.addSqlHintOrComment(
+						sql,
+						parameters,
+						session.getFactory().getSessionFactoryOptions().isCommentsEnabled()
+					),
+			parameterSpecifications
+		);
 	}
 	
 	protected int doExecute(QueryParameters parameters, SharedSessionContractImplementor session, String sql,

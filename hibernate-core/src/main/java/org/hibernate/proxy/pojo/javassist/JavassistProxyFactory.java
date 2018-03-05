@@ -33,11 +33,14 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 public class JavassistProxyFactory implements ProxyFactory, Serializable {
 	private static final CoreMessageLogger LOG = messageLogger( JavassistProxyFactory.class );
 
-	private static final MethodFilter FINALIZE_FILTER = new MethodFilter() {
-		public boolean isHandled(Method m) {
-			// skip finalize methods
-			return !( m.getParameterCount() == 0 && m.getName().equals( "finalize" ) );
-		}
+	private static final MethodFilter EXCLUDE_FILTER = m -> {
+		// skip finalize methods and Groovy getMetaClass
+		return !(
+				m.getParameterCount() == 0 && m.getName().equals( "finalize" ) || (
+						m.getName().equals( "getMetaClass" ) &&
+								m.getReturnType().getName().equals( "groovy.lang.MetaClass" )
+				)
+		);
 	};
 
 	private Class persistentClass;
@@ -98,7 +101,7 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 		};
 		factory.setSuperclass( interfaces.length == 1 ? persistentClass : null );
 		factory.setInterfaces( interfaces );
-		factory.setFilter( FINALIZE_FILTER );
+		factory.setFilter( EXCLUDE_FILTER );
 		return factory;
 	}
 

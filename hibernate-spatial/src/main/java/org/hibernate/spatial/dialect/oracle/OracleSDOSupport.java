@@ -8,11 +8,6 @@ package org.hibernate.spatial.dialect.oracle;
 
 import java.io.Serializable;
 
-import org.geolatte.geom.codec.db.oracle.ConnectionFinder;
-import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -25,6 +20,11 @@ import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
+
+import org.jboss.logging.Logger;
+
+import org.geolatte.geom.codec.db.oracle.ConnectionFinder;
+import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
 
 /**
  * SDO Geometry support for Oracle dialects
@@ -93,7 +93,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable {
 	 */
 	@Override
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
-		String sql = getOGCSpatialRelateSQL( columnName, "?", spatialRelation )  + " = 1";
+		String sql = getOGCSpatialRelateSQL( columnName, "?", spatialRelation ) + " = 1";
 		sql += " and " + columnName + " is not null";
 		return sql;
 	}
@@ -154,7 +154,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable {
 	 * @return SQL fragment  {@code SpatialRelateExpression}
 	 */
 	public String getSDOSpatialRelateSQL(String columnName, int spatialRelation) {
-		String sql = getNativeSpatialRelateSQL( columnName, "?", spatialRelation )  + " = 1";
+		String sql = getNativeSpatialRelateSQL( columnName, "?", spatialRelation ) + " = 1";
 		sql += " and " + columnName + " is not null";
 		return sql;
 	}

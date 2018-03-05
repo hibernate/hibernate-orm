@@ -29,6 +29,8 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 	private final String queryName;
 	private final EntityPersister persister;
 
+	private final int position;
+
 	/**
 	 * Constructs the NamedQueryLoader
 	 *
@@ -39,6 +41,9 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 		super();
 		this.queryName = queryName;
 		this.persister = persister;
+		this.position = persister.getFactory().getSessionFactoryOptions().jdbcStyleParamsZeroBased()
+				? 0
+				: 1;
 	}
 
 	@Override
@@ -61,7 +66,7 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 			query.setParameter( query.getNamedParameters()[0], id, persister.getIdentifierType() );
 		}
 		else {
-			query.setParameter( 0, id, persister.getIdentifierType() );
+			query.setParameter( position, id, persister.getIdentifierType() );
 		}
 
 		query.setOptionalId( id );

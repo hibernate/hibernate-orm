@@ -603,6 +603,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @return {@code this}, for method chaining
 	 */
 	Query<R> setParameterList(String name, Collection values);
+	Query<R> setParameterList(int position, Collection values);
 
 	/**
 	 * Bind multiple values to a named query parameter. This is useful for binding
@@ -615,6 +616,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @return {@code this}, for method chaining
 	 */
 	Query<R> setParameterList(String name, Collection values, Type type);
+	Query<R> setParameterList(int position, Collection values, Type type);
 
 	/**
 	 * Bind multiple values to a named query parameter. This is useful for binding
@@ -627,6 +629,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @return {@code this}, for method chaining
 	 */
 	Query<R> setParameterList(String name, Object[] values, Type type);
+	Query<R> setParameterList(int position, Object[] values, Type type);
 
 	/**
 	 * Bind multiple values to a named query parameter. The Hibernate type of the parameter is
@@ -640,6 +643,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @return {@code this}, for method chaining
 	 */
 	Query<R> setParameterList(String name, Object[] values);
+	Query<R> setParameterList(int position, Object[] values);
 
 	/**
 	 * Bind the property values of the given bean to named parameters of the query,

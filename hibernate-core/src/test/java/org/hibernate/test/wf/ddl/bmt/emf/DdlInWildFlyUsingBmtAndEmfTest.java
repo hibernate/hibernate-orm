@@ -24,6 +24,7 @@ import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 
 import org.hibernate.test.wf.ddl.WildFlyDdlEntity;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Steve Ebersole
  */
 @RunWith( Arquillian.class )
+@Ignore( "WildFly has not released a version supporting JPA 2.2 and CDI 2.0" )
 public class DdlInWildFlyUsingBmtAndEmfTest {
 
 	public static final String PERSISTENCE_XML_RESOURCE_NAME = "pu-wf-ddl/persistence.xml";
@@ -54,7 +56,6 @@ public class DdlInWildFlyUsingBmtAndEmfTest {
 				.setManifest( "org/hibernate/test/wf/ddl/manifest.mf" )
 				.addClass( WildFlyDdlEntity.class )
 //				.addAsManifestResource( EmptyAsset.INSTANCE, "beans.xml")
-				.addAsWebInfResource( "jboss-deployment-structure.xml" ) //Add as "web-inf" resource on Web archives
 				.addAsResource( new StringAsset( persistenceXml().exportAsString() ), PERSISTENCE_XML_RESOURCE_NAME )
 				.addAsResource( "org/hibernate/test/wf/ddl/log4j.properties", "log4j.properties" );
 		System.out.println( war.toString(true) );
@@ -69,7 +70,7 @@ public class DdlInWildFlyUsingBmtAndEmfTest {
 				.jtaDataSource( "java:jboss/datasources/ExampleDS" )
 				.clazz( WildFlyDdlEntity.class.getName() )
 				.excludeUnlistedClasses( true )
-				.getOrCreateProperties().createProperty().name( "jboss.as.jpa.providerModule" ).value( "org.hibernate:5.2" ).up().up()
+				.getOrCreateProperties().createProperty().name( "jboss.as.jpa.providerModule" ).value( "org.hibernate:5.3" ).up().up()
 				.getOrCreateProperties().createProperty().name( "hibernate.hbm2ddl.auto" ).value( "create-drop" ).up().up()
 				// this should not be needed, but...
 				.getOrCreateProperties().createProperty().name( AvailableSettings.JTA_PLATFORM ).value( JBossAppServerJtaPlatform.class.getName() ).up().up()

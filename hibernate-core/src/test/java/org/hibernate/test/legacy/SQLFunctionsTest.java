@@ -43,9 +43,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-
 public class SQLFunctionsTest extends LegacyTestCase {
-	private static final Logger log = Logger.getLogger( SQLFunctionsTest.class );
 
 	@Override
 	public String[] getMappings() {

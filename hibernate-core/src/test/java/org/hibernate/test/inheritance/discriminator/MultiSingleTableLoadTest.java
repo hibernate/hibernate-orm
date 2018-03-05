@@ -10,6 +10,7 @@ import java.io.Serializable;
 import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
@@ -23,6 +24,7 @@ import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Christian Beikov
@@ -50,7 +52,7 @@ public class MultiSingleTableLoadTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-5954")
-	public void testLoadMultipleHoldersWithDifferentSubtypes() {
+	public void testEagerLoadMultipleHoldersWithDifferentSubtypes() {
 		createTestData();
 		doInHibernate( this::sessionFactory, session -> {
 			Holder task1 = session.find( Holder.class, 1L );
@@ -60,12 +62,27 @@ public class MultiSingleTableLoadTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
+	@Test
+	public void testFetchJoinLoadMultipleHoldersWithDifferentSubtypes() {
+		createTestData();
+		doInHibernate( this::sessionFactory, session -> {
+			Holder task1 = session.createQuery( "FROM Holder h JOIN FETCH h.a WHERE h.id = :id", Holder.class )
+					.setParameter( "id", 1L ).getSingleResult();
+			Holder task2 = session.createQuery( "FROM Holder h JOIN FETCH h.a WHERE h.id = :id", Holder.class )
+					.setParameter( "id", 2L ).getSingleResult();
+			assertNotNull( task1 );
+			assertNotNull( task2 );
+			assertTrue( task1.a instanceof B );
+			assertTrue( task2.a instanceof C );
+		} );
+	}
+
 	@Override
 	protected boolean isCleanupTestDataRequired() {
 		return true;
 	}
 
-	@Entity
+	@Entity(name = "Holder")
 	@Table(name = "holder")
 	public static class Holder implements Serializable {
 		@Id

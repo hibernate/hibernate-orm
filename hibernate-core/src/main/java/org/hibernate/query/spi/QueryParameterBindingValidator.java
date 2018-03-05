@@ -86,11 +86,40 @@ public class QueryParameterBindingValidator {
 	}
 
 	private static boolean isValidBindValue(Class expectedType, Object value, TemporalType temporalType) {
-		if ( expectedType.isInstance( value ) ) {
+		if ( expectedType.isPrimitive() ) {
+			if ( expectedType == boolean.class ) {
+				return Boolean.class.isInstance( value );
+			}
+			else if ( expectedType == char.class ) {
+				return Character.class.isInstance( value );
+			}
+			else if ( expectedType == byte.class ) {
+				return Byte.class.isInstance( value );
+			}
+			else if ( expectedType == short.class ) {
+				return Short.class.isInstance( value );
+			}
+			else if ( expectedType == int.class ) {
+				return Integer.class.isInstance( value );
+			}
+			else if ( expectedType == long.class ) {
+				return Long.class.isInstance( value );
+			}
+			else if ( expectedType == float.class ) {
+				return Float.class.isInstance( value );
+			}
+			else if ( expectedType == double.class ) {
+				return Double.class.isInstance( value );
+			}
+			return false;
+		}
+		else if ( value == null) {
 			return true;
 		}
-
-		if ( temporalType != null ) {
+		else if ( expectedType.isInstance( value ) ) {
+			return true;
+		}
+		else if ( temporalType != null ) {
 			final boolean parameterDeclarationIsTemporal = Date.class.isAssignableFrom( expectedType )
 					|| Calendar.class.isAssignableFrom( expectedType );
 			final boolean bindIsTemporal = Date.class.isInstance( value )

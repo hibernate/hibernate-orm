@@ -13,10 +13,10 @@ import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
- *  A Dialect for Postgresql with support for the Postgis spatial types, functions and operators (release 1.x - 1.3)
+ * A Dialect for Postgresql with support for the Postgis spatial types, functions and operators (release 1.x - 1.3)
  *
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: Dec 18, 2010
+ * creation-date: Dec 18, 2010
  */
 public class PostgisNoSQLMM extends PostgisDialect {
 
@@ -36,138 +36,138 @@ public class PostgisNoSQLMM extends PostgisDialect {
 		// it occurs in the spatial dialect
 		registerFunction(
 				"dimension", new StandardSQLFunction(
-				"dimension",
-				StandardBasicTypes.INTEGER
-		)
+						"dimension",
+						StandardBasicTypes.INTEGER
+				)
 		);
 		registerFunction(
 				"geometrytype", new StandardSQLFunction(
-				"geometrytype", StandardBasicTypes.STRING
-		)
+						"geometrytype", StandardBasicTypes.STRING
+				)
 		);
 		registerFunction(
 				"srid", new StandardSQLFunction(
-				"srid",
-				StandardBasicTypes.INTEGER
-		)
+						"srid",
+						StandardBasicTypes.INTEGER
+				)
 		);
 		registerFunction(
 				"envelope", new StandardSQLFunction(
-				"envelope"
-		)
+						"envelope"
+				)
 		);
 		registerFunction(
 				"astext", new StandardSQLFunction(
-				"astext",
-				StandardBasicTypes.STRING
-		)
+						"astext",
+						StandardBasicTypes.STRING
+				)
 		);
 		registerFunction(
 				"asbinary", new StandardSQLFunction(
-				"asbinary",
-				StandardBasicTypes.BINARY
-		)
+						"asbinary",
+						StandardBasicTypes.BINARY
+				)
 		);
 		registerFunction(
 				"isempty", new StandardSQLFunction(
-				"isempty",
-				StandardBasicTypes.BOOLEAN
-		)
+						"isempty",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"issimple", new StandardSQLFunction(
-				"issimple",
-				StandardBasicTypes.BOOLEAN
-		)
+						"issimple",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"boundary", new StandardSQLFunction(
-				"boundary"
-		)
+						"boundary"
+				)
 		);
 
 		// Register functions for spatial relation constructs
 		registerFunction(
 				"overlaps", new StandardSQLFunction(
-				"overlaps",
-				StandardBasicTypes.BOOLEAN
-		)
+						"overlaps",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"intersects", new StandardSQLFunction(
-				"intersects",
-				StandardBasicTypes.BOOLEAN
-		)
+						"intersects",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"equals", new StandardSQLFunction(
-				"equals",
-				StandardBasicTypes.BOOLEAN
-		)
+						"equals",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"contains", new StandardSQLFunction(
-				"contains",
-				StandardBasicTypes.BOOLEAN
-		)
+						"contains",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"crosses", new StandardSQLFunction(
-				"crosses",
-				StandardBasicTypes.BOOLEAN
-		)
+						"crosses",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"disjoint", new StandardSQLFunction(
-				"disjoint",
-				StandardBasicTypes.BOOLEAN
-		)
+						"disjoint",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"touches", new StandardSQLFunction(
-				"touches",
-				StandardBasicTypes.BOOLEAN
-		)
+						"touches",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"within", new StandardSQLFunction(
-				"within",
-				StandardBasicTypes.BOOLEAN
-		)
+						"within",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"relate", new StandardSQLFunction(
-				"relate",
-				StandardBasicTypes.BOOLEAN
-		)
+						"relate",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 
 		// register the spatial analysis functions
 		registerFunction(
 				"distance", new StandardSQLFunction(
-				"distance",
-				StandardBasicTypes.DOUBLE
-		)
+						"distance",
+						StandardBasicTypes.DOUBLE
+				)
 		);
 		registerFunction(
 				"buffer", new StandardSQLFunction(
-				"buffer"
-		)
+						"buffer"
+				)
 		);
 		registerFunction(
 				"convexhull", new StandardSQLFunction(
-				"convexhull"
-		)
+						"convexhull"
+				)
 		);
 		registerFunction(
 				"difference", new StandardSQLFunction(
-				"difference"
-		)
+						"difference"
+				)
 		);
 		registerFunction(
 				"intersection", new StandardSQLFunction(
-				"intersection"
-		)
+						"intersection"
+				)
 		);
 		registerFunction(
 				"symdifference",
@@ -175,22 +175,22 @@ public class PostgisNoSQLMM extends PostgisDialect {
 		);
 		registerFunction(
 				"geomunion", new StandardSQLFunction(
-				"geomunion"
-		)
+						"geomunion"
+				)
 		);
 
 		//register Spatial Aggregate function
 		registerFunction(
 				"extent", new StandardSQLFunction(
-				"extent"
-		)
+						"extent"
+				)
 		);
 
 		//other common spatial functions
 		registerFunction(
 				"transform", new StandardSQLFunction(
-				"transform"
-		)
+						"transform"
+				)
 		);
 	}
 

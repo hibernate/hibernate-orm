@@ -10,6 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.Template;
 
 /**
@@ -33,7 +34,8 @@ public class Formula implements Selectable, Serializable {
 
 	@Override
 	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry) {
-		return Template.renderWhereStringTemplate(formula, dialect, functionRegistry);
+		String template = Template.renderWhereStringTemplate(formula, dialect, functionRegistry);
+		return StringHelper.replace( template, "{alias}", Template.TEMPLATE );
 	}
 
 	@Override

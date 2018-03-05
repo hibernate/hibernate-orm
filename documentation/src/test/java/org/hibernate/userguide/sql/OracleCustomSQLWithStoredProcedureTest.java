@@ -37,8 +37,6 @@ import static org.junit.Assert.assertNull;
 @RequiresDialect(Oracle8iDialect.class)
 public class OracleCustomSQLWithStoredProcedureTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( OracleCustomSQLWithStoredProcedureTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

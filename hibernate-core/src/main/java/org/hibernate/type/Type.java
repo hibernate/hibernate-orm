@@ -461,22 +461,32 @@ public interface Type extends Serializable {
 	throws HibernateException, SQLException;
 
 	/**
+	 * @see #resolve(Object, SharedSessionContractImplementor, Object, Boolean)
+	 */
+	Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
+	throws HibernateException;
+
+	/**
 	 * The second phase of 2-phase loading.  Only really pertinent for entities and collections.  Here we resolve the
 	 * identifier to an entity or collection instance
-	 * 
+	 *
 	 * @param value an identifier or value returned by <tt>hydrate()</tt>
 	 * @param owner the parent entity
 	 * @param session the session
-	 * 
+	 * @param overridingEager can override eager from the mapping. For example because of {@link org.hibernate.engine.spi.LoadQueryInfluencers}
+	 *   If null, then it does not override. If true or false then it overrides the mapping value.
+	 *
 	 * @return the given value, or the value associated with the identifier
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 *
 	 * @see #hydrate
 	 */
-	Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
-	throws HibernateException;
-	
+	default Object resolve(Object value, SharedSessionContractImplementor session, Object owner, Boolean overridingEager)
+	throws HibernateException {
+		return resolve(value, session, owner);
+	}
+
 	/**
 	 * Given a hydrated, but unresolved value, return a value that may be used to reconstruct property-ref
 	 * associations.

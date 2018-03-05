@@ -32,6 +32,7 @@ import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test the ability to interpret and understand AttributeConverter impls which
@@ -94,10 +95,8 @@ public class ParameterizedAttributeConverterParameterTypeTest extends BaseUnitTe
 					AttributeConverterTypeAdapter.class,
 					prop.getType()
 			);
-			assertTyping(
-					StringListConverter.class,
-					type.getAttributeConverter()
-			);
+
+			assertTrue( StringListConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaType() ) );
 		}
 
 		{
@@ -106,10 +105,8 @@ public class ParameterizedAttributeConverterParameterTypeTest extends BaseUnitTe
 					AttributeConverterTypeAdapter.class,
 					prop.getType()
 			);
-			assertTyping(
-					IntegerListConverter.class,
-					type.getAttributeConverter()
-			);
+
+			assertTrue( IntegerListConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaType() ) );
 		}
 	}
 

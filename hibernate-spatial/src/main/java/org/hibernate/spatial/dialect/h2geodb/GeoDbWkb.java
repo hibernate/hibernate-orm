@@ -13,6 +13,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Blob;
 
+import org.hibernate.HibernateException;
+import org.hibernate.spatial.HSMessageLogger;
+
+import org.jboss.logging.Logger;
+
 import org.geolatte.geom.ByteBuffer;
 import org.geolatte.geom.ByteOrder;
 import org.geolatte.geom.C2D;
@@ -26,11 +31,6 @@ import org.geolatte.geom.codec.WkbDecoder;
 import org.geolatte.geom.codec.WkbEncoder;
 import org.geolatte.geom.crs.CoordinateReferenceSystems;
 import org.geolatte.geom.jts.JTS;
-
-import org.jboss.logging.Logger;
-
-import org.hibernate.HibernateException;
-import org.hibernate.spatial.HSMessageLogger;
 
 /**
  * A utility class to serialize from/to GeoDB WKB's.
@@ -60,7 +60,7 @@ public class GeoDbWkb {
 	public static byte[] to(Geometry geometry) {
 		final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.POSTGIS_EWKB_1 );
 		final ByteBuffer buffer = encoder.encode( geometry, ByteOrder.NDR );
-		return (buffer == null ? null : buffer.toByteArray());
+		return ( buffer == null ? null : buffer.toByteArray() );
 	}
 
 	/**
@@ -76,7 +76,7 @@ public class GeoDbWkb {
 		}
 		try {
 
-			if (object instanceof com.vividsolutions.jts.geom.Geometry) {
+			if ( object instanceof com.vividsolutions.jts.geom.Geometry ) {
 				return JTS.from( (com.vividsolutions.jts.geom.Geometry) object );
 			}
 			final WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.POSTGIS_EWKB_1 );
@@ -121,7 +121,7 @@ public class GeoDbWkb {
 		try {
 			in = blob.getBinaryStream();
 			int n = 0;
-			while ( (n = in.read( buf )) >= 0 ) {
+			while ( ( n = in.read( buf ) ) >= 0 ) {
 				baos.write( buf, 0, n );
 			}
 		}

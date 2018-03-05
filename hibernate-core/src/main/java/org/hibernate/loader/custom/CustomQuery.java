@@ -5,9 +5,11 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.loader.custom;
+
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.param.ParameterBinder;
 
 /**
  * Extension point allowing any SQL query with named and positional parameters
@@ -23,7 +25,7 @@ public interface CustomQuery {
 	 *
 	 * @return The SQL statement string.
 	 */
-	public String getSQL();
+	String getSQL();
 
 	/**
 	 * Any query spaces to apply to the query execution.  Query spaces are
@@ -32,22 +34,9 @@ public interface CustomQuery {
 	 *
 	 * @return The query spaces
 	 */
-	public Set<String> getQuerySpaces();
+	Set<String> getQuerySpaces();
 
-	/**
-	 * A map representing positions within the supplied {@link #getSQL query} to
-	 * which we need to bind named parameters.
-	 * <p/>
-	 * Optional, may return null if no named parameters.
-	 * <p/>
-	 * The structure of the returned map (if one) as follows:<ol>
-	 * <li>The keys into the map are the named parameter names</li>
-	 * <li>The corresponding value is either an {@link Integer} if the
-	 * parameter occurs only once in the query; or a List of Integers if the
-	 * parameter occurs more than once</li>
-	 * </ol>
-	 */
-	public Map getNamedParameterBindPoints();
+	List<ParameterBinder> getParameterValueBinders();
 
 	/**
 	 * A collection of {@link Return descriptors} describing the
@@ -55,5 +44,6 @@ public interface CustomQuery {
 	 *
 	 * @return List of return descriptors.
 	 */
-	public List<Return> getCustomQueryReturns();
+	List<Return> getCustomQueryReturns();
+
 }

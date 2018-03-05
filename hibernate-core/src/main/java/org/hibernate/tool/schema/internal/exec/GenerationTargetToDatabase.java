@@ -65,7 +65,7 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 		}
 		catch (SQLException e) {
 			throw new CommandAcceptanceException(
-					"Error executing DDL via JDBC Statement",
+					"Error executing DDL \"" + command + "\" via JDBC Statement",
 					e
 			);
 		}

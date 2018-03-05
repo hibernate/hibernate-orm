@@ -236,7 +236,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public Interceptor getInterceptor() {
-		checkTransactionSynchStatus();
 		return interceptor;
 	}
 
@@ -362,7 +361,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public void markForRollbackOnly() {
-		accessTransaction().markRollbackOnly();
+		try {
+			accessTransaction().markRollbackOnly();
+		}
+		catch (Exception ignore) {
+		}
 	}
 
 	@Override
@@ -375,7 +378,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public Transaction getTransaction() throws HibernateException {
-		if ( getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+		if ( getFactory().getSessionFactoryOptions().getJpaCompliance().isJpaTransactionComplianceEnabled() ) {
 			// JPA requires that we throw IllegalStateException if this is called
 			// on a JTA EntityManager
 			if ( getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta() ) {
@@ -384,6 +387,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				}
 			}
 		}
+
 		return accessTransaction();
 	}
 
@@ -392,7 +396,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( this.currentHibernateTransaction == null || this.currentHibernateTransaction.getStatus() != TransactionStatus.ACTIVE ) {
 			this.currentHibernateTransaction = new TransactionImpl(
 					getTransactionCoordinator(),
-					getExceptionConverter()
+					getExceptionConverter(),
+					getFactory().getSessionFactoryOptions().getJpaCompliance()
 			);
 
 		}
@@ -446,7 +451,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public JdbcConnectionAccess getJdbcConnectionAccess() {
 		// See class-level JavaDocs for a discussion of the concurrent-access safety of this method
 		if ( jdbcConnectionAccess == null ) {
-			if ( MultiTenancyStrategy.NONE == factory.getSettings().getMultiTenancyStrategy() ) {
+			if ( !factory.getSettings().getMultiTenancyStrategy().requiresMultiTenantConnectionProvider() ) {
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
 						getEventListenerManager(),
 						factory.getServiceRegistry().getService( ConnectionProvider.class )
@@ -527,6 +532,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public FlushModeType getFlushMode() {
+		checkOpen();
 		return FlushModeTypeHelper.getFlushModeType( this.flushMode );
 	}
 
@@ -668,6 +674,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return query;
 		}
 		catch (RuntimeException e) {
+			markForRollbackOnly();
 			throw exceptionConverter.convert( e );
 		}
 	}
@@ -746,29 +753,32 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public QueryImplementor createNamedQuery(String name) {
-		final QueryImplementor<Object> query = buildQueryFromName( name, null );
-		query.getParameterMetadata().setOrdinalParametersZeroBased( false );
-		return query;
+		return buildQueryFromName( name, null );
 	}
 
 	protected  <T> QueryImplementor<T> buildQueryFromName(String name, Class<T> resultType) {
 		checkOpen();
-		checkTransactionSynchStatus();
-		delayedAfterCompletion();
+		try {
+			checkTransactionSynchStatus();
+			delayedAfterCompletion();
 
-		// todo : apply stored setting at the JPA Query level too
+			// todo : apply stored setting at the JPA Query level too
 
-		final NamedQueryDefinition namedQueryDefinition = getFactory().getNamedQueryRepository().getNamedQueryDefinition( name );
-		if ( namedQueryDefinition != null ) {
-			return createQuery( namedQueryDefinition, resultType );
+			final NamedQueryDefinition namedQueryDefinition = getFactory().getNamedQueryRepository().getNamedQueryDefinition( name );
+			if ( namedQueryDefinition != null ) {
+				return createQuery( namedQueryDefinition, resultType );
+			}
+
+			final NamedSQLQueryDefinition nativeQueryDefinition = getFactory().getNamedQueryRepository().getNamedSQLQueryDefinition( name );
+			if ( nativeQueryDefinition != null ) {
+				return (QueryImplementor<T>) createNativeQuery( nativeQueryDefinition, resultType );
+			}
+
+			throw exceptionConverter.convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
 		}
-
-		final NamedSQLQueryDefinition nativeQueryDefinition = getFactory().getNamedQueryRepository().getNamedSQLQueryDefinition( name );
-		if ( nativeQueryDefinition != null ) {
-			return (QueryImplementor<T>) createNativeQuery( nativeQueryDefinition, resultType );
+		catch (RuntimeException e) {
+			throw !( e instanceof IllegalArgumentException ) ? new IllegalArgumentException( e ) : e;
 		}
-
-		throw exceptionConverter.convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
 	}
 
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
@@ -867,9 +877,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public NativeQueryImplementor createNativeQuery(String sqlString) {
-		final NativeQueryImpl query = (NativeQueryImpl) getNativeQueryImplementor( sqlString, false );
-		query.setZeroBasedParametersIndex( false );
-		return query;
+		return getNativeQueryImplementor( sqlString, false );
 	}
 
 	@Override
@@ -957,9 +965,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public NativeQueryImplementor getNamedSQLQuery(String name) {
-		final NativeQueryImpl nativeQuery = (NativeQueryImpl) getNamedNativeQuery( name );
-		nativeQuery.setZeroBasedParametersIndex( true );
-		return nativeQuery;
+		return getNamedNativeQuery( name );
 	}
 
 	@Override

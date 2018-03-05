@@ -20,6 +20,7 @@ import javax.persistence.criteria.Root;
 import java.io.Serializable;
 import java.util.List;
 
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -203,7 +204,8 @@ public class CriteriaLiteralInSelectExpressionTest extends BaseEntityManagerFunc
 			Oracle8iDialect.class,
 			DB2Dialect.class,
 			SQLServerDialect.class,
-			SybaseDialect.class
+			SybaseDialect.class,
+			AbstractHANADialect.class
 	})
 	public void testStringLiteral2() {
 		final EntityManager entityManager = getOrCreateEntityManager();

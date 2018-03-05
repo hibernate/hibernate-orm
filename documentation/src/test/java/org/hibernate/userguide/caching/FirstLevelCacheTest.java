@@ -31,8 +31,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  */
 public class FirstLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( FirstLevelCacheTest.class );
-
     @Override
     protected Class<?>[] getAnnotatedClasses() {
         return new Class<?>[] {

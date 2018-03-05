@@ -4,11 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-apply plugin: 'java-gradle-plugin'
-
 apply plugin: 'groovy'
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply plugin: 'java-gradle-plugin'
 apply plugin: 'maven'
-apply plugin: 'java'
+
+description = "Gradle plugin for integrating Hibernate functionality into your build"
 
 dependencies {
 	compile( project( ':hibernate-core' ) )
@@ -17,9 +18,4 @@ dependencies {
 	compile( libraries.byteBuddy )
 	compile gradleApi()
 	compile localGroovy()
-}
-
-mavenPom {
-	name = 'Hibernate Gradle plugin'
-	description = "Gradle plugin for integrating Hibernate functionality into your build"
 }

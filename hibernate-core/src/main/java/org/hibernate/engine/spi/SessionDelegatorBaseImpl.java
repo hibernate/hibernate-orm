@@ -68,12 +68,12 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * This class is meant to be extended.
- * 
+ *
  * Wraps and delegates all methods to a {@link SessionImplementor} and
  * a {@link Session}. This is useful for custom implementations of this
  * API so that only some methods need to be overridden
  * (Used by Hibernate Search).
- * 
+ *
  * @author Sanne Grinovero <sanne@hibernate.org> (C) 2012 Red Hat Inc.
  */
 @SuppressWarnings("deprecation")
@@ -82,7 +82,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	protected final SessionImplementor delegate;
 
 	/**
-	 * @deprecated (snce 6.0) SessionDelegatorBaseImpl should take just one argument, the SessionImplementor.
+	 * @deprecated (since 6.0) SessionDelegatorBaseImpl should take just one argument, the SessionImplementor.
 	 * Use the {@link #SessionDelegatorBaseImpl(SessionImplementor)} form instead
 	 */
 	@Deprecated
@@ -102,6 +102,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	public SessionDelegatorBaseImpl(SessionImplementor delegate) {
 		this( delegate, delegate );
+	}
+
+	/**
+	 * Returns the underlying delegate. Be careful that is has a different behavior from the {@link #getDelegate()}
+	 * method coming from the EntityManager interface which returns the current session.
+	 *
+	 * @see SessionDelegatorBaseImpl#getDelegate()
+	 */
+	protected SessionImplementor delegate() {
+		return delegate;
 	}
 
 	@Override
@@ -618,9 +628,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.unwrap( cls );
 	}
 
+	/**
+	 * This is an implementation of EntityManager#getDelegate(). It returns the current session and not the delegate
+	 * session as it is what we want. The name of the method is misleading here but, as it is part of JPA, we cannot do
+	 * anything about it.
+	 * <p>
+	 * To get the underlying delegate, use {@link #delegate()} instead.
+	 *
+	 * @see SessionDelegatorBaseImpl#delegate()
+	 */
 	@Override
 	public Object getDelegate() {
-		return delegate;
+		return this;
 	}
 
 	@Override

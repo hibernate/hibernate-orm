@@ -13,6 +13,7 @@ import org.hibernate.TransactionException;
 import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.jpa.JpaCompliance;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
@@ -29,12 +30,24 @@ public class TransactionImpl implements TransactionImplementor {
 
 	private final TransactionCoordinator transactionCoordinator;
 	private final ExceptionConverter exceptionConverter;
+	private final JpaCompliance jpaCompliance;
+
 	private TransactionDriver transactionDriverControl;
 
-	public TransactionImpl(TransactionCoordinator transactionCoordinator, ExceptionConverter exceptionConverter) {
+	public TransactionImpl(
+			TransactionCoordinator transactionCoordinator,
+			ExceptionConverter exceptionConverter,
+			JpaCompliance jpaCompliance) {
 		this.transactionCoordinator = transactionCoordinator;
 		this.exceptionConverter = exceptionConverter;
-		transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+		this.jpaCompliance = jpaCompliance;
+
+		this.transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+
+		LOG.debugf(
+				"On TransactionImpl creation, JpaCompliance#isJpaTransactionComplianceEnabled == %s",
+				jpaCompliance.isJpaTransactionComplianceEnabled()
+		);
 	}
 
 	@Override
@@ -58,8 +71,13 @@ public class TransactionImpl implements TransactionImplementor {
 
 	@Override
 	public void commit() {
-		if ( !isActive() ) {
+		if ( !isActive( true ) ) {
 			// allow MARKED_ROLLBACK to propagate through to transactionDriverControl
+			// the boolean passed to isActive indicates whether MARKED_ROLLBACK should be
+			// considered active
+			//
+			// essentially here we have a transaction that is not active and
+			// has not been marked for rollback only
 			throw new IllegalStateException( "Transaction not successfully started" );
 		}
 
@@ -82,7 +100,14 @@ public class TransactionImpl implements TransactionImplementor {
 
 	@Override
 	public void rollback() {
-		// todo : may need a "JPA compliant" flag here
+		if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
+			if ( !isActive() ) {
+				throw new IllegalStateException(
+						"JPA compliance dictates throwing IllegalStateException when #rollback " +
+								"is called on non-active transaction"
+				);
+			}
+		}
 
 		TransactionStatus status = getStatus();
 		if ( status == TransactionStatus.ROLLED_BACK || status == TransactionStatus.NOT_ACTIVE ) {
@@ -104,6 +129,7 @@ public class TransactionImpl implements TransactionImplementor {
 	@Override
 	public boolean isActive() {
 		// old behavior considered TransactionStatus#MARKED_ROLLBACK as active
+//		return isActive( jpaCompliance.isJpaTransactionComplianceEnabled() ? false : true );
 		return isActive( true );
 	}
 
@@ -139,12 +165,42 @@ public class TransactionImpl implements TransactionImplementor {
 	}
 
 	@Override
-	public void setRollbackOnly() {
+	public void markRollbackOnly() {
+		// this is the Hibernate-specific API, whereas #setRollbackOnly is the
+		// JPA-defined API.  In our opinion it is much more user-friendly to
+		// always allow user/integration to indicate that the transaction
+		// should not be allowed to commit.
 		internalGetTransactionDriverControl().markRollbackOnly();
 	}
 
 	@Override
+	public void setRollbackOnly() {
+		// Since this is the JPA-defined one, we make sure the txn is active first
+		// so long as compliance (JpaCompliance) has not been defined to disable
+		// that check - making this active more like Hibernate's #markRollbackOnly
+		if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
+			if ( !isActive() ) {
+				throw new IllegalStateException(
+						"JPA compliance dictates throwing IllegalStateException when #setRollbackOnly " +
+								"is called on non-active transaction"
+				);
+			}
+		}
+
+		markRollbackOnly();
+	}
+
+	@Override
 	public boolean getRollbackOnly() {
+		if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
+			if ( !isActive() ) {
+				throw new IllegalStateException(
+						"JPA compliance dictates throwing IllegalStateException when #getRollbackOnly " +
+								"is called on non-active transaction"
+				);
+			}
+		}
+
 		return getStatus() == TransactionStatus.MARKED_ROLLBACK;
 	}
 

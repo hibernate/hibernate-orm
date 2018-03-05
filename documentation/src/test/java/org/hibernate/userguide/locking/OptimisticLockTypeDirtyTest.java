@@ -28,8 +28,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  */
 public class OptimisticLockTypeDirtyTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( OptimisticLockTypeDirtyTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

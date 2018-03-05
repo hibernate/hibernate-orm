@@ -56,7 +56,6 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 public class LockTest extends BaseEntityManagerFunctionalTestCase {
-	private static final Logger log = Logger.getLogger( LockTest.class );
 
 	@Test
 	public void testFindWithTimeoutHint() {

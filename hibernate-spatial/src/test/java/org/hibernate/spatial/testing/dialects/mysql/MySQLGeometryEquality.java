@@ -7,16 +7,16 @@
 
 package org.hibernate.spatial.testing.dialects.mysql;
 
+import org.hibernate.spatial.testing.JTSGeometryEquality;
+
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
-
-import org.hibernate.spatial.testing.GeometryEquality;
 
 /**
  * Extends the test for geometry equality, because
  * MySQL stores empty geometries as NULL objects.
  */
-public class MySQLGeometryEquality extends GeometryEquality {
+public class MySQLGeometryEquality extends JTSGeometryEquality {
 
 	@Override
 	public boolean test(Geometry geom1, Geometry geom2) {

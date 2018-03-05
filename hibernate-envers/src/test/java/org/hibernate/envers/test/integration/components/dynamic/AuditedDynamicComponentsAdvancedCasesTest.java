@@ -16,6 +16,7 @@ import java.util.Set;
 
 import org.hibernate.QueryException;
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
@@ -47,6 +48,12 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 	public static final String INTERNAL_SET_OF_COMPONENTS = "internalSetOfComponents";
 	public static final String AGE_USER_TYPE = "ageUserType";
 	public static final String INTERNAL_LIST_OF_USER_TYPES = "internalListOfUserTypes";
+
+	@Override
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+		settings.put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "false" );
+	}
 
 	@Override
 	protected String[] getMappings() {
@@ -353,6 +360,10 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 			Assert.fail();
 		}
 		catch ( Exception e ) {
+			if ( getSession().getTransaction().isActive() ) {
+				getSession().getTransaction().rollback();
+			}
+
 			assertTyping( IllegalArgumentException.class, e );
 		}
 
@@ -367,6 +378,10 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 			Assert.fail();
 		}
 		catch ( Exception e ) {
+			if ( getSession().getTransaction().isActive() ) {
+				getSession().getTransaction().rollback();
+			}
+
 			assertTyping( AuditException.class, e );
 			Assert.assertEquals(
 					"This type of relation (org.hibernate.envers.test.integration.components.dynamic.AdvancedEntity.dynamicConfiguration_internalMapWithEntities) isn't supported and can't be used in queries.",

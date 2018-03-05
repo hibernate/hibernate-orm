@@ -9,6 +9,7 @@ package org.hibernate.envers.configuration.internal.metadata;
 import java.util.Properties;
 
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
+import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
@@ -52,7 +53,8 @@ public final class BasicMetadataGenerator {
 
 			// A null mapper means that we only want to add xml mappings
 			if ( mapper != null ) {
-				mapper.add( propertyAuditingData.getPropertyData() );
+				final PropertyData propertyData = propertyAuditingData.resolvePropertyData( value.getType() );
+				mapper.add( propertyData );
 			}
 
 			return true;
@@ -108,7 +110,8 @@ public final class BasicMetadataGenerator {
 
 		// A null mapper means that we only want to add xml mappings
 		if ( mapper != null ) {
-			mapper.add( propertyAuditingData.getPropertyData() );
+			final PropertyData propertyData = propertyAuditingData.resolvePropertyData( value.getType() );
+			mapper.add( propertyData );
 		}
 
 		return true;
@@ -149,7 +152,7 @@ public final class BasicMetadataGenerator {
 
 		typeMapping.addAttribute( "name", typeName );
 
-		if ( EnumType.class.getName().equals( typeName ) ) {
+		if ( isEnumType( value.getType(), typeName ) ) {
 			// Proper handling of enumeration type
 			mapEnumerationType( typeMapping, value.getType(), typeParameters );
 		}
@@ -171,5 +174,22 @@ public final class BasicMetadataGenerator {
 			typeName = type.getClass().getName();
 		}
 		return typeName;
+	}
+
+	private boolean isEnumType(Type type, String typeName) {
+		// Check if a custom type implementation is used and it extends the EnumType directly.
+		if ( CustomType.class.isInstance( type ) ) {
+			final CustomType customType = (CustomType) type;
+			if ( EnumType.class.isInstance( customType.getUserType() ) ) {
+				return true;
+			}
+		}
+
+		// Check if its an EnumType without a custom type
+		if ( EnumType.class.getName().equals( typeName ) ) {
+			return true;
+		}
+
+		return false;
 	}
 }

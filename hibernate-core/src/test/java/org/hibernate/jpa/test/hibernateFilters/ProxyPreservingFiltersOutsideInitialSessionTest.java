@@ -27,7 +27,6 @@ import static org.junit.Assert.assertEquals;
 public class ProxyPreservingFiltersOutsideInitialSessionTest
 		extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( ProxyPreservingFiltersOutsideInitialSessionTest.class );
 
 	@Override
 	public Class[] getAnnotatedClasses() {

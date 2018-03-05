@@ -70,7 +70,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
@@ -87,6 +86,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
+import org.hibernate.loader.custom.sql.SQLQueryParser;
 import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.CascadeEntityLoader;
 import org.hibernate.loader.entity.DynamicBatchingEntityLoaderBuilder;
@@ -94,9 +94,12 @@ import org.hibernate.loader.entity.EntityLoader;
 import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Formula;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -148,6 +151,9 @@ public abstract class AbstractEntityPersister
 
 	// moved up from AbstractEntityPersister ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private final SessionFactoryImplementor factory;
+	private final boolean canReadFromCache;
+	private final boolean canWriteToCache;
+	private final boolean invalidateCache;
 	private final EntityRegionAccessStrategy cacheAccessStrategy;
 	private final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy;
 	private final boolean isLazyPropertiesCacheable;
@@ -330,7 +336,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public String getDiscriminatorColumnReaderTemplate() {
-		return DISCRIMINATOR_ALIAS;
+		return Template.TEMPLATE + "." + DISCRIMINATOR_ALIAS;
 	}
 
 	protected String getDiscriminatorAlias() {
@@ -512,9 +518,21 @@ public abstract class AbstractEntityPersister
 
 		// moved up from AbstractEntityPersister ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		this.factory = creationContext.getSessionFactory();
-		this.cacheAccessStrategy = cacheAccessStrategy;
-		this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
-		isLazyPropertiesCacheable = persistentClass.isLazyPropertiesCacheable();
+
+		if ( creationContext.getSessionFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
+			this.canWriteToCache = persistentClass.isCached();
+			this.canReadFromCache = determineCanReadFromCache( persistentClass );
+			this.cacheAccessStrategy = cacheAccessStrategy;
+			this.isLazyPropertiesCacheable = persistentClass.getRootClass().isLazyPropertiesCacheable();
+			this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
+		}
+		else {
+			this.canWriteToCache = false;
+			this.canReadFromCache = false;
+			this.cacheAccessStrategy = null;
+			this.isLazyPropertiesCacheable = true;
+			this.naturalIdRegionAccessStrategy = null;
+		}
 
 		this.entityMetamodel = new EntityMetamodel( persistentClass, this, factory );
 		this.entityTuplizer = this.entityMetamodel.getTuplizer();
@@ -632,6 +650,7 @@ public abstract class AbstractEntityPersister
 				colAliases[k] = thing.getAlias( dialect, prop.getValue().getTable() );
 				if ( thing.isFormula() ) {
 					foundFormula = true;
+					( (Formula) thing ).setFormula( substituteBrackets( ( (Formula) thing ).getFormula() ) );
 					formulaTemplates[k] = thing.getTemplate( dialect, factory.getSqlFunctionRegistry() );
 				}
 				else {
@@ -828,6 +847,66 @@ public abstract class AbstractEntityPersister
 
 		this.cacheEntryHelper = buildCacheEntryHelper();
 
+		if ( creationContext.getSessionFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
+			this.invalidateCache = canWriteToCache && determineWhetherToInvalidateCache( persistentClass, creationContext );
+		}
+		else {
+			this.invalidateCache = false;
+		}
+
+	}
+
+	@SuppressWarnings("RedundantIfStatement")
+	private boolean determineWhetherToInvalidateCache(
+			PersistentClass persistentClass,
+			PersisterCreationContext creationContext) {
+		if ( hasFormulaProperties() ) {
+			return true;
+		}
+
+		if ( isVersioned() ) {
+			return false;
+		}
+
+		if ( entityMetamodel.isDynamicUpdate() ) {
+			return false;
+		}
+
+		// We need to check whether the user may have circumvented this logic (JPA TCK)
+		final boolean complianceEnabled = creationContext.getSessionFactory()
+				.getSessionFactoryOptions()
+				.getJpaCompliance()
+				.isJpaCacheComplianceEnabled();
+		if ( complianceEnabled ) {
+			// The JPA TCK (inadvertently, but still...) requires that we cache
+			// entities with secondary tables even though Hibernate historically
+			// invalidated them
+			return false;
+		}
+
+		if ( persistentClass.getJoinClosureSpan() >= 1 ) {
+			// todo : this should really consider optionality of the secondary tables in count
+			//		non-optional tables do not cause this bypass
+			return true;
+		}
+
+		return false;
+	}
+
+	@SuppressWarnings("unchecked")
+	private boolean determineCanReadFromCache(PersistentClass persistentClass) {
+		if ( persistentClass.isCached() ) {
+			return true;
+		}
+
+		final Iterator<Subclass> subclassIterator = persistentClass.getSubclassIterator();
+		while ( subclassIterator.hasNext() ) {
+			final Subclass subclass = subclassIterator.next();
+			if ( subclass.isCached() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	protected CacheEntryHelper buildCacheEntryHelper() {
@@ -985,7 +1064,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		if ( session.getCacheMode().isGetEnabled() && hasCache() && isLazyPropertiesCacheable() ) {
+		if ( session.getCacheMode().isGetEnabled() && canReadFromCache() && isLazyPropertiesCacheable() ) {
 			final EntityRegionAccessStrategy cache = getCacheAccessStrategy();
 			final Object cacheKey = cache.generateCacheKey(id, this, session.getFactory(), session.getTenantIdentifier() );
 			final Object ce = CacheHelper.fromSharedCache( session, cacheKey, cache );
@@ -1240,8 +1319,7 @@ public abstract class AbstractEntityPersister
 	 * item.
 	 */
 	public boolean isCacheInvalidationRequired() {
-		return hasFormulaProperties() ||
-				( !isVersioned() && ( entityMetamodel.isDynamicUpdate() || getTableSpan() > 1 ) );
+		return invalidateCache;
 	}
 
 	public boolean isLazyPropertiesCacheable() {
@@ -2973,10 +3051,9 @@ public abstract class AbstractEntityPersister
 
 		// TODO : shouldn't inserts be Expectations.NONE?
 		final Expectation expectation = Expectations.appropriateExpectation( insertResultCheckStyles[j] );
-		// we can't batch joined inserts, *especially* not if it is an identity insert;
-		// nor can we batch statements where the expectation is based on an output param
-		final boolean useBatch = j == 0 && expectation.canBeBatched();
-		if ( useBatch && inserBatchKey == null ) {
+		final int jdbcBatchSizeToUse = session.getConfiguredJdbcBatchSize();
+		final boolean useBatch = expectation.canBeBatched() && jdbcBatchSizeToUse > 1;
+		if ( useBatch && inserBatchKey == null) {
 			inserBatchKey = new BasicBatchKey(
 					getEntityName() + "#INSERT",
 					expectation
@@ -3114,7 +3191,8 @@ public abstract class AbstractEntityPersister
 			final SharedSessionContractImplementor session) throws HibernateException {
 
 		final Expectation expectation = Expectations.appropriateExpectation( updateResultCheckStyles[j] );
-		final boolean useBatch = j == 0 && expectation.canBeBatched() && isBatchable(); //note: updates to joined tables can't be batched...
+		final int jdbcBatchSizeToUse = session.getConfiguredJdbcBatchSize();
+		final boolean useBatch = expectation.canBeBatched() && isBatchable() && jdbcBatchSizeToUse > 1;
 		if ( useBatch && updateBatchKey == null ) {
 			updateBatchKey = new BasicBatchKey(
 					getEntityName() + "#UPDATE",
@@ -3927,16 +4005,16 @@ public abstract class AbstractEntityPersister
 		for ( int j = 0; j < joinSpan; j++ ) {
 			sqlInsertStrings[j] = customSQLInsert[j] == null ?
 					generateInsertString( getPropertyInsertability(), j ) :
-					customSQLInsert[j];
+						substituteBrackets( customSQLInsert[j]);
 			sqlUpdateStrings[j] = customSQLUpdate[j] == null ?
 					generateUpdateString( getPropertyUpdateability(), j, false ) :
-					customSQLUpdate[j];
+						substituteBrackets( customSQLUpdate[j]);
 			sqlLazyUpdateStrings[j] = customSQLUpdate[j] == null ?
 					generateUpdateString( getNonLazyPropertyUpdateability(), j, false ) :
-					customSQLUpdate[j];
+						substituteBrackets( customSQLUpdate[j]);
 			sqlDeleteStrings[j] = customSQLDelete[j] == null ?
 					generateDeleteString( j ) :
-					customSQLDelete[j];
+						substituteBrackets( customSQLDelete[j]);
 		}
 
 		tableHasColumns = new boolean[joinSpan];
@@ -3959,13 +4037,17 @@ public abstract class AbstractEntityPersister
 					.getInsertGeneratedIdentifierDelegate( this, getFactory().getDialect(), useGetGeneratedKeys() );
 			sqlIdentityInsertString = customSQLInsert[0] == null
 					? generateIdentityInsertString( getPropertyInsertability() )
-					: customSQLInsert[0];
+					: substituteBrackets( customSQLInsert[0] );
 		}
 		else {
 			sqlIdentityInsertString = null;
 		}
 
 		logStaticSQL();
+	}
+
+	private String substituteBrackets(String sql) {
+		return new SubstituteBracketSQLQueryParser( sql, getFactory() ).process();
 	}
 
 	public final void postInstantiate() throws MappingException {
@@ -4289,8 +4371,18 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel;
 	}
 
+	@Override
+	public boolean canReadFromCache() {
+		return canReadFromCache;
+	}
+
+	@Override
+	public boolean canWriteToCache() {
+		return canWriteToCache;
+	}
+
 	public boolean hasCache() {
-		return cacheAccessStrategy != null;
+		return canWriteToCache;
 	}
 
 	public EntityRegionAccessStrategy getCacheAccessStrategy() {
@@ -4463,7 +4555,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		// check to see if it is in the second-level cache
-		if ( session.getCacheMode().isGetEnabled() && hasCache() ) {
+		if ( session.getCacheMode().isGetEnabled() && canReadFromCache() ) {
 			final EntityRegionAccessStrategy cache = getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey( id, this, session.getFactory(), session.getTenantIdentifier() );
 			final Object ce = CacheHelper.fromSharedCache( session, ck, getCacheAccessStrategy() );
@@ -5400,6 +5492,37 @@ public abstract class AbstractEntityPersister
 		return attributeDefinitions;
 	}
 
+	public String[][] getPolymorphicJoinColumns(String lhsTableAlias, String propertyPath) {
+		Set<String> subclassEntityNames = (Set<String>) getEntityMetamodel()
+				.getSubclassEntityNames();
+		// We will collect all the join columns from the LHS subtypes here
+		List<String[]> polymorphicJoinColumns = new ArrayList<>( subclassEntityNames.size() );
+
+		String[] joinColumns = null;
+
+		OUTER:
+		for ( String subclassEntityName : subclassEntityNames ) {
+			AbstractEntityPersister subclassPersister = (AbstractEntityPersister) getFactory()
+					.getMetamodel()
+					.entityPersister( subclassEntityName );
+			joinColumns = subclassPersister.toColumns( lhsTableAlias, propertyPath );
+
+			if ( joinColumns.length == 0 ) {
+				// The subtype does not have a "concrete" mapping for the property path
+				continue;
+			}
+
+			// Check for duplicates like this since we will mostly have just a few candidates
+			for ( String[] existingColumns : polymorphicJoinColumns ) {
+				if ( Arrays.deepEquals( existingColumns, joinColumns ) ) {
+					continue OUTER;
+				}
+			}
+			polymorphicJoinColumns.add( joinColumns );
+		}
+
+		return ArrayHelper.to2DStringArray( polymorphicJoinColumns );
+	}
 
 	private void prepareEntityIdentifierDefinition() {
 		if ( entityIdentifierDefinition != null ) {
@@ -5559,5 +5682,15 @@ public abstract class AbstractEntityPersister
 //		};
 	}
 
+	private static class SubstituteBracketSQLQueryParser extends SQLQueryParser {
 
+		SubstituteBracketSQLQueryParser(String queryString, SessionFactoryImplementor factory) {
+			super( queryString, null, factory );
+		}
+
+		@Override
+		public String process() {
+			return substituteBrackets( getOriginalQueryString() );
+		}
+	}
 }

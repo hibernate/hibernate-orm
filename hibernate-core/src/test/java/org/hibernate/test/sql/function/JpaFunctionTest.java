@@ -32,8 +32,6 @@ import static org.junit.Assert.fail;
 @RequiresDialect(H2Dialect.class)
 public class JpaFunctionTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( JpaFunctionTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

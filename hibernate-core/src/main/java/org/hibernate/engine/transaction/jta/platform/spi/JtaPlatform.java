@@ -39,8 +39,7 @@ public interface JtaPlatform extends Service {
 	 * Determine an identifier for the given transaction appropriate for use in caching/lookup usages.
 	 * <p/>
 	 * Generally speaking the transaction itself will be returned here.  This method was added specifically
-	 * for use in WebSphere and other unfriendly JEE containers (although WebSphere is still the only known
-	 * such brain-dead, sales-driven impl).
+	 * for use in WebSphere and other unfriendly Java EE containers.
 	 *
 	 * @param transaction The transaction to be identified.
 	 * @return An appropriate identifier

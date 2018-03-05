@@ -1,7 +1,8 @@
 = Hibernate ORM {fullVersion} User Guide
 Vlad Mihalcea, Steve Ebersole, Andrea Boriero, Gunnar Morling, Gail Badner, Chris Cranford, Emmanuel Bernard, Sanne Grinovero, Brett Meyer, Hardy Ferentschik, Gavin King, Christian Bauer, Max Rydahl Andersen, Karel Maesen, Radim Vansa, Louis Jacomet
-:toc:
+:toc2:
 :toclevels: 3
+:sectanchors:
 
 include::Preface.adoc[]
 

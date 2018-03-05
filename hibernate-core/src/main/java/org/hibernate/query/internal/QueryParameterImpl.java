@@ -18,7 +18,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public abstract class QueryParameterImpl<T> implements QueryParameter<T> {
-	private final Type expectedType;
+	private Type expectedType;
 
 	public QueryParameterImpl(Type expectedType) {
 		this.expectedType = expectedType;
@@ -27,6 +27,10 @@ public abstract class QueryParameterImpl<T> implements QueryParameter<T> {
 	@Override
 	public Type getType() {
 		return expectedType;
+	}
+
+	public void setHibernateType(Type expectedType) {
+		this.expectedType = expectedType;
 	}
 
 	@Override

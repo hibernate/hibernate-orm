@@ -12,11 +12,13 @@ import javax.persistence.SharedCacheMode;
 
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -63,6 +65,9 @@ public interface MetadataBuildingOptions {
 	 * @return The BasicType registrations
 	 */
 	List<BasicTypeRegistration> getBasicTypeRegistrations();
+
+
+	ReflectionManager getReflectionManager();
 
 	/**
 	 * Access to the Jandex index passed by call to
@@ -115,8 +120,6 @@ public interface MetadataBuildingOptions {
 
 	ImplicitNamingStrategy getImplicitNamingStrategy();
 	PhysicalNamingStrategy getPhysicalNamingStrategy();
-
-	ReflectionManager getReflectionManager();
 
 	/**
 	 * Access to the SharedCacheMode for determining whether we should perform second level
@@ -219,7 +222,7 @@ public interface MetadataBuildingOptions {
 	 */
 	List<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList();
 
-	List<AttributeConverterDefinition> getAttributeConverters();
+	List<AttributeConverterInfo> getAttributeConverters();
 
 //	/**
 //	 * Obtain the selected strategy for resolving members identifying persistent attributes

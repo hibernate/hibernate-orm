@@ -32,7 +32,7 @@ public class BitSetUserType implements UserType {
 
     @Override
     public Class returnedClass() {
-        return String.class;
+        return BitSet.class;
     }
 
     @Override

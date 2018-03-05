@@ -15,15 +15,15 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.spatial.HSMessageLogger;
+
+import org.jboss.logging.Logger;
+
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
-
-import org.jboss.logging.Logger;
-
-import org.hibernate.spatial.HSMessageLogger;
 
 /**
  * An <code>AbstractExpectationsFactory</code> provides the expected
@@ -36,25 +36,21 @@ import org.hibernate.spatial.HSMessageLogger;
  */
 public abstract class AbstractExpectationsFactory {
 
-	private static final HSMessageLogger LOG = Logger.getMessageLogger(
-			HSMessageLogger.class,
-			AbstractExpectationsFactory.class.getName()
-	);
-
 	public final static String TEST_POLYGON_WKT = "POLYGON((0 0, 50 0, 100 100, 0 100, 0 0))";
 	public final static String TEST_POINT_WKT = "POINT(0 0)";
-
 	public final static int INTEGER = 1;
 	public final static int DOUBLE = 2;
 	public final static int GEOMETRY = 3;
 	public final static int STRING = 4;
 	public final static int BOOLEAN = 5;
 	public final static int OBJECT = -1;
-
+	private static final HSMessageLogger LOG = Logger.getMessageLogger(
+			HSMessageLogger.class,
+			AbstractExpectationsFactory.class.getName()
+	);
 	private final static int TEST_SRID = 4326;
-
-	private final DataSourceUtils dataSourceUtils;
 	private static final int MAX_BYTE_LEN = 1024;
+	private final DataSourceUtils dataSourceUtils;
 
 	public AbstractExpectationsFactory(DataSourceUtils dataSourceUtils) {
 		this.dataSourceUtils = dataSourceUtils;
@@ -785,7 +781,8 @@ public abstract class AbstractExpectationsFactory {
 		try {
 			cn = createConnection();
 			preparedStatement = nativeSQLStatement.prepare( cn );
-			LOG.info( "Native SQL is: " + preparedStatement.toString() );
+			LOG.info( "Native SQL is: " + nativeSQLStatement.toString() );
+
 			results = preparedStatement.executeQuery();
 			while ( results.next() ) {
 				int id = results.getInt( 1 );
@@ -814,7 +811,7 @@ public abstract class AbstractExpectationsFactory {
 						//this code is a hack to deal with Oracle Spatial that returns Blob's for asWKB() function
 						//TODO -- clean up
 						if ( val instanceof Blob ) {
-							val = (T) ((Blob) val).getBytes( 1, MAX_BYTE_LEN );
+							val = (T) ( (Blob) val ).getBytes( 1, MAX_BYTE_LEN );
 						}
 						expected.put( id, val );
 				}
@@ -851,6 +848,10 @@ public abstract class AbstractExpectationsFactory {
 			public PreparedStatement prepare(Connection connection) throws SQLException {
 				return connection.prepareStatement( sql );
 			}
+
+			public String toString() {
+				return sql;
+			}
 		};
 	}
 
@@ -862,6 +863,10 @@ public abstract class AbstractExpectationsFactory {
 					pstmt.setString( i, wkt );
 				}
 				return pstmt;
+			}
+
+			public String toString() {
+				return String.format( "sql; %s, wkt: %s", sql, wkt );
 			}
 		};
 	}
@@ -875,6 +880,10 @@ public abstract class AbstractExpectationsFactory {
 					pstmt.setObject( i++, param );
 				}
 				return pstmt;
+			}
+
+			public String toString() {
+				return sql;
 			}
 		};
 	}

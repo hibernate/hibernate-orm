@@ -141,11 +141,7 @@ public class JoinedInheritanceWithOneToManyTest extends BaseNonConfigCoreFunctio
 	@Entity(name = "BuildingListEntry")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	@Table(name = "TB_BUILDING_LIST_ENTRY")
-	@SequenceGenerator(name = "seq",
-			sequenceName = "sq_building_list_entry_id",
-			allocationSize = 1)
 	public static class BuildingListEntry extends DBObject implements Serializable {
-
 
 		@Column
 		protected String comments;

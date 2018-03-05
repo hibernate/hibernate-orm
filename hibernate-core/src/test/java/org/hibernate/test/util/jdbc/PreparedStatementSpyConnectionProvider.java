@@ -116,6 +116,8 @@ public class PreparedStatementSpyConnectionProvider
 		releasedConnections.clear();
 		preparedStatementMap.keySet().forEach( Mockito::reset );
 		preparedStatementMap.clear();
+		executeStatements.clear();
+		executeUpdateStatements.clear();
 	}
 
 	/**
@@ -162,6 +164,15 @@ public class PreparedStatementSpyConnectionProvider
 	 */
 	public List<PreparedStatement> getPreparedStatements() {
 		return new ArrayList<>( preparedStatementMap.keySet() );
+	}
+
+	/**
+	 * Get the PreparedStatements SQL statements.
+	 *
+	 * @return list of recorded PreparedStatements SQL statements.
+	 */
+	public List<String> getPreparedSQLStatements() {
+		return new ArrayList<>( preparedStatementMap.values() );
 	}
 
 	/**

@@ -395,7 +395,11 @@ public interface PersistentCollection {
 	 * @return {@code true} if the collection is dirty
 	 */
 	boolean isDirty();
-	
+
+	default boolean isElementRemoved(){
+		return false;
+	}
+
 	/**
 	 * Clear the dirty flag, after flushing changes
 	 * to the database.

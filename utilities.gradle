@@ -14,6 +14,7 @@ class UtilitiesPlugin implements Plugin<Project> {
 }
 
 class UtilitiesPluginDef {
+    @SuppressWarnings("GrUnnecessarySemicolon")
     public String determinePackageName(SourceDirectorySet sourceDirectorySet, File javaFile) {
         final javaFileAbsolutePath = javaFile.absolutePath;
         for ( File sourceDirectory : sourceDirectorySet.srcDirs ) {
@@ -27,5 +28,17 @@ class UtilitiesPluginDef {
             }
         }
         throw new RuntimeException( "ugh" );
+    }
+
+    String java9ModuleName(Project project) {
+        String name = project.name
+
+        // alternative is to just use the full project name (don't drop the 'hibernate-' prefix)
+
+        if ( name.startsWith( 'hibernate-' ) ) {
+            name = name.drop( 'hibernate-'.length() )
+        }
+
+        return name
     }
 }

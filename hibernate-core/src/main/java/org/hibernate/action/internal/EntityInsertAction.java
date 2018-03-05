@@ -240,7 +240,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 	protected boolean hasPostCommitEventListeners() {
 		final EventListenerGroup<PostInsertEventListener> group = listenerGroup( EventType.POST_COMMIT_INSERT );
 		for ( PostInsertEventListener listener : group.listeners() ) {
-			if ( listener.requiresPostCommitHanding( getPersister() ) ) {
+			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;
 			}
 		}
@@ -249,7 +249,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 	
 	private boolean isCachePutEnabled(EntityPersister persister, SharedSessionContractImplementor session) {
-		return persister.hasCache()
+		return persister.canWriteToCache()
 				&& !persister.isCacheInvalidationRequired()
 				&& session.getCacheMode().isPutEnabled();
 	}

@@ -43,17 +43,17 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Christoph Beck
  */
-public class TypeNames {
+public final class TypeNames {
 	/**
 	 * Holds default type mappings for a typeCode.  This is the non-sized mapping
 	 */
-	private Map<Integer, String> defaults = new HashMap<Integer, String>();
+	private final Map<Integer, String> defaults = new HashMap<Integer, String>();
 
 	/**
 	 * Holds the weighted mappings for a typeCode.  The nested map is a TreeMap to sort its contents
 	 * based on the key (the weighting) to ensure proper iteration ordering during {@link #get(int, long, int, int)}
 	 */
-	private Map<Integer, Map<Long, String>> weighted = new HashMap<Integer, Map<Long, String>>();
+	private final Map<Integer, Map<Long, String>> weighted = new HashMap<Integer, Map<Long, String>>();
 
 	/**
 	 * get default type name for specified type
@@ -64,8 +64,9 @@ public class TypeNames {
 	 *
 	 * @throws MappingException Indicates that no registrations were made for that typeCode
 	 */
-	public String get(int typeCode) throws MappingException {
-		final String result = defaults.get( typeCode );
+	public String get(final int typeCode) throws MappingException {
+		final Integer integer = Integer.valueOf( typeCode );
+		final String result = defaults.get( integer );
 		if ( result == null ) {
 			throw new MappingException( "No Dialect mapping for JDBC type: " + typeCode );
 		}
@@ -85,7 +86,8 @@ public class TypeNames {
 	 * @throws MappingException Indicates that no registrations were made for that typeCode
 	 */
 	public String get(int typeCode, long size, int precision, int scale) throws MappingException {
-		final Map<Long, String> map = weighted.get( typeCode );
+		final Integer integer = Integer.valueOf( typeCode );
+		final Map<Long, String> map = weighted.get( integer );
 		if ( map != null && map.size() > 0 ) {
 			// iterate entries ordered by capacity to find first fit
 			for ( Map.Entry<Long, String> entry: map.entrySet() ) {
@@ -115,11 +117,12 @@ public class TypeNames {
 	 * @param value The mapping (type name)
 	 */
 	public void put(int typeCode, long capacity, String value) {
-		Map<Long, String> map = weighted.get( typeCode );
+		final Integer integer = Integer.valueOf( typeCode );
+		Map<Long, String> map = weighted.get( integer );
 		if ( map == null ) {
 			// add new ordered map
 			map = new TreeMap<Long, String>();
-			weighted.put( typeCode, map );
+			weighted.put( integer, map );
 		}
 		map.put( capacity, value );
 	}
@@ -131,7 +134,8 @@ public class TypeNames {
 	 * @param value The mapping (type name)
 	 */
 	public void put(int typeCode, String value) {
-		defaults.put( typeCode, value );
+		final Integer integer = Integer.valueOf( typeCode );
+		defaults.put( integer, value );
 	}
 
 	/**

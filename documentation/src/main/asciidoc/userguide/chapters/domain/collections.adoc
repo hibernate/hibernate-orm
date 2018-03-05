@@ -626,7 +626,7 @@ include::{sourcedir}/type/TimestampEpochType.java[tags=collections-map-custom-ke
 ----
 
 The `TimestampEpochType` allows us to map a Unix timestamp since epoch to a `java.util.Date`.
-But, without the `@MapKeyType` Hibernate annotation, it would nt be possible to customize the `Map` key type.
+But, without the `@MapKeyType` Hibernate annotation, it would not be possible to customize the `Map` key type.
 
 [[collections-map-key-class]]
 ===== Maps having an interface type as the key
@@ -777,7 +777,7 @@ include::{extrasdir}/collections-array-binary-example.sql[]
 If you want to map arrays such as `String[]` or `int[]` to database-specific array types like PostgreSQL `integer[]` or `text[]`,
 you need to write a custom Hibernate Type.
 
-Check out https://vladmihalcea.com/2017/06/21/how-to-map-java-and-sql-arrays-with-jpa-and-hibernate/[this article] for an example of how to write
+Check out https://vladmihalcea.com/how-to-map-java-and-sql-arrays-with-jpa-and-hibernate/[this article] for an example of how to write
 such a custom Hibernate Type.
 ====
 

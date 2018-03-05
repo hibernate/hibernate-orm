@@ -23,4 +23,12 @@ public class Workload {
 	public String name;
 	@Column(name="load_")
 	public Integer load;
+
+	public Integer getId() {
+		return id;
+	}
+
+	public String getName() {
+		return name;
+	}
 }

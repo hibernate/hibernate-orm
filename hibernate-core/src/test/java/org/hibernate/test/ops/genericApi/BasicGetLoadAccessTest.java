@@ -32,9 +32,9 @@ import static org.junit.Assert.fail;
  */
 public class BasicGetLoadAccessTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( User.class );
+	protected void applyMetadataSources(MetadataSources sources) {
+		super.applyMetadataSources( sources );
+		sources.addAnnotatedClass( User.class );
 	}
 
 	@Entity( name = "User" )

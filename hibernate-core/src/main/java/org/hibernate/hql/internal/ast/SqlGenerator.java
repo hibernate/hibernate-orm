@@ -158,7 +158,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 	public SqlGenerator(SessionFactoryImplementor sfi) {
 		super();
-		parseErrorHandler = new ErrorCounter();
+		parseErrorHandler = new ErrorTracker();
 		sessionFactory = sfi;
 	}
 

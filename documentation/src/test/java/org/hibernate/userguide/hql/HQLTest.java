@@ -783,8 +783,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			org.hibernate.query.Query query = session.createQuery(
 				"select p " +
 				"from Person p " +
-				"where p.name like ? " )
-			.setParameter( 0, "J%" );
+				"where p.name like ?1" )
+			.setParameter( 1, "J%" );
 			//end::hql-api-positional-parameter-example[]
 		});
 	}

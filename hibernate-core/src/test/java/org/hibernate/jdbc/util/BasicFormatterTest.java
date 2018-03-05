@@ -13,6 +13,8 @@ import org.junit.Test;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
+import org.jboss.logging.Logger;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -22,6 +24,7 @@ import static org.junit.Assert.assertFalse;
  * @author Steve Ebersole
  */
 public class BasicFormatterTest extends BaseUnitTestCase {
+
 	@Test
 	public void testNoLoss() {
 		assertNoLoss( "insert into Address (city, state, zip, \"from\") values (?, ?, ?, 'insert value')" );
@@ -43,6 +46,9 @@ public class BasicFormatterTest extends BaseUnitTestCase {
 		assertNoLoss(
 				"/* Here we' go! */ select case when p.age > 50 then 'old' when p.age > 18 then 'adult' else 'child' end from Person p where ( case when p.age > 50 then 'old' when p.age > 18 then 'adult' else 'child' end ) like ?"
 		);
+		assertNoLoss(
+				"(select p.pid from Address where city = 'Boston') union (select p.pid from Address where city = 'Taipei')"
+		);
 	}
 
 	private void assertNoLoss(String query) {
@@ -50,8 +56,9 @@ public class BasicFormatterTest extends BaseUnitTestCase {
 		StringTokenizer formatted = new StringTokenizer( formattedQuery, " \t\n\r\f()" );
 		StringTokenizer plain = new StringTokenizer( query, " \t\n\r\f()" );
 
-		System.out.println( "Original: " + query );
-		System.out.println( "Formatted: " + formattedQuery );
+		log.debugf( "Original: {}", query );
+		log.debugf( "Formatted: {}", formattedQuery );
+
 		while ( formatted.hasMoreTokens() && plain.hasMoreTokens() ) {
 			String plainToken = plain.nextToken();
 			String formattedToken = formatted.nextToken();

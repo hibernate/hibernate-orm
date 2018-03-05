@@ -18,8 +18,10 @@ Hibernate will internally determine which `ConnectionProvider` to use based on t
 3. else if any setting prefixed by `hibernate.c3p0.` is set -> <<database-connectionprovider-c3p0>>
 4. else if any setting prefixed by `hibernate.proxool.` is set -> <<database-connectionprovider-proxool>>
 5. else if any setting prefixed by `hibernate.hikari.` is set -> <<database-connectionprovider-hikari>>
-6. else if `hibernate.connection.url` is set -> <<database-connectionprovider-drivermanager>>
-7. else -> <<database-connectionprovider-provided>>
+6. else if any setting prefixed by `hibernate.vibur.` is set -> <<database-connectionprovider-vibur>>
+7. else if any setting prefixed by `hibernate.agroal.` is set -> <<database-connectionprovider-agroal>>
+8. else if `hibernate.connection.url` is set -> <<database-connectionprovider-drivermanager>>
+9. else -> <<database-connectionprovider-provided>>
 
 [[database-connectionprovider-datasource]]
 === Using DataSources
@@ -96,7 +98,7 @@ See http://proxool.sourceforge.net/configure.html[proxool  configuration].
 `hibernate.proxool.pool_alias` must be set to indicate which pool to use.
 
 [[database-connectionprovider-hikari]]
-=== Using Hikari
+=== Using HikariCP
 
 [IMPORTANT]
 ====
@@ -116,12 +118,52 @@ Additionally, this `ConnectionProvider` will pick up the following Hibernate-spe
 Note that Hikari only supports JDBC standard isolation levels (apparently).
 `hibernate.connection.autocommit`:: Mapped to Hikari's `autoCommit` setting
 
+[[database-connectionprovider-vibur]]
+=== Using Vibur DBCP
+
+[IMPORTANT]
+====
+To use this integration, the application must include the hibernate-vibur module jar (as well as its dependencies) on the classpath.
+====
+
+Hibernate also provides support for applications to use http://www.vibur.org/[Vibur DBCP] connection pool.
+
+Set all of your Vibur settings in Hibernate prefixed by `hibernate.vibur.` and this `ConnectionProvider` will pick them up and pass them along to Vibur DBCP.
+Additionally, this `ConnectionProvider` will pick up the following Hibernate-specific properties and map them to the corresponding Vibur ones (any `hibernate.vibur.` prefixed ones have precedence):
+
+`hibernate.connection.driver_class`:: Mapped to Vibur's `driverClassName` setting
+`hibernate.connection.url`:: Mapped to Vibur's `jdbcUrl` setting
+`hibernate.connection.username`:: Mapped to Vibur's `username` setting
+`hibernate.connection.password`:: Mapped to Vibur's `password` setting
+`hibernate.connection.isolation`:: Mapped to Vibur's `defaultTransactionIsolationValue` setting. See <<ConnectionProvider support for transaction isolation setting>>.
+`hibernate.connection.autocommit`:: Mapped to Vibur's `defaultAutoCommit` setting
+
+[[database-connectionprovider-agroal]]
+=== Using Agroal
+
+[IMPORTANT]
+====
+To use this integration, the application must include the hibernate-agroal module jar (as well as its dependencies) on the classpath.
+====
+
+Hibernate also provides support for applications to use http://agroal.github.io/[Agroal] connection pool.
+
+Set all of your Agroal settings in Hibernate prefixed by `hibernate.agroal.` and this `ConnectionProvider` will pick them up and pass them along to Agroal connection pool.
+Additionally, this `ConnectionProvider` will pick up the following Hibernate-specific properties and map them to the corresponding Agroal ones (any `hibernate.agroal.` prefixed ones have precedence):
+
+`hibernate.connection.driver_class`:: Mapped to Agroal's `driverClassName` setting
+`hibernate.connection.url`:: Mapped to Agroal's `jdbcUrl` setting
+`hibernate.connection.username`:: Mapped to Agroal's `principal` setting
+`hibernate.connection.password`:: Mapped to Agroal's `credential` setting
+`hibernate.connection.isolation`:: Mapped to Agroal's `jdbcTransactionIsolation` setting. See <<ConnectionProvider support for transaction isolation setting>>.
+`hibernate.connection.autocommit`:: Mapped to Agroal's `autoCommit` setting
+
 [[database-connectionprovider-drivermanager]]
 === Using Hibernate's built-in (and unsupported) pooling
 
 [IMPORTANT]
 ====
-The built-in connection pool is not supported supported for use.
+The built-in connection pool is not supported for use in a production system.
 ====
 
 This section is here just for completeness.
@@ -173,6 +215,8 @@ If for some reason it is not able to determine the proper one or you want to use
 |Firebird |Support for the Firebird database
 |FrontBase |Support for the Frontbase database
 |H2 |Support for the H2 database
+|HANAColumnStore |Support for the SAP HANA database column store. This is the recommended dialect for the SAP HANA database.
+|HANARowStore |Support for the SAP HANA database row store
 |HSQL |Support for the HSQL (HyperSQL) database
 |Informix |Support for the Informix database
 |Ingres |Support for the Ingres database, version 9.2

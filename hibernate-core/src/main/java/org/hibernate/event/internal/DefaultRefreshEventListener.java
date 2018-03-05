@@ -140,11 +140,11 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			final EntityKey key = source.generateEntityKey( id, persister );
 			source.getPersistenceContext().removeEntity( key );
 			if ( persister.hasCollections() ) {
-				new EvictVisitor( source ).process( object, persister );
+				new EvictVisitor( source, object ).process( object, persister );
 			}
 		}
 
-		if ( persister.hasCache() ) {
+		if ( persister.canWriteToCache() ) {
 			Object previousVersion = null;
 			if ( persister.isVersionPropertyGenerated() ) {
 				// we need to grab the version value from the entity, otherwise

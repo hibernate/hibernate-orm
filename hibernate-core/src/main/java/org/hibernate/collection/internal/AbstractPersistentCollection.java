@@ -69,6 +69,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	// collections detect changes made via their public interface and mark
 	// themselves as dirty as a performance optimization
 	private boolean dirty;
+	protected boolean elementRemoved;
 	private Serializable storedSnapshot;
 
 	private String sessionFactoryUuid;
@@ -106,8 +107,14 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	@Override
+	public boolean isElementRemoved() {
+		return elementRemoved;
+	}
+
+	@Override
 	public final void clearDirty() {
 		dirty = false;
+		elementRemoved = false;
 	}
 
 	@Override

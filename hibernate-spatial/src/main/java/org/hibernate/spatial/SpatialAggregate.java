@@ -18,4 +18,9 @@ public interface SpatialAggregate {
 	 */
 	public static final int EXTENT = 1;
 
+	/**
+	 * Enum value for union aggregate (only supported in DB2)
+	 */
+	public static final int UNION = 2;
+
 }

@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * A join that appears in a translated HQL query
@@ -32,7 +33,28 @@ public class QueryJoinFragment extends JoinFragment {
 		addJoin( tableName, alias, alias, fkColumns, pkColumns, joinType, on );
 	}
 
+	public void addJoin(String tableName, String alias, String[][] fkColumns, String[] pkColumns, JoinType joinType) {
+		addJoin( tableName, alias, alias, fkColumns, pkColumns, joinType, null );
+	}
+
+	public void addJoin(String tableName, String alias, String[][] fkColumns, String[] pkColumns, JoinType joinType, String on) {
+		addJoin( tableName, alias, alias, fkColumns, pkColumns, joinType, on );
+	}
+
 	private void addJoin(String tableName, String alias, String concreteAlias, String[] fkColumns, String[] pkColumns, JoinType joinType, String on) {
+		if ( !useThetaStyleInnerJoins || joinType != JoinType.INNER_JOIN ) {
+			JoinFragment jf = dialect.createOuterJoinFragment();
+			jf.addJoin( tableName, alias, fkColumns, pkColumns, joinType, on );
+			addFragment( jf );
+		}
+		else {
+			addCrossJoin( tableName, alias );
+			addCondition( concreteAlias, fkColumns, pkColumns );
+			addCondition( on );
+		}
+	}
+
+	private void addJoin(String tableName, String alias, String concreteAlias, String[][] fkColumns, String[] pkColumns, JoinType joinType, String on) {
 		if ( !useThetaStyleInnerJoins || joinType != JoinType.INNER_JOIN ) {
 			JoinFragment jf = dialect.createOuterJoinFragment();
 			jf.addJoin( tableName, alias, fkColumns, pkColumns, joinType, on );
@@ -94,6 +116,31 @@ public class QueryJoinFragment extends JoinFragment {
 		}
 	}
 
+	public void addCondition(String alias, String[][] fkColumns, String[] pkColumns) {
+		afterWhere.append( " and " );
+		if ( fkColumns.length > 1 ) {
+			afterWhere.append( "(" );
+		}
+		for ( int i = 0; i < fkColumns.length; i++ ) {
+			for ( int j = 0; j < fkColumns[i].length; j++ ) {
+				afterWhere.append( fkColumns[i][j] )
+						.append( '=' )
+						.append( alias )
+						.append( '.' )
+						.append( pkColumns[j] );
+				if ( j < fkColumns[i].length - 1 ) {
+					afterWhere.append( " and " );
+				}
+			}
+			if ( i < fkColumns.length - 1 ) {
+				afterWhere.append( " or " );
+			}
+		}
+		if ( fkColumns.length > 1 ) {
+			afterWhere.append( ")" );
+		}
+	}
+
 	/**
 	 * Add the condition string to the join fragment.
 	 *
@@ -103,6 +150,7 @@ public class QueryJoinFragment extends JoinFragment {
 	public boolean addCondition(String condition) {
 		// if the condition is not already there...
 		if (
+				!StringHelper.isEmpty( condition ) &&
 				afterFrom.toString().indexOf( condition.trim() ) < 0 &&
 				afterWhere.toString().indexOf( condition.trim() ) < 0
 		) {

@@ -12,8 +12,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-import com.vividsolutions.jts.geom.Geometry;
-
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -26,6 +24,8 @@ import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import com.vividsolutions.jts.geom.Geometry;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -33,7 +33,7 @@ import static org.junit.Assert.fail;
 
 /**
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: Sep 30, 2010
+ * creation-date: Sep 30, 2010
  */
 public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCase {
 
@@ -42,7 +42,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 
 	protected TestData testData;
 	protected DataSourceUtils dataSourceUtils;
-	protected GeometryEquality geometryEquality;
+	protected JTSGeometryEquality geometryEquality;
 	protected AbstractExpectationsFactory expectationsFactory;
 
 	/**
@@ -215,7 +215,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 		}
 		else if ( expected instanceof Geometry ) {
 			if ( JTS.equals( geometryType ) ) {
-				if ( !(received instanceof Geometry) ) {
+				if ( !( received instanceof Geometry ) ) {
 					fail(
 							"Expected a JTS Geometry, but received an object of type " + received.getClass()
 									.getCanonicalName()
@@ -227,7 +227,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 				);
 			}
 			else {
-				if ( !(received instanceof org.geolatte.geom.Geometry) ) {
+				if ( !( received instanceof org.geolatte.geom.Geometry ) ) {
 					fail(
 							"Expected a Geolatte Geometry, but received an object of type " + received.getClass()
 									.getCanonicalName()
@@ -245,7 +245,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 		}
 		else {
 			if ( expected instanceof Long ) {
-				assertEquals( "Failure on testsuite-suite for case " + id, ((Long) expected).intValue(), received );
+				assertEquals( "Failure on testsuite-suite for case " + id, ( (Long) expected ).intValue(), received );
 			}
 			else {
 				assertEquals( "Failure on testsuite-suite for case " + id, expected, received );

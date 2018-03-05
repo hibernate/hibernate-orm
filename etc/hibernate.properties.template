@@ -211,6 +211,15 @@ hibernate.connection.url @DB_URL@
 #hibernate.connection.password hibernate
 
 
+## HANA
+
+#hibernate.dialect org.hibernate.dialect.HANAColumnStoreDialect
+#hibernate.connection.driver_class com.sap.db.jdbc.Driver
+#hibernate.connection.url jdbc:sap://localhost:30015
+#hibernate.connection.username HIBERNATE_TEST
+#hibernate.connection.password H1bernate_test
+
+
 
 #################################
 ### Hibernate Connection Pool ###

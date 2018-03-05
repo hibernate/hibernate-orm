@@ -50,7 +50,6 @@ import static org.junit.Assert.assertTrue;
  */
 @RequiresDialect( value = Cache71Dialect.class )
 public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
-	private static final Logger log = Logger.getLogger( SQLFunctionsInterSystemsTest.class );
 
 	public String[] getMappings() {
 		return new String[] {

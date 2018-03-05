@@ -1284,7 +1284,7 @@ See the <<chapters/query/native/Native.adoc#sql-custom-crud-secondary-table-exam
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Tables.html[`@Tables`] annotation is used to group multiple <<annotations-hibernate-table>> annotations.
 
 [[annotations-hibernate-target]]
-==== `@Target`Se
+==== `@Target`
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify an explicit target implementation when the current annotated association is using an interface type.
 
 See the <<chapters/domain/basic_types.adoc#mapping-Target,`@Target` mapping>> section for more info.

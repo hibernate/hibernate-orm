@@ -17,15 +17,22 @@ import javax.persistence.Converter;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.boot.AttributeConverterInfo;
+import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 
 /**
  * Externalized representation of an AttributeConverter
  *
  * @author Steve Ebersole
  *
- * @see org.hibernate.boot.spi.AttributeConverterDescriptor
+ * @deprecated (since 5.3) forces the converter instance to be built too early,
+ * which precludes the ability to resolve them from CDI, etc.  See
+ * {@link org.hibernate.boot.model.convert.spi.ConverterDescriptor} instead
  */
-public class AttributeConverterDefinition {
+@Deprecated
+public class AttributeConverterDefinition implements AttributeConverterInfo {
 	private final AttributeConverter attributeConverter;
 	private final boolean autoApply;
 	private final Class entityAttributeType;
@@ -256,6 +263,11 @@ public class AttributeConverterDefinition {
 	}
 
 	@Override
+	public Class<? extends AttributeConverter> getConverterClass() {
+		return attributeConverter.getClass();
+	}
+
+	@Override
 	public String toString() {
 		return String.format(
 				"%s[converterClass=%s, domainType=%s, jdbcType=%s]",
@@ -263,6 +275,15 @@ public class AttributeConverterDefinition {
 				attributeConverter.getClass().getName(),
 				entityAttributeType.getName(),
 				databaseColumnType.getName()
+		);
+	}
+
+	@Override
+	public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
+		return new InstanceBasedConverterDescriptor(
+				getAttributeConverter(),
+				isAutoApply(),
+				context.getMetadataCollector().getClassmateContext()
 		);
 	}
 }

@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.LockOptions;
+import org.hibernate.engine.internal.BatchFetchQueueHelper;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.Loader;
@@ -97,6 +98,15 @@ public abstract class BatchingEntityLoader implements UniqueEntityLoader {
 		try {
 			final List results = loaderToUse.doQueryAndInitializeNonLazyCollections( session, qp, false );
 			log.debug( "Done entity batch load" );
+			// The EntityKey for any entity that is not found will remain in the batch.
+			// Explicitly remove the EntityKeys for entities that were not found to
+			// avoid including them in future batches that get executed.
+			BatchFetchQueueHelper.removeNotFoundBatchLoadableEntityKeys(
+					ids,
+					results,
+					persister(),
+					session
+			);
 			return getObjectFromList(results, id, session);
 		}
 		catch ( SQLException sqle ) {

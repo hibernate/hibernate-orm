@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
@@ -139,6 +140,50 @@ public class CriteriaLiteralsTest extends BaseEntityManagerFunctionalTestCase {
 					"select 'abc' as col_0_0_, criteriali0_.name as col_1_0_ from Book criteriali0_ where criteriali0_.name=?" ) );
 			assertTrue( tuples.isEmpty() );
 		} );
+	}
+
+	@Test
+	public void testNumericLiteralsInWhereClause() throws Exception {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			testNumericLiterals(
+				entityManager,
+			 	"select 'abc' as col_0_0_, criteriali0_.name as col_1_0_ from Book criteriali0_ where criteriali0_.id=1"
+			);
+		} );
+	}
+
+	@Test
+	public void testNumericLiteralsInWhereClauseUsingBindParameters() throws Exception {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			testNumericLiterals(
+				entityManager,
+			 	"select 'abc' as col_0_0_, criteriali0_.name as col_1_0_ from Book criteriali0_ where criteriali0_.id=1"
+			);
+		} );
+	}
+
+	private void testNumericLiterals(EntityManager entityManager, String expectedSQL) {
+		final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+
+		final CriteriaQuery<Tuple> query = cb.createQuery( Tuple.class );
+
+		final Root<Book> entity = query.from( Book.class );
+		query.where( cb.equal(
+				entity.get( "id" ),
+				cb.literal( 1 )
+		) );
+
+		query.multiselect(
+				cb.literal( "abc" ),
+				entity.get( "name" )
+		);
+
+		connectionProvider.clear();
+		List<Tuple> tuples = entityManager.createQuery( query )
+				.getResultList();
+		assertEquals( 1, tuples.size() );
+
+		assertNotNull( connectionProvider.getPreparedStatement(expectedSQL) );
 	}
 
 	@Test

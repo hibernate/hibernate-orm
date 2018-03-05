@@ -59,9 +59,9 @@ public class ColumnTransformerTest extends BaseCoreFunctionalTestCase {
 		assertEquals(HEIGHT_INCHES, staff.getSizeInInches(), 0.01d);
 		
 		// Test predicate and entity load via HQL
-		staff = (Staff)s.createQuery("from Staff s where s.sizeInInches between ? and ?")
-			.setDouble(0, HEIGHT_INCHES - 0.01d)
-			.setDouble(1, HEIGHT_INCHES + 0.01d)
+		staff = (Staff)s.createQuery("from Staff s where s.sizeInInches between ?1 and ?2")
+			.setDouble(1, HEIGHT_INCHES - 0.01d)
+			.setDouble(2, HEIGHT_INCHES + 0.01d)
 			.uniqueResult();
 		assertEquals(HEIGHT_INCHES, staff.getSizeInInches(), 0.01d);
 

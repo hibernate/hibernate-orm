@@ -47,8 +47,6 @@ import static org.junit.Assert.assertEquals;
 @RequiresDialect(PostgreSQL82Dialect.class)
 public class CollectionLoaderTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( CollectionLoaderTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

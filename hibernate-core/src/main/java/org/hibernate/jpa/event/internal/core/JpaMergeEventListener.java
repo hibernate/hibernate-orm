@@ -10,8 +10,8 @@ import java.io.Serializable;
 
 import org.hibernate.event.internal.DefaultMergeEventListener;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
-import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
+import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
 
 /**
  * Overrides the LifeCycle OnSave call to call the PrePersist operation

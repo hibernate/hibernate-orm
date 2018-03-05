@@ -1,0 +1,8 @@
+
+
+EWKTReader doesn't work with the test data for Z or M data. It tests for 'POINTM' but the data is 'POINT M'.
+
+TestSpatialFunctions failures:
+transform:
+DB2 transform functions between spatial reference systems with the same datum but not different datums.
+This causes the transform test in TestSpatialFunctions to fail because it transforms from WGS84 to WGS_1972_Transit_Broadcast_Ephemeris

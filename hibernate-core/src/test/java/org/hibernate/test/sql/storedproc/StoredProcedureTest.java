@@ -7,19 +7,11 @@
 package org.hibernate.test.sql.storedproc;
 
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.NamedStoredProcedureQueries;
-import javax.persistence.NamedStoredProcedureQuery;
 import javax.persistence.ParameterMode;
-import javax.persistence.QueryHint;
-import javax.persistence.StoredProcedureParameter;
 
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureOutputs;
@@ -31,6 +23,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -42,143 +35,13 @@ import static org.junit.Assert.fail;
 public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { MyEntity.class };
+		return new Class[] { H2ProcTesting.MyEntity.class };
 	}
 
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.addAuxiliaryDatabaseObject(
-				new AuxiliaryDatabaseObject() {
-					@Override
-					public String getExportIdentifier() {
-						return "function:findOneUser";
-					}
-
-					@Override
-					public boolean appliesToDialect(Dialect dialect) {
-						return H2Dialect.class.isInstance( dialect );
-					}
-
-					@Override
-					public boolean beforeTablesOnCreation() {
-						return false;
-					}
-
-					@Override
-					public String[] sqlCreateStrings(Dialect dialect) {
-						return new String[] {
-								"CREATE ALIAS findOneUser AS $$\n" +
-										"import org.h2.tools.SimpleResultSet;\n" +
-										"import java.sql.*;\n" +
-										"@CODE\n" +
-										"ResultSet findOneUser() {\n" +
-										"    SimpleResultSet rs = new SimpleResultSet();\n" +
-										"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
-										"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
-										"    rs.addRow(1, \"Steve\");\n" +
-										"    return rs;\n" +
-										"}\n" +
-										"$$"
-						};
-					}
-
-					@Override
-					public String[] sqlDropStrings(Dialect dialect) {
-						return new String[] {
-								"DROP ALIAS findUser IF EXISTS"
-						};
-					}
-				}
-		);
-
-		configuration.addAuxiliaryDatabaseObject(
-				new AuxiliaryDatabaseObject() {
-					@Override
-					public String getExportIdentifier() {
-						return "function:findUsers";
-					}
-
-					@Override
-					public boolean appliesToDialect(Dialect dialect) {
-						return H2Dialect.class.isInstance( dialect );
-					}
-
-					@Override
-					public boolean beforeTablesOnCreation() {
-						return false;
-					}
-
-					@Override
-					public String[] sqlCreateStrings(Dialect dialect) {
-						return new String[] {
-								"CREATE ALIAS findUsers AS $$\n" +
-										"import org.h2.tools.SimpleResultSet;\n" +
-										"import java.sql.*;\n" +
-										"@CODE\n" +
-										"ResultSet findUsers() {\n" +
-										"    SimpleResultSet rs = new SimpleResultSet();\n" +
-										"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
-										"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
-										"    rs.addRow(1, \"Steve\");\n" +
-										"    rs.addRow(2, \"John\");\n" +
-										"    rs.addRow(3, \"Jane\");\n" +
-										"    return rs;\n" +
-										"}\n" +
-										"$$"
-						};
-					}
-
-					@Override
-					public String[] sqlDropStrings(Dialect dialect) {
-						return new String[] {"DROP ALIAS findUser IF EXISTS"};
-					}
-				}
-		);
-
-		configuration.addAuxiliaryDatabaseObject(
-				new AuxiliaryDatabaseObject() {
-					@Override
-					public String getExportIdentifier() {
-						return "function:findUserRange";
-					}
-
-					@Override
-					public boolean appliesToDialect(Dialect dialect) {
-						return H2Dialect.class.isInstance( dialect );
-					}
-
-					@Override
-					public boolean beforeTablesOnCreation() {
-						return false;
-					}
-
-					@Override
-					public String[] sqlCreateStrings(Dialect dialect) {
-						return new String[] {
-								"CREATE ALIAS findUserRange AS $$\n" +
-										"import org.h2.tools.SimpleResultSet;\n" +
-										"import java.sql.*;\n" +
-										"@CODE\n" +
-										"ResultSet findUserRange(int start, int end) {\n" +
-										"    SimpleResultSet rs = new SimpleResultSet();\n" +
-										"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
-										"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
-										"    for ( int i = start; i < end; i++ ) {\n" +
-										"        rs.addRow(1, \"User \" + i );\n" +
-										"    }\n" +
-										"    return rs;\n" +
-										"}\n" +
-										"$$"
-						};
-					}
-
-					@Override
-					public String[] sqlDropStrings(Dialect dialect) {
-						return new String[] {"DROP ALIAS findUserRange IF EXISTS"};
-					}
-				}
-		);
+		H2ProcTesting.applyProcDefinitions( configuration );
 	}
 
 	@Test
@@ -284,8 +147,10 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 
 		ProcedureCall query = session.createStoredProcedureCall( "findUserRange" );
-		query.registerParameter( 1, Integer.class, ParameterMode.IN ).bindValue( 1 );
-		query.registerParameter( 2, Integer.class, ParameterMode.IN ).bindValue( 2 );
+		query.registerParameter( 1, Integer.class, ParameterMode.IN )
+				.bindValue( 1 );
+		query.registerParameter( 2, Integer.class, ParameterMode.IN )
+				.bindValue( 2 );
 		ProcedureOutputs procedureResult = query.getOutputs();
 		Output currentOutput = procedureResult.getCurrent();
 		assertNotNull( currentOutput );
@@ -411,37 +276,4 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 
-	@Entity
-	@NamedStoredProcedureQueries( {
-			@NamedStoredProcedureQuery(
-					name = "findUserRangeNoNullPassing",
-					procedureName = "findUserRange",
-					parameters = {
-							@StoredProcedureParameter( type = Integer.class ),
-							@StoredProcedureParameter( type = Integer.class ),
-					}
-			),
-			@NamedStoredProcedureQuery(
-					name = "findUserRangeNamedNullPassing",
-					procedureName = "findUserRange",
-					hints = @QueryHint( name = "hibernate.proc.param_null_passing.firstArg", value = "true" ),
-					parameters = {
-							@StoredProcedureParameter( name = "firstArg", type = Integer.class ),
-							@StoredProcedureParameter( name = "secondArg", type = Integer.class ),
-					}
-			),
-			@NamedStoredProcedureQuery(
-					name = "findUserRangeOrdinalNullPassing",
-					procedureName = "findUserRange",
-					hints = @QueryHint( name = "hibernate.proc.param_null_passing.1", value = "true" ),
-					parameters = {
-							@StoredProcedureParameter( type = Integer.class ),
-							@StoredProcedureParameter( type = Integer.class ),
-					}
-			)
-	} )
-	public static class MyEntity {
-		@Id
-		public Integer id;
-	}
 }

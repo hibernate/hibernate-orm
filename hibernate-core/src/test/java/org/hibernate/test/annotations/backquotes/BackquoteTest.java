@@ -35,7 +35,6 @@ import static org.junit.Assert.fail;
  *
  */
 public class BackquoteTest extends BaseUnitTestCase {
-	private static final Logger log = Logger.getLogger( BackquoteTest.class );
 
 	private ServiceRegistry serviceRegistry;
     private SessionFactory sessionFactory;

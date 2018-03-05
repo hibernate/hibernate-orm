@@ -9,8 +9,10 @@ package org.hibernate.test.annotations.xml.hbm;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
@@ -19,6 +21,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class HbmWithIdentityTest extends BaseCoreFunctionalTestCase {
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testManyToOneAndInterface() throws Exception {
 		Session s = openSession();
 		s.getTransaction().begin();

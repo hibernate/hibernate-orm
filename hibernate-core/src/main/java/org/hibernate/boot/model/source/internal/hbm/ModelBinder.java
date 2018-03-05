@@ -331,7 +331,7 @@ public class ModelBinder {
 		}
 		rootEntityDescriptor.setCacheRegionName( caching.getRegion() );
 		rootEntityDescriptor.setLazyPropertiesCacheable( caching.isCacheLazyProperties() );
-		rootEntityDescriptor.setCachingExplicitlyRequested( caching.getRequested() != TruthValue.UNKNOWN );
+		rootEntityDescriptor.setCached( caching.getRequested() != TruthValue.UNKNOWN );
 	}
 
 	private void bindEntityIdentifier(

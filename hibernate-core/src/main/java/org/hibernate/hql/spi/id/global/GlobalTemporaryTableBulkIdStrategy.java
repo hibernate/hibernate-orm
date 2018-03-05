@@ -165,7 +165,7 @@ public class GlobalTemporaryTableBulkIdStrategy
 	}
 
 	private void cleanUpRows(String tableName, SharedSessionContractImplementor session) {
-		final String sql = "delete from " + tableName;
+		final String sql = this.getIdTableSupport().getTruncateIdTableCommand() + " " + tableName;
 		PreparedStatement ps = null;
 		try {
 			ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );

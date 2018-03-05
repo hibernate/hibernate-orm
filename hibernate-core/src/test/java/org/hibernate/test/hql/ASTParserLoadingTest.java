@@ -46,7 +46,9 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
+import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.persister.entity.DiscriminatorType;
@@ -77,13 +79,17 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -103,7 +109,6 @@ import static org.junit.Assert.fail;
                 "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
 )
 public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
-	private static final Logger log = Logger.getLogger( ASTParserLoadingTest.class );
 
 	private List<Long> createdAnimalIds = new ArrayList<>();
 
@@ -192,9 +197,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session.clear();
 
 		session.getTransaction().begin();
-		List result = session.createQuery( "FROM Zoo z WHERE z.name IN (?1) and z.address.city IN (?11)" )
-				.setParameterList( "1", namesArray )
-				.setParameterList( "11", citiesArray )
+		List result = session.createQuery( "FROM Zoo z WHERE z.name IN (?1) and z.address.city IN (?2)" )
+				.setParameterList( 1, namesArray )
+				.setParameterList( 2, citiesArray )
 				.list();
 		assertEquals( 1, result.size() );
 		session.getTransaction().commit();
@@ -231,7 +236,15 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session.getTransaction().commit();
 
 		assertEquals( 1, Constructor.getConstructorExecutionCount() );
-		assertEquals( new Constructor( constructor.getId(), true, true, constructor.getId() + 1, constructor.getId() + "foo" ), result );
+		assertEquals(
+				new Constructor(
+						constructor.getId(),
+						true,
+						true,
+						constructor.getId() + 1,
+						constructor.getId() + "foo"
+				), result
+		);
 
 		session.close();
 	}
@@ -569,7 +582,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			Long count = (Long) s.createQuery( "select count(*) from Human h where VALUE(h.family) = :joe" ).setParameter( "joe", joe ).uniqueResult();
 			// ACTUALLY EXACTLY THE SAME AS:
 			// select count(*) from Human h where h.family = :joe
-			assertEquals( (Long)1L, count );
+			assertEquals( (Long) 1L, count );
 			s.getTransaction().commit();
 			s.close();
 		}
@@ -581,7 +594,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			Long count = (Long) s.createQuery( "select count(*) from Human h join h.family f where value(f) = :joe" ).setParameter( "joe", joe ).uniqueResult();
 			// ACTUALLY EXACTLY THE SAME AS:
 			// select count(*) from Human h join h.family f where f = :joe
-			assertEquals( (Long)1L, count );
+			assertEquals( (Long) 1L, count );
 			s.getTransaction().commit();
 			s.close();
 		}
@@ -695,7 +708,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				.setParameter( "name", null )
 				.list();
 		assertEquals( 1, results.size() );
-		results = s.createQuery( "from Human where name.first = :firstName and ( :name is null or name.last = :name )" )
+		results = s.createQuery( "from Human where name.first = :firstName and ( :name is null  or name.last = cast(:name as string) )" )
 				.setParameter( "firstName", "Bono" )
 				.setParameter( "name", null )
 				.list();
@@ -715,7 +728,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				.setParameter( "intVal", null )
 				.list();
 		assertEquals( 5, results.size() );
-		results = s.createQuery( "from Human where :intVal is null or intValue = :intVal" )
+		results = s.createQuery( "from Human where :intVal is null or intValue is null" )
 				.setParameter( "intVal", null )
 				.list();
 		assertEquals( 5, results.size() );
@@ -758,13 +771,13 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		String query =
 				( getDialect() instanceof DB2Dialect || getDialect() instanceof HSQLDialect ) ?
 						"from Human where cast(? as string) is null" :
-						"from Human where ? is null"
+						"from Human where ?1 is null"
 				;
 		if ( getDialect() instanceof DerbyDialect ) {
-			s.createQuery( query ).setParameter( 0, "null" ).list();
+			s.createQuery( query ).setParameter( 1, "null" ).list();
 		}
 		else {
-			s.createQuery( query ).setParameter( 0, null ).list();
+			s.createQuery( query ).setParameter( 1, null ).list();
 		}
 
 		s.getTransaction().commit();
@@ -848,61 +861,84 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testInvalidCollectionDereferencesFail() {
-		Session s = openSession();
-		s.beginTransaction();
 
-		// control group...
-		s.createQuery( "from Animal a join a.offspring o where o.description = 'xyz'" ).list();
-		s.createQuery( "from Animal a join a.offspring o where o.father.description = 'xyz'" ).list();
-		s.createQuery( "from Animal a join a.offspring o order by o.description" ).list();
-		s.createQuery( "from Animal a join a.offspring o order by o.father.description" ).list();
 
-		try {
-			s.createQuery( "from Animal a where a.offspring.description = 'xyz'" ).list();
-			fail( "illegal collection dereference semantic did not cause failure" );
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch( QueryException qe ) {
-            log.trace("expected failure...", qe);
-		}
+		try ( final SessionImplementor s = (SessionImplementor) openSession() ) {
+			// control group...
+			inTransaction(
+					s,
+					session -> {
+						s.createQuery( "from Animal a join a.offspring o where o.description = 'xyz'" ).list();
+						s.createQuery( "from Animal a join a.offspring o where o.father.description = 'xyz'" ).list();
+						s.createQuery( "from Animal a join a.offspring o order by o.description" ).list();
+						s.createQuery( "from Animal a join a.offspring o order by o.father.description" ).list();
+					}
+			);
 
-		try {
-			s.createQuery( "from Animal a where a.offspring.father.description = 'xyz'" ).list();
-			fail( "illegal collection dereference semantic did not cause failure" );
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch( QueryException qe ) {
-            log.trace("expected failure...", qe);
-		}
+			inTransaction(
+					s,
+					session -> {
+						try {
+							s.createQuery( "from Animal a where a.offspring.description = 'xyz'" ).list();
+							fail( "illegal collection dereference semantic did not cause failure" );
+						}
+						catch (IllegalArgumentException e) {
+							assertTyping( QueryException.class, e.getCause() );
+						}
+						catch (QueryException qe) {
+							log.trace( "expected failure...", qe );
+						}
+					}
+			);
 
-		try {
-			s.createQuery( "from Animal a order by a.offspring.description" ).list();
-			fail( "illegal collection dereference semantic did not cause failure" );
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch( QueryException qe ) {
-            log.trace("expected failure...", qe);
-		}
+			inTransaction(
+					s,
+					session -> {
+						try {
+							s.createQuery( "from Animal a where a.offspring.father.description = 'xyz'" ).list();
+							fail( "illegal collection dereference semantic did not cause failure" );
+						}
+						catch (IllegalArgumentException e) {
+							assertTyping( QueryException.class, e.getCause() );
+						}
+						catch (QueryException qe) {
+							log.trace( "expected failure...", qe );
+						}
+					}
+			);
 
-		try {
-			s.createQuery( "from Animal a order by a.offspring.father.description" ).list();
-			fail( "illegal collection dereference semantic did not cause failure" );
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch( QueryException qe ) {
-            log.trace("expected failure...", qe);
-		}
+			inTransaction(
+					s,
+					session -> {
+						try {
+							s.createQuery( "from Animal a order by a.offspring.description" ).list();
+							fail( "illegal collection dereference semantic did not cause failure" );
+						}
+						catch (IllegalArgumentException e) {
+							assertTyping( QueryException.class, e.getCause() );
+						}
+						catch (QueryException qe) {
+							log.trace( "expected failure...", qe );
+						}
+					}
+			);
 
-		s.getTransaction().commit();
-		s.close();
+			inTransaction(
+					s,
+					session -> {
+						try {
+							s.createQuery( "from Animal a order by a.offspring.father.description" ).list();
+							fail( "illegal collection dereference semantic did not cause failure" );
+						}
+						catch (IllegalArgumentException e) {
+							assertTyping( QueryException.class, e.getCause() );
+						}
+						catch (QueryException qe) {
+							log.trace( "expected failure...", qe );
+						}
+					}
+			);
+		}
 	}
 
 	@Test
@@ -1024,7 +1060,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// resolved to a "id short cut" when part of the order by clause -> no inner join = no weeding out...
 		checkCounts( "from SimpleAssociatedEntity e order by e.owner", 2, "implicit-join in order-by clause" );
 		// resolved to a "id short cut" when part of the group by clause -> no inner join = no weeding out...
-		checkCounts( "select e.owner.id, count(*) from SimpleAssociatedEntity e group by e.owner", 2, "implicit-join in select and group-by clauses" );
+		checkCounts(
+				"select e.owner.id, count(*) from SimpleAssociatedEntity e group by e.owner",
+				2,
+				"implicit-join in select and group-by clauses"
+		);
 
 	 	s = openSession();
 		s.beginTransaction();
@@ -1178,9 +1218,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		Object [] result = ( Object [] ) s.createQuery( "from User u, Human h where u.human = h" ).uniqueResult();
 		assertNotNull( result );
-		assertEquals( u.getUserName(), ( ( User ) result[ 0 ] ).getUserName() );
-		assertEquals( h.getName().getFirst(), ((Human) result[1]).getName().getFirst() );
-		assertSame( ((User) result[0]).getHuman(), result[1] );
+		assertEquals( u.getUserName(), ( (User) result[0] ).getUserName() );
+		assertEquals( h.getName().getFirst(), ( (Human) result[1] ).getName().getFirst() );
+		assertSame( ( (User) result[0] ).getHuman(), result[1] );
 		s.createQuery( "delete User" ).executeUpdate();
 		s.createQuery( "delete Human" ).executeUpdate();
 		s.getTransaction().commit();
@@ -1426,35 +1466,35 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		params.add( "Doe" );
 		params.add( "Public" );
 		s.createQuery( "from Human where name.last in (?1)" )
-				.setParameterList( "1", params )
+				.setParameterList( 1, params )
 				.list();
 
 		s.createQuery( "from Human where name.last in ?1" )
-				.setParameterList( "1", params )
+				.setParameterList( 1, params )
 				.list();
 
 		s.createQuery( "from Human where nickName = ?1 and ( name.first = ?2 or name.last in (?3) )" )
-				.setParameter( "1", "Yogster" )
-				.setParameter( "2", "Yogi"  )
-				.setParameterList( "3", params )
+				.setParameter( 1, "Yogster" )
+				.setParameter( 2, "Yogi"  )
+				.setParameterList( 3, params )
 				.list();
 
 		s.createQuery( "from Human where nickName = ?1 and ( name.first = ?2 or name.last in ?3 )" )
-				.setParameter( "1", "Yogster" )
-				.setParameter( "2", "Yogi" )
-				.setParameterList( "3", params )
+				.setParameter( 1, "Yogster" )
+				.setParameter( 2, "Yogi" )
+				.setParameterList( 3, params )
 				.list();
 
 		s.createQuery( "from Human where nickName = ?1 or ( name.first = ?2 and name.last in (?3) )" )
-				.setParameter( "1", "Yogster" )
-				.setParameter( "2", "Yogi"  )
-				.setParameterList( "3", params )
+				.setParameter( 1, "Yogster" )
+				.setParameter( 2, "Yogi"  )
+				.setParameterList( 3, params )
 				.list();
 
 		s.createQuery( "from Human where nickName = ?1 or ( name.first = ?2 and name.last in ?3 )" )
-				.setParameter( "1", "Yogster" )
-				.setParameter( "2", "Yogi"  )
-				.setParameterList( "3", params )
+				.setParameter( 1, "Yogster" )
+				.setParameter( 2, "Yogi"  )
+				.setParameterList( 3, params )
 				.list();
 
 		s.getTransaction().commit();
@@ -1568,42 +1608,46 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@FailureExpected( jiraKey = "unknown" )
 	public void testParameterTypeMismatch() {
-		Session s = openSession();
-		s.beginTransaction();
-
-		Query query = s.createQuery( "from Animal a where a.description = :nonstring" )
-				.setParameter( "nonstring", Integer.valueOf( 1 ) );
-		try {
-			query.list();
-			fail( "query execution should have failed" );
+		try ( final SessionImplementor s = (SessionImplementor) openSession() ) {
+			inTransaction(
+					s,
+				session -> {
+					try {
+						s.createQuery( "from Animal a where a.description = :nonstring" )
+								.setParameter( "nonstring", Integer.valueOf( 1 ) )
+								.list();
+						fail( "query execution should have failed" );
+					}
+					catch (IllegalArgumentException e) {
+						assertTyping( TypeMismatchException.class, e.getCause() );
+					}
+					catch (TypeMismatchException tme) {
+						// expected behavior
+					}
+				}
+			);
 		}
-		catch (IllegalArgumentException e) {
-			assertTyping( TypeMismatchException.class, e.getCause() );
-		}
-		catch( TypeMismatchException tme ) {
-			// expected behavior
-		}
-
-		s.getTransaction().commit();
-		s.close();
 	}
 
 	@Test
 	public void testMultipleBagFetchesFail() {
-		Session s = openSession();
-		s.beginTransaction();
-		try {
-			s.createQuery( "from Human h join fetch h.friends f join fetch f.friends fof" ).list();
-			fail( "failure expected" );
+		try ( final SessionImplementor s = (SessionImplementor) openSession() ) {
+			inTransaction(
+					s,
+					session-> {
+						try {
+							s.createQuery( "from Human h join fetch h.friends f join fetch f.friends fof" ).list();
+							fail( "failure expected" );
+						}
+						catch (IllegalArgumentException e) {
+							assertTyping( MultipleBagFetchException.class, e.getCause() );
+						}
+						catch( HibernateException e ) {
+							assertTrue( "unexpected failure reason : " + e, e.getMessage().indexOf( "multiple bags" ) > 0 );
+						}
+					}
+			);
 		}
-		catch (IllegalArgumentException e) {
-			assertTyping( MultipleBagFetchException.class, e.getCause() );
-		}
-		catch( HibernateException e ) {
-			assertTrue( "unexpected failure reason : " + e, e.getMessage().indexOf( "multiple bags" ) > 0 );
-		}
-		s.getTransaction().commit();
-		s.close();
 	}
 
 	@Test
@@ -1715,6 +1759,21 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		catch( QueryException expected ) {
 			// expected behavior
 		}
+		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-1830")
+	public void testAggregatedJoinAlias() {
+		Session s = openSession();
+		s.getTransaction().begin();
+		s.createQuery(
+			"select p.id, size( descendants ) " +
+			"from Animal p " +
+			"left outer join p.offspring descendants " +
+			"group by p.id" )
+		.list();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -1877,31 +1936,39 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testInvalidFetchSemantics() {
-		Session s = openSession();
-		s.beginTransaction();
+		try ( final SessionImplementor s = (SessionImplementor) openSession()) {
 
-		try {
-			s.createQuery( "select mother from Human a left join fetch a.mother mother" ).list();
-			fail( "invalid fetch semantic allowed!" );
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch( QueryException e ) {
-		}
+			inTransaction(
+					s,
+					session -> {
+						try {
+							s.createQuery( "select mother from Human a left join fetch a.mother mother" ).list();
+							fail( "invalid fetch semantic allowed!" );
+						}
+						catch (IllegalArgumentException e) {
+							assertTyping( QueryException.class, e.getCause() );
+						}
+						catch( QueryException e ) {
+						}
+					}
+			);
 
-		try {
-			s.createQuery( "select mother from Human a left join fetch a.mother mother" ).list();
-			fail( "invalid fetch semantic allowed!" );
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch( QueryException e ) {
-		}
+			inTransaction(
+					s,
+					session-> {
+						try {
+							s.createQuery( "select mother from Human a left join fetch a.mother mother" ).list();
+							fail( "invalid fetch semantic allowed!" );
+						}
+						catch (IllegalArgumentException e) {
+							assertTyping( QueryException.class, e.getCause() );
+						}
+						catch( QueryException e ) {
+						}
+					}
+			);
 
-		s.getTransaction().commit();
-		s.close();
+		}
 	}
 
 	@Test
@@ -2486,9 +2553,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	public void testParameterMixing() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		s.createQuery( "from Animal a where a.description = ? and a.bodyWeight = ? or a.bodyWeight = :bw" )
-				.setString( 0, "something" )
-				.setFloat( 1, 12345f )
+		s.createQuery( "from Animal a where a.description = ?1 and a.bodyWeight = ?2 or a.bodyWeight = :bw" )
+				.setString( 1, "something" )
+				.setFloat( 2, 12345f )
 				.setFloat( "bw", 123f )
 				.list();
 		t.commit();
@@ -2499,13 +2566,13 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	public void testOrdinalParameters() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		s.createQuery( "from Animal a where a.description = ? and a.bodyWeight = ?" )
-				.setString( 0, "something" )
-				.setFloat( 1, 123f )
+		s.createQuery( "from Animal a where a.description = ?1 and a.bodyWeight = ?2" )
+				.setString( 1, "something" )
+				.setFloat( 2, 123f )
 				.list();
-		s.createQuery( "from Animal a where a.bodyWeight in (?, ?)" )
-				.setFloat( 0, 999f )
-				.setFloat( 1, 123f )
+		s.createQuery( "from Animal a where a.bodyWeight in (?1, ?2)" )
+				.setFloat( 1, 999f )
+				.setFloat( 2, 123f )
 				.list();
 		t.commit();
 		s.close();
@@ -2798,8 +2865,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session.flush();
 
 		assertEquals( session.createFilter( human.getFriends(), "" ).list().size(), 1 );
-		assertEquals( session.createFilter( human.getFriends(), "where this.bodyWeight > ?" ).setFloat( 0, 10f ).list().size(), 1 );
-		assertEquals( session.createFilter( human.getFriends(), "where this.bodyWeight < ?" ).setFloat( 0, 10f ).list().size(), 0 );
+		assertEquals( session.createFilter( human.getFriends(), "where this.bodyWeight > ?1" ).setFloat( 1, 10f ).list().size(), 1 );
+		assertEquals( session.createFilter( human.getFriends(), "where this.bodyWeight < ?1" ).setFloat( 1, 10f ).list().size(), 0 );
 
 		session.delete(human);
 		session.delete(friend);
@@ -2832,17 +2899,22 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session.flush();
 
 		assertEquals( session.createFilter( human.getFriends(), "" ).list().size(), 1 );
-		assertEquals( session.createFilter( human.getFriends(), "where this.heightInches < ?" ).setDouble( 0, 51d ).list().size(), 1 );
 		assertEquals(
-				session.createFilter( human.getFriends(), "where this.heightInches > ?" )
-						.setDouble( 0, 51d )
-						.list()
-						.size(), 0
+				session.createFilter( human.getFriends(), "where this.heightInches < ?1" ).setDouble( 1, 51d ).list().size(),
+				1
 		);
 		assertEquals(
-				session.createFilter( human.getFriends(), "where this.heightInches between 49 and 51" ).list().size(), 1
+				session.createFilter( human.getFriends(), "where this.heightInches > ?1" ).setDouble( 1, 51d ).list().size(),
+				0
 		);
-		assertEquals( session.createFilter( human.getFriends(), "where this.heightInches not between 49 and 51" ).list().size(), 0 );
+		assertEquals(
+				session.createFilter( human.getFriends(), "where this.heightInches between 49 and 51" ).list().size(),
+				1
+		);
+		assertEquals(
+				session.createFilter( human.getFriends(), "where this.heightInches not between 49 and 51" ).list().size(),
+				0
+		);
 
 		session.delete( human );
 		session.delete( friend );
@@ -3782,6 +3854,28 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		t.commit();
 		session.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11942" )
+	public void testOrderByExtraParenthesis() throws Exception {
+		try {
+			doInHibernate( this::sessionFactory, session -> {
+				session.createQuery(
+					"select a from Product a " +
+					"where " +
+					"coalesce(a.description, :description) = :description ) " +
+					"order by a.description ", Product.class)
+				.setParameter( "description", "desc" )
+				.getResultList();
+				fail("Should have thrown exception");
+			} );
+		}
+		catch (IllegalArgumentException e) {
+			final Throwable cause = e.getCause();
+			assertThat( cause, instanceOf( QuerySyntaxException.class ) );
+			assertTrue( cause.getMessage().contains( "expecting EOF, found ')'" ) );
+		}
 	}
 
 	@RequiresDialectFeature(

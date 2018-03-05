@@ -79,8 +79,8 @@ public class MergeWithTransientNonCascadedAssociationTest extends BaseEntityMana
 	@Entity( name = "Address" )
 	public static class Address {
 		@Id
-		@GeneratedValue( generator = "increment" )
-		@GenericGenerator( name = "increment", strategy = "increment" )
+		@GeneratedValue( generator = "increment_1" )
+		@GenericGenerator( name = "increment_1", strategy = "increment" )
 		private Integer id;
 	}
 }

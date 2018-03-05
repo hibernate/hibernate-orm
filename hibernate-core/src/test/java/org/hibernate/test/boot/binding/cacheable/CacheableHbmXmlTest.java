@@ -19,6 +19,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,8 +39,7 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-public class CacheableHbmXmlTest {
-	private static final Logger log = Logger.getLogger( CacheableHbmXmlTest.class );
+public class CacheableHbmXmlTest extends BaseUnitTestCase {
 
 	private static final String HBM_RESOURCE_NAME = "org/hibernate/test/boot/binding/cacheable/SimpleEntity.hbm.xml";
 

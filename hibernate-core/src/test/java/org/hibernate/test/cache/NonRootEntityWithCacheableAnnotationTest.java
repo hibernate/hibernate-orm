@@ -32,7 +32,7 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -64,8 +64,10 @@ public class NonRootEntityWithCacheableAnnotationTest {
 				.addAnnotatedClass( AEntity.class )
 				.buildMetadata();
 
-		assertTrue( triggerable.wasTriggered() );
-		assertNull( ( metadata.getEntityBinding( AEntity.class.getName() ) ).getCacheConcurrencyStrategy() );
+		assertFalse( metadata.getEntityBinding( ABase.class.getName() ).isCached() );
+		assertTrue( metadata.getEntityBinding( AEntity.class.getName() ).isCached() );
+
+		assertFalse( triggerable.wasTriggered() );
 
 		serviceRegistry.destroy();
 	}

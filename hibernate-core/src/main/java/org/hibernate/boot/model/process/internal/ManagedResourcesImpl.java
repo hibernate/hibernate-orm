@@ -10,12 +10,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.process.spi.ManagedResources;
@@ -26,7 +26,7 @@ import org.hibernate.cfg.AttributeConverterDefinition;
  * @author Steve Ebersole
  */
 public class ManagedResourcesImpl implements ManagedResources {
-	private Map<Class, AttributeConverterDefinition> attributeConverterDefinitionMap = new HashMap<Class,AttributeConverterDefinition>();
+	private Map<Class, AttributeConverterInfo> attributeConverterInfoMap = new HashMap<>();
 	private Set<Class> annotatedClassReferences = new LinkedHashSet<Class>();
 	private Set<String> annotatedClassNames = new LinkedHashSet<String>();
 	private Set<String> annotatedPackageNames = new LinkedHashSet<String>();
@@ -34,8 +34,8 @@ public class ManagedResourcesImpl implements ManagedResources {
 
 	public static ManagedResourcesImpl baseline(MetadataSources sources, MetadataBuildingOptions metadataBuildingOptions) {
 		final ManagedResourcesImpl impl = new ManagedResourcesImpl();
-		for ( AttributeConverterDefinition attributeConverterDefinition : metadataBuildingOptions.getAttributeConverters() ) {
-			impl.addAttributeConverterDefinition( attributeConverterDefinition );
+		for ( AttributeConverterInfo converterInfo : metadataBuildingOptions.getAttributeConverters() ) {
+			impl.addAttributeConverterDefinition( converterInfo );
 		}
 		impl.annotatedClassReferences.addAll( sources.getAnnotatedClasses() );
 		impl.annotatedClassNames.addAll( sources.getAnnotatedClassNames() );
@@ -48,8 +48,8 @@ public class ManagedResourcesImpl implements ManagedResources {
 	}
 
 	@Override
-	public Collection<AttributeConverterDefinition> getAttributeConverterDefinitions() {
-		return Collections.unmodifiableCollection( attributeConverterDefinitionMap.values() );
+	public Collection<AttributeConverterInfo> getAttributeConverterDefinitions() {
+		return Collections.unmodifiableCollection( attributeConverterInfoMap.values() );
 	}
 
 	@Override
@@ -76,11 +76,8 @@ public class ManagedResourcesImpl implements ManagedResources {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// package private
 
-	void addAttributeConverterDefinition(AttributeConverterDefinition attributeConverterDefinition) {
-		attributeConverterDefinitionMap.put(
-				attributeConverterDefinition.getAttributeConverter().getClass(),
-				attributeConverterDefinition
-		);
+	void addAttributeConverterDefinition(AttributeConverterInfo converterInfo) {
+		attributeConverterInfoMap.put( converterInfo.getConverterClass(), converterInfo );
 	}
 
 	void addAnnotatedClassReference(Class annotatedClassReference) {

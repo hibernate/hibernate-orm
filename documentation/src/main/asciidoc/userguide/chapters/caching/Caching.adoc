@@ -132,49 +132,30 @@ include::
 [[caching-mappings-inheritance]]
 === Entity inheritance and second-level cache mapping
 
-When using inheritance, the JPA `@Cacheable` and the Hibernate-specific `@Cache` annotations should be declared at the root-entity level only.
-That being said, it is not possible to customize the base class `@Cacheable` or `@Cache` definition in subclasses.
+Traditionally, when using entity inheritance, Hibernate required an entity hierarchy to be either cached entirely or not cached at all.
+Therefore, if you wanted to cache a subclass belonging to a given entity hierarchy,
+the JPA `@Cacheable` and the Hibernate-specific `@Cache` annotations would have to be declared at the root-entity level only.
 
-Although the JPA 2.1 specification says that the `@Cacheable` annotation could be overwritten by a subclass:
+Although we still believe that all entities belonging to a given entity hierarchy should share the same caching semantics,
+the JPA specification says that the `@Cacheable` annotation could be overwritten by a subclass:
 
 [quote, Section 11.1.7 of the JPA 2.1 Specification]
 ____
-The value of the `Cacheable` annotation is inherited by subclasses; it can be
-overridden by specifying `Cacheable` on a subclass.
+The value of the `Cacheable` annotation is inherited by subclasses; it can be overridden by specifying `Cacheable` on a subclass.
 ____
-
-Hibernate requires that a given entity hierarchy share the same caching semantics.
-
-The reasons why Hibernate requires that all entities belonging to an inheritance tree share the same caching definition can be summed as follows:
-
-- from a performance perspective, adding an additional check on a per entity type level would slow the bootstrap process.
-- providing different caching semantics for subclasses would violate the https://en.wikipedia.org/wiki/Liskov_substitution_principle[Liskov substitution principle].
-+
-Assuming we have a base class, `Payment` and a subclass `CreditCardPayment`.
-If the `Payment` is not cacheable and the `CreditCardPayment` is cached, what should happen when executing the following code snippet:
-+
-[source, JAVA, indent=0]
-----
-Payment payment = entityManager.find(Payment.class, creditCardPaymentId);
-CreditCardPayment creditCardPayment = (CreditCardPayment) CreditCardPayment;
-----
-+
-In this particular case, the second level cache key is formed of the entity class name and the identifier:
-+
-[source, JAVA, indent=0]
-----
-keyToLoad = {org.hibernate.engine.spi.EntityKey@4712}
- identifier = {java.lang.Long@4716} "2"
- persister = {org.hibernate.persister.entity.SingleTableEntityPersister@4629}
-  "SingleTableEntityPersister(org.hibernate.userguide.model.Payment)"
-----
-+
-Should Hibernate load the `CreditCardPayment` from the cache as indicated by the actual entity type, or it should not use the cache since the `Payment` is not supposed to be cached?
 
 [NOTE]
 ====
-Because of all these intricacies, Hibernate only considers the base class `@Cacheable` and `@Cache` definition.
+As of Hibernate ORM 5.3, it's now possible to possible to override a base class `@Cacheable` or `@Cache` definition in subclasses.
+
+However, the Hibernate cache concurrency strategy (e.g. read-only, nonstrict-read-write, read-write, transactional) is still defined at the root entity level
+and cannot be overridden.
 ====
+
+Nevertheless, the reasons why we advise you to have all entities belonging to an inheritance tree share the same caching definition can be summed as follows:
+
+- from a performance perspective, adding an additional check on a per entity type level slows the bootstrap process.
+- providing different caching semantics for subclasses would violate the https://en.wikipedia.org/wiki/Liskov_substitution_principle[Liskov substitution principle].
 
 [[caching-query]]
 === Entity cache

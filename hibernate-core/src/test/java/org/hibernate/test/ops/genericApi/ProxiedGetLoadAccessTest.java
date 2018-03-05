@@ -26,9 +26,9 @@ import org.junit.Test;
  */
 public class ProxiedGetLoadAccessTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( UserImpl.class );
+	protected void applyMetadataSources(MetadataSources sources) {
+		super.applyMetadataSources( sources );
+		sources.addAnnotatedClass( UserImpl.class );
 	}
 
 	public static interface User {

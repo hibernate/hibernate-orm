@@ -13,11 +13,12 @@ import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.SQLExpressionTemplate;
 import org.hibernate.spatial.testing.TestData;
 import org.hibernate.spatial.testing.TestSupport;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: Sep 30, 2010
+ * creation-date: Sep 30, 2010
  */
 public class PostgisTestSupport extends TestSupport {
 

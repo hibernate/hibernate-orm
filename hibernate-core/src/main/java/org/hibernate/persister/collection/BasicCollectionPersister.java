@@ -9,7 +9,9 @@ package org.hibernate.persister.collection;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -193,82 +195,51 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		}
 
 		try {
-			PreparedStatement st = null;
-			Expectation expectation = Expectations.appropriateExpectation( getUpdateCheckStyle() );
-			boolean callable = isUpdateCallable();
-			boolean useBatch = expectation.canBeBatched();
-			Iterator entries = collection.entries( this );
-			String sql = getSQLUpdateRowString();
-			int i = 0;
-			int count = 0;
+			final Expectation expectation = Expectations.appropriateExpectation( getUpdateCheckStyle() );
+			final boolean callable = isUpdateCallable();
+			final int jdbcBatchSizeToUse = session.getConfiguredJdbcBatchSize();
+			boolean useBatch = expectation.canBeBatched() && jdbcBatchSizeToUse > 1;
+			final Iterator entries = collection.entries( this );
+
+			final List elements = new ArrayList();
 			while ( entries.hasNext() ) {
-				Object entry = entries.next();
-				if ( collection.needsUpdating( entry, i, elementType ) ) {
-					int offset = 1;
+				elements.add( entries.next() );
+			}
 
-					if ( useBatch ) {
-						if ( updateBatchKey == null ) {
-							updateBatchKey = new BasicBatchKey(
-									getRole() + "#UPDATE",
-									expectation
-							);
-						}
-						st = session
-								.getJdbcCoordinator()
-								.getBatch( updateBatchKey )
-								.getBatchStatement( sql, callable );
-					}
-					else {
-						st = session
-								.getJdbcCoordinator()
-								.getStatementPreparer()
-								.prepareStatement( sql, callable );
-					}
-
-					try {
-						offset += expectation.prepare( st );
-						int loc = writeElement( st, collection.getElement( entry ), offset, session );
-						if ( hasIdentifier ) {
-							writeIdentifier( st, collection.getIdentifier( entry, i ), loc, session );
-						}
-						else {
-							loc = writeKey( st, id, loc, session );
-							if ( hasIndex && !indexContainsFormula ) {
-								writeIndexToWhere( st, collection.getIndex( entry, i, this ), loc, session );
-							}
-							else {
-								writeElementToWhere( st, collection.getSnapshotElement( entry, i ), loc, session );
-							}
-						}
-
-						if ( useBatch ) {
-							session.getJdbcCoordinator()
-									.getBatch( updateBatchKey )
-									.addToBatch();
-						}
-						else {
-							expectation.verifyOutcome(
-									session.getJdbcCoordinator().getResultSetReturn().executeUpdate(
-											st
-									), st, -1
-							);
-						}
-					}
-					catch (SQLException sqle) {
-						if ( useBatch ) {
-							session.getJdbcCoordinator().abortBatch();
-						}
-						throw sqle;
-					}
-					finally {
-						if ( !useBatch ) {
-							session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-							session.getJdbcCoordinator().afterStatementExecution();
-						}
-					}
-					count++;
+			final String sql = getSQLUpdateRowString();
+			int count = 0;
+			if ( collection.isElementRemoved() ) {
+				// the update should be done starting from the end to the list
+				for ( int i = elements.size() - 1; i >= 0; i-- ) {
+					count = doUpdateRow(
+							id,
+							collection,
+							session,
+							expectation,
+							callable,
+							useBatch,
+							elements,
+							sql,
+							count,
+							i
+					);
 				}
-				i++;
+			}
+			else {
+				for ( int i = 0; i < elements.size(); i++ ) {
+					count = doUpdateRow(
+							id,
+							collection,
+							session,
+							expectation,
+							callable,
+							useBatch,
+							elements,
+							sql,
+							count,
+							i
+					);
+				}
 			}
 			return count;
 		}
@@ -284,6 +255,82 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 					getSQLUpdateRowString()
 			);
 		}
+	}
+
+	private int doUpdateRow(
+			Serializable id,
+			PersistentCollection collection,
+			SharedSessionContractImplementor session,
+			Expectation expectation, boolean callable, boolean useBatch, List elements, String sql, int count, int i)
+			throws SQLException {
+		PreparedStatement st;
+		Object entry = elements.get( i );
+		if ( collection.needsUpdating( entry, i, elementType ) ) {
+			int offset = 1;
+
+			if ( useBatch ) {
+				if ( updateBatchKey == null ) {
+					updateBatchKey = new BasicBatchKey(
+							getRole() + "#UPDATE",
+							expectation
+					);
+				}
+				st = session
+						.getJdbcCoordinator()
+						.getBatch( updateBatchKey )
+						.getBatchStatement( sql, callable );
+			}
+			else {
+				st = session
+						.getJdbcCoordinator()
+						.getStatementPreparer()
+						.prepareStatement( sql, callable );
+			}
+
+			try {
+				offset += expectation.prepare( st );
+				int loc = writeElement( st, collection.getElement( entry ), offset, session );
+				if ( hasIdentifier ) {
+					writeIdentifier( st, collection.getIdentifier( entry, i ), loc, session );
+				}
+				else {
+					loc = writeKey( st, id, loc, session );
+					if ( hasIndex && !indexContainsFormula ) {
+						writeIndexToWhere( st, collection.getIndex( entry, i, this ), loc, session );
+					}
+					else {
+						writeElementToWhere( st, collection.getSnapshotElement( entry, i ), loc, session );
+					}
+				}
+
+				if ( useBatch ) {
+					session.getJdbcCoordinator()
+							.getBatch( updateBatchKey )
+							.addToBatch();
+				}
+				else {
+					expectation.verifyOutcome(
+							session.getJdbcCoordinator().getResultSetReturn().executeUpdate(
+									st
+							), st, -1
+					);
+				}
+			}
+			catch (SQLException sqle) {
+				if ( useBatch ) {
+					session.getJdbcCoordinator().abortBatch();
+				}
+				throw sqle;
+			}
+			finally {
+				if ( !useBatch ) {
+					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
+					session.getJdbcCoordinator().afterStatementExecution();
+				}
+			}
+			count++;
+		}
+		return count;
 	}
 
 	public String selectFragment(

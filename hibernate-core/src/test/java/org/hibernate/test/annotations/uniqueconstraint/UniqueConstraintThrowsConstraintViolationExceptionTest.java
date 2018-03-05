@@ -38,10 +38,6 @@ public class UniqueConstraintThrowsConstraintViolationExceptionTest extends Base
 		return new Class[] { Customer.class };
 	}
 
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( Environment.HBM2DDL_AUTO, "update" );
-	}
-
 	@Test
 	public void testUniqueConstraintWithEmptyColumnName() {
 		doInHibernate( this::sessionFactory, session -> {

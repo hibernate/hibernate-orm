@@ -42,8 +42,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( PersistenceContextTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
@@ -225,7 +223,7 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 			//tag::pc-managed-state-native-example[]
 			Person person = session.byId( Person.class ).load( personId );
 			person.setName("John Doe");
-			entityManager.flush();
+			session.flush();
 			//end::pc-managed-state-native-example[]
 		} );
 

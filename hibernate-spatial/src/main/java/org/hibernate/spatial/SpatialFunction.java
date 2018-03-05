@@ -9,14 +9,14 @@ package org.hibernate.spatial;
 
 /**
  * Spatial functions that users generally expect in a database.
- *
+ * <p>
  * <p>The javadoc contains references to these specifications.</p>
  * <ul>
  * <li>OpenGIS Simple Features Specification for SQL, rev. 1.1  (OGC 99-049)</li>
  * </ul>
  *
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: Oct 7, 2010
+ * creation-date: Oct 7, 2010
  */
 public enum SpatialFunction {
 
@@ -147,7 +147,7 @@ public enum SpatialFunction {
 
 	/**
 	 * the distance within function
-	 *
+	 * <p>
 	 * <p>The semantics are those of Postgis function ST_Dwithin (geom1, geom2, distance) : boolean. It returns true
 	 * if geom1 and geom2 are within the specified distance of one another (in units of the spatial reference system).</p>
 	 */
@@ -155,7 +155,7 @@ public enum SpatialFunction {
 
 	/**
 	 * the transform function
-	 *
+	 * <p>
 	 * <p>The semantics are those of the Postgis function ST_Transform(geometry, srid) : geometry. It returns new geometry
 	 * with its coordinates transformed to the spatial reference system referenced by the srid parameter.
 	 */
@@ -168,8 +168,6 @@ public enum SpatialFunction {
 
 
 	private final String description;
-
-
 
 
 	SpatialFunction(String specification) {

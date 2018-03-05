@@ -83,14 +83,14 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 	public void testMapKeyExpressionInWhere() {
 		doInHibernate( this::sessionFactory, s -> {
 			// JPA form
-			Query query = s.createQuery( "select te from TestEntity te join te.values v where ? in (key(v)) " );
-			query.setParameter( 0, keyValue );
+			Query query = s.createQuery( "select te from TestEntity te join te.values v where ?1 in (key(v)) " );
+			query.setParameter( 1, keyValue );
 
 			assertThat( query.list().size(), is( 1 ) );
 
 			// Hibernate additional form
-			query = s.createQuery( "select te from TestEntity te where ? in (key(te.values))" );
-			query.setParameter( 0, keyValue );
+			query = s.createQuery( "select te from TestEntity te where ?1 in (key(te.values))" );
+			query.setParameter( 1, keyValue );
 
 			assertThat( query.list().size(), is( 1 ) );
 
@@ -113,7 +113,7 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 				fail( "HibernateException expected - Could not determine type for EmbeddableValue" );
 			}
 			catch ( Exception e ) {
-				assertTyping( HibernateException.class, e );
+				assertTyping( IllegalArgumentException.class, e );
 			}
 
 			// Hibernate additional form
@@ -124,7 +124,7 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 				fail( "HibernateException expected - Could not determine type for EmbeddableValue" );
 			}
 			catch ( Exception e ) {
-				assertTyping( HibernateException.class, e );
+				assertTyping( IllegalArgumentException.class, e );
 			}
 
 			// Test value property dereference

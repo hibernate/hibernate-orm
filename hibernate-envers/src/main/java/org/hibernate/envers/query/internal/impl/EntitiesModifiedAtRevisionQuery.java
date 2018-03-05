@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.query.internal.impl;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.envers.boot.internal.EnversService;
@@ -14,6 +15,8 @@ import org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstan
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.query.Query;
+
+import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
 
 /**
  * In comparison to {@link EntitiesAtRevisionQuery} this query returns an empty collection if an entity
@@ -74,6 +77,11 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 		}
 
 		Query query = buildQuery();
+		// add named parameter (used for ValidityAuditStrategy and association queries)
+		Collection<String> params = query.getParameterMetadata().getNamedParameterNames();
+		if ( params.contains( REVISION_PARAMETER ) ) {
+			query.setParameter( REVISION_PARAMETER, revision );
+		}
 		List queryResult = query.list();
 		return applyProjections( queryResult, revision );
 	}

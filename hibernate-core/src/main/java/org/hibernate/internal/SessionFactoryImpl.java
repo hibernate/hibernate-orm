@@ -40,7 +40,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
@@ -387,7 +386,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				integrator.disintegrate( this, serviceRegistry );
 				integratorObserver.integrators.remove( integrator );
 			}
-			serviceRegistry.destroy();
+			close();
 			throw e;
 		}
 	}
@@ -424,14 +423,14 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return new JdbcConnectionAccess() {
 			@Override
 			public Connection obtainConnection() throws SQLException {
-				return settings.getMultiTenancyStrategy() == MultiTenancyStrategy.NONE
+				return !settings.getMultiTenancyStrategy().requiresMultiTenantConnectionProvider()
 						? serviceRegistry.getService( ConnectionProvider.class ).getConnection()
 						: serviceRegistry.getService( MultiTenantConnectionProvider.class ).getAnyConnection();
 			}
 
 			@Override
 			public void releaseConnection(Connection connection) throws SQLException {
-				if ( settings.getMultiTenancyStrategy() == MultiTenancyStrategy.NONE ) {
+				if ( !settings.getMultiTenancyStrategy().requiresMultiTenantConnectionProvider() ) {
 					serviceRegistry.getService( ConnectionProvider.class ).closeConnection( connection );
 				}
 				else {
@@ -567,11 +566,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public Session createEntityManager() {
+		validateNotClosed();
 		return buildEntityManager( SynchronizationType.SYNCHRONIZED, Collections.emptyMap() );
 	}
 
 	private Session buildEntityManager(SynchronizationType synchronizationType, Map map) {
-		validateNotClosed();
+		assert !isClosed;
+
 		SessionBuilderImplementor builder = withOptions();
 		if ( synchronizationType == SynchronizationType.SYNCHRONIZED ) {
 			builder.autoJoinTransactions( true );
@@ -593,11 +594,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public Session createEntityManager(Map map) {
+		validateNotClosed();
 		return buildEntityManager( SynchronizationType.SYNCHRONIZED, map );
 	}
 
 	@Override
 	public Session createEntityManager(SynchronizationType synchronizationType) {
+		validateNotClosed();
 		errorIfResourceLocalDueToExplicitSynchronizationType();
 		return buildEntityManager( synchronizationType, Collections.emptyMap() );
 	}
@@ -616,6 +619,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public Session createEntityManager(SynchronizationType synchronizationType, Map map) {
+		validateNotClosed();
 		errorIfResourceLocalDueToExplicitSynchronizationType();
 		return buildEntityManager( synchronizationType, map );
 	}
@@ -628,6 +632,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public MetamodelImplementor getMetamodel() {
+		validateNotClosed();
 		return metamodel;
 	}
 
@@ -735,6 +740,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	 */
 	public void close() throws HibernateException {
 		if ( isClosed ) {
+			if ( getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
+				throw new IllegalStateException( "EntityManagerFactory is already closed" );
+			}
+
 			LOG.trace( "Already closed" );
 			return;
 		}
@@ -746,10 +755,20 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		settings.getMultiTableBulkIdStrategy().release( serviceRegistry.getService( JdbcServices.class ), buildLocalConnectionAccess() );
 
-		cacheAccess.close();
-		metamodel.close();
+		// NOTE : the null checks below handle cases where close is called from
+		//		a failed attempt to create the SessionFactory
 
-		queryPlanCache.cleanup();
+		if ( cacheAccess != null ) {
+			cacheAccess.close();
+		}
+
+		if ( metamodel != null ) {
+			metamodel.close();
+		}
+
+		if ( queryPlanCache != null ) {
+			queryPlanCache.cleanup();
+		}
 
 		if ( delayedDropAction != null ) {
 			delayedDropAction.perform( serviceRegistry );
@@ -1057,13 +1076,25 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		// then check the Session-scoped interceptor prototype
-		if ( options.getStatelessInterceptorImplementor() != null ) {
+		if ( options.getStatelessInterceptorImplementor() != null && options.getStatelessInterceptorImplementorSupplier() != null ) {
+			throw new HibernateException(
+					"A session scoped interceptor class or supplier are allowed, but not both!" );
+		}
+		else if ( options.getStatelessInterceptorImplementor() != null ) {
 			try {
+				/**
+				 * We could remove the getStatelessInterceptorImplementor method and use just the getStatelessInterceptorImplementorSupplier
+				 * since it can cover both cases when the user has given a Supplier<? extends Interceptor> or just the
+				 * Class<? extends Interceptor>, in which case, we simply instantiate the Interceptor when calling the Supplier.
+				 */
 				return options.getStatelessInterceptorImplementor().newInstance();
 			}
 			catch (InstantiationException | IllegalAccessException e) {
-				throw new HibernateException( "Could not instantiate session-scoped SessionFactory Interceptor", e );
+				throw new HibernateException( "Could not supply session-scoped SessionFactory Interceptor", e );
 			}
+		}
+		else if ( options.getStatelessInterceptorImplementorSupplier() != null ) {
+			return options.getStatelessInterceptorImplementorSupplier().get();
 		}
 
 		return null;
@@ -1563,6 +1594,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private void maskOutSensitiveInformation(Map<String, Object> props) {
 		maskOutIfSet( props, AvailableSettings.JPA_JDBC_USER );
+		maskOutIfSet( props, AvailableSettings.JPA_JDBC_PASSWORD );
+		maskOutIfSet( props, AvailableSettings.USER );
 		maskOutIfSet( props, AvailableSettings.PASS );
 	}
 

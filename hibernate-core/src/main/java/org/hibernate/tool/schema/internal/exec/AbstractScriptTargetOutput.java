@@ -31,7 +31,7 @@ public abstract class AbstractScriptTargetOutput implements ScriptTargetOutput {
 			writer().flush();
 		}
 		catch (IOException e) {
-			throw new CommandAcceptanceException( "Could not write to target script file", e );
+			throw new CommandAcceptanceException( "Could not write \"" + command + "\" to target script file", e );
 		}
 	}
 

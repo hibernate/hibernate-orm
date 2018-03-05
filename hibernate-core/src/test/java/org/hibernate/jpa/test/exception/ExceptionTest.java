@@ -30,7 +30,6 @@ import static org.junit.Assert.fail;
  */
 @SuppressWarnings("unchecked")
 public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
-	private static final Logger log = Logger.getLogger( ExceptionTest.class );
 
 	@Test
 	public void testOptimisticLockingException() throws Exception {

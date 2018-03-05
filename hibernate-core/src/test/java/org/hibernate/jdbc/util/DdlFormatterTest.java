@@ -13,6 +13,8 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
+import org.jboss.logging.Logger;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -20,6 +22,7 @@ import static org.junit.Assert.assertFalse;
  * @author Vlad Mihalcea
  */
 public class DdlFormatterTest extends BaseUnitTestCase {
+
 	@Test
 	public void testNoLoss() {
 
@@ -44,8 +47,9 @@ public class DdlFormatterTest extends BaseUnitTestCase {
 		StringTokenizer formatted = new StringTokenizer( formattedQuery, " \t\n\r\f()" );
 		StringTokenizer plain = new StringTokenizer( query, " \t\n\r\f()" );
 
-		System.out.println( "Original: " + query );
-		System.out.println( "Formatted: " + formattedQuery );
+		log.debugf( "Original: {}", query );
+		log.debugf( "Formatted: {}", formattedQuery );
+
 		while ( formatted.hasMoreTokens() && plain.hasMoreTokens() ) {
 			String plainToken = plain.nextToken();
 			String formattedToken = formatted.nextToken();

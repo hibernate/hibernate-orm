@@ -26,6 +26,7 @@ import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.Cache71Dialect;
 import org.hibernate.dialect.DB2390Dialect;
+import org.hibernate.dialect.DB2390V8Dialect;
 import org.hibernate.dialect.DB2400Dialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyTenFiveDialect;
@@ -35,6 +36,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.FirebirdDialect;
 import org.hibernate.dialect.FrontBaseDialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HANAColumnStoreDialect;
+import org.hibernate.dialect.HANARowStoreDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InformixDialect;
 import org.hibernate.dialect.Ingres10Dialect;
@@ -81,6 +84,7 @@ import org.hibernate.engine.transaction.jta.platform.internal.SapNetWeaverJtaPla
 import org.hibernate.engine.transaction.jta.platform.internal.SunOneJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.internal.EntityCopyAllowedLoggedObserver;
@@ -195,6 +199,7 @@ public class StrategySelectorBuilder {
 		addDialect( strategySelector, CUBRIDDialect.class );
 		addDialect( strategySelector, DB2Dialect.class );
 		addDialect( strategySelector, DB2390Dialect.class );
+		addDialect( strategySelector, DB2390V8Dialect.class );
 		addDialect( strategySelector, DB2400Dialect.class );
 		addDialect( strategySelector, DerbyTenFiveDialect.class );
 		addDialect( strategySelector, DerbyTenSixDialect.class );
@@ -202,6 +207,8 @@ public class StrategySelectorBuilder {
 		addDialect( strategySelector, FirebirdDialect.class );
 		addDialect( strategySelector, FrontBaseDialect.class );
 		addDialect( strategySelector, H2Dialect.class );
+		addDialect( strategySelector, HANAColumnStoreDialect.class );
+		addDialect( strategySelector, HANARowStoreDialect.class );
 		addDialect( strategySelector, HSQLDialect.class );
 		addDialect( strategySelector, InformixDialect.class );
 		addDialect( strategySelector, IngresDialect.class );
@@ -334,6 +341,13 @@ public class StrategySelectorBuilder {
 				WeblogicJtaPlatform.class,
 				"Weblogic",
 				"org.hibernate.service.jta.platform.internal.WeblogicJtaPlatform"
+		);
+		
+		addJtaPlatforms(
+				strategySelector,
+				WebSphereLibertyJtaPlatform.class,
+				"WebSphereLiberty",
+				"org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform"
 		);
 
 		addJtaPlatforms(

@@ -12,6 +12,8 @@ import java.util.List;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import org.jboss.logging.Logger;
+
 /**
  * An abstract Envers test which runs the tests using two audit strategies.
  *
@@ -19,6 +21,9 @@ import org.junit.runners.Parameterized;
  */
 @RunWith(EnversRunner.class)
 public abstract class AbstractEnversTest {
+
+	protected final Logger log = Logger.getLogger( getClass() );
+
 	private String auditStrategy;
 
 	@Parameterized.Parameters

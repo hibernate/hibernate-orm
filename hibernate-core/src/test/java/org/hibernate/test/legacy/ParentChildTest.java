@@ -31,6 +31,8 @@ import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -76,6 +78,7 @@ public class ParentChildTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testReplicate() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -223,6 +226,7 @@ public class ParentChildTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect( value = H2Dialect.class, comment = "Feature not supported: MVCC=TRUE && FOR UPDATE && JOIN")
 	public void testComplexCriteria() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -522,6 +526,7 @@ public class ParentChildTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testCollectionQuery() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -701,6 +706,7 @@ public class ParentChildTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testManyToMany() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -750,6 +756,7 @@ public class ParentChildTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testContainer() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -895,6 +902,7 @@ public class ParentChildTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testCascadeCompositeElements() throws Exception {
 		Container c = new Container();
 		List list = new ArrayList();
@@ -944,6 +952,7 @@ public class ParentChildTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testBag() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

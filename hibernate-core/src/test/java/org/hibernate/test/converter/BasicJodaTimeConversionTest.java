@@ -78,7 +78,7 @@ public class BasicJodaTimeConversionTest extends BaseNonConfigCoreFunctionalTest
 		final EntityPersister ep = sessionFactory().getEntityPersister( TheEntity.class.getName() );
 		final Type theDatePropertyType = ep.getPropertyType( "theDate" );
 		final AttributeConverterTypeAdapter type = assertTyping( AttributeConverterTypeAdapter.class, theDatePropertyType );
-		assertTyping( JodaLocalDateConverter.class, type.getAttributeConverter() );
+		assertTrue( JodaLocalDateConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaType() ) );
 
 		resetFlags();
 

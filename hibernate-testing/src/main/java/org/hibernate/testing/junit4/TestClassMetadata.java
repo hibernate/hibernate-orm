@@ -27,6 +27,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class TestClassMetadata {
+
 	private static final Logger log = Logger.getLogger( TestClassMetadata.class );
 
 	private static final Object[] NO_ARGS = new Object[0];

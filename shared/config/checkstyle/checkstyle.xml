@@ -10,13 +10,13 @@
 
     <!-- Only defines "fatal" violations; there are additional "non-fatal" rules in checkstyle-non-fatal.xml -->
 
-    <module name="Header">
-        <property name="header" value="/*\n * Hibernate, Relational Persistence for Idiomatic Java\n *\n * License: GNU Lesser General Public License (LGPL), version 2.1 or later.\n * See the lgpl.txt file in the root directory or &lt;http://www.gnu.org/licenses/lgpl-2.1.html&gt;.\n */"/>
+    <module name="RegexpHeader">
+        <property name="header" value="\/\*\n \* Hibernate, Relational Persistence for Idiomatic Java\n \*\n \* License: GNU Lesser General Public License \(LGPL\), version 2\.1 or later[\.]?\n \* See the lgpl\.txt file in the root directory or [&lt;]?http:\/\/www\.gnu\.org\/licenses\/lgpl-2\.1\.html[&gt;]?[\.]?\n \*\/"/>
         <property name="fileExtensions" value="java,gradle,groovy"/>
     </module>
 
-    <module name="Header">
-        <property name="header" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;\n&lt;!--\n ~ Hibernate, Relational Persistence for Idiomatic Java\n ~\n ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.\n ~ See the lgpl.txt file in the root directory or &lt;http://www.gnu.org/licenses/lgpl-2.1.html&gt;.\n  --&gt;"/>
+    <module name="RegexpHeader">
+        <property name="header" value="&lt;\?xml version\=&quot;1.0&quot; encoding\=&quot;UTF-8&quot;\?&gt;\n&lt;!--\n  ~ Hibernate, Relational Persistence for Idiomatic Java\n  ~\n  ~ License: GNU Lesser General Public License \(LGPL\), version 2\.1 or later[\.]?\n  ~ See the lgpl.txt file in the root directory or [&lt;]?http:\/\/www\.gnu\.org\/licenses\/lgpl-2\.1\.html[&gt;]?[.]?\n  --&gt;"/>
         <property name="fileExtensions" value="xml,xsd"/>
     </module>
 

@@ -25,7 +25,6 @@ import static org.junit.Assert.assertTrue;
  * @author Scott Marlow
  */
 public class UpgradeLockTest extends BaseEntityManagerFunctionalTestCase {
-	private static final Logger log = Logger.getLogger( UpgradeLockTest.class );
 
 	/**
 	 * Initially in tx1, get a LockModeType.READ and upgrade to LockModeType.OPTIMISTIC_FORCE_INCREMENT.

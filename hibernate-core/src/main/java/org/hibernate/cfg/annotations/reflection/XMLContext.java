@@ -15,6 +15,7 @@ import javax.persistence.AccessType;
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.cfg.AttributeConverterDefinition;
@@ -192,7 +193,7 @@ public class XMLContext implements Serializable {
 				final Class<? extends AttributeConverter> attributeConverterClass = classLoaderAccess.classForName(
 						className
 				);
-				attributeConverterDefinitions.add(
+				attributeConverterInfoList.add(
 						new AttributeConverterDefinition( attributeConverterClass.newInstance(), autoApply )
 				);
 			}
@@ -238,13 +239,13 @@ public class XMLContext implements Serializable {
 		return hasContext;
 	}
 
-	private List<AttributeConverterDefinition> attributeConverterDefinitions = new ArrayList<AttributeConverterDefinition>();
+	private List<AttributeConverterInfo> attributeConverterInfoList = new ArrayList<>();
 
 	public void applyDiscoveredAttributeConverters(AttributeConverterDefinitionCollector collector) {
-		for ( AttributeConverterDefinition definition : attributeConverterDefinitions ) {
-			collector.addAttributeConverter( definition );
+		for ( AttributeConverterInfo info : attributeConverterInfoList ) {
+			collector.addAttributeConverter( info );
 		}
-		attributeConverterDefinitions.clear();
+		attributeConverterInfoList.clear();
 	}
 
 	public static class Default implements Serializable {

@@ -6,8 +6,6 @@
  */
 package org.hibernate.boot.spi;
 
-import java.util.Map;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -15,6 +13,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
+import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -24,19 +23,24 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
+
+import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Convenience base class for custom implementors of SessionFactoryBuilder, using delegation
  *
  * @author Steve Ebersole
  * @author Gunnar Morling
+ * @author Guillaume Smet
  * @param <T> The type of a specific sub-class; Allows sub-classes to narrow down the return-type of the contract methods
  * to a specialization of {@link SessionFactoryBuilder}
  */
-public abstract class AbstractDelegatingSessionFactoryBuilder<T extends AbstractDelegatingSessionFactoryBuilder<T>> implements SessionFactoryBuilder {
+public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionFactoryBuilder> implements SessionFactoryBuilder {
 	private final SessionFactoryBuilder delegate;
 
 	public AbstractDelegatingSessionFactoryBuilder(SessionFactoryBuilder delegate) {
@@ -49,6 +53,10 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	 * "getThis trick?"</a>.
 	 */
 	protected abstract T getThis();
+
+	protected SessionFactoryBuilder delegate() {
+		return delegate;
+	}
 
 	@Override
 	public T applyValidatorFactory(Object validatorFactory) {
@@ -342,6 +350,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 		return getThis();
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public T applyConnectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
 		delegate.applyConnectionReleaseMode( connectionReleaseMode );
@@ -375,8 +384,32 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	}
 
 	@Override
-	public SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable) {
+	public T enableReleaseResourcesOnCloseEnabled(boolean enable) {
 		delegate.enableReleaseResourcesOnCloseEnabled( enable );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder enableJpaQueryCompliance(boolean enabled) {
+		delegate.enableJpaQueryCompliance( enabled );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled) {
+		delegate.enableJpaTransactionCompliance( enabled );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder enableJpaListCompliance(boolean enabled) {
+		delegate.enableJpaListCompliance( enabled );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled) {
+		delegate.enableJpaClosedCompliance( enabled );
 		return getThis();
 	}
 
@@ -384,5 +417,28 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	@SuppressWarnings("unchecked")
 	public <S extends SessionFactoryBuilder> S unwrap(Class<S> type) {
 		return (S) this;
+	}
+
+	@Override
+	public T applyStatelessInterceptor(Supplier<? extends Interceptor> statelessInterceptorSupplier) {
+		delegate.applyStatelessInterceptor(statelessInterceptorSupplier);
+		return getThis();
+	}
+
+	@Override
+	public T applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass) {
+		delegate.applyStatelessInterceptor(statelessInterceptorClass);
+		return getThis();
+	}
+
+	@Override
+	public T applyConnectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
+		delegate.applyConnectionHandlingMode( connectionHandlingMode );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactory build() {
+		return delegate.build();
 	}
 }

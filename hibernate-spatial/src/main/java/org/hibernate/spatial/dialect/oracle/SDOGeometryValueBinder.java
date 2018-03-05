@@ -26,7 +26,7 @@ import org.geolatte.geom.codec.db.oracle.SDOGeometry;
 
 /**
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 8/22/11
+ * creation-date: 8/22/11
  */
 class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 
@@ -84,7 +84,7 @@ class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 			//we get here if the type of geometry is unsupported by geolatte encoders
 			throw new HibernateException( e.getMessage() );
 		}
-		catch(Exception e) {
+		catch (Exception e) {
 			throw new HibernateException( e );
 		}
 	}

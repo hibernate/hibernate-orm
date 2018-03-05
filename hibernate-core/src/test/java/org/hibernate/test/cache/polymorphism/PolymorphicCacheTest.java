@@ -46,7 +46,7 @@ public class PolymorphicCacheTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		// See HHH-9107
 		try {
-			s.get( CachedItem2.class, item1.getId() );
+			final CachedItem2 tmp = s.get( CachedItem2.class, item1.getId() );
 			fail( "Expected a WrongClassException to be thrown." );
 		}
 		catch (WrongClassException e) {

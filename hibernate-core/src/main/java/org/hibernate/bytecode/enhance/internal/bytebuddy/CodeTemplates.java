@@ -14,6 +14,7 @@ import java.util.Map;
 import org.hibernate.Hibernate;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
+import org.hibernate.bytecode.enhance.internal.tracker.NoopCollectionTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.SimpleCollectionTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
@@ -83,13 +84,38 @@ class CodeTemplates {
 		}
 	}
 
-	static class AreCollectionFieldsDirty {
+	static class GetDirtyAttributesWithoutCollections {
+		@Advice.OnMethodExit
+		static void $$_hibernate_getDirtyAttributes(
+				@Advice.Return(readOnly = false) String[] returned,
+				@Advice.FieldValue(value = EnhancerConstants.TRACKER_FIELD_NAME) DirtyTracker $$_hibernate_tracker) {
+			returned = $$_hibernate_tracker == null ? new String[0] : $$_hibernate_tracker.get();
+		}
+	}
+
+	static class GetCollectionTrackerWithoutCollections {
+		@Advice.OnMethodExit
+		static void $$_hibernate_getCollectionTracker( @Advice.Return(readOnly = false) CollectionTracker returned) {
+			returned = NoopCollectionTracker.INSTANCE;
+		}
+	}
+
+	static class AreFieldsDirty {
 		@Advice.OnMethodExit
 		static void $$_hibernate_hasDirtyAttributes(
 				@Advice.This ExtendedSelfDirtinessTracker self,
 				@Advice.Return(readOnly = false) boolean returned,
 				@Advice.FieldValue(value = EnhancerConstants.TRACKER_FIELD_NAME, readOnly = false) DirtyTracker $$_hibernate_tracker) {
 			returned = ( $$_hibernate_tracker != null && !$$_hibernate_tracker.isEmpty() ) || self.$$_hibernate_areCollectionFieldsDirty();
+		}
+	}
+
+	static class AreFieldsDirtyWithoutCollections {
+		@Advice.OnMethodExit
+		static void $$_hibernate_hasDirtyAttributes(
+				@Advice.Return(readOnly = false) boolean returned,
+				@Advice.FieldValue(value = EnhancerConstants.TRACKER_FIELD_NAME) DirtyTracker $$_hibernate_tracker) {
+			returned = $$_hibernate_tracker != null && !$$_hibernate_tracker.isEmpty();
 		}
 	}
 
@@ -102,6 +128,16 @@ class CodeTemplates {
 				$$_hibernate_tracker.clear();
 			}
 			self.$$_hibernate_clearDirtyCollectionNames();
+		}
+	}
+
+	static class ClearDirtyAttributesWithoutCollections {
+		@Advice.OnMethodEnter
+		static void $$_hibernate_clearDirtyAttributes(
+				@Advice.FieldValue(value = EnhancerConstants.TRACKER_FIELD_NAME) DirtyTracker $$_hibernate_tracker) {
+			if ( $$_hibernate_tracker != null ) {
+				$$_hibernate_tracker.clear();
+			}
 		}
 	}
 

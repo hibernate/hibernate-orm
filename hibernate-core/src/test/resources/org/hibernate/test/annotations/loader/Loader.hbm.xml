@@ -21,7 +21,7 @@
 
     <sql-query name="loadByTeam">
         <load-collection alias="p" role="Team.players"/>
-        select {p.*} from Player p where p.team_id = ?
+        select {p.*} from Player p where p.team_id = ?1
     </sql-query>
 
 </hibernate-mapping>

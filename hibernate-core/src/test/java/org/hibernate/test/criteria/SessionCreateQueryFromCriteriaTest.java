@@ -18,10 +18,10 @@ import java.util.stream.Stream;
 
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-
+import org.hibernate.dialect.AbstractHANADialect;
 import org.junit.After;
 import org.junit.Test;
-
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -96,6 +96,7 @@ public class SessionCreateQueryFromCriteriaTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA only supports forward-only cursors")
 	public void testScrollMethod() {
 		final String entityName = "expected";
 		insertTestEntity( entityName );

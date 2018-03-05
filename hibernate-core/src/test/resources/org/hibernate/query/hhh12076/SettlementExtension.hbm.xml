@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class
+            name="org.hibernate.query.hhh12076.SettlementExtension"
+            table="claim_settlement_ext"
+            abstract="true"
+            lazy="false">
+
+        <id name="id" type="java.lang.Long">
+            <column name="id"/>
+            <generator class="native"/>
+        </id>
+        <version name="version" unsaved-value="null" type="java.lang.Integer"/>
+        <property name="creationDate" type="timestamp" insert="false" update="false" generated="always">
+            <column name="creation_date"/>
+        </property>
+        <property name="modifiedDate" type="timestamp" insert="false" update="false" generated="always">
+            <column name="modified_date"/>
+        </property>
+        <property name="orderIndex" type="integer">
+            <column name="order_index"/>
+        </property>
+
+        <many-to-one
+                name="settlement"
+                class="org.hibernate.query.hhh12076.Settlement"
+                fetch="select">
+            <column name="settlement_id" not-null="true"/>
+        </many-to-one>
+
+    </class>
+</hibernate-mapping>

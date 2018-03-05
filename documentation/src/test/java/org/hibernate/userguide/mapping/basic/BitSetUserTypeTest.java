@@ -7,8 +7,12 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.util.BitSet;
+import javax.persistence.ColumnResult;
+import javax.persistence.ConstructorResult;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.NamedNativeQuery;
+import javax.persistence.SqlResultSetMapping;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.cfg.Configuration;
@@ -60,6 +64,52 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
+	@Test
+	public void testNativeQuery() {
+		BitSet bitSet = BitSet.valueOf( new long[] {1, 2, 3} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			Product product = new Product( );
+			product.setId( 1 );
+			product.setBitSet( bitSet );
+			session.persist( product );
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			Product product = (Product) session.getNamedNativeQuery(
+					"find_person_by_bitset")
+					.setParameter( "id", 1L)
+					.getSingleResult();
+
+			assertEquals(bitSet, product.getBitSet());
+		} );
+	}
+
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
+
+	@NamedNativeQuery(
+		name = "find_person_by_bitset",
+		query =
+			"SELECT " +
+			"   pr.id AS \"pr.id\", " +
+			"   pr.bitset AS \"pr.bitset\" " +
+			"FROM Product pr " +
+			"WHERE pr.id = :id",
+		resultSetMapping = "Person"
+	)
+	@SqlResultSetMapping(
+		name = "Person",
+		classes = @ConstructorResult(
+			targetClass = Product.class,
+			columns = {
+				@ColumnResult(name = "pr.id"),
+				@ColumnResult(name = "pr.bitset", type = BitSetUserType.class)
+			}
+		)
+	)
 	//tag::basic-custom-type-BitSetUserType-mapping-example[]
 	@Entity(name = "Product")
 	public static class Product {
@@ -69,6 +119,15 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 
 		@Type( type = "bitset" )
 		private BitSet bitSet;
+	//end::basic-custom-type-BitSetUserType-mapping-example[]
+		public Product() {
+		}
+
+		public Product(Number id, BitSet bitSet) {
+			this.id = id.intValue();
+			this.bitSet = bitSet;
+		}
+	//tag::basic-custom-type-BitSetUserType-mapping-example[]
 
 		public Integer getId() {
 			return id;

@@ -41,10 +41,10 @@ public class SharedRegionTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( StateCodes.class );
-		metadataSources.addAnnotatedClass( ZipCodes.class );
+	protected void applyMetadataSources(MetadataSources sources) {
+		super.applyMetadataSources( sources );
+		sources.addAnnotatedClass( StateCodes.class );
+		sources.addAnnotatedClass( ZipCodes.class );
 	}
 
 	@Test

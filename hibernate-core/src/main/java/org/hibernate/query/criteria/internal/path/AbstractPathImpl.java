@@ -247,9 +247,4 @@ public abstract class AbstractPathImpl<X>
 			return getAttribute().getName();
 		}
 	}
-
-	@Override
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
 }

@@ -401,7 +401,18 @@ public interface MetadataBuilder {
 	 * @param definition The definition
 	 *
 	 * @return {@code this} for method chaining
+	 *
+	 * @deprecated (since 5.3) AttributeConverterDefinition forces early
+	 * access to the AttributeConverter instance which precludes the
+	 * possibility to resolve the converter from CDI, etc.  Instead use
+	 * one of:
+	 *
+	 * 		* {@link #applyAttributeConverter(Class)}
+	 * 		* {@link #applyAttributeConverter(Class, boolean)}
+	 * 		* {@link #applyAttributeConverter(AttributeConverter)}
+	 * 		* {@link #applyAttributeConverter(AttributeConverter, boolean)}
 	 */
+	@Deprecated
 	MetadataBuilder applyAttributeConverter(AttributeConverterDefinition definition);
 
 	/**
@@ -410,8 +421,6 @@ public interface MetadataBuilder {
 	 * @param attributeConverterClass The AttributeConverter class.
 	 *
 	 * @return {@code this} for method chaining
-	 *
-	 * @see org.hibernate.cfg.AttributeConverterDefinition#from(Class)
 	 */
 	MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass);
 

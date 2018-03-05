@@ -30,6 +30,7 @@ import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
+import org.hibernate.action.internal.EntityActionVetoException;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
@@ -283,11 +284,20 @@ public class ActionQueue {
 			LOG.trace( "Adding resolved non-early insert action." );
 			addAction( AbstractEntityInsertAction.class, insert );
 		}
-		insert.makeEntityManaged();
-		if( unresolvedInsertions != null ) {
-			for ( AbstractEntityInsertAction resolvedAction : unresolvedInsertions.resolveDependentActions( insert.getInstance(), session ) ) {
-				addResolvedEntityInsertAction( resolvedAction );
+		if ( !insert.isVeto() ) {
+			insert.makeEntityManaged();
+
+			if( unresolvedInsertions != null ) {
+				for ( AbstractEntityInsertAction resolvedAction : unresolvedInsertions.resolveDependentActions( insert.getInstance(), session ) ) {
+					addResolvedEntityInsertAction( resolvedAction );
+				}
 			}
+		}
+		else {
+			throw new EntityActionVetoException(
+				"The EntityInsertAction was vetoed.",
+				insert
+			);
 		}
 	}
 
@@ -1024,9 +1034,19 @@ public class ActionQueue {
 
 			private Set<String> childEntityNames = new HashSet<>( );
 
+			private BatchIdentifier parent;
+
 			BatchIdentifier(String entityName, String rootEntityName) {
 				this.entityName = entityName;
 				this.rootEntityName = rootEntityName;
+			}
+
+			public BatchIdentifier getParent() {
+				return parent;
+			}
+
+			public void setParent(BatchIdentifier parent) {
+				this.parent = parent;
 			}
 
 			@Override
@@ -1068,8 +1088,23 @@ public class ActionQueue {
 			}
 
 			boolean hasAnyChildEntityNames(BatchIdentifier batchIdentifier) {
-				return childEntityNames.contains( batchIdentifier.getEntityName() ) ||
-						parentEntityNames.contains( batchIdentifier.getRootEntityName() );
+				return childEntityNames.contains( batchIdentifier.getEntityName() );
+			}
+
+			/**
+			 * Check if the this {@link BatchIdentifier} has a parent or grand parent
+			 * matching the given {@link BatchIdentifier reference.
+			 *
+			 * @param batchIdentifier {@link BatchIdentifier} reference
+			 *
+			 * @return This {@link BatchIdentifier} has a parent matching the given {@link BatchIdentifier reference
+			 */
+			boolean hasParent(BatchIdentifier batchIdentifier) {
+				return (
+					parent == batchIdentifier ||
+					( parent != null && parent.hasParent( batchIdentifier ) ) ||
+					( parentEntityNames.contains( batchIdentifier.getEntityName() ) )
+				);
 			}
 		}
 
@@ -1096,7 +1131,11 @@ public class ActionQueue {
 			for ( AbstractEntityInsertAction action : insertions ) {
 				BatchIdentifier batchIdentifier = new BatchIdentifier(
 						action.getEntityName(),
-						action.getSession().getFactory().getMetamodel().entityPersister( action.getEntityName() ).getRootEntityName()
+						action.getSession()
+								.getFactory()
+								.getMetamodel()
+								.entityPersister( action.getEntityName() )
+								.getRootEntityName()
 				);
 
 				// the entity associated with the current action.
@@ -1115,42 +1154,71 @@ public class ActionQueue {
 			}
 			insertions.clear();
 
-			// Examine each entry in the batch list, sorting them based on parent/child associations.
+			// Examine each entry in the batch list, and build the dependency graph.
 			for ( int i = 0; i < latestBatches.size(); i++ ) {
 				BatchIdentifier batchIdentifier = latestBatches.get( i );
 
-				// Iterate previous batches and make sure that parent types are before children
-				// Since the outer loop looks at each batch entry individually, we need to verify that any
-				// prior batches in the list are not considered children (or have a parent) of the current
-				// batch.  If so, we reordered them.
 				for ( int j = i - 1; j >= 0; j-- ) {
 					BatchIdentifier prevBatchIdentifier = latestBatches.get( j );
 					if ( prevBatchIdentifier.hasAnyParentEntityNames( batchIdentifier ) ) {
-						latestBatches.remove( batchIdentifier );
-						latestBatches.add( j, batchIdentifier );
+						prevBatchIdentifier.parent = batchIdentifier;
+					}
+					if ( batchIdentifier.hasAnyChildEntityNames( prevBatchIdentifier ) ) {
+						prevBatchIdentifier.parent = batchIdentifier;
 					}
 				}
 
-				// Iterate next batches and make sure that children types are after parents.
-				// Since the outer loop looks at each batch entry individually and the prior loop will reorder
-				// entries as well, we need to look and verify if the current batch is a child of the next
-				// batch or if the current batch is seen as a parent or child of the next batch.
 				for ( int j = i + 1; j < latestBatches.size(); j++ ) {
 					BatchIdentifier nextBatchIdentifier = latestBatches.get( j );
 
-					final boolean nextBatchHasChild = nextBatchIdentifier.hasAnyChildEntityNames( batchIdentifier );
-					final boolean batchHasChild = batchIdentifier.hasAnyChildEntityNames( nextBatchIdentifier );
-					final boolean batchHasParent = batchIdentifier.hasAnyParentEntityNames( nextBatchIdentifier );
-
-					// Take care of unidirectional @OneToOne associations but exclude bidirectional @ManyToMany
-					if ( ( nextBatchHasChild && !batchHasChild ) || batchHasParent ) {
-						latestBatches.remove( batchIdentifier );
-						latestBatches.add( j, batchIdentifier );
+					if ( nextBatchIdentifier.hasAnyParentEntityNames( batchIdentifier ) ) {
+						nextBatchIdentifier.parent = batchIdentifier;
+					}
+					if ( batchIdentifier.hasAnyChildEntityNames( nextBatchIdentifier ) ) {
+						nextBatchIdentifier.parent = batchIdentifier;
 					}
 				}
 			}
 
-			// now rebuild the insertions list. There is a batch for each entry in the name list.
+			boolean sorted = false;
+
+			long maxIterations = latestBatches.size() * 2;
+			long iterations = 0;
+
+			sort:
+			do {
+				// Examine each entry in the batch list, sorting them based on parent/child association
+				// as depicted by the dependency graph.
+				iterations++;
+
+				for ( int i = 0; i < latestBatches.size(); i++ ) {
+					BatchIdentifier batchIdentifier = latestBatches.get( i );
+
+					// Iterate next batches and make sure that children types are after parents.
+					// Since the outer loop looks at each batch entry individually and the prior loop will reorder
+					// entries as well, we need to look and verify if the current batch is a child of the next
+					// batch or if the current batch is seen as a parent or child of the next batch.
+					for ( int j = i + 1; j < latestBatches.size(); j++ ) {
+						BatchIdentifier nextBatchIdentifier = latestBatches.get( j );
+
+						if ( batchIdentifier.hasParent( nextBatchIdentifier ) && !nextBatchIdentifier.hasParent( batchIdentifier ) ) {
+							latestBatches.remove( batchIdentifier );
+							latestBatches.add( j, batchIdentifier );
+
+							continue sort;
+						}
+					}
+				}
+				sorted = true;
+			}
+			while ( !sorted && iterations <= maxIterations);
+
+			if ( iterations > maxIterations ) {
+				LOG.warn( "The batch containing " + latestBatches.size() + " statements could not be sorted after " + maxIterations + " iterations. " +
+								"This might indicate a circular entity relationship." );
+			}
+
+			// Now, rebuild the insertions list. There is a batch for each entry in the name list.
 			for ( BatchIdentifier rootIdentifier : latestBatches ) {
 				List<AbstractEntityInsertAction> batch = actionBatches.get( rootIdentifier );
 				insertions.addAll( batch );

@@ -6,22 +6,21 @@
  */
 package org.hibernate.spatial.integration.geolatte;
 
+import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import java.util.List;
+
+import org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import org.geolatte.geom.C2D;
 import org.geolatte.geom.Point;
 import org.geolatte.geom.Polygon;
 import org.geolatte.geom.crs.CoordinateReferenceSystem;
 import org.geolatte.geom.crs.CoordinateReferenceSystems;
-
-import org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect;
-
-import org.junit.Test;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.geolatte.geom.builder.DSL.c;
 import static org.geolatte.geom.builder.DSL.point;

@@ -6,6 +6,11 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.AfterUseAction;
+
 /**
  * An SQL dialect for HANA. <br/>
  * <a href="http://help.sap.com/hana/html/sqlmain.html">SAP HANA Reference</a> <br/>
@@ -22,5 +27,22 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 	@Override
 	public String getCreateTableString() {
 		return "create column table";
+	}
+
+	@Override
+	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+		return new GlobalTemporaryTableBulkIdStrategy( new IdTableSupportStandardImpl() {
+
+			@Override
+			public String getCreateIdTableCommand() {
+				return "create global temporary column table";
+			}
+
+			@Override
+			public String getTruncateIdTableCommand() {
+				return "truncate table";
+			}
+
+		}, AfterUseAction.CLEAN );
 	}
 }

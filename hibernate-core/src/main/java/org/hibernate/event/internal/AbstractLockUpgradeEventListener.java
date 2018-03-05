@@ -61,7 +61,7 @@ public abstract class AbstractLockUpgradeEventListener extends AbstractReassocia
 				);
 			}
 
-			final boolean cachingEnabled = persister.hasCache();
+			final boolean cachingEnabled = persister.canWriteToCache();
 			SoftLock lock = null;
 			Object ck = null;
 			try {

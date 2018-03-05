@@ -525,7 +525,7 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 	public abstract class PlanItem {
 
 		@Id
-		@GeneratedValue(strategy= GenerationType.IDENTITY)
+		@GeneratedValue(strategy= GenerationType.AUTO)
 		private Integer id;
 
 		public Integer getId() {
@@ -541,7 +541,7 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 	@SecondaryTable( name = "Task" )
 	public class Task extends PlanItem {
 		@Id
-		@GeneratedValue(strategy=GenerationType.IDENTITY)
+		@GeneratedValue(strategy=GenerationType.AUTO)
 		private Integer id;
 
 		@ElementCollection

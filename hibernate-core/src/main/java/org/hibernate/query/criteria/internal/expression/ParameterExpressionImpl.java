@@ -72,8 +72,4 @@ public class ParameterExpressionImpl<T>
 		final ExplicitParameterInfo parameterInfo = renderingContext.registerExplicitParameter( this );
 		return parameterInfo.render();
 	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
 }

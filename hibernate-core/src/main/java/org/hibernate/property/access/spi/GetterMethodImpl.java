@@ -16,6 +16,7 @@ import java.util.Map;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ReflectHelper;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -122,7 +123,7 @@ public class GetterMethodImpl implements Getter {
 		private Method resolveMethod() {
 			try {
 				final Method method = declaringClass.getDeclaredMethod( methodName );
-				method.setAccessible( true );
+				ReflectHelper.ensureAccessibility( method );
 				return method;
 			}
 			catch (NoSuchMethodException e) {

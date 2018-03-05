@@ -21,12 +21,16 @@ import org.hibernate.mapping.Table;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.test.annotations.Customer;
 import org.hibernate.test.annotations.Discount;
 import org.hibernate.test.annotations.Passport;
 import org.hibernate.test.annotations.Ticket;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -37,257 +41,261 @@ import static org.junit.Assert.assertTrue;
 public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testEagerFetching() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		Client c = new Client();
-		c.setName( "Emmanuel" );
-		Address a = new Address();
-		a.setCity( "Courbevoie" );
-		c.setAddress( a );
-		s.persist( c );
-		tx.commit();
-		s.close();
+		final String clientName = "Emmanuel";
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			Client c = new Client();
+			c.setName( clientName );
+			Address a = new Address();
+			a.setCity( "Courbevoie" );
+			c.setAddress( a );
+			session.persist( c );
+		} );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		Query q = s.createQuery( "select c from Client c where c.name = :name" );
-		q.setString( "name", c.getName() );
-		c = ( Client ) q.uniqueResult();
-		//c = (Client) s.get(Client.class, c.getId());
-		assertNotNull( c );
-		tx.commit();
-		s.close();
-		assertNotNull( c.getAddress() );
+		final Client client = TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			Query q = session.createQuery( "select c from Client c where c.name = :name" );
+			q.setString( "name", clientName );
+			Client c = (Client) q.uniqueResult();
+			//c = (Client) s.get(Client.class, c.getId());
+
+			assertNotNull( c );
+			return c;
+		} );
+
+		assertNotNull( client.getAddress() );
 		//assertTrue( "Should be eager fetched", Hibernate.isInitialized( c.getAddress() ) );
-
 	}
 
 	@Test
 	public void testDefaultOneToOne() throws Exception {
 		//test a default one to one and a mappedBy in the other side
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		Customer c = new Customer();
-		c.setName( "Hibernatus" );
-		Passport p = new Passport();
-		p.setNumber( "123456789" );
-		s.persist( c ); //we need the id to assigned it to passport
-		c.setPassport( p );
-		p.setOwner( c );
-		p.setId( c.getId() );
-		tx.commit();
-		s.close();
-		s = openSession();
-		tx = s.beginTransaction();
-		c = ( Customer ) s.get( Customer.class, c.getId() );
-		assertNotNull( c );
-		p = c.getPassport();
-		assertNotNull( p );
-		assertEquals( "123456789", p.getNumber() );
-		assertNotNull( p.getOwner() );
-		assertEquals( "Hibernatus", p.getOwner().getName() );
-		tx.commit(); // commit or rollback is the same, we don't care for read queries
-		s.close();
+		Long customerId = TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			Customer c = new Customer();
+			c.setName( "Hibernatus" );
+			Passport p = new Passport();
+			p.setNumber( "123456789" );
+			session.persist( c ); //we need the id to assigned it to passport
+			c.setPassport( p );
+			p.setOwner( c );
+			p.setId( c.getId() );
+			return c.getId();
+		} );
+
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			Customer c = session.get( Customer.class, customerId );
+			assertNotNull( c );
+			Passport p = c.getPassport();
+
+			assertNotNull( p );
+			assertEquals( "123456789", p.getNumber() );
+			assertNotNull( p.getOwner() );
+			assertEquals( "Hibernatus", p.getOwner().getName() );
+		} );
 	}
 
 	@Test
 	public void testOneToOneWithExplicitFk() throws Exception {
-		Client c = new Client();
+		final Client c = new Client();
 		Address a = new Address();
 		a.setCity( "Paris" );
 		c.setName( "Emmanuel" );
 		c.setAddress( a );
 
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		s.persist( c );
-		tx.commit();
-		s.close();
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			session.persist( c );
+		} );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		c = ( Client ) s.get( Client.class, c.getId() );
-		assertNotNull( c );
-		assertNotNull( c.getAddress() );
-		assertEquals( "Paris", c.getAddress().getCity() );
-		tx.commit();
-		s.close();
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			Client client = session.get( Client.class, c.getId() );
+
+			assertNotNull( client );
+			assertNotNull( client.getAddress() );
+			assertEquals( "Paris", client.getAddress().getCity() );
+		} );
 	}
 
 	@Test
 	public void testOneToOneWithExplicitSecondaryTableFk() throws Exception {
-		Client c = new Client();
+		final Client c = new Client();
 		Address a = new Address();
 		a.setCity( "Paris" );
 		c.setName( "Emmanuel" );
 		c.setSecondaryAddress( a );
 
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		s.persist( c );
-		tx.commit();
-		s.close();
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			session.persist( c );
+		} );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		c = ( Client ) s.get( Client.class, c.getId() );
-		assertNotNull( c );
-		assertNotNull( c.getSecondaryAddress() );
-		assertEquals( "Paris", c.getSecondaryAddress().getCity() );
-		tx.commit();
-		s.close();
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			final Client client = session.get( Client.class, c.getId() );
+
+			assertNotNull( client );
+			assertNotNull( client.getSecondaryAddress() );
+			assertEquals( "Paris", client.getSecondaryAddress().getCity() );
+		} );
 	}
 
 	@Test
 	public void testUnidirectionalTrueOneToOne() throws Exception {
-		Body b = new Body();
-		Heart h = new Heart();
+		final Body b = new Body();
+		final Heart h = new Heart();
 		b.setHeart( h );
 		b.setId( 1 );
 		h.setId( b.getId() ); //same PK
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		s.persist( h );
-		s.persist( b );
-		tx.commit();
-		s.close();
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			session.persist( h );
+			session.persist( b );
+		} );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		b = ( Body ) s.get( Body.class, b.getId() );
-		assertNotNull( b );
-		assertNotNull( b.getHeart() );
-		assertEquals( h.getId(), b.getHeart().getId() );
-		tx.commit();
-		s.close();
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			final Body body = session.get( Body.class, b.getId() );
+
+			assertNotNull( body );
+			assertNotNull( body.getHeart() );
+			assertEquals( h.getId(), body.getHeart().getId() );
+		} );
 	}
 
 	@Test
 	public void testCompositePk() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		ComputerPk cid = new ComputerPk();
-		cid.setBrand( "IBM" );
-		cid.setModel( "ThinkPad" );
-		Computer c = new Computer();
-		c.setId( cid );
-		c.setCpu( "2 GHz" );
-		SerialNumberPk sid = new SerialNumberPk();
-		sid.setBrand( cid.getBrand() );
-		sid.setModel( cid.getModel() );
-		SerialNumber sn = new SerialNumber();
-		sn.setId( sid );
-		sn.setValue( "REZREZ23424" );
-		c.setSerial( sn );
-		s.persist( c );
-		tx.commit();
-		s.close();
+		final ComputerPk cid = new ComputerPk();
+		final SerialNumber sn = new SerialNumber();
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			cid.setBrand( "IBM" );
+			cid.setModel( "ThinkPad" );
+			Computer c = new Computer();
+			c.setId( cid );
+			c.setCpu( "2 GHz" );
+			SerialNumberPk sid = new SerialNumberPk();
+			sid.setBrand( cid.getBrand() );
+			sid.setModel( cid.getModel() );
+			sn.setId( sid );
+			sn.setValue( "REZREZ23424" );
+			c.setSerial( sn );
+			session.persist( c );
+		} );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		c = ( Computer ) s.get( Computer.class, cid );
-		assertNotNull( c );
-		assertNotNull( c.getSerial() );
-		assertEquals( sn.getValue(), c.getSerial().getValue() );
-		tx.commit();
-		s.close();
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			Computer c = session.get( Computer.class, cid );
+			assertNotNull( c );
+			assertNotNull( c.getSerial() );
+			assertEquals( sn.getValue(), c.getSerial().getValue() );
+		} );
 	}
 
 	@Test
 	public void testBidirectionalTrueOneToOne() throws Exception {
-		Session s = openSession();
-		s.getTransaction().begin();
-		Party party = new Party();
-		PartyAffiliate affiliate = new PartyAffiliate();
-		affiliate.partyId = "id";
-		party.partyId = "id";
-		party.partyAffiliate = affiliate;
-		affiliate.party = party;
-		
-		s.persist( party );
-		s.getTransaction().commit();
+		try (Session s = openSession()) {
+			Party party = new Party();
+			PartyAffiliate affiliate = new PartyAffiliate();
+			affiliate.partyId = "id";
+			party.partyId = "id";
+			party.partyAffiliate = affiliate;
+			affiliate.party = party;
 
-		s.clear();
+			s.getTransaction().begin();
+			try {
 
-		Transaction tx = s.beginTransaction();
-		affiliate = ( PartyAffiliate ) s.get( PartyAffiliate.class, "id" );
-		assertNotNull( affiliate.party );
-		assertEquals( affiliate.partyId, affiliate.party.partyId );
+				s.persist( party );
+				s.getTransaction().commit();
+			}
+			catch (Exception e) {
+				if ( s.getTransaction() != null && s.getTransaction().isActive() ) {
+					s.getTransaction().rollback();
+				}
+				throw e;
+			}
 
-		s.clear();
+			s.clear();
 
-		party = ( Party ) s.get( Party.class, "id" );
-		assertNotNull( party.partyAffiliate );
-		assertEquals( party.partyId, party.partyAffiliate.partyId );
+			Transaction tx = s.beginTransaction();
+			try {
+				affiliate = s.get( PartyAffiliate.class, "id" );
+				assertNotNull( affiliate.party );
+				assertEquals( affiliate.partyId, affiliate.party.partyId );
 
-		s.delete( party );
-		s.delete( party.partyAffiliate );
-		tx.commit();
-		s.close();
+				s.clear();
+
+				party = s.get( Party.class, "id" );
+				assertNotNull( party.partyAffiliate );
+				assertEquals( party.partyId, party.partyAffiliate.partyId );
+
+				s.delete( party );
+				s.delete( party.partyAffiliate );
+				tx.commit();
+			}
+			catch (Exception e) {
+				if ( s.getTransaction() != null && s.getTransaction().isActive() ) {
+					s.getTransaction().rollback();
+				}
+				throw e;
+			}
+		}
 	}
 
 	@Test
 	public void testBidirectionalFkOneToOne() throws Exception {
-		Session s = openSession();
-		s.getTransaction().begin();
-		Trousers trousers = new Trousers();
-		TrousersZip zip = new TrousersZip();
-		trousers.id = 1;
-		zip.id = 2;
-		trousers.zip = zip;
-		zip.trousers = trousers;
-		s.persist( trousers );
-		s.persist( zip );
-		s.getTransaction().commit();
+		try (Session s = openSession()) {
+			s.getTransaction().begin();
+			Trousers trousers = new Trousers();
+			TrousersZip zip = new TrousersZip();
+			try {
+				trousers.id = 1;
+				zip.id = 2;
+				trousers.zip = zip;
+				zip.trousers = trousers;
+				s.persist( trousers );
+				s.persist( zip );
+				s.getTransaction().commit();
+			}
+			catch (Exception e) {
+				if ( s.getTransaction() != null && s.getTransaction().isActive() ) {
+					s.getTransaction().rollback();
+				}
+				throw e;
+			}
 
-		s.clear();
+			s.clear();
 
-		Transaction tx = s.beginTransaction();
-		trousers = ( Trousers ) s.get( Trousers.class, trousers.id );
-		assertNotNull( trousers.zip );
-		assertEquals( zip.id, trousers.zip.id );
+			Transaction tx = s.beginTransaction();
+			try {
+				trousers = s.get( Trousers.class, trousers.id );
+				assertNotNull( trousers.zip );
+				assertEquals( zip.id, trousers.zip.id );
 
-		s.clear();
+				s.clear();
 
-		zip = ( TrousersZip ) s.get( TrousersZip.class, zip.id );
-		assertNotNull( zip.trousers );
-		assertEquals( trousers.id, zip.trousers.id );
+				zip = s.get( TrousersZip.class, zip.id );
+				assertNotNull( zip.trousers );
+				assertEquals( trousers.id, zip.trousers.id );
 
-		s.delete( zip );
-		s.delete( zip.trousers );
-		tx.commit();
-		s.close();
+				s.delete( zip );
+				s.delete( zip.trousers );
+				tx.commit();
+			}
+			catch (Exception e) {
+				if ( s.getTransaction() != null && s.getTransaction().isActive() ) {
+					s.getTransaction().rollback();
+				}
+				throw e;
+			}
+		}
 	}
 
 	@Test
 	public void testForeignGenerator() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		Owner owner = new Owner();
-		OwnerAddress address = new OwnerAddress();
-		owner.setAddress( address );
-		address.setOwner( owner );
-		s.persist( owner );
-		s.flush();
-		s.clear();
-		owner = ( Owner ) s.get( Owner.class, owner.getId() );
-		assertNotNull( owner );
-		assertNotNull( owner.getAddress() );
-		assertEquals( owner.getId(), owner.getAddress().getId() );
-		tx.rollback();
-		s.close();
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			Owner owner = new Owner();
+			OwnerAddress address = new OwnerAddress();
+			owner.setAddress( address );
+			address.setOwner( owner );
+			session.persist( owner );
+			session.flush();
+			session.clear();
+			owner = session.get( Owner.class, owner.getId() );
+			assertNotNull( owner );
+			assertNotNull( owner.getAddress() );
+			assertEquals( owner.getId(), owner.getAddress().getId() );
+		} );
 	}
 
 	@Test
@@ -314,58 +322,88 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-6723" )
+	@TestForIssue(jiraKey = "HHH-6723")
 	public void testPkOneToOneSelectStatementDoesNotGenerateExtraJoin() {
 		// This test uses an interceptor to verify that correct number of joins are generated.
-		Session s = openSession(new JoinCounter(1));
-		Transaction tx = s.beginTransaction();
-		Owner owner = new Owner();
-		OwnerAddress address = new OwnerAddress();
-		owner.setAddress( address );
-		address.setOwner( owner );
-		s.persist( owner );
-		s.flush();
-		s.clear();
-		
-		owner = ( Owner ) s.get( Owner.class, owner.getId() );
-		assertNotNull( owner );
-		assertNotNull( owner.getAddress() );
-		assertEquals( owner.getId(), owner.getAddress().getId() );
-		s.flush();
-		s.clear();
-		
-		address = ( OwnerAddress ) s.get( OwnerAddress.class, address.getId() );
-		assertNotNull( address );
-		assertNotNull( address.getOwner() );
-		assertEquals( address.getId(), address.getOwner().getId() );
+		TransactionUtil.doInHibernate( this::sessionFactory, s -> {
 
-		s.flush();
-		s.clear();
+			Owner owner = new Owner();
+			OwnerAddress address = new OwnerAddress();
+			owner.setAddress( address );
+			address.setOwner( owner );
+			s.persist( owner );
+			s.flush();
+			s.clear();
 
-		owner = ( Owner ) s.createCriteria( Owner.class )
-				.add( Restrictions.idEq( owner.getId() ) )
-				.uniqueResult();
+			owner = s.get( Owner.class, owner.getId() );
+			assertNotNull( owner );
+			assertNotNull( owner.getAddress() );
+			assertEquals( owner.getId(), owner.getAddress().getId() );
+			s.flush();
+			s.clear();
 
-		assertNotNull( owner );
-		assertNotNull( owner.getAddress() );
-		assertEquals( owner.getId(), owner.getAddress().getId() );
-		s.flush();
-		s.clear();
+			address = s.get( OwnerAddress.class, address.getId() );
+			assertNotNull( address );
+			assertNotNull( address.getOwner() );
+			assertEquals( address.getId(), address.getOwner().getId() );
 
-		address = ( OwnerAddress ) s.createCriteria( OwnerAddress.class )
-				.add( Restrictions.idEq( address.getId() ) )
-				.uniqueResult();
+			s.flush();
+			s.clear();
 
-		address = ( OwnerAddress ) s.get( OwnerAddress.class, address.getId() );
-		assertNotNull( address );
-		assertNotNull( address.getOwner() );
-		assertEquals( address.getId(), address.getOwner().getId() );
+			owner = (Owner) s.createCriteria( Owner.class )
+					.add( Restrictions.idEq( owner.getId() ) )
+					.uniqueResult();
 
-		s.flush();
-		s.clear();
+			assertNotNull( owner );
+			assertNotNull( owner.getAddress() );
+			assertEquals( owner.getId(), owner.getAddress().getId() );
+			s.flush();
+			s.clear();
 
-		tx.rollback();
-		s.close();
+			address = (OwnerAddress) s.createCriteria( OwnerAddress.class )
+					.add( Restrictions.idEq( address.getId() ) )
+					.uniqueResult();
+
+			address = s.get( OwnerAddress.class, address.getId() );
+			assertNotNull( address );
+			assertNotNull( address.getOwner() );
+			assertEquals( address.getId(), address.getOwner().getId() );
+
+			s.flush();
+			s.clear();
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-5757")
+	public void testHqlQuery() throws Exception {
+		//test a default one to one and a mappedBy in the other side
+		final Passport passport = TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			Customer c = new Customer();
+			c.setName( "Hibernatus" );
+			Passport p = new Passport();
+			p.setNumber( "123456789" );
+			session.persist( c ); //we need the id to assigned it to passport
+			c.setPassport( p );
+			p.setOwner( c );
+			p.setId( c.getId() );
+			return p;
+		} );
+
+		final Customer customer = TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			final Customer c = (Customer) session.createQuery( "from Customer c where c.passport = :passport " )
+					.setParameter( "passport", passport ).getSingleResult();
+
+			assertThat( c, is( notNullValue() ) );
+			return c;
+		} );
+
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			final Passport p = (Passport) session.createQuery( "from Passport p where p.owner = :owner " )
+					.setParameter( "owner", customer ).getSingleResult();
+
+			assertThat( p, is( notNullValue() ) );
+		} );
 	}
 	
 	@Override

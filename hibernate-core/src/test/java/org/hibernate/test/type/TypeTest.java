@@ -20,6 +20,7 @@ import java.util.Locale;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -64,6 +65,8 @@ import org.hibernate.type.YesNoType;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -364,6 +367,10 @@ public class TypeTest extends BaseUnitTestCase {
 		}
 
 		assertTrue( original == type.replace( original, copy, null, null, null ) );
+
+		// following tests assert that types work with properties not yet loaded in bytecode enhanced entities
+		assertSame( copy, type.replace( LazyPropertyInitializer.UNFETCHED_PROPERTY, copy, null, null, null ) );
+		assertNotEquals( LazyPropertyInitializer.UNFETCHED_PROPERTY, type.replace( original, LazyPropertyInitializer.UNFETCHED_PROPERTY, null, null, null ) );
 
 		assertTrue( type.isSame( original, copy ) );
 		assertTrue( type.isEqual( original, copy ) );

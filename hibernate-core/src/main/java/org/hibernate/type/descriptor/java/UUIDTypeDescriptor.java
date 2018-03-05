@@ -99,17 +99,14 @@ public class UUIDTypeDescriptor extends AbstractTypeDescriptor<UUID> {
 
 		public byte[] transform(UUID uuid) {
 			byte[] bytes = new byte[16];
-			System.arraycopy( BytesHelper.fromLong( uuid.getMostSignificantBits() ), 0, bytes, 0, 8 );
-			System.arraycopy( BytesHelper.fromLong( uuid.getLeastSignificantBits() ), 0, bytes, 8, 8 );
+			BytesHelper.fromLong( uuid.getMostSignificantBits(), bytes, 0);
+			BytesHelper.fromLong( uuid.getLeastSignificantBits(), bytes, 8 );
 			return bytes;
 		}
 
 		public UUID parse(Object value) {
-			byte[] msb = new byte[8];
-			byte[] lsb = new byte[8];
-			System.arraycopy( value, 0, msb, 0, 8 );
-			System.arraycopy( value, 8, lsb, 0, 8 );
-			return new UUID( BytesHelper.asLong( msb ), BytesHelper.asLong( lsb ) );
+			byte[] bytea = (byte[]) value;
+			return new UUID( BytesHelper.asLong( bytea, 0 ), BytesHelper.asLong( bytea, 8 ) );
 		}
 	}
 }

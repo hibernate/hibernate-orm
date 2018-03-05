@@ -102,9 +102,4 @@ public class NegatedPredicateWrapper extends ExpressionImpl<Boolean> implements 
 	public String render(RenderingContext renderingContext) {
 		return render( isNegated(), renderingContext );
 	}
-
-	@Override
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
 }

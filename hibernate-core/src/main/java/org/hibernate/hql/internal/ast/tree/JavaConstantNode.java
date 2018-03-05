@@ -86,7 +86,7 @@ public class JavaConstantNode extends Node implements ExpectedTypeAwareNode, Ses
 							)
 					);
 				}
-				final Object value = converterType.getAttributeConverter().convertToDatabaseColumn( constantValue );
+				final Object value = converterType.getAttributeConverter().toRelationalValue( constantValue );
 				if ( String.class.equals( converterType.getJdbcType() ) ) {
 					return "'" + value + "'";
 				}

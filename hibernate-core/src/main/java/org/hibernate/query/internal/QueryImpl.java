@@ -9,6 +9,7 @@ package org.hibernate.query.internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.type.Type;
 
 /**
@@ -17,12 +18,24 @@ import org.hibernate.type.Type;
 public class QueryImpl<R> extends AbstractProducedQuery<R> implements Query<R> {
 	private final String queryString;
 
+	private final QueryParameterBindingsImpl queryParameterBindings;
+
 	public QueryImpl(
 			SharedSessionContractImplementor producer,
 			ParameterMetadata parameterMetadata,
 			String queryString) {
 		super( producer, parameterMetadata );
 		this.queryString = queryString;
+		this.queryParameterBindings = QueryParameterBindingsImpl.from(
+				parameterMetadata,
+				producer.getFactory(),
+				producer.isQueryParametersValidationEnabled()
+		);
+	}
+
+	@Override
+	protected QueryParameterBindings getQueryParameterBindings() {
+		return queryParameterBindings;
 	}
 
 	@Override

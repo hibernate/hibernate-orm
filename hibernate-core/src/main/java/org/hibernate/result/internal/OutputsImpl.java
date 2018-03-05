@@ -9,18 +9,23 @@ package org.hibernate.result.internal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.hibernate.JDBCException;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
+import org.hibernate.loader.custom.Return;
+import org.hibernate.loader.custom.RootReturn;
 import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
+import org.hibernate.param.ParameterBinder;
 import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.Outputs;
@@ -201,6 +206,10 @@ public class OutputsImpl implements Outputs {
 			return new ResultSetOutputImpl( list );
 		}
 
+		protected Output buildResultSetOutput(Supplier<List> listSupplier) {
+			return new ResultSetOutputImpl( listSupplier );
+		}
+
 		protected Output buildUpdateCountOutput(int updateCount) {
 			return new UpdateCountOutputImpl( updateCount );
 		}
@@ -226,7 +235,7 @@ public class OutputsImpl implements Outputs {
 				context.getSession().getFactory()
 		);
 		processor.process();
-		final List<org.hibernate.loader.custom.Return> customReturns = processor.generateCustomReturns( false );
+		final List<org.hibernate.loader.custom.Return> customReturns = processor.generateCallableReturns();
 
 		CustomQuery customQuery = new CustomQuery() {
 			@Override
@@ -240,9 +249,9 @@ public class OutputsImpl implements Outputs {
 			}
 
 			@Override
-			public Map getNamedParameterBindPoints() {
-				// no named parameters in terms of embedded in the SQL string
-				return null;
+			public List<ParameterBinder> getParameterValueBinders() {
+				// no parameters in terms of embedded in the SQL string
+				return Collections.emptyList();
 			}
 
 			@Override
@@ -259,8 +268,11 @@ public class OutputsImpl implements Outputs {
 	}
 
 	private static class CustomLoaderExtension extends CustomLoader {
-		private QueryParameters queryParameters;
-		private SharedSessionContractImplementor session;
+		private static final EntityAliases[] NO_ALIASES = new EntityAliases[0];
+
+		private final QueryParameters queryParameters;
+		private final SharedSessionContractImplementor session;
+		private final EntityAliases[] entityAliases;
 
 		private boolean needsDiscovery = true;
 
@@ -271,7 +283,32 @@ public class OutputsImpl implements Outputs {
 			super( customQuery, session.getFactory() );
 			this.queryParameters = queryParameters;
 			this.session = session;
+
+			entityAliases = interpretEntityAliases( customQuery.getCustomQueryReturns() );
 		}
+
+		private EntityAliases[] interpretEntityAliases(List<Return> customQueryReturns) {
+			final List<EntityAliases> entityAliases = new ArrayList<>();
+			for ( Return queryReturn : customQueryReturns ) {
+				if ( !RootReturn.class.isInstance( queryReturn ) ) {
+					continue;
+				}
+
+				entityAliases.add( ( (RootReturn) queryReturn ).getEntityAliases() );
+			}
+
+			if ( entityAliases.isEmpty() ) {
+				return NO_ALIASES;
+			}
+
+			return entityAliases.toArray( new EntityAliases[ entityAliases.size() ] );
+		}
+
+		@Override
+		protected EntityAliases[] getEntityAliases() {
+			return entityAliases;
+		}
+
 
 		// todo : this would be a great way to add locking to stored procedure support (at least where returning entities).
 

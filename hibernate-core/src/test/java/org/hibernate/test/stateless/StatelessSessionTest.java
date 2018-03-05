@@ -8,13 +8,13 @@ package org.hibernate.test.stateless;
 
 import java.util.Date;
 
-import org.junit.Test;
-
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -38,14 +38,14 @@ public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 		Date initVersion = doc.getLastModified();
 		assertNotNull( initVersion );
 		tx.commit();
-		
+
 		tx = ss.beginTransaction();
 		doc.setText("blah blah blah .... blah");
 		ss.update(doc);
 		assertNotNull( doc.getLastModified() );
 		assertNotSame( doc.getLastModified(), initVersion );
 		tx.commit();
-		
+
 		tx = ss.beginTransaction();
 		doc.setText("blah blah blah .... blah blay");
 		ss.update(doc);
@@ -165,6 +165,5 @@ public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		ss.close();
 	}
-
 }
 

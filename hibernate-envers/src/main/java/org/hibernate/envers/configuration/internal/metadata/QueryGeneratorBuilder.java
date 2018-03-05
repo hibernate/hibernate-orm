@@ -26,6 +26,7 @@ import org.hibernate.envers.strategy.AuditStrategy;
  * The related entities information can be added gradually, and when complete, the query generator can be built.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public final class QueryGeneratorBuilder {
 	private final GlobalConfiguration globalCfg;

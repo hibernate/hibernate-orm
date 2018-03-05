@@ -54,7 +54,7 @@ public class ImplicitCompositeKeyJoinTest {
 
 			for ( String command : commands ) {
 				LOGGER.info( command );
-				if ( command.toLowerCase().contains( "create table employee" ) ) {
+				if ( command.toLowerCase().matches( "^create( (column|row))? table employee.+" ) ) {
 					final String[] columnsDefinition = getColumnsDefinition( command );
 
 					for ( int i = 0; i < columnsDefinition.length; i++ ) {
@@ -74,7 +74,7 @@ public class ImplicitCompositeKeyJoinTest {
 	}
 
 	private String[] getColumnsDefinition(String command) {
-		String substring = command.toLowerCase().replaceAll( "create table employee ", "" );
+		String substring = command.toLowerCase().replaceAll( "create( (column|row))? table employee ", "" );
 		substring = substring.substring( 0, substring.toLowerCase().indexOf( "primary key" ) );
 		return substring.split( "\\," );
 	}

@@ -1,0 +1,142 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+
+apply from: rootProject.file( 'gradle/java-module.gradle' )
+
+apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
+apply from: rootProject.file( 'gradle/publishing-repos.gradle' )
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Jar
+
+jar {
+	manifest = osgiManifest {
+		// GRADLE-1411: Even if we override Imports and Exports
+		// auto-generation with instructions, classesDir and classpath
+		// need to be here (temporarily).
+
+		if ( project.pluginManager.hasPlugin( 'groovy' ) ) {
+			classesDir = sourceSets.main.groovy.outputDir
+		}
+		else {
+			classesDir = sourceSets.main.output.classesDir
+		}
+		classpath = configurations.runtime
+
+
+		// Java 9 module name
+		instruction 'Automatic-Module-Name', project.java9ModuleName
+
+		// the OSGi metadata
+		symbolicName project.java9ModuleName
+		vendor 'Hibernate.org'
+		description project.description
+		docURL "http://www.hibernate.org/orm/${project.hibernateMajorMinorVersion}"
+
+		instruction 'Import-Package',
+					// Temporarily support JTA 1.1 -- Karaf and other frameworks still
+					// use it.  Without this, the plugin generates [1.2,2).
+					'javax.transaction;version="[1.1,2)"',
+					// Tell Gradle OSGi to still dynamically import the other packages.
+					// IMPORTANT: Do not include the * in the modules' .gradle files.
+					// If it exists more than once, the manifest will physically contain a *.
+					'*'
+
+		// Basic JAR manifest metadata
+		instruction 'Specification-Title', project.name
+		instruction 'Specification-Version', project.version
+		instruction 'Specification-Vendor', 'Hibernate.org'
+		instruction 'Implementation-Title', project.name
+		instruction 'Implementation-Version', project.version
+		instruction 'Implementation-Vendor', 'Hibernate.org'
+		instruction 'Implementation-Vendor-Id', 'org.hibernate'
+		instruction 'Implementation-Url', 'http://hibernate.org/orm'
+
+		instruction 'Hibernate-VersionFamily', project.hibernateMajorMinorVersion
+		instruction 'Hibernate-JpaVersion', project.jpaVersion
+	}
+}
+
+
+task sourcesJar(type: Jar) {
+	from project.sourceSets.main.allSource
+	manifest = project.tasks.jar.manifest
+	classifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+	from project.tasks.javadoc.outputs
+	manifest = project.tasks.jar.manifest
+	classifier = 'javadoc'
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Javadoc
+
+javadoc {
+	exclude( "**/internal/*" )
+	exclude( "**/generated-src/**" )
+
+	final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
+
+	configure( options ) {
+		docletpath = configurations.asciidoclet.files.asType(List)
+		doclet = 'org.asciidoctor.Asciidoclet'
+
+		windowTitle = "$project.name JavaDocs"
+		docTitle = "$project.name JavaDocs ($project.version)"
+		bottom = "Copyright &copy; 2001-$currentYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+		use = true
+		encoding = 'UTF-8'
+		links += [
+				'https://docs.oracle.com/javase/8/docs/api/',
+				'http://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
+				'http://docs.jboss.org/cdi/api/2.0/',
+				'https://docs.oracle.com/javaee/7/api/'
+		]
+
+		if ( JavaVersion.current().isJava8Compatible() ) {
+			options.addStringOption( 'Xdoclint:none', '-quiet' )
+		}
+
+		doFirst {
+			// ordering problems if we try to do this during config phase :(
+			classpath += project.sourceSets.main.output + project.sourceSets.main.compileClasspath + project.configurations.provided
+		}
+	}
+}
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Publishing
+
+publishing {
+	publications {
+		publishedArtifacts {
+			from components.java
+
+			artifact( sourcesJar ) {
+				// todo : do these really need to be specified twice?
+				classifier 'sources'
+			}
+
+			artifact( javadocJar ) {
+				// todo : do these really need to be specified twice?
+				classifier "javadoc"
+			}
+		}
+	}
+}
+
+task ciBuild( dependsOn: [test, publish] )
+
+task release( dependsOn: [test, bintrayUpload] )
+

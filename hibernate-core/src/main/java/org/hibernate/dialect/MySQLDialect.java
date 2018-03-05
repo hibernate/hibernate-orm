@@ -583,4 +583,9 @@ public class MySQLDialect extends Dialect {
 	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
 		return MyISAMStorageEngine.INSTANCE;
 	}
+
+	@Override
+	protected String escapeLiteral(String literal) {
+		return super.escapeLiteral( literal ).replace("\\", "\\\\");
+	}
 }

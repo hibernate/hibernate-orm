@@ -213,9 +213,4 @@ public class BinaryArithmeticOperation<N extends Number>
 				( (Renderable) getRightHandOperand() ).render( renderingContext )
 		);
 	}
-
-	@Override
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
 }

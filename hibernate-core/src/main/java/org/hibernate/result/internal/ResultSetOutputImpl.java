@@ -6,7 +6,11 @@
  */
 package org.hibernate.result.internal;
 
+import java.sql.ResultSet;
 import java.util.List;
+import java.util.function.Supplier;
+
+import javax.enterprise.inject.spi.Producer;
 
 import org.hibernate.result.ResultSetOutput;
 
@@ -16,10 +20,14 @@ import org.hibernate.result.ResultSetOutput;
  * @author Steve Ebersole
  */
 class ResultSetOutputImpl implements ResultSetOutput {
-	private final List results;
+	private final Supplier<List> resultSetSupplier;
 
 	public ResultSetOutputImpl(List results) {
-		this.results = results;
+		this.resultSetSupplier = () -> results;
+	}
+
+	public ResultSetOutputImpl(Supplier<List> resultSetSupplier) {
+		this.resultSetSupplier = resultSetSupplier;
 	}
 
 	@Override
@@ -30,7 +38,7 @@ class ResultSetOutputImpl implements ResultSetOutput {
 	@Override
 	@SuppressWarnings("unchecked")
 	public List getResultList() {
-		return results;
+		return resultSetSupplier.get();
 	}
 
 	@Override

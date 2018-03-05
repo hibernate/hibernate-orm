@@ -22,7 +22,7 @@ public class SDOTestDataElement extends TestDataElement {
 	public final String sdo;
 
 	public SDOTestDataElement(int id, String type, String wkt, String sdo) {
-		super( id, type, wkt);
+		super( id, type, wkt );
 		this.sdo = sdo;
 	}
 

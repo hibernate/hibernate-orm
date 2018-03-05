@@ -15,9 +15,6 @@ import java.sql.SQLException;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.ResourceClosedException;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -47,12 +44,6 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	private boolean closed;
 
 	private boolean providerDisablesAutoCommit;
-
-	public LogicalConnectionManagedImpl(
-			JdbcConnectionAccess jdbcConnectionAccess,
-			JdbcSessionContext jdbcSessionContext) {
-		this( jdbcConnectionAccess, jdbcSessionContext, new ResourceRegistryStandardImpl() );
-	}
 
 	public LogicalConnectionManagedImpl(
 			JdbcConnectionAccess jdbcConnectionAccess,
@@ -274,10 +265,10 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 
 	@Override
 	protected void afterCompletion() {
-		afterTransaction();
-
 		resetConnection( initiallyAutoCommit );
 		initiallyAutoCommit = false;
+
+		afterTransaction();
 	}
 
 	@Override

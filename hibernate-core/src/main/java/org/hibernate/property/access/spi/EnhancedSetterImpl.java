@@ -6,171 +6,48 @@
  */
 package org.hibernate.property.access.spi;
 
-import java.io.ObjectStreamException;
-import java.io.Serializable;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
-import org.hibernate.PropertyAccessException;
-import org.hibernate.PropertySetterAccessException;
-import org.hibernate.engine.spi.SelfDirtinessTracker;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.engine.spi.CompositeOwner;
+import org.hibernate.engine.spi.CompositeTracker;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import java.lang.reflect.Field;
 
 /**
  * A specialized Setter implementation for handling setting values into
  * a into a bytecode-enhanced Class.  The reason we need specialized handling
- * is to render the fact that the
+ * is to render the fact that we need to account for certain enhancement features
+ * during the setting process.
  *
  * @author Steve Ebersole
  * @author Luis Barreiro
  */
-public class EnhancedSetterImpl implements Setter {
-	private static final CoreMessageLogger LOG = messageLogger( EnhancedSetterImpl.class );
+public class EnhancedSetterImpl extends SetterFieldImpl {
 
-	private final Class containerClass;
 	private final String propertyName;
-	private final Method setterMethod;
 
-	private final boolean isPrimitive;
-
-	public EnhancedSetterImpl(Class containerClass, String propertyName, Method setterMethod) {
-		this.containerClass = containerClass;
+	public EnhancedSetterImpl(Class containerClass, String propertyName, Field field) {
+		super( containerClass, propertyName, field );
 		this.propertyName = propertyName;
-		this.setterMethod = setterMethod;
-		this.isPrimitive = setterMethod.getParameterTypes()[0].isPrimitive();
 	}
 
 	@Override
 	public void set(Object target, Object value, SessionFactoryImplementor factory) {
-		try {
 
-			// for enhanced attribute, don't flag as dirty
-			if ( target instanceof SelfDirtinessTracker ) {
-				( (SelfDirtinessTracker) target ).$$_hibernate_suspendDirtyTracking( true );
-				try {
-					setterMethod.invoke( target, value );
-				}
-				finally {
-					( (SelfDirtinessTracker) target ).$$_hibernate_suspendDirtyTracking( false );
-				}
-			}
-			else {
-				setterMethod.invoke( target, value );
-			}
+		super.set( target, value, factory );
 
-		}
-		catch (NullPointerException npe) {
-			if ( value == null && isPrimitive ) {
-				throw new PropertyAccessException(
-						npe,
-						"Null value was assigned to a property of primitive type",
-						true,
-						containerClass,
-						propertyName
-				);
-			}
-			else {
-				throw new PropertyAccessException(
-						npe,
-						"NullPointerException occurred while calling",
-						true,
-						containerClass,
-						propertyName
-				);
-			}
-		}
-		catch (InvocationTargetException ite) {
-			throw new PropertyAccessException(
-					ite,
-					"Exception occurred inside",
-					true,
-					containerClass,
-					propertyName
-			);
-		}
-		catch (IllegalAccessException iae) {
-			throw new PropertyAccessException(
-					iae,
-					"IllegalAccessException occurred while calling",
-					true,
-					containerClass,
-					propertyName
-			);
-			//cannot occur
-		}
-		catch (IllegalArgumentException iae) {
-			if ( value == null && isPrimitive ) {
-				throw new PropertyAccessException(
-						iae,
-						"Null value was assigned to a property of primitive type",
-						true,
-						containerClass,
-						propertyName
-				);
-			}
-			else {
-				final Class expectedType = setterMethod.getParameterTypes()[0];
-				LOG.illegalPropertySetterArgument( containerClass.getName(), propertyName );
-				LOG.expectedType( expectedType.getName(), value == null ? null : value.getClass().getName() );
-				throw new PropertySetterAccessException(
-						iae,
-						containerClass,
-						propertyName,
-						expectedType,
-						target,
-						value
-				);
-			}
-		}
-	}
-
-	@Override
-	public String getMethodName() {
-		return setterMethod.getName();
-	}
-
-	@Override
-	public Method getMethod() {
-		return setterMethod;
-	}
-
-	private Object writeReplace() throws ObjectStreamException {
-		return new SerialForm( containerClass, propertyName, setterMethod );
-	}
-
-	private static class SerialForm implements Serializable {
-		private final Class containerClass;
-		private final String propertyName;
-
-		private final Class declaringClass;
-		private final String methodName;
-		private final Class argumentType;
-
-		private SerialForm(Class containerClass, String propertyName, Method method) {
-			this.containerClass = containerClass;
-			this.propertyName = propertyName;
-			this.declaringClass = method.getDeclaringClass();
-			this.methodName = method.getName();
-			this.argumentType = method.getParameterTypes()[0];
+		// This sets the component relation for dirty tracking purposes
+		if ( target instanceof CompositeOwner && value instanceof CompositeTracker ) {
+			( (CompositeTracker) value ).$$_hibernate_setOwner( propertyName, (CompositeOwner) target );
 		}
 
-		private Object readResolve() {
-			return new EnhancedSetterImpl( containerClass, propertyName, resolveMethod() );
-		}
-
-		@SuppressWarnings("unchecked")
-		private Method resolveMethod() {
-			try {
-				return declaringClass.getDeclaredMethod( methodName, argumentType );
-			}
-			catch (NoSuchMethodException e) {
-				throw new PropertyAccessSerializationException(
-						"Unable to resolve setter method on deserialization : " + declaringClass.getName() + "#"
-								+ methodName + "(" + argumentType.getName() + ")"
-				);
+		// This marks the attribute as initialized, so it doesn't get lazy loaded afterwards
+		if ( target instanceof PersistentAttributeInterceptable ) {
+			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) target ).$$_hibernate_getInterceptor();
+			if ( interceptor != null && interceptor instanceof LazyAttributeLoadingInterceptor ) {
+				interceptor.attributeInitialized( propertyName );
 			}
 		}
 	}

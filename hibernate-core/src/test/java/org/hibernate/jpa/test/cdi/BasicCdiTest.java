@@ -10,93 +10,101 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Resource;
-import javax.inject.Inject;
+import javax.enterprise.inject.se.SeContainer;
+import javax.enterprise.inject.se.SeContainerInitializer;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
-import javax.persistence.PersistenceUnit;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
+
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.jpa.event.spi.JpaIntegrator;
+import org.hibernate.tool.schema.Action;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.Archive;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.asset.EmptyAsset;
-import org.jboss.shrinkwrap.api.asset.StringAsset;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.jboss.shrinkwrap.descriptor.api.Descriptors;
-import org.jboss.shrinkwrap.descriptor.api.persistence21.PersistenceDescriptor;
-
+import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Steve Ebersole
  */
-@RunWith(Arquillian.class)
 public class BasicCdiTest {
-	@Deployment
-	public static Archive<?> buildDeployment() {
-		return ShrinkWrap.create( JavaArchive.class, "test.jar" )
-				.addClass( MyEntity.class )
-				.addClass( EventQueue.class )
-				.addClass( Event.class )
-				.addClass( Monitor.class )
-				.addAsManifestResource( "jboss-deployment-structure.xml" )
-				.addAsManifestResource( EmptyAsset.INSTANCE, "beans.xml" )
-				.addAsManifestResource( new StringAsset( persistenceXml().exportAsString() ), "persistence.xml" );
-	}
-
-	private static PersistenceDescriptor persistenceXml() {
-		return Descriptors.create( PersistenceDescriptor.class )
-				.createPersistenceUnit().name( "pu-cdi-basic" )
-				.clazz( MyEntity.class.getName() )
-				.excludeUnlistedClasses( true )
-				.nonJtaDataSource( "java:jboss/datasources/ExampleDS" )
-				.getOrCreateProperties().createProperty().name( "jboss.as.jpa.providerModule" ).value( "org.hibernate:5.2" ).up().up()
-				.getOrCreateProperties().createProperty().name( "hibernate.delay_cdi_access" ).value( "true" ).up().up()
-				.getOrCreateProperties().createProperty().name( "hibernate.hbm2ddl.auto" ).value( "create-drop" ).up().up().up();
-	}
-
-	@PersistenceUnit
-	EntityManagerFactory emf;
-
-	@Resource
-	private UserTransaction utx;
-
 
 	private static int count;
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testIt() throws Exception {
+	public void testIt() {
+		final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
+				.disableDiscovery()
+				.addBeanClasses( Monitor.class, EventQueue.class, Event.class );
+
 		count = 0;
 
-		utx.begin();
-		EntityManager em = emf.createEntityManager();
-		em.persist( new MyEntity( 1 ) );
-		utx.commit();
+		try ( final SeContainer cdiContainer = cdiInitializer.initialize() ) {
+			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
+					.applyIntegrator( new JpaIntegrator() )
+					.build();
 
-		assertEquals( 1, count );
+			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
+					.applySetting( AvailableSettings.DELAY_CDI_ACCESS, "true" )
+					.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
+					.build();
 
-		utx.begin();
-		em = emf.createEntityManager();
-		MyEntity it = em.find( MyEntity.class, 1 );
-		assertNotNull( it );
-		em.remove( it );
-		utx.commit();
+			final SessionFactoryImplementor sessionFactory;
+
+			try {
+				sessionFactory = (SessionFactoryImplementor) new MetadataSources( ssr )
+						.addAnnotatedClass( MyEntity.class )
+						.buildMetadata()
+						.getSessionFactoryBuilder()
+						.build();
+			}
+			catch ( Exception e ) {
+				StandardServiceRegistryBuilder.destroy( ssr );
+				throw e;
+			}
+
+			try {
+				inTransaction(
+						sessionFactory,
+						session -> session.persist( new MyEntity( 1 ) )
+				);
+
+				assertEquals( 1, count );
+
+				inTransaction(
+						sessionFactory,
+						session -> {
+							MyEntity it = session.find( MyEntity.class, 1 );
+							assertNotNull( it );
+						}
+				);
+			}
+			finally {
+				inTransaction(
+						sessionFactory,
+						session -> {
+							session.createQuery( "delete MyEntity" ).executeUpdate();
+						}
+				);
+
+				sessionFactory.close();
+			}
+		}
 	}
 
-	@Entity
+	@Entity( name = "MyEntity" )
 	@EntityListeners( Monitor.class )
 	@Table(name = "my_entity")
 	public static class MyEntity {
@@ -133,7 +141,7 @@ public class BasicCdiTest {
 
 		public void addEvent(Event anEvent) {
 			if ( events == null ) {
-				events = new ArrayList<Event>();
+				events = new ArrayList<>();
 			}
 			events.add( anEvent );
 			count++;

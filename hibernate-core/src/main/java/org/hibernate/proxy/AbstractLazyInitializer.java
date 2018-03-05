@@ -16,10 +16,10 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.persister.entity.EntityPersister;
-
-import org.jboss.logging.Logger;
 
 /**
  * Convenience base class for lazy initialization handlers.  Centralizes the basic plumbing of doing lazy
@@ -29,7 +29,7 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 public abstract class AbstractLazyInitializer implements LazyInitializer {
-	private static final Logger log = Logger.getLogger( AbstractLazyInitializer.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractLazyInitializer.class );
 
 	private String entityName;
 	private Serializable id;
@@ -75,7 +75,16 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	@Override
 	public final Serializable getIdentifier() {
+		if ( isUninitialized() && isInitializeProxyWhenAccessingIdentifier() ) {
+			initialize();
+		}
 		return id;
+	}
+
+	private boolean isInitializeProxyWhenAccessingIdentifier() {
+		return session != null && session.getFactory()
+				.getSessionFactoryOptions()
+				.getJpaCompliance().isJpaProxyComplianceEnabled();
 	}
 
 	@Override
@@ -102,6 +111,10 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			}
 			else if ( isConnectedToSession() ) {
 				//TODO: perhaps this should be some other RuntimeException...
+				LOG.attemptToAssociateProxyWithTwoOpenSessions(
+					entityName,
+					id
+				);
 				throw new HibernateException( "illegally attempted to associate a proxy with two open Sessions" );
 			}
 			else {
@@ -200,12 +213,12 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 						session.close();
 					}
 					catch (Exception e) {
-						log.warn( "Unable to close temporary session used to load lazy proxy associated to no session" );
+						LOG.warn( "Unable to close temporary session used to load lazy proxy associated to no session" );
 					}
 				}
 			}
 			catch (Exception e) {
-				log.error( "Initialization failure", e );
+				LOG.error( "Initialization failure", e );
 				throw new LazyInitializationException( e.getMessage() );
 			}
 		}

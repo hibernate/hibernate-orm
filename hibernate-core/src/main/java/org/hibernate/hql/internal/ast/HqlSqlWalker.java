@@ -15,12 +15,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.QueryException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.engine.internal.ParameterBinder;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.CollectionProperties;
 import org.hibernate.hql.internal.antlr.HqlSqlBaseWalker;
@@ -92,6 +95,8 @@ import antlr.RecognitionException;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
+import static org.hibernate.hql.spi.QueryTranslator.ERROR_LEGACY_ORDINAL_PARAMS_NO_LONGER_SUPPORTED;
+
 /**
  * Implements methods used by the HQL->SQL tree transform grammar (a.k.a. the second phase).
  * <ul>
@@ -123,15 +128,16 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	 * Maps each top-level result variable to its SelectExpression;
 	 * (excludes result variables defined in subqueries)
 	 */
-	private Map<String, SelectExpression> selectExpressionsByResultVariable = new HashMap<String, SelectExpression>();
+	private Map<String, SelectExpression> selectExpressionsByResultVariable = new HashMap<>();
 
-	private Set<Serializable> querySpaces = new HashSet<Serializable>();
+	private Set<Serializable> querySpaces = new HashSet<>();
 
 	private int parameterCount;
-	private Map namedParameters = new HashMap();
-	private ArrayList<ParameterSpecification> parameters = new ArrayList<ParameterSpecification>();
+	private Map namedParameters;
+	private Map positionalParameters;
+
+	private ArrayList<ParameterSpecification> parameterSpecs = new ArrayList<>();
 	private int numberOfParametersInSetClause;
-	private int positionalParameterCount;
 
 	private ArrayList assignmentSpecifications = new ArrayList();
 
@@ -158,7 +164,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			String collectionRole) {
 		setASTFactory( new SqlASTFactory( this ) );
 		// Initialize the error handling delegate.
-		this.parseErrorHandler = new ErrorCounter( qti.getQueryString() );
+		this.parseErrorHandler = new ErrorTracker( qti.getQueryString() );
 		this.queryTranslatorImpl = qti;
 		this.sessionFactoryHelper = new SessionFactoryHelper( sfi );
 		this.literalProcessor = new LiteralProcessor( this );
@@ -225,7 +231,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 //									 positionalParameterCount++
 //							);
 //							collectionFilterKeyParameter.setHqlParameterSpecification( paramSpec );
-//							parameters.add( paramSpec );
+//							parameterSpecs.add( paramSpec );
 //						}
 //					}
 //				}
@@ -250,14 +256,16 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				queryTranslatorImpl.showHqlAst( hqlParser.getAST() );
 
 				// Create a parameter specification for the collection filter...
-				Type collectionFilterKeyType = sessionFactoryHelper.requireQueryableCollection( collectionFilterRole )
+				final Type collectionFilterKeyType = sessionFactoryHelper.requireQueryableCollection( collectionFilterRole )
 						.getKeyType();
-				ParameterNode collectionFilterKeyParameter = (ParameterNode) astFactory.create( PARAM, "?" );
-				CollectionFilterKeyParameterSpecification collectionFilterKeyParameterSpec = new CollectionFilterKeyParameterSpecification(
-						collectionFilterRole, collectionFilterKeyType, positionalParameterCount++
+				final ParameterNode collectionFilterKeyParameter = (ParameterNode) astFactory.create( PARAM, "?" );
+				final CollectionFilterKeyParameterSpecification collectionFilterKeyParameterSpec = new CollectionFilterKeyParameterSpecification(
+						collectionFilterRole,
+						collectionFilterKeyType
 				);
+				parameterCount++;
 				collectionFilterKeyParameter.setHqlParameterSpecification( collectionFilterKeyParameterSpec );
-				parameters.add( collectionFilterKeyParameterSpec );
+				parameterSpecs.add( collectionFilterKeyParameterSpec );
 			}
 		}
 	}
@@ -934,7 +942,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				versionValueNode = getASTFactory().create( HqlSqlTokenTypes.PARAM, "?" );
 				ParameterSpecification paramSpec = new VersionTypeSeedParameterSpecification( versionType );
 				( (ParameterNode) versionValueNode ).setHqlParameterSpecification( paramSpec );
-				parameters.add( 0, paramSpec );
+				parameterSpecs.add( 0, paramSpec );
 
 				if ( sessionFactoryHelper.getFactory().getDialect().requiresCastingOfParametersInSelectClause() ) {
 					// we need to wrtap the param in a cast()
@@ -975,7 +983,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 					versionValueNode = getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, functionName );
 				}
 				else {
-					throw new QueryException( "cannot handle version type [" + versionType + "] on bulk inserts with dialects not supporting parameters in insert-select statements" );
+					throw new QueryException( "cannot handle version type [" + versionType + "] on bulk inserts with dialects not supporting parameterSpecs in insert-select statements" );
 				}
 			}
 
@@ -1079,64 +1087,109 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 	@Override
-	protected AST generatePositionalParameter(AST inputNode) throws SemanticException {
-		if ( namedParameters.size() > 0 ) {
+	protected AST generatePositionalParameter(AST delimiterNode, AST numberNode) throws SemanticException {
+		// todo : we check this multiple times
+		if ( namedParameters != null ) {
 			throw new SemanticException(
-					"cannot define positional parameter after any named parameters have been defined"
+					"Cannot define positional and named parameterSpecs : " + queryTranslatorImpl.getQueryString()
 			);
 		}
-		LOG.warnf(
-				"[DEPRECATION] Encountered positional parameter near line %s, column %s in HQL: [%s].  Positional parameter " +
-						"are considered deprecated; use named parameters or JPA-style positional parameters instead.",
-				inputNode.getLine(),
-				inputNode.getColumn(),
-				queryTranslatorImpl.getQueryString()
-		);
-		ParameterNode parameter = (ParameterNode) astFactory.create( PARAM, "?" );
-		PositionalParameterSpecification paramSpec = new PositionalParameterSpecification(
-				inputNode.getLine(),
-				inputNode.getColumn(),
-				positionalParameterCount++
+
+		if ( numberNode == null ) {
+			throw new QueryException(
+					String.format(
+							Locale.ROOT,
+							ERROR_LEGACY_ORDINAL_PARAMS_NO_LONGER_SUPPORTED,
+							queryTranslatorImpl.getQueryString()
+					)
+			);
+		}
+		final String positionString = numberNode.getText();
+		final int label = Integer.parseInt( positionString );
+		trackPositionalParameterPositions( label );
+
+		final ParameterNode parameter = (ParameterNode) astFactory.create( PARAM, positionString );
+		parameter.setText( "?" );
+
+		final int queryParamtersPosition = isFilter()
+				? label
+				: label - 1;
+		final PositionalParameterSpecification paramSpec = new PositionalParameterSpecification(
+				delimiterNode.getLine(),
+				delimiterNode.getColumn(),
+				label,
+				queryParamtersPosition
 		);
 		parameter.setHqlParameterSpecification( paramSpec );
-		parameters.add( paramSpec );
+		parameterSpecs.add( paramSpec );
+
 		return parameter;
+	}
+
+	@SuppressWarnings("unchecked")
+	private void trackPositionalParameterPositions(int label) {
+		if ( positionalParameters == null ) {
+			positionalParameters = new HashMap();
+		}
+
+		final Integer loc = parameterCount++;
+
+		final Object existingValue = positionalParameters.get( label );
+		if ( existingValue == null ) {
+			positionalParameters.put( label, loc );
+		}
+		else if ( existingValue instanceof Integer ) {
+			final ArrayList list = new ArrayList();
+			positionalParameters.put( label, list );
+			list.add( existingValue );
+			list.add( loc );
+		}
+		else {
+			( (List) existingValue ).add( loc );
+		}
 	}
 
 	@Override
 	protected AST generateNamedParameter(AST delimiterNode, AST nameNode) throws SemanticException {
-		String name = nameNode.getText();
+		final String name = nameNode.getText();
 		trackNamedParameterPositions( name );
 
 		// create the node initially with the param name so that it shows
 		// appropriately in the "original text" attribute
-		ParameterNode parameter = (ParameterNode) astFactory.create( NAMED_PARAM, name );
+		final ParameterNode parameter = (ParameterNode) astFactory.create( NAMED_PARAM, name );
 		parameter.setText( "?" );
 
-		NamedParameterSpecification paramSpec = new NamedParameterSpecification(
+		final NamedParameterSpecification paramSpec = new NamedParameterSpecification(
 				delimiterNode.getLine(),
 				delimiterNode.getColumn(),
 				name
 		);
 		parameter.setHqlParameterSpecification( paramSpec );
-		parameters.add( paramSpec );
+		parameterSpecs.add( paramSpec );
+
 		return parameter;
 	}
 
+	@SuppressWarnings("unchecked")
 	private void trackNamedParameterPositions(String name) {
-		Integer loc = parameterCount++;
-		Object o = namedParameters.get( name );
-		if ( o == null ) {
+		if ( namedParameters == null ) {
+			namedParameters = new HashMap();
+		}
+
+		final Integer loc = parameterCount++;
+
+		final Object existingValue = namedParameters.get( name );
+		if ( existingValue == null ) {
 			namedParameters.put( name, loc );
 		}
-		else if ( o instanceof Integer ) {
-			ArrayList list = new ArrayList( 4 );
-			list.add( o );
+		else if ( existingValue instanceof Integer ) {
+			ArrayList<Integer> list = new ArrayList<>( 4 );
+			list.add( (Integer) existingValue );
 			list.add( loc );
 			namedParameters.put( name, list );
 		}
 		else {
-			( (ArrayList) o ).add( loc );
+			( (List) existingValue ).add( loc );
 		}
 	}
 
@@ -1282,8 +1335,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		return printer;
 	}
 
-	public ArrayList<ParameterSpecification> getParameters() {
-		return parameters;
+	public ArrayList<ParameterSpecification> getParameterSpecs() {
+		return parameterSpecs;
 	}
 
 	public int getNumberOfParametersInSetClause() {
@@ -1354,7 +1407,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				versionIncrementNode = getASTFactory().create( HqlSqlTokenTypes.PARAM, "?" );
 				ParameterSpecification paramSpec = new VersionTypeSeedParameterSpecification( versionType );
 				( (ParameterNode) versionIncrementNode ).setHqlParameterSpecification( paramSpec );
-				parameters.add( 0, paramSpec );
+				parameterSpecs.add( 0, paramSpec );
 			}
 			else {
 				// Not possible to simply re-use the versionPropertyNode here as it causes
@@ -1418,6 +1471,10 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	public Set<String> getTreatAsDeclarationsByPath(String path) {
 		return hqlParser.getTreatMap().get( path );
+	}
+
+	public Dialect getDialect() {
+		return sessionFactoryHelper.getFactory().getServiceRegistry().getService( JdbcServices.class ).getDialect();
 	}
 
 	public static void panic() {

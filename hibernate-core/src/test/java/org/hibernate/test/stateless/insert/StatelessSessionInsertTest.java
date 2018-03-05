@@ -17,7 +17,6 @@ import org.junit.Test;
  * @author mukhanov@gmail.com
  */
 public class StatelessSessionInsertTest extends BaseCoreFunctionalTestCase {
-    private static final Logger log = Logger.getLogger(StatelessSessionInsertTest.class);
 
     @Override
     public String[] getMappings() {

@@ -20,8 +20,6 @@ import static org.junit.Assert.*;
 
 public class HibernateUnproxyTest extends BaseEntityManagerFunctionalTestCase {
 
-    private static final Logger log = Logger.getLogger( HibernateUnproxyTest.class );
-
     @Override
     protected Class<?>[] getAnnotatedClasses() {
         return new Class<?>[]{Parent.class, Child.class};

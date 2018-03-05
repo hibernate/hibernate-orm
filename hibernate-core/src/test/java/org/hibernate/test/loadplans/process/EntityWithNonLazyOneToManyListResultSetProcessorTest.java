@@ -113,12 +113,7 @@ public class EntityWithNonLazyOneToManyListResultSetProcessorTest extends BaseCo
 											resultSet,
 											(SessionImplementor) workSession,
 											new QueryParameters(),
-											new NamedParameterContext() {
-												@Override
-												public int[] getNamedParameterLocations(String name) {
-													return new int[0];
-												}
-											},
+											Helper.parameterContext(),
 											true,
 											false,
 											null,

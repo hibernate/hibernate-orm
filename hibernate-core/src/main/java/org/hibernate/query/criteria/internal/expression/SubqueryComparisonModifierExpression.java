@@ -70,8 +70,4 @@ public class SubqueryComparisonModifierExpression<Y>
 	public String render(RenderingContext renderingContext) {
 		return getModifier().rendered() + ( (Renderable) getSubquery() ).render( renderingContext );
 	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
 }

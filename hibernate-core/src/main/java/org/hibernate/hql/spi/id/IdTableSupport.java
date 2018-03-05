@@ -14,4 +14,5 @@ public interface IdTableSupport {
 	String getCreateIdTableCommand();
 	String getCreateIdTableStatementOptions();
 	String getDropIdTableCommand();
+	String getTruncateIdTableCommand();
 }

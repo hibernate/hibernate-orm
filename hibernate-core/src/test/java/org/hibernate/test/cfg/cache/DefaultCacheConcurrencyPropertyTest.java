@@ -28,7 +28,9 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gail Badner
@@ -60,6 +62,8 @@ public class DefaultCacheConcurrencyPropertyTest extends BaseUnitTestCase {
 			final SessionFactoryImplementor sf = (SessionFactoryImplementor) metadata.buildSessionFactory();
 			try {
 				final EntityPersister persister = sf.getMetamodel().entityPersister( TheEntity.class.getName() );
+				assertTrue( persister.canReadFromCache() );
+				assertTrue( persister.canWriteToCache() );
 				assertNotNull( persister.getCacheAccessStrategy() );
 			}
 			finally {

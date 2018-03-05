@@ -1,54 +1,41 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.asciidoctor.gradle.AsciidoctorTask
+
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-buildscript {
-    repositories {
-        mavenCentral()
-        mavenLocal()
 
-        maven {
-            name 'jboss-nexus'
-            url "http://repository.jboss.org/nexus/content/groups/public/"
-        }
-        jcenter()
-    }
-    dependencies {
-        classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.2'
-    }
+ext {
+	projectsToSkipWhenAggregatingJavadocs = [
+			'documentation',
+			'hibernate-entitymanager',
+			'hibernate-infinispan',
+			'hibernate-java8',
+			'hibernate-orm-modules',
+			'release'
+	]
 }
 
-apply plugin: "java"
+rootProject.subprojects { subproject ->
+	if ( !this.projectsToSkipWhenAggregatingJavadocs.contains( subproject.name ) ) {
+		this.evaluationDependsOn( subproject.path )
+	}
+}
+
+apply from: rootProject.file( 'gradle/java-module.gradle' )
+
 apply plugin: 'org.asciidoctor.convert'
 
 apply plugin: 'hibernate-matrix-testing'
 
-apply from: "${rootProject.projectDir}/utilities.gradle"
-
 defaultTasks 'buildDocs'
 
-configurations {
-    asciidoclet {
-        description = 'Dependencies for Asciidoclet (the javadoc doclet tool for using Asciidoc)'
-    }
-    //asciidoctor
-}
-
-if ( JavaVersion.current().isJava8Compatible() ) {
-    tasks.withType( Javadoc ) {
-        options.addStringOption( 'Xdoclint:none', '-quiet' )
-    }
-}
 
 dependencies {
 	ext.pressgangVersion = '3.0.0'
-
-	//	asciidoctor 'org.asciidoctor:asciidoctorj:1.5.2'
-	asciidoclet 'org.asciidoctor:asciidoclet:0.+'
 
 	compile( libraries.jpa )
 	compile( project( ':hibernate-core' ) )
@@ -73,56 +60,16 @@ dependencies {
 	testRuntime( libraries.mssql )
 
 	testCompile "org.osgi:org.osgi.core:4.3.1"
-
-	if (db.equalsIgnoreCase("oracle")) {
-		dependencies {
-			testRuntime( libraries.oracle ) {
-				exclude group: 'com.oracle.jdbc', module: 'xmlparserv2'
-			}
-		}
-	}
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Java 9 ftw!
-	if ( JavaVersion.current().isJava9Compatible() ) {
-		// The JDK used to run Gradle is Java 9+, and we assume that that is the same
-		//		JDK for executing tasks
-		compile( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-		compile( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-		compile( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-		compile( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-		compile( 'javax:javaee-api:7.0' )
-
-		testCompile( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-		testCompile( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-		testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-		testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-		testCompile( 'javax:javaee-api:7.0' )
-
-		testRuntime( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-		testRuntime( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-		testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-		testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-		testRuntime( 'javax:javaee-api:7.0' )
-	}
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
-processTestResources.doLast( {
-	copy {
-		from( sourceSets.test.java.srcDirs ) {
-			include '**/*.properties'
-			include '**/*.xml'
-		}
-		into sourceSets.test.output.classesDir
-	}
-	copy {
-		ext.targetDir = file( "${buildDir}/resources/test" )
-		from file('src/test/resources')
-		into targetDir
-		filter( ReplaceTokens, tokens: dbBundle[db] );
-	}
-} )
+
+if ( project.isSnapshot ) {
+	// only run the ci build tasks for SNAPSHOT versions
+	task ciBuild( dependsOn: [clean, test] )
+}
+else {
+	task release( dependsOn: [clean, test] )
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // grouping tasks - declaration, see below for task dependency definitions
@@ -151,78 +98,47 @@ final File javadocDir = mkdir( new File( (File) project.buildDir, 'javadocs' ) )
 task aggregateJavadocs(type: Javadoc) {
     description = 'Builds the aggregated (unified) JavaDocs across all sub-projects'
 
-    final int copyrightYear = new GregorianCalendar().get( Calendar.YEAR );
+    final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
 
-    // exclude any generated sources (this is not working: http://forums.gradle.org/gradle/topics/excluding_generated_source_from_javadoc)
-    exclude "**/generated-src/**"
+    // exclude any generated sources and internal packages
+    exclude( '**/generated-src/**' )
+    exclude( '**/internal/**' )
+
+
+	// apply standard config
+	maxMemory = '512m'
+	destinationDir = javadocDir
+	configure( options ) {
+		overview = project.file( 'src/main/javadoc/overview.html' )
+		windowTitle = 'Hibernate JavaDocs'
+		docTitle = "Hibernate JavaDoc ($project.version)"
+		bottom = "Copyright &copy; 2001-$currentYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+		use = true
+		options.encoding = 'UTF-8'
+
+		links = [
+				'https://docs.oracle.com/javase/8/docs/api/',
+				'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
+				'http://docs.jboss.org/cdi/api/2.0/',
+				'https://docs.oracle.com/javaee/7/api/'
+		]
+
+		if ( JavaVersion.current().isJava8Compatible() ) {
+			options.addStringOption( 'Xdoclint:none', '-quiet' )
+		}
+	}
 
     // process each project, building up:
     //      1) appropriate sources
     //      2) classpath
-    //      3) the package list for groups
-    Set<String> apiPackages = new HashSet<String>()
-    Set<String> spiPackages = new HashSet<String>()
-    Set<String> internalPackages = new HashSet<String>()
-    parent.subprojects.each{ Project subProject->
+    parent.subprojects.each { Project subProject->
         // skip certain sub-projects
-		if ( ['release','documentation', 'hibernate-orm-modules'].contains( subProject.name ) ) {
-			return;
+		if ( ! projectsToSkipWhenAggregatingJavadocs.contains( subProject.name ) ) {
+			// we only care about the main SourceSet...
+			source subProject.sourceSets.main.java
+
+			classpath += subProject.sourceSets.main.output + subProject.sourceSets.main.compileClasspath + subProject.configurations.provided
 		}
-
-		// we only care about the main SourceSet...
-		source subProject.sourceSets.main.java
-
-		if( classpath ) {
-			classpath += subProject.sourceSets.main.output + subProject.sourceSets.main.compileClasspath
-		}
-		else {
-			classpath = subProject.sourceSets.main.output + subProject.sourceSets.main.compileClasspath
-		}
-
-		subProject.sourceSets.main.java.each { javaFile ->
-			final String packageName = determinePackageName( subProject.sourceSets.main.java, javaFile );
-			if ( packageName.endsWith( ".internal" ) || packageName.contains( ".internal." ) ) {
-				internalPackages.add( packageName );
-			}
-			else if ( packageName.endsWith( ".spi" ) || packageName.contains( ".spi." ) ) {
-				spiPackages.add( packageName );
-			}
-			else if ( packageName.startsWith( "org.hibernate.testing" ) ) {
-				// do nothing as testing support is already handled...
-			}
-			else {
-				apiPackages.add( packageName );
-			}
-		}
-    }
-
-    // apply standard config
-    maxMemory = '512m'
-    destinationDir = javadocDir
-    configure( options ) {
-        overview = rootProject.file( 'shared/javadoc/overview.html' )
-        stylesheetFile = rootProject.file( 'shared/javadoc/stylesheet.css' )
-        windowTitle = 'Hibernate JavaDocs'
-        docTitle = "Hibernate JavaDoc ($project.version)"
-        bottom = "Copyright &copy; 2001-$copyrightYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
-        use = true
-        options.encoding = 'UTF-8'
-        links = [ 'http://download.oracle.com/javase/6/docs/api/', 'http://download.oracle.com/javaee/6/api/' ]
-        group( 'API', apiPackages.asList() )
-        group( 'SPI', spiPackages.asList() )
-        group( 'Internal', internalPackages.asList() )
-        group ( 'Testing Support', ['org.hibernate.testing*'] )
-// ugh, http://issues.gradle.org/browse/GRADLE-1563
-//        tags ["todo:X"]
-// work around:
-        addStringOption( "tag", "todo:X" )
-    }
-
-    doLast {
-        copy {
-            from rootProject.file( 'shared/javadoc/images' )
-            into new File( javadocDir, "/images" )
-        }
     }
 }
 
@@ -240,7 +156,7 @@ task renderTopicalGuides(type: AsciidoctorTask, group: 'Documentation') {
 	backends "html5"
 	separateOutputDirs false
 	options logDocuments: true
-	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', majorMinorVersion: rootProject.hibernateMajorMinorVersion, fullVersion: rootProject.hibernateFullVersion
+	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', majorMinorVersion: rootProject.hibernateMajorMinorVersion, fullVersion: rootProject.hibernateVersion
 }
 
 
@@ -264,8 +180,8 @@ task buildTutorialZip(type: Zip) {
 	expand(
 			version: project.version,
 			slf4j: "1.7.5",
-			junit: parent.junitVersion,
-			h2: parent.h2Version
+			junit: project.junitVersion,
+			h2: project.h2Version
 	)
 }
 
@@ -301,8 +217,15 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
     backends "html5"
     separateOutputDirs false
     options logDocuments: true
-    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css", majorMinorVersion: rootProject.hibernateMajorMinorVersion, fullVersion: rootProject.hibernateFullVersion
-    resources {
+	attributes icons: 'font', experimental: true,
+			   'source-highlighter': 'prettify',
+			   linkcss: true,
+			   stylesheet: "css/hibernate.css",
+			   majorMinorVersion: rootProject.hibernateMajorMinorVersion,
+			   fullVersion: rootProject.hibernateVersion,
+			   docinfo: true
+
+	resources {
         from('src/main/asciidoc/userguide/') {
             include 'images/**'
         }
@@ -311,6 +234,9 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
 		}
 		from('src/main/style/asciidoctor') {
 			include 'css/**'
+		}
+		from('src/main/style/asciidoctor') {
+			include 'js/**'
 		}
     }
 }
@@ -353,3 +279,6 @@ buildDocsForPublishing.dependsOn renderTopicalGuides
 buildDocsForPublishing.dependsOn renderGettingStartedGuides
 buildDocsForPublishing.dependsOn renderUserGuide
 buildDocsForPublishing.dependsOn renderIntegrationGuide
+
+checkstyleMain.exclude '**/org/hibernate/userguide/model/*'
+

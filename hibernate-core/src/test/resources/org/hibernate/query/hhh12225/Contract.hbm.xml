@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+          "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.query.hhh12225">
+
+  <class name="Contract" table="contract" >
+    <meta attribute="class-description">
+      Walkaway Debt Cancellation Contract
+    </meta>
+	
+    <id name="id" type="long" unsaved-value="null">
+      <!--  meta attribute="scope-set">protected</meta -->
+      <generator class="native"/>
+    </id>
+	<version name="version" unsaved-value="null" type="java.lang.Integer">
+      <!--  meta attribute="scope-set">protected</meta -->
+	</version>
+	<property name="creationDate" type="timestamp" column="creation_date" insert="false" update="false" generated="always" />
+	<property name="modifiedDate" type="timestamp" column="modified_date" insert="false" update="false" generated="always" />
+	<property name="effectiveDate" type="timestamp">
+		<column name="effective_date" index="idx_contract_effective_date" />
+	</property>
+    <property name="terminationDate" type="timestamp" column="termination_date" />
+    <property name="renewalDate" type="timestamp" column="renewal_date" />
+    <property name="expiryDate" type="timestamp" column="expiry_date" />
+    
+	<!--<many-to-one name="endorsed" claorg.hibernate.query.hhh122252225.Contract" column="endorsed_contract_id" fetch="select" lazy="false" />-->
+
+	<joined-subclass name="VehicleContract" table="contract_vehicle" >
+		<key column="contract_id" />
+		<bag name="vehicles" cascade="all" inverse="true" fetch="select" lazy="false">
+			<meta attribute="validate:min-size">1</meta>
+			<meta attribute="validate:max-size">1</meta>
+			<key column="contract_id" />
+			<one-to-many class="org.hibernate.query.hhh12225.Vehicle" />
+		</bag>
+		<joined-subclass name="VehicleTrackContract" table="contract_vehicle_track">
+			<key column="contract_id" />
+		    <property name="etchingId" type="string" column="etching_id" length="64" />
+		    <property name="original" type="boolean" column="original" />
+		</joined-subclass>
+	</joined-subclass>
+	
+  </class>
+</hibernate-mapping>

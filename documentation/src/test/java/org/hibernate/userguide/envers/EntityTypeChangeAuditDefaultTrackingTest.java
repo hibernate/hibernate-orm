@@ -69,10 +69,12 @@ public class EntityTypeChangeAuditDefaultTrackingTest extends BaseEntityManagerF
 					AvailableSettings.HBM2DDL_AUTO,
 					"update"
 			);
-			entityManagerFactory =  Bootstrap.getEntityManagerFactoryBuilder(
-					new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
-					settings
-			).build().unwrap( SessionFactoryImplementor.class );
+			entityManagerFactory =  Bootstrap
+			.getEntityManagerFactoryBuilder(
+				new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
+				settings )
+			.build()
+			.unwrap( SessionFactoryImplementor.class );
 
 			final EntityManagerFactory emf = entityManagerFactory;
 

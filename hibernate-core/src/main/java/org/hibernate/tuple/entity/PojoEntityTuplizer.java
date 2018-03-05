@@ -300,6 +300,10 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
 	@Override
 	public String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory) {
+		if ( entityInstance == null ) {
+			return getEntityName();
+		}
+
 		final Class concreteEntityClass = entityInstance.getClass();
 		if ( concreteEntityClass == getMappedClass() ) {
 			return getEntityName();

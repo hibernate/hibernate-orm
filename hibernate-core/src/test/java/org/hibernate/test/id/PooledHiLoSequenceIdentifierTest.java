@@ -54,7 +54,6 @@ import static org.junit.Assert.assertEquals;
  */
 @TestForIssue(jiraKey = "HHH-9287")
 public class PooledHiLoSequenceIdentifierTest extends BaseCoreFunctionalTestCase {
-	private static final Logger log = Logger.getLogger( PooledHiLoSequenceIdentifierTest.class );
 
 	@Test
 	public void testSequenceIdentifierGenerator() {

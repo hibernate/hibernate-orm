@@ -654,6 +654,16 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
+	public boolean canReadFromCache() {
+		return false;
+	}
+
+	@Override
+	public boolean canWriteToCache() {
+		return false;
+	}
+
+	@Override
 	public boolean isVersionPropertyGenerated() {
 		return false;
 	}

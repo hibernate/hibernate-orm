@@ -2793,10 +2793,28 @@ public abstract class Dialect implements ConversionContext {
 	 * and syntax of the hint.  By default, ignore the hint and simply return the query.
 	 *
 	 * @param query The query to which to apply the hint.
+	 * @param hintList The  hints to apply
+	 * @return The modified SQL
+	 */
+	public String getQueryHintString(String query, List<String> hintList) {
+		final String hints = StringHelper.join( ", ", hintList.iterator() );
+
+		if ( StringHelper.isEmpty( hints ) ) {
+			return query;
+		}
+
+		return getQueryHintString( query, hints );
+	}
+
+	/**
+	 * Apply a hint to the query.  The entire query is provided, allowing the Dialect full control over the placement
+	 * and syntax of the hint.  By default, ignore the hint and simply return the query.
+	 *
+	 * @param query The query to which to apply the hint.
 	 * @param hints The  hints to apply
 	 * @return The modified SQL
 	 */
-	public String getQueryHintString(String query, List<String> hints) {
+	public String getQueryHintString(String query, String hints) {
 		return query;
 	}
 
@@ -2921,6 +2939,24 @@ public abstract class Dialect implements ConversionContext {
 		return legacyLimitHandlerBehavior;
 	}
 
+	/**
+	 * Inline String literal.
+	 *
+	 * @return escaped String
+	 */
+	public String inlineLiteral(String literal) {
+		return String.format( "\'%s\'", escapeLiteral( literal ) );
+	}
+
+	/**
+	 * Escape String literal.
+	 *
+	 * @return escaped String
+	 */
+	protected String escapeLiteral(String literal) {
+		return literal.replace("'", "''");
+	}
+
 	private void resolveLegacyLimitHandlerBehavior(ServiceRegistry serviceRegistry) {
 		// HHH-11194
 		// Temporary solution to set whether legacy limit handler behavior should be used.
@@ -2930,5 +2966,33 @@ public abstract class Dialect implements ConversionContext {
 				StandardConverters.BOOLEAN,
 				false
 		);
+	}
+
+	/**
+	 * Modify the SQL, adding hints or comments, if necessary
+	 *
+	 * @param sql original sql
+	 * @param parameters query parameters
+	 * @param commentsEnabled if comments are enabled
+	 */
+	public String addSqlHintOrComment(
+			String sql,
+			QueryParameters parameters,
+			boolean commentsEnabled) {
+
+		// Keep this here, rather than moving to Select.  Some Dialects may need the hint to be appended to the very
+		// end or beginning of the finalized SQL statement, so wait until everything is processed.
+		if ( parameters.getQueryHints() != null && parameters.getQueryHints().size() > 0 ) {
+			sql = getQueryHintString( sql, parameters.getQueryHints() );
+		}
+		else if ( commentsEnabled && parameters.getComment() != null ){
+			sql = prependComment( sql, parameters.getComment() );
+		}
+
+		return sql;
+	}
+
+	protected String prependComment(String sql, String comment) {
+		return  "/* " + comment + " */ " + sql;
 	}
 }

@@ -61,7 +61,7 @@ public final class HqlParser extends HqlBaseParser {
 	private HqlParser(String hql) {
 		// The fix for HHH-558...
 		super( new HqlLexer( new StringReader( hql ) ) );
-		parseErrorHandler = new ErrorCounter( hql );
+		parseErrorHandler = new ErrorTracker( hql );
 		// Create nodes that track line and column number.
 		setASTFactory( new HqlASTFactory() );
 	}

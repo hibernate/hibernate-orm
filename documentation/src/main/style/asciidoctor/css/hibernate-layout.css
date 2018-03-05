@@ -5,8 +5,6 @@ body{
     background-repeat: repeat-x !important;
     background-size: 300px 300px;
     color:#333 !important;
-    padding:25px !important;
-    margin:0 !important;
     font-family:"Noto Serif","DejaVu Serif",serif !important;
     font-weight:400 !important;
     font-style:normal !important;
@@ -16,6 +14,7 @@ body{
 }
 body:before {
     content: url(../images/org/hibernate/logo_smaller.png);
+    padding:25px;
 }
 #header {
     width: 1000px !important;
@@ -40,6 +39,9 @@ body:before {
 .toc>a {
     font-weight: bold !important;
     font-size: 1.3em !important;
+}
+#toc>#tocsearch {
+    font-family: "FontAwesome";
 }
 .subheader .title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{
     color:darkslategray;
@@ -97,7 +99,6 @@ h4,h5,h6{
     border-radius: 1em !important;
     width: 100% !important;
     padding: 2em 0em 2em 0em !important;
-    margin: 2em 2em 2em 2em !important;
 }
 td.icon {
     display:block !important;
@@ -110,7 +111,7 @@ td.content {
 .admonitionblock .icon [class^="fa icon-tip"]{
     background-image: url(../images/org/hibernate/docbook/tip.png) !important;
     background-repeat: no-repeat !important;
-    margin: 1em 2em 1em 1em !important;
+    margin: 0.5em !important;
     background-position: center !important;
     width: 50px !important;
     height: 50px !important;
@@ -119,7 +120,7 @@ td.content {
 .admonitionblock td.icon [class^="fa icon-note"]{
     background-image: url(../images/org/hibernate/docbook/note.png)!important;
     background-repeat: no-repeat !important;
-    margin: 1em 2em 1em 1em !important;
+    margin: 0.5em !important;
     background-position: center !important;
     width: 50px;
     height: 50px;
@@ -128,7 +129,7 @@ td.content {
 .admonitionblock td.icon [class^="fa icon-warning"]{
     background-image: url(../images/org/hibernate/docbook/warning.png) !important;
     background-repeat: no-repeat !important;
-    margin: 1em 2em 1em 1em !important;
+    margin: 0.5em !important;
     background-position: center !important;
     width: 50px !important;
     height: 50px !important;
@@ -146,7 +147,7 @@ td.content {
 .admonitionblock td.icon [class^="fa icon-important"]{
     background-image: url(../images/org/hibernate/docbook/important.png) !important;
     background-repeat: no-repeat !important;
-    margin: 1em 2em 1em 1em !important;
+    margin: 0.5em !important;
     background-position: center !important;
     width: 50px !important;
     height: 50px !important;
@@ -182,19 +183,13 @@ ul {
     padding-bottom:.25em !important;
 }
 .sectlevel1{
-    font-weight: bolder !important;
-    margin-left: 1.5em !important;
+    display: none;
 }
 .sectlevel2{
-    margin-left: 3em !important;
-    padding-top: .5em;
-    padding-bottom: .5em;
-    font-weight: normal;
+    display: none;
 }
 .sectlevel3{
-    margin-left: 3em !important;
-    padding-top: .5em !important;
-    padding-bottom: .5em!important;
+    display: none;
 }
 .exampleblock>.title{
     text-rendering:optimizeLegibility !important;

@@ -6,8 +6,6 @@
  */
 package org.hibernate.spatial.criterion;
 
-import com.vividsolutions.jts.geom.Geometry;
-
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.criterion.CriteriaQuery;
@@ -16,6 +14,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.spatial.SpatialDialect;
+
+import com.vividsolutions.jts.geom.Geometry;
 
 /**
  * A {@code Criterion} constraining a {@code Geometry} property to have specific spatial relation

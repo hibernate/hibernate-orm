@@ -24,6 +24,7 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
  * Base class for implementers of {@code RelationQueryGenerator} contract.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public abstract class AbstractRelationQueryGenerator implements RelationQueryGenerator {
 	protected final AuditEntitiesConfiguration verEntCfg;
@@ -31,7 +32,8 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 	protected final boolean revisionTypeInId;
 
 	protected AbstractRelationQueryGenerator(
-			AuditEntitiesConfiguration verEntCfg, MiddleIdData referencingIdData,
+			AuditEntitiesConfiguration verEntCfg,
+			MiddleIdData referencingIdData,
 			boolean revisionTypeInId) {
 		this.verEntCfg = verEntCfg;
 		this.referencingIdData = referencingIdData;
@@ -63,12 +65,6 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 		return query;
 	}
 
-	protected String getRevisionTypePath() {
-		return revisionTypeInId
-				? verEntCfg.getOriginalIdPropName() + "." + verEntCfg.getRevisionTypePropName()
-				: verEntCfg.getRevisionTypePropName();
-	}
-
 	protected String queryToString(QueryBuilder query) {
 		return queryToString( query, Collections.emptyMap() );
 	}
@@ -77,5 +73,11 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 		final StringBuilder sb = new StringBuilder();
 		query.build( sb, queryParamValues );
 		return sb.toString();
+	}
+
+	protected String getRevisionTypePath() {
+		return revisionTypeInId
+				? verEntCfg.getOriginalIdPropName() + "." + verEntCfg.getRevisionTypePropName()
+				: verEntCfg.getRevisionTypePropName();
 	}
 }

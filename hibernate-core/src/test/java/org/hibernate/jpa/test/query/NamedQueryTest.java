@@ -79,8 +79,8 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 					 assertEquals( 1, list.size() );
 
 					 final Session session = entityManager.unwrap( Session.class );
-					 final org.hibernate.query.Query sessionQuery = session.createQuery( "select g from Game g where title = ?" );
-					 sessionQuery.setParameter( 0, GAME_TITLES[0] );
+					 final org.hibernate.query.Query sessionQuery = session.createQuery( "select g from Game g where title = ?1" );
+					 sessionQuery.setParameter( 1, GAME_TITLES[0] );
 					 list = sessionQuery.getResultList();
 
 					 query.setParameter( 1, GAME_TITLES[0] );
@@ -99,7 +99,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 					 final Session session = entityManager.unwrap( Session.class );
 					 final org.hibernate.query.Query sessionQuery = session.getNamedQuery( "NamedQuery" );
-					 sessionQuery.setParameter( 0, GAME_TITLES[0] );
+					 sessionQuery.setParameter( 1, GAME_TITLES[0] );
 					 list = sessionQuery.getResultList();
 
 					 query.setParameter( 1, GAME_TITLES[0] );
@@ -130,7 +130,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 					 final Session session = entityManager.unwrap( Session.class );
 					 final org.hibernate.query.Query sessionQuery = session.createSQLQuery(
 							 "select * from Game g where title = ?" );
-					 sessionQuery.setParameter( 0, GAME_TITLES[0] );
+					 sessionQuery.setParameter( 1, GAME_TITLES[0] );
 					 list = sessionQuery.getResultList();
 
 					 query.setParameter( 1, GAME_TITLES[0] );
@@ -150,7 +150,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 					 final Session session = entityManager.unwrap( Session.class );
 					 final org.hibernate.query.Query sessionQuery = session.getNamedNativeQuery(
 							 "NamedNativeQuery" );
-					 sessionQuery.setParameter( 0, GAME_TITLES[0] );
+					 sessionQuery.setParameter( 1, GAME_TITLES[0] );
 					 list = sessionQuery.getResultList();
 
 					 query.setParameter( 1, GAME_TITLES[0] );
@@ -160,7 +160,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Entity(name = "Game")
-	@NamedQueries(@NamedQuery(name = "NamedQuery", query = "select g from Game g where title = ?"))
+	@NamedQueries(@NamedQuery(name = "NamedQuery", query = "select g from Game g where title = ?1"))
 	@NamedNativeQueries(@NamedNativeQuery(name = "NamedNativeQuery", query = "select * from Game g where title = ?"))
 	public static class Game {
 		private Long id;

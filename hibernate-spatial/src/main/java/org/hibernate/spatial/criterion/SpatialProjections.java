@@ -29,7 +29,7 @@ public class SpatialProjections {
 
 	/**
 	 * Applies an extent projection to the specified geometry function
-	 *
+	 * <p>
 	 * <p>The extent of a set of {@code Geometry}s is the union of their bounding boxes.</p>
 	 *
 	 * @param propertyName The property to use for calculating the extent

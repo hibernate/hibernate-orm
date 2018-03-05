@@ -31,7 +31,11 @@ public class JdbcResourceLocalTransactionCoordinatorBuilderImpl implements Trans
 	@Override
 	public TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, Options options) {
 		if ( owner instanceof JdbcResourceTransactionAccess ) {
-			return new JdbcResourceLocalTransactionCoordinatorImpl( this, owner, (JdbcResourceTransactionAccess) owner );
+			return new JdbcResourceLocalTransactionCoordinatorImpl(
+					this,
+					owner,
+					(JdbcResourceTransactionAccess) owner
+			);
 		}
 
 		throw new HibernateException(

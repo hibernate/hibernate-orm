@@ -28,8 +28,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( AutoFlushTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

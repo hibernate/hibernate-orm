@@ -66,7 +66,7 @@ public class TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		final Query queryWithParameter = s.createQuery( "from TimestampPropertyTest$Entity where ts=?" ).setParameter( 0, eOrig.ts );
+		final Query queryWithParameter = s.createQuery( "from TimestampPropertyTest$Entity where ts=?1" ).setParameter( 1, eOrig.ts );
 		final Entity eQueriedWithParameter = (Entity) queryWithParameter.uniqueResult();
 		assertNotNull( eQueriedWithParameter );
 		s.getTransaction().commit();
@@ -74,7 +74,7 @@ public class TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		final Query queryWithTimestamp = s.createQuery( "from TimestampPropertyTest$Entity where ts=?" ).setTimestamp( 0, eOrig.ts );
+		final Query queryWithTimestamp = s.createQuery( "from TimestampPropertyTest$Entity where ts=?1" ).setTimestamp( 1, eOrig.ts );
 		final Entity eQueriedWithTimestamp = (Entity) queryWithTimestamp.uniqueResult();
 		assertNotNull( eQueriedWithTimestamp );
 		s.getTransaction().commit();
@@ -111,8 +111,8 @@ public class TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		final Query queryWithParameter =
-				s.createQuery( "from TimestampPropertyTest$Entity where tsColumnDefault=?" )
-						.setParameter( 0, eOrig.tsColumnDefault );
+				s.createQuery( "from TimestampPropertyTest$Entity where tsColumnDefault=?1" )
+						.setParameter( 1, eOrig.tsColumnDefault );
 		final Entity eQueriedWithParameter = (Entity) queryWithParameter.uniqueResult();
 		assertNotNull( eQueriedWithParameter );
 		s.getTransaction().commit();
@@ -121,8 +121,8 @@ public class TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		final Query queryWithTimestamp =
-				s.createQuery( "from TimestampPropertyTest$Entity where tsColumnDefault=?" )
-						.setTimestamp( 0, eOrig.tsColumnDefault );
+				s.createQuery( "from TimestampPropertyTest$Entity where tsColumnDefault=?1" )
+						.setTimestamp( 1, eOrig.tsColumnDefault );
 		final Entity eQueriedWithTimestamp = (Entity) queryWithTimestamp.uniqueResult();
 		assertNotNull( eQueriedWithTimestamp );
 		s.getTransaction().commit();

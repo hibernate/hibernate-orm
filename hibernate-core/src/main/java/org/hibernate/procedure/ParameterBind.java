@@ -8,10 +8,12 @@ package org.hibernate.procedure;
 
 import javax.persistence.TemporalType;
 
+import org.hibernate.query.spi.QueryParameterBinding;
+
 /**
  * Describes an input value binding for any IN/INOUT parameters.
  */
-public interface ParameterBind<T> {
+public interface ParameterBind<T> extends QueryParameterBinding<T> {
 	/**
 	 * Retrieves the bound value.
 	 *

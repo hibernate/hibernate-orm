@@ -30,7 +30,6 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
-	private static final Logger log = Logger.getLogger( StatelessSessionFetchingTest.class );
 
 	@Override
 	public String[] getMappings() {

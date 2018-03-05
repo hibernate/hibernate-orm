@@ -247,9 +247,9 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals(HEIGHT_INCHES, u.getPerson().getHeightInches(), 0.01d);
 		
 		// Test predicate and entity load via HQL
-		u = (User)s.createQuery("from User u where u.person.heightInches between ? and ?")
-			.setDouble(0, HEIGHT_INCHES - 0.01d)
-			.setDouble(1, HEIGHT_INCHES + 0.01d)
+		u = (User)s.createQuery("from User u where u.person.heightInches between ?1 and ?2")
+			.setDouble(1, HEIGHT_INCHES - 0.01d)
+			.setDouble(2, HEIGHT_INCHES + 0.01d)
 			.uniqueResult();
 		assertEquals(HEIGHT_INCHES, u.getPerson().getHeightInches(), 0.01d);
 		

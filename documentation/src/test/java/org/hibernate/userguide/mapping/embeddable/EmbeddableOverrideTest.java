@@ -21,8 +21,10 @@ import javax.persistence.ManyToOne;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -30,6 +32,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 /**
  * @author Vlad Mihalcea
  */
+@SkipForDialect(Oracle8iDialect.class)
 public class EmbeddableOverrideTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

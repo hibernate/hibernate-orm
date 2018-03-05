@@ -35,8 +35,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( BatchTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

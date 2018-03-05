@@ -127,7 +127,7 @@ public final class EntityUpdateAction extends EntityAction {
 		}
 		
 		final Object ck;
-		if ( persister.hasCache() ) {
+		if ( persister.canWriteToCache() ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 			ck = cache.generateCacheKey(
 					id, 
@@ -184,7 +184,7 @@ public final class EntityUpdateAction extends EntityAction {
 			entry.postUpdate( instance, state, nextVersion );
 		}
 
-		if ( persister.hasCache() ) {
+		if ( persister.canWriteToCache() ) {
 			if ( persister.isCacheInvalidationRequired() || entry.getStatus()!= Status.MANAGED ) {
 				persister.getCacheAccessStrategy().remove( session, ck);
 			}
@@ -299,7 +299,7 @@ public final class EntityUpdateAction extends EntityAction {
 	protected boolean hasPostCommitEventListeners() {
 		final EventListenerGroup<PostUpdateEventListener> group = listenerGroup( EventType.POST_COMMIT_UPDATE );
 		for ( PostUpdateEventListener listener : group.listeners() ) {
-			if ( listener.requiresPostCommitHanding( getPersister() ) ) {
+			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;
 			}
 		}
@@ -310,7 +310,7 @@ public final class EntityUpdateAction extends EntityAction {
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) throws CacheException {
 		final EntityPersister persister = getPersister();
-		if ( persister.hasCache() ) {
+		if ( persister.canWriteToCache() ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
 					getId(),

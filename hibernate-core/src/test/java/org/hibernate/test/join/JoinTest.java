@@ -15,6 +15,8 @@ import java.util.List;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.jdbc.AbstractWork;
 
@@ -23,6 +25,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -32,6 +35,12 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "join/Person.hbm.xml" };
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.afterConfigurationBuilt( configuration );
+		configuration.setProperty( AvailableSettings.JDBC_TYLE_PARAMS_ZERO_BASE, "true" );
 	}
 
 	@Test
@@ -197,14 +206,15 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(PASSWORD_EXPIRY_DAYS, u.getPasswordExpiryDays(), 0.01d);
 		
 		// Test predicate and entity load via HQL
-		p = (Person)s.createQuery("from Person p where p.heightInches between ? and ?")
-			.setDouble(0, HEIGHT_INCHES - 0.01d)
-			.setDouble(1, HEIGHT_INCHES + 0.01d)
+		p = (Person)s.createQuery("from Person p where p.heightInches between ?1 and ?2")
+			.setDouble(1, HEIGHT_INCHES - 0.01d)
+			.setDouble(2, HEIGHT_INCHES + 0.01d)
 			.uniqueResult();
+		assertNotNull( p );
 		assertEquals(HEIGHT_INCHES, p.getHeightInches(), 0.01d);
-		u = (User)s.createQuery("from User u where u.passwordExpiryDays between ? and ?")
-			.setDouble(0, PASSWORD_EXPIRY_DAYS - 0.01d)
-			.setDouble(1, PASSWORD_EXPIRY_DAYS + 0.01d)
+		u = (User)s.createQuery("from User u where u.passwordExpiryDays between ?1 and ?2")
+			.setDouble(1, PASSWORD_EXPIRY_DAYS - 0.01d)
+			.setDouble(2, PASSWORD_EXPIRY_DAYS + 0.01d)
 			.uniqueResult();
 		assertEquals(PASSWORD_EXPIRY_DAYS, u.getPasswordExpiryDays(), 0.01d);
 		

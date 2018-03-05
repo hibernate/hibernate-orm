@@ -6,19 +6,17 @@
  */
 package org.hibernate.hql.internal.ast;
 
-import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import org.hibernate.hql.spi.NamedParameterInformation;
 import org.hibernate.hql.spi.ParameterTranslations;
-import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.hql.spi.PositionalParameterInformation;
 import org.hibernate.param.NamedParameterSpecification;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.param.PositionalParameterSpecification;
-import org.hibernate.type.Type;
 
 /**
  * Defines the information available for parameters encountered during
@@ -27,52 +25,8 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class ParameterTranslationsImpl implements ParameterTranslations {
-	private final Map<String,ParameterInfo> namedParameters;
-	private final ParameterInfo[] ordinalParameters;
-
-	@Override
-	public boolean supportsOrdinalParameterMetadata() {
-		return true;
-	}
-
-	@Override
-	public int getOrdinalParameterCount() {
-		return ordinalParameters.length;
-	}
-
-	public ParameterInfo getOrdinalParameterInfo(int ordinalPosition) {
-		return ordinalParameters[ordinalPosition];
-	}
-
-	@Override
-	public int getOrdinalParameterSqlLocation(int ordinalPosition) {
-		return getOrdinalParameterInfo( ordinalPosition ).getSqlLocations()[0];
-	}
-
-	@Override
-	public Type getOrdinalParameterExpectedType(int ordinalPosition) {
-		return getOrdinalParameterInfo( ordinalPosition ).getExpectedType();
-	}
-
-	@Override
-	public Set getNamedParameterNames() {
-		return namedParameters.keySet();
-	}
-
-	public ParameterInfo getNamedParameterInfo(String name) {
-		return namedParameters.get( name );
-	}
-
-	@Override
-	public int[] getNamedParameterSqlLocations(String name) {
-		return getNamedParameterInfo( name ).getSqlLocations();
-	}
-
-	@Override
-	public Type getNamedParameterExpectedType(String name) {
-		return getNamedParameterInfo( name ).getExpectedType();
-	}
-
+	private final Map<String,NamedParameterInformationImpl> namedParameters;
+	private final Map<Integer,PositionalParameterInformationImpl > ordinalParameters;
 	/**
 	 * Constructs a parameter metadata object given a list of parameter
 	 * specifications.
@@ -82,78 +36,85 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 	 *
 	 * @param parameterSpecifications The parameter specifications
 	 */
-	public ParameterTranslationsImpl(List<ParameterSpecification> parameterSpecifications) {
-		class NamedParamTempHolder {
-			private String name;
-			private Type type;
-			private List<Integer> positions = new ArrayList<>();
+	ParameterTranslationsImpl(List<ParameterSpecification> parameterSpecifications) {
+		Map<String, NamedParameterInformationImpl> namedParameters = null;
+		Map<Integer, PositionalParameterInformationImpl> ordinalParameters = null;
+
+		int i = 0;
+		for ( ParameterSpecification specification : parameterSpecifications ) {
+			if ( PositionalParameterSpecification.class.isInstance( specification ) ) {
+				if ( ordinalParameters == null ) {
+					ordinalParameters = new HashMap<>();
+				}
+
+				final PositionalParameterSpecification ordinalSpecification = (PositionalParameterSpecification) specification;
+				final PositionalParameterInformationImpl info = ordinalParameters.computeIfAbsent(
+						ordinalSpecification.getLabel(),
+						k -> new PositionalParameterInformationImpl( k, ordinalSpecification.getExpectedType() )
+				);
+				info.addSourceLocation( i++ );
+			}
+			else if ( NamedParameterSpecification.class.isInstance( specification ) ) {
+				if ( namedParameters == null ) {
+					namedParameters = new HashMap<>();
+				}
+
+				final NamedParameterSpecification namedSpecification = (NamedParameterSpecification) specification;
+				final NamedParameterInformationImpl info = namedParameters.computeIfAbsent(
+						namedSpecification.getName(),
+						k -> new NamedParameterInformationImpl( k, namedSpecification.getExpectedType() )
+				);
+
+				/*
+					If a previous reference to the NamedParameter already exists with expected type null and the new
+					reference expected type is not null then we add the type to the NamedParameterInformation.
+
+					This situation may occur when the same name parameter is used twice in the same query,
+					an example is ".... where :name is null or name.last = :name"
+
+					If info.getExpectedType() != null and also != namedSpecification.getExpectedType(), should an exception be thrown?
+				*/
+				if ( info.getExpectedType() == null && namedSpecification.getExpectedType() != null ) {
+					info.setExpectedType( namedSpecification.getExpectedType() );
+				}
+				info.addSourceLocation( i++ );
+			}
 		}
 
-		final int size = parameterSpecifications.size();
-		final List<ParameterInfo> ordinalParameterList = new ArrayList<>();
-		final Map<String,NamedParamTempHolder> namedParameterMap = new HashMap<>();
-		for ( int i = 0; i < size; i++ ) {
-			final ParameterSpecification spec = parameterSpecifications.get( i );
-			if ( PositionalParameterSpecification.class.isInstance( spec ) ) {
-				final PositionalParameterSpecification ordinalSpec = (PositionalParameterSpecification) spec;
-				ordinalParameterList.add( new ParameterInfo( i, ordinalSpec.getExpectedType() ) );
-			}
-			else if ( NamedParameterSpecification.class.isInstance( spec ) ) {
-				final NamedParameterSpecification namedSpec = (NamedParameterSpecification) spec;
-				NamedParamTempHolder paramHolder = namedParameterMap.get( namedSpec.getName() );
-				if ( paramHolder == null ) {
-					paramHolder = new NamedParamTempHolder();
-					paramHolder.name = namedSpec.getName();
-					paramHolder.type = namedSpec.getExpectedType();
-					namedParameterMap.put( namedSpec.getName(), paramHolder );
-				}
-				else if ( paramHolder.type == null && namedSpec.getExpectedType() != null ) {
-					// previous reference to the named parameter did not have type determined;
-					// this time, it can be determined by namedSpec.getExpectedType().
-					paramHolder.type = namedSpec.getExpectedType();
-				}
-				paramHolder.positions.add( i );
-			}
-			// don't care about other param types here, just those explicitly user-defined...
-		}
-
-		ordinalParameters = ordinalParameterList.toArray( new ParameterInfo[ordinalParameterList.size()] );
-
-		if ( namedParameterMap.isEmpty() ) {
-			namedParameters = java.util.Collections.emptyMap();
+		if ( namedParameters == null ) {
+			this.namedParameters = Collections.emptyMap();
 		}
 		else {
-			final Map<String,ParameterInfo> namedParametersBacking = new HashMap<>( namedParameterMap.size() );
-			for ( NamedParamTempHolder holder : namedParameterMap.values() ) {
-				namedParametersBacking.put(
-						holder.name,
-						new ParameterInfo( ArrayHelper.toIntArray( holder.positions ), holder.type )
-				);
-			}
-			namedParameters = java.util.Collections.unmodifiableMap( namedParametersBacking );
+			this.namedParameters = Collections.unmodifiableMap( namedParameters );
+		}
+
+		if ( ordinalParameters == null ) {
+			this.ordinalParameters = Collections.emptyMap();
+		}
+		else {
+			this.ordinalParameters = Collections.unmodifiableMap( ordinalParameters );
 		}
 	}
 
-	public static class ParameterInfo implements Serializable {
-		private final int[] sqlLocations;
-		private final Type expectedType;
+	@Override
+	@SuppressWarnings("unchecked")
+	public Map getNamedParameterInformationMap() {
+		return namedParameters;
+	}
 
-		public ParameterInfo(int[] sqlPositions, Type expectedType) {
-			this.sqlLocations = sqlPositions;
-			this.expectedType = expectedType;
-		}
+	@SuppressWarnings("unchecked")
+	@Override
+	public Map getPositionalParameterInformationMap() {
+		return ordinalParameters;
+	}
 
-		public ParameterInfo(int sqlPosition, Type expectedType) {
-			this.sqlLocations = new int[] { sqlPosition };
-			this.expectedType = expectedType;
-		}
+	@Override
+	public PositionalParameterInformation getPositionalParameterInformation(int position) {
+		return ordinalParameters.get( position );
+	}
 
-		public int[] getSqlLocations() {
-			return sqlLocations;
-		}
-
-		public Type getExpectedType() {
-			return expectedType;
-		}
+	@Override
+	public NamedParameterInformation getNamedParameterInformation(String name) {
+		return namedParameters.get( name );
 	}
 }

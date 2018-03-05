@@ -178,6 +178,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		if ( isPutQueueEnabled() ) {
 			final Object old = readElementByIndex( key );
 			if ( old != UNKNOWN ) {
+				elementRemoved = true;
 				queueOperation( new Remove( key, old ) );
 				return old;
 			}
@@ -185,6 +186,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		// TODO : safe to interpret "map.remove(key) == null" as non-dirty?
 		initialize( true );
 		if ( map.containsKey( key ) ) {
+			elementRemoved = true;
 			dirty();
 		}
 		return map.remove( key );

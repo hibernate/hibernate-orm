@@ -88,8 +88,4 @@ public class CompoundSelectionImpl<X>
 		}
 		return buff.toString();
 	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
 }

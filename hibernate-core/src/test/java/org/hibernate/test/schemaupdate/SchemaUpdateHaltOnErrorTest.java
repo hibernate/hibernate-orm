@@ -6,53 +6,70 @@
  */
 package org.hibernate.test.schemaupdate;
 
-import java.util.Map;
+import java.io.File;
+import java.io.IOException;
+import java.util.EnumSet;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.hbm2ddl.SchemaUpdate;
+import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
  * @author Vlad Mihalcea
+ * @author Gail Badner
  */
-public class SchemaUpdateHaltOnErrorTest extends BaseEntityManagerFunctionalTestCase {
+public class SchemaUpdateHaltOnErrorTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			From.class
-		};
+	private File output;
+	private StandardServiceRegistry ssr;
+	private MetadataImplementor metadata;
+
+	@Before
+	public void setUp() throws IOException {
+		output = File.createTempFile( "update_script", ".sql" );
+		output.deleteOnExit();
+		ssr = new StandardServiceRegistryBuilder().build();
+
+		final MetadataSources metadataSources = new MetadataSources( ssr )
+				.addAnnotatedClass( From.class );
+		metadata = (MetadataImplementor) metadataSources.buildMetadata();
 	}
 
-	@Override
-	protected Map buildSettings() {
-		Map settings = super.buildSettings();
-		settings.put( AvailableSettings.HBM2DDL_AUTO, "update" );
-		settings.put( AvailableSettings.HBM2DDL_HALT_ON_ERROR, true );
-		return settings;
-	}
-
-	@Override
-	public void buildEntityManagerFactory() throws Exception {
-		try {
-			super.buildEntityManagerFactory();
-			fail("Should halt on error!");
-		}
-		catch ( Exception e ) {
-			SchemaManagementException cause = (SchemaManagementException) e.getCause();
-			assertEquals("Halting on error : Error executing DDL via JDBC Statement", cause.getMessage());
-		}
+	@After
+	public void tearsDown() {
+		// there shouldn't be anything to clean up
+		StandardServiceRegistryBuilder.destroy( ssr );
 	}
 
 	@Test
 	public void testHaltOnError() {
+		try {
+			new SchemaUpdate().setHaltOnError( true )
+					.execute( EnumSet.of( TargetType.DATABASE ), metadata );
+			fail( "Should halt on error!" );
+		}
+		catch ( Exception e ) {
+			SchemaManagementException cause = (SchemaManagementException) e;
+
+			assertTrue( cause.getMessage().startsWith( "Halting on error : Error executing DDL" ) );
+			assertTrue( cause.getMessage().endsWith( "via JDBC Statement" ) );
+		}
 	}
 
 	@Entity(name = "From")

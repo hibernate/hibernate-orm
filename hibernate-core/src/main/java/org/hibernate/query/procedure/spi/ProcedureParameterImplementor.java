@@ -12,6 +12,5 @@ import org.hibernate.query.procedure.ProcedureParameter;
 /**
  * @author Steve Ebersole
  */
-public interface ProcedureParameterImplementor<T> extends ProcedureParameter<T> {
-	ParameterRegistrationImplementor<T> getNativeParameterRegistration();
+public interface ProcedureParameterImplementor<T> extends ProcedureParameter<T>, ParameterRegistrationImplementor<T> {
 }

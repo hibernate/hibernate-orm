@@ -38,6 +38,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -119,7 +120,7 @@ public class CacheImpl implements CacheImplementor {
 	@Override
 	public boolean containsEntity(String entityName, Serializable identifier) {
 		EntityPersister p = sessionFactory.getMetamodel().entityPersister( entityName );
-		if ( p.hasCache() ) {
+		if ( p.canReadFromCache() ) {
 			EntityRegionAccessStrategy cache = p.getCacheAccessStrategy();
 			Object key = cache.generateCacheKey( identifier, p, sessionFactory, null ); // have to assume non tenancy
 			return cache.getRegion().contains( key );
@@ -137,7 +138,7 @@ public class CacheImpl implements CacheImplementor {
 	@Override
 	public void evictEntity(String entityName, Serializable identifier) {
 		EntityPersister p = sessionFactory.getMetamodel().entityPersister( entityName );
-		if ( p.hasCache() ) {
+		if ( p.canWriteToCache() ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf(
 						"Evicting second-level cache: %s",
@@ -158,7 +159,7 @@ public class CacheImpl implements CacheImplementor {
 	@Override
 	public void evictEntityRegion(String entityName) {
 		EntityPersister p = sessionFactory.getMetamodel().entityPersister( entityName );
-		if ( p.hasCache() ) {
+		if ( p.canWriteToCache() ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Evicting second-level cache: %s", p.getEntityName() );
 			}
@@ -428,12 +429,23 @@ public class CacheImpl implements CacheImplementor {
 		throw new PersistenceException( "Hibernate cannot unwrap Cache as " + cls.getName() );
 	}
 
+	// todo (5.3) : normalize caching to the "first subclass" in the hierarchy whose subclasses all define caching
+	// 		5.3 adds support for "subclass only" caching, so we need a different paradigm for
+	//		code such as this that assumes root-only caching
+
 	@Override
 	public EntityRegionAccessStrategy determineEntityRegionAccessStrategy(PersistentClass model) {
-		final String cacheRegionName = cacheRegionPrefix + model.getRootClass().getCacheRegionName();
+		if ( ! settings.isSecondLevelCacheEnabled() ) {
+			return null;
+		}
+
+		// cache settings are defined on root entity
+		final RootClass rootEntity = model.getRootClass();
+
+		final String cacheRegionName = cacheRegionPrefix + rootEntity.getCacheRegionName();
 		EntityRegionAccessStrategy accessStrategy = entityRegionAccessStrategyMap.get( cacheRegionName );
-		if ( accessStrategy == null && settings.isSecondLevelCacheEnabled() ) {
-			final AccessType accessType = AccessType.fromExternalName( model.getCacheConcurrencyStrategy() );
+		if ( accessStrategy == null ) {
+			final AccessType accessType = AccessType.fromExternalName( rootEntity.getCacheConcurrencyStrategy() );
 			if ( accessType != null ) {
 				LOG.tracef( "Building shared cache region for entity data [%s]", model.getEntityName() );
 				EntityRegion entityRegion = regionFactory.buildEntityRegion(

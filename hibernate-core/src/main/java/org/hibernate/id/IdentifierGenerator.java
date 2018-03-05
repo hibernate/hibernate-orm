@@ -8,6 +8,8 @@ package org.hibernate.id;
 
 import java.io.Serializable;
 
+import javax.persistence.GeneratedValue;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -34,12 +36,18 @@ public interface IdentifierGenerator {
 	/**
 	 * The configuration parameter holding the entity name
 	 */
-	public static final String ENTITY_NAME = "entity_name";
+	String ENTITY_NAME = "entity_name";
 
 	/**
 	 * The configuration parameter holding the JPA entity name
 	 */
-	public static final String JPA_ENTITY_NAME = "jpa_entity_name";
+	String JPA_ENTITY_NAME = "jpa_entity_name";
+
+	/**
+	 * Used as a key to pass the name used as {@link GeneratedValue#generator()} to  the
+	 * {@link IdentifierGenerator} as it is configured.
+	 */
+	String GENERATOR_NAME = "GENERATOR_NAME";
 
 	/**
 	 * Generate a new identifier.
@@ -51,5 +59,5 @@ public interface IdentifierGenerator {
 	 *
 	 * @throws HibernateException Indicates trouble generating the identifier
 	 */
-	public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException;
+	Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException;
 }

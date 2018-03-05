@@ -86,7 +86,7 @@ public class EntityDeleteAction extends EntityAction {
 		}
 
 		final Object ck;
-		if ( persister.hasCache() ) {
+		if ( persister.canWriteToCache() ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 			ck = cache.generateCacheKey( id, persister, session.getFactory(), session.getTenantIdentifier() );
 			lock = cache.lockItem( session, ck, version );
@@ -113,7 +113,7 @@ public class EntityDeleteAction extends EntityAction {
 		persistenceContext.removeEntity( entry.getEntityKey() );
 		persistenceContext.removeProxy( entry.getEntityKey() );
 		
-		if ( persister.hasCache() ) {
+		if ( persister.canWriteToCache() ) {
 			persister.getCacheAccessStrategy().remove( session, ck);
 		}
 
@@ -187,7 +187,7 @@ public class EntityDeleteAction extends EntityAction {
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) throws HibernateException {
 		EntityPersister entityPersister = getPersister();
-		if ( entityPersister.hasCache() ) {
+		if ( entityPersister.canWriteToCache() ) {
 			EntityRegionAccessStrategy cache = entityPersister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
 					getId(),
@@ -204,7 +204,7 @@ public class EntityDeleteAction extends EntityAction {
 	protected boolean hasPostCommitEventListeners() {
 		final EventListenerGroup<PostDeleteEventListener> group = listenerGroup( EventType.POST_COMMIT_DELETE );
 		for ( PostDeleteEventListener listener : group.listeners() ) {
-			if ( listener.requiresPostCommitHanding( getPersister() ) ) {
+			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;
 			}
 		}

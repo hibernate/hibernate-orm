@@ -36,7 +36,6 @@ import static org.junit.Assert.assertTrue;
 @SuppressWarnings("unchecked")
 @TestForIssue( jiraKey = "ANN-750" )
 public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
-	private static final Logger log = Logger.getLogger( NaturalIdOnSingleManyToOneTest.class );
 
 	@After
 	public void cleanupData() {

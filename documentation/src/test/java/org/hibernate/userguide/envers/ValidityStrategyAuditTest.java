@@ -82,29 +82,32 @@ public class ValidityStrategyAuditTest extends BaseEntityManagerFunctionalTestCa
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			Customer customer = (Customer) AuditReaderFactory.get( entityManager )
-				.createQuery()
-				.forEntitiesAtRevision( Customer.class, revisions.get( 0 ) )
-				.getSingleResult();
+			Customer customer = (Customer) AuditReaderFactory
+			.get( entityManager )
+			.createQuery()
+			.forEntitiesAtRevision( Customer.class, revisions.get( 0 ) )
+			.getSingleResult();
 
 			assertEquals("Doe", customer.getLastName());
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			Customer customer = (Customer) AuditReaderFactory.get( entityManager )
-				.createQuery()
-				.forEntitiesAtRevision( Customer.class, revisions.get( 1 ) )
-				.getSingleResult();
+			Customer customer = (Customer) AuditReaderFactory
+			.get( entityManager )
+			.createQuery()
+			.forEntitiesAtRevision( Customer.class, revisions.get( 1 ) )
+			.getSingleResult();
 
 			assertEquals("Doe Jr.", customer.getLastName());
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			try {
-				Customer customer = (Customer) AuditReaderFactory.get( entityManager )
-					.createQuery()
-					.forEntitiesAtRevision( Customer.class, revisions.get( 2 ) )
-					.getSingleResult();
+				Customer customer = (Customer) AuditReaderFactory
+				.get( entityManager )
+				.createQuery()
+				.forEntitiesAtRevision( Customer.class, revisions.get( 2 ) )
+				.getSingleResult();
 
 				fail("The Customer was deleted at this revision: " + revisions.get( 2 ));
 			}
@@ -113,14 +116,15 @@ public class ValidityStrategyAuditTest extends BaseEntityManagerFunctionalTestCa
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			Customer customer = (Customer) AuditReaderFactory.get( entityManager )
-				.createQuery()
-				.forEntitiesAtRevision(
-					Customer.class,
-					Customer.class.getName(),
-					revisions.get( 2 ),
-					true )
-				.getSingleResult();
+			Customer customer = (Customer) AuditReaderFactory
+			.get( entityManager )
+			.createQuery()
+			.forEntitiesAtRevision(
+				Customer.class,
+				Customer.class.getName(),
+				revisions.get( 2 ),
+				true )
+			.getSingleResult();
 
 			assertEquals( Long.valueOf( 1L ), customer.getId() );
 			assertNull( customer.getFirstName() );

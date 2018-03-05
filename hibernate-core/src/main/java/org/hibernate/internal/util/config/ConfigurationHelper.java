@@ -110,19 +110,32 @@ public final class ConfigurationHelper {
 	 * @return The value.
 	 */
 	public static boolean getBoolean(String name, Map values, boolean defaultValue) {
-		Object value = values.get( name );
+		final Object raw = values.get( name );
+
+		final Boolean value = toBoolean( raw, defaultValue );
+		if ( value == null ) {
+			throw new ConfigurationException(
+					"Could not determine how to handle configuration raw [name=" + name + ", value=" + raw + "] as boolean"
+			);
+		}
+
+		return value;
+	}
+
+	public static Boolean toBoolean(Object value, boolean defaultValue) {
 		if ( value == null ) {
 			return defaultValue;
 		}
+
 		if ( Boolean.class.isInstance( value ) ) {
-			return ( (Boolean) value ).booleanValue();
+			return (Boolean) value;
 		}
+
 		if ( String.class.isInstance( value ) ) {
 			return Boolean.parseBoolean( (String) value );
 		}
-		throw new ConfigurationException(
-				"Could not determine how to handle configuration value [name=" + name + ", value=" + value + "] as boolean"
-		);
+
+		return null;
 	}
 
 	/**

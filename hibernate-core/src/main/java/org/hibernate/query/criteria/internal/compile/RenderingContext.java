@@ -8,6 +8,9 @@ package org.hibernate.query.criteria.internal.compile;
 
 import javax.persistence.criteria.ParameterExpression;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.query.criteria.LiteralHandlingMode;
+
 /**
  * Used to provide a context and services to the rendering.
  *
@@ -19,7 +22,7 @@ public interface RenderingContext {
 	 *
 	 * @return The generated correlation name
 	 */
-	public String generateAlias();
+	String generateAlias();
 
 	/**
 	 * Register parameters explicitly encountered in the criteria query.
@@ -28,17 +31,17 @@ public interface RenderingContext {
 	 *
 	 * @return The JPA-QL parameter name
 	 */
-	public ExplicitParameterInfo registerExplicitParameter(ParameterExpression<?> criteriaQueryParameter);
+	ExplicitParameterInfo registerExplicitParameter(ParameterExpression<?> criteriaQueryParameter);
 
 	/**
 	 * Register a parameter that was not part of the criteria query (at least not as a parameter).
 	 *
 	 * @param literal The literal value
-	 * @param javaType The java type as whcih to handle the literal value.
+	 * @param javaType The java type as which to handle the literal value.
 	 *
 	 * @return The JPA-QL parameter name
 	 */
-	public String registerLiteralParameterBinding(Object literal, Class javaType);
+	String registerLiteralParameterBinding(Object literal, Class javaType);
 
 	/**
 	 * Given a java type, determine the proper cast type name.
@@ -47,5 +50,21 @@ public interface RenderingContext {
 	 *
 	 * @return The cast type name.
 	 */
-	public String getCastType(Class javaType);
+	String getCastType(Class javaType);
+
+	/**
+	 * Current Dialect.
+	 *
+	 * @return Dialect
+	 */
+	Dialect getDialect();
+
+	/**
+	 * How literals are going to be handled.
+	 *
+	 * @return literal handling strategy
+	 */
+	default LiteralHandlingMode getCriteriaLiteralHandlingMode() {
+		return LiteralHandlingMode.AUTO;
+	}
 }

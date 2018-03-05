@@ -68,17 +68,20 @@ public class Set extends Collection {
 				if ( selectable instanceof Column ) {
 					Column col = (Column) selectable;
 					if ( !col.isNullable() ) {
-						pk.addColumn(col);
+						pk.addColumn( col );
+					}
+					else {
+						return;
 					}
 				}
 			}
-			if ( pk.getColumnSpan()==getKey().getColumnSpan() ) { 
-				//for backward compatibility, allow a set with no not-null 
+			if ( pk.getColumnSpan() == getKey().getColumnSpan() ) {
+				//for backward compatibility, allow a set with no not-null
 				//element columns, using all columns in the row locater SQL
 				//TODO: create an implicit not null constraint on all cols?
 			}
 			else {
-				getCollectionTable().setPrimaryKey(pk);
+				getCollectionTable().setPrimaryKey( pk );
 			}
 		}
 		else {

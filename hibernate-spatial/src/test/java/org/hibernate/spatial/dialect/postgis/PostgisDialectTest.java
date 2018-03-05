@@ -7,17 +7,17 @@
 
 package org.hibernate.spatial.dialect.postgis;
 
-import junit.framework.TestCase;
-import org.junit.Test;
-
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
+
+import org.junit.Test;
+import junit.framework.TestCase;
 
 /**
  * Tests support for
  *
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 1/19/11
+ * creation-date: 1/19/11
  */
 public class PostgisDialectTest extends TestCase {
 

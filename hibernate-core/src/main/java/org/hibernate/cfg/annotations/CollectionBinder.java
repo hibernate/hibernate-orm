@@ -46,6 +46,7 @@ import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ManyToAny;
+import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OrderBy;
 import org.hibernate.annotations.Parameter;
@@ -111,7 +112,7 @@ import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
  * @author inger
  * @author Emmanuel Bernard
  */
-@SuppressWarnings({"unchecked", "serial"})
+@SuppressWarnings({"unchecked", "serial", "WeakerAccess", "deprecation"})
 public abstract class CollectionBinder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionBinder.class.getName());
 
@@ -120,14 +121,14 @@ public abstract class CollectionBinder {
 	protected Collection collection;
 	protected String propertyName;
 	PropertyHolder propertyHolder;
-	int batchSize;
+	private int batchSize;
 	private String mappedBy;
 	private XClass collectionType;
 	private XClass targetEntity;
 	private Ejb3JoinColumn[] inverseJoinColumns;
 	private String cascadeStrategy;
-	String cacheConcurrencyStrategy;
-	String cacheRegionName;
+	private String cacheConcurrencyStrategy;
+	private String cacheRegionName;
 	private boolean oneToMany;
 	protected IndexColumn indexColumn;
 	protected boolean cascadeDeleteEnabled;
@@ -160,6 +161,10 @@ public abstract class CollectionBinder {
 	private String explicitType;
 	private final Properties explicitTypeParameters = new Properties();
 
+	protected CollectionBinder(boolean isSortedCollection) {
+		this.isSortedCollection = isSortedCollection;
+	}
+
 	protected MetadataBuildingContext getBuildingContext() {
 		return buildingContext;
 	}
@@ -172,7 +177,7 @@ public abstract class CollectionBinder {
 		return false;
 	}
 
-	public void setIsHibernateExtensionMapping(boolean hibernateExtensionMapping) {
+	protected void setIsHibernateExtensionMapping(boolean hibernateExtensionMapping) {
 		this.hibernateExtensionMapping = hibernateExtensionMapping;
 	}
 
@@ -346,10 +351,6 @@ public abstract class CollectionBinder {
 		return result;
 	}
 
-	protected CollectionBinder(boolean isSortedCollection) {
-		this.isSortedCollection = isSortedCollection;
-	}
-
 	public void setMappedBy(String mappedBy) {
 		this.mappedBy = mappedBy;
 	}
@@ -480,6 +481,15 @@ public abstract class CollectionBinder {
 			throw new AnnotationException( message );
 		}
 
+		if (!isMappedBy
+				&& oneToMany
+				&& property.isAnnotationPresent( OnDelete.class )
+				&& !property.isAnnotationPresent( JoinColumn.class )) {
+			String message = "Unidirectional one-to-many associations annotated with @OnDelete must define @JoinColumn: ";
+			message += StringHelper.qualify( propertyHolder.getPath(), propertyName );
+			throw new AnnotationException( message );
+		}
+
 		collection.setInverse( isMappedBy );
 
 		//many to many may need some second pass informations
@@ -523,7 +533,7 @@ public abstract class CollectionBinder {
 		binder.setName( propertyName );
 		binder.setValue( collection );
 		binder.setCascade( cascadeStrategy );
-		if ( cascadeStrategy != null && cascadeStrategy.indexOf( "delete-orphan" ) >= 0 ) {
+		if ( cascadeStrategy != null && cascadeStrategy.contains( "delete-orphan" ) ) {
 			collection.setOrphanDelete( true );
 		}
 		binder.setLazy( collection.isLazy() );
@@ -542,8 +552,6 @@ public abstract class CollectionBinder {
 	}
 
 	private void applySortingAndOrdering(Collection collection) {
-		boolean isSorted = isSortedCollection;
-
 		boolean hadOrderBy = false;
 		boolean hadExplicitSort = false;
 
@@ -557,10 +565,10 @@ public abstract class CollectionBinder {
 				}
 				hadExplicitSort = deprecatedSort.type() != SortType.UNSORTED;
 				if ( deprecatedSort.type() == SortType.NATURAL ) {
-					isSorted = true;
+					isSortedCollection = true;
 				}
 				else if ( deprecatedSort.type() == SortType.COMPARATOR ) {
-					isSorted = true;
+					isSortedCollection = true;
 					comparatorClass = deprecatedSort.comparator();
 				}
 			}
@@ -639,7 +647,7 @@ public abstract class CollectionBinder {
 		Fetch fetch = property.getAnnotation( Fetch.class );
 		OneToMany oneToMany = property.getAnnotation( OneToMany.class );
 		ManyToMany manyToMany = property.getAnnotation( ManyToMany.class );
-		ElementCollection elementCollection = property.getAnnotation( ElementCollection.class ); //jpa 2
+		ElementCollection elementCollection = property.getAnnotation( ElementCollection.class );
 		ManyToAny manyToAny = property.getAnnotation( ManyToAny.class );
 		FetchType fetchType;
 		if ( oneToMany != null ) {
@@ -765,14 +773,14 @@ public abstract class CollectionBinder {
 				);
 			}
 			catch (MappingException e) {
-				StringBuilder error = new StringBuilder( 80 );
-				error.append( "mappedBy reference an unknown target entity property: " )
-						.append( collType ).append( "." ).append( this.mappedBy )
-						.append( " in " )
-						.append( collection.getOwnerEntityName() )
-						.append( "." )
-						.append( property.getName() );
-				throw new AnnotationException( error.toString() );
+				throw new AnnotationException(
+						"mappedBy reference an unknown target entity property: " +
+								collType + "." + this.mappedBy +
+								" in " +
+								collection.getOwnerEntityName() +
+								"." +
+								property.getName()
+				);
 			}
 		}
 		if ( persistentClass != null
@@ -1001,13 +1009,6 @@ public abstract class CollectionBinder {
 //		}
 	}
 
-	private String getCondition(FilterJoinTable filter) {
-		//set filtering
-		String name = filter.name();
-		String cond = filter.condition();
-		return getCondition( cond, name );
-	}
-
 	private String getCondition(Filter filter) {
 		//set filtering
 		String name = filter.name();
@@ -1066,17 +1067,28 @@ public abstract class CollectionBinder {
 		return orderByFragment;
 	}
 
-	private static String adjustUserSuppliedValueCollectionOrderingFragment(String orderByFragment) {
+	public static String adjustUserSuppliedValueCollectionOrderingFragment(String orderByFragment) {
 		if ( orderByFragment != null ) {
-			// NOTE: "$element$" is a specially recognized collection property recognized by the collection persister
-			if ( orderByFragment.length() == 0 ) {
-				//order by element
+			orderByFragment = orderByFragment.trim();
+			if ( orderByFragment.length() == 0 || orderByFragment.equalsIgnoreCase( "asc" ) ) {
+				// This indicates something like either:
+				//		`@OrderBy()`
+				//		`@OrderBy("asc")
+				//
+				// JPA says this should indicate an ascending natural ordering of the elements - id for
+				//		entity associations or the value(s) for "element collections"
 				return "$element$ asc";
 			}
-			else if ( "desc".equals( orderByFragment ) ) {
+			else if ( orderByFragment.equalsIgnoreCase( "desc" ) ) {
+				// This indicates:
+				//		`@OrderBy("desc")`
+				//
+				// JPA says this should indicate a descending natural ordering of the elements - id for
+				//		entity associations or the value(s) for "element collections"
 				return "$element$ desc";
 			}
 		}
+
 		return orderByFragment;
 	}
 
@@ -1198,7 +1210,7 @@ public abstract class CollectionBinder {
 		return key;
 	}
 
-	protected void bindManyToManySecondPass(
+	private void bindManyToManySecondPass(
 			Collection collValue,
 			Map persistentClasses,
 			Ejb3JoinColumn[] joinColumns,
@@ -1266,14 +1278,12 @@ public abstract class CollectionBinder {
 		boolean mappedBy = !BinderHelper.isEmptyAnnotationValue( joinColumns[0].getMappedBy() );
 		if ( mappedBy ) {
 			if ( !isCollectionOfEntities ) {
-				StringBuilder error = new StringBuilder( 80 )
-						.append(
-								"Collection of elements must not have mappedBy or association reference an unmapped entity: "
-						)
-						.append( collValue.getOwnerEntityName() )
-						.append( "." )
-						.append( joinColumns[0].getPropertyName() );
-				throw new AnnotationException( error.toString() );
+				throw new AnnotationException(
+						"Collection of elements must not have mappedBy or association reference an unmapped entity: " +
+								collValue.getOwnerEntityName() +
+								"." +
+								joinColumns[0].getPropertyName()
+				);
 			}
 			Property otherSideProperty;
 			try {
@@ -1415,7 +1425,7 @@ public abstract class CollectionBinder {
 			XClass elementClass;
 			AnnotatedClassType classType;
 
-			CollectionPropertyHolder holder = null;
+			CollectionPropertyHolder holder;
 			if ( BinderHelper.PRIMITIVE_NAMES.contains( collType.getName() ) ) {
 				classType = AnnotatedClassType.NONE;
 				elementClass = null;
@@ -1512,7 +1522,6 @@ public abstract class CollectionBinder {
 				collValue.setElement( component );
 
 				if ( StringHelper.isNotEmpty( hqlOrderBy ) ) {
-					String path = collValue.getOwnerEntityName() + "." + joinColumns[0].getPropertyName();
 					String orderBy = adjustUserSuppliedValueCollectionOrderingFragment( hqlOrderBy );
 					if ( orderBy != null ) {
 						collValue.setOrderBy( orderBy );
@@ -1534,7 +1543,7 @@ public abstract class CollectionBinder {
 					column.setLength( Ejb3Column.DEFAULT_COLUMN_LENGTH );
 					column.setLogicalColumnName( Collection.DEFAULT_ELEMENT_COLUMN_NAME );
 					//TODO create an EMPTY_JOINS collection
-					column.setJoins( new HashMap<String, Join>() );
+					column.setJoins( new HashMap<>() );
 					column.setBuildingContext( buildingContext );
 					column.bind();
 					elementColumns[0] = column;

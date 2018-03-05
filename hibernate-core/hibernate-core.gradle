@@ -1,15 +1,17 @@
-import org.apache.tools.ant.filters.ReplaceTokens
-
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+import org.apache.tools.ant.filters.ReplaceTokens
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'antlr'
 apply plugin: 'hibernate-matrix-testing'
-
 apply plugin: 'org.hibernate.build.gradle.xjc'
+
+description = 'Hibernate\'s core ORM functionality'
 
 configurations {
     hibernateJpaModelGenTool {
@@ -21,10 +23,24 @@ configurations {
 }
 
 dependencies {
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Java 9 ftw!
+    if ( JavaVersion.current().isJava9Compatible() ) {
+        xjc( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
+        xjc( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
+        xjc( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
+        xjc( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
+        xjc( 'javax.activation:javax.activation-api:1.2.0' )
+        xjc( 'javax.annotation:jsr250-api:1.0' )
+    }
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     compile( libraries.jpa )
+    // Javassist is no longer the default enhancer but still required for other purposes, e.g. Scanning
     compile( libraries.javassist )
-    // provided until 6.0 when we make it the default and drop Javassist support
-    provided( libraries.byteBuddy )
+    // Could be made optional?
+    compile( libraries.byteBuddy )
     compile( libraries.antlr )
     compile( libraries.jta )
     compile( libraries.jandex )
@@ -37,50 +53,25 @@ dependencies {
     compile( libraries.dom4j )
     compile( libraries.commons_annotations )
 
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // Java 9 ftw!
-    if ( JavaVersion.current().isJava9Compatible() ) {
-        // The JDK used to run Gradle is Java 9+, and we assume that that is the same
-        //		JDK for executing tasks
-        xjc( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-        xjc( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-        xjc( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-        xjc( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-        xjc( 'javax:javaee-api:7.0' )
-
-        testCompile( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-        testCompile( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-        testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-        testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-        testCompile( 'javax:javaee-api:7.0' )
-
-        testRuntime( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
-        testRuntime( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
-        testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
-        testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
-        testRuntime( 'javax:javaee-api:7.0' )
-    }
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
     antlr( libraries.antlr )
 
     provided( libraries.jacc )
     provided( libraries.validation )
     provided( libraries.ant )
-    provided( "javax.enterprise:cdi-api:${cdiVersion}" )
+    provided( libraries.cdi )
 
     testCompile( project(':hibernate-testing') )
     testCompile( libraries.shrinkwrap_api )
     testCompile( libraries.shrinkwrap )
+    testCompile( libraries.jacc )
     testCompile( libraries.validation )
     testCompile( libraries.jandex )
     testCompile( libraries.classmate )
     testCompile( libraries.mockito )
     testCompile( libraries.mockito_inline )
     testCompile( 'joda-time:joda-time:2.3' )
-//    testCompile( "org.jboss.weld:weld-core:2.3.4.Final" )
-//    testCompile( "org.jboss.arquillian.container:arquillian-weld-ee-embedded-1.1:1.0.0.CR9" )
-    testCompile( "javax.enterprise:cdi-api:${cdiVersion}" ) {
+
+    testCompile( libraries.cdi ) {
         // we need to force it to make sure we influence the one coming from arquillian
         force=true
     }
@@ -94,11 +85,11 @@ dependencies {
     testCompile( libraries.derby )
 
     testRuntime( "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final" )
-    testRuntime( libraries.expression_language_api )
-    testRuntime( libraries.expression_language_impl )
+    testRuntime( libraries.expression_language )
     testRuntime( 'jaxen:jaxen:1.1' )
     testRuntime( libraries.javassist )
     testRuntime( libraries.byteBuddy )
+    testRuntime( libraries.weld )
 
     testCompile( project( ':hibernate-jpamodelgen' ) )
 
@@ -110,15 +101,6 @@ dependencies {
 
     testCompile libraries.jboss_ejb_spec_jar
     testCompile libraries.jboss_annotation_spec_jar
-}
-
-mavenPom {
-    name = 'Core Hibernate O/RM functionality'
-    description = 'The core O/RM functionality as provided by Hibernate'
-}
-
-def osgiDescription() {
-	return mavenPom.description
 }
 
 jar {
@@ -149,6 +131,7 @@ jar {
             '!javax.enterprise*',
             'javax.enterprise.context.spi;resolution:=optional',
             'javax.enterprise.inject.spi;resolution:=optional',
+            'javax.inject;resolution:=optional',
             'net.bytebuddy.*;resolution:=optional'
 
 //        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer
@@ -164,7 +147,7 @@ ext {
 }
 
 sourceSets.main {
-    java.srcDir jaxbTargetDir
+    java.srcDir project.jaxbTargetDir
 }
 
 // resources inherently exclude sources
@@ -172,14 +155,14 @@ sourceSets.test.resources {
     setSrcDirs( ['src/test/java','src/test/resources'] )
 }
 
-idea {
-	module {
-		sourceDirs += file( "${buildDir}/generated-src/antlr/main" )
-	}
-}
+//idea {
+//	module {
+//		sourceDirs += file( "${buildDir}/generated-src/antlr/main" )
+//	}
+//}
 
 xjc {
-    outputDir = jaxbTargetDir
+    outputDir = project.jaxbTargetDir
 
     schemas {
         cfg {
@@ -200,14 +183,18 @@ xjc {
 tasks.compile.dependsOn generateGrammarSource
 
 task copyBundleResources (type: Copy) {
-    ext.bundlesTargetDir = file( "${buildDir}/bundles" )
+    ext {
+        bundlesTargetDir = file( "${buildDir}/bundles" )
+        bundleTokens = dbBundle[db]
+        ext.bundleTokens['buildDirName'] = buildDir.absolutePath
+    }
+
     from file('src/test/bundles')
-    into bundlesTargetDir
-    ext.bundleTokens = dbBundle[db]
-    ext.bundleTokens["buildDirName"] = buildDir.absolutePath
-    filter( ReplaceTokens, tokens: bundleTokens);
+    into ext.bundlesTargetDir
+    filter( ReplaceTokens, tokens: ext.bundleTokens)
+
     doFirst {
-        bundlesTargetDir.mkdirs()
+        ext.bundlesTargetDir.mkdirs()
     }
 }
 processTestResources.dependsOn copyBundleResources
@@ -221,25 +208,6 @@ artifacts {
     tests testJar
 }
 
-if ( JavaVersion.current().isJava9Compatible() ) {
-    logger.warn( '[WARN] Skipping Javassist-related tests for hibernate-core due to Javassist JDK 9 incompatibility' )
-
-    // we need to exclude tests using Javassist enhancement, which does not properly support
-    // Java 9 yet - https://issues.jboss.org/browse/JASSIST-261
-    test {
-        // rather than wild-cards, keep an explicit list
-        exclude 'org/hibernate/jpa/test/enhancement/InterceptFieldClassFileTransformerTest.class'
-        exclude 'org/hibernate/jpa/test/enhancement/runtime/JpaRuntimeEnhancementTest.class'
-        exclude 'org/hibernate/test/bytecode/enhancement/EnhancerTest.class'
-        exclude 'org/hibernate/test/bytecode/enhancement/basic/BasicInSessionTest.class'
-
-        // also, any tests using Arquillian for in-container testing with WildFly currently
-        // need to be excluded because WildFly does not yet work with Java 9
-        exclude 'org/hibernate/test/wf/ddl/**'
-        exclude 'org/hibernate/jpa/test/cdi/**'
-    }
-}
-
 processTestResources {
     doLast {
         copy {
@@ -247,17 +215,17 @@ processTestResources {
             into file( "${buildDir}/resources/test" )
             include 'arquillian.xml'
             include 'org/hibernate/test/wf/ddl/manifest.mf'
-            expand wildFlyInstallDir: "${rootProject.buildDir.absolutePath}/wildfly-${wildflyVersion}",
-                   hibernateMajorMinorVersion: "${rootProject.hibernateMajorMinorVersion}",
+            expand wildFlyInstallDir: project( ':hibernate-orm-modules' ).wildFlyInstallDir,
+                   hibernateMajorMinorVersion: "${project.hibernateMajorMinorVersion}",
                    arquillianDeploymentExportDir: "${rootProject.buildDir.absolutePath}/arquillian-deployments"
         }
     }
 }
 
-test.dependsOn ":hibernate-orm-modules:prepareWildFlyForTests"
+test.dependsOn ':hibernate-orm-modules:prepareWildFlyForTests'
 
 test {
-    systemProperty "file.encoding", "utf-8"
+    systemProperty 'file.encoding', 'utf-8'
     beforeTest { descriptor ->
         //println "Starting test: " + descriptor
     }

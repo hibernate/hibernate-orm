@@ -90,6 +90,8 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	private Component declaredIdentifierMapper;
 	private OptimisticLockStyle optimisticLockStyle;
 
+	private boolean isCached;
+
 	public PersistentClass(MetadataBuildingContext metadataBuildingContext) {
 		this.metadataBuildingContext = metadataBuildingContext;
 	}
@@ -270,9 +272,34 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public abstract boolean isVersioned();
 
-	public abstract String getNaturalIdCacheRegionName();
+
+	public boolean isCached() {
+		return isCached;
+	}
+
+	public void setCached(boolean cached) {
+		isCached = cached;
+	}
+
+	/**
+	 * @deprecated Use {@link #isCached} instead
+	 */
+	@Deprecated
+	public boolean isCachingExplicitlyRequested() {
+		return isCached();
+	}
+
+	/**
+	 * @deprecated Use {@link #setCached} instead
+	 */
+	@Deprecated
+	public void setCachingExplicitlyRequested(boolean cached) {
+		setCached( cached );
+	}
 
 	public abstract String getCacheConcurrencyStrategy();
+
+	public abstract String getNaturalIdCacheRegionName();
 
 	public abstract PersistentClass getSuperclass();
 
@@ -954,8 +981,6 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		}
 		return false;
 	}
-
-	public abstract boolean isLazyPropertiesCacheable();
 
 	// The following methods are added to support @MappedSuperclass in the metamodel
 	public Iterator getDeclaredPropertyIterator() {

@@ -24,6 +24,11 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
+import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
+import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
+import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
@@ -53,16 +58,15 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unchecked")
-public class EnumType implements EnhancedUserType, DynamicParameterizedType,LoggableUserType, Serializable {
+public class EnumType<T extends Enum> implements EnhancedUserType, DynamicParameterizedType,LoggableUserType, Serializable {
 	private static final Logger LOG = CoreLogging.logger( EnumType.class );
 
 	public static final String ENUM = "enumClass";
 	public static final String NAMED = "useNamed";
 	public static final String TYPE = "type";
 
-	private Class<? extends Enum> enumClass;
-	private EnumValueMapper enumValueMapper;
-	private int sqlType;
+	private Class enumClass;
+	private EnumValueConverter enumValueConverter;
 
 	@Override
 	public void setParameterValues(Properties parameters) {
@@ -91,13 +95,14 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 				throw new AssertionFailure( "Unknown EnumType: " + enumType );
 			}
 
+			final EnumJavaTypeDescriptor enumJavaDescriptor = (EnumJavaTypeDescriptor) JavaTypeDescriptorRegistry.INSTANCE.getDescriptor( enumClass );
+
 			if ( isOrdinal ) {
-				this.enumValueMapper = new OrdinalEnumValueMapper();
+				this.enumValueConverter = new OrdinalEnumValueConverter( enumJavaDescriptor );
 			}
 			else {
-				this.enumValueMapper = new NamedEnumValueMapper();
+				this.enumValueConverter = new NamedEnumValueConverter( enumJavaDescriptor );
 			}
-			sqlType = enumValueMapper.getSqlType();
 		}
 		else {
 			final String enumClassName = (String) parameters.get( ENUM );
@@ -108,9 +113,14 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 				throw new HibernateException( "Enum class not found: " + enumClassName, exception );
 			}
 
-			this.enumValueMapper = interpretParameters( parameters );
-			this.sqlType = enumValueMapper.getSqlType();
+			this.enumValueConverter = interpretParameters( parameters );
 		}
+
+		LOG.debugf(
+				"Using %s-based conversion for Enum %s",
+				isOrdinal() ? "ORDINAL" : "NAMED",
+				enumClass.getName()
+		);
 	}
 
 	private javax.persistence.EnumType getEnumType(ParameterType reader) {
@@ -130,33 +140,35 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 		return enumType;
 	}
 
-	private <T extends Annotation> T getAnnotation(Annotation[] annotations, Class<T> anClass) {
+	private <A extends Annotation> A getAnnotation(Annotation[] annotations, Class<A> anClass) {
 		for ( Annotation annotation : annotations ) {
 			if ( anClass.isInstance( annotation ) ) {
-				return (T) annotation;
+				return (A) annotation;
 			}
 		}
 		return null;
 	}
 
-	private EnumValueMapper interpretParameters(Properties parameters) {
+	private EnumValueConverter interpretParameters(Properties parameters) {
+		final EnumJavaTypeDescriptor javaTypeDescriptor = (EnumJavaTypeDescriptor) JavaTypeDescriptorRegistry.INSTANCE.getDescriptor( enumClass );
+
 		if ( parameters.containsKey( NAMED ) ) {
 			final boolean useNamed = ConfigurationHelper.getBoolean( NAMED, parameters );
 			if ( useNamed ) {
-				return new NamedEnumValueMapper();
+				return new NamedEnumValueConverter( javaTypeDescriptor );
 			}
 			else {
-				return new OrdinalEnumValueMapper();
+				return new OrdinalEnumValueConverter( javaTypeDescriptor );
 			}
 		}
 
 		if ( parameters.containsKey( TYPE ) ) {
 			final int type = Integer.decode( (String) parameters.get( TYPE ) );
 			if ( isNumericType( type ) ) {
-				return new OrdinalEnumValueMapper();
+				return new OrdinalEnumValueConverter( javaTypeDescriptor );
 			}
 			else if ( isCharacterType( type ) ) {
-				return new NamedEnumValueMapper();
+				return new NamedEnumValueConverter( javaTypeDescriptor );
 			}
 			else {
 				throw new HibernateException(
@@ -170,7 +182,7 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 		}
 
 		// the fallback
-		return new OrdinalEnumValueMapper();
+		return new OrdinalEnumValueConverter( javaTypeDescriptor );
 	}
 
 	private boolean isCharacterType(int jdbcTypeCode) {
@@ -205,7 +217,8 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 
 	@Override
 	public int[] sqlTypes() {
-		return new int[] { sqlType };
+		verifyConfigured();
+		return new int[] { enumValueConverter.getJdbcTypeCode() };
 	}
 
 	@Override
@@ -225,18 +238,20 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 
 	@Override
 	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws SQLException {
-		if ( enumValueMapper == null ) {
+		verifyConfigured();
+		return enumValueConverter.readValue( rs, names[0] );
+	}
+
+	private void verifyConfigured() {
+		if ( enumValueConverter == null ) {
 			throw new AssertionFailure( "EnumType (" + enumClass.getName() + ") not properly, fully configured" );
 		}
-		return enumValueMapper.getValue( rs, names );
 	}
 
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		if ( enumValueMapper == null ) {
-			throw new AssertionFailure( "EnumType (" + enumClass.getName() + ") not properly, fully configured" );
-		}
-		enumValueMapper.setValue( st, (Enum) value, index );
+		verifyConfigured();
+		enumValueConverter.writeValue( st, (Enum) value, index );
 	}
 
 	@Override
@@ -266,198 +281,31 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 
 	@Override
 	public String objectToSQLString(Object value) {
-		return enumValueMapper.objectToSQLString( (Enum) value );
+		verifyConfigured();
+		return enumValueConverter.toSqlLiteral( value );
 	}
 
 	@Override
 	public String toXMLString(Object value) {
-		return enumValueMapper.toXMLString( (Enum) value );
+		verifyConfigured();
+		return (String) enumValueConverter.getJavaDescriptor().unwrap( (Enum) value, String.class, null );
 	}
 
 	@Override
+	@SuppressWarnings("RedundantCast")
 	public Object fromXMLString(String xmlValue) {
-		return enumValueMapper.fromXMLString( xmlValue );
+		verifyConfigured();
+		return (T) enumValueConverter.getJavaDescriptor().wrap( xmlValue, null );
 	}
 
 	@Override
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
-		if ( enumValueMapper != null ) {
-			return enumValueMapper.toXMLString( (Enum) value );
-		}
-		return value.toString();
+		verifyConfigured();
+		return enumValueConverter.getJavaDescriptor().toString( (Enum) value );
 	}
 
 	public boolean isOrdinal() {
-		return enumValueMapper instanceof OrdinalEnumValueMapper;
+		verifyConfigured();
+		return enumValueConverter instanceof OrdinalEnumValueConverter;
 	}
-
-	private interface EnumValueMapper extends Serializable {
-		int getSqlType();
-		Enum getValue(ResultSet rs, String[] names) throws SQLException;
-		void setValue(PreparedStatement st, Enum value, int index) throws SQLException;
-
-		String objectToSQLString(Enum value);
-		String toXMLString(Enum value);
-		Enum fromXMLString(String xml);
-	}
-
-	public abstract class EnumValueMapperSupport implements EnumValueMapper {
-		protected abstract Object extractJdbcValue(Enum value);
-
-		@Override
-		public void setValue(PreparedStatement st, Enum value, int index) throws SQLException {
-			final Object jdbcValue = value == null ? null : extractJdbcValue( value );
-
-			final boolean traceEnabled = LOG.isTraceEnabled();
-			if ( jdbcValue == null ) {
-				if ( traceEnabled ) {
-					LOG.trace(String.format("Binding null to parameter: [%s]", index));
-				}
-				st.setNull( index, getSqlType() );
-				return;
-			}
-
-			if ( traceEnabled ) {
-				LOG.trace(String.format("Binding [%s] to parameter: [%s]", jdbcValue, index));
-			}
-			st.setObject( index, jdbcValue, EnumType.this.sqlType );
-		}
-	}
-
-	private class OrdinalEnumValueMapper extends EnumValueMapperSupport implements EnumValueMapper, Serializable {
-		private transient Enum[] enumsByOrdinal;
-
-		@Override
-		public int getSqlType() {
-			return Types.INTEGER;
-		}
-
-		@Override
-		public Enum getValue(ResultSet rs, String[] names) throws SQLException {
-			final int ordinal = rs.getInt( names[0] );
-			final boolean traceEnabled = LOG.isTraceEnabled();
-			if ( rs.wasNull() ) {
-				if ( traceEnabled ) {
-					LOG.trace(String.format("Returning null as column [%s]", names[0]));
-				}
-				return null;
-			}
-
-			final Enum enumValue = fromOrdinal( ordinal );
-			if ( traceEnabled ) {
-				LOG.trace(String.format("Returning [%s] as column [%s]", enumValue, names[0]));
-			}
-			return enumValue;
-		}
-
-		private Enum fromOrdinal(int ordinal) {
-			final Enum[] enumsByOrdinal = enumsByOrdinal();
-			if ( ordinal < 0 || ordinal >= enumsByOrdinal.length ) {
-				throw new IllegalArgumentException(
-						String.format(
-								"Unknown ordinal value [%s] for enum class [%s]",
-								ordinal,
-								enumClass.getName()
-						)
-				);
-			}
-			return enumsByOrdinal[ordinal];
-
-		}
-
-		private Enum[] enumsByOrdinal() {
-			if ( enumsByOrdinal == null ) {
-				enumsByOrdinal = enumClass.getEnumConstants();
-				if ( enumsByOrdinal == null ) {
-					throw new HibernateException( "Failed to init enum values" );
-				}
-			}
-			return enumsByOrdinal;
-		}
-
-		@Override
-		public String objectToSQLString(Enum value) {
-			return toXMLString( value );
-		}
-
-		@Override
-		public String toXMLString(Enum value) {
-			return Integer.toString( value.ordinal() );
-		}
-
-		@Override
-		public Enum fromXMLString(String xml) {
-			return fromOrdinal( Integer.parseInt( xml ) );
-		}
-
-		@Override
-		protected Object extractJdbcValue(Enum value) {
-			return value.ordinal();
-		}
-	}
-
-	private class NamedEnumValueMapper extends EnumValueMapperSupport implements EnumValueMapper, Serializable {
-		@Override
-		public int getSqlType() {
-			return Types.VARCHAR;
-		}
-
-		@Override
-		public Enum getValue(ResultSet rs, String[] names) throws SQLException {
-			final String value = rs.getString( names[0] );
-
-			final boolean traceEnabled = LOG.isTraceEnabled();
-			if ( rs.wasNull() ) {
-				if ( traceEnabled ) {
-					LOG.trace(String.format("Returning null as column [%s]", names[0]));
-				}
-				return null;
-			}
-
-			final Enum enumValue = fromName( value );
-			if ( traceEnabled ) {
-				LOG.trace(String.format("Returning [%s] as column [%s]", enumValue, names[0]));
-			}
-			return enumValue;
-		}
-
-		private Enum fromName(String name) {
-			try {
-				if (name == null) {
-					return null;
-				}
-				return Enum.valueOf( enumClass, name.trim() );
-			}
-			catch ( IllegalArgumentException iae ) {
-				throw new IllegalArgumentException(
-						String.format(
-								"Unknown name value [%s] for enum class [%s]",
-								name,
-								enumClass.getName()
-						)
-				);
-			}
-		}
-
-		@Override
-		public String objectToSQLString(Enum value) {
-			return '\'' + toXMLString( value ) + '\'';
-		}
-
-		@Override
-		public String toXMLString(Enum value) {
-			return value.name();
-		}
-
-		@Override
-		public Enum fromXMLString(String xml) {
-			return fromName( xml );
-		}
-
-		@Override
-		protected Object extractJdbcValue(Enum value) {
-			return value.name();
-		}
-	}
-
 }

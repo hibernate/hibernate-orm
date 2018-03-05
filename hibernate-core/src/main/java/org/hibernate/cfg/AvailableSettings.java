@@ -6,9 +6,17 @@
  */
 package org.hibernate.cfg;
 
+import java.util.function.Supplier;
+
+import javax.persistence.GeneratedValue;
+
+import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
+import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.jpa.JpaCompliance;
 import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
@@ -17,14 +25,14 @@ import org.hibernate.tool.schema.SourceType;
 /**
  * @author Steve Ebersole
  */
-public interface AvailableSettings {
+public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA defined settings
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * THe name of the {@link javax.persistence.spi.PersistenceProvider} implementor
+	 * The name of the {@link javax.persistence.spi.PersistenceProvider} implementor
 	 * <p/>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.4
 	 */
@@ -175,6 +183,25 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to pass along the CDI BeanManager, if any, to be used.
+	 *
+	 * According to JPA, strictly, the BeanManager should be passed in
+	 * at boot-time and be ready for use at that time.  However not all
+	 * environments can do this (WildFly e.g.).  To accommodate such
+	 * environments, Hibernate provides 2 options:
+	 *
+	 *     * a proprietary CDI extension SPI (that we have proposed to
+	 *     	the CDI spec group as a standard option) that can be used
+	 *     	to provide delayed BeanManager access.  To use this solution,
+	 *     	the reference passed as the BeanManager during bootstrap
+	 *     	should be typed as {@link ExtendedBeanManager}
+	 *     * delayed access to the BeanManager reference.  Here, Hibernate
+	 *      will not access the reference passed as the BeanManager during
+	 *      bootstrap until it is first needed.  Note however that this has
+	 *      the effect of delaying any deployement problems until after
+	 *      bootstrapping.
+	 *
+	 * This setting is used to configure Hibernate ORM's access to
+	 * the BeanManager (either directly or via {@link ExtendedBeanManager}).
 	 */
 	String CDI_BEAN_MANAGER = "javax.persistence.bean.manager";
 
@@ -194,11 +221,11 @@ public interface AvailableSettings {
 	/**
 	 * Used to define how the current thread context {@link ClassLoader} must be used
 	 * for class lookup.
-	 * 
+	 *
 	 * @see TcclLookupPrecedence
 	 */
 	String TC_CLASSLOADER = "hibernate.classLoader.tccl_lookup_precedence";
-        
+
 	/**
 	 * Names the {@link ClassLoader} used to load user application classes.
 	 * @since 4.0
@@ -466,6 +493,20 @@ public interface AvailableSettings {
 	 */
 	String JTA_CACHE_UT = "hibernate.jta.cacheUserTransaction";
 
+	/**
+	 * `true` / `false - should zero be used as the base for JDBC-style parameters
+	 * found in native-queries?
+	 *
+	 * @since 5.3
+	 *
+	 * @see DeprecationLogger#logUseOfDeprecatedZeroBasedJdbcStyleParams
+	 *
+	 * @deprecated This is a temporary backwards-compatibility setting to help applications
+	 * using versions prior to 5.3 in upgrading.  Deprecation warnings are issued when this
+	 * is set to `true`.
+	 */
+	@Deprecated
+	String JDBC_TYLE_PARAMS_ZERO_BASE = "hibernate.query.sql.jdbc_style_params_base";
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -875,6 +916,19 @@ public interface AvailableSettings {
 	 */
 	String LOG_JDBC_WARNINGS =  "hibernate.jdbc.log.warnings";
 
+	/**
+	 * Identifies an explicit {@link org.hibernate.resource.beans.container.spi.BeanContainer}
+	 * to be used.
+	 *
+	 * Note that for CDI-based containers setting this is not necessary - simply
+	 * pass the BeanManager to use via {@link #CDI_BEAN_MANAGER} and
+	 * optionally specify {@link #DELAY_CDI_ACCESS}.  This setting is more meant to
+	 * integrate non-CDI bean containers such as Spring.
+	 *
+	 * @since 5.3
+	 */
+	String BEAN_CONTAINER = "hibernate.resource.beans.container";
+
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1069,6 +1123,9 @@ public interface AvailableSettings {
 	String CHECK_NULLABILITY = "hibernate.check_nullability";
 
 
+	/**
+	 * Pick which bytecode enhancing library to use. Currently supports javassist and bytebuddy, bytebuddy being the default since version 5.3.
+	 */
 	String BYTECODE_PROVIDER = "hibernate.bytecode.provider";
 
 	String JPAQL_STRICT_COMPLIANCE= "hibernate.query.jpaql_strict_compliance";
@@ -1110,7 +1167,7 @@ public interface AvailableSettings {
 	 *     <li>{@link org.hibernate.engine.query.spi.FilterQueryPlan}</li>
 	 *     <li>{@link org.hibernate.engine.query.spi.NativeSQLQueryPlan}</li>
 	 * </ul>
-	 * 
+	 *
 	 * maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 2048.
 	 */
 	String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
@@ -1458,6 +1515,7 @@ public interface AvailableSettings {
 	 * Can reference<ul>
 	 *     <li>Interceptor implementation {@link Class} reference</li>
 	 *     <li>Interceptor implementation class name</li>
+	 *     <li>{@link Supplier} instance which is used to retrieve the interceptor</li>
 	 * </ul>
 	 * Note specifically that this setting cannot name an Interceptor instance.
 	 *
@@ -1485,18 +1543,18 @@ public interface AvailableSettings {
 	 * Names the {@link org.hibernate.loader.BatchFetchStyle} to use.  Can specify either the
 	 * {@link org.hibernate.loader.BatchFetchStyle} name (insensitively), or a
 	 * {@link org.hibernate.loader.BatchFetchStyle} instance.
-	 * 
+	 *
 	 * {@code LEGACY} is the default value.
 	 */
 	String BATCH_FETCH_STYLE = "hibernate.batch_fetch_style";
-	
+
 	/**
 	 * A transaction can be rolled back by another thread ("tracking by thread")
 	 * -- not the original application. Examples of this include a JTA
 	 * transaction timeout handled by a background reaper thread.  The ability
 	 * to handle this situation requires checking the Thread ID every time
 	 * Session is called.  This can certainly have performance considerations.
-	 * 
+	 *
 	 * Default is <code>true</code> (enabled).
 	 */
 	String JTA_TRACK_BY_THREAD = "hibernate.jta.track_by_thread";
@@ -1526,7 +1584,7 @@ public interface AvailableSettings {
 	 * SchemaUpdate needs to create these constraints, but DB's
 	 * support for finding existing constraints is extremely inconsistent. Further,
 	 * non-explicitly-named unique constraints use randomly generated characters.
-	 * 
+	 *
 	 * Therefore, select from these strategies.
 	 * {@link org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy#DROP_RECREATE_QUIETLY} (DEFAULT):
 	 * 			Attempt to drop, then (re-)create each unique constraint.
@@ -1561,7 +1619,7 @@ public interface AvailableSettings {
 	 * Global setting for whether NULL parameter bindings should be passed to database
 	 * procedure/function calls as part of {@link org.hibernate.procedure.ProcedureCall}
 	 * handling.  Implicitly Hibernate will not pass the NULL, the intention being to allow
-	 * any default argumnet values to be applied.
+	 * any default argument values to be applied.
 	 * <p/>
 	 * This defines a global setting, which can them be controlled per parameter via
 	 * {@link org.hibernate.procedure.ParameterRegistration#enablePassingNulls(boolean)}
@@ -1681,4 +1739,125 @@ public interface AvailableSettings {
 	 *
 	 */
 	String VALIDATE_QUERY_PARAMETERS = "hibernate.query.validate_parameters";
+
+	/**
+	 * By default, Criteria queries uses bind parameters for any literal that is not a numeric value.
+	 *
+	 * However, to increase the likelihood of JDBC statement caching,
+	 * you might want to use bind parameters for numeric values too.
+	 * The {@link org.hibernate.query.criteria.LiteralHandlingMode#BIND} mode will use bind variables for any literal value.
+	 *
+	 * The {@link org.hibernate.query.criteria.LiteralHandlingMode#INLINE} mode will inline literal values as-is.
+	 * To prevent SQL injection, never use {@link org.hibernate.query.criteria.LiteralHandlingMode#INLINE} with String variables.
+	 * Always use constants with the {@link org.hibernate.query.criteria.LiteralHandlingMode#INLINE} mode.
+	 * </p>
+	 * Valid options are defined by the {@link org.hibernate.query.criteria.LiteralHandlingMode} enum.
+	 * </p>
+	 * The default value is {@link org.hibernate.query.criteria.LiteralHandlingMode#AUTO}
+	 *
+	 * @since 5.2.12
+	 * @see org.hibernate.query.criteria.LiteralHandlingMode
+	 */
+	String CRITERIA_LITERAL_HANDLING_MODE = "hibernate.criteria.literal_handling_mode";
+
+	/**
+	 * True/false setting indicating whether the value specified for {@link GeneratedValue#generator()}
+	 * should be used as the sequence/table name when no matching {@link javax.persistence.SequenceGenerator}
+	 * or {@link javax.persistence.TableGenerator} is found.
+	 *
+	 * The default value is `true` meaning that {@link GeneratedValue#generator()} will be used as the
+	 * sequence/table name by default.  Users migrating from earlier versions using the legacy
+	 * `hibernate_sequence` name should disable this setting.
+	 */
+	String PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME = "hibernate.model.generator_name_as_sequence_name";
+
+	/**
+	 * Should Hibernate's {@link Transaction} behave as
+	 * defined by the spec for JPA's {@link javax.persistence.EntityTransaction}
+	 * since it extends the JPA one.
+	 *
+	 * @see JpaCompliance#isJpaTransactionComplianceEnabled()
+	 * @since 5.3
+	 */
+	String JPA_TRANSACTION_COMPLIANCE = "hibernate.jpa.compliance.transaction";
+
+	/**
+	 * Controls whether Hibernate's handling of {@link javax.persistence.Query}
+	 * (JPQL, Criteria and native-query) should strictly follow the JPA spec.
+	 * This includes both in terms of parsing or translating a query as well
+	 * as calls to the {@link javax.persistence.Query} methods throwing spec
+	 * defined exceptions where as Hibernate might not.
+	 *
+	 * Deviations result in an exception if enabled
+	 *
+	 * @see JpaCompliance#isJpaQueryComplianceEnabled()
+	 * @since 5.3
+	 */
+	String JPA_QUERY_COMPLIANCE = "hibernate.jpa.compliance.query";
+
+	/**
+	 * Controls whether Hibernate should recognize what it considers a "bag"
+	 * ({@link org.hibernate.collection.internal.PersistentBag}) as a List
+	 * ({@link org.hibernate.collection.internal.PersistentList}) or as a bag.
+	 *
+	 * If enabled, we will recognize it as a List where {@link javax.persistence.OrderColumn}
+	 * is just missing (and its defaults will apply).
+	 *
+	 * @see JpaCompliance#isJpaListComplianceEnabled()
+	 * @since 5.3
+	 */
+	String JPA_LIST_COMPLIANCE	= "hibernate.jpa.compliance.list";
+
+	/**
+	 * JPA defines specific exceptions on specific methods when called on
+	 * {@link javax.persistence.EntityManager} and {@link javax.persistence.EntityManagerFactory}
+	 * when those objects have been closed.  This setting controls
+	 * whether the spec defined behavior or Hibernate's behavior will be used.
+	 *
+	 * If enabled Hibernate will operate in the JPA specified way throwing
+	 * exceptions when the spec says it should.
+	 *
+	 * @see JpaCompliance#isJpaClosedComplianceEnabled()
+	 * @since 5.3
+	 */
+	String JPA_CLOSED_COMPLIANCE = "hibernate.jpa.compliance.closed";
+
+	/**
+	 * The JPA spec says that a {@link javax.persistence.EntityNotFoundException}
+	 * should be thrown when accessing an entity Proxy which does not have an associated
+	 * table row in the database.
+	 *
+	 * Traditionally, Hibernate does not initialize an entity Proxy when accessing its
+	 * identifier since we already know the identifier value, hence we can save a database roundtrip.
+	 *
+	 * If enabled Hibernate will initialize the entity Proxy even when accessing its identifier.
+	 *
+	 * @see JpaCompliance#isJpaProxyComplianceEnabled()
+	 * @since 5.2.13
+	 */
+	String JPA_PROXY_COMPLIANCE = "hibernate.jpa.compliance.proxy";
+
+	/**
+	 * @see JpaCompliance#isJpaCacheComplianceEnabled()
+	 * @since 5.3
+	 */
+	String JPA_CACHING_COMPLIANCE = "hibernate.jpa.compliance.caching";
+
+	/**
+	 * True/False setting indicating if the value stored in the table used by the {@link javax.persistence.TableGenerator}
+	 * is the last value generated or the next value to be used.
+	 *
+	 * The default value is true.
+	 *
+	 * @since 5.3
+	 */
+	String TABLE_GENERATOR_STORE_LAST_USED = "hibernate.id.generator.stored_last_used";
+
+	/**
+	 * Raises an exception when in-memory pagination over collection fetch is about to be performed.
+	 * Disabled by default. Set to true to enable.
+	 *
+	 * @since 5.2.13
+	 */
+	String FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH = "hibernate.query.fail_on_pagination_over_collection_fetch";
 }

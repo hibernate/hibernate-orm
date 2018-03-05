@@ -198,12 +198,20 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 						.getName();
 				value.addColumn( new Column( columnName ) );
 				if ( joinColumn != null ) {
+					applyComponentColumnSizeValueToJoinColumn( column, joinColumn );
 					joinColumn.linkWithValue( value );
 				}
 				column.setValue( value );
 			}
 		}
 		return property;
+	}
+
+	private void applyComponentColumnSizeValueToJoinColumn(Column column, Ejb3JoinColumn joinColumn) {
+		Column mappingColumn = joinColumn.getMappingColumn();
+		mappingColumn.setLength( column.getLength() );
+		mappingColumn.setPrecision( column.getPrecision() );
+		mappingColumn.setScale( column.getScale() );
 	}
 
 	public boolean dependentUpon( CopyIdentifierComponentSecondPass other ) {

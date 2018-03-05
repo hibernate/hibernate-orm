@@ -10,13 +10,13 @@
  */
 package org.hibernate.spatial.testing.dialects.h2geodb;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
-import org.geolatte.geom.jts.JTS;
-
 import org.hibernate.spatial.dialect.h2geodb.GeoDbWkb;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.NativeSQLStatement;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
+import org.geolatte.geom.jts.JTS;
 
 
 /**
@@ -50,7 +50,7 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	protected NativeSQLStatement createNativeBufferStatement(Double distance) {
 		return createNativeSQLStatement(
 				"select t.id, ST_Buffer(t.geom,?) from GEOMTEST t where ST_SRID(t.geom) = 4326",
-				new Object[] {distance}
+				new Object[] { distance }
 		);
 	}
 
@@ -112,11 +112,11 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeDistanceStatement(com.vividsolutions.jts.geom.Geometry)
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeDistanceStatement(com.vividsolutions.jts.geom.Geometry)
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeDistanceStatement(Geometry geom) {
@@ -127,11 +127,11 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeEnvelopeStatement()
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeEnvelopeStatement()
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeEnvelopeStatement() {
@@ -139,11 +139,11 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeEqualsStatement(com.vividsolutions.jts.geom.Geometry)
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeEqualsStatement(com.vividsolutions.jts.geom.Geometry)
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeEqualsStatement(Geometry geom) {
@@ -154,11 +154,11 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeFilterStatement(com.vividsolutions.jts.geom.Geometry)
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeFilterStatement(com.vividsolutions.jts.geom.Geometry)
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeFilterStatement(Geometry geom) {
@@ -168,11 +168,11 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeGeomUnionStatement(com.vividsolutions.jts.geom.Geometry)
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeGeomUnionStatement(com.vividsolutions.jts.geom.Geometry)
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeGeomUnionStatement(Geometry geom) {
@@ -183,11 +183,11 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeGeometryTypeStatement()
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeGeometryTypeStatement()
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeGeometryTypeStatement() {
@@ -195,11 +195,11 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeIntersectionStatement(com.vividsolutions.jts.geom.Geometry)
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeIntersectionStatement(com.vividsolutions.jts.geom.Geometry)
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeIntersectionStatement(Geometry geom) {
@@ -210,11 +210,11 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeIntersectsStatement(com.vividsolutions.jts.geom.Geometry)
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeIntersectsStatement(com.vividsolutions.jts.geom.Geometry)
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeIntersectsStatement(Geometry geom) {
@@ -225,11 +225,11 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeIsEmptyStatement()
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeIsEmptyStatement()
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeIsEmptyStatement() {
@@ -242,11 +242,11 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeIsSimpleStatement()
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeIsSimpleStatement()
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeIsSimpleStatement() {
@@ -254,11 +254,11 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeOverlapsStatement(com.vividsolutions.jts.geom.Geometry)
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeOverlapsStatement(com.vividsolutions.jts.geom.Geometry)
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeOverlapsStatement(Geometry geom) {
@@ -269,12 +269,12 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeRelateStatement(com.vividsolutions.jts.geom.Geometry,
-		  * java.lang.String)
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeRelateStatement(com.vividsolutions.jts.geom.Geometry,
+	 * java.lang.String)
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeRelateStatement(
@@ -296,11 +296,11 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeSridStatement()
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeSridStatement()
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeSridStatement() {
@@ -308,11 +308,11 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeSymDifferenceStatement(com.vividsolutions.jts.geom.Geometry)
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeSymDifferenceStatement(com.vividsolutions.jts.geom.Geometry)
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeSymDifferenceStatement(
@@ -324,11 +324,11 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeTouchesStatement(com.vividsolutions.jts.geom.Geometry)
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeTouchesStatement(com.vividsolutions.jts.geom.Geometry)
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeTouchesStatement(Geometry geom) {
@@ -339,11 +339,11 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeWithinStatement(com.vividsolutions.jts.geom.Geometry)
-		  */
+	 * (non-Javadoc)
+	 *
+	 * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
+	 * createNativeWithinStatement(com.vividsolutions.jts.geom.Geometry)
+	 */
 
 	@Override
 	protected NativeSQLStatement createNativeWithinStatement(

@@ -16,6 +16,7 @@ import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.mapping.Value;
+import org.hibernate.type.Type;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -141,7 +142,12 @@ public class PropertyAuditingData {
 		this.accessType = accessType;
 	}
 
+	// todo (6.0) - remove this and use #resolvePropertyData instead
 	public PropertyData getPropertyData() {
+		return resolvePropertyData( null );
+	}
+
+	public PropertyData resolvePropertyData(Type propertyType) {
 		return new PropertyData(
 				name,
 				beanName,
@@ -149,7 +155,8 @@ public class PropertyAuditingData {
 				store,
 				usingModifiedFlag,
 				modifiedFlagName,
-				syntheic
+				syntheic,
+				propertyType
 		);
 	}
 

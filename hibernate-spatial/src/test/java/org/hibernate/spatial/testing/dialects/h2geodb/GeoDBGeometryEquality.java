@@ -10,10 +10,10 @@
  */
 package org.hibernate.spatial.testing.dialects.h2geodb;
 
+import org.hibernate.spatial.testing.JTSGeometryEquality;
+
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
-
-import org.hibernate.spatial.testing.GeometryEquality;
 
 /**
  * Extends the test for {@link Geometry} equality, because GeoDB uses JTS
@@ -23,7 +23,7 @@ import org.hibernate.spatial.testing.GeometryEquality;
  * @deprecated This should no longer be necesseary
  */
 @Deprecated
-public class GeoDBGeometryEquality extends GeometryEquality {
+public class GeoDBGeometryEquality extends JTSGeometryEquality {
 
 	@Override
 	public boolean test(Geometry geom1, Geometry geom2) {

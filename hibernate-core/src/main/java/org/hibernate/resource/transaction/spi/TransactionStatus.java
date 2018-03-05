@@ -13,15 +13,15 @@ package org.hibernate.resource.transaction.spi;
  */
 public enum TransactionStatus {
 	/**
-	 * The transaction has not yet been begun
+	 * The transaction has not yet been started.
 	 */
 	NOT_ACTIVE,
 	/**
-	 * The transaction has been begun, but not yet completed.
+	 * The transaction has been started, but not yet completed.
 	 */
 	ACTIVE,
 	/**
-	 * The transaction has been competed successfully.
+	 * The transaction has been completed successfully.
 	 */
 	COMMITTED,
 	/**
@@ -29,7 +29,7 @@ public enum TransactionStatus {
 	 */
 	ROLLED_BACK,
 	/**
-	 * The transaction  has been marked for  rollback only.
+	 * The transaction has been marked for rollback only.
 	 */
 	MARKED_ROLLBACK,
 	/**
@@ -37,9 +37,13 @@ public enum TransactionStatus {
 	 */
 	FAILED_COMMIT,
 	/**
+	 * The transaction attempted to rollback, but failed.
+	 */
+	FAILED_ROLLBACK,
+	/**
 	 * Status code indicating a transaction that has begun the second
 	 * phase of the two-phase commit protocol, but not yet completed
-	 * this phase
+	 * this phase.
 	 */
 	COMMITTING,
 	/**

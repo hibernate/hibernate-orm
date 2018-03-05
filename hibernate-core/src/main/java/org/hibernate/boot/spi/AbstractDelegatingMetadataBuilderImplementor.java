@@ -11,6 +11,7 @@ import javax.persistence.SharedCacheMode;
 
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
@@ -40,11 +41,21 @@ import org.jboss.jandex.IndexView;
  * to a specialization of {@link MetadataBuilderImplementor}
  */
 @SuppressWarnings("unused")
-public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends AbstractDelegatingMetadataBuilderImplementor<T>>  implements MetadataBuilderImplementor {
+public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends MetadataBuilderImplementor>  implements MetadataBuilderImplementor {
 
 	private final MetadataBuilderImplementor delegate;
 
+	/**
+	 * Kept for compatibility reason but should be removed as soon as possible.
+	 *
+	 * @deprecated use {@link #delegate()} instead
+	 */
+	@Deprecated
 	public MetadataBuilderImplementor getDelegate() {
+		return delegate;
+	}
+
+	protected MetadataBuilderImplementor delegate() {
 		return delegate;
 	}
 
@@ -255,5 +266,20 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Abs
 	public MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter) {
 		delegate.applyIdGenerationTypeInterpreter( interpreter );
 		return getThis();
+	}
+
+	@Override
+	public <M extends MetadataBuilder> M unwrap(Class<M> type) {
+		return delegate.unwrap( type );
+	}
+
+	@Override
+	public MetadataBuildingOptions getMetadataBuildingOptions() {
+		return delegate.getMetadataBuildingOptions();
+	}
+
+	@Override
+	public Metadata build() {
+		return delegate.build();
 	}
 }

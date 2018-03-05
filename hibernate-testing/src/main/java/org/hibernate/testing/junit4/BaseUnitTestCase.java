@@ -33,7 +33,8 @@ import org.jboss.logging.Logger;
  */
 @RunWith( CustomRunner.class )
 public abstract class BaseUnitTestCase {
-	private static final Logger log = Logger.getLogger( BaseUnitTestCase.class );
+
+	protected final Logger log = Logger.getLogger( getClass() );
 
 	private static boolean enableConnectionLeakDetection = Boolean.TRUE.toString()
 			.equals( System.getenv( "HIBERNATE_CONNECTION_LEAK_DETECTION" ) );

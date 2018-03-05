@@ -28,7 +28,6 @@ import static org.junit.Assert.assertNull;
 @SuppressWarnings("unchecked")
 @TestForIssue( jiraKey = "ANN-744" )
 public class EnumIdTest extends BaseCoreFunctionalTestCase {
-	private static final Logger log = Logger.getLogger( EnumIdTest.class );
 
 	@Test
 	public void testEnumAsId() throws Exception {

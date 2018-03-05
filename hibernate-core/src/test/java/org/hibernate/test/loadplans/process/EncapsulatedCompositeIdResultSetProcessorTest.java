@@ -189,12 +189,7 @@ public class EncapsulatedCompositeIdResultSetProcessorTest extends BaseCoreFunct
 										resultSet,
 										(SessionImplementor) workSession,
 										callback.getQueryParameters(),
-										new NamedParameterContext() {
-											@Override
-											public int[] getNamedParameterLocations(String name) {
-												return new int[0];
-											}
-										},
+										Helper.parameterContext(),
 										true,
 										false,
 										null,

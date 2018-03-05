@@ -21,6 +21,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -32,8 +33,7 @@ import org.jboss.logging.Logger;
  * @author Hardy Ferentschik
  *
  */
-public class NullablePrimaryKeyTest {
-	private static final Logger log = Logger.getLogger( NullablePrimaryKeyTest.class );
+public class NullablePrimaryKeyTest extends BaseUnitTestCase {
 
 	@Test
 	@SuppressWarnings("unchecked")

@@ -376,8 +376,8 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
         assertEquals( resultList.get(1).getTrimmed(), Trimmed.B );
 
         // ensure querying works
-        final Query query = s.createQuery("select e from EntityEnum e where e.trimmed=?");
-        query.setParameter( 0, Trimmed.A );
+        final Query query = s.createQuery("select e from EntityEnum e where e.trimmed=?1");
+        query.setParameter( 1, Trimmed.A );
         resultList = query.list();
         assertEquals( resultList.size(), 1 );
         assertEquals( resultList.get(0).getTrimmed(), Trimmed.A );

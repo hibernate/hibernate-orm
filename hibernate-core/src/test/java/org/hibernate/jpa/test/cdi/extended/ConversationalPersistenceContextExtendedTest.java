@@ -10,6 +10,7 @@ import javax.ejb.EJB;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -29,6 +30,7 @@ import static org.junit.Assert.assertEquals;
  * @author Vlad Mihalcea
  */
 @RunWith(Arquillian.class)
+@Ignore( "WildFly has not released a version supporting JPA 2.2 and CDI 2.0" )
 public class ConversationalPersistenceContextExtendedTest {
 
 	@Deployment
@@ -37,17 +39,16 @@ public class ConversationalPersistenceContextExtendedTest {
 				.addClass( Event.class )
 				.addClass( ConversationalEventManager.class )
 				.addAsManifestResource( EmptyAsset.INSTANCE, "beans.xml" )
-				.addAsManifestResource( "jboss-deployment-structure.xml" )
 				.addAsManifestResource( new StringAsset( persistenceXml().exportAsString() ), "persistence.xml" );
 	}
 
 	private static PersistenceDescriptor persistenceXml() {
 		return Descriptors.create( PersistenceDescriptor.class )
-				.createPersistenceUnit().name( "pu-cdi-basic" )
+				.createPersistenceUnit().name( "pu-beans-basic" )
 				.clazz( Event.class.getName() )
 				.excludeUnlistedClasses( true )
 				.nonJtaDataSource( "java:jboss/datasources/ExampleDS" )
-				.getOrCreateProperties().createProperty().name( "jboss.as.jpa.providerModule" ).value( "org.hibernate:5.2" ).up().up()
+				.getOrCreateProperties().createProperty().name( "jboss.as.jpa.providerModule" ).value( "org.hibernate:5.3" ).up().up()
 				.getOrCreateProperties().createProperty().name( "hibernate.hbm2ddl.auto" ).value( "create-drop" ).up().up().up();
 	}
 

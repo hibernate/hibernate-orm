@@ -225,8 +225,8 @@ tokens
 		return #( [NAMED_PARAM, nameNode.getText()] );
 	}
 
-	protected AST generatePositionalParameter(AST inputNode) throws SemanticException {
-		return #( [PARAM, "?"] );
+	protected AST generatePositionalParameter(AST delimiterNode, AST numberNode) throws SemanticException {
+		return #( [PARAM, numberNode.getText()] );
 	}
 
 	protected void lookupAlias(AST ident) throws SemanticException { }
@@ -452,6 +452,7 @@ constructor
 aggregateExpr
 	: expr [ null ] //p:propertyRef { resolve(#p); }
 	| collectionFunction
+	| selectStatement
 	;
 
 // Establishes the list of aliases being used by this query.
@@ -804,24 +805,13 @@ mapPropertyExpression
 
 parameter!
 	: #(c:COLON a:identifier) {
-			// Create a NAMED_PARAM node instead of (COLON IDENT).
-			#parameter = generateNamedParameter( c, a );
-//			#parameter = #([NAMED_PARAM,a.getText()]);
-//			namedParameter(#parameter);
-		}
-	| #(p:PARAM (n:NUM_INT)?) {
-			if ( n != null ) {
-				// An ejb3-style "positional parameter", which we handle internally as a named-param
-				#parameter = generateNamedParameter( p, n );
-//				#parameter = #([NAMED_PARAM,n.getText()]);
-//				namedParameter(#parameter);
-			}
-			else {
-				#parameter = generatePositionalParameter( p );
-//				#parameter = #([PARAM,"?"]);
-//				positionalParameter(#parameter);
-			}
-		}
+		// Create a NAMED_PARAM node instead of (COLON IDENT) - semantics ftw!
+		#parameter = generateNamedParameter( c, a );
+	}
+	| #(p:PARAM (n:NUM_INT)? ) {
+		// Create a (POSITIONAL_)PARAM node instead of (PARAM NUM_INT) - semantics ftw!
+		#parameter = generatePositionalParameter( p, n );
+	}
 	;
 
 numericInteger

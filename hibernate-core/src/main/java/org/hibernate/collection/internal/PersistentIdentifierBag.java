@@ -150,6 +150,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		if ( index >= 0 ) {
 			beforeRemove( index );
 			values.remove( index );
+			elementRemoved = true;
 			dirty();
 			return true;
 		}

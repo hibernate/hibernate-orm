@@ -7,13 +7,19 @@
 package org.hibernate.query.procedure.internal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import javax.persistence.Parameter;
 
-import org.hibernate.QueryParameterException;
+import org.hibernate.procedure.internal.ProcedureCallImpl;
+import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
+import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.procedure.ProcedureParameter;
@@ -23,40 +29,51 @@ import org.hibernate.query.procedure.spi.ProcedureParameterImplementor;
  * @author Steve Ebersole
  */
 public class ProcedureParameterMetadata implements ParameterMetadata {
-	private List<ProcedureParameterImplementor> parameters;
+	private final ProcedureCallImpl procedureCall;
+	private ParameterStrategy parameterStrategy = ParameterStrategy.UNKNOWN;
+	private List<ProcedureParameterImplementor> parameters = new ArrayList<>();
 
-	private boolean hasNamed;
-	private int ordinalParamCount;
-
-	public ProcedureParameterMetadata() {
-		parameters = new ArrayList<>(  );
+	public ProcedureParameterMetadata(ProcedureCallImpl procedureCall) {
+		this.procedureCall = procedureCall;
 	}
 
 	public void registerParameter(ProcedureParameterImplementor parameter) {
+		if ( parameter.getName() != null ) {
+			if ( parameterStrategy == ParameterStrategy.POSITIONAL ) {
+				throw new IllegalArgumentException( "Cannot mix named parameter with positional parameter registrations" );
+			}
+			parameterStrategy = ParameterStrategy.NAMED;
+		}
+		else if ( parameter.getPosition() != null ) {
+			if ( parameterStrategy == ParameterStrategy.NAMED ) {
+				throw new IllegalArgumentException( "Cannot mix positional parameter with named parameter registrations" );
+			}
+			this.parameterStrategy = ParameterStrategy.POSITIONAL;
+		}
+		else {
+			throw new IllegalArgumentException( "Unrecognized parameter type : " + parameter );
+		}
+
+
 		if ( parameters == null ) {
 			parameters = new ArrayList<>();
 		}
 		parameters.add( parameter );
-
-		this.hasNamed = hasNamed || parameter.getName() != null;
-		if ( parameter.getPosition() != null ) {
-			ordinalParamCount++;
-		}
 	}
 
 	@Override
 	public boolean hasNamedParameters() {
-		return hasNamed;
+		return parameterStrategy == ParameterStrategy.NAMED;
 	}
 
 	@Override
 	public boolean hasPositionalParameters() {
-		return ordinalParamCount > 0;
+		return parameterStrategy == ParameterStrategy.POSITIONAL;
 	}
 
 	@Override
 	public Set<QueryParameter<?>> collectAllParameters() {
-		final Set<QueryParameter<?>> rtn = new HashSet<>();
+		final Set<QueryParameter<?>> rtn = new LinkedHashSet<>();
 		for ( ProcedureParameter parameter : parameters ) {
 			rtn.add( parameter );
 		}
@@ -65,7 +82,7 @@ public class ProcedureParameterMetadata implements ParameterMetadata {
 
 	@Override
 	public Set<Parameter<?>> collectAllParametersJpa() {
-		final Set<Parameter<?>> rtn = new HashSet<>();
+		final Set<Parameter<?>> rtn = new LinkedHashSet<>();
 		for ( ProcedureParameter parameter : parameters ) {
 			rtn.add( parameter );
 		}
@@ -74,7 +91,7 @@ public class ProcedureParameterMetadata implements ParameterMetadata {
 
 	@Override
 	public Set<String> getNamedParameterNames() {
-		if ( !hasNamed ) {
+		if ( !hasNamedParameters() ) {
 			return Collections.emptySet();
 		}
 
@@ -89,68 +106,85 @@ public class ProcedureParameterMetadata implements ParameterMetadata {
 
 	@Override
 	public int getPositionalParameterCount() {
-		return ordinalParamCount;
+		return hasPositionalParameters() ? parameters.size() : 0;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> QueryParameter<T> getQueryParameter(String name) {
+	public <T> ParameterRegistrationImplementor<T> getQueryParameter(String name) {
 		assert name != null;
-		QueryParameter<T> result = null;
-		if ( hasNamed ) {
-			for ( ProcedureParameter parameter : parameters ) {
+
+		if ( hasNamedParameters() ) {
+			for ( ParameterRegistrationImplementor parameter : parameters ) {
 				if ( name.equals( parameter.getName() ) ) {
-					result = parameter;
-					break;
+					return parameter;
 				}
 			}
 		}
-		if ( result != null ) {
-			return result;
-		}
-		throw new QueryParameterException( "could not locate named parameter [" + name + "]" );
+
+		throw new IllegalArgumentException( "Named parameter [" + name + "] is not registered with this procedure call" );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> QueryParameter<T> getQueryParameter(Integer position) {
+	public <T> ParameterRegistrationImplementor<T> getQueryParameter(Integer position) {
 		assert position != null;
 
-		if ( ordinalParamCount > 0 ) {
-			for ( ProcedureParameter parameter : parameters ) {
+		if ( hasPositionalParameters() ) {
+			for ( ParameterRegistrationImplementor parameter : parameters ) {
 				if ( parameter.getPosition() != null && position.intValue() == parameter.getPosition() ) {
 					return parameter;
 				}
 			}
 		}
-		throw new QueryParameterException( "could not locate parameter at position [" + position + "]" );
+
+		throw new IllegalArgumentException( "Positional parameter [" + position + "] is not registered with this procedure call" );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> QueryParameter<T> resolve(Parameter<T> param) {
-		// first see if that instance exists here...
-		for ( ProcedureParameter parameter : parameters ) {
-			if ( parameter == param ) {
-				return parameter;
-			}
-		}
-
-		// otherwise, try name/position from the incoming param
-		if ( param.getPosition() != null || param.getName() != null ) {
-			for ( ProcedureParameter parameter : parameters ) {
-				// name
-				if ( param.getName() != null && param.getName().equals( parameter.getName() ) ) {
-					return parameter;
-				}
-
-				// position
-				if ( param.getPosition() != null && param.getPosition().equals( parameter.getPosition() ) ) {
+	public <T> ProcedureParameterImplementor<T> resolve(Parameter<T> param) {
+		if ( ProcedureParameterImplementor.class.isInstance( param ) ) {
+			for ( ProcedureParameterImplementor parameter : parameters ) {
+				if ( parameter == param ) {
 					return parameter;
 				}
 			}
 		}
 
-		return null;
+		throw new IllegalArgumentException( "Could not resolve javax.persistence.Parameter to org.hibernate.query.QueryParameter" );
+	}
+
+	@Override
+	public Collection<QueryParameter> getPositionalParameters() {
+		return parameters.stream().filter( p -> p.getPosition() != null ).collect( Collectors.toList() );
+	}
+
+	@Override
+	public Collection<QueryParameter> getNamedParameters() {
+		return parameters.stream().filter( p -> p.getPosition() == null ).collect( Collectors.toList() );
+	}
+
+	@Override
+	public int getParameterCount() {
+		return parameters.size();
+	}
+
+	@Override
+	@SuppressWarnings("SuspiciousMethodCalls")
+	public boolean containsReference(QueryParameter parameter) {
+		return parameters.contains( parameter );
+	}
+
+	public ParameterStrategy getParameterStrategy() {
+		return parameterStrategy;
+	}
+
+	@Override
+	public void visitRegistrations(Consumer<QueryParameter> action) {
+		for ( ProcedureParameterImplementor parameter : parameters ) {
+			action.accept( parameter );
+		}
+
 	}
 }

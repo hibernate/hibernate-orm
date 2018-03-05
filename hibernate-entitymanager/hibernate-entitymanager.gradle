@@ -1,32 +1,30 @@
-// keep dependencies for transitivity to consumers
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+description = '(deprecated - use hibernate-core instead) Hibernate O/RM implementation of the JPA specification'
+
 dependencies {
 	compile( project( ':hibernate-core' ) )
 	compile( libraries.dom4j )
 	compile( libraries.commons_annotations )
 	compile( libraries.jpa )
-	compile( libraries.javassist )
 	compile( libraries.byteBuddy )
 	compile( libraries.jta )
 }
 
-mavenPom {
-	name = '(deprecated - use hibernate-core instead) Hibernate JPA Support'
-	description = '(deprecated - use hibernate-core instead) Hibernate O/RM implementation of the JPA specification'
-}
 
-public String osgiDescription() {
-	return mavenPom.description
-}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// The OSGi JAR manifest support does not like a non-existent classes dir,
+// so make sure we dont use the OSGi one :)
 
 jar {
-	// The OSGi JAR manifest support does not like a non-existent classes dir,
-	// so make sure we dont use the OSGi one :)
 	manifest = null
 }
 
 sourcesJar {
-	// The OSGi JAR manifest support does not like a non-existent classes dir,
-	// so make sure we dont use the OSGi one :)
 	manifest = null
 }
 
+javadocJar {
+	manifest = null
+}

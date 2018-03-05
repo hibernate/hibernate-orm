@@ -89,6 +89,63 @@ public class ANSIJoinFragment extends JoinFragment {
 
 	}
 
+	public void addJoin(
+			String rhsTableName,
+			String rhsAlias,
+			String[][] lhsColumns,
+			String[] rhsColumns,
+			JoinType joinType,
+			String on) {
+		final String joinString;
+		switch (joinType) {
+			case INNER_JOIN:
+				joinString = " inner join ";
+				break;
+			case LEFT_OUTER_JOIN:
+				joinString = " left outer join ";
+				break;
+			case RIGHT_OUTER_JOIN:
+				joinString = " right outer join ";
+				break;
+			case FULL_JOIN:
+				joinString = " full outer join ";
+				break;
+			default:
+				throw new AssertionFailure("undefined join type");
+		}
+
+		this.buffer.append(joinString)
+				.append(rhsTableName)
+				.append(' ')
+				.append(rhsAlias)
+				.append(" on ");
+
+
+		if ( lhsColumns.length > 1 ) {
+			this.buffer.append( "(" );
+		}
+		for ( int i = 0; i < lhsColumns.length; i++ ) {
+			for ( int j=0; j<lhsColumns[i].length; j++) {
+				this.buffer.append( lhsColumns[i][j] )
+						.append('=')
+						.append(rhsAlias)
+						.append('.')
+						.append( rhsColumns[j] );
+				if ( j < lhsColumns[i].length-1 ) {
+					this.buffer.append( " and " );
+				}
+			}
+			if ( i < lhsColumns.length - 1 ) {
+				this.buffer.append( " or " );
+			}
+		}
+		if ( lhsColumns.length > 1 ) {
+			this.buffer.append( ")" );
+		}
+
+		addCondition( buffer, on );
+	}
+
 	@Override
 	public String toFromFragmentString() {
 		return this.buffer.toString();

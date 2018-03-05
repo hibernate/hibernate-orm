@@ -24,7 +24,7 @@ import antlr.collections.AST;
  * @author Steve Ebersole
  */
 public class ASTPrinter {
-	private final Map tokenTypeNameCache;
+	private final Map<Integer,String> tokenTypeNameCache;
 	private final boolean showClassNames;
 
 	/**
@@ -54,7 +54,7 @@ public class ASTPrinter {
 		this( ASTUtil.generateTokenNameCache( tokenTypeConstants ), showClassNames );
 	}
 
-	private ASTPrinter(Map tokenTypeNameCache, boolean showClassNames) {
+	private ASTPrinter(Map<Integer,String> tokenTypeNameCache, boolean showClassNames) {
 		this.tokenTypeNameCache = tokenTypeNameCache;
 		this.showClassNames = showClassNames;
 	}
@@ -119,7 +119,7 @@ public class ASTPrinter {
 		final Integer typeInteger = type;
 		String value = null;
 		if ( tokenTypeNameCache != null ) {
-			value = (String) tokenTypeNameCache.get( typeInteger );
+			value = tokenTypeNameCache.get( typeInteger );
 		}
 		if ( value == null ) {
 			value = typeInteger.toString();

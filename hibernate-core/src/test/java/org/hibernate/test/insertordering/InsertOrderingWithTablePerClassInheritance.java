@@ -127,8 +127,8 @@ public class InsertOrderingWithTablePerClassInheritance
 	public static class Person {
 		@Id
 		@Column(name = "ID", nullable = false)
-		@SequenceGenerator(name = "ID", sequenceName = "PERSON_SEQ")
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ID")
+		@SequenceGenerator(name = "ID_2", sequenceName = "PERSON_SEQ")
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ID_2")
 		private Long id;
 
 		@OneToMany(orphanRemoval = true, cascade = {

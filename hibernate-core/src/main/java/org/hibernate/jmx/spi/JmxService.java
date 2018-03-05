@@ -23,7 +23,7 @@ public interface JmxService extends Service {
 	 * @param service The manageable service
 	 * @param serviceRole The service's role.
 	 */
-	public void registerService(Manageable service, Class<? extends Service> serviceRole);
+	void registerService(Manageable service, Class<? extends Service> serviceRole);
 
 	/**
 	 * Registers the given {@code mBean} under the given {@code objectName}
@@ -31,5 +31,5 @@ public interface JmxService extends Service {
 	 * @param objectName The name under which to register the MBean
 	 * @param mBean The MBean to register
 	 */
-	public void registerMBean(ObjectName objectName, Object mBean);
+	void registerMBean(ObjectName objectName, Object mBean);
 }

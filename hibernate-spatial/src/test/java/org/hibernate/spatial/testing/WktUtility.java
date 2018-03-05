@@ -8,7 +8,7 @@ package org.hibernate.spatial.testing;
 
 /**
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 1/24/13
+ * creation-date: 1/24/13
  */
 public class WktUtility {
 

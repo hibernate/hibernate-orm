@@ -179,7 +179,7 @@ public class EmptyCompositeManyToOneKeyTest extends BaseCoreFunctionalTestCase {
 		private OtherEntity otherEntity;
 	}
 
-	@Entity
+	@Entity(name  = "OtherEntity")
 	public static class OtherEntity implements Serializable {
 		@Id
 		private String firstName;

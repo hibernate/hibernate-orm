@@ -83,4 +83,14 @@ public class JdbcObserverImpl implements JdbcObserver {
 	public void jdbcExecuteBatchEnd() {
 		session.getEventListenerManager().jdbcExecuteBatchEnd();
 	}
+
+	@Override
+	public void jdbcReleaseRegistryResourcesStart() {
+		session.getJdbcCoordinator().abortBatch();
+	}
+
+	@Override
+	public void jdbcReleaseRegistryResourcesEnd() {
+	}
+
 }

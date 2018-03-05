@@ -7,6 +7,7 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
@@ -108,6 +109,15 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		this.eager = eager;
 		this.unwrapProxy = unwrapProxy;
 		this.referenceToPrimaryKey = referenceToPrimaryKey;
+	}
+
+	protected EntityType(EntityType original, String superTypeEntityName) {
+		this.scope = original.scope;
+		this.associatedEntityName = superTypeEntityName;
+		this.uniqueKeyPropertyName = original.uniqueKeyPropertyName;
+		this.eager = original.eager;
+		this.unwrapProxy = original.unwrapProxy;
+		this.referenceToPrimaryKey = original.referenceToPrimaryKey;
 	}
 
 	protected TypeFactory.TypeScope scope() {
@@ -260,6 +270,22 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException, SQLException {
 		return resolve( hydrate( rs, names, session, owner ), session, owner );
+	}
+
+	@Override
+	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SharedSessionContractImplementor session)
+			throws SQLException {
+		if ( settable.length > 0 ) {
+			requireIdentifierOrUniqueKeyType( session.getFactory() )
+					.nullSafeSet( st, getIdentifier( value, session ), index, settable, session );
+		}
+	}
+
+	@Override
+	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+			throws SQLException {
+		requireIdentifierOrUniqueKeyType( session.getFactory() )
+				.nullSafeSet( st, getIdentifier( value, session ), index, session );
 	}
 
 	/**
@@ -426,9 +452,14 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 */
 	@Override
 	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+		return resolve(value, session, owner, null);
+	}
+
+	@Override
+	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) throws HibernateException {
 		if ( value != null && !isNull( owner, session ) ) {
 			if ( isReferenceToPrimaryKey() ) {
-				return resolveIdentifier( (Serializable) value, session );
+				return resolveIdentifier( (Serializable) value, session, overridingEager );
 			}
 			else if ( uniqueKeyPropertyName != null ) {
 				return loadByUniqueKey( getAssociatedEntityName(), uniqueKeyPropertyName, value, session );
@@ -638,10 +669,13 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 *
 	 * @throws org.hibernate.HibernateException Indicates problems performing the load.
 	 */
-	protected final Object resolveIdentifier(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+	protected final Object resolveIdentifier(Serializable id, SharedSessionContractImplementor session, Boolean overridingEager) throws HibernateException {
+
 		boolean isProxyUnwrapEnabled = unwrapProxy &&
 				getAssociatedEntityPersister( session.getFactory() )
 						.isInstrumented();
+
+		boolean eager = overridingEager != null ? overridingEager : this.eager;
 
 		Object proxyOrEntity = session.internalLoad(
 				getAssociatedEntityName(),
@@ -656,6 +690,10 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 
 		return proxyOrEntity;
+	}
+
+	protected final Object resolveIdentifier(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+		return resolveIdentifier( id, session, null );
 	}
 
 	protected boolean isNull(Object owner, SharedSessionContractImplementor session) {
@@ -708,4 +746,15 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return result == null ? null : persistenceContext.proxyFor( result );
 	}
 
+	protected Type requireIdentifierOrUniqueKeyType(Mapping mapping) {
+		final Type fkTargetType = getIdentifierOrUniqueKeyType( mapping );
+		if ( fkTargetType == null ) {
+			throw new MappingException(
+					"Unable to determine FK target Type for many-to-one or one-to-one mapping: " +
+							"referenced-entity-name=[" + getAssociatedEntityName() +
+							"], referenced-entity-attribute-name=[" + getLHSPropertyName() + "]"
+			);
+		}
+		return fkTargetType;
+	}
 }

@@ -4,16 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-apply plugin: 'java'
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'maven'
 
 import org.apache.tools.ant.filters.ReplaceTokens
 
 group = 'org.hibernate.orm.tooling'
-
-repositories {
-    mavenCentral()
-}
+description = 'Enhance Plugin of the Hibernate project for use with Maven build system.'
 
 processResources {
     include "**/lifecycle-mapping-metadata.xml"
@@ -117,7 +114,3 @@ processResources.doLast {
 
 processResources.dependsOn processPluginXml
 
-mavenPom {
-    name = 'Enhance Plugin of the Hibernate project for use with Maven build system.'
-    description = 'Enhance Plugin of the Hibernate project for use with Maven build system.'
-}

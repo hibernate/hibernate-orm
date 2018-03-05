@@ -15,6 +15,33 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
  * @author Steve Ebersole
  */
 public interface Renderable {
-	public String render(RenderingContext renderingContext);
-	public String renderProjection(RenderingContext renderingContext);
+
+	/**
+	 * Render clause
+	 *
+	 * @param renderingContext context
+	 * @return rendered expression
+	 */
+	String render(RenderingContext renderingContext);
+
+	/**
+	 * Render SELECT clause
+	 *
+	 * @param renderingContext context
+	 * @return rendered expression
+	 */
+	default String renderProjection(RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
+
+	/**
+	 * Render GROUP BY clause
+	 *
+	 * @param renderingContext context
+	 *
+	 * @return rendered expression
+	 */
+	default String renderGroupBy(RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

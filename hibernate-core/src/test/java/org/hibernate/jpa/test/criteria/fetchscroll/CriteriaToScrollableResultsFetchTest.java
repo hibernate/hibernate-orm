@@ -19,9 +19,10 @@ import javax.persistence.criteria.Root;
 
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.junit.Test;
-
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
@@ -35,18 +36,19 @@ public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunct
 
 	@Override
 	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-			Customer.class,
-			Order.class,
-			OrderLine.class,
-			Product.class,
-			PurchaseOrg.class,
-			Facility.class,									
-			Site.class
+		return new Class[]{
+				Customer.class,
+				Order.class,
+				OrderLine.class,
+				Product.class,
+				PurchaseOrg.class,
+				Facility.class,
+				Site.class
 		};
 	}
-	
+
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA only supports forward-only cursors")
 	public void testWithScroll() {
 		// Creates data necessary for test
 		Long facilityId = populate();
@@ -96,7 +98,7 @@ public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunct
 			em.getTransaction().commit();
 			return lines;
 		}
-		catch ( Throwable t ) {
+		catch (Throwable t) {
 			if ( em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
@@ -107,7 +109,7 @@ public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunct
 		}
 	}
 
-	private List<OrderLine> getOrderLinesJpaFetched(Long facilityId) {		
+	private List<OrderLine> getOrderLinesJpaFetched(Long facilityId) {
 		EntityManager em = getOrCreateEntityManager();
 		try {
 			em.getTransaction().begin();
@@ -121,7 +123,7 @@ public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunct
 			em.getTransaction().commit();
 			return lines;
 		}
-		catch ( Throwable t ) {
+		catch (Throwable t) {
 			if ( em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
@@ -131,7 +133,7 @@ public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunct
 			em.close();
 		}
 	}
-	
+
 	private Set<PurchaseOrg> getPurchaseOrgsByFacilityId(Long facilityId, EntityManager em) {
 		Set<PurchaseOrg> orgs = new HashSet<>();
 		try {
@@ -144,7 +146,7 @@ public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunct
 				}
 			}
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 
 		}
 		finally {
@@ -155,7 +157,7 @@ public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunct
 	private <T> List<T> findAll(Class<T> clazz, EntityManager em) {
 		return em.createQuery( "SELECT o FROM " + clazz.getSimpleName() + " o", clazz ).getResultList();
 	}
-		
+
 	private TypedQuery<OrderLine> getOrderLinesQuery(Collection<PurchaseOrg> purchaseOrgs, EntityManager em) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<OrderLine> query = cb.createQuery( OrderLine.class );
@@ -175,11 +177,11 @@ public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunct
 		List<Predicate> predicates = new ArrayList<>();
 		predicates.add( idPath.get( OrderLineId_.purchaseOrgId ).in( ids ) );
 
-		query.select( root ).where( predicates.toArray( new Predicate[ predicates.size() ] ) );
+		query.select( root ).where( predicates.toArray( new Predicate[predicates.size()] ) );
 
 		return em.createQuery( query );
 	}
-	
+
 	private Long populate() {
 		final EntityManager em = getOrCreateEntityManager();
 		try {
@@ -223,7 +225,7 @@ public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunct
 
 			return facility.getId();
 		}
-		catch( Throwable t) {
+		catch (Throwable t) {
 			if ( em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
@@ -233,5 +235,5 @@ public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunct
 			em.close();
 		}
 	}
-	
+
 }

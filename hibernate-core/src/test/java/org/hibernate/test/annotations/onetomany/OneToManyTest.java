@@ -6,20 +6,32 @@
  */
 package org.hibernate.test.annotations.onetomany;
 
-import javax.persistence.PersistenceException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
+import javax.persistence.PersistenceException;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
@@ -36,6 +48,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -346,6 +359,46 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	public void testCascadeDeleteWithUnidirectionalAssociation() throws Exception {
+		OnDeleteUnidirectionalOneToManyChild child = new OnDeleteUnidirectionalOneToManyChild();
+
+		doInHibernate( this::sessionFactory, session -> {
+			OnDeleteUnidirectionalOneToManyParent parent = new OnDeleteUnidirectionalOneToManyParent();
+			parent.children = Collections.singletonList( child);
+			session.persist( parent );
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			session.createQuery("delete from OnDeleteUnidirectionalOneToManyParent").executeUpdate();
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			OnDeleteUnidirectionalOneToManyChild e1 = session.get( OnDeleteUnidirectionalOneToManyChild.class, child.id );
+			assertNull( "delete cascade should work", e1 );
+		} );
+	}
+
+	@Test
+	public void testOnDeleteWithoutJoinColumn() throws Exception {
+		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+				.build();
+
+		try {
+			new MetadataSources( serviceRegistry )
+				.addAnnotatedClass( OnDeleteUnidirectionalOneToMany.class )
+				.addAnnotatedClass( ParentUnawareChild.class )
+				.getMetadataBuilder()
+				.build();
+		}
+		catch ( AnnotationException e ) {
+			assertTrue(e.getMessage().contains( "Unidirectional one-to-many associations annotated with @OnDelete must define @JoinColumn" ));
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
+		}
+	}
+
+	@Test
 	public void testSimpleOneToManySet() throws Exception {
 		Session s;
 		Transaction tx;
@@ -503,12 +556,57 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 				Person.class,
 				Organisation.class,
 				OrganisationUser.class,
-				Model.class
+				Model.class,
+				OnDeleteUnidirectionalOneToManyParent.class,
+				OnDeleteUnidirectionalOneToManyChild.class
 		};
 	}
 
 	@Override
 	protected String[] getXmlFiles() {
 		return new String[] { "org/hibernate/test/annotations/onetomany/orm.xml" };
+	}
+
+	@Entity(name = "OnDeleteUnidirectionalOneToManyParent")
+	@javax.persistence.Table(name = "OneToManyParent")
+	public static class OnDeleteUnidirectionalOneToManyParent {
+
+		@Id
+		@GeneratedValue
+		Long id;
+
+		@OneToMany(cascade = CascadeType.ALL)
+		@JoinColumn(name = "a_id")
+		@OnDelete(action = OnDeleteAction.CASCADE)
+		List<OnDeleteUnidirectionalOneToManyChild> children;
+	}
+
+	@Entity(name = "OnDeleteUnidirectionalOneToManyChild")
+	@javax.persistence.Table(name = "OneToManyChild")
+	public static class OnDeleteUnidirectionalOneToManyChild {
+
+		@Id
+		@GeneratedValue
+		Long id;
+	}
+
+	@Entity(name = "OnDeleteUnidirectionalOneToMany")
+	@javax.persistence.Table(name = "OneToMany")
+	public static class OnDeleteUnidirectionalOneToMany {
+
+		@Id
+		Long id;
+
+		@OneToMany(cascade = CascadeType.ALL)
+		@OnDelete(action = OnDeleteAction.CASCADE)
+		List<ParentUnawareChild> children;
+	}
+
+	@Entity(name = "ParentUnawareChild")
+	@javax.persistence.Table(name = "Child")
+	public static class ParentUnawareChild {
+
+		@Id
+		Long id;
 	}
 }

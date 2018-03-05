@@ -33,8 +33,6 @@ import static org.junit.Assert.assertSame;
  */
 public class QueueTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( QueueTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

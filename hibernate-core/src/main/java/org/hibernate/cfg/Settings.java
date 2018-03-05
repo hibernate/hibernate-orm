@@ -89,7 +89,6 @@ public final class Settings {
 			LOG.debugf( "JTA Track by Thread: %s", enabledDisabled( sessionFactoryOptions.isJtaTrackByThread() ) );
 
 			LOG.debugf( "Query language substitutions: %s", sessionFactoryOptions.getQuerySubstitutions() );
-			LOG.debugf( "JPA query language strict compliance: %s", enabledDisabled( sessionFactoryOptions.isStrictJpaQueryLanguageCompliance() ) );
 			LOG.debugf( "Named query checking : %s", enabledDisabled( sessionFactoryOptions.isNamedQueryStartupCheckingEnabled() ) );
 
 			LOG.debugf( "Second-level cache: %s", enabledDisabled( sessionFactoryOptions.isSecondLevelCacheEnabled() ) );
@@ -109,6 +108,11 @@ public final class Settings {
 			LOG.debugf( "JDBC result set fetch size: %s", sessionFactoryOptions.getJdbcFetchSize() );
 			LOG.debugf( "Connection release mode: %s", sessionFactoryOptions.getConnectionReleaseMode() );
 			LOG.debugf( "Generate SQL with comments: %s", enabledDisabled( sessionFactoryOptions.isCommentsEnabled() ) );
+
+			LOG.debugf( "JPA compliance - query : ", enabledDisabled( sessionFactoryOptions.getJpaCompliance().isJpaQueryComplianceEnabled() ) );
+			LOG.debugf( "JPA compliance - closed-handling : ", enabledDisabled( sessionFactoryOptions.getJpaCompliance().isJpaClosedComplianceEnabled() ) );
+			LOG.debugf( "JPA compliance - lists : ", enabledDisabled( sessionFactoryOptions.getJpaCompliance().isJpaListComplianceEnabled() ) );
+			LOG.debugf( "JPA compliance - transactions : ", enabledDisabled( sessionFactoryOptions.getJpaCompliance().isJpaTransactionComplianceEnabled() ) );
 		}
 	}
 
@@ -205,10 +209,6 @@ public final class Settings {
 
 	public Map getQuerySubstitutions() {
 		return sessionFactoryOptions.getQuerySubstitutions();
-	}
-
-	public boolean isStrictJPAQLCompliance() {
-		return sessionFactoryOptions.isStrictJpaQueryLanguageCompliance();
 	}
 
 	public boolean isNamedQueryStartupCheckingEnabled() {

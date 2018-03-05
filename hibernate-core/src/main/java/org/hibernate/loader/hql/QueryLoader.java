@@ -32,6 +32,8 @@ import org.hibernate.hql.internal.ast.tree.AggregatedSelectExpression;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
 import org.hibernate.hql.internal.ast.tree.SelectClause;
+import org.hibernate.hql.spi.NamedParameterInformation;
+import org.hibernate.hql.spi.ParameterInformation;
 import org.hibernate.internal.IteratorImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.BasicLoader;
@@ -599,7 +601,22 @@ public class QueryLoader extends BasicLoader {
 	 */
 	@Override
 	public int[] getNamedParameterLocs(String name) throws QueryException {
-		return queryTranslator.getParameterTranslations().getNamedParameterSqlLocations( name );
+		ParameterInformation info = queryTranslator.getParameterTranslations().getNamedParameterInformation( name );
+		if ( info == null ) {
+			try {
+				info = queryTranslator.getParameterTranslations().getPositionalParameterInformation(
+						Integer.parseInt( name )
+				);
+			}
+			catch (Exception ignore) {
+			}
+		}
+
+		if ( info == null ) {
+			throw new QueryException( "Unrecognized parameter label : " + name );
+		}
+
+		return info.getSourceLocations();
 	}
 
 	/**

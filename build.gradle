@@ -10,13 +10,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 buildscript {
 	repositories {
 		mavenCentral()
-		mavenLocal()
 		jcenter()
-
-		maven {
-			name 'jboss-nexus'
-			url "http://repository.jboss.org/nexus/content/groups/public/"
-		}
 		maven {
 			name "jboss-snapshots"
 			url "http://snapshots.jboss.org/maven2/"
@@ -28,424 +22,65 @@ buildscript {
 		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
 		classpath 'org.hibernate.build.gradle:gradle-xjc-plugin:1.0.2.Final'
 		classpath 'com.github.lburgazzoli:lb-karaf-features-gen:1.0.0-SNAPSHOT'
+		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.2'
+		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
 	}
 }
 
 plugins {
-	id 'com.gradle.build-scan' version '1.3'
+	id 'com.gradle.build-scan' version '1.9'
 	id 'me.champeau.buildscan-recipes' version '0.1.7'
 }
 
-apply plugin: 'eclipse'
-apply plugin: 'idea'
-apply from: "./libraries.gradle"
-apply from: "./databases.gradle"
-
 allprojects {
-    repositories {
-        mavenCentral()
-        mavenLocal()
+	repositories {
+		mavenCentral()
+		maven {
+			name "jboss-snapshots"
+			url "http://snapshots.jboss.org/maven2/"
+		}
+	}
 
-        maven {
-            name 'jboss-nexus'
-            url "http://repository.jboss.org/nexus/content/groups/public/"
-        }
-        maven {
-            name "jboss-snapshots"
-            url "http://snapshots.jboss.org/maven2/"
-        }
-    }
+	// minimize changes, at least for now (gradle uses 'build' by default)..
+	buildDir = "target"
+
+	apply from: rootProject.file( 'gradle/base-information.gradle' )
 }
 
-ext {
-	hibernateTargetVersion = '5.2.11-SNAPSHOT'
-	expectedGradleVersion = '3.2.1'
-	baselineJavaVersion = '1.8'
 
-    osgiExportVersion = hibernateTargetVersion.replaceAll( '-SNAPSHOT', '.SNAPSHOT' )
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Release Task
 
-	final String[] versionComponents = hibernateTargetVersion.split( '\\.' );
-	hibernateFullVersion = hibernateTargetVersion
-	hibernateMajorMinorVersion = versionComponents[0] + '.' + versionComponents[1]
-	hibernateMajorVersion = versionComponents[0]
+task release {
+	description = "The task performed when we are performing a release build.  Relies on " +
+			"the fact that subprojects will appropriately define a release task " +
+			"themselves if they have any release-related activities to perform"
 }
 
-idea {
-    project {
-		jdkName = baselineJavaVersion
-		languageLevel = baselineJavaVersion
-
-		vcs = 'Git'
-    }
-    module {
-        name = "hibernate-orm"
-    }
+task publish {
+	description = "The task performed when we want to just publish maven artifacts.  Relies on " +
+			"the fact that subprojects will have a task named pubappropriately define a release task " +
+			"themselves if they have any release-related activities to perform"
 }
 
-// Used in MANIFEST.MF for OSGi Bundles
-def osgiDescription() {
-	return "A module of the Hibernate O/RM project"
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// CI Build Task
+
+task ciBuild {
+	description = "The task performed when one of the 'main' jobs are triggered on the " +
+			"CI server.  Just as above, relies on the fact that subprojects will " +
+			"appropriately define a release task themselves if they have any tasks " +
+			"which should be performed from these CI jobs"
 }
 
-buildDir = "target"
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-subprojects { subProject ->
-    apply plugin: 'idea'
-    apply plugin: 'eclipse'
-
-    defaultTasks 'build'
-
-    group = 'org.hibernate'
-    version = rootProject.hibernateTargetVersion
-
-    ext.exportPackageVersion = rootProject.osgiExportVersion
-
-    // minimize changes, at least for now (gradle uses 'build' by default)..
-    buildDir = "target"
-
-	if ( subProject.name.startsWith( 'release' ) || subProject.name.startsWith( 'documentation' ) ) {
-		return;
-	}
-
-	if ( subProject.name.startsWith( 'hibernate-orm-modules' ) ) {
-		return;
-	}
-
-	// everything below here in the closure applies to java projects
-	apply plugin: 'java'
-	apply plugin: 'maven-publish'
-	apply plugin: 'maven-publish-auth'
-	apply plugin: 'osgi'
-
-	apply plugin: 'findbugs'
-	apply plugin: 'checkstyle'
-	apply plugin: 'build-dashboard'
-	apply plugin: 'project-report'
-
-	apply plugin: org.hibernate.build.HibernateBuildPlugin
-
-	sourceCompatibility = rootProject.baselineJavaVersion
-	targetCompatibility = rootProject.baselineJavaVersion
-
-	configurations {
-		provided {
-			// todo : need to make sure these are non-exported
-			description = 'Non-exported compile-time dependencies.'
-		}
-		jbossLoggingTool {
-			description = 'Dependencies for running the jboss-logging tooling.'
-		}
-		configurations {
-			all*.exclude group: 'xml-apis', module: 'xml-apis'
-		}
-	}
-
-	// appropriately inject the common dependencies into each sub-project
-	dependencies {
-		compile libraries.logging
-
-		provided libraries.logging_annotations
-
-		jbossLoggingTool( libraries.logging_processor )
-
-		testCompile( libraries.junit )
-		testCompile( libraries.byteman )
-		testCompile( libraries.byteman_install )
-		testCompile( libraries.byteman_bmunit )
-
-		testRuntime( libraries.log4j )
-		testRuntime( libraries.javassist )
-		testRuntime( libraries.byteBuddy )
-		testRuntime( libraries.woodstox )
-
-		//Databases
-		testRuntime( libraries.h2 )
-		testRuntime( libraries.hsqldb )
-		testRuntime( libraries.postgresql )
-		testRuntime( libraries.mysql )
-		testRuntime( libraries.mariadb )
-		testRuntime( libraries.mssql )
-		testRuntime( libraries.informix )
-
-		if (db.equalsIgnoreCase("oracle")) {
-			dependencies {
-				testRuntime( libraries.oracle ) {
-					exclude group: 'com.oracle.jdbc', module: 'xmlparserv2'
-				}
-			}
-		}
-		if (db.equalsIgnoreCase("db2")) {
-			dependencies {
-				testRuntime( libraries.db2 )
-			}
-		}
-		// 6.6 gave me some NPE problems from within checkstyle...
-		checkstyle 'com.puppycrawl.tools:checkstyle:6.5'
-	}
-
-	// mac-specific stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// should really use Jvm.current().toolsJar
-	ext.toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
-	if ( ext.toolsJar.exists() ) {
-		dependencies{
-			testCompile files( toolsJar )
-		}
-	}
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// compilation
-	compileJava.options.encoding = 'UTF-8'
-
-	tasks.withType(JavaCompile) {
-		options.encoding = 'UTF-8'
-	}
-
-	task compile
-	compile.dependsOn compileJava, processResources, compileTestJava, processTestResources
-
-	sourceSets.main {
-		compileClasspath += configurations.provided
-		compileClasspath += configurations.jbossLoggingTool
-	}
-
-	subProject.getConvention().findPlugin( JavaPluginConvention.class ).sourceSets.each { sourceSet ->
-		JavaCompile javaCompileTask = project.tasks.findByName( sourceSet.compileJavaTaskName ) as JavaCompile
-
-		// NOTE : this aptDir stuff is needed until we can have IntelliJ run annotation processors for us
-		//		which cannot happen until we can fold hibernate-testing back into hibernate-core/src/test
-		//		which cannot happen until... ugh
-		File aptDir = subProject.file( "${subProject.buildDir}/generated-src/apt/${sourceSet.name}" )
-		sourceSet.allJava.srcDir( aptDir )
-
-		javaCompileTask.options.compilerArgs += [
-				"-nowarn",
-				"-encoding", "UTF-8",
-				"-s", "${aptDir.absolutePath}"
-		]
-		javaCompileTask.doFirst {
-			aptDir.mkdirs()
-		}
-	}
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// testing
-	subProject.tasks.withType( Test.class ).all { task ->
-		task.jvmArgs += [
-				'-XX:+HeapDumpOnOutOfMemoryError',
-				"-XX:HeapDumpPath=${project.file( "${project.buildDir}/OOM-dump.hprof" ).absolutePath}",
-				'-XX:MetaspaceSize=512M'
-		]
-
-		task.maxHeapSize = '2G'
-
-		task.systemProperties['hibernate.test.validatefailureexpected'] = true
-		task.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate.") }
-
-// uncomment to help identify pauses in test executions : where they occur
-//		task.beforeTest { descriptor ->
-//			println "Starting test: " + descriptor
-//		}
-//		task.afterTest { descriptor ->
-//			println "Completed test: " + descriptor
-//		}
-	}
-
-	processTestResources.doLast( {
-		copy {
-			from( sourceSets.test.java.srcDirs ) {
-				include '**/*.properties'
-				include '**/*.xml'
-			}
-			into sourceSets.test.output.classesDir
-		}
-		copy {
-			from file('src/test/resources')
-			into file( "${buildDir}/resources/test" )
-			exclude 'src/test/resources/arquillian.xml'
-			exclude 'src/test/resources/hibernate.properties'
-		}
-		copy {
-			from file('src/test/resources/hibernate.properties')
-			into file( "${buildDir}/resources/test" )
-			filter( ReplaceTokens, tokens: dbBundle[db] )
-		}
-	} )
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// artifact
-	jar {
-		manifest = osgiManifest {
-			// GRADLE-1411: Even if we override Imports and Exports
-			// auto-generation with instructions, classesDir and classpath
-			// need to be here (temporarily).
-			classesDir = sourceSets.main.output.classesDir
-			classpath = configurations.runtime
-
-			instruction 'Import-Package',
-				// Temporarily support JTA 1.1 -- Karaf and other frameworks still
-				// use it.  Without this, the plugin generates [1.2,2).
-				'javax.transaction;version="[1.1,2)"',
-				// Tell Gradle OSGi to still dynamically import the other packages.
-				// IMPORTANT: Do not include the * in the modules' .gradle files.
-				// If it exists more than once, the manifest will physically contain a *.
-				'*'
-
-			instruction 'Bundle-Vendor', 'Hibernate.org'
-			instruction 'Bundle-Description', subProject.osgiDescription()
-			instruction 'Implementation-Url', 'http://hibernate.org'
-			instruction 'Implementation-Version', version
-			instruction 'Implementation-Vendor', 'Hibernate.org'
-			instruction 'Implementation-Vendor-Id', 'org.hibernate'
-			instruction 'Implementation-Title', name
-			instruction 'Specification-Title', name
-			instruction 'Specification-Version', version
-			instruction 'Specification-Vendor', 'Hibernate.org'
-		}
-	}
-
-	task sourcesJar(type: Jar, dependsOn: compileJava) {
-		from sourceSets.main.allSource
-		classifier = 'sources'
-	}
-
-	sourcesJar {
-		manifest = jar.manifest
-	}
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// IDE options
-	idea {
-		module {
-			jdkName = subProject.sourceCompatibility
-
-			excludeDirs = [file( ".gradle" )]
-			excludeDirs += file( "$buildDir/classes" )
-			excludeDirs += file( "$buildDir/bundles" )
-			excludeDirs += file( "$buildDir/packages" )
-			excludeDirs += file( "$buildDir/dependency-cache" )
-			excludeDirs += file( "$buildDir/libs" )
-			excludeDirs += file( "$buildDir/reports" )
-			excludeDirs += file( "$buildDir/test-results" )
-			excludeDirs += file( "$buildDir/tmp" )
-			excludeDirs += file( "$buildDir/matrix" )
-			excludeDirs += file( "$buildDir/resources" )
-
-			downloadSources = true
-			scopes.PROVIDED.plus += [configurations.provided]
-		}
-	}
-
-	eclipse {
-		jdt {
-			sourceCompatibility = subProject.sourceCompatibility
-			targetCompatibility = subProject.targetCompatibility
-		}
-		classpath {
-			plusConfigurations.add( configurations.provided )
-		}
-	}
-
-	// eclipseClasspath will not add sources to classpath unless the dirs actually exist.
-	// TODO: Eclipse's annotation processor handling is also fairly stupid (and completely lacks in the
-	// Gradle plugin).  For now, just compile first in order to get the logging classes.
-	eclipseClasspath.dependsOn compile
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Report configs
-	checkstyle {
-		sourceSets = [ subProject.sourceSets.main ]
-		configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
-		showViolations = false
-	}
-	// exclude generated java sources - by explicitly setting the base source dir
-	checkstyleMain.source = 'src/main/java'
-	
-	// define a second checkstyle task for checking non-fatal violations
-	task nonFatalCheckstyle(type:Checkstyle) {
-		source = subProject.sourceSets.main.java
-		classpath = subProject.configurations.checkstyle
-		showViolations = false
-		configFile = rootProject.file( 'shared/config/checkstyle/checkstyle-non-fatal.xml' )
-	}
-
-	findbugs {
-		sourceSets = [ subProject.sourceSets.main, subProject.sourceSets.test ]
-		ignoreFailures = true
-		toolVersion = '3.0.1'
-		// for now we need to set this to low so that FindBugs will actually report the DM_CONVERT_CASE warning we care about
-		reportLevel = 'low'
-		// remove all low level bug warnings except DM_CONVERT_CASE
-		excludeFilterConfig=resources.text.fromString(excludeAllLowLevelBugsExcept('DM_CONVERT_CASE'))
-	}
-
-	// exclude generated java sources and cfg package is a mess mainly from annotation stuff
-	findbugsMain.doFirst {
-		classes = classes.filter {
-			!it.path.contains( 'org/hibernate/hql/internal/antlr' ) &&
-					!it.path.contains( 'org/hibernate/boot/jaxb/cfg/spi' ) &&
-					!it.path.contains( 'org/hibernate/sql/ordering/antlr/Generated' ) &&
-					!it.path.contains( 'org/hibernate/sql/ordering/antlr/OrderByTemplateTokenTypes' ) &&
-					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/Jaxb' ) &&
-					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/Adapter' ) &&
-					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/ObjectFactory' ) &&
-					!it.path.contains( 'org/hibernate/cfg' ) &&
-					!it.path.contains( '_\$logger' )
-		}
-	}
-
-		// because cfg package is a mess mainly from annotation stuff
-	checkstyleMain.exclude '**/org/hibernate/cfg/**'
-	checkstyleMain.exclude '**/org/hibernate/cfg/*'
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Publishing
-	publishing {
-		publications {
-			mavenJava(MavenPublication) {
-				from components.java
-
-				artifact( sourcesJar ) {
-					classifier 'sources'
-				}
-			}
-			// http://issues.gradle.org/browse/GRADLE-2966
-			// Once ^^ is resolved:
-			//		1) Move hibernate-testing module into hibernate-core tests
-			//		2) Define a second publication on hibernate-core for publishing the testing jar
-			// We could kind of do this now, but it would just be the jar.  Every module would still need
-			// to duplicate the testing dependencies.  Well, on second thought, we could centralize the
-			// testing dependencies here within the subprojects block
-		}
-	}
-
-	model {
-		tasks.generatePomFileForMavenJavaPublication {
-			destination = file( "$subProject.buildDir/generated-pom.xml" )
-		}
-	}
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-}
-
-task release(type: Task, dependsOn: 'release:release')
 
 task wrapper(type: Wrapper) {
-    gradleVersion = expectedGradleVersion
+	gradleVersion = '4.4'
+	distributionType = 'ALL'
 }
+
 
 buildScan {
 	licenseAgreementUrl = 'https://gradle.com/terms-of-service'
@@ -456,18 +91,30 @@ buildScan {
 
 
 
-def excludeAllLowLevelBugsExcept(String[] bugTypes){
-	def writer = new StringWriter()
-	def xml = new groovy.xml.MarkupBuilder(writer);
-	xml.FindBugsFilter {
-		Match {
-			Confidence( value: '3' )
-			bugTypes.each { bug ->
-				Not {
-					Bug( pattern: "${bug}" )
-				}
-			}
-		}
-	}
-	return writer.toString(  )
-}
+
+
+
+
+
+//idea {
+//    project {
+//		jdkName = baselineJavaVersion
+//		languageLevel = baselineJavaVersion
+//
+//		vcs = 'Git'
+//    }
+//    module {
+//        name = "hibernate-orm"
+//    }
+//}
+
+
+
+
+//allprojects {
+//	apply plugin: 'idea'
+//	apply plugin: 'eclipse'
+//}
+
+
+

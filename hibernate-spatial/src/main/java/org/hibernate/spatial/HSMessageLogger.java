@@ -21,7 +21,7 @@ import static org.jboss.logging.Logger.Level.INFO;
  * @author Karel Maesen, Geovise BVBA
  */
 @MessageLogger(projectCode = "HHH")
-@ValidIdRange( min = 80000001, max = 80001000 )
+@ValidIdRange(min = 80000001, max = 80001000)
 public interface HSMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "hibernate-spatial integration enabled : %s", id = 80000001)

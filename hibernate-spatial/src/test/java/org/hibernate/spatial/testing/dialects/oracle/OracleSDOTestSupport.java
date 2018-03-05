@@ -19,7 +19,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: Oct 22, 2010
+ * creation-date: Oct 22, 2010
  */
 public class OracleSDOTestSupport extends TestSupport {
 

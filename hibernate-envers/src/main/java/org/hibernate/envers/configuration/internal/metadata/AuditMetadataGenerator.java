@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.dom4j.Element;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -48,6 +47,9 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.TimestampType;
 import org.hibernate.type.Type;
+
+import org.dom4j.Element;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -742,6 +744,10 @@ public final class AuditMetadataGenerator {
 
 		// Mapping unjoined properties
 		final Element parent = xmlMappingData.getClassMapping();
+
+		// HHH-11748 - Generate a second pass for identifiers
+		// This is useful for situations where @Id point to @ManyToOne and @OneToOne associations.
+		idMetadataGenerator.generateSecondPass( entityName, pc );
 
 		addProperties(
 				parent,

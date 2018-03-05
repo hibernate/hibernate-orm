@@ -242,7 +242,7 @@ tokens
 }
 
 statement
-	: ( updateStatement | deleteStatement | selectStatement | insertStatement )
+	: ( updateStatement | deleteStatement | selectStatement | insertStatement ) (EOF!)
 	;
 
 // Without the optionalVersioned if the path starts with a keyword the parser fails
@@ -813,13 +813,13 @@ identPrimaryBase
     ;
 
 castedIdentPrimaryBase
-    : i:IDENT! OPEN! p:path AS! a:path! CLOSE! { i.getText().equals("treat") }? {
+    : i:IDENT! OPEN! p:path AS! a:path! CLOSE! { i.getText().equalsIgnoreCase("treat") }? {
         registerTreat( #p, #a );
     }
     ;
 
 aggregate
-	: ( SUM^ | AVG^ | MAX^ | MIN^ ) OPEN! additiveExpression CLOSE! { #aggregate.setType(AGGREGATE); }
+	: ( SUM^ | AVG^ | MAX^ | MIN^ ) OPEN! ( additiveExpression | selectStatement ) CLOSE! { #aggregate.setType(AGGREGATE); }
 	// Special case for count - It's 'parameters' can be keywords.
 	|  COUNT^ OPEN! ( STAR { #STAR.setType(ROW_STAR); } | ( ( DISTINCT | ALL )? ( path | collectionExpr | NUM_INT | caseExpression ) ) ) CLOSE!
 	|  collectionExpr

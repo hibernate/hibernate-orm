@@ -9,6 +9,7 @@ package org.hibernate.userguide.envers;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.Column;
@@ -25,16 +26,19 @@ import javax.persistence.TemporalType;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.DefaultRevisionEntity;
 import org.hibernate.envers.ModifiedEntityNames;
 import org.hibernate.envers.RevisionEntity;
+import org.hibernate.envers.tools.Pair;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
@@ -50,7 +54,7 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
 	}
 
 	@Test
-	public void testLifecycle() {
+	public void test() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Customer customer = new Customer();
@@ -68,6 +72,7 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
 				org.hibernate.jpa.AvailableSettings.LOADED_CLASSES,
 				Arrays.asList(
 					ApplicationCustomer.class,
+					Customer.class,
 					CustomTrackingRevisionEntity.class
 				)
 			);
@@ -76,19 +81,39 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
 					"update"
 			);
 			entityManagerFactory =  Bootstrap.getEntityManagerFactoryBuilder(
-					new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
-					settings
+				new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
+				settings
 			).build().unwrap( SessionFactoryImplementor.class );
 
 			final EntityManagerFactory emf = entityManagerFactory;
 
 			doInJPA( () -> emf, entityManager -> {
-				ApplicationCustomer customer = new ApplicationCustomer();
-				customer.setId( 2L );
-				customer.setFirstName( "John" );
+				ApplicationCustomer customer = entityManager.find( ApplicationCustomer.class, 1L );
 				customer.setLastName( "Doe Jr." );
+			} );
 
-				entityManager.persist( customer );
+			doInJPA( () -> emf, entityManager -> {
+				//tag::envers-tracking-modified-entities-queries-example[]
+				assertEquals(
+					"org.hibernate.userguide.envers.EntityTypeChangeAuditTest$Customer",
+					AuditReaderFactory
+					.get( entityManager )
+					.getCrossTypeRevisionChangesReader()
+					.findEntityTypes( 1 )
+					.iterator().next()
+					.getFirst()
+				);
+
+				assertEquals(
+					"org.hibernate.userguide.envers.EntityTypeChangeAuditTest$ApplicationCustomer",
+					AuditReaderFactory
+					.get( entityManager )
+					.getCrossTypeRevisionChangesReader()
+					.findEntityTypes( 2 )
+					.iterator().next()
+					.getFirst()
+				);
+				//end::envers-tracking-modified-entities-queries-example[]
 			} );
 		}
 		finally {

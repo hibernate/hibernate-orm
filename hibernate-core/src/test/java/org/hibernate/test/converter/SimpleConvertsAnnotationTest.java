@@ -46,7 +46,7 @@ public class SimpleConvertsAnnotationTest extends BaseNonConfigCoreFunctionalTes
 				AttributeConverterTypeAdapter.class,
 				websitePropertyType
 		);
-		assertTyping( UrlConverter.class, type.getAttributeConverter() );
+		assertTrue( UrlConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaType() ) );
 
 		resetFlags();
 

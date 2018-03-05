@@ -27,4 +27,8 @@ public interface JdbcObserver {
 	public void jdbcExecuteBatchStart();
 	public void jdbcExecuteBatchEnd();
 
+	default public void jdbcReleaseRegistryResourcesStart() {}
+	default public void jdbcReleaseRegistryResourcesEnd() {}
+
+
 }

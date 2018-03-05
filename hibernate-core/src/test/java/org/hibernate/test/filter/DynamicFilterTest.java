@@ -53,7 +53,6 @@ import static org.junit.Assert.assertTrue;
  */
 @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-3637")
 public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
-	private static final Logger log = Logger.getLogger( DynamicFilterTest.class );
 
 	@Override
 	public String[] getMappings() {
@@ -210,7 +209,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertTrue( "Incorrect collectionfilter count", result.getOrders().size() == 1 );
 
         log.info( "HQL against Product..." );
-		results = session.createQuery( "from Product as p where p.stockNumber = ?" ).setInteger( 0, 124 ).list();
+		results = session.createQuery( "from Product as p where p.stockNumber = ?1" ).setInteger( 1, 124 ).list();
 		assertTrue( results.size() == 1 );
 
 		session.close();
@@ -393,23 +392,23 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
         log.info("query against Department with a subquery on Salesperson in the APAC reqion...");
 
 		List departments = session.createQuery(
-				"select d from Department as d where d.id in (select s.department from Salesperson s where s.name = ?)"
-		).setString( 0, "steve" ).list();
+				"select d from Department as d where d.id in (select s.department from Salesperson s where s.name = ?1)"
+		).setString( 1, "steve" ).list();
 
 		assertEquals("Incorrect department count", 1, departments.size());
 
         log.info("query against Department with a subquery on Salesperson in the FooBar reqion...");
 
 		session.enableFilter("region").setParameter( "region", "Foobar" );
-		departments = session.createQuery("select d from Department as d where d.id in (select s.department from Salesperson s where s.name = ?)").setString(0, "steve").list();
+		departments = session.createQuery("select d from Department as d where d.id in (select s.department from Salesperson s where s.name = ?1)").setString(1, "steve").list();
 
 		assertEquals( "Incorrect department count", 0, departments.size() );
 
         log.info("query against Order with a subquery for line items with a subquery line items where the product name is Acme Hair Gel and the quantity is greater than 1 in a given region for a given buyer");
 		session.enableFilter("region").setParameter( "region", "APAC" );
 
-		List orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li, Product as p where p.id = li.product and li.quantity >= ? and p.name = ?) and o.buyer = ?")
-				.setLong(0, 1L).setString(1, "Acme Hair Gel").setString(2, "gavin").list();
+		List orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li, Product as p where p.id = li.product and li.quantity >= ?1 and p.name = ?2) and o.buyer = ?3")
+				.setLong(1, 1L).setString(2, "Acme Hair Gel").setString(3, "gavin").list();
 
 		assertEquals( "Incorrect orders count", 1, orders.size() );
 
@@ -418,8 +417,8 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.enableFilter("region").setParameter("region", "APAC");
 		session.enableFilter("effectiveDate").setParameter( "asOfDate", testData.lastMonth.getTime() );
 
-		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ? and li.product in (select p.id from Product p where p.name = ?)) and o.buyer = ?")
-				.setLong(0, 1L).setString(1, "Acme Hair Gel").setString(2, "gavin").list();
+		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p.id from Product p where p.name = ?2)) and o.buyer = ?3")
+				.setLong(1, 1L).setString(2, "Acme Hair Gel").setString(3, "gavin").list();
 
 		assertEquals( "Incorrect orders count", 1, orders.size() );
 
@@ -431,8 +430,8 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.enableFilter("region").setParameter("region", "APAC");
 		session.enableFilter("effectiveDate").setParameter("asOfDate", testData.fourMonthsAgo.getTime());
 
-		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ? and li.product in (select p.id from Product p where p.name = ?)) and o.buyer = ?")
-				.setLong( 0, 1L ).setString( 1, "Acme Hair Gel" ).setString( 2, "gavin" ).list();
+		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p.id from Product p where p.name = ?2)) and o.buyer = ?3")
+				.setLong(1, 1L).setString(2, "Acme Hair Gel").setString(3, "gavin").list();
 
 		assertEquals("Incorrect orders count", 0, orders.size());
 
@@ -441,8 +440,8 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.enableFilter("region").setParameter("region", "APAC");
 		session.enableFilter("effectiveDate").setParameter("asOfDate", testData.lastMonth.getTime());
 
-		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= :quantity and li.product in (select p.id from Product p where p.name = :name)) and o.buyer = :buyer")
-				.setLong("quantity", 1L).setString("name", "Acme Hair Gel").setString("buyer", "gavin").list();
+		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p.id from Product p where p.name = ?2)) and o.buyer = ?3")
+				.setLong(1, 1L).setString(2, "Acme Hair Gel").setString(3, "gavin").list();
 
 		assertEquals("Incorrect orders count", 1, orders.size());
 
@@ -451,8 +450,8 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.enableFilter("region").setParameter("region", "APAC");
 		session.enableFilter("effectiveDate").setParameter("asOfDate", testData.lastMonth.getTime());
 
-		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ? and li.product in (select p.id from Product p where p.name = ?)) and o.buyer = :buyer")
-				.setLong( 0, 1L ).setString( 1, "Acme Hair Gel" ).setString( "buyer", "gavin" ).list();
+		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p.id from Product p where p.name = ?2)) and o.buyer = ?3")
+				.setLong(1, 1L).setString(2, "Acme Hair Gel").setString(3, "gavin").list();
 
 		assertEquals("Incorrect orders count", 1, orders.size());
 
@@ -477,25 +476,25 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		Session session = openSession();
 		session.beginTransaction();
 
-		final String queryString = "from Order o where ? in ( select sp.name from Salesperson sp )";
+		final String queryString = "from Order o where ?1 in ( select sp.name from Salesperson sp )";
 
 		// first a control-group query
-		List result = session.createQuery( queryString ).setParameter( 0, "steve" ).list();
+		List result = session.createQuery( queryString ).setParameter( 1, "steve" ).list();
 		assertEquals( 2, result.size() );
 
 		// now lets enable filters on Order...
 		session.enableFilter( "fulfilledOrders" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
-		result = session.createQuery( queryString ).setParameter( 0, "steve" ).list();
+		result = session.createQuery( queryString ).setParameter( 1, "steve" ).list();
 		assertEquals( 1, result.size() );
 
 		// now, lets additionally enable filter on Salesperson.  First a valid one...
 		session.enableFilter( "regionlist" ).setParameterList( "regions", new String[] { "APAC" } );
-		result = session.createQuery( queryString ).setParameter( 0, "steve" ).list();
+		result = session.createQuery( queryString ).setParameter( 1, "steve" ).list();
 		assertEquals( 1, result.size() );
 
 		// ... then a silly one...
 		session.enableFilter( "regionlist" ).setParameterList( "regions", new String[] { "gamma quadrant" } );
-		result = session.createQuery( queryString ).setParameter( 0, "steve" ).list();
+		result = session.createQuery( queryString ).setParameter( 1, "steve" ).list();
 		assertEquals( 0, result.size() );
 
 		session.getTransaction().commit();

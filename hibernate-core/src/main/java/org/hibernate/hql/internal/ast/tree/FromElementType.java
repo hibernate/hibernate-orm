@@ -457,7 +457,7 @@ class FromElementType {
 			// table name as the column qualification
 			// 2) otherwise (not correlated), use the given alias
 			if ( isCorrelation() ) {
-				if ( isMultiTable() ) {
+				if ( isMultiTable() || isInsertQuery() ) {
 					return propertyMapping.toColumns( tableAlias, path );
 				}
 				return propertyMapping.toColumns( extractTableName(), path );
@@ -496,6 +496,10 @@ class FromElementType {
 	private String extractTableName() {
 		// should be safe to only ever expect EntityPersister references here
 		return fromElement.getQueryable().getTableName();
+	}
+
+	private boolean isInsertQuery() {
+		return fromElement.getWalker().getStatementType() == HqlSqlTokenTypes.INSERT;
 	}
 
 	private boolean isManipulationQuery() {
@@ -618,7 +622,7 @@ class FromElementType {
 
 				Map enabledFilters = fromElement.getWalker().getEnabledFilters();
 				String subquery = CollectionSubqueryFactory.createCollectionSubquery(
-						joinSequence.copy().setUseThetaStyle( true ),
+						joinSequence.copyForCollectionProperty().setUseThetaStyle( true ),
 						enabledFilters,
 						collectionPropertyMapping.toColumns( tableAlias, propertyName )
 				);

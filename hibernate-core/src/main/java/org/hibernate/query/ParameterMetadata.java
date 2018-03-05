@@ -6,7 +6,9 @@
  */
 package org.hibernate.query;
 
+import java.util.Collection;
 import java.util.Set;
+import java.util.function.Consumer;
 import javax.persistence.Parameter;
 
 /**
@@ -54,10 +56,13 @@ public interface ParameterMetadata {
 
 	<T> QueryParameter<T> resolve(Parameter<T> param);
 
-	default boolean isOrdinalParametersZeroBased() {
-		return true;
-	}
+	Collection<QueryParameter> getPositionalParameters();
 
-	default void setOrdinalParametersZeroBased(boolean isZeroBased) {
-	}
+	Collection<QueryParameter> getNamedParameters();
+
+	int getParameterCount();
+
+	boolean containsReference(QueryParameter parameter);
+
+	void visitRegistrations(Consumer<QueryParameter> action);
 }

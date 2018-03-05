@@ -7,7 +7,6 @@
 
 package org.hibernate.spatial.testing;
 
-import javax.sql.DataSource;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -23,16 +22,17 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import javax.sql.DataSource;
+
+import org.hibernate.spatial.HSMessageLogger;
+
+import org.jboss.logging.Logger;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.codec.WktDecodeException;
 import org.geolatte.geom.codec.WktDecoder;
-
-import org.jboss.logging.Logger;
-
-import org.hibernate.spatial.HSMessageLogger;
 
 /**
  * <p>Unit testsuite-suite support class.</p>
@@ -104,6 +104,14 @@ public class DataSourceUtils {
 		createBasicDataSource();
 	}
 
+	private static int sum(int[] insCounts) {
+		int result = 0;
+		for ( int idx = 0; idx < insCounts.length; idx++ ) {
+			result += insCounts[idx];
+		}
+		return result;
+	}
+
 	private Properties readProperties(String propertyFile) {
 		InputStream is = null;
 		try {
@@ -116,7 +124,7 @@ public class DataSourceUtils {
 			return properties;
 		}
 		catch (IOException e) {
-			throw (new RuntimeException( e ));
+			throw ( new RuntimeException( e ) );
 		}
 		finally {
 			if ( is != null ) {
@@ -139,14 +147,13 @@ public class DataSourceUtils {
 		dataSource = bds;
 	}
 
-
 	/**
 	 * Closes the connections to the database.
 	 *
 	 * @throws SQLException
 	 */
 	public void close() throws SQLException {
-		((BasicDataSource) dataSource).close();
+		( (BasicDataSource) dataSource ).close();
 	}
 
 	/**
@@ -232,7 +239,6 @@ public class DataSourceUtils {
 			}
 		}
 	}
-
 
 	/**
 	 * Parses the content of a file into an executable SQL statement.
@@ -396,14 +402,6 @@ public class DataSourceUtils {
 					throw new RuntimeException( e );
 				}
 			}
-		}
-		return result;
-	}
-
-	private static int sum(int[] insCounts) {
-		int result = 0;
-		for ( int idx = 0; idx < insCounts.length; idx++ ) {
-			result += insCounts[idx];
 		}
 		return result;
 	}

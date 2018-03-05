@@ -47,13 +47,7 @@ public class ByteBuddyInterceptor extends BasicLazyInitializer implements ProxyC
 
 	@Override
 	public Object intercept(Object proxy, Method thisMethod, Object[] args) throws Throwable {
-		Object result;
-		try {
-			result = this.invoke( thisMethod, args, proxy );
-		}
-		catch (Throwable t) {
-			throw new Exception( t.getCause() );
-		}
+		Object result = this.invoke( thisMethod, args, proxy );
 		if ( result == INVOKE_IMPLEMENTATION ) {
 			Object target = getImplementation();
 			final Object returnValue;

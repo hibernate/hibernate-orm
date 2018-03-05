@@ -9,6 +9,7 @@ package org.hibernate.event.internal;
 import java.io.Serializable;
 import java.util.Map;
 
+import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
@@ -35,6 +36,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
+
+import static org.hibernate.FlushMode.COMMIT;
+import static org.hibernate.FlushMode.MANUAL;
 
 /**
  * A convenience base class for listeners responding to save events.
@@ -230,8 +234,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 
 		Serializable id = key == null ? null : key.getIdentifier();
 
-		boolean inTxn = source.isTransactionInProgress();
-		boolean shouldDelayIdentityInserts = !inTxn && !requiresImmediateIdAccess;
+		boolean shouldDelayIdentityInserts = shouldDelayIdentityInserts( requiresImmediateIdAccess, source );
 
 		// Put a placeholder in entries, so we don't recurse back and try to save() the
 		// same object again. QUESTION: should this be done before onSave() is called?
@@ -301,6 +304,30 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		}
 
 		return id;
+	}
+
+	private static boolean shouldDelayIdentityInserts(boolean requiresImmediateIdAccess, EventSource source) {
+		return shouldDelayIdentityInserts( requiresImmediateIdAccess, isPartOfTransaction( source ), source.getHibernateFlushMode() );
+	}
+
+	private static boolean shouldDelayIdentityInserts(
+			boolean requiresImmediateIdAccess,
+			boolean partOfTransaction,
+			FlushMode flushMode) {
+		if ( requiresImmediateIdAccess ) {
+			// todo : make this configurable?  as a way to support this behavior with Session#save etc
+			return false;
+		}
+
+		// otherwise we should delay the IDENTITY insertions if either:
+		//		1) we are not part of a transaction
+		//		2) we are in FlushMode MANUAL or COMMIT (not AUTO nor ALWAYS)
+		return !partOfTransaction || flushMode == MANUAL || flushMode == COMMIT;
+
+	}
+
+	private static boolean isPartOfTransaction(EventSource source) {
+		return source.isTransactionInProgress() && source.getTransactionCoordinator().isJoined();
 	}
 
 	private AbstractEntityInsertAction addInsertAction(

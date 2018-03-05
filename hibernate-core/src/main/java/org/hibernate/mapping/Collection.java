@@ -293,12 +293,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		assert getKey() != null : "Collection key not bound : " + getRole();
 		assert getElement() != null : "Collection element not bound : " + getRole();
 
-		if ( getKey().isCascadeDeleteEnabled() && ( !isInverse() || !isOneToMany() ) ) {
-			throw new MappingException(
-					"only inverse one-to-many associations may use on-delete=\"cascade\": "
-							+ getRole()
-			);
-		}
 		if ( !getKey().isValid( mapping ) ) {
 			throw new MappingException(
 					"collection foreign key mapping has wrong number of columns: "

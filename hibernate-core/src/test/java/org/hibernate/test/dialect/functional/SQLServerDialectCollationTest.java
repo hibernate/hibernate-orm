@@ -43,8 +43,6 @@ import static org.junit.Assert.fail;
 @RequiresDialect(value = { SQLServer2005Dialect.class })
 public class SQLServerDialectCollationTest extends BaseCoreFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( SQLServerDialectCollationTest.class );
-
 	@Override
 	protected Configuration constructConfiguration() {
 		Configuration configuration = super.constructConfiguration();

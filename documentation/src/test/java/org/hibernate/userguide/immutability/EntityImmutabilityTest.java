@@ -25,8 +25,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class EntityImmutabilityTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( EntityImmutabilityTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

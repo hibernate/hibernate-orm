@@ -21,8 +21,19 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 * Retrieve the Java type handled here.
 	 *
 	 * @return The Java type.
+	 *
+	 * @deprecated Use {@link #getJavaType()} instead
 	 */
-	public Class<T> getJavaTypeClass();
+	@Deprecated
+	Class<T> getJavaTypeClass();
+
+	/**
+	 * Get the Java type described
+	 */
+	default Class<T> getJavaType() {
+		// default on this side since #getJavaTypeClass is the currently implemented method
+		return getJavaTypeClass();
+	}
 
 	/**
 	 * Retrieve the mutability plan for this Java type.

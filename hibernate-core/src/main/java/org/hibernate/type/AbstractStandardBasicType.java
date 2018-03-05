@@ -71,10 +71,11 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	protected T getReplacement(T original, T target, SharedSessionContractImplementor session) {
-		if ( !isMutable() ) {
-			return original;
+		if ( original == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+			return target;
 		}
-		else if ( isEqual( original, target ) ) {
+		else if ( !isMutable() ||
+					( target != LazyPropertyInitializer.UNFETCHED_PROPERTY && isEqual( original, target ) ) ) {
 			return original;
 		}
 		else {

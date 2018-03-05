@@ -7,6 +7,8 @@
 package org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor;
 
 import java.lang.reflect.InvocationTargetException;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.List;
 import java.util.Map;
 
@@ -45,18 +47,25 @@ public class MapCollectionInitializor<T extends Map> extends AbstractCollectionI
 	@Override
 	@SuppressWarnings("unchecked")
 	protected T initializeCollection(int size) {
-		try {
-			return (T) ReflectHelper.getDefaultConstructor( collectionClass ).newInstance();
-		}
-		catch (InstantiationException e) {
-			throw new AuditException( e );
-		}
-		catch (IllegalAccessException e) {
-			throw new AuditException( e );
-		}
-		catch (InvocationTargetException e) {
-			throw new AuditException( e );
-		}
+		return AccessController.doPrivileged(
+				new PrivilegedAction<T>() {
+					@Override
+					public T run() {
+						try {
+							return (T) ReflectHelper.getDefaultConstructor( collectionClass ).newInstance();
+						}
+						catch (InstantiationException e) {
+							throw new AuditException( e );
+						}
+						catch (IllegalAccessException e) {
+							throw new AuditException( e );
+						}
+						catch (InvocationTargetException e) {
+							throw new AuditException( e );
+						}
+					}
+				}
+		);
 	}
 
 	@Override

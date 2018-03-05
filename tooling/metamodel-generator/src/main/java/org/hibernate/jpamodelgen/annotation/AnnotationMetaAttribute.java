@@ -7,12 +7,15 @@
 package org.hibernate.jpamodelgen.annotation;
 
 import java.beans.Introspector;
+import java.util.ArrayList;
+import java.util.List;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.util.Elements;
 
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.MetaEntity;
+import org.hibernate.jpamodelgen.util.StringUtil;
 
 /**
  * Captures all information about an annotated persistent attribute.
@@ -33,7 +36,8 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 		this.type = type;
 	}
 
-	public String getDeclarationString() {
+	@Override
+	public String getAttributeDeclarationString() {
 		return new StringBuilder().append( "public static volatile " )
 				.append( parent.importType( getMetaType() ) )
 				.append( "<" )
@@ -43,6 +47,20 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 				.append( "> " )
 				.append( getPropertyName() )
 				.append( ";" )
+				.toString();
+	}
+
+	@Override
+	public String getAttributeNameDeclarationString(){
+		return new StringBuilder().append("public static final ")
+				.append(parent.importType(String.class.getName()))
+				.append(" ")
+				.append(StringUtil.getUpperUnderscoreCaseFromLowerCamelCase(getPropertyName()))
+				.append(" = ")
+				.append("\"")
+				.append(getPropertyName())
+				.append("\"")
+				.append(";")
 				.toString();
 	}
 

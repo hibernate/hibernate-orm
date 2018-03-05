@@ -9,6 +9,8 @@ package org.hibernate.envers.internal.entities.mapper.relation;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -247,45 +249,52 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 
 	@Override
 	public void mapToEntityFromMap(
-			EnversService enversService,
-			Object obj,
-			Map data,
-			Object primaryKey,
-			AuditReaderImplementor versionsReader,
-			Number revision) {
-		final Setter setter = ReflectionTools.getSetter(
-				obj.getClass(),
-				commonCollectionMapperData.getCollectionReferencingPropertyData(),
-				enversService.getServiceRegistry()
-		);
-		try {
-			setter.set(
-					obj,
-					proxyConstructor.newInstance(
-							getInitializor(
-									enversService,
-									versionsReader,
-									primaryKey,
-									revision,
-									RevisionType.DEL.equals(
-											data.get(
-													enversService.getAuditEntitiesConfiguration().getRevisionTypePropName()
+			final EnversService enversService,
+			final Object obj,
+			final Map data,
+			final Object primaryKey,
+			final AuditReaderImplementor versionsReader,
+			final Number revision) {
+		final String revisionTypePropertyName = enversService.getAuditEntitiesConfiguration().getRevisionTypePropName();
+		AccessController.doPrivileged(
+				new PrivilegedAction<Object>() {
+					@Override
+					public Object run() {
+						final Setter setter = ReflectionTools.getSetter(
+								obj.getClass(),
+								commonCollectionMapperData.getCollectionReferencingPropertyData(),
+								enversService.getServiceRegistry()
+						);
+
+						try {
+							setter.set(
+									obj,
+									proxyConstructor.newInstance(
+											getInitializor(
+													enversService,
+													versionsReader,
+													primaryKey,
+													revision,
+													RevisionType.DEL.equals( data.get( revisionTypePropertyName ) )
 											)
-									)
-							)
-					),
-					null
-			);
-		}
-		catch (InstantiationException e) {
-			throw new AuditException( e );
-		}
-		catch (IllegalAccessException e) {
-			throw new AuditException( e );
-		}
-		catch (InvocationTargetException e) {
-			throw new AuditException( e );
-		}
+									),
+									null
+							);
+						}
+						catch (InstantiationException e) {
+							throw new AuditException( e );
+						}
+						catch (IllegalAccessException e) {
+							throw new AuditException( e );
+						}
+						catch (InvocationTargetException e) {
+							throw new AuditException( e );
+						}
+
+						return null;
+					}
+				}
+		);
 	}
 
 	/**
@@ -309,10 +318,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 		final Collection newCollection = getNewCollectionContent( newColl );
 		final Collection oldCollection = getOldCollectionContent( oldColl );
 
-		final Set<Object> added = new HashSet<>();
-		if ( newColl != null ) {
-			added.addAll( newCollection );
-		}
+		final Set<Object> added = buildCollectionChangeSet( newColl, newCollection );
 		// Re-hashing the old collection as the hash codes of the elements there may have changed, and the
 		// removeAll in AbstractSet has an implementation that is hashcode-change sensitive (as opposed to addAll).
 		if ( oldColl != null ) {
@@ -320,10 +326,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 		}
 		addCollectionChanges( session, collectionChanges, added, RevisionType.ADD, id );
 
-		final Set<Object> deleted = new HashSet<>();
-		if ( oldColl != null ) {
-			deleted.addAll( oldCollection );
-		}
+		final Set<Object> deleted = buildCollectionChangeSet( oldColl, oldCollection );
 		// The same as above - re-hashing new collection.
 		if ( newColl != null ) {
 			deleted.removeAll( new HashSet( newCollection ) );
@@ -358,10 +361,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 
 		// take the new collection and remove any that exist in the old collection.
 		// take the resulting Set<> and generate ADD changes.
-		final Set<Object> added = new HashSet<>();
-		if ( newColl != null ) {
-			added.addAll( newCollection );
-		}
+		final Set<Object> added = buildCollectionChangeSet( newColl, newCollection );
 		if ( oldColl != null && collectionPersister != null ) {
 			for ( Object object : oldCollection ) {
 				for ( Iterator addedIt = added.iterator(); addedIt.hasNext(); ) {
@@ -377,10 +377,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 
 		// take the old collection and remove any that exist in the new collection.
 		// take the resulting Set<> and generate DEL changes.
-		final Set<Object> deleted = new HashSet<>();
-		if ( oldColl != null ) {
-			deleted.addAll( oldCollection );
-		}
+		final Set<Object> deleted = buildCollectionChangeSet( oldColl, oldCollection );
 		if ( newColl != null && collectionPersister != null ) {
 			for ( Object object : newCollection ) {
 				for ( Iterator deletedIt = deleted.iterator(); deletedIt.hasNext(); ) {
@@ -396,6 +393,8 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 
 		return collectionChanges;
 	}
+
+	protected abstract Set<Object> buildCollectionChangeSet(Object eventCollection, Collection collection);
 
 	@Override
 	public boolean hasPropertiesWithModifiedFlag() {

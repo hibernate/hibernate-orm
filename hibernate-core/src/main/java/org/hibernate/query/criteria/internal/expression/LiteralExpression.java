@@ -8,6 +8,7 @@ package org.hibernate.query.criteria.internal.expression;
 
 import java.io.Serializable;
 
+import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
@@ -46,11 +47,31 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 
 	@SuppressWarnings({ "unchecked" })
 	public String render(RenderingContext renderingContext) {
-		if ( ValueHandlerFactory.isNumeric( literal ) ) {
-			return ValueHandlerFactory.determineAppropriateHandler( (Class) literal.getClass() ).render( literal );
-		}
 
-		// else...
+		LiteralHandlingMode literalHandlingMode = renderingContext.getCriteriaLiteralHandlingMode();
+
+		switch ( literalHandlingMode ) {
+			case AUTO:
+				if ( ValueHandlerFactory.isNumeric( literal ) ) {
+					return ValueHandlerFactory.determineAppropriateHandler( (Class) literal.getClass() ).render( literal );
+				}
+				else {
+					return bindLiteral( renderingContext );
+				}
+			case BIND:
+				return bindLiteral( renderingContext );
+			case INLINE:
+				Object literalValue = literal;
+				if ( String.class.equals( literal.getClass() ) ) {
+					literalValue = renderingContext.getDialect().inlineLiteral( (String) literal );
+				}
+				return ValueHandlerFactory.determineAppropriateHandler( (Class) literal.getClass() ).render( literalValue );
+			default:
+				throw new IllegalArgumentException( "Unexpected LiteralHandlingMode: " + literalHandlingMode );
+		}
+	}
+
+	private String bindLiteral(RenderingContext renderingContext) {
 		final String parameterName = renderingContext.registerLiteralParameterBinding( getLiteral(), getJavaType() );
 		return ':' + parameterName;
 	}
@@ -66,6 +87,11 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 		else {
 			return handler.render( literal );
 		}
+	}
+
+	@Override
+	public String renderGroupBy(RenderingContext renderingContext) {
+		return renderProjection( renderingContext );
 	}
 
 	@Override

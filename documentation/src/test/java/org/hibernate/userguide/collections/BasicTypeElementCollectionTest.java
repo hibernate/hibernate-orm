@@ -25,8 +25,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  */
 public class BasicTypeElementCollectionTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( BasicTypeCollectionTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

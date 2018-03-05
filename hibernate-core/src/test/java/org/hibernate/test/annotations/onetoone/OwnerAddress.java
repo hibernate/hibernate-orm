@@ -20,8 +20,8 @@ import org.hibernate.annotations.Parameter;
  */
 @Entity
 public class OwnerAddress {
-	@Id @GeneratedValue(generator = "fk")
-	@GenericGenerator(strategy = "foreign", name = "fk", parameters = @Parameter(name="property", value="owner"))
+	@Id @GeneratedValue(generator = "fk_1")
+	@GenericGenerator(strategy = "foreign", name = "fk_1", parameters = @Parameter(name="property", value="owner"))
 	private Integer id;
 
 	@OneToOne(mappedBy="address")

@@ -26,8 +26,6 @@
       <inheritedByDefault>true</inheritedByDefault>
       <requiresDependencyResolution>compile+runtime</requiresDependencyResolution>
       <phase>compile</phase>
-      <executePhase>compile</executePhase>
-      <executeGoal>enhance</executeGoal>
       <implementation>org.hibernate.orm.tooling.maven.MavenEnhancePlugin</implementation>
       <language>java</language>
       <instantiationStrategy>per-lookup</instantiationStrategy>

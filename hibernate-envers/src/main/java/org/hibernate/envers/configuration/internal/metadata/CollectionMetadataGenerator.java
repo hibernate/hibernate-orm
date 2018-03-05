@@ -95,6 +95,9 @@ import org.jboss.logging.Logger;
  * @author Chris Cranford
  */
 public final class CollectionMetadataGenerator {
+
+	// todo: this class should undergo major changes to differentiate between various collection types.
+
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
 			EnversMessageLogger.class,
 			CollectionMetadataGenerator.class.getName()
@@ -284,13 +287,9 @@ public final class CollectionMetadataGenerator {
 
 			// Checking if there's an index defined. If so, adding a mapper for it.
 			if ( positionMappedBy != null ) {
+				final Type indexType = ( (IndexedCollection) propertyValue ).getIndex().getType();
 				fakeBidirectionalRelationIndexMapper = new SinglePropertyMapper(
-						new PropertyData(
-								positionMappedBy,
-								null,
-								null,
-								null
-						)
+						PropertyData.forProperty( positionMappedBy, indexType )
 				);
 
 				// Also, overwriting the index component data to properly read the index.
@@ -943,7 +942,11 @@ public final class CollectionMetadataGenerator {
 
 	@SuppressWarnings({"unchecked"})
 	private String searchMappedBy(PersistentClass referencedClass, Table collectionTable) {
-		final Iterator<Property> properties = referencedClass.getPropertyIterator();
+		return searchMappedBy( referencedClass.getPropertyIterator(), collectionTable );
+	}
+
+	@SuppressWarnings("unchecked")
+	private String searchMappedBy(Iterator<Property> properties, Table collectionTable) {
 		while ( properties.hasNext() ) {
 			final Property property = properties.next();
 			if ( property.getValue() instanceof Collection ) {
@@ -951,6 +954,17 @@ public final class CollectionMetadataGenerator {
 				//noinspection ObjectEquality
 				if ( ( (Collection) property.getValue() ).getCollectionTable() == collectionTable ) {
 					return property.getName();
+				}
+			}
+			else if ( property.getValue() instanceof Component ) {
+				// HHH-12240
+				// Should we find an embeddable, we should traverse it as well to see if the collection table
+				// happens to be an attribute inside the embeddable rather than directly on the entity.
+				final Component component = (Component) property.getValue();
+
+				final String mappedBy = searchMappedBy( component.getPropertyIterator(), collectionTable );
+				if ( mappedBy != null ) {
+					return property.getName() + "_" + mappedBy;
 				}
 			}
 		}
@@ -1024,12 +1038,30 @@ public final class CollectionMetadataGenerator {
 	}
 
 	/**
-	 * Returns whether the revision type column part of the collection table's primary key.
+	 * Returns whether the revision type column of the collection element is part of the collection table's primary key.
 	 *
 	 * @return {@code true} if the revision type should be part of the primary key, otherwise {@code false}.
 	 */
 	private boolean isRevisionTypeInId() {
 		return isEmbeddableElementType() || isLobMapElementType();
+	}
+
+	/**
+	 * Returns whether the revision type column of the map-key is part of the collection table's primary key.
+	 *
+	 * NOTE: It is safe to call this method, even for non-map collection types as this method will always return
+	 * {@code false} for non-map collection types.
+	 *
+	 * @return {@code true} if the revision type should be part of the primary key, otherwise {@code false}.
+	 */
+	private boolean isKeyRevisionTypeInId() {
+		if ( propertyValue instanceof org.hibernate.mapping.Map ) {
+			final Type type = propertyValue.getKey().getType();
+			if ( !type.isComponentType() && !type.isAssociationType() ) {
+				return ( type instanceof MaterializedClobType ) || ( type instanceof MaterializedNClobType );
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -1046,5 +1078,18 @@ public final class CollectionMetadataGenerator {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Returns whether we believe the map element should be included as part of the middle table's primary key.
+	 *
+	 * @return {@code true} if the element should be included as part of the key, otherwise {@code false}.
+	 */
+	private boolean isMapElementInPrimaryKey() {
+		if ( propertyValue instanceof IndexedCollection ) {
+			final Value index = ( (IndexedCollection) propertyValue ).getIndex();
+			return !index.getType().isEntityType();
+		}
+		return true;
 	}
 }

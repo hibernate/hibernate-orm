@@ -13,6 +13,7 @@ import javax.persistence.SharedCacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
@@ -42,6 +43,10 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 
 	public AbstractDelegatingMetadataBuildingOptions(MetadataBuildingOptions delegate) {
 		this.delegate = delegate;
+	}
+
+	protected MetadataBuildingOptions delegate() {
+		return delegate;
 	}
 
 	@Override
@@ -170,7 +175,7 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
-	public List<AttributeConverterDefinition> getAttributeConverters() {
+	public List<AttributeConverterInfo> getAttributeConverters() {
 		return delegate.getAttributeConverters();
 	}
 

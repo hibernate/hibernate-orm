@@ -58,13 +58,11 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 				return builder.build();
 			}
 		}
-		catch (PersistenceException pe) {
-			throw pe;
-		}
 		catch (Exception e) {
-			log.debug( "Unable to build entity manager factory", e );
-			throw new PersistenceException( "Unable to build entity manager factory", e );
+			log.debug( "Unable to create EntityManagerFactory", e );
 		}
+
+		return null;
 	}
 
 	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties) {

@@ -19,66 +19,101 @@ strategy Class name::
   The class name (`java.lang.String`) of the strategy implementation to use
 
 [[configurations-general]]
-=== General Configuration
+=== General configuration
 
-[width="100%",cols="20%,20%,60%",]
-|===================================================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.dialect` | `org.hibernate.dialect.
-PostgreSQL94Dialect` |
+`*hibernate.dialect*` (e.g. `org.hibernate.dialect.PostgreSQL94Dialect`)::
 The classname of a Hibernate https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html[`Dialect`] from which Hibernate can generate SQL optimized for a particular relational database.
-
++
 In most cases Hibernate can choose the correct https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html[`Dialect`] implementation based on the JDBC metadata returned by the JDBC driver.
-
-|`hibernate.current_session_context_class` |`jta`, `thread`, `managed`, or a custom class implementing `org.hibernate.context.spi.
-CurrentSessionContext` |
-
++
+`*hibernate.current_session_context_class*` (e.g. `jta`, `thread`, `managed`, or a custom class implementing `org.hibernate.context.spi.CurrentSessionContext`)::
++
 Supply a custom strategy for the scoping of the _current_ `Session`.
-
++
 The definition of what exactly _current_ means is controlled by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/spi/CurrentSessionContext.html[`CurrentSessionContext`] implementation in use.
-
++
 Note that for backwards compatibility, if a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/spi/CurrentSessionContext.html[`CurrentSessionContext`] is not configured but JTA is configured this will default to the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/internal/JTASessionContext.html[`JTASessionContext`].
 
-|===================================================================================================================================================================================================================================================================
+[[configurations-jpa-compliance]]
+=== JPA compliance
+
+`*hibernate.jpa.compliance.transaction*` (e.g. `true` or `false` (default value))::
+This setting controls if Hibernate  `Transaction` should behave as defined by the spec for JPA's `javax.persistence.EntityTransaction`
+since it extends the JPA one.
+
+`*hibernate.jpa.compliance.query*` (e.g. `true` or `false` (default value))::
+Controls whether Hibernate's handling of `javax.persistence.Query` (JPQL, Criteria and native-query) should strictly follow the JPA spec.
++
+This includes both in terms of parsing or translating a query as well as calls to the `javax.persistence.Query` methods throwing spec
+defined exceptions where as Hibernate might not.
+
+`*hibernate.jpa.compliance.list*` (e.g. `true` or `false` (default value))::
+Controls whether Hibernate should recognize what it considers a "bag" (`org.hibernate.collection.internal.PersistentBag`)
+as a List (`org.hibernate.collection.internal.PersistentList`) or as a bag.
++
+If enabled, we will recognize it as a List where `javax.persistence.OrderColumn`
+is just missing (and its defaults will apply).
+
+`*hibernate.jpa.compliance.closed*` (e.g. `true` or `false` (default value))::
+JPA defines specific exceptions upon calling specific methods on `javax.persistence.EntityManager` and `javax.persistence.EntityManagerFactory`
+objects which have been closed previously.
++
+This setting controls whether the JPA spec defined behavior or the Hibernate behavior will be used.
++
+If enabled, Hibernate will operate in the JPA specified way, throwing exceptions when the spec says it should.
+
+`*hibernate.jpa.compliance.proxy*` (e.g. `true` or `false` (default value))::
+The JPA spec says that a `javax.persistence.EntityNotFoundException` should be thrown when accessing an entity Proxy
+which does not have an associated table row in the database.
++
+Traditionally, Hibernate does not initialize an entity Proxy when accessing its identifier since we already know the identifier value,
+hence we can save a database roundtrip.
++
+If enabled Hibernate will initialize the entity Proxy even when accessing its identifier.
 
 [[configurations-database-connection]]
 === Database connection properties
 
-[width="100%",cols="20%,20%,60%",]
-|===================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.connection.driver_class` or `javax.persistence.jdbc.driver` | `org.postgresql.Driver` | Names the JDBC `Driver` class name.
-|`hibernate.connection.url` or `javax.persistence.jdbc.url` | `jdbc:postgresql:hibernate_orm_test` | Names the JDBC connection URL.
-|`hibernate.connection.username` or `javax.persistence.jdbc.user` | | Names the JDBC connection user name.
-|`hibernate.connection.password` or `javax.persistence.jdbc.password` | | Names the JDBC connection password.
-|`hibernate.connection.isolation` | `REPEATABLE_READ` or
-`Connection.TRANSACTION_REPEATABLE_READ` | Names the JDBC connection transaction isolation level.
-|`hibernate.connection.autocommit` | `true` or `false` (default value) |
+`*hibernate.connection.driver_class*` or `*javax.persistence.jdbc.driver*` (e.g. `org.postgresql.Driver`)::
+Names the JDBC `Driver` class name.
 
-Names the initial autocommit mode for JDBC Connections returned from a connection pool created in certain ConnectionProvider impl.  See discussion of `hibernate.connection.provider_disables_autocommit` as well.
-|`hibernate.connection.provider_disables_autocommit` | `true` or `false` (default value) a|
+`*hibernate.connection.url*` or `*javax.persistence.jdbc.url*` (e.g. `jdbc:postgresql:hibernate_orm_test`)::
+Names the JDBC connection URL.
 
+`*hibernate.connection.username*` or `*javax.persistence.jdbc.user*`::
+Names the JDBC connection user name.
+
+`*hibernate.connection.password*` or `*javax.persistence.jdbc.password*`::
+Names the JDBC connection password.
+
+`*hibernate.connection.isolation*` (e.g. `REPEATABLE_READ` or `Connection.TRANSACTION_REPEATABLE_READ`)::
+Names the JDBC connection transaction isolation level.
+
+`*hibernate.connection.autocommit*` (e.g. `true` or `false` (default value))::
+Names the initial autocommit mode for JDBC Connections returned from a connection pool created in certain ConnectionProvider impl.
++
+See discussion of `hibernate.connection.provider_disables_autocommit` as well.
+
+`*hibernate.connection.provider_disables_autocommit*` (e.g. `true` or `false` (default value))::
 Indicates a promise by the user that Connections that Hibernate obtains from the configured ConnectionProvider
 have auto-commit disabled when they are obtained from that provider, whether that provider is backed by
 a DataSource or some other Connection pooling mechanism.  Generally this occurs when:
-
 * Hibernate is configured to get Connections from an underlying DataSource, and that DataSource is already configured to disable auto-commit on its managed Connections
-* Hibernate is configured to get Connections from a non-DataSource connection pool and that connection pool is already configured to disable auto-commit.  For the
-	Hibernate provided impls this will depend on the value of {@link #AUTOCOMMIT} setting.
-
+* Hibernate is configured to get Connections from a non-DataSource connection pool and that connection pool is already configured to disable auto-commit.
+For the Hibernate provided implementation this will depend on the value of `hibernate.connection.autocommit` setting.
++
 Hibernate uses this assurance as an opportunity to opt-out of certain operations that may have a performance
- 	impact (although this impact is general negligible).  Specifically, when a transaction is started via the
- 	Hibernate or JPA transaction APIs Hibernate will generally immediately acquire a Connection from the
- 	provider and:
-
+impact (although this impact is general negligible).  Specifically, when a transaction is started via the
+Hibernate or JPA transaction APIs Hibernate will generally immediately acquire a Connection from the
+provider and:
 * check whether the Connection is initially in auto-commit mode via a call to `Connection#getAutocommit` to know how to clean up the Connection when released.
 * start a JDBC transaction by calling `Connection#setAutocommit(false)`
-
++
 We can skip both of those steps if we know that the ConnectionProvider will always return Connections with auto-commit disabled.
 That is the purpose of this setting.  By setting it to `true`, the `Connection` acquisition can be delayed until the first
 SQL statement is needed to be executed.  The connection acquisition delay allows you to reduce the database connection lease
 time, therefore allowing you to increase the transaction throughput.
-
++
 ====
 It is *inappropriate* to set this value to `true` when the Connections Hibernate gets
 from the provider do not, in fact, have auto-commit disabled.
@@ -86,868 +121,1023 @@ from the provider do not, in fact, have auto-commit disabled.
 Doing so will lead to Hibernate executing SQL operations outside of any JDBC/SQL transaction.
 ====
 
-|`hibernate.connection.datasource` | |
-
+`*hibernate.connection.datasource*`::
 Either a `javax.sql.DataSource` instance or a JNDI name under which to locate the `DataSource`.
-
++
 For JNDI names, ses also `hibernate.jndi.class`, `hibernate.jndi.url`, `hibernate.jndi`.
 
-|`hibernate.connection` | | Names a prefix used to define arbitrary JDBC connection properties. These properties are passed along to the JDBC provider when creating a connection.
-|`hibernate.connection.provider_class` | `org.hibernate.hikaricp.internal.
-HikariCPConnectionProvider` a|
-
+`*hibernate.connection*`::
+ Names a prefix used to define arbitrary JDBC connection properties. These properties are passed along to the JDBC provider when creating a connection.
+`*hibernate.connection.provider_class*` (e.g. `org.hibernate.hikaricp.internal. HikariCPConnectionProvider`)::
 Names the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/connections/spi/ConnectionProvider.html[`ConnectionProvider`] to use for obtaining JDBC connections.
-
++
 Can reference:
-
-* an instance of `ConnectionProvider`
-* a `Class<? extends ConnectionProvider` object reference
-* a fully qualified name of a class implementing `ConnectionProvider`
++
+** an instance of `ConnectionProvider`
+** a `Class<? extends ConnectionProvider` object reference
+** a fully qualified name of a class implementing `ConnectionProvider`
++
 
 The term `class` appears in the setting name due to legacy reasons; however it can accept instances.
 
-|`hibernate.jndi.class` | | Names the JNDI `javax.naming.InitialContext` class.
-|`hibernate.jndi.url` | java:global/jdbc/default | Names the JNDI provider/connection url.
-|`hibernate.jndi` | |
+`*hibernate.jndi.class*`::
+Names the JNDI `javax.naming.InitialContext` class.
 
+`*hibernate.jndi.url*` (e.g. java:global/jdbc/default)::
+Names the JNDI provider/connection url.
+
+`*hibernate.jndi*`::
 Names a prefix used to define arbitrary JNDI `javax.naming.InitialContext` properties.
-
++
 These properties are passed along to `javax.naming.InitialContext#InitialContext(java.util.Hashtable)`
 
-|`hibernate.connection.acquisition_mode` | `immediate` |
-
+`*hibernate.connection.acquisition_mode*` (e.g. `immediate`)::
 Specifies how Hibernate should acquire JDBC connections. The possible values are given by `org.hibernate.ConnectionAcquisitionMode`.
-
++
 Should generally only configure this or `hibernate.connection.release_mode`, not both.
 
-|`hibernate.connection.release_mode` | `auto` (default value) |
-
+`*hibernate.connection.release_mode*` (e.g. `auto` (default value))::
 Specifies how Hibernate should release JDBC connections. The possible values are given by the current transaction mode (`after_transaction` for JDBC transactions and `after_statement` for JTA transactions).
-
++
 Should generally only configure this or `hibernate.connection.acquisition_mode`, not both.
 
-3+|Hibernate internal connection pool options
-|`hibernate.connection.initial_pool_size` | 1 (default value) | Minimum number of connections for the built-in Hibernate connection pool.
-|`hibernate.connection.pool_size` | 20 (default value) | Maximum number of connections for the built-in Hibernate connection pool.
-|`hibernate.connection.pool_validation_interval` | 30 (default value) | The number of seconds between two consecutive pool validations. During validation, the pool size can increase or decreases based on the connection acquisition request count.
+==== Hibernate internal connection pool options
 
-|===================================================================================================================================================================================================================================
+`*hibernate.connection.initial_pool_size*` (e.g. 1 (default value))::
+Minimum number of connections for the built-in Hibernate connection pool.
+
+`*hibernate.connection.pool_size*` (e.g. 20 (default value))::
+Maximum number of connections for the built-in Hibernate connection pool.
+
+`*hibernate.connection.pool_validation_interval*` (e.g. 30 (default value))::
+The number of seconds between two consecutive pool validations. During validation, the pool size can increase or decreases based on the connection acquisition request count.
 
 [[configurations-c3p0]]
 === c3p0 properties
 
-[width="100%",cols="20%,20%,60%",]
-|===================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.c3p0.min_size` | 1 | Minimum size of C3P0 connection pool. Refers to http://www.mchange.com/projects/c3p0/#minPoolSize[c3p0 `minPoolSize` setting].
-|`hibernate.c3p0.max_size` | 5 | Maximum size of C3P0 connection pool. Refers to http://www.mchange.com/projects/c3p0/#maxPoolSize[c3p0 `maxPoolSize` setting].
-|`hibernate.c3p0.timeout` | 30 | Maximum idle time for C3P0 connection pool. Refers to http://www.mchange.com/projects/c3p0/#maxIdleTime[c3p0 `maxIdleTime` setting].
-|`hibernate.c3p0.max_statements` | 5 | Maximum size of C3P0 statement cache. Refers to http://www.mchange.com/projects/c3p0/#maxStatements[c3p0 `maxStatements` setting].
-|`hibernate.c3p0.acquire_increment` | 2 | Number of connections acquired at a time when there's no connection available in the pool. Refers to http://www.mchange.com/projects/c3p0/#acquireIncrement[c3p0 `acquireIncrement` setting].
-|`hibernate.c3p0.idle_test_period` | 5 | Idle time before a C3P0 pooled connection is validated. Refers to http://www.mchange.com/projects/c3p0/#idleConnectionTestPeriod[c3p0 `idleConnectionTestPeriod` setting].
-|`hibernate.c3p0` | | A setting prefix used to indicate additional c3p0 properties that need to be passed to the underlying c3p0 connection pool.
-|===================================================================================================================================================================================================================================
+`*hibernate.c3p0.min_size*` (e.g. 1)::
+ Minimum size of C3P0 connection pool. Refers to http://www.mchange.com/projects/c3p0/#minPoolSize[c3p0 `minPoolSize` setting].
+
+`*hibernate.c3p0.max_size*` (e.g. 5)::
+ Maximum size of C3P0 connection pool. Refers to http://www.mchange.com/projects/c3p0/#maxPoolSize[c3p0 `maxPoolSize` setting].
+
+`*hibernate.c3p0.timeout*` (e.g. 30)::
+ Maximum idle time for C3P0 connection pool. Refers to http://www.mchange.com/projects/c3p0/#maxIdleTime[c3p0 `maxIdleTime` setting].
+
+`*hibernate.c3p0.max_statements*` (e.g. 5)::
+ Maximum size of C3P0 statement cache. Refers to http://www.mchange.com/projects/c3p0/#maxStatements[c3p0 `maxStatements` setting].
+
+`*hibernate.c3p0.acquire_increment*` (e.g. 2)::
+ Number of connections acquired at a time when there's no connection available in the pool. Refers to http://www.mchange.com/projects/c3p0/#acquireIncrement[c3p0 `acquireIncrement` setting].
+
+`*hibernate.c3p0.idle_test_period*` (e.g. 5)::
+ Idle time before a C3P0 pooled connection is validated. Refers to http://www.mchange.com/projects/c3p0/#idleConnectionTestPeriod[c3p0 `idleConnectionTestPeriod` setting].
+
+`*hibernate.c3p0*`::
+ A setting prefix used to indicate additional c3p0 properties that need to be passed to the underlying c3p0 connection pool.
 
 [[configurations-mapping]]
 === Mapping Properties
 
-[width="100%",cols="20%,20%,60%",]
-|===================================================================================================================================================================================================================================
-|Property |Example |Purpose
-3+|Table qualifying options
-|`hibernate.default_catalog` |A catalog name |Qualifies unqualified table names with the given catalog in generated SQL.
-|`hibernate.default_schema` |A schema name |Qualify unqualified table names with the given schema or tablespace in generated SQL.
-|`hibernate.schema_name_resolver` |The fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/env/spi/SchemaNameResolver.html[`org.hibernate.engine.jdbc.env.spi.SchemaNameResolver`] implementation class |
-By default, Hibernate uses the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#getSchemaNameResolver--[`org.hibernate.dialect.Dialect#getSchemaNameResolver`] You can customize how the schema name is resolved by providing a custom implementation of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/env/spi/SchemaNameResolver.html[`SchemaNameResolver`] interface.
+==== Table qualifying options
 
-3+|Identifier options
-|`hibernate.id.new_generator_mappings` |`true` (default value) or `false` |
+`*hibernate.default_catalog*` (e.g. A catalog name)::
+Qualifies unqualified table names with the given catalog in generated SQL.
 
+`*hibernate.default_schema*` (e.g. A schema name)::
+Qualify unqualified table names with the given schema or tablespace in generated SQL.
+
+`*hibernate.schema_name_resolver*` (e.g. The fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/env/spi/SchemaNameResolver.html[`org.hibernate.engine.jdbc.env.spi.SchemaNameResolver`] implementation class)::
+By default, Hibernate uses the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#getSchemaNameResolver--[`org.hibernate.dialect.Dialect#getSchemaNameResolver`].
+You can customize how the schema name is resolved by providing a custom implementation of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/env/spi/SchemaNameResolver.html[`SchemaNameResolver`] interface.
+
+==== Identifier options
+`*hibernate.id.new_generator_mappings*` (e.g. `true` (default value) or `false`)::
 Setting which indicates whether or not the new https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/id/IdentifierGenerator.html[`IdentifierGenerator`] are used for `AUTO`, `TABLE` and `SEQUENCE`.
-
++
 Existing applications may want to disable this (set it `false`) for upgrade compatibility from 3.x and 4.x to 5.x.
 
-|`hibernate.use_identifier_rollback` |`true` or `false` (default value) |If true, generated identifier properties are reset to default values when objects are deleted.
-|`hibernate.id.optimizer.pooled.preferred` |`none`, `hilo`, `legacy-hilo`, `pooled` (default value), `pooled-lo`, `pooled-lotl` or a fully-qualified name of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/id/enhanced/Optimizer.html[`Optimizer`] implementation |
+`*hibernate.use_identifier_rollback*` (e.g. `true` or `false` (default value))::
+If true, generated identifier properties are reset to default values when objects are deleted.
 
+`*hibernate.id.optimizer.pooled.preferred*` (e.g. `none`, `hilo`, `legacy-hilo`, `pooled` (default value), `pooled-lo`, `pooled-lotl` or a fully-qualified name of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/id/enhanced/Optimizer.html[`Optimizer`] implementation)::
 When a generator specified an increment-size and an optimizer was not explicitly specified, which of the _pooled_ optimizers should be preferred?
 
-3+|Quoting options
-|`hibernate.globally_quoted_identifiers` |`true` or `false` (default value) |Should all database identifiers be quoted.
-|`hibernate.globally_quoted_identifiers_skip_column_definitions` |`true` or `false` (default value) |
+`*hibernate.id.generator.stored_last_used*` (e.g. `true` (default value) or `false`)::
+If true, the value stored in the table used by the `@TableGenerator` is the last value used, if false the value is the next value to be used.
 
+`*hibernate.model.generator_name_as_sequence_name*` (e.g. `true` (default value) or `false`)::
+If true, the value specified by the `generator` attribute of the `@GeneratedValue` annotation should be used as the sequence/table name when no matching
+`@SequenceGenerator` or `TableGenerator` is found.
++
+The default value is `true` meaning that `@GeneratedValue.generator()` will be used as the sequence/table name by default.
+Users migrating from earlier versions using the legacy `hibernate_sequence` name should disable this setting.
+
+`*hibernate.ejb.identifier_generator_strategy_provider*` (e.g. fully-qualified class name or an actual the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/spi/IdentifierGeneratorStrategyProvider.html[`IdentifierGeneratorStrategyProvider`] instance)::
+This setting allows you to provide an instance or the class implementing the `org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider` interface,
+so you can provide a set of https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/id/IdentifierGenerator.html[`IdentifierGenerator`] strategies allowing to override the Hibernate Core default ones.
+
+==== Quoting options
+
+`*hibernate.globally_quoted_identifiers*` (e.g. `true` or `false` (default value))::
+Should all database identifiers be quoted.
+
+`*hibernate.globally_quoted_identifiers_skip_column_definitions*` (e.g. `true` or `false` (default value))::
 Assuming `hibernate.globally_quoted_identifiers` is `true`, this allows the global quoting to skip column-definitions as defined by `javax.persistence.Column`,
 `javax.persistence.JoinColumn`, etc, and while it avoids column-definitions being quoted due to global quoting, they can still be explicitly quoted in the annotation/xml mappings.
 
-|`hibernate.auto_quote_keyword` |`true` or `false` (default value) |Specifies whether to automatically quote any names that are deemed keywords.
+`*hibernate.auto_quote_keyword*` (e.g. `true` or `false` (default value))::
+Specifies whether to automatically quote any names that are deemed keywords.
 
-3+|Discriminator options
-|`hibernate.discriminator.implicit_for_joined` |`true` or `false` (default value) |
-
+==== Discriminator options
+`*hibernate.discriminator.implicit_for_joined*` (e.g. `true` or `false` (default value))::
 The legacy behavior of Hibernate is to not use discriminators for joined inheritance (Hibernate does not need the discriminator).
 However, some JPA providers do need the discriminator for handling joined inheritance so, in the interest of portability, this capability has been added to Hibernate too.
-
-However, we want to make sure that legacy applications continue to work as well, which puts us in a bind in terms of how to handle _implicit_ discriminator mappings.
++
+Because want to make sure that legacy applications continue to work as well, that puts us in a bind in terms of how to handle _implicit_ discriminator mappings.
 The solution is to assume that the absence of discriminator metadata means to follow the legacy behavior _unless_ this setting is enabled.
-
++
 With this setting enabled, Hibernate will interpret the absence of discriminator metadata as an indication to use the JPA-defined defaults for these absent annotations.
-
++
 See Hibernate Jira issue https://hibernate.atlassian.net/browse/HHH-6911[HHH-6911] for additional background info.
 
-|`hibernate.discriminator.ignore_explicit_for_joined` |`true` or `false` (default value) |
-
+`*hibernate.discriminator.ignore_explicit_for_joined*` (e.g. `true` or `false` (default value))::
 The legacy behavior of Hibernate is to not use discriminators for joined inheritance (Hibernate does not need the discriminator).
 However, some JPA providers do need the discriminator for handling joined inheritance so, in the interest of portability, this capability has been added to Hibernate too.
-
++
 Existing applications rely (implicitly or explicitly) on Hibernate ignoring any `DiscriminatorColumn` declarations on joined inheritance hierarchies.
 This setting allows these applications to maintain the legacy behavior of `DiscriminatorColumn` annotations being ignored when paired with joined inheritance.
-
++
 See Hibernate Jira issue https://hibernate.atlassian.net/browse/HHH-6911[HHH-6911] for additional background info.
 
-3+|Naming strategies
-|`hibernate.implicit_naming_strategy` |`default` (default value), `jpa`, `legacy-jpa`, `legacy-hbm`, `component-path` a|
+==== Naming strategies
 
+`*hibernate.implicit_naming_strategy*` (e.g. `default` (default value), `jpa`, `legacy-jpa`, `legacy-hbm`, `component-path`)::
 Used to specify the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/model/naming/ImplicitNamingStrategy.html[`ImplicitNamingStrategy`] class to use.
 The following short names are defined for this setting:
-
-`default`:: Uses the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/model/naming/ImplicitNamingStrategyJpaCompliantImpl.html[`ImplicitNamingStrategyJpaCompliantImpl`]
-`jpa`:: Uses the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/model/naming/ImplicitNamingStrategyJpaCompliantImpl.html[`ImplicitNamingStrategyJpaCompliantImpl`]
-`legacy-jpa`:: Uses the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/model/naming/ImplicitNamingStrategyLegacyJpaImpl.html[`ImplicitNamingStrategyLegacyJpaImpl`]
-`legacy-hbm`:: Uses the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/model/naming/ImplicitNamingStrategyLegacyHbmImpl.html[`ImplicitNamingStrategyLegacyHbmImpl`]
-`component-path`:: Uses the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/model/naming/ImplicitNamingStrategyComponentPathImpl.html[`ImplicitNamingStrategyComponentPathImpl`]
-
+`default`::: Uses the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/model/naming/ImplicitNamingStrategyJpaCompliantImpl.html[`ImplicitNamingStrategyJpaCompliantImpl`]
+`jpa`::: Uses the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/model/naming/ImplicitNamingStrategyJpaCompliantImpl.html[`ImplicitNamingStrategyJpaCompliantImpl`]
+`legacy-jpa`::: Uses the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/model/naming/ImplicitNamingStrategyLegacyJpaImpl.html[`ImplicitNamingStrategyLegacyJpaImpl`]
+`legacy-hbm`::: Uses the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/model/naming/ImplicitNamingStrategyLegacyHbmImpl.html[`ImplicitNamingStrategyLegacyHbmImpl`]
+`component-path`::: Uses the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/model/naming/ImplicitNamingStrategyComponentPathImpl.html[`ImplicitNamingStrategyComponentPathImpl`]
++
 If this property happens to be empty, the fallback is to use `default` strategy.
 
-|`hibernate.physical_naming_strategy` | `org.hibernate.boot.model.naming.
-PhysicalNamingStrategyStandardImpl` (default value) | Used to specify the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/model/naming/PhysicalNamingStrategy.html[`PhysicalNamingStrategy`] class to use.
-3+|Metadata scanning options
-|`hibernate.archive.scanner` | a|
+`*hibernate.physical_naming_strategy*` (e.g. `org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl` (default value))::
+Used to specify the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/model/naming/PhysicalNamingStrategy.html[`PhysicalNamingStrategy`] class to use.
 
+==== Metadata scanning options
+
+`*hibernate.archive.scanner*`::
 Pass an implementation of https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/archive/scan/spi/Scanner.html[`Scanner`].
 By default, https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/archive/scan/internal/StandardScanner.html[`StandardScanner`] is used.
-
++
 Accepts either:
++
+** an actual `Scanner` instance
+** a reference to a Class that implements `Scanner`
+** a fully qualified name of a Class that implements `Scanner`
 
-* an actual `Scanner` instance
-* a reference to a Class that implements `Scanner`
-* a fully qualified name of a Class that implements `Scanner`
-
-|`hibernate.archive.interpreter` | a|
-
+`*hibernate.archive.interpreter*`::
 Pass https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/archive/spi/ArchiveDescriptorFactory.html[`ArchiveDescriptorFactory`] to use in the scanning process.
-
++
 Accepts either:
-
-* an actual `ArchiveDescriptorFactory` instance
-* a reference to a Class that implements `ArchiveDescriptorFactory`
-* a fully qualified name of a Class that implements `ArchiveDescriptorFactory`
++
+** an actual `ArchiveDescriptorFactory` instance
+** a reference to a Class that implements `ArchiveDescriptorFactory`
+** a fully qualified name of a Class that implements `ArchiveDescriptorFactory`
++
 
 See information on https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/archive/scan/spi/Scanner.html[`Scanner`] about expected constructor forms.
 
-|`hibernate.archive.autodetection` | `hbm,class` (default value) a|
-
+`*hibernate.archive.autodetection*` (e.g. `hbm,class` (default value))::
 Identifies a comma-separate list of values indicating the mapping types we should auto-detect during scanning.
-
++
 Allowable values include:
-
-`class`:: scan classes (e.g. `.class`) to extract entity mapping metadata
-`hbm`:: scan `hbm` mapping files (e.g. `hbm.xml`) to extract entity mapping metadata
++
+`class`::: scan classes (e.g. `.class`) to extract entity mapping metadata
+`hbm`::: scan `hbm` mapping files (e.g. `hbm.xml`) to extract entity mapping metadata
++
 
 By default both HBM, annotations, and JPA XML mappings are scanned.
-
++
 When using JPA, to disable the automatic scanning of all entity classes, the `exclude-unlisted-classes` `persistence.xml` element must be set to true.
 Therefore, when setting `exclude-unlisted-classes` to true, only the classes that are explicitly declared in the `persistence.xml` configuration files are going to be taken into consideration.
 
-|`hibernate.mapping.precedence` | `hbm,class` (default value)  |
-
+`*hibernate.mapping.precedence*` (e.g. `hbm,class` (default value))::
 Used to specify the order in which metadata sources should be processed.
 Value is a delimited-list whose elements are defined by https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/cfg/MetadataSourceType.html[`MetadataSourceType`].
-
++
 Default is `hbm,class"`, therefore `hbm.xml` files are processed first, followed by annotations (combined with `orm.xml` mappings).
-
++
 When using JPA, the XML mapping overrides a conflicting annotation mapping that targets the same entity attribute.
 
-3+|JDBC-related options
-|`hibernate.use_nationalized_character_data` |`true` or `false` (default value) |Enable nationalized character support on all string / clob based attribute ( string, char, clob, text etc ).
-|`hibernate.jdbc.lob.non_contextual_creation` |`true` or `false` (default value) |Should we not use contextual LOB creation (aka based on `java.sql.Connection#createBlob()` et al)? The default value for HANA, H2, and PostgreSQL is `true`.
-|`hibernate.jdbc.time_zone` | A `java.util.TimeZone`, a `java.time.ZoneId` or a `String` representation of a `ZoneId` |Unless specified, the JDBC Driver uses the default JVM time zone. If a different time zone is configured via this setting, the JDBC https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-java.util.Calendar-[PreparedStatement#setTimestamp] is going to use a `Calendar` instance according to the specified time zone.
-|`hibernate.dialect.oracle.prefer_long_raw` | `true` or `false` (default value) |This setting applies to Oracle Dialect only, and it specifies whether `byte[]` or `Byte[]` arrays should be mapped to the deprecated `LONG RAW` (when this configuration property value is `true`) or to a `BLOB` column type (when this configuration property value is `false`).
+==== JDBC-related options
 
-3+|Bean Validation options
-|`javax.persistence.validation.factory` |`javax.validation.ValidationFactory` implementation | Specify the  `javax.validation.ValidationFactory` implementation to use for Bean Validation.
-|`hibernate.check_nullability` |`true` or `false` |
+`*hibernate.use_nationalized_character_data*` (e.g. `true` or `false` (default value))::
+Enable nationalized character support on all string / clob based attribute ( string, char, clob, text etc ).
 
+`*hibernate.jdbc.lob.non_contextual_creation*` (e.g. `true` or `false` (default value))::
+Should we not use contextual LOB creation (aka based on `java.sql.Connection#createBlob()` et al)? The default value for HANA, H2, and PostgreSQL is `true`.
+
+`*hibernate.jdbc.time_zone*` (e.g. A `java.util.TimeZone`, a `java.time.ZoneId` or a `String` representation of a `ZoneId`)::
+Unless specified, the JDBC Driver uses the default JVM time zone. If a different time zone is configured via this setting, the JDBC https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-java.util.Calendar-[PreparedStatement#setTimestamp] is going to use a `Calendar` instance according to the specified time zone.
+
+`*hibernate.dialect.oracle.prefer_long_raw*` (e.g. `true` or `false` (default value))::
+This setting applies to Oracle Dialect only, and it specifies whether `byte[]` or `Byte[]` arrays should be mapped to the deprecated `LONG RAW` (when this configuration property value is `true`) or to a `BLOB` column type (when this configuration property value is `false`).
+
+==== Bean Validation options
+`*javax.persistence.validation.factory*` (e.g. `javax.validation.ValidationFactory` implementation)::
+Specify the  `javax.validation.ValidationFactory` implementation to use for Bean Validation.
+
+`*hibernate.check_nullability*` (e.g. `true` or `false`)::
 Enable nullability checking. Raises an exception if a property marked as not-null is null.
-
++
 Default to `false` if Bean Validation is present in the classpath and Hibernate Annotations is used, `true` otherwise.
-|`hibernate.validator.apply_to_ddl` |`true` (default value) or `false` |
-
+`*hibernate.validator.apply_to_ddl*` (e.g. `true` (default value) or `false`)::
++
 Bean Validation constraints will be applied in DDL if the automatic schema generation is enabled.
 In other words, the database schema will reflect the Bean Validation constraints.
-
++
 To disable constraint propagation to DDL, set up `hibernate.validator.apply_to_ddl` to `false` in the configuration file.
 Such a need is very uncommon and not recommended.
 
-3+|Misc options
-|`hibernate.create_empty_composites.enabled` |`true` or `false` (default value) | Enable instantiation of composite/embeddable objects when all of its attribute values are `null`. The default (and historical) behavior is that a `null` reference will be used to represent the composite when all of its attributes are `null`.
+==== Misc options
 
+`*hibernate.create_empty_composites.enabled*` (e.g. `true` or `false` (default value))::
+ Enable instantiation of composite/embeddable objects when all of its attribute values are `null`. The default (and historical) behavior is that a `null` reference will be used to represent the composite when all of its attributes are `null`.
++
 This is an experimental feature that has known issues. It should not be used in production until it is stabilized. See Hibernate Jira issue https://hibernate.atlassian.net/browse/HHH-11936[HHH-11936] for details.
 
-|`hibernate.entity_dirtiness_strategy` | fully-qualified class name or an actual `CustomEntityDirtinessStrategy` instance | Setting to identify a `org.hibernate.CustomEntityDirtinessStrategy` to use.
-|`hibernate.default_entity_mode` |`pojo` (default value) or `dynamic-map` |Default `EntityMode` for entity representation for all sessions opened from this `SessionFactory`, defaults to `pojo`.
-|===================================================================================================================================================================================================================================
+`*hibernate.entity_dirtiness_strategy*` (e.g. fully-qualified class name or an actual `CustomEntityDirtinessStrategy` instance)::
+Setting to identify a `org.hibernate.CustomEntityDirtinessStrategy` to use.
+
+`*hibernate.default_entity_mode*` (e.g. `pojo` (default value) or `dynamic-map`)::
+Default `EntityMode` for entity representation for all sessions opened from this `SessionFactory`, defaults to `pojo`.
 
 [[configurations-bytecode-enhancement]]
 === Bytecode Enhancement Properties
 
-[width="100%",cols="20%,20%,60%",]
-|===================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.enhancer.enableDirtyTracking`| `true` or `false` (default value) | Enable dirty tracking feature in runtime bytecode enhancement.
-|`hibernate.enhancer.enableLazyInitialization`| `true` or `false` (default value) | Enable lazy loading feature in runtime bytecode enhancement. This way, even basic types (e.g. `@Basic(fetch = FetchType.LAZY`)) can be fetched lazily.
-|`hibernate.enhancer.enableAssociationManagement`| `true` or `false` (default value) | Enable association management feature in runtime bytecode enhancement which automatically synchronizes a bidirectional association when only one side is changed.
-|`hibernate.bytecode.provider` |`javassist` (default value) | The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/BytecodeProvider.html[`BytecodeProvider`] built-in implementation flavor. Currently, only `javassist` is supported.
-|`hibernate.bytecode.use_reflection_optimizer`| `true` or `false` (default value) | Should we use reflection optimization? The reflection optimizer implements the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/ReflectionOptimizer.html[`ReflectionOptimizer`] interface and improves entity instantiation and property getter/setter calls.
-|===================================================================================================================================================================================================================================
+`*hibernate.enhancer.enableDirtyTracking*` (e.g. `true` or `false` (default value))::
+Enable dirty tracking feature in runtime bytecode enhancement.
+
+`*hibernate.enhancer.enableLazyInitialization*` (e.g. `true` or `false` (default value))::
+Enable lazy loading feature in runtime bytecode enhancement. This way, even basic types (e.g. `@Basic(fetch = FetchType.LAZY`)) can be fetched lazily.
+
+`*hibernate.enhancer.enableAssociationManagement*` (e.g. `true` or `false` (default value))::
+Enable association management feature in runtime bytecode enhancement which automatically synchronizes a bidirectional association when only one side is changed.
+
+`*hibernate.bytecode.provider*` (e.g. `bytebuddy` (default value))::
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/BytecodeProvider.html[`BytecodeProvider`] built-in implementation flavor. Currently, only `bytebuddy` and `javassist` are valid values.
+
+`*hibernate.bytecode.use_reflection_optimizer*` (e.g. `true` or `false` (default value))::
+Should we use reflection optimization? The reflection optimizer implements the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/ReflectionOptimizer.html[`ReflectionOptimizer`] interface and improves entity instantiation and property getter/setter calls.
 
 [[configurations-query]]
 === Query settings
 
-[width="100%",cols="20%,20%,60%",]
-|===================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.query.plan_cache_max_size` | `2048` (default value)  a|
-
+`*hibernate.query.plan_cache_max_size*` (e.g. `2048` (default value))::
 The maximum number of entries including:
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/query/spi/HQLQueryPlan.html[`HQLQueryPlan`],
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/query/spi/FilterQueryPlan.html[`FilterQueryPlan`],
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/query/spi/NativeSQLQueryPlan.html[`NativeSQLQueryPlan`].
++
+Maintained by https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/query/spi/QueryPlanCache.html[`QueryPlanCache`].
 
-* https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/query/spi/HQLQueryPlan.html[`HQLQueryPlan`]
-* https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/query/spi/FilterQueryPlan.html[`FilterQueryPlan`]
-* https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/query/spi/NativeSQLQueryPlan.html[`NativeSQLQueryPlan`]
+`*hibernate.query.plan_parameter_metadata_max_size*` (e.g. `128` (default value))::
+The maximum number of strong references associated with `ParameterMetadata` maintained by https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/query/spi/QueryPlanCache.html[`QueryPlanCache`].
 
-maintained by https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/query/spi/QueryPlanCache.html[`QueryPlanCache`].
+`*hibernate.order_by.default_null_ordering*` (e.g. `none`, `first` or `last`)::
+Defines precedence of null values in `ORDER BY` clause. Defaults to `none` which varies between RDBMS implementation.
 
-|`hibernate.query.plan_parameter_metadata_max_size` | `128` (default value) | The maximum number of strong references associated with `ParameterMetadata` maintained by https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/query/spi/QueryPlanCache.html[`QueryPlanCache`].
-|`hibernate.order_by.default_null_ordering` |`none`, `first` or `last` |Defines precedence of null values in `ORDER BY` clause. Defaults to `none` which varies between RDBMS implementation.
-|`hibernate.discriminator.force_in_select` |`true` or `false` (default value) | For entities which do not explicitly say, should we force discriminators into SQL selects?
-|`hibernate.query.substitutions` | `true=1,false=0` |A comma-separated list of token substitutions to use when translating a Hibernate query to SQL.
-|`hibernate.query.factory_class` |`org.hibernate.hql.internal.ast.
-ASTQueryTranslatorFactory` (default value) or `org.hibernate.hql.internal.classic.
-ClassicQueryTranslatorFactory` |Chooses the HQL parser implementation.
+`*hibernate.discriminator.force_in_select*` (e.g. `true` or `false` (default value))::
+For entities which do not explicitly say, should we force discriminators into SQL selects?
 
-|`hibernate.query.jpaql_strict_compliance` |`true` or `false` (default value) |Map from tokens in Hibernate queries to SQL tokens, such as function or literal names.
+`*hibernate.query.substitutions*` (e.g. `true=1,false=0`)::
+A comma-separated list of token substitutions to use when translating a Hibernate query to SQL.
 
+`*hibernate.query.factory_class*` (e.g. `org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory` (default value) or `org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory`)::
+Chooses the HQL parser implementation.
+
+`*hibernate.query.jpaql_strict_compliance*` (e.g. `true` or `false` (default value))::
+Map from tokens in Hibernate queries to SQL tokens, such as function or literal names.
++
 Should we strictly adhere to JPA Query Language (JPQL) syntax, or more broadly support all of Hibernate's superset (HQL)?
-
++
 Setting this to `true` may cause valid HQL to throw an exception because it violates the JPQL subset.
-|`hibernate.query.startup_check` | `true` (default value) or `false` |Should named queries be checked during startup?
-|`hibernate.proc.param_null_passing` | `true` or `false` (default value) |
 
+`*hibernate.query.startup_check*` (e.g. `true` (default value) or `false`)::
+Should named queries be checked during startup?
+
+`*hibernate.proc.param_null_passing*` (e.g. `true` or `false` (default value))::
 Global setting for whether `null` parameter bindings should be passed to database procedure/function calls as part of https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/procedure/ProcedureCall.html[`ProcedureCall`] handling.
 Implicitly Hibernate will not pass the `null`, the intention being to allow any default argument values to be applied.
-
++
 This defines a global setting, which can then be controlled per parameter via `org.hibernate.procedure.ParameterRegistration#enablePassingNulls(boolean)`
-
++
 Values are `true` (pass the NULLs) or `false` (do not pass the NULLs).
 
-|`hibernate.jdbc.log.warnings` | `true` or `false` |Enable fetching JDBC statement warning for logging. Default value is given by `org.hibernate.dialect.Dialect#isJdbcLogWarningsEnabledByDefault()`.
-|`hibernate.session_factory.statement_inspector` | A fully-qualified class name, an instance, or a `Class` object reference a|
+`*hibernate.jdbc.log.warnings*` (e.g. `true` or `false`)::
+Enable fetching JDBC statement warning for logging. Default value is given by `org.hibernate.dialect.Dialect#isJdbcLogWarningsEnabledByDefault()`.
 
+`*hibernate.session_factory.statement_inspector*` (e.g. A fully-qualified class name, an instance, or a `Class` object reference)::
 Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/jdbc/spi/StatementInspector.html[`StatementInspector`] implementation to be applied to every `Session` created by the current `SessionFactory`.
++
+Can reference a
+`StatementInspector` instance,
+`StatementInspector` implementation `Class` reference or
+`StatementInspector` implementation class name (fully-qualified class name).
 
-Can reference
+`*hibernate.query.validate_parameters*` (e.g. `true` (default value) or `false`)::
+This configuration property can be used to disable parameters validation performed by `org.hibernate.query.Query#setParameter` when the the Session is bootstrapped via JPA
+`javax.persistence.EntityManagerFactory`
 
-* `StatementInspector` instance
-* `StatementInspector` implementation {@link Class} reference
-* `StatementInspector` implementation class name (fully-qualified class name)
+`*hibernate.criteria.literal_handling_mode*` (e.g. `AUTO` (default value), `BIND` or `INLINE`)::
+By default, Criteria queries uses bind parameters for any literal that is not a numeric value.
+However, to increase the likelihood of JDBC statement caching, you might want to use bind parameters for numeric values too.
++
+The `org.hibernate.query.criteria.LiteralHandlingMode#BIND` mode will use bind variables for any literal value.
+The `org.hibernate.query.criteria.LiteralHandlingMode#INLINE` mode will inline literal values as-is.
++
+To prevent SQL injection, never use `org.hibernate.query.criteria.LiteralHandlingMode#INLINE` with String variables.
+Always use constants with the `org.hibernate.query.criteria.LiteralHandlingMode#INLINE` mode.
++
+Valid options are defined by the `org.hibernate.query.criteria.LiteralHandlingMode` enum.
+The default value is `org.hibernate.query.criteria.LiteralHandlingMode#AUTO`.
 
-| `hibernate.query.validate_parameters` | `true` (default value) or `false` | This configuration property can be used to disable parameters validation performed by `org.hibernate.query.Query#setParameter` when the the Session is bootstrapped via JPA `javax.persistence.EntityManagerFactory`
+`*hibernate.query.fail_on_pagination_over_collection_fetch*` (e.g. `true` or `false` (default value))::
+Raises an exception when in-memory pagination over collection fetch is about to be performed.
++
+Disabled by default. Set to true to enable.
 
-3+|Multi-table bulk HQL operations
-|`hibernate.hql.bulk_id_strategy` | A fully-qualified class name, an instance, or a `Class` object reference |Provide a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/hql/spi/id/MultiTableBulkIdStrategy.html[`org.hibernate.hql.spi.id.MultiTableBulkIdStrategy`] implementation for handling multi-table bulk HQL operations.
-|`hibernate.hql.bulk_id_strategy.global_temporary.drop_tables` | `true` or `false` (default value) | For databases that don't support local tables, but just global ones, this configuration property allows you to DROP the global tables used for multi-table bulk HQL operations when the `SessionFactory` or the `EntityManagerFactory` is closed.
-|`hibernate.hql.bulk_id_strategy.persistent.drop_tables` | `true` or `false` (default value) |
+==== Multi-table bulk HQL operations
+
+`*hibernate.hql.bulk_id_strategy*` (e.g. A fully-qualified class name, an instance, or a `Class` object reference)::
+Provide a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/hql/spi/id/MultiTableBulkIdStrategy.html[`org.hibernate.hql.spi.id.MultiTableBulkIdStrategy`] implementation for handling multi-table bulk HQL operations.
+
+`*hibernate.hql.bulk_id_strategy.global_temporary.drop_tables*` (e.g. `true` or `false` (default value))::
+ For databases that don't support local tables, but just global ones, this configuration property allows you to DROP the global tables used for multi-table bulk HQL operations when the `SessionFactory` or the `EntityManagerFactory` is closed.
+
+`*hibernate.hql.bulk_id_strategy.persistent.drop_tables*` (e.g. `true` or `false` (default value))::
 This configuration property is used by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/hql/spi/id/persistent/PersistentTableBulkIdStrategy.html[`PersistentTableBulkIdStrategy`], that mimics temporary tables for databases which do not support temporary tables.
 It follows a pattern similar to the ANSI SQL definition of global temporary table using a "session id" column to segment rows from the various sessions.
-
++
 This configuration property allows you to DROP the tables used for multi-table bulk HQL operations when the `SessionFactory` or the `EntityManagerFactory` is closed.
-|`hibernate.hql.bulk_id_strategy.persistent.schema` | Database schema name. By default, the `hibernate.default_schema` is used. |
+
+`*hibernate.hql.bulk_id_strategy.persistent.schema*` (e.g. Database schema name. By default, the `hibernate.default_schema` is used.)::
 This configuration property is used by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/hql/spi/id/persistent/PersistentTableBulkIdStrategy.html[`PersistentTableBulkIdStrategy`], that mimics temporary tables for databases which do not support temporary tables.
 It follows a pattern similar to the ANSI SQL definition of global temporary table using a "session id" column to segment rows from the various sessions.
-
++
 This configuration property defines the database schema used for storing the temporary tables used for bulk HQL operations.
-|`hibernate.hql.bulk_id_strategy.persistent.catalog` | Database catalog name. By default, the `hibernate.default_catalog` is used. |
+
+`*hibernate.hql.bulk_id_strategy.persistent.catalog*` (e.g. Database catalog name. By default, the `hibernate.default_catalog` is used.)::
 This configuration property is used by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/hql/spi/id/persistent/PersistentTableBulkIdStrategy.html[`PersistentTableBulkIdStrategy`], that mimics temporary tables for databases which do not support temporary tables.
 It follows a pattern similar to the ANSI SQL definition of global temporary table using a "session id" column to segment rows from the various sessions.
-
++
 This configuration property defines the database catalog used for storing the temporary tables used for bulk HQL operations.
-|`hibernate.legacy_limit_handler` | `true` or `false` (default value) |
+
+`*hibernate.legacy_limit_handler*` (e.g. `true` or `false` (default value))::
 Setting which indicates whether or not to use `org.hibernate.dialect.pagination.LimitHandler`
 implementations that sacrifices performance optimizations to allow legacy 4.x limit behavior.
-
++
 Legacy 4.x behavior favored performing pagination in-memory by avoiding the use of the offset value, which is overall poor performance.
 In 5.x, the limit handler behavior favors performance, thus, if the dialect doesn't support offsets, an exception is thrown instead.
-|`hibernate.query.conventional_java_constants` | `true` (default value) or `false` |
-Setting which indicates whether or not Java constant follow the https://docs.oracle.com/javase/tutorial/java/nutsandbolts/variables.html[Java Naming conventions].
 
+`*hibernate.query.conventional_java_constants*` (e.g. `true` (default value) or `false`)::
+Setting which indicates whether or not Java constant follow the https://docs.oracle.com/javase/tutorial/java/nutsandbolts/variables.html[Java Naming conventions].
++
 Default is `true`.
 Existing applications may want to disable this (set it `false`) if non-conventional Java constants are used.
 However, there is a significant performance overhead for using non-conventional Java constants
 since Hibernate cannot determine if aliases should be treated as Java constants or not.
-
++
 Check out https://hibernate.atlassian.net/browse/HHH-4959[HHH-4959] for more details.
-|===================================================================================================================================================================================================================================
 
 [[configurations-batch]]
 === Batching properties
 
-[width="100%",cols="20%,20%,60%",]
-|=====================================================================================================================================================================================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.jdbc.batch_size` |5 |Maximum JDBC batch size. A nonzero value enables batch updates.
-|`hibernate.order_inserts` |`true` or `false` (default value) |Forces Hibernate to order SQL inserts by the primary key value of the items being inserted. This preserves batching when using cascading.
-|`hibernate.order_updates` |`true` or `false` (default value) |Forces Hibernate to order SQL updates by the primary key value of the items being updated. This preserves batching when using cascading and reduces the likelihood of transaction deadlocks in highly-concurrent systems.
-|`hibernate.jdbc.batch_versioned_data` |`true`(default value) or `false` |
-Should versioned entities be included in batching?
+`*hibernate.jdbc.batch_size*` (e.g. 5)::
+Maximum JDBC batch size. A nonzero value enables batch updates.
 
+`*hibernate.order_inserts*` (e.g. `true` or `false` (default value))::
+Forces Hibernate to order SQL inserts by the primary key value of the items being inserted. This preserves batching when using cascading.
+
+`*hibernate.order_updates*` (e.g. `true` or `false` (default value))::
+Forces Hibernate to order SQL updates by the primary key value of the items being updated. This preserves batching when using cascading and reduces the likelihood of transaction deadlocks in highly-concurrent systems.
+
+`*hibernate.jdbc.batch_versioned_data*` (e.g. `true`(default value) or `false`)::
+Should versioned entities be included in batching?
++
 Set this property to `true` if your JDBC driver returns correct row counts from executeBatch(). This option is usually safe, but is disabled by default. If enabled, Hibernate uses batched DML for automatically versioned data.
 
-|`hibernate.batch_fetch_style` |`LEGACY`(default value) |
-
+`*hibernate.batch_fetch_style*` (e.g. `LEGACY`(default value))::
 Names the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/loader/BatchFetchStyle.html[`BatchFetchStyle`] to use.
-
++
 Can specify either the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/loader/BatchFetchStyle.html[`BatchFetchStyle`] name (insensitively), or a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/loader/BatchFetchStyle.html[`BatchFetchStyle`] instance. `LEGACY}` is the default value.
 
-|`hibernate.jdbc.batch.builder` | The fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/batch/spi/BatchBuilder.html[`BatchBuilder`] implementation class type or an actual object instance  | Names the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/batch/spi/BatchBuilder.html[`BatchBuilder`] implementation to use.
-|=====================================================================================================================================================================================================================================================================================================================================================================================================
+`*hibernate.jdbc.batch.builder*` (e.g. The fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/batch/spi/BatchBuilder.html[`BatchBuilder`] implementation class type or an actual object instance)::
+ Names the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/batch/spi/BatchBuilder.html[`BatchBuilder`] implementation to use.
 
 [[configurations-database-fetch]]
 ==== Fetching properties
 
-[width="100%",cols="20%,20%,60%",]
-|=====================================================================================================================================================================================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.max_fetch_depth`|A value between `0` and `3` |Sets a maximum depth for the outer join fetch tree for single-ended associations. A single-ended association is a one-to-one or many-to-one assocation. A value of `0` disables default outer join fetching.
-|`hibernate.default_batch_fetch_size` |`4`,`8`, or `16` |Default size for Hibernate Batch fetching of associations (lazily fetched associations can be fetched in batches to prevent N+1 query problems).
-|`hibernate.jdbc.fetch_size` |`0` or an integer |A non-zero value determines the JDBC fetch size, by calling `Statement.setFetchSize()`.
-|`hibernate.jdbc.use_scrollable_resultset` |`true` or `false` |Enables Hibernate to use JDBC2 scrollable resultsets. This property is only relevant for user-supplied JDBC connections. Otherwise, Hibernate uses connection metadata.
-|`hibernate.jdbc.use_streams_for_binary` |`true` or `false` (default value) |Use streams when writing or reading `binary` or `serializable` types to or from JDBC. This is a system-level property.
-|`hibernate.jdbc.use_get_generated_keys` |`true` or `false` |Allows Hibernate to use JDBC3 `PreparedStatement.getGeneratedKeys()` to retrieve natively-generated keys after insert. You need the JDBC3+ driver and JRE1.4+. Disable this property if your driver has problems with the Hibernate identifier generators. By default, it tries to detect the driver capabilities from connection metadata.
-|`hibernate.jdbc.wrap_result_sets` |`true` or `false` (default value) |Enable wrapping of JDBC result sets in order to speed up column name lookups for broken JDBC drivers.
-|`hibernate.enable_lazy_load_no_trans` |`true` or `false` (default value) |
+`*hibernate.max_fetch_depth*` (e.g. A value between `0` and `3`)::
+Sets a maximum depth for the outer join fetch tree for single-ended associations. A single-ended association is a one-to-one or many-to-one assocation. A value of `0` disables default outer join fetching.
 
+`*hibernate.default_batch_fetch_size*` (e.g. `4`,`8`, or `16`)::
+Default size for Hibernate Batch fetching of associations (lazily fetched associations can be fetched in batches to prevent N+1 query problems).
+
+`*hibernate.jdbc.fetch_size*` (e.g. `0` or an integer)::
+A non-zero value determines the JDBC fetch size, by calling `Statement.setFetchSize()`.
+
+`*hibernate.jdbc.use_scrollable_resultset*` (e.g. `true` or `false`)::
+Enables Hibernate to use JDBC2 scrollable resultsets. This property is only relevant for user-supplied JDBC connections. Otherwise, Hibernate uses connection metadata.
+
+`*hibernate.jdbc.use_streams_for_binary*` (e.g. `true` or `false` (default value))::
+Use streams when writing or reading `binary` or `serializable` types to or from JDBC. This is a system-level property.
+
+`*hibernate.jdbc.use_get_generated_keys*` (e.g. `true` or `false`)::
+Allows Hibernate to use JDBC3 `PreparedStatement.getGeneratedKeys()` to retrieve natively-generated keys after insert. You need the JDBC3+ driver and JRE1.4+. Disable this property if your driver has problems with the Hibernate identifier generators. By default, it tries to detect the driver capabilities from connection metadata.
+
+`*hibernate.jdbc.wrap_result_sets*` (e.g. `true` or `false` (default value))::
+Enable wrapping of JDBC result sets in order to speed up column name lookups for broken JDBC drivers.
+
+`*hibernate.enable_lazy_load_no_trans*` (e.g. `true` or `false` (default value))::
 Initialize Lazy Proxies or Collections outside a given Transactional Persistence Context.
-
++
 Although enabling this configuration can make `LazyInitializationException` go away, it's better to use a fetch plan that guarantees that all properties are properly initialised before the Session is closed.
-
++
 In reality, you shouldn't probably enable this setting anyway.
-|=====================================================================================================================================================================================================================================================================================================================================================================================================
 
 [[configurations-logging]]
 === Statement logging and statistics
 
-[width="100%",cols="20%,20%,60%",]
-|===================================================================================================================================================================================================================================
-|Property |Example |Purpose
-3+|SQL statement logging
-|`hibernate.show_sql` |`true` or `false` (default value) |Write all SQL statements to the console. This is an alternative to setting the log category `org.hibernate.SQL` to debug.
-|`hibernate.format_sql` |`true` or `false` (default value) |Pretty-print the SQL in the log and console.
-|`hibernate.use_sql_comments` |`true` or `false` (default value) |If true, Hibernate generates comments inside the SQL, for easier debugging.
-3+|Statistics settings
-|`hibernate.generate_statistics` |`true` or `false` |Causes Hibernate to collect statistics for performance tuning.
-|`hibernate.stats.factory` |The fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/stat/spi/StatisticsFactory.html[`StatisticsFactory`] implementation or an actual instance
+==== SQL statement logging
+
+`*hibernate.show_sql*` (e.g. `true` or `false` (default value))::
+Write all SQL statements to the console. This is an alternative to setting the log category `org.hibernate.SQL` to debug.
+
+`*hibernate.format_sql*` (e.g. `true` or `false` (default value))::
+Pretty-print the SQL in the log and console.
+
+`*hibernate.use_sql_comments*` (e.g. `true` or `false` (default value))::
+If true, Hibernate generates comments inside the SQL, for easier debugging.
+
+==== Statistics settings
+
+`*hibernate.generate_statistics*` (e.g. `true` or `false`)::
+Causes Hibernate to collect statistics for performance tuning.
+
+`*hibernate.stats.factory*` (e.g. the fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/stat/spi/StatisticsFactory.html[`StatisticsFactory`] implementation or an actual instance)::
 The `StatisticsFactory` allow you to customize how the Hibernate Statistics are being collected.
-|`hibernate.session.events.log` |`true` or `false` |
 
-A setting to control whether the `org.hibernate.engine.internal
-.StatisticalLoggingSessionEventListener` is enabled on all `Sessions` (unless explicitly disabled for a given `Session`).
+`*hibernate.session.events.log*` (e.g. `true` or `false`)::
+A setting to control whether the `org.hibernate.engine.internal.StatisticalLoggingSessionEventListener` is enabled on all `Sessions` (unless explicitly disabled for a given `Session`).
++
 The default value of this setting is determined by the value for `hibernate.generate_statistics`, meaning that if statistics are enabled, then logging of Session metrics is enabled by default too.
-
-|===================================================================================================================================================================================================================================
 
 [[configurations-cache]]
 === Cache Properties
 
-[width="100%",cols="20%,20%,60%",]
-|==================================================================================================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.cache.region.factory_class` | `org.hibernate.cache.infinispan.
-InfinispanRegionFactory` |The fully-qualified name of the `RegionFactory` implementation class.
-|`hibernate.cache.default_cache_concurrency_strategy` | |
+`*hibernate.cache.region.factory_class*` (e.g. `org.hibernate.cache.infinispan.InfinispanRegionFactory`)::
+The fully-qualified name of the `RegionFactory` implementation class.
 
-Setting used to give the name of the default https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CacheConcurrencyStrategy.html[`CacheConcurrencyStrategy`] to use when either `@javax.persistence.Cacheable` or
-`@org.hibernate.annotations.Cache`.  `@org.hibernate.annotations.Cache` is used to override the global setting.
+`*hibernate.cache.default_cache_concurrency_strategy*`::
+Setting used to give the name of the default https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CacheConcurrencyStrategy.html[`CacheConcurrencyStrategy`] to use
+when either `@javax.persistence.Cacheable` or `@org.hibernate.annotations.Cache`.  `@org.hibernate.annotations.Cache` is used to override the global setting.
 
-|`hibernate.cache.use_minimal_puts` |`true` (default value) or `false` |Optimizes second-level cache operation to minimize writes, at the cost of more frequent reads. This is most useful for clustered caches and is enabled by default for clustered cache implementations.
-|`hibernate.cache.use_query_cache` |`true` or `false` (default value) |Enables the query cache. You still need to set individual queries to be cachable.
-|`hibernate.cache.use_second_level_cache` |`true` (default value) or `false` |Enable/disable the second level cache, which is enabled by default, although the default `RegionFactor` is `NoCachingRegionFactory` (meaning there is no actual caching implementation).
-|`hibernate.cache.query_cache_factory` |Fully-qualified classname |A custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/cache/spi/QueryCacheFactory.html[`QueryCacheFactory`] interface. The default is the built-in `StandardQueryCacheFactory`.
-|`hibernate.cache.region_prefix` |A string |A prefix for second-level cache region names.
-|`hibernate.cache.use_structured_entries` |`true` or `false` (default value) |Forces Hibernate to store data in the second-level cache in a more human-readable format.
-|`hibernate.cache.auto_evict_collection_cache` |`true` or `false` (default: false) |Enables the automatic eviction of a bi-directional association's collection cache when an element in the `ManyToOne` collection is added/updated/removed without properly managing the change on the `OneToMany` side.
-|`hibernate.cache.use_reference_entries` |`true` or `false` |Optimizes second-level cache operation to store immutable entities (aka "reference") which do not have associations into cache directly, this case, lots of disasseble and deep copy operations can be avoid. Default value of this property is `false`.
-|`hibernate.ejb.classcache`| `hibernate.ejb.classcache
-.org.hibernate.ejb.test.Item` = `read-write` |	Sets the associated entity class cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.ejb.classcache.<fully.qualified.Classname>` usage[, region] where usage is the cache strategy used and region the cache region name.
-|`hibernate.ejb.collectioncache`| `hibernate.ejb.collectioncache
-.org.hibernate.ejb.test.Item.distributors` = `read-write, RegionName`/> | Sets the associated collection cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.ejb.collectioncache.<fully.qualified.Classname>.<role>` usage[, region] where usage is the cache strategy used and region the cache region name
-|==================================================================================================================================================================================================================================================================================================================
+`*hibernate.cache.use_minimal_puts*` (e.g. `true` (default value) or `false`)::
+Optimizes second-level cache operation to minimize writes, at the cost of more frequent reads. This is most useful for clustered caches and is enabled by default for clustered cache implementations.
+
+`*hibernate.cache.use_query_cache*` (e.g. `true` or `false` (default value))::
+Enables the query cache. You still need to set individual queries to be cachable.
+
+`*hibernate.cache.use_second_level_cache*` (e.g. `true` (default value) or `false`)::
+Enable/disable the second level cache, which is enabled by default, although the default `RegionFactor` is `NoCachingRegionFactory` (meaning there is no actual caching implementation).
+
+`*hibernate.cache.query_cache_factory*` (e.g. Fully-qualified classname)::
+A custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/cache/spi/QueryCacheFactory.html[`QueryCacheFactory`] interface. The default is the built-in `StandardQueryCacheFactory`.
+
+`*hibernate.cache.region_prefix*` (e.g. A string)::
+A prefix for second-level cache region names.
+
+`*hibernate.cache.use_structured_entries*` (e.g. `true` or `false` (default value))::
+Forces Hibernate to store data in the second-level cache in a more human-readable format.
+
+`*hibernate.cache.auto_evict_collection_cache*` (e.g. `true` or `false` (default: false))::
+Enables the automatic eviction of a bi-directional association's collection cache when an element in the `ManyToOne` collection is added/updated/removed without properly managing the change on the `OneToMany` side.
+
+`*hibernate.cache.use_reference_entries*` (e.g. `true` or `false`)::
+Optimizes second-level cache operation to store immutable entities (aka "reference") which do not have associations into cache directly, this case, lots of disasseble and deep copy operations can be avoid. Default value of this property is `false`.
+
+`*hibernate.ejb.classcache*` (e.g. `hibernate.ejb.classcache.org.hibernate.ejb.test.Item` = `read-write`)::
+Sets the associated entity class cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.ejb.classcache.<fully.qualified.Classname>` usage[, region] where usage is the cache strategy used and region the cache region name.
+
+`*hibernate.ejb.collectioncache*` (e.g. `hibernate.ejb.collectioncache.org.hibernate.ejb.test.Item.distributors` = `read-write, RegionName`)::
+Sets the associated collection cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.ejb.collectioncache.<fully.qualified.Classname>.<role>` usage[, region] where usage is the cache strategy used and region the cache region name
 
 [[configurations-infinispan]]
 === Infinispan properties
 
-[width="100%",cols="20%,20%,60%",]
-|=====================================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.cache.infinispan.cfg` | `org/hibernate/cache/infinispan/
-builder/infinispan-configs.xml` | Classpath or filesystem resource containing the Infinispan configuration settings.
-|`hibernate.cache.infinispan.statistics` | | Property name that controls whether Infinispan statistics are enabled. The property value is expected to be a boolean true or false, and it overrides statistic configuration in base Infinispan configuration, if provided.
-|`hibernate.cache.infinispan.use_synchronization` | | Deprecated setting because Infinispan is designed to always register a `Synchronization` for `TRANSACTIONAL` caches.
-|`hibernate.cache.infinispan.cachemanager` | There is no default value, the user must specify the property. | Specifies the JNDI name under which the `EmbeddedCacheManager` is bound.
-|=====================================================================================================================================================================================================================================================
+`*hibernate.cache.infinispan.cfg*` (e.g. `org/hibernate/cache/infinispan/builder/infinispan-configs.xml`)::
+Classpath or filesystem resource containing the Infinispan configuration settings.
+
+`*hibernate.cache.infinispan.statistics*`::
+Property name that controls whether Infinispan statistics are enabled. The property value is expected to be a boolean true or false, and it overrides statistic configuration in base Infinispan configuration, if provided.
+
+`*hibernate.cache.infinispan.use_synchronization*`::
+Deprecated setting because Infinispan is designed to always register a `Synchronization` for `TRANSACTIONAL` caches.
+
+`*hibernate.cache.infinispan.cachemanager*` (e.g. There is no default value, the user must specify the property.)::
+Specifies the JNDI name under which the `EmbeddedCacheManager` is bound.
 
 [[configurations-transactions]]
 === Transactions properties
 
-[width="100%",cols="20%,20%,60%",]
-|===================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.transaction.jta.platform` |`JBossAS`, `BitronixJtaPlatform` |
-
+`*hibernate.transaction.jta.platform*` (e.g. `JBossAS`, `BitronixJtaPlatform`)::
 Names the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/transaction/jta/platform/spi/JtaPlatform.html[`JtaPlatform`] implementation to use for integrating with JTA systems.
 Can reference either a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/transaction/jta/platform/spi/JtaPlatform.html[`JtaPlatform`] instance or the name of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/transaction/jta/platform/spi/JtaPlatform.html[`JtaPlatform`] implementation class
 
-|`hibernate.jta.prefer_user_transaction` |`true` or `false` (default value) |
-
+`*hibernate.jta.prefer_user_transaction*` (e.g. `true` or `false` (default value))::
 Should we prefer using the `org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform#retrieveUserTransaction` over using `org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform#retrieveTransactionManager`
 
-|`hibernate.transaction.jta.platform_resolver` | | Names the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/transaction/jta/platform/spi/JtaPlatformResolver.html[`JtaPlatformResolver`] implementation to use.
-|`hibernate.jta.cacheTransactionManager` | `true` (default value) or `false` | A configuration value key used to indicate that it is safe to cache.
-|`hibernate.jta.cacheUserTransaction` | `true` or `false` (default value) | A configuration value key used to indicate that it is safe to cache.
-|`hibernate.transaction.flush_before_completion` |`true` or `false` (default value) | Causes the session be flushed during the before completion phase of the transaction. If possible, use built-in and automatic session context management instead.
-|`hibernate.transaction.auto_close_session` |`true` or `false` (default value) |Causes the session to be closed during the after completion phase of the transaction. If possible, use built-in and automatic session context management instead.
-|`hibernate.transaction.coordinator_class` | a|
+`*hibernate.transaction.jta.platform_resolver*`::
+Names the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/transaction/jta/platform/spi/JtaPlatformResolver.html[`JtaPlatformResolver`] implementation to use.
 
+`*hibernate.jta.cacheTransactionManager*` (e.g. `true` (default value) or `false`)::
+A configuration value key used to indicate that it is safe to cache.
+
+`*hibernate.jta.cacheUserTransaction*` (e.g. `true` or `false` (default value))::
+A configuration value key used to indicate that it is safe to cache.
+
+`*hibernate.transaction.flush_before_completion*` (e.g. `true` or `false` (default value))::
+Causes the session be flushed during the before completion phase of the transaction. If possible, use built-in and automatic session context management instead.
+
+`*hibernate.transaction.auto_close_session*` (e.g. `true` or `false` (default value))::
+Causes the session to be closed during the after completion phase of the transaction. If possible, use built-in and automatic session context management instead.
+
+`*hibernate.transaction.coordinator_class*`::
 Names the implementation of https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/transaction/spi/TransactionCoordinatorBuilder.html[`TransactionCoordinatorBuilder`] to use for creating https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/transaction/spi/TransactionCoordinator.html[`TransactionCoordinator`] instances.
-
-Can be
-
-* `TransactionCoordinatorBuilder` instance
-* `TransactionCoordinatorBuilder` implementation `Class` reference
-* `TransactionCoordinatorBuilder` implementation class name (fully-qualified name) or short name
-
++
+Can be a`TransactionCoordinatorBuilder` instance, `TransactionCoordinatorBuilder` implementation `Class` reference, a `TransactionCoordinatorBuilder` implementation class name (fully-qualified name) or a short name.
++
 The following short names are defined for this setting:
-
-`jdbc`:: Manages transactions via calls to `java.sql.Connection` (default for non-JPA applications)
-`jta`:: Manages transactions via JTA. See <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant,Java EE bootstrapping>>
++
+`jdbc`::: Manages transactions via calls to `java.sql.Connection` (default for non-JPA applications)
+`jta`::: Manages transactions via JTA. See <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant,Java EE bootstrapping>>
++
 
 If a JPA application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate will
 automatically build the proper transaction coordinator based on the transaction type for the persistence unit.
-
++
 If a non-JPA application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate
 will use `jdbc` as the default. This default will cause problems if the application actually uses JTA-based transactions.
 A non-JPA application that uses JTA-based transactions should explicitly set `hibernate.transaction.coordinator_class=jta`
 or provide a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/transaction/TransactionCoordinatorBuilder.html[`TransactionCoordinatorBuilder`] that builds a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/transaction/TransactionCoordinator.html[`TransactionCoordinator`] that properly coordinates with JTA-based transactions.
 
-|`hibernate.jta.track_by_thread` | `true` (default value) or `false` |
-
+`*hibernate.jta.track_by_thread*` (e.g. `true` (default value) or `false`)::
 A transaction can be rolled back by another thread ("tracking by thread") and not the original application.
 Examples of this include a JTA transaction timeout handled by a background reaper thread.
-
++
 The ability to handle this situation requires checking the Thread ID every time Session is called, so enabling this can certainly have a performance impact.
 
-|`hibernate.transaction.factory_class` | | This is a legacy setting that's been deprecated and you should use the `hibernate.transaction.jta.platform` instead.
+[line-through]#`*hibernate.transaction.factory_class*`#::
++
+WARNING: This is a legacy setting that's been deprecated and you should use the `hibernate.transaction.jta.platform` instead.
 
-
-|===================================================================================================================================================================================================================================
+`*hibernate.jta.allowTransactionAccess*`(e.g. `true` (default value) or `false`)::
+It allows access to the underlying `org.hibernate.Transaction` even when using JTA
+since the JPA specification prohibits this behavior.
++
+If this configuration property is set to `true`, access is granted to the underlying `org.hibernate.Transaction`.
+If it's set to `false`, you won't be able to access the `org.hibernate.Transaction`.
++
+The default behavior is to allow access unless the `Session` is bootstrapped via JPA.
 
 [[configurations-multi-tenancy]]
 === Multi-tenancy settings
 
-[width="100%",cols="20%,20%,60%",]
-|===================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.multiTenancy` | `NONE` (default value), `SCHEMA`, `DATABASE`, and `DISCRIMINATOR` (not implemented yet)  | The multi-tenancy strategy in use.
-|`hibernate.multi_tenant_connection_provider` | `true` or `false` (default value) | Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/connections/spi/MultiTenantConnectionProvider.html[`MultiTenantConnectionProvider`] implementation to use. As `MultiTenantConnectionProvider` is also a service, can be configured directly through the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/registry/StandardServiceRegistryBuilder.html[`StandardServiceRegistryBuilder`].
-|`hibernate.tenant_identifier_resolver` | a|
+`*hibernate.multiTenancy*` (e.g. `NONE` (default value), `SCHEMA`, `DATABASE`, and `DISCRIMINATOR` (not implemented yet))::
+The multi-tenancy strategy in use.
 
+`*hibernate.multi_tenant_connection_provider*` (e.g. `true` or `false` (default value))::
+Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/connections/spi/MultiTenantConnectionProvider.html[`MultiTenantConnectionProvider`] implementation to use. As `MultiTenantConnectionProvider` is also a service, can be configured directly through the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/registry/StandardServiceRegistryBuilder.html[`StandardServiceRegistryBuilder`].
+
+`*hibernate.tenant_identifier_resolver*`::
 Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/spi/CurrentTenantIdentifierResolver.html[`CurrentTenantIdentifierResolver`] implementation to resolve the resolve the current tenant identifier so that calling `SessionFactory#openSession()` would get a `Session` that's connected to the right tenant.
++
+Can be a `CurrentTenantIdentifierResolver` instance, `CurrentTenantIdentifierResolver` implementation `Class` object reference or a `CurrentTenantIdentifierResolver` implementation class name.
 
-Can be:
-
-* `CurrentTenantIdentifierResolver` instance
-* `CurrentTenantIdentifierResolver` implementation `Class` object reference
-* `CurrentTenantIdentifierResolver` implementation class name
-
-|`hibernate.multi_tenant.datasource.identifier_for_any` | `true` or `false` (default value) | When the `hibernate.connection.datasource` property value is resolved to a `javax.naming.Context` object, this configuration property defines the JNDI name used to locate the `DataSource` used for fetching the initial `Connection` which is used to access to the database metadata of the underlying database(s) (in situations where we do not have a tenant id, like startup processing).
-
-|===================================================================================================================================================================================================================================
+`*hibernate.multi_tenant.datasource.identifier_for_any*` (e.g. `true` or `false` (default value))::
+When the `hibernate.connection.datasource` property value is resolved to a `javax.naming.Context` object, this configuration property defines the JNDI name used to locate the `DataSource` used for fetching the initial `Connection` which is used to access to the database metadata of the underlying database(s) (in situations where we do not have a tenant id, like startup processing).
 
 [[configurations-hbmddl]]
 === Automatic schema generation
 
-[width="100%",cols="20%,20%,60%",]
-|===================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.hbm2ddl.auto` |`none` (default value), `create-only`, `drop`, `create`, `create-drop`, `validate`, and `update` a|
-
+`*hibernate.hbm2ddl.auto*` (e.g. `none` (default value), `create-only`, `drop`, `create`, `create-drop`, `validate`, and `update`)::
 Setting to perform `SchemaManagementTool` actions automatically as part of the `SessionFactory` lifecycle.
 Valid options are defined by the `externalHbm2ddlName` value of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/Action.html[`Action`] enum:
++
+`none`::: No action will be performed.
+`create-only`::: Database creation will be generated.
+`drop`::: Database dropping will be generated.
+`create`::: Database dropping will be generated followed by database creation.
+`create-drop`::: Drop the schema and recreate it on SessionFactory startup.  Additionally, drop the schema on SessionFactory shutdown.
+`validate`::: Validate the database schema
+`update`::: Update the database schema
 
-`none`:: No action will be performed.
-`create-only`:: Database creation will be generated.
-`drop`:: Database dropping will be generated.
-`create`:: Database dropping will be generated followed by database creation.
-`create-drop`:: Drop the schema and recreate it on SessionFactory startup.  Additionally, drop the schema on SessionFactory shutdown.
-`validate`:: Validate the database schema
-`update`:: Update the database schema
-
-|`javax.persistence.schema-generation.database.action` |`none` (default value), `create-only`, `drop`, `create`, `create-drop`, `validate`, and `update` a|
-
+`*javax.persistence.schema-generation.database.action*` (e.g. `none` (default value), `create-only`, `drop`, `create`, `create-drop`, `validate`, and `update`)::
 Setting to perform `SchemaManagementTool` actions automatically as part of the `SessionFactory` lifecycle.
 Valid options are defined by the `externalJpaName` value of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/Action.html[`Action`] enum:
++
+`none`::: No action will be performed.
+`create`::: Database creation will be generated.
+`drop`::: Database dropping will be generated.
+`drop-and-create`::: Database dropping will be generated followed by database creation.
 
-`none`:: No action will be performed.
-`create`:: Database creation will be generated.
-`drop`:: Database dropping will be generated.
-`drop-and-create`:: Database dropping will be generated followed by database creation.
-
-|`javax.persistence.schema-generation.scripts.action` |`none` (default value), `create-only`, `drop`, `create`, `create-drop`, `validate`, and `update` a|
-
+`*javax.persistence.schema-generation.scripts.action*` (e.g. `none` (default value), `create-only`, `drop`, `create`, `create-drop`, `validate`, and `update`)::
 Setting to perform `SchemaManagementTool` actions writing the commands into a DDL script file.
 Valid options are defined by the `externalJpaName` value of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/Action.html[`Action`] enum:
++
+`none`::: No action will be performed.
+`create`::: Database creation will be generated.
+`drop`::: Database dropping will be generated.
+`drop-and-create`::: Database dropping will be generated followed by database creation.
 
-`none`:: No action will be performed.
-`create`:: Database creation will be generated.
-`drop`:: Database dropping will be generated.
-`drop-and-create`:: Database dropping will be generated followed by database creation.
+`*javax.persistence.schema-generation-connection*`::
+Allows passing a specific `java.sql.Connection` instance to be used by `SchemaManagementTool`
 
-|`javax.persistence.schema-generation-connection` | |Allows passing a specific `java.sql.Connection` instance to be used by `SchemaManagementTool`
-|`javax.persistence.database-product-name` | |
-
+`*javax.persistence.database-product-name*`::
 Specifies the name of the database provider in cases where a Connection to the underlying database is not available (aka, mainly in generating scripts).
 In such cases, a value for this setting _must_ be specified.
-
++
 The value of this setting is expected to match the value returned by `java.sql.DatabaseMetaData#getDatabaseProductName()` for the target database.
-
++
 Additionally, specifying `javax.persistence.database-major-version` and/or `javax.persistence.database-minor-version` may be required to understand exactly how to generate the required schema commands.
 
-|`javax.persistence.database-major-version` | |
-
+`*javax.persistence.database-major-version*`::
 Specifies the major version of the underlying database, as would be returned by `java.sql.DatabaseMetaData#getDatabaseMajorVersion` for the target database.
-
++
 This value is used to help more precisely determine how to perform schema generation tasks for the underlying database in cases where `javax.persistence.database-product-name` does not provide enough distinction.
 
-|`javax.persistence.database-minor-version` | |
-
+`*javax.persistence.database-minor-version*`::
 Specifies the minor version of the underlying database, as would be returned by `java.sql.DatabaseMetaData#getDatabaseMinorVersion` for the target database.
-
++
 This value is used to help more precisely determine how to perform schema generation tasks for the underlying database in cases where `javax.persistence.database-product-name` and `javax.persistence.database-major-version` does not provide enough distinction.
 
-|`javax.persistence.schema-generation.create-source` | a|
-
+`*javax.persistence.schema-generation.create-source*`::
 Specifies whether schema generation commands for schema creation are to be determine based on object/relational mapping metadata, DDL scripts, or a combination of the two.
 See https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/SourceType.html[`SourceType`] for valid set of values.
-
++
 If no value is specified, a default is assumed as follows:
-
++
 * if source scripts are specified (per `javax.persistence.schema-generation.create-script-source`), then `scripts` is assumed
 * otherwise, `metadata` is assumed
 
-|`javax.persistence.schema-generation.drop-source` | a|
-
+`*javax.persistence.schema-generation.drop-source*`::
 Specifies whether schema generation commands for schema dropping are to be determine based on object/relational mapping metadata, DDL scripts, or a combination of the two.
 See https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/SourceType.html[`SourceType`] for valid set of values.
-
++
 If no value is specified, a default is assumed as follows:
-
++
 * if source scripts are specified (per `javax.persistence.schema-generation.create-script-source`), then `scripts` is assumed
 * otherwise, `metadata` is assumed
 
-|`javax.persistence.schema-generation.create-script-source` | |
-
+`*javax.persistence.schema-generation.create-script-source*`::
 Specifies the `create` script file as either a `java.io.Reader` configured for reading of the DDL script file or a string designating a file `java.net.URL` for the DDL script.
-
++
 Hibernate historically also accepted `hibernate.hbm2ddl.import_files` for a similar purpose, but `javax.persistence.schema-generation.create-script-source` should be preferred over `hibernate.hbm2ddl.import_files`.
 
-|`javax.persistence.schema-generation.drop-script-source` | | Specifies the `drop` script file as either a `java.io.Reader` configured for reading of the DDL script file or a string designating a file `java.net.URL` for the DDL script.
-|`javax.persistence.schema-generation.scripts.create-target` | |For cases where the `javax.persistence.schema-generation.scripts.action` value indicates that schema creation commands should be written to DDL script file, `javax.persistence.schema-generation.scripts.create-target` specifies either a `java.io.Writer` configured for output of the DDL script or a string specifying the file URL for the DDL script.
-|`javax.persistence.schema-generation.scripts.drop-target` | |For cases where the `javax.persistence.schema-generation.scripts.action` value indicates that schema dropping commands should be written to DDL script file, `javax.persistence.schema-generation.scripts.drop-target` specifies either a `java.io.Writer` configured for output of the DDL script or a string specifying the file URL for the DDL script.
-|`javax.persistence.hibernate.hbm2ddl.import_files` | `import.sql` (default value) a|
+`*javax.persistence.schema-generation.drop-script-source*`::
+ Specifies the `drop` script file as either a `java.io.Reader` configured for reading of the DDL script file or a string designating a file `java.net.URL` for the DDL script.
 
+`*javax.persistence.schema-generation.scripts.create-target*`::
+For cases where the `javax.persistence.schema-generation.scripts.action` value indicates that schema creation commands should be written to DDL script file, `javax.persistence.schema-generation.scripts.create-target` specifies either a `java.io.Writer` configured for output of the DDL script or a string specifying the file URL for the DDL script.
+
+`*javax.persistence.schema-generation.scripts.drop-target*`::
+For cases where the `javax.persistence.schema-generation.scripts.action` value indicates that schema dropping commands should be written to DDL script file, `javax.persistence.schema-generation.scripts.drop-target` specifies either a `java.io.Writer` configured for output of the DDL script or a string specifying the file URL for the DDL script.
+
+`*javax.persistence.hibernate.hbm2ddl.import_files*` (e.g. `import.sql` (default value))::
 Comma-separated names of the optional files containing SQL DML statements executed during the `SessionFactory` creation.
 File order matters, the statements of a give file are executed before the statements of the following one.
-
++
 These statements are only executed if the schema is created, meaning that `hibernate.hbm2ddl.auto` is set to `create`, `create-drop`, or `update`.
 `javax.persistence.schema-generation.create-script-source` / `javax.persistence.schema-generation.drop-script-source` should be preferred.
 
-|`javax.persistence.sql-load-script-source` | |
-
+`*javax.persistence.sql-load-script-source*`::
 JPA variant of `hibernate.hbm2ddl.import_files`. Specifies a `java.io.Reader` configured for reading of the SQL load script or a string designating the file `java.net.URL` for the SQL load script.
 A "SQL load script" is a script that performs some database initialization (INSERT, etc).
 
-|`hibernate.hbm2ddl.import_files_sql_extractor` | |
-
+`*hibernate.hbm2ddl.import_files_sql_extractor*`::
 Reference to the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/hbm2ddl/ImportSqlCommandExtractor.html[`ImportSqlCommandExtractor`] implementation class to use for parsing source/import files as defined by `javax.persistence.schema-generation.create-script-source`,
 `javax.persistence.schema-generation.drop-script-source` or `hibernate.hbm2ddl.import_files`.
-
++
 Reference may refer to an instance, a Class implementing `ImportSqlCommandExtractor` of the fully-qualified name of the `ImportSqlCommandExtractor` implementation.
 If the fully-qualified name is given, the implementation must provide a no-arg constructor.
-
++
 The default value is https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/hbm2ddl/SingleLineSqlCommandExtractor.html[`SingleLineSqlCommandExtractor`].
 
-|`hibernate.hbm2dll.create_namespaces` | `true` or `false` (default value) |Specifies whether to automatically create also the database schema/catalog.
-|`javax.persistence.create-database-schemas` | `true` or `false` (default value) |
+`*hibernate.hbm2dll.create_namespaces*` (e.g. `true` or `false` (default value))::
+Specifies whether to automatically create also the database schema/catalog.
 
+`*javax.persistence.create-database-schemas*` (e.g. `true` or `false` (default value))::
 The JPA variant of `hibernate.hbm2dll.create_namespaces`. Specifies whether the persistence provider is to create the database schema(s) in addition to creating database objects (tables, sequences, constraints, etc).
 The value of this boolean property should be set to `true` if the persistence provider is to create schemas in the database or to generate DDL that contains "CREATE SCHEMA" commands.
++
 If this property is not supplied (or is explicitly `false`), the provider should not attempt to create database schemas.
 
-|`hibernate.hbm2ddl.schema_filter_provider` | |
-
+`*hibernate.hbm2ddl.schema_filter_provider*`::
 Used to specify the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaFilterProvider.html[`SchemaFilterProvider`] to be used by `create`, `drop`, `migrate`, and `validate` operations on the database schema.
 `SchemaFilterProvider` provides filters that can be used to limit the scope of these operations to specific namespaces, tables and sequences. All objects are included by default.
 
-|`hibernate.hbm2ddl.jdbc_metadata_extraction_strategy` |`grouped` (default value) or `individually` a|
-
+`*hibernate.hbm2ddl.jdbc_metadata_extraction_strategy*` (e.g. `grouped` (default value) or `individually`)::
 Setting to choose the strategy used to access the JDBC Metadata.
 Valid options are defined by the `strategy` value of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/JdbcMetadaAccessStrategy.html[`JdbcMetadaAccessStrategy`] enum:
++
+`grouped`::: https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaMigrator.html[`SchemaMigrator`] and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaValidator.html[`SchemaValidator`] execute a single `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call to retrieve all the database table in order to determine if all the `javax.persistence.Entity` have a corresponding mapped database tables.This strategy may require `hibernate.default_schema` and/or `hibernate.default_catalog` to be provided.
+`individually`::: https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaMigrator.html[`SchemaMigrator`] and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaValidator.html[`SchemaValidator`] execute one `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call for each `javax.persistence.Entity` in order to determine if a corresponding database table exists.
 
-`grouped`:: https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaMigrator.html[`SchemaMigrator`] and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaValidator.html[`SchemaValidator`] execute a single `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call to retrieve all the database table in order to determine if all the `javax.persistence.Entity` have a corresponding mapped database tables.This strategy may require `hibernate.default_schema` and/or `hibernate.default_catalog` to be provided.
-`individually`:: https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaMigrator.html[`SchemaMigrator`] and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaValidator.html[`SchemaValidator`] execute one `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call for each `javax.persistence.Entity` in order to determine if a corresponding database table exists.
+`*hibernate.hbm2ddl.delimiter*` (e.g. `;`)::
+Identifies the delimiter to use to separate schema management statements in script outputs.
 
-|`hibernate.hbm2ddl.delimiter` | `;` |Identifies the delimiter to use to separate schema management statements in script outputs.
+`*hibernate.schema_management_tool*` (e.g. A schema name)::
+Used to specify the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaManagementTool.html[`SchemaManagementTool`] to use for performing schema management. The default is to use https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/internal/HibernateSchemaManagementTool.html[`HibernateSchemaManagementTool`]
 
-|`hibernate.schema_management_tool` |A schema name |Used to specify the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaManagementTool.html[`SchemaManagementTool`] to use for performing schema management. The default is to use https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/internal/HibernateSchemaManagementTool.html[`HibernateSchemaManagementTool`]
-|`hibernate.synonyms` |`true` or `false` (default value) |If enabled, allows schema update and validation to support synonyms. Due to the possibility that this would return duplicate tables (especially in Oracle), this is disabled by default.
-|`hibernate.hbm2dll.extra_physical_table_types` |`BASE TABLE` |Identifies a comma-separated list of values to specify extra table types, other than the default `TABLE` value, to recognize as defining a physical table by schema update, creation and validation.
-|`hibernate.schema_update.unique_constraint_strategy` |`DROP_RECREATE_QUIETLY`, `RECREATE_QUIETLY`, `SKIP` a|
+`*hibernate.synonyms*` (e.g. `true` or `false` (default value))::
+If enabled, allows schema update and validation to support synonyms. Due to the possibility that this would return duplicate tables (especially in Oracle), this is disabled by default.
 
+`*hibernate.hbm2dll.extra_physical_table_types*` (e.g. `BASE TABLE`)::
+Identifies a comma-separated list of values to specify extra table types, other than the default `TABLE` value, to recognize as defining a physical table by schema update, creation and validation.
+
+`*hibernate.schema_update.unique_constraint_strategy*` (e.g. `DROP_RECREATE_QUIETLY`, `RECREATE_QUIETLY`, `SKIP`)::
 Unique columns and unique keys both use unique constraints in most dialects.
 `SchemaUpdate` needs to create these constraints, but DBs support for finding existing constraints is extremely inconsistent.
 Further, non-explicitly-named unique constraints use randomly generated characters.
-
++
 Therefore, the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/hbm2ddl/UniqueConstraintSchemaUpdateStrategy.html[`UniqueConstraintSchemaUpdateStrategy`] offers the following options:
++
+`DROP_RECREATE_QUIETLY`::: Default option.
+Attempt to drop, then (re-)create each unique constraint. Ignore any exceptions being thrown.
+`RECREATE_QUIETLY`:::
+Attempts to (re-)create unique constraints, ignoring exceptions thrown if the constraint already existed
+`SKIP`:::
+Does not attempt to create unique constraints on a schema update.
 
-`DROP_RECREATE_QUIETLY`:: Default option.
-	Attempt to drop, then (re-)create each unique constraint. Ignore any exceptions being thrown.
-`RECREATE_QUIETLY`::
-	Attempts to (re-)create unique constraints, ignoring exceptions thrown if the constraint already existed
-`SKIP`::
-	Does not attempt to create unique constraints on a schema update.
-|`hibernate.hbm2ddl.charset_name` |`Charset.defaultCharset()` |Defines the charset (encoding) used for all input/output schema generation resources. By default, Hibernate uses the default charset given by `Charset.defaultCharset()`. This configuration property allows you to override the default JVM setting so that you can specify which encoding is used when reading and writing schema generation resources (e.g. File, URL).
-|`hibernate.hbm2ddl.halt_on_error` |`true` or `false` (default value) |Whether the schema migration tool should halt on error, therefore terminating the bootstrap process. By default, the `EntityManagerFactory` or `SessionFactory` are created even if the schema migration throws exceptions. To prevent this default behavior, set this property value to `true`.
+`*hibernate.hbm2ddl.charset_name*` (e.g. `Charset.defaultCharset()`)::
+Defines the charset (encoding) used for all input/output schema generation resources. By default, Hibernate uses the default charset given by `Charset.defaultCharset()`. This configuration property allows you to override the default JVM setting so that you can specify which encoding is used when reading and writing schema generation resources (e.g. File, URL).
 
-|===================================================================================================================================================================================================================================
+`*hibernate.hbm2ddl.halt_on_error*` (e.g. `true` or `false` (default value))::
+Whether the schema migration tool should halt on error, therefore terminating the bootstrap process. By default, the `EntityManagerFactory` or `SessionFactory` are created even if the schema migration throws exceptions. To prevent this default behavior, set this property value to `true`.
 
 [[configurations-exception-handling]]
 === Exception handling
 
-[width="100%",cols="20%,20%,60%",]
-|===================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.jdbc.sql_exception_converter` | Fully-qualified name of class implementing `SQLExceptionConverter` |The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/exception/spi/SQLExceptionConverter.html[`SQLExceptionConverter`] to use for converting `SQLExceptions` to Hibernate's `JDBCException` hierarchy. The default is to use the configured https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html[`Dialect`]'s preferred `SQLExceptionConverter`.
-|===================================================================================================================================================================================================================================
+`*hibernate.jdbc.sql_exception_converter*` (e.g. Fully-qualified name of class implementing `SQLExceptionConverter`)::
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/exception/spi/SQLExceptionConverter.html[`SQLExceptionConverter`] to use for converting `SQLExceptions` to Hibernate's `JDBCException` hierarchy. The default is to use the configured https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html[`Dialect`]'s preferred `SQLExceptionConverter`.
 
 [[configurations-session-events]]
 === Session events
 
-[width="100%",cols="20%,20%,60%",]
-|===========================================================================================================================
-|Property |Example |Purpose
-|`hibernate.session.events.auto` | | Fully qualified class name implementing the `SessionEventListener` interface.
-|`hibernate.session_factory.interceptor` or `hibernate.ejb.interceptor` | `org.hibernate.EmptyInterceptor` (default value)  a|
+`*hibernate.session.events.auto*`::
+Fully qualified class name implementing the `SessionEventListener` interface.
 
-Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Interceptor` implementation to be applied to every `Session` created by the current `org.hibernate.SessionFactory`
-
+`*hibernate.session_factory.interceptor*` (e.g. `org.hibernate.EmptyInterceptor` (default value))::
+Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Interceptor[`Interceptor`] implementation to be applied to every `Session` created by the current `org.hibernate.SessionFactory`
++
 Can reference:
-
++
 * `Interceptor` instance
 * `Interceptor` implementation `Class` object reference
 * `Interceptor` implementation class name
 
-|`hibernate.ejb.interceptor.session_scoped` | fully-qualified class name or class reference | An optional Hibernate interceptor.
+[line-through]#`*hibernate.ejb.interceptor*`# (e.g. `hibernate.session_factory.interceptor` (default value))::
++
+WARNING: Deprecated setting. Use `hibernate.session_factory.session_scoped_interceptor` instead.
 
+`*hibernate.session_factory.session_scoped_interceptor*` (e.g. fully-qualified class name or class reference)::
+Names a `org.hibernate.Interceptor` implementation to be applied to the `org.hibernate.SessionFactory` and propagated to each `Session` created from the `SessionFactory`.
++
+This setting identifies an `Interceptor` implementation that is to be applied to every `Session` opened from the `SessionFactory`,
+but unlike `hibernate.session_factory.interceptor`, a unique instance of the `Interceptor` is
+used for each `Session`.
++
+Can reference:
++
+* `Interceptor` instance
+* `Interceptor` implementation `Class` object reference
+* `java.util.function.Supplier` instance which is used to retrieve the `Interceptor` instance.
++
+NOTE: Specifically, this setting cannot name an `Interceptor` instance.
+
+[line-through]#`*hibernate.ejb.interceptor.session_scoped*`# (e.g. fully-qualified class name or class reference)::
++
+WARNING: Deprecated setting. Use `hibernate.session_factory.session_scoped_interceptor` instead.
++
+An optional Hibernate interceptor.
++
 The interceptor instance is specific to a given Session instance (and hence is not thread-safe) has to implement `org.hibernate.Interceptor` and have a no-arg constructor.
++
+This property cannot be combined with `hibernate.ejb.interceptor`.
 
-This property can not be combined with `hibernate.ejb.interceptor`.
-|`hibernate.ejb.session_factory_observer` | fully-qualified class name or class reference | Specifies a `SessionFactoryObserver` to be applied to the SessionFactory. The class must have a no-arg constructor.
-|`hibernate.ejb.event` | `hibernate.ejb.event.pre-load` = `com.acme.SecurityListener,com.acme.AuditListener` | Event listener list for a given event type. The list of event listeners is a comma separated fully qualified class name list.
-|===========================================================================================================================
+`*hibernate.ejb.session_factory_observer*` (e.g. fully-qualified class name or class reference)::
+Specifies a `SessionFactoryObserver` to be applied to the SessionFactory. The class must have a no-arg constructor.
+
+`*hibernate.ejb.event*` (e.g. `hibernate.ejb.event.pre-load` = `com.acme.SecurityListener,com.acme.AuditListener`)::
+Event listener list for a given event type. The list of event listeners is a comma separated fully qualified class name list.
 
 [[configurations-jmx]]
 === JMX settings
 
-[width="100%",cols="20%,20%,60%",]
-|===================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.jmx.enabled` | `true` or `false` (default value) | Enable JMX.
-|`hibernate.jmx.usePlatformServer` | `true` or `false` (default value) | Uses the platform MBeanServer as returned by `ManagementFactory#getPlatformMBeanServer()`.
-|`hibernate.jmx.agentId` | | The agent identifier of the associated `MBeanServer`.
-|`hibernate.jmx.defaultDomain` | | The domain name of the associated `MBeanServer`.
-|`hibernate.jmx.sessionFactoryName` | | The `SessionFactory` name appended to the object name the Manageable Bean is registered with. If null, the `hibernate.session_factory_name` configuration value is used.
-|`org.hibernate.core` | | The default object domain appended to the object name the Manageable Bean is registered with.
-|===================================================================================================================================================================================================================================
+`*hibernate.jmx.enabled*` (e.g. `true` or `false` (default value))::
+Enable JMX.
+
+`*hibernate.jmx.usePlatformServer*` (e.g. `true` or `false` (default value))::
+Uses the platform MBeanServer as returned by `ManagementFactory#getPlatformMBeanServer()`.
+
+`*hibernate.jmx.agentId*`::
+The agent identifier of the associated `MBeanServer`.
+
+`*hibernate.jmx.defaultDomain*`::
+The domain name of the associated `MBeanServer`.
+
+`*hibernate.jmx.sessionFactoryName*`::
+The `SessionFactory` name appended to the object name the Manageable Bean is registered with. If null, the `hibernate.session_factory_name` configuration value is used.
+
+`*org.hibernate.core*`::
+The default object domain appended to the object name the Manageable Bean is registered with.
 
 [[configurations-jacc]]
 === JACC settings
 
-[width="100%",cols="20%,20%,60%",]
-|===================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.jacc.enabled` | `true` or `false` (default value)  | Is JACC enabled?
-|`hibernate.jacc` | `hibernate.jacc.allowed.org.jboss.ejb3.test.jacc.AllEntity` | The property name defines the role (e.g. `allowed`) and the entity class name (e.g. `org.jboss.ejb3.test.jacc.AllEntity`), while the property value defines the authorized actions (e.g. `insert,update,read`).
-|`hibernate.jacc_context_id` | | A String identifying the policy context whose PolicyConfiguration interface is to be returned. The value passed to this parameter must not be null.
-|===================================================================================================================================================================================================================================
+`*hibernate.jacc.enabled*` (e.g. `true` or `false` (default value))::
+Is JACC enabled?
+
+`*hibernate.jacc*` (e.g. `hibernate.jacc.allowed.org.jboss.ejb3.test.jacc.AllEntity`)::
+The property name defines the role (e.g. `allowed`) and the entity class name (e.g. `org.jboss.ejb3.test.jacc.AllEntity`), while the property value defines the authorized actions (e.g. `insert,update,read`).
+
+`*hibernate.jacc_context_id*`::
+A String identifying the policy context whose PolicyConfiguration interface is to be returned. The value passed to this parameter must not be null.
 
 [[configurations-misc]]
 === ClassLoaders properties
 
-[width="100%",cols="20%,20%,60%",]
-|=====================================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.classLoaders` | |Used to define a `java.util.Collection<ClassLoader>` or the `ClassLoader` instance Hibernate should use for class-loading and resource-lookups.
-|`hibernate.classLoader.application` | |Names the `ClassLoader` used to load user application classes.
-|`hibernate.classLoader.resources` | |Names the `ClassLoader` Hibernate should use to perform resource loading.
-|`hibernate.classLoader.hibernate` | |Names the `ClassLoader` responsible for loading Hibernate classes.  By default this is the `ClassLoader` that loaded this class.
-|`hibernate.classLoader.environment` | |Names the `ClassLoader` used when Hibernate is unable to locates classes on the `hibernate.classLoader.application` or `hibernate.classLoader.hibernate`.
-|=====================================================================================================================================================================================================================================================
+`*hibernate.classLoaders*`::
+Used to define a `java.util.Collection<ClassLoader>` or the `ClassLoader` instance Hibernate should use for class-loading and resource-lookups.
+
+`*hibernate.classLoader.application*`::
+Names the `ClassLoader` used to load user application classes.
+
+`*hibernate.classLoader.resources*`::
+Names the `ClassLoader` Hibernate should use to perform resource loading.
+
+`*hibernate.classLoader.hibernate*`::
+Names the `ClassLoader` responsible for loading Hibernate classes.  By default this is the `ClassLoader` that loaded this class.
+
+`*hibernate.classLoader.environment*`::
+Names the `ClassLoader` used when Hibernate is unable to locates classes on the `hibernate.classLoader.application` or `hibernate.classLoader.hibernate`.
 
 [[configurations-bootstrap]]
 === Bootstrap properties
 
-[width="100%",cols="20%,20%,60%",]
-|=====================================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.integrator_provider` | The fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/IntegratorProvider.html[`IntegratorProvider`] |
+`*hibernate.integrator_provider*` (e.g. The fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/IntegratorProvider.html[`IntegratorProvider`])::
 Used to define a list of  https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/integrator/spi/Integrator.html[`Integrator`] which are used during bootstrap process to integrate various services.
-|`hibernate.strategy_registration_provider` | The fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/StrategyRegistrationProviderList.html[`StrategyRegistrationProviderList`] |
+
+`*hibernate.strategy_registration_provider*` (e.g. The fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/StrategyRegistrationProviderList.html[`StrategyRegistrationProviderList`])::
 Used to define a list of  https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/registry/selector/StrategyRegistrationProvider.html[`StrategyRegistrationProvider`] which are used during bootstrap process to provide registrations of strategy selector(s).
-|`hibernate.type_contributors` | The fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/TypeContributorList.html[`TypeContributorList`] |
+
+`*hibernate.type_contributors*` (e.g. The fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/TypeContributorList.html[`TypeContributorList`])::
 Used to define a list of  https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/model/TypeContributor.html[`TypeContributor`] which are used during bootstrap process to contribute types.
-|`hibernate.persister.resolver` | The fully qualified name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/spi/PersisterClassResolver.html[`PersisterClassResolver`] or a `PersisterClassResolver` instance |
+
+`*hibernate.persister.resolver*` (e.g. The fully qualified name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/spi/PersisterClassResolver.html[`PersisterClassResolver`] or a `PersisterClassResolver` instance)::
 Used to define an implementation of the `PersisterClassResolver` interface which can be used to customize how an entity or a collection is being persisted.
-|`hibernate.persister.factory` | The fully qualified name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/spi/PersisterFactory.html[`PersisterFactory`] or a `PersisterFactory` instance |
+
+`*hibernate.persister.factory*` (e.g. The fully qualified name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/spi/PersisterFactory.html[`PersisterFactory`] or a `PersisterFactory` instance)::
 Like a `PersisterClassResolver`, the `PersisterFactory` can be used to customize how an entity or a collection are being persisted.
-|`hibernate.service.allow_crawling` | `true` (default value) or `false` |
+
+`*hibernate.service.allow_crawling*` (e.g. `true` (default value) or `false`)::
 Crawl all available service bindings for an alternate registration of a given Hibernate `Service`.
-
-
-
-|=====================================================================================================================================================================================================================================================
 
 [[configurations-misc]]
 === Miscellaneous properties
 
-[width="100%",cols="20%,20%,60%",]
-|=====================================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.dialect_resolvers` | | Names any additional https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/dialect/spi/DialectResolver.html[`DialectResolver`] implementations to  register with the standard https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/dialect/spi/DialectFactory.html[`DialectFactory`]
-|`hibernate.session_factory_name` |A JNDI name |
+`*hibernate.dialect_resolvers*`::
+Names any additional https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/dialect/spi/DialectResolver.html[`DialectResolver`] implementations to  register with the standard https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/dialect/spi/DialectFactory.html[`DialectFactory`]
 
+`*hibernate.session_factory_name*` (e.g. A JNDI name)::
 Setting used to name the Hibernate `SessionFactory`.
 Naming the `SessionFactory` allows for it to be properly serialized across JVMs as long as the same name is used on each JVM.
-
++
 If `hibernate.session_factory_name_is_jndi` is set to `true`, this is also the name under which the `SessionFactory` is bound into JNDI on startup and from which it can be obtained from JNDI.
 
-|`hibernate.session_factory_name_is_jndi` |`true` (default value) or `false` |
-
+`*hibernate.session_factory_name_is_jndi*` (e.g. `true` (default value) or `false`)::
 Does the value defined by `hibernate.session_factory_name` represent a JNDI namespace into which the `org.hibernate.SessionFactory` should be bound and made accessible?
-
++
 Defaults to `true` for backwards compatibility. Set this to `false` if naming a SessionFactory is needed for serialization purposes, but no writable JNDI context exists in the runtime environment or if the user simply does not want JNDI to be used.
 
-|`hibernate.ejb.entitymanager_factory_name`| By default, the persistence unit name is used, otherwise a randomly generated UUID | Internally, Hibernate keeps track of all `EntityManagerFactory` instances using the `EntityManagerFactoryRegistry`. The name is used as a key to identify a given `EntityManagerFactory` reference.
-|`hibernate.ejb.cfgfile`| `hibernate.cfg.xml` (default value) | XML configuration file to use to configure Hibernate.
-|`hibernate.ejb.discard_pc_on_close`| `true` or `false` (default value) |
+`*hibernate.ejb.entitymanager_factory_name*` (e.g. By default, the persistence unit name is used, otherwise a randomly generated UUID)::
+Internally, Hibernate keeps track of all `EntityManagerFactory` instances using the `EntityManagerFactoryRegistry`. The name is used as a key to identify a given `EntityManagerFactory` reference.
 
+`*hibernate.ejb.cfgfile*` (e.g. `hibernate.cfg.xml` (default value))::
+XML configuration file to use to configure Hibernate.
+
+`*hibernate.ejb.discard_pc_on_close*` (e.g. `true` or `false` (default value))::
 If true, the persistence context will be discarded (think `clear()` when the method is called.
 Otherwise, the persistence context will stay alive till the transaction completion: all objects will remain managed, and any change will be synchronized with the database (default to false, ie wait for transaction completion).
 
-|`hibernate.ejb.metamodel.population`| `enabled` or `disabled`, or `ignoreUnsupported` (default value) a|
-
+`*hibernate.ejb.metamodel.population*` (e.g. `enabled` or `disabled`, or `ignoreUnsupported` (default value))::
 Setting that indicates whether to build the JPA types.
-
++
 Accepts three values:
++
+enabled::: Do the build
+disabled::: Do not do the build
+ignoreUnsupported::: Do the build, but ignore any non-JPA features that would otherwise result in a failure (e.g. `@Any` annotation).
 
-enabled:: Do the build
-disabled:: Do not do the build
-ignoreUnsupported:: Do the build, but ignore any non-JPA features that would otherwise result in a failure (e.g. `@Any` annotation).
-
-|`hibernate.jpa.static_metamodel.population` | `enabled` or `disabled`, or `skipUnsupported` (default value) a|
-
+`*hibernate.jpa.static_metamodel.population*` (e.g. `enabled` or `disabled`, or `skipUnsupported` (default value))::
 Setting that controls whether we seek out JPA _static metamodel_ classes and populate them.
-
++
 Accepts three values:
++
+enabled::: Do the population
+disabled::: Do not do the population
+skipUnsupported::: Do the population, but ignore any non-JPA features that would otherwise result in the population failing (e.g. `@Any` annotation).
 
-enabled:: Do the population
-disabled:: Do not do the population
-skipUnsupported:: Do the population, but ignore any non-JPA features that would otherwise result in the population failing (e.g. `@Any` annotation).
+`*hibernate.delay_cdi_access*` (e.g. `true` or `false` (default value))::
+Defines delayed access to CDI `BeanManager`. Starting in 5.1 the preferred means for CDI bootstrapping is through https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/event/spi/jpa/ExtendedBeanManager.html[`ExtendedBeanManager`].
 
+`*hibernate.resource.beans.container*` (e.g. fully-qualified class name)::
+Identifies an explicit `org.hibernate.resource.beans.container.spi.BeanContainer` to be used.
++
+Note that, for CDI-based containers, setting this is not necessary.
+Simply pass the `BeanManager` to use via `javax.persistence.bean.manager` and optionally specify `hibernate.delay_cdi_access`.
++
+This setting is more meant to integrate non-CDI bean containers such as Spring.
 
-|`hibernate.delay_cdi_access`| `true` or `false` (default value) | Defines delayed access to CDI `BeanManager`. Starting in 5.1 the preferred means for CDI bootstrapping is through https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/event/spi/jpa/ExtendedBeanManager.html[`ExtendedBeanManager`].
-
-|`hibernate.allow_update_outside_transaction` | `true` or `false` (default value) a|
-
+`*hibernate.allow_update_outside_transaction*` (e.g. `true` or `false` (default value))::
 Setting that allows to perform update operations outside of a transaction boundary.
-
++
 Accepts two values:
++
+true::: allows to flush an update out of a transaction
+false::: does not allow
 
-true:: allows to flush an update out of a transaction
-false:: does not allow
+`*hibernate.collection_join_subquery*` (e.g. `true` (default value) or `false`)::
+Setting which indicates whether or not the new JOINS over collection tables should be rewritten to subqueries.
 
-|`hibernate.collection_join_subquery`| `true` (default value) or `false` | Setting which indicates whether or not the new JOINS over collection tables should be rewritten to subqueries.
+`*hibernate.allow_refresh_detached_entity*` (e.g. `true` (default value when using Hibernate native bootstrapping) or `false` (default value when using JPA bootstrapping))::
+Setting that allows to call `javax.persistence.EntityManager#refresh(entity)` or `Session#refresh(entity)` on a detached instance even when the `org.hibernate.Session` is obtained from a JPA `javax.persistence.EntityManager`.
 
-|`hibernate.allow_refresh_detached_entity`| `true` (default value when using Hibernate native bootstrapping) or `false` (default value when using JPA bootstrapping) | Setting that allows to call `javax.persistence.EntityManager#refresh(entity)` or `Session#refresh(entity)` on a detached instance even when the `org.hibernate.Session` is obtained from a JPA `javax.persistence.EntityManager`.
-|`hibernate.event.merge.entity_copy_observer`| `disallow` (default value), `allow`, `log` (testing purpose only) or fully-qualified class name a|
-
+`*hibernate.event.merge.entity_copy_observer*` (e.g. `disallow` (default value), `allow`, `log` (testing purpose only) or fully-qualified class name)::
 Setting that specifies how Hibernate will respond when multiple representations of the same persistent entity ("entity copy") is detected while merging.
-
++
 The possible values are:
-
-disallow (the default):: throws `IllegalStateException` if an entity copy is detected
-allow:: performs the merge operation on each entity copy that is detected
-log:: (provided for testing only) performs the merge operation on each entity copy that is detected and logs information about the entity copies.
++
+disallow (the default)::: throws `IllegalStateException` if an entity copy is detected
+allow::: performs the merge operation on each entity copy that is detected
+log::: (provided for testing only) performs the merge operation on each entity copy that is detected and logs information about the entity copies.
 This setting requires DEBUG logging be enabled for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/event/internal/EntityCopyAllowedLoggedObserver.html[`EntityCopyAllowedLoggedObserver`].
-
++
 In addition, the application may customize the behavior by providing an implementation of https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/event/spi/EntityCopyObserver.html[`EntityCopyObserver`] and setting `hibernate.event.merge.entity_copy_observer` to the class name.
 When this property is set to `allow` or `log`, Hibernate will merge each entity copy detected while cascading the merge operation.
 In the process of merging each entity copy, Hibernate will cascade the merge operation from each entity copy to its associations with `cascade=CascadeType.MERGE` or `CascadeType.ALL`.
 The entity state resulting from merging an entity copy will be overwritten when another entity copy is merged.
-
++
 For more details, check out the <<chapters/pc/PersistenceContext.adoc#pc-merge-gotchas,Merge gotchas>> section.
-
-|=====================================================================================================================================================================================================================================================
 
 [[configurations-envers]]
 === Envers properties
 
-[width="100%",cols="20%,20%,60%",]
-|=====================================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.envers.autoRegisterListeners` | `true` (default value) or `false` |When set to `false`, the Envers entity listeners are no longer auto-registered, so you need to register them manually during the bootstrap process.
-|`hibernate.integration.envers.enabled` | `true` (default value) or `false` |Enable or disable the Hibernate Envers `Service` integration.
-|`hibernate.listeners.envers.autoRegister` | |Legacy setting. Use `hibernate.envers.autoRegisterListeners` or `hibernate.integration.envers.enabled` instead.
-|=====================================================================================================================================================================================================================================================
+`*hibernate.envers.autoRegisterListeners*` (e.g. `true` (default value) or `false`)::
+When set to `false`, the Envers entity listeners are no longer auto-registered, so you need to register them manually during the bootstrap process.
+
+`*hibernate.integration.envers.enabled*` (e.g. `true` (default value) or `false`)::
+Enable or disable the Hibernate Envers `Service` integration.
+
+`*hibernate.listeners.envers.autoRegister*`::
+Legacy setting. Use `hibernate.envers.autoRegisterListeners` or `hibernate.integration.envers.enabled` instead.
 
 [[configurations-spatial]]
 === Spatial properties
 
-[width="100%",cols="20%,20%,60%",]
-|=====================================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.integration.spatial.enabled` | `true` (default value) or `false` | Enable or disable the Hibernate Spatial `Service` integration.
-|`hibernate.spatial.connection_finder` | `org.geolatte.geom.codec.db.oracle.DefaultConnectionFinder` | Define the fully-qualified name of class implementing the `org.geolatte.geom.codec.db.oracle.ConnectionFinder` interface.
-|=====================================================================================================================================================================================================================================================
+`*hibernate.integration.spatial.enabled*` (e.g. `true` (default value) or `false`)::
+Enable or disable the Hibernate Spatial `Service` integration.
+
+`*hibernate.spatial.connection_finder*` (e.g. `org.geolatte.geom.codec.db.oracle.DefaultConnectionFinder`)::
+Define the fully-qualified name of class implementing the `org.geolatte.geom.codec.db.oracle.ConnectionFinder` interface.
 
 [[configurations-internal]]
 === Internal properties
 
 The following configuration properties are used internally, and you shouldn't probably have to configured them in your application.
 
-[width="100%",cols="20%,20%,60%",]
-|=====================================================================================================================================================================================================================================================
-|Property |Example |Purpose
-|`hibernate.enable_specj_proprietary_syntax` | `true` or `false` (default value) | Enable or disable the SpecJ proprietary mapping syntax which differs from JPA specification. Used during performance testing only.
-|`hibernate.temp.use_jdbc_metadata_defaults` | `true` (default value) or `false` |
+`*hibernate.enable_specj_proprietary_syntax*` (e.g. `true` or `false` (default value))::
+Enable or disable the SpecJ proprietary mapping syntax which differs from JPA specification. Used during performance testing only.
+
+`*hibernate.temp.use_jdbc_metadata_defaults*` (e.g. `true` (default value) or `false`)::
 This setting is used to control whether we should consult the JDBC metadata to determine certain Settings default values when the database may not be available (mainly in tools usage).
-|`hibernate.connection_provider.injection_data` | `java.util.Map` | Connection provider settings to be injected in the currently configured connection provider.
-|`hibernate.jandex_index` | `org.jboss.jandex.Index` | Names a Jandex `org.jboss.jandex.Index` instance to use.
-|=====================================================================================================================================================================================================================================================
+
+`*hibernate.connection_provider.injection_data*` (e.g. `java.util.Map`)::
+Connection provider settings to be injected in the currently configured connection provider.
+
+`*hibernate.jandex_index*` (e.g. `org.jboss.jandex.Index`)::
+Names a Jandex `org.jboss.jandex.Index` instance to use.

@@ -15,6 +15,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
 
 /**
@@ -26,11 +27,14 @@ public class GetterFieldImpl implements Getter {
 	private final Class containerClass;
 	private final String propertyName;
 	private final Field field;
+	private final Method getterMethod;
 
 	public GetterFieldImpl(Class containerClass, String propertyName, Field field) {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.field = field;
+
+		this.getterMethod = ReflectHelper.findGetterMethodForFieldAccess( field, propertyName );
 	}
 
 	@Override
@@ -98,12 +102,12 @@ public class GetterFieldImpl implements Getter {
 
 	@Override
 	public String getMethodName() {
-		return null;
+		return getterMethod != null ? getterMethod.getName() : null;
 	}
 
 	@Override
 	public Method getMethod() {
-		return null;
+		return getterMethod;
 	}
 
 	private Object writeReplace() throws ObjectStreamException {
@@ -123,5 +127,6 @@ public class GetterFieldImpl implements Getter {
 		private Object readResolve() {
 			return new GetterFieldImpl( containerClass, propertyName, resolveField() );
 		}
+
 	}
 }

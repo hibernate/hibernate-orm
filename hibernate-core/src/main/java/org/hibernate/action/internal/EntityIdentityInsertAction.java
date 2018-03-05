@@ -72,12 +72,12 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 		final SharedSessionContractImplementor session = getSession();
 		final Object instance = getInstance();
 
-		final boolean veto = preInsert();
+		setVeto( preInsert() );
 
 		// Don't need to lock the cache here, since if someone
 		// else inserted the same pk first, the insert would fail
 
-		if ( !veto ) {
+		if ( !isVeto() ) {
 			generatedId = persister.insert( getState(), instance, session );
 			if ( persister.hasInsertGeneratedProperties() ) {
 				persister.processInsertGeneratedProperties( generatedId, instance, getState(), session );
@@ -101,7 +101,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 
 		postInsert();
 
-		if ( session.getFactory().getStatistics().isStatisticsEnabled() && !veto ) {
+		if ( session.getFactory().getStatistics().isStatisticsEnabled() && !isVeto() ) {
 			session.getFactory().getStatisticsImplementor().insertEntity( getPersister().getEntityName() );
 		}
 
@@ -118,7 +118,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 	protected boolean hasPostCommitEventListeners() {
 		final EventListenerGroup<PostInsertEventListener> group = listenerGroup( EventType.POST_COMMIT_INSERT );
 		for ( PostInsertEventListener listener : group.listeners() ) {
-			if ( listener.requiresPostCommitHanding( getPersister() ) ) {
+			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;
 			}
 		}

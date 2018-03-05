@@ -90,7 +90,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class FooBarTest extends LegacyTestCase {
-	private static final Logger log = Logger.getLogger( FooBarTest.class );
 
 	@Override
 	public String[] getMappings() {
@@ -1375,6 +1374,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect( value = H2Dialect.class, comment = "Feature not supported: MVCC=TRUE && FOR UPDATE && JOIN")
 	public void testQueryLockMode() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -4029,6 +4029,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA currently requires specifying table name by 'FOR UPDATE of t1.c1' if there are more than one tables/views/subqueries in the FROM clause")
+	@SkipForDialect( value = H2Dialect.class, comment = "Feature not supported: MVCC=TRUE && FOR UPDATE && JOIN")
 	@Test
 	public void testNewSessionLifecycle() throws Exception {
 		Session s = openSession();
@@ -4309,6 +4310,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA currently requires specifying table name by 'FOR UPDATE of t1.c1' if there are more than one tables/views/subqueries in the FROM clause")
+	@SkipForDialect( value = H2Dialect.class, comment = "Feature not supported: MVCC=TRUE && FOR UPDATE && JOIN")
 	@Test
 	public void testRefresh() throws Exception {
 		final Session s = openSession();

@@ -38,8 +38,6 @@ import static org.junit.Assert.assertNotNull;
 @RequiresDialect(H2Dialect.class)
 public class ProfileFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( ProfileFetchingTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

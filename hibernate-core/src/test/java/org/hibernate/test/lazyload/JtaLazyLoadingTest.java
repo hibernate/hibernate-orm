@@ -35,7 +35,7 @@ public class JtaLazyLoadingTest
 		cfg.setProperty( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
 
 		TestingJtaBootstrap.prepare( cfg.getProperties() );
-//		cfg.setProperty( Environment.TRANSACTION_STRATEGY, JtaTransactionFactory.class.getName() );
+		cfg.setProperty( Environment.TRANSACTION_COORDINATOR_STRATEGY, "jta" );
 	}
 
 	protected Class<?>[] getAnnotatedClasses() {

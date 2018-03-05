@@ -68,8 +68,4 @@ public class ConcatExpression extends ExpressionImpl<String> implements Serializ
 				+ " || "
 				+ ( (Renderable) getString2() ).render( renderingContext ) + ')' ;
 	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
 }

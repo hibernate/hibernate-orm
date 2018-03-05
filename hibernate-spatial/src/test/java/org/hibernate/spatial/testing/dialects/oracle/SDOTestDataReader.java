@@ -9,10 +9,10 @@ package org.hibernate.spatial.testing.dialects.oracle;
 
 import java.util.List;
 
-import org.dom4j.Element;
-
 import org.hibernate.spatial.testing.TestDataElement;
 import org.hibernate.spatial.testing.TestDataReader;
+
+import org.dom4j.Element;
 
 
 public class SDOTestDataReader extends TestDataReader {

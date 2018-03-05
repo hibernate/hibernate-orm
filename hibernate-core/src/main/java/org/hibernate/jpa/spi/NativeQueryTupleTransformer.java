@@ -55,20 +55,22 @@ public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
 		private Object[] tuple;
 
 		private Map<String, Object> aliasToValue = new LinkedHashMap<>();
+		private Map<String, String> aliasReferences = new LinkedHashMap<>();
 
 		public NativeTupleImpl(Object[] tuple, String[] aliases) {
 			if ( tuple == null ) {
-			    throw new HibernateException( "Tuple must not be null" );
+				throw new HibernateException( "Tuple must not be null" );
 			}
 			if ( aliases == null ) {
-			    throw new HibernateException( "Aliases must not be null" );
-            }
+				throw new HibernateException( "Aliases must not be null" );
+			}
 			if ( tuple.length != aliases.length ) {
 				throw new HibernateException( "Got different size of tuples and aliases" );
 			}
 			this.tuple = tuple;
 			for ( int i = 0; i < tuple.length; i++ ) {
-				aliasToValue.put( aliases[i].toLowerCase(), tuple[i] );
+				aliasToValue.put( aliases[i], tuple[i] );
+				aliasReferences.put( aliases[i].toLowerCase(), aliases[i] );
 			}
 		}
 
@@ -81,12 +83,11 @@ public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
 
 		@Override
 		public Object get(String alias) {
-			Object tupleElement = aliasToValue.get( alias.toLowerCase() );
-
-			if ( tupleElement == null ) {
-				throw new IllegalArgumentException( "Unknown alias [" + alias + "]" );
+			final String aliasReference = aliasReferences.get( alias.toLowerCase() );
+			if ( aliasReference != null && aliasToValue.containsKey( aliasReference ) ) {
+				return aliasToValue.get( aliasReference );
 			}
-			return tupleElement;
+			throw new IllegalArgumentException( "Unknown alias [" + alias + "]" );
 		}
 
 		@Override
@@ -123,15 +124,15 @@ public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
 			return elements;
 		}
 
-        private Class<?> getValueClass(Object value) {
-            Class<?> valueClass = Object.class;
-            if ( value != null ) {
-                valueClass = value.getClass();
-            }
-            return valueClass;
-        }
+		private Class<?> getValueClass(Object value) {
+			Class<?> valueClass = Object.class;
+			if ( value != null ) {
+				valueClass = value.getClass();
+			}
+			return valueClass;
+		}
 
-        @Override
+		@Override
 		public <X> X get(TupleElement<X> tupleElement) {
 			return get( tupleElement.getAlias(), tupleElement.getJavaType() );
 		}

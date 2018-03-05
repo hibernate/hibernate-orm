@@ -56,9 +56,19 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	public static final String PROXOOL_STRATEGY = "proxool";
 
 	/**
-	 * The strategy for proxool connection pooling
+	 * The strategy for hikari connection pooling
 	 */
 	public static final String HIKARI_STRATEGY = "hikari";
+
+	/**
+	 * The strategy for vibur connection pooling
+	 */
+	public static final String VIBUR_STRATEGY = "vibur";
+
+	/**
+	 * The strategy for agroal connection pooling
+	 */
+	public static final String AGROAL_STRATEGY = "agroal";
 
 	/**
 	 * No idea.  Is this even still used?
@@ -151,6 +161,18 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		if ( connectionProvider == null ) {
 			if ( hikariConfigDefined( configurationValues ) ) {
 				connectionProvider = instantiateHikariProvider( strategySelector );
+			}
+		}
+
+		if ( connectionProvider == null ) {
+			if ( viburConfigDefined( configurationValues ) ) {
+				connectionProvider = instantiateViburProvider( strategySelector );
+			}
+		}
+
+		if ( connectionProvider == null ) {
+			if ( agroalConfigDefined( configurationValues ) ) {
+				connectionProvider = instantiateAgroalProvider( strategySelector );
 			}
 		}
 
@@ -260,6 +282,53 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 		catch ( Exception e ) {
 			LOG.hikariProviderClassNotFound();
+			return null;
+		}
+	}
+
+	private boolean viburConfigDefined(Map configValues) {
+		for ( Object key : configValues.keySet() ) {
+			if ( !String.class.isInstance( key ) ) {
+				continue;
+			}
+
+			if ( ( (String) key ).startsWith( "hibernate.vibur." ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+	private boolean agroalConfigDefined(Map configValues) {
+		for ( Object key : configValues.keySet() ) {
+			if ( !String.class.isInstance( key ) ) {
+				continue;
+			}
+
+			if ( ( (String) key ).startsWith( "hibernate.agroal." ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private ConnectionProvider instantiateViburProvider(StrategySelector strategySelector) {
+		try {
+			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, VIBUR_STRATEGY ).newInstance();
+		}
+		catch ( Exception e ) {
+			LOG.viburProviderClassNotFound();
+			return null;
+		}
+	}
+
+	private ConnectionProvider instantiateAgroalProvider(StrategySelector strategySelector) {
+		try {
+			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, AGROAL_STRATEGY ).newInstance();
+		}
+		catch ( Exception e ) {
+			LOG.agroalProviderClassNotFound();
 			return null;
 		}
 	}

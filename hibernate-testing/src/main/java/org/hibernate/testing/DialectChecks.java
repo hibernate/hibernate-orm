@@ -229,4 +229,10 @@ abstract public class DialectChecks {
 			return dialect.supportsSkipLocked();
 		}
 	}
+
+	public static class SupportDropCOnstraints implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.dropConstraints();
+		}
+	}
 }

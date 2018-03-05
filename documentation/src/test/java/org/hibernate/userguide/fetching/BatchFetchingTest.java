@@ -29,8 +29,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  */
 public class BatchFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger log = Logger.getLogger( BatchFetchingTest.class );
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

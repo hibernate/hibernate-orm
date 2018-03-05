@@ -63,6 +63,13 @@ public class OneToOneType extends EntityType {
 		this.entityName = entityName;
 	}
 
+	public OneToOneType(OneToOneType original, String superTypeEntityName) {
+		super( original, superTypeEntityName );
+		this.foreignKeyType = original.foreignKeyType;
+		this.propertyName = original.propertyName;
+		this.entityName = original.entityName;
+	}
+
 	@Override
 	public String getPropertyName() {
 		return propertyName;
@@ -110,11 +117,6 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SharedSessionContractImplementor session) {
-		//nothing to do
-	}
-
-	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) {
 		//nothing to do
 	}
 

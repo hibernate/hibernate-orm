@@ -9,22 +9,17 @@ package org.hibernate.engine.query.spi;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 import org.hibernate.HibernateException;
-import org.hibernate.QueryException;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.type.Type;
+import org.hibernate.param.ParameterBinder;
 
 /**
  * Defines a query execution plan for a native-SQL query.
@@ -54,98 +49,6 @@ public class NativeSQLQueryPlan implements Serializable {
 
 	public CustomQuery getCustomQuery() {
 		return customQuery;
-	}
-
-	private int[] getNamedParameterLocs(String name) throws QueryException {
-		final Object loc = customQuery.getNamedParameterBindPoints().get( name );
-		if ( loc == null ) {
-			throw new QueryException(
-					"Named parameter does not appear in Query: " + name,
-					customQuery.getSQL() );
-		}
-		if ( loc instanceof Integer ) {
-			return new int[] { (Integer) loc };
-		}
-		else {
-			return ArrayHelper.toIntArray( (List) loc );
-		}
-	}
-
-	/**
-	 * Perform binding of all the JDBC bind parameter values based on the user-defined
-	 * positional query parameters (these are the '?'-style hibernate query
-	 * params) into the JDBC {@link PreparedStatement}.
-	 *
-	 * @param st The prepared statement to which to bind the parameter values.
-	 * @param queryParameters The query parameters specified by the application.
-	 * @param start JDBC paramer binds are positional, so this is the position
-	 * from which to start binding.
-	 * @param session The session from which the query originated.
-	 *
-	 * @return The number of JDBC bind positions accounted for during execution.
-	 *
-	 * @throws SQLException Some form of JDBC error binding the values.
-	 * @throws HibernateException Generally indicates a mapping problem or type mismatch.
-	 */
-	private int bindPositionalParameters(
-			final PreparedStatement st,
-			final QueryParameters queryParameters,
-			final int start,
-			final SharedSessionContractImplementor session) throws SQLException {
-		final Object[] values = queryParameters.getFilteredPositionalParameterValues();
-		final Type[] types = queryParameters.getFilteredPositionalParameterTypes();
-		int span = 0;
-		for (int i = 0; i < values.length; i++) {
-			types[i].nullSafeSet( st, values[i], start + span, session );
-			span += types[i].getColumnSpan( session.getFactory() );
-		}
-		return span;
-	}
-
-	/**
-	 * Perform binding of all the JDBC bind parameter values based on the user-defined
-	 * named query parameters into the JDBC {@link PreparedStatement}.
-	 *
-	 * @param ps The prepared statement to which to bind the parameter values.
-	 * @param namedParams The named query parameters specified by the application.
-	 * @param start JDBC paramer binds are positional, so this is the position
-	 * from which to start binding.
-	 * @param session The session from which the query originated.
-	 *
-	 * @return The number of JDBC bind positions accounted for during execution.
-	 *
-	 * @throws SQLException Some form of JDBC error binding the values.
-	 * @throws HibernateException Generally indicates a mapping problem or type mismatch.
-	 */
-	private int bindNamedParameters(
-			final PreparedStatement ps,
-			final Map namedParams,
-			final int start,
-			final SharedSessionContractImplementor session) throws SQLException {
-		if ( namedParams != null ) {
-			// assumes that types are all of span 1
-			final Iterator iter = namedParams.entrySet().iterator();
-			int result = 0;
-			while ( iter.hasNext() ) {
-				final Map.Entry e = (Map.Entry) iter.next();
-				final String name = (String) e.getKey();
-				final TypedValue typedval = (TypedValue) e.getValue();
-				final int[] locs = getNamedParameterLocs( name );
-				for ( int loc : locs ) {
-					LOG.debugf( "bindNamedParameters() %s -> %s [%s]", typedval.getValue(), name, loc + start );
-					typedval.getType().nullSafeSet(
-							ps,
-							typedval.getValue(),
-							loc + start,
-							session
-					);
-				}
-				result += locs.length;
-			}
-			return result;
-		}
-
-		return 0;
 	}
 
 	protected void coordinateSharedCacheCleanup(SharedSessionContractImplementor session) {
@@ -181,16 +84,26 @@ public class NativeSQLQueryPlan implements Serializable {
 
 		int result = 0;
 		PreparedStatement ps;
+		RowSelection selection = queryParameters.getRowSelection();
 		try {
 			queryParameters.processFilters( this.customQuery.getSQL(), session );
-			final String sql = queryParameters.getFilteredSQL();
+			final String sql = session.getJdbcServices().getDialect()
+					.addSqlHintOrComment(
+						queryParameters.getFilteredSQL(),
+						queryParameters,
+						session.getFactory().getSessionFactoryOptions().isCommentsEnabled()
+					);
 
 			ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
 
 			try {
 				int col = 1;
-				col += bindPositionalParameters( ps, queryParameters, col, session );
-				col += bindNamedParameters( ps, queryParameters.getNamedParameters(), col, session );
+				for ( ParameterBinder binder : this.customQuery.getParameterValueBinders() ) {
+					col += binder.bind( ps, queryParameters, session, col );
+				}
+				if ( selection != null && selection.getTimeout() != null ) {
+					ps.setQueryTimeout( selection.getTimeout() );
+				}
 				result = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 			}
 			finally {

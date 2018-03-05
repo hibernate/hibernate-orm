@@ -36,7 +36,6 @@ import static org.junit.Assert.fail;
  */
 @SuppressWarnings("unchecked")
 public class ImmutableTest extends BaseCoreFunctionalTestCase {
-	private static final Logger log = Logger.getLogger( ImmutableTest.class );
 
 	@Test
 	public void testImmutableEntity() throws Exception {

@@ -6,9 +6,11 @@
  */
 package org.hibernate.param;
 
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.hibernate.QueryException;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.Type;
@@ -20,22 +22,20 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class CollectionFilterKeyParameterSpecification implements ParameterSpecification {
+	public static final String PARAM_KEY = "{collection_key}";
+
 	private final String collectionRole;
 	private final Type keyType;
-	private final int queryParameterPosition;
 
 	/**
 	 * Creates a specialized collection-filter collection-key parameter spec.
 	 *
 	 * @param collectionRole The collection role being filtered.
 	 * @param keyType The mapped collection-key type.
-	 * @param queryParameterPosition The position within {@link org.hibernate.engine.spi.QueryParameters} where
-	 * we can find the appropriate param value to bind.
 	 */
-	public CollectionFilterKeyParameterSpecification(String collectionRole, Type keyType, int queryParameterPosition) {
+	public CollectionFilterKeyParameterSpecification(String collectionRole, Type keyType) {
 		this.collectionRole = collectionRole;
 		this.keyType = keyType;
-		this.queryParameterPosition = queryParameterPosition;
 	}
 
 	@Override
@@ -44,7 +44,7 @@ public class CollectionFilterKeyParameterSpecification implements ParameterSpeci
 			QueryParameters qp,
 			SharedSessionContractImplementor session,
 			int position) throws SQLException {
-		Object value = qp.getPositionalParameterValues()[queryParameterPosition];
+		final Object value = qp.getNamedParameters().get( PARAM_KEY ).getValue();
 		keyType.nullSafeSet( statement, value, position, session );
 		return keyType.getColumnSpan( session.getFactory() );
 	}

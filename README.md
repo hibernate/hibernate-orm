@@ -1,25 +1,27 @@
 <img src="http://static.jboss.org/hibernate/images/hibernate_logo_whitebkg_200px.png" />
 
 
-Hibernate ORM is a component/library providing Object/Relational Mapping (ORM) support
-to applications and other components/libraries.  It is also provides an implementation of the
-JPA specification, which is the standardized Java specification for ORM.  See 
-[Hibernate.org](http://hibernate.org/orm/) for additional information. 
+Hibernate ORM is a library providing Object/Relational Mapping (ORM) support
+to applications, libraries and frameworks.
+
+It also provides an implementation of the JPA specification, which is the standard Java specification for ORM.
+
+This is the repository of its source code: see [Hibernate.org](http://hibernate.org/orm/) for additional information.
 
 [![Build Status](http://ci.hibernate.org/job/hibernate-orm-master-h2-main/badge/icon)](http://ci.hibernate.org/job/hibernate-orm-master-h2-main/)
 
 
-Resources
+Building from sources
 =========
 
 The build requires a Java 8 JDK as JAVA_HOME.
 
-You will need http://git-scm.com/[git] to obtain the http://github.com/hibernate/hibernate-orm/[source].
+You will need [Git](https://git-scm.com/) to obtain the [source](https://github.com/hibernate/hibernate-orm/).
 
-Hibernate uses [Gradle](http://gradle.org) as its build tool.  See the _Gradle Primer_ section below if you are new to
+Hibernate uses [Gradle](https://gradle.org) as its build tool.  See the _Gradle Primer_ section below if you are new to
 Gradle.
 
-Contributors should read the [Contributing Guide](CONTRIBUTING.md)
+Contributors should read the [Contributing Guide](CONTRIBUTING.md).
 
 See the guides for setting up [IntelliJ](https://developer.jboss.org/wiki/ContributingToHibernateUsingIntelliJ) or
 [Eclipse](https://developer.jboss.org/wiki/ContributingToHibernateUsingEclipse) as your development environment.
@@ -27,7 +29,7 @@ See the guides for setting up [IntelliJ](https://developer.jboss.org/wiki/Contri
 Check out the _Getting Started_ section in CONTRIBUTING.md for getting started working on Hibernate source.
 
 
-CI Builds
+Continuous Integration
 =========
 
 Hibernate makes use of [Jenkins](http://jenkins-ci.org) for its CI needs.  The project is built continuous on each 
@@ -55,15 +57,14 @@ For contributors who do not otherwise use Gradle and do not want to install it, 
 features called the wrapper.  It lets you run Gradle builds without a previously installed Gradle distro in 
 a zero-conf manner.  Hibernate configures the Gradle wrapper for you.  If you would rather use the wrapper and 
 not install Gradle (or to make sure you use the version of Gradle intended for older builds) you would just use
-the command `gradlew` (or `gradlew.bat`) rather than `gradle` (or `gradle.bat`) in the following discussions.  
-Note that `gradlew` is only available in the project's root dir, so depending on your `pwd` you may need to adjust 
-the path to `gradlew` as well.
+the command `gradlew` (or `gradlew.bat`) rather than `gradle` (or `gradle.bat`) in the following discussions.
+Note that `gradlew` is only available in the project's root dir, so depending on your working directory you may
+need to adjust the path to `gradlew` as well.
 
 Examples use the `gradle` syntax, but just swap `gradlew` (properly relative) for `gradle` if you wish to use 
 the wrapper.
 
-_Note that another reason to use `gradlew` is that it uses the exact version of Gradle that the build is 
-defined to work with.
+Another reason to use `gradlew` is that it uses the exact version of Gradle that the build is defined to work with.
 
 
 Executing Tasks

@@ -8,6 +8,7 @@ package org.hibernate.test.wf.ddl.cmt.sf;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.test.wf.ddl.WildFlyDdlEntity;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -22,6 +23,7 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
  */
 @RunWith(Arquillian.class)
 @TestForIssue(jiraKey = "HHH-11024")
+@Ignore( "WildFly has not released a version supporting JPA 2.2 and CDI 2.0" )
 public class DdlInWildFlyUsingCmtAndSfTest {
 
 	public static final String ARCHIVE_NAME = CmtSfStatefulBean.class.getSimpleName();

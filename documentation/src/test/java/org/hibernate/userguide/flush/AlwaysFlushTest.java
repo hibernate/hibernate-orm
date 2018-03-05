@@ -32,8 +32,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class AlwaysFlushTest extends BaseEntityManagerFunctionalTestCase {
 
-    private static final Logger log = Logger.getLogger( AlwaysFlushTest.class);
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

@@ -282,9 +282,16 @@ class TypeSafeActivator {
 			ConstraintDescriptor<Min> minConstraint = (ConstraintDescriptor<Min>) descriptor;
 			long min = minConstraint.getAnnotation().value();
 
-			Column col = (Column) property.getColumnIterator().next();
-			String checkConstraint = col.getQuotedName(dialect) + ">=" + min;
-			applySQLCheck( col, checkConstraint );
+			@SuppressWarnings("unchecked")
+			final Iterator<Selectable> itor = property.getColumnIterator();
+			if ( itor.hasNext() ) {
+				final Selectable selectable = itor.next();
+				if ( Column.class.isInstance( selectable ) ) {
+					Column col = (Column) selectable;
+					String checkConstraint = col.getQuotedName(dialect) + ">=" + min;
+					applySQLCheck( col, checkConstraint );
+				}
+			}
 		}
 	}
 
@@ -293,9 +300,17 @@ class TypeSafeActivator {
 			@SuppressWarnings("unchecked")
 			ConstraintDescriptor<Max> maxConstraint = (ConstraintDescriptor<Max>) descriptor;
 			long max = maxConstraint.getAnnotation().value();
-			Column col = (Column) property.getColumnIterator().next();
-			String checkConstraint = col.getQuotedName(dialect) + "<=" + max;
-			applySQLCheck( col, checkConstraint );
+
+			@SuppressWarnings("unchecked")
+			final Iterator<Selectable> itor = property.getColumnIterator();
+			if ( itor.hasNext() ) {
+				final Selectable selectable = itor.next();
+				if ( Column.class.isInstance( selectable ) ) {
+					Column col = (Column) selectable;
+					String checkConstraint = col.getQuotedName( dialect ) + "<=" + max;
+					applySQLCheck( col, checkConstraint );
+				}
+			}
 		}
 	}
 
@@ -344,9 +359,18 @@ class TypeSafeActivator {
 			ConstraintDescriptor<Digits> digitsConstraint = (ConstraintDescriptor<Digits>) descriptor;
 			int integerDigits = digitsConstraint.getAnnotation().integer();
 			int fractionalDigits = digitsConstraint.getAnnotation().fraction();
-			Column col = (Column) property.getColumnIterator().next();
-			col.setPrecision( integerDigits + fractionalDigits );
-			col.setScale( fractionalDigits );
+
+			@SuppressWarnings("unchecked")
+			final Iterator<Selectable> itor = property.getColumnIterator();
+			if ( itor.hasNext() ) {
+				final Selectable selectable = itor.next();
+				if ( Column.class.isInstance( selectable ) ) {
+					Column col = (Column) selectable;
+					col.setPrecision( integerDigits + fractionalDigits );
+					col.setScale( fractionalDigits );
+				}
+			}
+
 		}
 	}
 
@@ -356,9 +380,15 @@ class TypeSafeActivator {
 			@SuppressWarnings("unchecked")
 			ConstraintDescriptor<Size> sizeConstraint = (ConstraintDescriptor<Size>) descriptor;
 			int max = sizeConstraint.getAnnotation().max();
-			Column col = (Column) property.getColumnIterator().next();
-			if ( max < Integer.MAX_VALUE ) {
-				col.setLength( max );
+
+			@SuppressWarnings("unchecked")
+			final Iterator<Selectable> itor = property.getColumnIterator();
+			if ( itor.hasNext() ) {
+				final Selectable selectable = itor.next();
+				Column col = (Column) selectable;
+				if ( max < Integer.MAX_VALUE ) {
+					col.setLength( max );
+				}
 			}
 		}
 	}
@@ -370,9 +400,17 @@ class TypeSafeActivator {
 				&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
 			@SuppressWarnings("unchecked")
 			int max = (Integer) descriptor.getAttributes().get( "max" );
-			Column col = (Column) property.getColumnIterator().next();
-			if ( max < Integer.MAX_VALUE ) {
-				col.setLength( max );
+
+			@SuppressWarnings("unchecked")
+			final Iterator<Selectable> itor = property.getColumnIterator();
+			if ( itor.hasNext() ) {
+				final Selectable selectable = itor.next();
+				if ( Column.class.isInstance( selectable ) ) {
+					Column col = (Column) selectable;
+					if ( max < Integer.MAX_VALUE ) {
+						col.setLength( max );
+					}
+				}
 			}
 		}
 	}

@@ -42,7 +42,7 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 	@SuppressWarnings( {"unchecked"})
 	public MultiTenantConnectionProvider initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 		final MultiTenancyStrategy strategy = MultiTenancyStrategy.determineMultiTenancyStrategy(  configurationValues );
-		if ( strategy == MultiTenancyStrategy.NONE || strategy == MultiTenancyStrategy.DISCRIMINATOR ) {
+		if ( !strategy.requiresMultiTenantConnectionProvider() ) {
 			// nothing to do, but given the separate hierarchies have to handle this here.
 			return null;
 		}

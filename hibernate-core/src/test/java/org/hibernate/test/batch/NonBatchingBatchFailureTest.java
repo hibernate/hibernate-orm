@@ -71,10 +71,7 @@ public class NonBatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 				Field field = sessionImplementor.getJdbcCoordinator().getClass().getDeclaredField( "currentBatch" );
 				field.setAccessible( true );
 				Batch batch = (Batch) field.get( sessionImplementor.getJdbcCoordinator() );
-				if ( batch == null ) {
-					throw new Exception( "Current batch was null" );
-				}
-				else {
+				if ( batch != null ) {
 					//make sure it's actually a batching impl
 					assertEquals( NonBatchingBatch.class, batch.getClass() );
 					field = AbstractBatchImpl.class.getDeclaredField( "statements" );

@@ -87,6 +87,7 @@ import org.jboss.jandex.Index;
 import static org.hibernate.cfg.AvailableSettings.DATASOURCE;
 import static org.hibernate.cfg.AvailableSettings.DRIVER;
 import static org.hibernate.cfg.AvailableSettings.JACC_CONTEXT_ID;
+import static org.hibernate.cfg.AvailableSettings.JACC_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.JACC_PREFIX;
 import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_DRIVER;
 import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_PASSWORD;
@@ -483,15 +484,17 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				final String valueString = (String) entry.getValue();
 
 				if ( keyString.startsWith( JACC_PREFIX ) ) {
-					if ( jaccContextId == null ) {
-						LOG.debug(
-								"Found JACC permission grant [%s] in properties, but no JACC context id was specified; ignoring"
-						);
-					}
-					else {
-						mergedSettings.getJaccPermissions( jaccContextId ).addPermissionDeclaration(
-								parseJaccConfigEntry( keyString, valueString )
-						);
+					if( !JACC_CONTEXT_ID.equals( keyString ) && !JACC_ENABLED.equals( keyString )) {
+						if ( jaccContextId == null ) {
+							LOG.debug(
+									"Found JACC permission grant [%s] in properties, but no JACC context id was specified; ignoring"
+							);
+						}
+						else {
+							mergedSettings.getJaccPermissions( jaccContextId ).addPermissionDeclaration(
+									parseJaccConfigEntry( keyString, valueString )
+							);
+						}
 					}
 				}
 				else if ( keyString.startsWith( CLASS_CACHE_PREFIX ) ) {

@@ -18,6 +18,9 @@ public final class RowSelection {
 	private Integer fetchSize;
 
 	public void setFirstRow(Integer firstRow) {
+		if ( firstRow != null && firstRow < 0 ) {
+			throw new IllegalArgumentException( "first-row value cannot be negative : " + firstRow );
+		}
 		this.firstRow = firstRow;
 	}
 

@@ -193,7 +193,8 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 					return;
 				}
 
-                throw new IllegalStateException( "Collection mapping in abstract entity type with a type variable is unsupported! Couldn't add property '" + path + "' with type: " + type );
+				throw new IllegalStateException( "Collection mapping in abstract entity type with a type variable is unsupported! Couldn't add property '"
+						+ path + "' with type: " + type );
 			}
 			else if ( type instanceof EntityType ) {
 				EntityType entityType1 = (EntityType) existingType;

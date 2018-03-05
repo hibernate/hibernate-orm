@@ -6,82 +6,31 @@
  */
 package org.hibernate.test.annotations.reflection;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import javax.persistence.AssociationOverrides;
-import javax.persistence.AttributeOverrides;
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Embedded;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.ExcludeDefaultListeners;
-import javax.persistence.ExcludeSuperclassListeners;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumns;
-import javax.persistence.JoinTable;
-import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
-import javax.persistence.MapKey;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.NamedNativeQueries;
-import javax.persistence.NamedQueries;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.OrderBy;
-import javax.persistence.PostLoad;
-import javax.persistence.PostPersist;
-import javax.persistence.PrePersist;
-import javax.persistence.PrimaryKeyJoinColumn;
-import javax.persistence.PrimaryKeyJoinColumns;
-import javax.persistence.SecondaryTable;
-import javax.persistence.SecondaryTables;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.SqlResultSetMappings;
-import javax.persistence.Table;
-import javax.persistence.TableGenerator;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
-import javax.persistence.Version;
-
+import org.dom4j.DocumentException;
+import org.dom4j.io.SAXReader;
 import org.hibernate.annotations.Columns;
 import org.hibernate.cfg.EJB3DTDEntityResolver;
 import org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
 import org.hibernate.internal.util.xml.ErrorLogger;
 import org.hibernate.internal.util.xml.XMLHelper;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.boot.ClassLoaderAccessTestingImpl;
 import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
-
-import org.dom4j.DocumentException;
-import org.dom4j.io.SAXReader;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotSupportedException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import javax.persistence.*;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Emmanuel Bernard
@@ -401,6 +350,20 @@ public class JPAOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		assertEquals( 2, reader.getAnnotation( JoinTable.class ).uniqueConstraints()[0].columnNames().length );
 		assertNotNull( reader.getAnnotation( OrderBy.class ) );
 		assertEquals( "maxSpeed", reader.getAnnotation( OrderBy.class ).value() );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11924")
+	public void testElementCollectionConverter() throws Exception {
+		XMLContext context = buildContext( "org/hibernate/test/annotations/reflection/orm.xml" );
+
+		Field field = BusTrip.class.getDeclaredField( "organizations" );
+		JPAOverriddenAnnotationReader reader = new JPAOverriddenAnnotationReader( field, context, ClassLoaderAccessTestingImpl.INSTANCE );
+		assertNotNull( reader.getAnnotation( ElementCollection.class ) );
+		assertNotNull( reader.getAnnotation( Converts.class ) );
+		assertNotNull( reader.getAnnotation( Converts.class ).value() );
+		assertTrue( reader.getAnnotation( Converts.class ).value().length == 1 );
+		assertEquals(OrganizationConverter.class, reader.getAnnotation( Converts.class ).value()[0].converter());
 	}
 
 	@Test

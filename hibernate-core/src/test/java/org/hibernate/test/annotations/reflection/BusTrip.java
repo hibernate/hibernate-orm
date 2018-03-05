@@ -7,11 +7,12 @@
 
 //$Id$
 package org.hibernate.test.annotations.reflection;
+
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
 
 /**
  * @author Emmanuel Bernard
@@ -24,6 +25,7 @@ public class BusTrip {
 	private Date terminusTime;
 	private Map<String, SocialSecurityPhysicalAccount> players;
 	private List roads;
+	private List<Organization> organizations;
 
 	@EmbeddedId
 	public BusTripPk getId() {
@@ -56,5 +58,13 @@ public class BusTrip {
 
 	public void setTerminusTime(Date terminusTime) {
 		this.terminusTime = terminusTime;
+	}
+
+	public List<Organization> getOrganizations() {
+		return organizations;
+	}
+
+	public void setOrganization(List<Organization> organizations) {
+		this.organizations = organizations;
 	}
 }

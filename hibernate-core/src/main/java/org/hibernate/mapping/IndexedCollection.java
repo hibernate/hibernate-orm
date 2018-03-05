@@ -44,15 +44,15 @@ public abstract class IndexedCollection extends Collection {
 	}
 
 	public boolean isSame(IndexedCollection other) {
-		 return super.isSame( other )
-				 && isSame( index, other.index );
+		return super.isSame( other )
+				&& isSame( index, other.index );
 	}
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
 			pk.addColumns( getKey().getColumnIterator() );
-			
+
 			// index should be last column listed
 			boolean isFormula = false;
 			Iterator iter = getIndex().getColumnIterator();
@@ -66,7 +66,7 @@ public abstract class IndexedCollection extends Collection {
 				pk.addColumns( getElement().getColumnIterator() );
 			}
 			else {
-				pk.addColumns( getIndex().getColumnIterator() ); 
+				pk.addColumns( getIndex().getColumnIterator() );
 			}
 			getCollectionTable().setPrimaryKey(pk);
 		}
@@ -95,7 +95,7 @@ public abstract class IndexedCollection extends Collection {
 			);
 		}
 	}
-	
+
 	public boolean isList() {
 		return false;
 	}

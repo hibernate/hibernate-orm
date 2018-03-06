@@ -151,7 +151,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 				);
 			}
 			else {
-				return new AnnotationMetaSingleAttribute(entity, element, declaredType.toString());
+				return new AnnotationMetaSingleAttribute(entity, element, TypeUtils.toTypeString(declaredType));
 			}
 		}
 	}

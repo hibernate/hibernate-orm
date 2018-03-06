@@ -5,8 +5,6 @@ import org.hibernate.jpamodelgen.test.util.TestForIssue;
 import org.hibernate.jpamodelgen.test.util.WithClasses;
 import org.junit.Test;
 
-import java.util.List;
-
 import static org.hibernate.jpamodelgen.test.util.TestUtil.*;
 
 /**
@@ -17,7 +15,7 @@ public class CollectionTest extends CompilationTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12338")
 	@WithClasses({Goods.class, Product.class})
-	public void testPrimitiveArray() throws ClassNotFoundException {
+	public void testPrimitiveArray() throws ClassNotFoundException, NoSuchFieldException {
 		assertMetamodelClassGeneratedFor(Product.class);
 		assertMetamodelClassGeneratedFor(Goods.class);
 		assertListAttributeTypeInMetaModelFor(
@@ -29,7 +27,7 @@ public class CollectionTest extends CompilationTest {
 		assertAttributeTypeInMetaModelFor(
 				Goods.class,
 				"tags",
-				List.class,
+				Goods.class.getDeclaredField("tags").getGenericType(),
 				"Wrong meta model type"
 		);
 

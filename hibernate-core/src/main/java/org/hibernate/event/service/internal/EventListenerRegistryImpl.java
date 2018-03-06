@@ -13,6 +13,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.DefaultAutoFlushEventListener;
 import org.hibernate.event.internal.DefaultDeleteEventListener;
@@ -46,6 +47,7 @@ import org.hibernate.jpa.event.internal.CallbackRegistryImpl;
 import org.hibernate.jpa.event.spi.CallbackBuilder;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
 import static org.hibernate.event.spi.EventType.AUTO_FLUSH;
@@ -92,9 +94,23 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 	private Map<Class,Object> listenerClassToInstanceMap = new HashMap<>();
 
 	private final SessionFactoryImplementor sessionFactory;
+	private final CallbackRegistryImpl callbackRegistry;
+	private final EventListenerGroupImpl[] registeredEventListeners;
 	private CallbackBuilder callbackBuilder;
-	private CallbackRegistryImpl callbackRegistry;
-	private EventListenerGroupImpl[] registeredEventListeners;
+
+	/**
+	 * @deprecated Use {@link EventListenerRegistryImpl#EventListenerRegistryImpl(BootstrapContext, SessionFactoryImplementor)} instead
+	 */
+	@Deprecated
+	EventListenerRegistryImpl(SessionFactoryImplementor sessionFactory,
+							  SessionFactoryOptions sessionFactoryOptions,
+							  ServiceRegistryImplementor registry) {
+		this.sessionFactory = sessionFactory;
+
+		this.callbackRegistry = new CallbackRegistryImpl();
+
+		this.registeredEventListeners = buildListenerGroups();
+	}
 
 	EventListenerRegistryImpl(BootstrapContext bootstrapContext, SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -105,7 +121,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 				bootstrapContext.getReflectionManager()
 		);
 
-		this.registeredEventListeners = buildListenerGroups( bootstrapContext );
+		this.registeredEventListeners = buildListenerGroups();
 	}
 
 	SessionFactoryImplementor getSessionFactory() {
@@ -118,6 +134,13 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 
 	@Override
 	public void prepare(MetadataImplementor metadata) {
+		if ( callbackBuilder == null ) {
+			// TODO : not needed anymore when the deprecate constructor will be removed
+			this.callbackBuilder = new CallbackBuilderLegacyImpl(
+					sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class ),
+					metadata.getMetadataBuildingOptions().getReflectionManager()
+			);
+		}
 		for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
 			if ( persistentClass.getClassName() == null ) {
 				// we can have non java class persisted by hibernate
@@ -218,7 +241,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 		getEventListenerGroup( type ).prependListeners( listeners );
 	}
 
-	private EventListenerGroupImpl[] buildListenerGroups(BootstrapContext bootstrapContext) {
+	private EventListenerGroupImpl[] buildListenerGroups() {
 		EventListenerGroupImpl[] listenerArray = new EventListenerGroupImpl[ EventType.values().size() ];
 
 		// auto-flush listeners

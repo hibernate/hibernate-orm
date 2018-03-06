@@ -12,7 +12,12 @@ import javax.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.CacheRegionDefinition;
+import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
+import org.hibernate.boot.archive.scan.spi.ScanOptions;
+import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
@@ -59,6 +64,36 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
+	public IndexView getJandexView() {
+		return delegate.getJandexView();
+	}
+
+	@Override
+	public ScanOptions getScanOptions() {
+		return delegate.getScanOptions();
+	}
+
+	@Override
+	public ScanEnvironment getScanEnvironment() {
+		return delegate.getScanEnvironment();
+	}
+
+	@Override
+	public Object getScanner() {
+		return delegate.getScanner();
+	}
+
+	@Override
+	public ArchiveDescriptorFactory getArchiveDescriptorFactory() {
+		return delegate.getArchiveDescriptorFactory();
+	}
+
+	@Override
+	public ClassLoader getTempClassLoader() {
+		return delegate.getTempClassLoader();
+	}
+
+	@Override
 	public ImplicitNamingStrategy getImplicitNamingStrategy() {
 		return delegate.getImplicitNamingStrategy();
 	}
@@ -66,6 +101,11 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public PhysicalNamingStrategy getPhysicalNamingStrategy() {
 		return delegate.getPhysicalNamingStrategy();
+	}
+
+	@Override
+	public ReflectionManager getReflectionManager() {
+		return delegate.getReflectionManager();
 	}
 
 	@Override
@@ -86,6 +126,11 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter() {
 		return delegate.getIdGenerationTypeInterpreter();
+	}
+
+	@Override
+	public List<CacheRegionDefinition> getCacheRegionDefinitions() {
+		return delegate.getCacheRegionDefinitions();
 	}
 
 	@Override
@@ -116,6 +161,21 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public List<MetadataSourceType> getSourceProcessOrdering() {
 		return delegate.getSourceProcessOrdering();
+	}
+
+	@Override
+	public Map<String, SQLFunction> getSqlFunctions() {
+		return delegate.getSqlFunctions();
+	}
+
+	@Override
+	public List<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList() {
+		return delegate.getAuxiliaryDatabaseObjectList();
+	}
+
+	@Override
+	public List<AttributeConverterInfo> getAttributeConverters() {
+		return delegate.getAttributeConverters();
 	}
 
 	@Override

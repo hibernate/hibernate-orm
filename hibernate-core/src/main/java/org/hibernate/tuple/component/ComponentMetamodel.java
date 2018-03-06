@@ -32,7 +32,6 @@ public class ComponentMetamodel implements Serializable {
 
 	// TODO : will need reference to session factory to fully complete HHH-1907
 
-//	private final SessionFactoryImplementor sessionFactory;
 	private final String role;
 	private final boolean isKey;
 	private final StandardProperty[] properties;
@@ -45,9 +44,19 @@ public class ComponentMetamodel implements Serializable {
 	private final Map propertyIndexes = new HashMap();
 	private final boolean createEmptyCompositesEnabled;
 
-//	public ComponentMetamodel(Component component, SessionFactoryImplementor sessionFactory) {
+	/**
+	 * @deprecated Use {@link ComponentMetamodel#ComponentMetamodel(Component, BootstrapContext)} instead.
+	 */
+	@Deprecated
+	public ComponentMetamodel(Component component, MetadataBuildingOptions metadataBuildingOptions) {
+		this( component, new ComponentTuplizerFactory( metadataBuildingOptions ) );
+	}
+
 	public ComponentMetamodel(Component component, BootstrapContext bootstrapContext) {
-//		this.sessionFactory = sessionFactory;
+		this( component, new ComponentTuplizerFactory( bootstrapContext ) );
+	}
+
+	private ComponentMetamodel(Component component, ComponentTuplizerFactory componentTuplizerFactory){
 		this.role = component.getRoleName();
 		this.isKey = component.isKey();
 		propertySpan = component.getPropertySpan();
@@ -64,7 +73,6 @@ public class ComponentMetamodel implements Serializable {
 		entityMode = component.hasPojoRepresentation() ? EntityMode.POJO : EntityMode.MAP;
 
 		// todo : move this to SF per HHH-3517; also see HHH-1907 and ComponentMetamodel
-		final ComponentTuplizerFactory componentTuplizerFactory = new ComponentTuplizerFactory( bootstrapContext );
 		final String tuplizerClassName = component.getTuplizerImplClassName( entityMode );
 		this.componentTuplizer = tuplizerClassName == null ? componentTuplizerFactory.constructDefaultTuplizer(
 				entityMode,

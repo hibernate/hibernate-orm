@@ -303,6 +303,17 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	NaturalIdUniqueKeyBinder locateNaturalIdUniqueKeyBinder(String entityName);
 	void registerNaturalIdUniqueKeyBinder(String entityName, NaturalIdUniqueKeyBinder ukBinder);
 
+	/**
+	 * Access to the shared Classmate objects used throughout Hibernate's
+	 * bootstrap process.
+	 *
+	 * @return Access to the shared Classmate delegates.
+	 *
+	 * @deprecated Use {@link BootstrapContext#getClassmateContext()} instead.
+	 */
+	@Deprecated
+	ClassmateContext getClassmateContext();
+
 	interface DelayedPropertyReferenceHandler extends Serializable {
 		void process(InFlightMetadataCollector metadataCollector);
 	}

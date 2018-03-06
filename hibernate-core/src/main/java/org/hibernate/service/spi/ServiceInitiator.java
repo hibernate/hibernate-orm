@@ -19,5 +19,5 @@ public interface ServiceInitiator<R extends Service> {
 	 *
 	 * @return The service role.
 	 */
-	public Class<R> getServiceInitiated();
+	Class<R> getServiceInitiated();
 }

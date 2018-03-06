@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -15,6 +16,14 @@ import org.hibernate.type.CollectionType;
  * the key columns + index columns.
  */
 public class Map extends IndexedCollection {
+
+	/**
+	 * @deprecated Use {@link Map#Map(MetadataBuildingContext, PersistentClass)} instead.
+	 */
+	@Deprecated
+	public Map(MetadataImplementor metadata, PersistentClass owner) {
+		super( metadata, owner );
+	}
 
 	public Map(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );

@@ -25,6 +25,7 @@ import org.hibernate.boot.model.source.internal.OverriddenMappingDefaults;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -140,6 +141,11 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	@Override
 	public InFlightMetadataCollector getMetadataCollector() {
 		return rootBuildingContext.getMetadataCollector();
+	}
+
+	@Override
+	public ClassLoaderAccess getClassLoaderAccess() {
+		return rootBuildingContext.getClassLoaderAccess();
 	}
 
 	@Override

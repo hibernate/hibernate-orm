@@ -141,7 +141,7 @@ public interface BootstrapContext {
 	 * <p/>
 	 * Should never return {@code null}
 	 *
-	 * @return
+	 * @return The AttributeConverterInfo registered through MetadataBuilder
 	 */
 	Collection<AttributeConverterInfo> getAttributeConverters();
 

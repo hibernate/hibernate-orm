@@ -18,6 +18,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -35,7 +36,7 @@ import org.dom4j.Element;
 public class XMLContext implements Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( XMLContext.class );
 
-	private final BootstrapContext bootstrapContext;
+	private final ClassLoaderAccess classLoaderAccess;
 
 	private Default globalDefaults;
 	private Map<String, Element> classOverriding = new HashMap<>();
@@ -44,8 +45,16 @@ public class XMLContext implements Serializable {
 	private List<String> defaultEntityListeners = new ArrayList<>();
 	private boolean hasContext = false;
 
+	/**
+	 * @deprecated Use {@link XMLContext#XMLContext(BootstrapContext)} instead.
+	 */
+	@Deprecated
+	public XMLContext(ClassLoaderAccess classLoaderAccess) {
+		this.classLoaderAccess = classLoaderAccess;
+	}
+
 	public XMLContext(BootstrapContext bootstrapContext) {
-		this.bootstrapContext = bootstrapContext;
+		this.classLoaderAccess = bootstrapContext.getClassLoaderAccess();
 	}
 
 	/**
@@ -190,7 +199,7 @@ public class XMLContext implements Serializable {
 			final boolean autoApply = autoApplyAttribute != null && Boolean.parseBoolean( autoApplyAttribute );
 
 			try {
-				final Class<? extends AttributeConverter> attributeConverterClass = bootstrapContext.getClassLoaderAccess().classForName(
+				final Class<? extends AttributeConverter> attributeConverterClass = classLoaderAccess.classForName(
 						className
 				);
 				attributeConverterInfoList.add(

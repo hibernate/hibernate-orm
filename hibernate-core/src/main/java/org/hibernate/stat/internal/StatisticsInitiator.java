@@ -8,6 +8,7 @@ package org.hibernate.stat.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
@@ -45,6 +46,18 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 				.getSettings()
 				.get( STATS_BUILDER );
 		return initiateServiceInternal( context.getSessionFactory(), configValue, context.getServiceRegistry() );
+	}
+
+	@Override
+	public StatisticsImplementor initiateService(
+			SessionFactoryImplementor sessionFactory,
+			SessionFactoryOptions sessionFactoryOptions,
+			ServiceRegistryImplementor registry) {
+		final Object configValue = registry
+				.getService( ConfigurationService.class )
+				.getSettings()
+				.get( STATS_BUILDER );
+		return initiateServiceInternal( sessionFactory, configValue, registry );
 	}
 
 	private StatisticsImplementor initiateServiceInternal(

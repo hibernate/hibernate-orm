@@ -9,6 +9,7 @@ package org.hibernate.boot.internal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import javax.persistence.AttributeConverter;
 import javax.persistence.SharedCacheMode;
@@ -16,6 +17,7 @@ import javax.persistence.SharedCacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.MetadataBuilder;
@@ -84,11 +86,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	private final MetadataBuildingOptionsImpl options;
 
 	public MetadataBuilderImpl(MetadataSources sources) {
-		this(
-				sources,
-				getStandardServiceRegistry( sources.getServiceRegistry() ),
-				new ClassmateContext()
-		);
+		this( sources, getStandardServiceRegistry( sources.getServiceRegistry() ) );
 	}
 
 	private static StandardServiceRegistry getStandardServiceRegistry(ServiceRegistry serviceRegistry) {
@@ -116,10 +114,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 	}
 
-	public MetadataBuilderImpl(MetadataSources sources, StandardServiceRegistry serviceRegistry, ClassmateContext classmateContext) {
+	public MetadataBuilderImpl(MetadataSources sources, StandardServiceRegistry serviceRegistry) {
 		this.sources = sources;
 		this.options = new MetadataBuildingOptionsImpl( serviceRegistry );
-		this.bootstrapContext = new BootstrapContextImpl( serviceRegistry, classmateContext, options );
+		this.bootstrapContext = new BootstrapContextImpl( serviceRegistry, options );
+		//this is needed only fro implementig deprecated method
+		options.setBootstrapContext( bootstrapContext );
 
 		for ( MetadataSourcesContributor contributor :
 				sources.getServiceRegistry()
@@ -312,7 +312,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		return this;
 	}
 
-
 	@Override
 	public MetadataBuilder applySqlFunction(String functionName, SQLFunction function) {
 		this.bootstrapContext.addSqlFunction( functionName, function );
@@ -435,11 +434,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		this.options.idGenerationTypeInterpreter.addInterpreterDelegate( interpreter );
 		return this;
 	}
-
-//	public MetadataBuilder with(PersistentAttributeMemberResolver resolver) {
-//		options.persistentAttributeMemberResolver = resolver;
-//		return this;
-//	}
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -582,6 +576,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			implements MetadataBuildingOptions, JpaOrmXmlPersistenceUnitDefaultAware {
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
+		// todo (6.0) : remove bootstrapContext property along with the deprecated methods
+		private BootstrapContext bootstrapContext;
 
 		private ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<>();
 
@@ -601,9 +597,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
 
 		private String schemaCharset;
-
-//		private PersistentAttributeMemberResolver persistentAttributeMemberResolver =
-//				StandardPersistentAttributeMemberResolver.INSTANCE;
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -770,6 +763,41 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
+		public ReflectionManager getReflectionManager() {
+			return bootstrapContext.getReflectionManager();
+		}
+
+		@Override
+		public IndexView getJandexView() {
+			return bootstrapContext.getJandexView();
+		}
+
+		@Override
+		public ScanOptions getScanOptions() {
+			return bootstrapContext.getScanOptions();
+		}
+
+		@Override
+		public ScanEnvironment getScanEnvironment() {
+			return bootstrapContext.getScanEnvironment();
+		}
+
+		@Override
+		public Object getScanner() {
+			return bootstrapContext.getScanner();
+		}
+
+		@Override
+		public ArchiveDescriptorFactory getArchiveDescriptorFactory() {
+			return bootstrapContext.getArchiveDescriptorFactory();
+		}
+
+		@Override
+		public ClassLoader getTempClassLoader() {
+			return bootstrapContext.getJpaTempClassLoader();
+		}
+
+		@Override
 		public ImplicitNamingStrategy getImplicitNamingStrategy() {
 			return implicitNamingStrategy;
 		}
@@ -797,6 +825,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter() {
 			return idGenerationTypeInterpreter;
+		}
+
+		@Override
+		public List<CacheRegionDefinition> getCacheRegionDefinitions() {
+			return new ArrayList<>( bootstrapContext.getCacheRegionDefinitions() );
 		}
 
 		@Override
@@ -829,6 +862,22 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			return sourceProcessOrdering;
 		}
 
+		@Override
+		public Map<String, SQLFunction> getSqlFunctions() {
+			return bootstrapContext.getSqlFunctions();
+		}
+
+		@Override
+		public List<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList() {
+			return new ArrayList<>( bootstrapContext.getAuxiliaryDatabaseObjectList());
+		}
+
+		@Override
+		public List<AttributeConverterInfo> getAttributeConverters() {
+			return new ArrayList<>( bootstrapContext.getAttributeConverters() );
+		}
+
+		@Override
 		public String getSchemaCharset() {
 			return schemaCharset;
 		}
@@ -856,9 +905,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 		}
 
-		//		@Override
-//		public PersistentAttributeMemberResolver getPersistentAttributeMemberResolver() {
-//			return persistentAttributeMemberResolver;
-//		}
+		public void setBootstrapContext(BootstrapContextImpl bootstrapContext) {
+			this.bootstrapContext = bootstrapContext;
+		}
 	}
 }

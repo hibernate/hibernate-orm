@@ -23,22 +23,22 @@ public interface ServiceRegistryImplementor extends ServiceRegistry {
 	 *
 	 * @return The located binding; may be {@code null}
 	 */
-	public <R extends Service> ServiceBinding<R> locateServiceBinding(Class<R> serviceRole);
+	<R extends Service> ServiceBinding<R> locateServiceBinding(Class<R> serviceRole);
 
 	/**
 	 * Release resources
 	 */
-	public void destroy();
+	void destroy();
 
 	/**
 	 * When a registry is created with a parent, the parent is notified of the child
 	 * via this callback.
 	 */
-	public void registerChild(ServiceRegistryImplementor child);
+	void registerChild(ServiceRegistryImplementor child);
 
 	/**
 	 * When a registry is created with a parent, the parent is notified of the child
 	 * via this callback.
 	 */
-	public void deRegisterChild(ServiceRegistryImplementor child);
+	void deRegisterChild(ServiceRegistryImplementor child);
 }

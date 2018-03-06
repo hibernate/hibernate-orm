@@ -50,17 +50,22 @@ public class DynamicFilterParameterSpecification implements ParameterSpecificati
 			SharedSessionContractImplementor session,
 			int start) throws SQLException {
 		final int columnSpan = definedParameterType.getColumnSpan( session.getFactory() );
-		final Object value = session.getLoadQueryInfluencers().getFilterParameterValue( filterName + '.' + parameterName );
+		final String fullParamName = filterName + '.' + parameterName;
+		final Object value = session.getLoadQueryInfluencers().getFilterParameterValue(fullParamName);
+		final Type type = session.getLoadQueryInfluencers().getFilterParameterType(fullParamName);
 		if ( Collection.class.isInstance( value ) ) {
 			int positions = 0;
 			Iterator itr = ( ( Collection ) value ).iterator();
 			while ( itr.hasNext() ) {
-				definedParameterType.nullSafeSet( statement, itr.next(), start + positions, session );
+				Object next = itr.next();
+				qp.bindDynamicParameter( type, next );
+				definedParameterType.nullSafeSet( statement, next, start + positions, session );
 				positions += columnSpan;
 			}
 			return positions;
 		}
 		else {
+			qp.bindDynamicParameter(type, value);
 			definedParameterType.nullSafeSet( statement, value, start, session );
 			return columnSpan;
 		}

@@ -33,7 +33,7 @@ public class SessionFactoryServiceRegistryImpl
 	private final SessionFactoryImplementor sessionFactory;
 	private EventListenerRegistry cachedEventListenerRegistry;
 
-	private BootstrapContext bootstrapContext;
+	private final BootstrapContext bootstrapContext;
 
 	@SuppressWarnings( {"unchecked"})
 	public SessionFactoryServiceRegistryImpl(
@@ -47,7 +47,6 @@ public class SessionFactoryServiceRegistryImpl
 
 		this.sessionFactory = sessionFactory;
 		this.sessionFactoryOptions = sessionFactoryOptions;
-
 		this.bootstrapContext = bootstrapContext;
 
 		// for now, just use the standard initiator list

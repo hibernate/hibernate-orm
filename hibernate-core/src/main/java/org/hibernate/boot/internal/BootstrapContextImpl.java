@@ -32,7 +32,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.dialect.function.SQLFunction;
@@ -73,10 +72,9 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	public BootstrapContextImpl(
 			StandardServiceRegistry serviceRegistry,
-			ClassmateContext classmateContext,
 			MetadataBuildingOptions metadataBuildingOptions) {
 		this.serviceRegistry = serviceRegistry;
-		this.classmateContext = classmateContext;
+		this.classmateContext = new ClassmateContext();
 		this.metadataBuildingOptions = metadataBuildingOptions;
 
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );

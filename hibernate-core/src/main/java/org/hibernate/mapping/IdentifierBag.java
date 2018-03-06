@@ -7,6 +7,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -14,6 +15,14 @@ import org.hibernate.type.CollectionType;
  * just the identifier column
  */
 public class IdentifierBag extends IdentifierCollection {
+	/**
+	 * @deprecated User {@link IdentifierBag#IdentifierBag(MetadataBuildingContext, PersistentClass)} instead.
+	 */
+	@Deprecated
+	public IdentifierBag(MetadataImplementor metadata, PersistentClass owner) {
+		super( metadata, owner );
+	}
+
 	public IdentifierBag(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
 	}

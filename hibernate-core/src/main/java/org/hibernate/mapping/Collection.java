@@ -38,7 +38,8 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public static final String DEFAULT_ELEMENT_COLUMN_NAME = "elt";
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";
 
-	private final MetadataBuildingContext buildingContext;
+	private final MetadataImplementor metadata;
+	private MetadataBuildingContext buildingContext;
 	private PersistentClass owner;
 
 	private KeyValue key;
@@ -89,12 +90,20 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private String loaderName;
 
 	protected Collection(MetadataBuildingContext buildingContext, PersistentClass owner) {
-		this.buildingContext = buildingContext;
+		this(buildingContext.getMetadataCollector(), owner);
+	}
+
+	/**
+	 * @deprecated Use {@link Collection#Collection(MetadataBuildingContext, PersistentClass)} instead.
+	 */
+	@Deprecated
+	protected Collection(MetadataImplementor metadata, PersistentClass owner) {
+		this.metadata = metadata;
 		this.owner = owner;
 	}
 
 	public MetadataImplementor getMetadata() {
-		return buildingContext.getMetadataCollector();
+		return metadata;
 	}
 
 	@Override

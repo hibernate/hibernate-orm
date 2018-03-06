@@ -30,7 +30,6 @@ import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.envers.configuration.internal.MappingCollector;
@@ -46,7 +45,7 @@ public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingP
 
 	@Override
 	public Collection<MappingDocument> produceAdditionalMappings(
-			final InFlightMetadataCollector metadata,
+			final MetadataImplementor metadata,
 			IndexView jandexIndex,
 			final MappingBinder mappingBinder,
 			final MetadataBuildingContext buildingContext) {

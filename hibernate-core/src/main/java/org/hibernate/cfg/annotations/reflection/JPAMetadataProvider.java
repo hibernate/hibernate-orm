@@ -22,8 +22,13 @@ import javax.persistence.TableGenerator;
 import org.hibernate.annotations.common.reflection.AnnotationReader;
 import org.hibernate.annotations.common.reflection.MetadataProvider;
 import org.hibernate.annotations.common.reflection.java.JavaMetadataProvider;
+import org.hibernate.boot.internal.ClassLoaderAccessImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.ClassLoaderAccessDelegateImpl;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 
 import org.dom4j.Element;
 
@@ -36,18 +41,42 @@ import org.dom4j.Element;
 public class JPAMetadataProvider implements MetadataProvider {
 	private final MetadataProvider delegate = new JavaMetadataProvider();
 
-	private final BootstrapContext bootstrapContext;
+	private final ClassLoaderAccess classLoaderAccess;
 	private final XMLContext xmlContext;
+
 
 	private Map<Object, Object> defaults;
 	private Map<AnnotatedElement, AnnotationReader> cache = new HashMap<AnnotatedElement, AnnotationReader>(100);
 
+	/**
+	 * @deprecated Use {@link JPAMetadataProvider#JPAMetadataProvider(BootstrapContext)} instead.
+	 */
+	@Deprecated
+	public JPAMetadataProvider(final MetadataBuildingOptions metadataBuildingOptions) {
+		this( new ClassLoaderAccessDelegateImpl() {
+			ClassLoaderAccess delegate;
+
+			@Override
+			protected ClassLoaderAccess getDelegate() {
+				if ( delegate == null ) {
+					delegate = new ClassLoaderAccessImpl(
+							metadataBuildingOptions.getTempClassLoader(),
+							metadataBuildingOptions.getServiceRegistry().getService( ClassLoaderService.class )
+					);
+				}
+				return delegate;
+			}
+		} );
+	}
 
 	public JPAMetadataProvider(BootstrapContext bootstrapContext) {
-		this.bootstrapContext = bootstrapContext;
+		this( bootstrapContext.getClassLoaderAccess() );
+	}
 
-		xmlContext = new XMLContext( bootstrapContext );
-
+	JPAMetadataProvider(ClassLoaderAccess classLoaderAccess) {
+		this.classLoaderAccess = classLoaderAccess;
+		this.xmlContext = new XMLContext( classLoaderAccess );
+		;
 	}
 
 	//all of the above can be safely rebuilt from XMLContext: only XMLContext this object is serialized
@@ -56,7 +85,7 @@ public class JPAMetadataProvider implements MetadataProvider {
 		AnnotationReader reader = cache.get( annotatedElement );
 		if (reader == null) {
 			if ( xmlContext.hasContext() ) {
-				reader = new JPAOverriddenAnnotationReader( annotatedElement, xmlContext, bootstrapContext );
+				reader = new JPAOverriddenAnnotationReader( annotatedElement, xmlContext, classLoaderAccess );
 			}
 			else {
 				reader = delegate.getAnnotationReader( annotatedElement );
@@ -78,7 +107,7 @@ public class JPAMetadataProvider implements MetadataProvider {
 			List<Class> entityListeners = new ArrayList<Class>();
 			for ( String className : xmlContext.getDefaultEntityListeners() ) {
 				try {
-					entityListeners.add( bootstrapContext.getClassLoaderAccess().classForName( className ) );
+					entityListeners.add( classLoaderAccess.classForName( className ) );
 				}
 				catch ( ClassLoadingException e ) {
 					throw new IllegalStateException( "Default entity listener class not found: " + className );
@@ -120,7 +149,7 @@ public class JPAMetadataProvider implements MetadataProvider {
 						element,
 						false,
 						xmlDefaults,
-						bootstrapContext.getClassLoaderAccess()
+						classLoaderAccess
 				);
 				namedQueries.addAll( currentNamedQueries );
 
@@ -133,7 +162,7 @@ public class JPAMetadataProvider implements MetadataProvider {
 						element,
 						true,
 						xmlDefaults,
-						bootstrapContext.getClassLoaderAccess()
+						classLoaderAccess
 				);
 				namedNativeQueries.addAll( currentNamedNativeQueries );
 
@@ -147,7 +176,7 @@ public class JPAMetadataProvider implements MetadataProvider {
 				List<SqlResultSetMapping> currentSqlResultSetMappings = JPAOverriddenAnnotationReader.buildSqlResultsetMappings(
 						element,
 						xmlDefaults,
-						bootstrapContext.getClassLoaderAccess()
+						classLoaderAccess
 				);
 				sqlResultSetMappings.addAll( currentSqlResultSetMappings );
 
@@ -159,7 +188,7 @@ public class JPAMetadataProvider implements MetadataProvider {
 				List<NamedStoredProcedureQuery> currentNamedStoredProcedureQueries = JPAOverriddenAnnotationReader.buildNamedStoreProcedureQueries(
 						element,
 						xmlDefaults,
-						bootstrapContext.getClassLoaderAccess()
+						classLoaderAccess
 				);
 				namedStoredProcedureQueries.addAll( currentNamedStoredProcedureQueries );
 			}

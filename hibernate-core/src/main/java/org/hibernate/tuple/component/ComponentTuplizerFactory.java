@@ -34,6 +34,17 @@ public class ComponentTuplizerFactory implements Serializable {
 
 	private final ClassLoaderAccess classLoaderAccess;
 
+	/**
+	 * @deprecated Use {@link ComponentTuplizerFactory#ComponentTuplizerFactory(BootstrapContext)} instead.
+	 */
+	@Deprecated
+	public ComponentTuplizerFactory(MetadataBuildingOptions metadataBuildingOptions) {
+		classLoaderAccess = new ClassLoaderAccessImpl(
+				metadataBuildingOptions.getTempClassLoader(),
+				metadataBuildingOptions.getServiceRegistry().getService( ClassLoaderService.class )
+		);
+	}
+
 	public ComponentTuplizerFactory(BootstrapContext bootstrapContext) {
 		classLoaderAccess = bootstrapContext.getClassLoaderAccess();
 	}

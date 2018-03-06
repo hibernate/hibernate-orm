@@ -377,6 +377,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
+	@Override
+	public ClassmateContext getClassmateContext() {
+		return bootstrapContext.getClassmateContext();
+	}
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// attribute converters
 
@@ -2219,7 +2225,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	 */
 	public MetadataImpl buildMetadataInstance(MetadataBuildingContext buildingContext) {
 		processSecondPasses( buildingContext );
-		processExportableProducers( buildingContext );
+		processExportableProducers( );
 
 		try {
 			return new MetadataImpl(
@@ -2251,7 +2257,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
-	private void processExportableProducers(MetadataBuildingContext buildingContext) {
+	private void processExportableProducers() {
 		// for now we only handle id generators as ExportableProducers
 
 		final Dialect dialect = getDatabase().getJdbcEnvironment().getDialect();

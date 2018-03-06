@@ -81,7 +81,7 @@ public class OrderedBySQLTest extends BaseEntityManagerFunctionalTestCase {
 		private String name;
 
 		@OneToMany(mappedBy = "person", cascade = CascadeType.ALL)
-		@org.hibernate.annotations.OrderBy(clause = "CHAR_LENGTH(name) DESC")
+		@org.hibernate.annotations.OrderBy(clause = "CHAR_LENGTH(content) DESC")
 		private List<Article> articles = new ArrayList<>();
 
 		//Getters and setters are omitted for brevity

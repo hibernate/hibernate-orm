@@ -70,7 +70,7 @@ public final class QueryParameters {
 	private String processedSQL;
 	private Type[] processedPositionalParameterTypes;
 	private Object[] processedPositionalParameterValues;
-	
+
 	private HQLQueryPlan queryPlan;
 
 	public QueryParameters() {
@@ -91,7 +91,6 @@ public final class QueryParameters {
 		this.optionalObject = optionalObject;
 		this.optionalId = optionalObjectId;
 		this.optionalEntityName = optionalEntityName;
-
 	}
 
 	public QueryParameters(
@@ -664,5 +663,21 @@ public final class QueryParameters {
 
 	public void setQueryPlan(HQLQueryPlan queryPlan) {
 		this.queryPlan = queryPlan;
+	}
+
+	public void bindDynamicParameter(Type paramType, Object paramValue) {
+		if(processedPositionalParameterTypes != null) {
+			int length = processedPositionalParameterTypes.length;
+			Type[] types = new Type[length + 1];
+			Object[] values = new Object[length + 1];
+			for ( int i = 0; i < length; i++ ) {
+				types[i] = processedPositionalParameterTypes[i];
+				values[i] = processedPositionalParameterValues[i];
+			}
+			types[length] = paramType;
+			values[length] = paramValue;
+			processedPositionalParameterTypes = types;
+			processedPositionalParameterValues = values;
+		}
 	}
 }

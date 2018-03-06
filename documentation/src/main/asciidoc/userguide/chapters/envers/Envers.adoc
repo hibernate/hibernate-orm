@@ -972,6 +972,40 @@ include::{extrasdir}/envers-tracking-properties-changes-queries-at-revision-exam
 ----
 ====
 
+[[envers-tracking-obtain-properties-changed-queries]]
+=== Querying for revisions of entity including property names that were modified
+
+[NOTE]
+====
+This feature described here is still considered experimental.
+It is subject to change in future releases based on user feedback to improve its usefulness.
+====
+
+Sometimes it may be useful to query entity revisions and also determine all the properties of that revision which
+were modified without having to issue multiple queries using `hasChanged()` and `hasNotChanged()` criteria.
+
+You can now obtain this information easily by using the following query:
+
+.Querying entity revisions including property names modified.
+====
+[source, JAVA, indent=0]
+----
+List results  = AuditReaderFactory.get( entityManager )
+  .createQuery()
+  .forRevisionsOfEntityWithChanges( Customer.class, false )
+  .add( AuditEntity.id().eq( 1L ) )
+  .getResultList();
+
+for ( Object entry : results ) {
+  final Object[] array = (Object[]) entry;
+  final Set<String> propertiesChanged = (Set<String>) array[3];
+  for ( String propertyName : propertiesChanged ) {
+    /* Do something useful with the modified property `propertyName` */
+  }
+}
+----
+====
+
 [[envers-tracking-modified-entities-queries]]
 === Querying for entity types modified in a given revision
 

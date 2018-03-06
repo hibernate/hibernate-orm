@@ -27,7 +27,7 @@
                     -Djava.net.preferIPv4Stack=true
                     -Djgroups.bind_addr=127.0.0.1
                     -Djboss.socket.binding.port-offset=137
-
+                    -Dee8.preview.mode=true
                     <!-- Uncomment for Remote debugging Wildfly -->
                     <!--
                     -Xrunjdwp:transport=dt_socket,address=5005,server=y,suspend=y

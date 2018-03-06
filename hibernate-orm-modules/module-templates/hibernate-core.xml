@@ -30,5 +30,8 @@
         <module name="org.hibernate.commons-annotations"/>
         <module name="org.hibernate.orm.jipijapa-hibernate5" services="import" slot="${slot}"/>
         <module name="net.bytebuddy" slot="${bytebuddySlot}" />
+<!-- need an ORM 5.3 slot version of this service created
+        <module name="org.infinispan.hibernate-cache" services="import" optional="true"/>
+-->
     </dependencies>
 </module>

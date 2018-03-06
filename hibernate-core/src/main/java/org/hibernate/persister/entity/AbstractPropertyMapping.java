@@ -193,8 +193,17 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 					return;
 				}
 
-				throw new IllegalStateException( "Collection mapping in abstract entity type with a type variable is unsupported! Couldn't add property '"
-						+ path + "' with type: " + type );
+				// When we discover incompatible types, we register "null" as property type to signal that the property is not resolvable on the parent type
+				newType = null;
+				if ( LOG.isTraceEnabled() ) {
+					LOG.tracev(
+							"Skipped adding same named type incompatible property to base type [{0}] for property [{1}], existing type = [{2}], incoming type = [{3}]",
+							getEntityName(),
+							path,
+							existingType,
+							type
+					);
+				}
 			}
 			else if ( type instanceof EntityType ) {
 				EntityType entityType1 = (EntityType) existingType;

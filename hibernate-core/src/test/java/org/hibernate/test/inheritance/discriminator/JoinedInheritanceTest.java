@@ -26,7 +26,11 @@ package org.hibernate.test.inheritance.discriminator;
 import org.hibernate.Session;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Assert;
 import org.junit.Test;
+
+import javax.persistence.*;
+import java.util.Set;
 
 /**
  * Test cases for joined inheritance with a discriminator column.
@@ -37,7 +41,15 @@ public class JoinedInheritanceTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Polygon.class, Quadrilateral.class };
+		return new Class[] {
+				Polygon.class,
+				Quadrilateral.class,
+				BaseEntity.class,
+				EntityA.class,
+				EntityB.class,
+				EntityC.class,
+				EntityD.class
+		};
 	}
 
 	@Test
@@ -61,6 +73,55 @@ public class JoinedInheritanceTest extends BaseCoreFunctionalTestCase {
 
 		s.getTransaction().commit();
 		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12332" )
+	public void joinUnrelatedCollectionOnBaseType() {
+		final Session s = openSession();
+		s.getTransaction().begin();
+
+		try {
+			s.createQuery("from BaseEntity b join b.attributes").list();
+			Assert.fail("Expected a resolution exception for property 'attributes'!");
+		} catch (IllegalArgumentException ex) {
+			Assert.assertTrue(ex.getMessage().contains("could not resolve property: attributes "));
+		} finally {
+			s.getTransaction().commit();
+			s.close();
+		}
+	}
+
+	// Test entities for metamodel building for HHH-12332
+	@Entity(name = "BaseEntity")
+	@Inheritance(strategy = InheritanceType.JOINED)
+	public static class BaseEntity {
+		@Id
+		private long id;
+	}
+
+	@Entity(name = "EntityA")
+	public static class EntityA extends BaseEntity {
+		@OneToMany(fetch = FetchType.LAZY)
+		private Set<EntityC> attributes;
+	}
+
+	@Entity(name = "EntityB")
+	public static class EntityB extends BaseEntity {
+		@OneToMany(fetch = FetchType.LAZY)
+		private Set<EntityD> attributes;
+	}
+
+	@Entity(name = "EntityC")
+	public static class EntityC {
+		@Id
+		private long id;
+	}
+
+	@Entity(name = "EntityD")
+	public static class EntityD {
+		@Id
+		private long id;
 	}
 
 }

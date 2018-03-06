@@ -9,11 +9,13 @@
 
     <properties>
         <property name="jboss.api" value="deprecated"/>
-        <!-- This module is using the old name. Please use "org.hibernate.orm" in the future.-->
+        <!-- This module is using the old name. Please use "org.hibernate.orm" in the future,
+          and declare the dependency on "org.hibernate.envers" explicitly as well if it's used -->
     </properties>
 
     <dependencies>
         <module name="org.hibernate.orm" services="import" export="true" slot="${minorSlot}"/>
+        <module name="org.hibernate.envers" services="import" export="true" slot="${minorSlot}"/>
     </dependencies>
 
 </module>

@@ -93,10 +93,11 @@ provision {
 		artifactId = 'javax.persistence-api'
 		version = '2.2'
 	}
-	//TODO: explore overriding any other library we might need?
+	/**TODO: explore overriding any other library we might need?
+	   Example: (not currently necessary)
 	override( 'org.hibernate.common:hibernate-commons-annotations' ) {
 		version = '5.0.2.Final'
-	}
+	}*/
 	variables['wildfly.version'] = project.wildflyVersion
 	variables['hibernate-orm.version'] = rootProject.hibernateVersion
 }

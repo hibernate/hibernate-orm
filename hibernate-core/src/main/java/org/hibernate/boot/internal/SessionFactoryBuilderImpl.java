@@ -435,6 +435,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public void markAsJpaBootstrap() {
+		this.bootstrapContext.markAsJpaBootstrap();
+	}
+
+	@Override
 	public void disableRefreshDetachedEntity() {
 		this.optionsBuilder.disableRefreshDetachedEntity();
 	}

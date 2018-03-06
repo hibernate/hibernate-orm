@@ -7,13 +7,13 @@
 package org.hibernate.testing.boot;
 
 import org.hibernate.boot.internal.BootstrapContextImpl;
-import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -37,11 +37,7 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 
 	public MetadataBuildingContextTestingImpl(StandardServiceRegistry serviceRegistry) {
 		buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
-		bootstrapContext = new BootstrapContextImpl(
-				serviceRegistry,
-				new ClassmateContext(),
-				buildingOptions
-		);
+		bootstrapContext = new BootstrapContextImpl( serviceRegistry, buildingOptions );
 		mappingDefaults = new MetadataBuilderImpl.MappingDefaultsImpl( serviceRegistry );
 		metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext,buildingOptions, new TypeResolver() );
 
@@ -71,6 +67,11 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 	@Override
 	public InFlightMetadataCollector getMetadataCollector() {
 		return metadataCollector;
+	}
+
+	@Override
+	public ClassLoaderAccess getClassLoaderAccess() {
+		return bootstrapContext.getClassLoaderAccess();
 	}
 
 	@Override

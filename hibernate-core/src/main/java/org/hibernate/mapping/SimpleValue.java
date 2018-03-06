@@ -25,6 +25,7 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
@@ -67,7 +68,8 @@ public class SimpleValue implements KeyValue {
 
 	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
 
-	private final MetadataBuildingContext buildingContext;
+	private MetadataBuildingContext buildingContext;
+	private MetadataImplementor metadata;
 
 	private final List<Selectable> columns = new ArrayList<Selectable>();
 	private final List<Boolean> insertability = new ArrayList<Boolean>();
@@ -91,8 +93,25 @@ public class SimpleValue implements KeyValue {
 	private ConverterDescriptor attributeConverterDescriptor;
 	private Type type;
 
+	/**
+	 * @deprecated Use {@link SimpleValue#SimpleValue(MetadataBuildingContext)} instead.
+	 */
+	@Deprecated
+	public SimpleValue(MetadataImplementor metadata) {
+		this.metadata = metadata;
+	}
+
+	/**
+	 * @deprecated Use {@link SimpleValue#SimpleValue(MetadataBuildingContext, Table)} instead.
+	 */
+	@Deprecated
+	public SimpleValue(MetadataImplementor metadata, Table table) {
+		this( metadata );
+		this.table = table;
+	}
+
 	public SimpleValue(MetadataBuildingContext buildingContext) {
-		this.buildingContext = buildingContext;
+		this(buildingContext.getMetadataCollector());
 	}
 
 	public SimpleValue(MetadataBuildingContext buildingContext, Table table) {
@@ -100,18 +119,13 @@ public class SimpleValue implements KeyValue {
 		this.table = table;
 	}
 
-	public MetadataImplementor getMetadata(){
-		return buildingContext.getMetadataCollector();
+	public MetadataImplementor getMetadata() {
+		return metadata;
 	}
-
-	public MetadataBuildingContext getMetadataBuildingContext() {
-		return buildingContext;
-	}
-
 
 	@Override
 	public ServiceRegistry getServiceRegistry() {
-		return buildingContext.getBootstrapContext().getServiceRegistry();
+		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
 	}
 
 	@Override
@@ -185,7 +199,8 @@ public class SimpleValue implements KeyValue {
 	public void setTypeName(String typeName) {
 		if ( typeName != null && typeName.startsWith( AttributeConverterTypeAdapter.NAME_PREFIX ) ) {
 			final String converterClassName = typeName.substring( AttributeConverterTypeAdapter.NAME_PREFIX.length() );
-			final ClassLoaderService cls = buildingContext.getBootstrapContext().getMetadataBuildingOptions()
+			final ClassLoaderService cls = getMetadata()
+					.getMetadataBuildingOptions()
 					.getServiceRegistry()
 					.getService( ClassLoaderService.class );
 			try {
@@ -193,7 +208,7 @@ public class SimpleValue implements KeyValue {
 				this.attributeConverterDescriptor = new ClassBasedConverterDescriptor(
 						converterClass,
 						false,
-						buildingContext.getBootstrapContext().getClassmateContext()
+						( (InFlightMetadataCollector) getMetadata() ).getClassmateContext()
 				);
 				return;
 			}
@@ -307,7 +322,7 @@ public class SimpleValue implements KeyValue {
 		}
 
 		// TODO : we should pass along all settings once "config lifecycle" is hashed out...
-		final ConfigurationService cs = buildingContext.getBootstrapContext().getServiceRegistry()
+		final ConfigurationService cs = metadata.getMetadataBuildingOptions().getServiceRegistry()
 				.getService( ConfigurationService.class );
 
 		params.put(
@@ -496,8 +511,7 @@ public class SimpleValue implements KeyValue {
 			typeName = ReflectHelper.reflectedPropertyClass(
 					className,
 					propertyName,
-					buildingContext
-							.getBootstrapContext()
+					getMetadata()
 							.getMetadataBuildingOptions()
 							.getServiceRegistry()
 							.getService( ClassLoaderService.class )
@@ -553,8 +567,7 @@ public class SimpleValue implements KeyValue {
 				new JpaAttributeConverterCreationContext() {
 					@Override
 					public ManagedBeanRegistry getManagedBeanRegistry() {
-						return buildingContext
-								.getBootstrapContext()
+						return getMetadata()
 								.getMetadataBuildingOptions()
 								.getServiceRegistry()
 								.getService( ManagedBeanRegistry.class );
@@ -602,8 +615,7 @@ public class SimpleValue implements KeyValue {
 		}
 
 		// find the standard SqlTypeDescriptor for that JDBC type code (allow itr to be remapped if needed!)
-		final SqlTypeDescriptor sqlTypeDescriptor = buildingContext
-				.getBootstrapContext()
+		final SqlTypeDescriptor sqlTypeDescriptor = getMetadata()
 				.getMetadataBuildingOptions()
 				.getServiceRegistry()
 				.getService( JdbcServices.class )
@@ -722,8 +734,7 @@ public class SimpleValue implements KeyValue {
 					? null
 					: xProperty.getAnnotations();
 
-			final ClassLoaderService classLoaderService = buildingContext
-					.getBootstrapContext()
+			final ClassLoaderService classLoaderService = getMetadata()
 					.getMetadataBuildingOptions()
 					.getServiceRegistry()
 					.getService( ClassLoaderService.class );

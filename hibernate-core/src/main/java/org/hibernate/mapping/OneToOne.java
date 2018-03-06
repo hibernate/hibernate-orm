@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
@@ -27,6 +28,16 @@ public class OneToOne extends ToOne {
 	private KeyValue identifier;
 	private String propertyName;
 	private String entityName;
+
+	/**
+	 * @deprecated Use {@link OneToOne#OneToOne(MetadataBuildingContext, Table, PersistentClass)} instead.
+	 */
+	@Deprecated
+	public OneToOne(MetadataImplementor metadata, Table table, PersistentClass owner) throws MappingException {
+		super( metadata, table );
+		this.identifier = owner.getKey();
+		this.entityName = owner.getEntityName();
+	}
 
 	public OneToOne(MetadataBuildingContext buildingContext, Table table, PersistentClass owner) throws MappingException {
 		super( buildingContext, table );

@@ -41,6 +41,15 @@ public interface MetadataBuildingContext {
 	 */
 	InFlightMetadataCollector getMetadataCollector();
 
+	/**
+	 * Provides access to ClassLoader services when needed during binding
+	 *
+	 * @return The ClassLoaderAccess
+	 *
+	 * @deprecated Use {@link BootstrapContext#getClassLoaderAccess()}} instead.
+	 */
+	@Deprecated
+	ClassLoaderAccess getClassLoaderAccess();
 
 	/**
 	 * Not sure how I feel about this exposed here

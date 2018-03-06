@@ -39,7 +39,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build();
 		MetadataBuildingOptions buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
 
-		delegate = new org.hibernate.boot.internal.BootstrapContextImpl( serviceRegistry, null, buildingOptions );
+		delegate = new org.hibernate.boot.internal.BootstrapContextImpl( serviceRegistry, buildingOptions );
 	}
 
 	@Override

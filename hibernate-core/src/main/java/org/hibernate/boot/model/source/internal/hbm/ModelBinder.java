@@ -2837,20 +2837,6 @@ public class ModelBinder {
 				typeParameters.putAll( typeDefinition.getParameters() );
 			}
 		}
-//		else {
-//			final BasicType basicType = sourceDocument.getMetadataCollector().getTypeResolver().basic( typeName );
-//			if ( basicType == null ) {
-//				throw new MappingException(
-//						String.format(
-//								Locale.ENGLISH,
-//								"Mapping named an explicit type [%s] which could not be resolved",
-//								typeName
-//						),
-//						sourceDocument.getOrigin()
-//				);
-//			}
-//		}
-
 		// parameters on the property mapping should override parameters in the type-def
 		if ( typeSource.getParameters() != null ) {
 			typeParameters.putAll( typeSource.getParameters() );
@@ -3347,59 +3333,6 @@ public class ModelBinder {
 					new RelationalObjectBinder.ColumnNamingDelegate() {
 						@Override
 						public Identifier determineImplicitName(final LocalMetadataBuildingContext context) {
-							// another case where HbmBinder was not adjusted to make use of NamingStrategy#foreignKeyColumnName
-							// when that was added in developing annotation binding :(
-//							return implicitNamingStrategy.determineJoinColumnName(
-//									new ImplicitJoinColumnNameSource() {
-//										private EntityNamingSourceImpl entityNamingSource;
-//										private Identifier referencedColumnName;
-//
-//										@Override
-//										public Nature getNature() {
-//											return implicitNamingNature;
-//										}
-//
-//										@Override
-//										public EntityNaming getEntityNaming() {
-//											if ( entityNamingSource == null ) {
-//												entityNamingSource = new EntityNamingSourceImpl(
-//														getCollectionBinding().getOwner().getEntityName(),
-//														getCollectionBinding().getOwner().getClassName(),
-//														getCollectionBinding().getOwner().getJpaEntityName()
-//												);
-//											}
-//											return entityNamingSource;
-//										}
-//
-//										@Override
-//										public AttributePath getAttributePath() {
-//											return getPluralAttributeSource().getAttributePath();
-//										}
-//
-//										@Override
-//										public Identifier getReferencedTableName() {
-//											return getCollectionBinding().getCollectionTable().getNameIdentifier();
-//										}
-//
-//										@Override
-//										public Identifier getReferencedColumnName() {
-//											if ( referencedColumnName == null ) {
-//												final Iterator<Selectable> selectableItr = keyVal.getColumnIterator();
-//												// assume there is just one, and that its a column...
-//												final Column column = (Column) selectableItr.next();
-//												referencedColumnName = getMappingDocument().getMetadataCollector()
-//														.getDatabase()
-//														.toIdentifier( column.getQuotedName() );
-//											}
-//											return referencedColumnName;
-//										}
-//
-//										@Override
-//										public MetadataBuildingContext getBuildingContext() {
-//											return context;
-//										}
-//									}
-//							);
 							return context.getMetadataCollector().getDatabase().toIdentifier( Collection.DEFAULT_KEY_COLUMN_NAME );
 						}
 					}
@@ -3477,9 +3410,6 @@ public class ModelBinder {
 						new RelationalObjectBinder.ColumnNamingDelegate() {
 							@Override
 							public Identifier determineImplicitName(LocalMetadataBuildingContext context) {
-//								return implicitNamingStrategy.determineBasicColumnName(
-//										elementSource
-//								);
 								return context.getMetadataCollector().getDatabase().toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME );
 							}
 						}
@@ -3540,82 +3470,6 @@ public class ModelBinder {
 						new RelationalObjectBinder.ColumnNamingDelegate() {
 							@Override
 							public Identifier determineImplicitName(final LocalMetadataBuildingContext context) {
-//								return implicitNamingStrategy.determineJoinColumnName(
-//										new ImplicitJoinColumnNameSource() {
-//											private final PersistentClass pc = mappingDocument.getMetadataCollector()
-//													.getEntityBinding( elementSource.getReferencedEntityName() );
-//											private final EntityNaming referencedEntityNaming = new EntityNamingSourceImpl(
-//													pc
-//											);
-//											private Identifier referencedTableName;
-//											private Identifier referencedColumnName;
-//
-//											@Override
-//											public Nature getNature() {
-//												return Nature.ENTITY_COLLECTION;
-//											}
-//
-//											@Override
-//											public EntityNaming getEntityNaming() {
-//												return referencedEntityNaming;
-//											}
-//
-//											@Override
-//											public AttributePath getAttributePath() {
-//												// this is the mapped-by attribute, which we do not
-//												// know here
-//												return null;
-//											}
-//
-//											@Override
-//											public Identifier getReferencedTableName() {
-//												if ( referencedTableName == null ) {
-//													resolveTableAndColumn();
-//												}
-//												return referencedTableName;
-//											}
-//
-//											private void resolveTableAndColumn() {
-//												final Iterator itr;
-//
-//												if ( elementSource.getReferencedEntityAttributeName() == null ) {
-//													// refers to PK
-//													referencedTableName = pc.getIdentifier()
-//															.getTable()
-//															.getNameIdentifier();
-//													itr = pc.getIdentifier().getColumnIterator();
-//												}
-//												else {
-//													// refers to an attribute's column(s)
-//													final Property referencedAttribute = pc.getProperty( elementSource.getReferencedEntityAttributeName() );
-//													referencedTableName = referencedAttribute.getValue()
-//															.getTable()
-//															.getNameIdentifier();
-//													itr = referencedAttribute.getValue().getColumnIterator();
-//												}
-//
-//												// assume one and only one...
-//												referencedColumnName = context.getMetadataCollector()
-//														.getDatabase()
-//														.getJdbcEnvironment()
-//														.getIdentifierHelper()
-//														.toIdentifier( ( (Column) itr.next() ).getQuotedName() );
-//											}
-//
-//											@Override
-//											public Identifier getReferencedColumnName() {
-//												if ( referencedColumnName == null ) {
-//													resolveTableAndColumn();
-//												}
-//												return referencedColumnName;
-//											}
-//
-//											@Override
-//											public MetadataBuildingContext getBuildingContext() {
-//												return context;
-//											}
-//										}
-//								);
 								return context.getMetadataCollector().getDatabase().toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME );
 							}
 						}
@@ -4169,8 +4023,6 @@ public class ModelBinder {
 				// implicit naming.  If we get here, we assume that there is only a single
 				// column making up the FK
 
-//				final String referencedEntityAttributeName = manyToOneSource.getReferencedEntityAttributeName();
-
 				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector()
 						.getEntityBinding( referencedEntityName );
 
@@ -4181,36 +4033,6 @@ public class ModelBinder {
 					);
 				}
 
-//				final EntityNaming entityNaming = new EntityNamingSourceImpl( referencedEntityBinding );
-//
-//				final Identifier referencedTableName;
-//				final Identifier referencedColumnName;
-//
-//				if ( referencedEntityAttributeName == null ) {
-//					referencedTableName = referencedEntityBinding.getTable().getNameIdentifier();
-//					final Column referencedColumn = referencedEntityBinding.getTable()
-//							.getPrimaryKey()
-//							.getColumn( 0 );
-//					referencedColumnName = mappingDocument.getMetadataCollector()
-//							.getDatabase()
-//							.getJdbcEnvironment()
-//							.getIdentifierHelper()
-//							.toIdentifier( referencedColumn.getQuotedName() );
-//				}
-//				else {
-//					final Property referencedProperty = referencedEntityBinding.getReferencedProperty(
-//							referencedEntityAttributeName
-//					);
-//					final SimpleValue value = (SimpleValue) referencedProperty.getValue();
-//					referencedTableName = value.getTable().getNameIdentifier();
-//					final Column referencedColumn = (Column) value.getColumnIterator().next();
-//					referencedColumnName = mappingDocument.getMetadataCollector()
-//							.getDatabase()
-//							.getJdbcEnvironment()
-//							.getIdentifierHelper()
-//							.toIdentifier( referencedColumn.getQuotedName() );
-//				}
-
 				relationalObjectBinder.bindColumnsAndFormulas(
 						mappingDocument,
 						manyToOneSource.getRelationalValueSources(),
@@ -4219,45 +4041,6 @@ public class ModelBinder {
 						new RelationalObjectBinder.ColumnNamingDelegate() {
 							@Override
 							public Identifier determineImplicitName(final LocalMetadataBuildingContext context) {
-								// NOTE : This sucks!!!  The problem is that the legacy HBMBinder routed this
-								// through the legacy NamingStrategy#propertyToColumName.
-								//
-								// Basically, when developing the AnnotationBinder and
-								// NamingStrategy#foreignKeyColumnName HbmBinder was never updated to
-								// utilize that new method.
-//								return implicitNamingStrategy.determineJoinColumnName(
-//										new ImplicitJoinColumnNameSource() {
-//											@Override
-//											public Nature getNature() {
-//												return Nature.ENTITY;
-//											}
-//
-//											@Override
-//											public EntityNaming getEntityNaming() {
-//												return entityNaming;
-//											}
-//
-//											@Override
-//											public AttributePath getAttributePath() {
-//												return manyToOneSource.getAttributePath();
-//											}
-//
-//											@Override
-//											public Identifier getReferencedTableName() {
-//												return referencedTableName;
-//											}
-//
-//											@Override
-//											public Identifier getReferencedColumnName() {
-//												return referencedColumnName;
-//											}
-//
-//											@Override
-//											public MetadataBuildingContext getBuildingContext() {
-//												return context;
-//											}
-//										}
-//								);
 								return implicitNamingStrategy.determineBasicColumnName(
 										new ImplicitBasicColumnNameSource() {
 											@Override

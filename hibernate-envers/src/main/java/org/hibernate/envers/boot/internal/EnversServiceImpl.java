@@ -12,7 +12,7 @@ import java.util.Properties;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.EntitiesConfigurator;
@@ -103,7 +103,7 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 	}
 
 	@Override
-	public void initialize(final InFlightMetadataCollector metadata, final MappingCollector mappingCollector) {
+	public void initialize(final MetadataImplementor metadata, final MappingCollector mappingCollector) {
 		if ( initialized ) {
 			throw new UnsupportedOperationException( "EnversService#initialize should be called only once" );
 		}
@@ -119,7 +119,7 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 	}
 
 	private void doInitialize(
-			final InFlightMetadataCollector metadata,
+			final MetadataImplementor metadata,
 			final MappingCollector mappingCollector,
 			ServiceRegistry serviceRegistry) {
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
@@ -128,7 +128,7 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 
 		this.globalConfiguration = new GlobalConfiguration( this, properties );
 
-		final ReflectionManager reflectionManager = metadata.getBootstrapContext()
+		final ReflectionManager reflectionManager = metadata.getMetadataBuildingOptions()
 				.getReflectionManager();
 		final RevisionInfoConfiguration revInfoCfg = new RevisionInfoConfiguration( globalConfiguration );
 		final RevisionInfoConfigurationResult revInfoCfgResult = revInfoCfg.configure(

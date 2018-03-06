@@ -24,7 +24,6 @@ import javax.xml.transform.dom.DOMSource;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
-import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
@@ -61,10 +60,10 @@ public class MetadataSources implements Serializable {
 
 	private XmlMappingBinderAccess xmlMappingBinderAccess;
 
-	private List<Binding> xmlBindings = new ArrayList<Binding>();
-	private LinkedHashSet<Class<?>> annotatedClasses = new LinkedHashSet<Class<?>>();
-	private LinkedHashSet<String> annotatedClassNames = new LinkedHashSet<String>();
-	private LinkedHashSet<String> annotatedPackages = new LinkedHashSet<String>();
+	private List<Binding> xmlBindings = new ArrayList<>();
+	private LinkedHashSet<Class<?>> annotatedClasses = new LinkedHashSet<>();
+	private LinkedHashSet<String> annotatedClassNames = new LinkedHashSet<>();
+	private LinkedHashSet<String> annotatedPackages = new LinkedHashSet<>();
 
 	public MetadataSources() {
 		this( new BootstrapServiceRegistryBuilder().build() );
@@ -131,21 +130,12 @@ public class MetadataSources implements Serializable {
 	 * Get a builder for metadata where non-default options can be specified.
 	 *
 	 * @return The built metadata.
-	 */
-	public MetadataBuilder getMetadataBuilder(StandardServiceRegistry serviceRegistry, ClassmateContext classmateContext) {
-		MetadataBuilderImpl defaultBuilder = new MetadataBuilderImpl( this, serviceRegistry, classmateContext );
-		return getCustomBuilderOrDefault( defaultBuilder );
-	}
-
-	/**
-	 * Get a builder for metadata where non-default options can be specified.
-	 *
-	 * @return The built metadata.
 	 * @deprecated Use {@link #getMetadataBuilder()} instead
 	 */
 	@Deprecated
 	public MetadataBuilder getMetadataBuilder(StandardServiceRegistry serviceRegistry) {
-		return getMetadataBuilder( serviceRegistry, new ClassmateContext() );
+		MetadataBuilderImpl defaultBuilder = new MetadataBuilderImpl( this, serviceRegistry );
+		return getCustomBuilderOrDefault( defaultBuilder );
 	}
 
 	/**
@@ -163,7 +153,7 @@ public class MetadataSources implements Serializable {
 			final MetadataBuilder returnedBuilder = discoveredBuilderFactory.getMetadataBuilder( this, defaultBuilder );
 			if ( returnedBuilder != null ) {
 				if ( activeFactoryNames == null ) {
-					activeFactoryNames = new ArrayList<String>();
+					activeFactoryNames = new ArrayList<>();
 				}
 				activeFactoryNames.add( discoveredBuilderFactory.getClass().getName() );
 				builder = returnedBuilder;

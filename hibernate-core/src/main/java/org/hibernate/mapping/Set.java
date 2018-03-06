@@ -10,6 +10,7 @@ import java.util.Iterator;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.type.CollectionType;
 
@@ -19,6 +20,14 @@ import org.hibernate.type.CollectionType;
  * @author Gavin King
  */
 public class Set extends Collection {
+	/**
+	 * @deprecated Use {@link Set#Set(MetadataBuildingContext, PersistentClass)} instead.
+	 */
+	@Deprecated
+	public Set(MetadataImplementor metadata, PersistentClass owner) {
+		super( metadata, owner );
+	}
+
 	public Set(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
 	}

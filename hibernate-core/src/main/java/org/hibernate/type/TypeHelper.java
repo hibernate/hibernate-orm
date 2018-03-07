@@ -6,16 +6,13 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Map;
-
-import org.hibernate.Hibernate;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.tuple.NonIdentifierAttribute;
+
+import java.io.Serializable;
+import java.util.Map;
 
 /**
  * Collection of convenience methods relating to operations across arrays of types...
@@ -404,24 +401,4 @@ public class TypeHelper {
 		}
 	}
 
-	public static String toLoggableString(
-			Object[] state,
-			Type[] types,
-			SessionFactoryImplementor factory) {
-		final StringBuilder buff = new StringBuilder();
-		for ( int i = 0; i < state.length; i++ ) {
-			if ( i > 0 ) {
-				buff.append( ", " );
-			}
-
-			// HHH-11173 - Instead of having to account for unfectched lazy properties in all types, it's done here
-			if ( state[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || !Hibernate.isInitialized( state[i] ) ) {
-				buff.append( "<uninitialized>" );
-			}
-			else {
-				buff.append( types[i].toLoggableString( state[i], factory ) );
-			}
-		}
-		return buff.toString();
-	}
 }

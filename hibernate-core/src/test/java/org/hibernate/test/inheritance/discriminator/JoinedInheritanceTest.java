@@ -104,12 +104,16 @@ public class JoinedInheritanceTest extends BaseCoreFunctionalTestCase {
 	public static class EntityA extends BaseEntity {
 		@OneToMany(fetch = FetchType.LAZY)
 		private Set<EntityC> attributes;
+		@ManyToOne(fetch = FetchType.LAZY)
+		private EntityC relation;
 	}
 
 	@Entity(name = "EntityB")
 	public static class EntityB extends BaseEntity {
 		@OneToMany(fetch = FetchType.LAZY)
 		private Set<EntityD> attributes;
+		@ManyToOne(fetch = FetchType.LAZY)
+		private EntityD relation;
 	}
 
 	@Entity(name = "EntityC")

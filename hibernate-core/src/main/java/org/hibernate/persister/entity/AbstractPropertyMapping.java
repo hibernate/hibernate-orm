@@ -250,6 +250,10 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		PersistentClass otherClass = metadata.getEntityBinding( entityType2.getAssociatedEntityName() );
 		PersistentClass commonClass = getCommonPersistentClass( thisClass, otherClass );
 
+		if ( commonClass == null ) {
+			return null;
+		}
+
 		// Create a copy of the type but with the common class
 		if ( entityType1 instanceof ManyToOneType ) {
 			ManyToOneType t = (ManyToOneType) entityType1;

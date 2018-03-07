@@ -26,7 +26,7 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-public class JPAQLComplianceTest extends AbstractJPATest {
+	public class JPAQLComplianceTest extends AbstractJPATest {
 	@Test
 	public void testAliasNameSameAsUnqualifiedEntityName() {
 		Session s = openSession();
@@ -74,6 +74,20 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12290")
+	public void testParameterCollectionPositional() {
+		Session s = openSession();
+		Query q = s.createQuery( "select item from Item item where item.id in (?1) and item.name = ?2" );
+		List params = new ArrayList();
+		params.add( Long.valueOf( 0 ) );
+		params.add( Long.valueOf( 1 ) );
+		q.setParameter( 1, params );
+		q.setParameter( 2, "name" );
+		q.list();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12290")
 	public void testParametersMixturePositionalAndNamed() {
 		Session s = openSession();
 		try {
@@ -112,9 +126,9 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 		Session s = openSession();
 		try {
 			Query q = s.createQuery( "select item from Item item where item.id in (?1) and item.name = :name" );
-			List<Integer> params = new ArrayList();
-			params.add( 0 );
-			params.add( 1 );
+			List<Long> params = new ArrayList();
+			params.add( Long.valueOf( 0 ) );
+			params.add( Long.valueOf( 1 ) );
 			q.setParameter( 1, params );
 			q.setParameter( "name", "name" );
 			q.list();

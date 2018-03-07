@@ -121,6 +121,15 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	void setFlushMode(FlushMode flushMode);
 
 	/**
+	 * This is a synthethic method which should never be used; please ignore
+	 * but do not remove from the source code as it is used to maintain
+	 * binary compatibility with older versions.
+	 * @deprecated This was never meant to be public. Please ignore.
+	 */
+	@Deprecated
+	FlushMode getFlushMode$$bridge();
+
+	/**
 	 * {@inheritDoc}
 	 * <p/>
 	 * For users of the Hibernate native APIs, we've had to rename this method

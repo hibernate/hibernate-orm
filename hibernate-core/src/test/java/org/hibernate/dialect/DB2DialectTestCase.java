@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
+import org.hibernate.engine.spi.RowSelection;
 import org.junit.Test;
 
 import org.hibernate.mapping.Column;
@@ -15,6 +16,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * DB2 dialect related test cases
@@ -61,6 +63,19 @@ public class DB2DialectTestCase extends BaseUnitTestCase {
 				"Wrong binary type. Should be varchar for length > 254",
 				"varchar(255) for bit data",
 				actual
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12369")
+	public void testIntegerOverflowForMaxResults() {
+		RowSelection rowSelection = new RowSelection();
+		rowSelection.setFirstRow(1);
+		rowSelection.setMaxRows(Integer.MAX_VALUE);
+		String sql = dialect.getLimitHandler().processSql( "select a.id from tbl_a a order by a.id", rowSelection );
+		assertTrue(
+				"Integer overflow for max rows in: " + sql,
+				sql.contains("fetch first 2147483647 rows only")
 		);
 	}
 }

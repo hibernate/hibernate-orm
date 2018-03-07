@@ -42,7 +42,14 @@ public class NoopLimitHandler extends AbstractLimitHandler {
 	@Override
 	public void setMaxRows(RowSelection selection, PreparedStatement statement) throws SQLException {
 		if ( LimitHelper.hasMaxRows( selection ) ) {
-			statement.setMaxRows( selection.getMaxRows() + convertToFirstRowValue( LimitHelper.getFirstRow( selection ) ) );
+			int maxRows = selection.getMaxRows() + convertToFirstRowValue( LimitHelper.getFirstRow( selection ) );
+			// Use Integer.MAX_VALUE on overflow
+			if ( maxRows < 0 ) {
+				statement.setMaxRows( Integer.MAX_VALUE );
+			}
+			else {
+				statement.setMaxRows( maxRows );
+			}
 		}
 	}
 }

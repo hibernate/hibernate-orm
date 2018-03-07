@@ -49,7 +49,6 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 		}
 		return new StandardCacheEntryImpl(
 			disassembledState,
-			null,
 			subclass,
 			version
 		);

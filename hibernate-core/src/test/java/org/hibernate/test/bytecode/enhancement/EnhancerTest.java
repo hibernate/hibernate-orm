@@ -9,6 +9,7 @@ package org.hibernate.test.bytecode.enhancement;
 import javassist.CtClass;
 
 import org.hibernate.test.bytecode.enhancement.lazy.cache.LazyInCacheTestTask;
+import org.hibernate.test.bytecode.enhancement.lazy.group.LazyGroupMappedByTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.group.LazyGroupUpdateTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.group.SimpleLazyGroupUpdateTestTask;
 import org.hibernate.test.bytecode.enhancement.association.InheritedAttributeAssociationTestTask;
@@ -169,6 +170,12 @@ public class EnhancerTest extends BaseUnitTestCase {
 		EnhancerTestUtils.runEnhancerTestTask( LazyGroupAccessTestTask.class );
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-11986" )
+	public void testLazyGroupMappedBy() {
+		EnhancerTestUtils.runEnhancerTestTask( LazyGroupMappedByTestTask.class );
+
+	}
 	@Test
 	@TestForIssue( jiraKey = "HHH-11155" )
 	public void testLazyGroupsUpdate() {

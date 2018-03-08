@@ -1,16 +1,15 @@
 package org.hibernate.test.bytecode.enhancement.lazy.group;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
+import org.hibernate.Session;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
 
 /**
  * Testing OneToOne LazyToOne association
@@ -18,25 +17,22 @@ import org.junit.runner.RunWith;
  * @author Jan-Oliver Lustig, Sebastian Viefhaus
  */
 @TestForIssue(jiraKey = "HHH-11986")
-@RunWith(BytecodeEnhancerRunner.class)
-public class LazyGroupMappedByTest extends BaseCoreFunctionalTestCase {
+public class LazyGroupMappedByTestTask extends AbstractEnhancerTestTask {
+	private Long fromId;
 
 	public Class<?>[] getAnnotatedClasses() {
 		return new Class[] { LGMB_From.class, LGMB_To.class };
 	}
 
-	@Test
-	@TestForIssue(jiraKey = "HHH-11986")
-	public void test() {
-		Long fromId = createEntities();
-
-		Statistics stats = sessionFactory().getStatistics();
+	@Override
+	public void execute() {
+		Statistics stats = getFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
 		stats.clear();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-
+		Session session = getFactory().openSession();
+		session.beginTransaction();
+		{
 					SessionStatistics sessionStats = session.getStatistics();
 
 					// Should be loaded lazy.
@@ -56,8 +52,9 @@ public class LazyGroupMappedByTest extends BaseCoreFunctionalTestCase {
 
 					to.getFromRelation().getName();
 					assertEquals( 3, stats.getPrepareStatementCount() );
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	/**
@@ -65,12 +62,18 @@ public class LazyGroupMappedByTest extends BaseCoreFunctionalTestCase {
 	 *
 	 * @return ID der Quell-Entität
 	 */
-	public Long createEntities() {
-		return doInHibernate(
-				this::sessionFactory, session -> {
-					session.createNativeQuery( "DELETE FROM LGMB_TO" ).executeUpdate();
-					session.createNativeQuery( "DELETE FROM LGMB_FROM" ).executeUpdate();
+	@Override
+	public void prepare() {
+		Configuration cfg = new Configuration();
+		cfg.setProperty( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
+		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "false" );
+		super.prepare( cfg );
 
+		cleanup();
+
+		Session session = getFactory().openSession();
+		session.beginTransaction();
+		{
 					LGMB_From from = new LGMB_From( "A" );
 					LGMB_To to = new LGMB_To( "B" );
 					from.setToRelation( to );
@@ -79,9 +82,22 @@ public class LazyGroupMappedByTest extends BaseCoreFunctionalTestCase {
 					session.save( from );
 					session.flush();
 
-					return from.getId();
-				}
-		);
+					fromId = from.getId();
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
+	@Override
+	protected void cleanup() {
+		Session session = getFactory().openSession();
+		session.beginTransaction();
+		{
+			session.createSQLQuery( "DELETE FROM LGMB_TO" ).executeUpdate();
+			session.createSQLQuery( "DELETE FROM LGMB_FROM" ).executeUpdate();
+
+		}
+		session.getTransaction().commit();
+		session.close();
+	}
 }

@@ -4,6 +4,25 @@ Hibernate 5 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.2.15.Final (March 08, 2018)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/31642
+
+** Bug
+    * [HHH-7119] - Hibernate filter's parameters are not populated when an entity's Collection is populated using a fetch mode of subselect.
+    * [HHH-8382] - Oracle ORA-24816 - Issue HH4635 solved for annotation, not for hbm version
+    * [HHH-9186] - ORM wrongly assumes that an element of a set has a primary key
+    * [HHH-12297] - Relations are not loaded when using Fetch Profiles
+    * [HHH-12332] - 5.2.14 regression: NullPointerException in AbstractPropertyMapping.getSuperCollection
+    * [HHH-12355] - Insert fails on one-to-one mapping when an intermediate embeddable type is between mappings when using ordered inserts.
+    * [HHH-12369] - Integer overflow in limit handlers when firstResult used with maxResults=Integer.MAX_VALUE on DB2
+    * [HHH-12370] - Lazily-initialized byte[] LOB gets turned into a String, resulting in poor performance
+
+** Improvement
+    * [HHH-2558] - Allow batching inserts for multi-table entities
+    * [HHH-5797] - Improve batching for entity updates or deletes that use secondary tables
+
+
 Changes in 5.2.14.Final (February 27, 2018)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/31635

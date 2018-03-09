@@ -507,12 +507,16 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 		// HHH-1123
 		// Some DBs limit number of IN expressions.  For now, warn...
-		final Dialect dialect = session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getJdbcEnvironment().getDialect();
+		final Dialect dialect = session.getFactory()
+				.getServiceRegistry()
+				.getService( JdbcServices.class )
+				.getJdbcEnvironment()
+				.getDialect();
 		final int inExprLimit = dialect.getInExpressionCountLimit();
 
 		for ( Map.Entry<QueryParameter, QueryParameterListBinding> entry : parameterListBindingMap.entrySet() ) {
-			final String sourceToken = getSourceToken(entry.getKey());
-			queryString = StringHelper.replace( queryString, sourceToken, sourceToken + "_tmp", true);
+			final String sourceToken = getSourceToken( entry.getKey() );
+			queryString = StringHelper.replace( queryString, sourceToken, sourceToken + "_tmp", true );
 		}
 
 		for ( Map.Entry<QueryParameter, QueryParameterListBinding> entry : parameterListBindingMap.entrySet() ) {
@@ -527,7 +531,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 						bindValues.size()
 				);
 			}
-			final String sourceToken = getSourceToken(sourceParam) + "_tmp";
+			final String sourceToken = getSourceToken( sourceParam ) + "_tmp";
 
 			final int loc = queryString.indexOf( sourceToken );
 			if ( loc < 0 ) {
@@ -562,9 +566,15 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 				}
 				else {
 					TreeMap<QueryParameter, QueryParameterBinding> sortedPositionalParamBindingMap = getSortedPositionalParamBindingMap();
-					Integer nextPositionNumber = sortedPositionalParamBindingMap.size() > 0
-							? sortedPositionalParamBindingMap.lastKey().getPosition() + 1
-							: 1;
+					Integer nextPositionNumber;
+					if ( i == 0 ) {
+						nextPositionNumber = sourceParam.getPosition();
+					}
+					else {
+						nextPositionNumber = sortedPositionalParamBindingMap.size() > 0
+								? sortedPositionalParamBindingMap.lastKey().getPosition() + 1
+								: 1;
+					}
 					expansionList.append( "?" ).append( nextPositionNumber );
 
 					syntheticParam = new OrdinalParameterDescriptor(

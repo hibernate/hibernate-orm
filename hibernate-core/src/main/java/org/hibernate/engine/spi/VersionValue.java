@@ -13,7 +13,7 @@ import org.hibernate.internal.CoreLogging;
 import org.jboss.logging.Logger;
 
 /**
- * A strategy for determining if a version value is an version of
+ * A strategy for determining if a version value is a version of
  * a new transient instance or a previously persistent transient instance.
  * The strategy is determined by the <tt>unsaved-value</tt> attribute in
  * the mapping file.

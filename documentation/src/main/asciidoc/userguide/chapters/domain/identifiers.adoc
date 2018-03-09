@@ -117,7 +117,7 @@ include::{sourcedir}/EmbeddedIdTest.java[tag=identifiers-basic-embeddedid-mappin
 ----
 ====
 
-As mentioned before, EmbeddedIds can even contain `@ManyToOne` attributes.
+As mentioned before, EmbeddedIds can even contain `@ManyToOne` attributes:
 
 [[identifiers-basic-embeddedid-manytoone-mapping-example]]
 .`@EmbeddedId` with `@ManyToOne`
@@ -200,7 +200,7 @@ Although the mapping is much simpler than using an `@EmbeddedId` or an `@IdClass
 To query this entity, an instance of the entity itself must be supplied to the persistence context.
 
 [[identifiers-composite-id-fetching-example]]
-.Fetchcing with composite identifiers
+.Fetching with composite identifiers
 ====
 [source,java]
 ----
@@ -243,7 +243,7 @@ How a persistence provider interprets the AUTO generation type is left up to the
 
 The default behavior is to look at the java type of the identifier attribute.
 
-If the identifier type is UUID, Hibernate is going to use an <<identifiers-generators-uuid, UUID identifier>>.
+If the identifier type is UUID, Hibernate is going to use a <<identifiers-generators-uuid, UUID identifier>>.
 
 If the identifier type is numerical (e.g. `Long`, `Integer`), then Hibernate is going to use the `IdGeneratorStrategyInterpreter` to resolve the identifier generator strategy.
 The `IdGeneratorStrategyInterpreter` has two implementations:

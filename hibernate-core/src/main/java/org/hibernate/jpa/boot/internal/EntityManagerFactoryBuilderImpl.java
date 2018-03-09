@@ -469,7 +469,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		//		1) additional JACC permissions
 		//		2) additional cache region declarations
 		//
-		// we will also clean up an references with null entries
+		// we will also clean up any references with null entries
 		Iterator itr = mergedSettings.configurationValues.entrySet().iterator();
 		while ( itr.hasNext() ) {
 			final Map.Entry entry = (Map.Entry) itr.next();

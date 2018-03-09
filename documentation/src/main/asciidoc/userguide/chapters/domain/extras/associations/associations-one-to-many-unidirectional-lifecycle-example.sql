@@ -4,11 +4,11 @@ VALUES ( 1 )
 
 INSERT INTO Phone
        ( number, id )
-VALUES ( '123 - 456 - 7890', 2 )
+VALUES ( '123-456-7890', 2 )
 
 INSERT INTO Phone
        ( number, id )
-VALUES ( '321 - 654 - 0987', 3 )
+VALUES ( '321-654-0987', 3 )
 
 INSERT INTO Person_Phone
        ( Person_id, phones_id )

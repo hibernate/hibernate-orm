@@ -34,7 +34,7 @@ import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
 /**
- * Generates identifier values based on an sequence-style database structure.
+ * Generates identifier values based on a sequence-style database structure.
  * Variations range from actually using a sequence to using a table to mimic
  * a sequence.  These variations are encapsulated by the {@link DatabaseStructure}
  * interface internally.

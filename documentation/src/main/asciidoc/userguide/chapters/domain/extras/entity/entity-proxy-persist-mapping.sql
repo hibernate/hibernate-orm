@@ -1,3 +1,4 @@
+insert
 into
     Book
     (author, title, id)

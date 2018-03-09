@@ -132,15 +132,16 @@ public abstract class AbstractEntityGraphVisitationStrategy
 	}
 
 	/**
-	 * I'm using NULL-OBJECT pattern here, for attributes that not existing in the EntityGraph,
+	 * I'm using the NULL-OBJECT pattern here.
+	 * For attributes that don't exist in the EntityGraph,
 	 * a predefined NULL-ATTRIBUTE-NODE is pushed to the stack.
 	 *
-	 * and for an not existing sub graph, a predefined NULL-SUBGRAPH is pushed to the stack.
+	 * And for a nonexistent subgraph, a predefined NULL-SUBGRAPH is pushed to the stack.
 	 *
-	 * So, whenever we're start visiting an attribute, there will be a attribute node pushed to the attribute stack,
+	 * So, whenever we start visiting an attribute, there will be an attribute node pushed to the attribute stack,
 	 * and a subgraph node pushed to the graph stack.
 	 *
-	 * when we're finish visiting an attribute, these two will be poped from each stack.
+	 * when we finish visiting an attribute, these two will be popped from each stack.
 	 */
 	@Override
 	public boolean startingAttribute(AttributeDefinition attributeDefinition) {

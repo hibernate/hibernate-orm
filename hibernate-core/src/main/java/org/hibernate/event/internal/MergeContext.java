@@ -262,7 +262,7 @@ class MergeContext implements Map {
 			}
 			if ( oldOperatedOn != null ) {
 				throw new IllegalStateException(
-						"MergeContext#mergeEntityToOperatedOnFlagMap contains an merge entity " + printEntity( mergeEntity )
+						"MergeContext#mergeEntityToOperatedOnFlagMap contains a merge entity " + printEntity( mergeEntity )
 								+ ", but MergeContext#mergeToManagedEntityXref does not."
 				);
 			}
@@ -278,7 +278,7 @@ class MergeContext implements Map {
 			}
 			if ( oldOperatedOn == null ) {
 				throw new IllegalStateException(
-						"MergeContext#mergeToManagedEntityXref contained an mergeEntity " + printEntity( mergeEntity )
+						"MergeContext#mergeToManagedEntityXref contained a merge entity " + printEntity( mergeEntity )
 								+ ", but MergeContext#mergeEntityToOperatedOnFlagMap did not."
 				);
 			}

@@ -100,7 +100,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-8916")
 	public void testPaginationWithCTEQueryWithOffsetAndOrderBy() {
-		// This used to throw an StringIndexOutOfBoundsException
+		// This used to throw a StringIndexOutOfBoundsException
 		doInHibernate( this::sessionFactory, session -> {
 			for ( int i = 0; i < 20; ++i ) {
 				session.persist( new Product2( i, "Product" + i ) );
@@ -127,7 +127,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-8916")
 	public void testPaginationWithCTEQueryWithOffset() {
-		// This used to throw an StringIndexOutOfBoundsException
+		// This used to throw a StringIndexOutOfBoundsException
 		doInHibernate( this::sessionFactory, session -> {
 			for ( int i = 0; i < 20; ++i ) {
 				session.persist( new Product2( i, "Product" + i ) );

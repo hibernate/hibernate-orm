@@ -101,7 +101,7 @@ public class ActionQueue {
 	private BeforeTransactionCompletionProcessQueue beforeTransactionProcesses;
 
 	/**
-	 * An LinkedHashMap containing providers for all the ExecutableLists, inserted in execution order
+	 * A LinkedHashMap containing providers for all the ExecutableLists, inserted in execution order
 	 */
 	private static final LinkedHashMap<Class<? extends Executable>,ListProvider> EXECUTABLE_LISTS_MAP;
 	static {

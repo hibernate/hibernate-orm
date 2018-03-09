@@ -111,7 +111,7 @@ public class FromElementFactory implements SqlTokenTypes {
 			String classAlias) throws SemanticException {
 		LOG.debugf( "createFromElementInSubselect() : path = %s", path );
 
-		// Create an DotNode AST for the path and resolve it.
+		// Create a DotNode AST for the path and resolve it.
 		FromElement fromElement = evaluateFromElementPath( path, classAlias );
 		EntityPersister entityPersister = fromElement.getEntityPersister();
 

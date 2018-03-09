@@ -66,7 +66,7 @@ public interface ImplicitNamingStrategy {
 	public Identifier determineJoinTableName(ImplicitJoinTableNameSource source);
 
 	/**
-	 * Determine the name of an collection join table given the source naming
+	 * Determine the name of a collection join table given the source naming
 	 * information, when a name is not explicitly given.
 	 *
 	 * @param source The source information

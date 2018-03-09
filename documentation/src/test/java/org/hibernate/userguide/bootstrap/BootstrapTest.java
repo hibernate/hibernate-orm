@@ -263,7 +263,7 @@ public class BootstrapTest {
 
 				SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
 
-				// Supply an SessionFactory-level Interceptor
+				// Supply a SessionFactory-level Interceptor
 				sessionFactoryBuilder.applyInterceptor( new CustomSessionFactoryInterceptor() );
 
 				// Add a custom observer

@@ -103,12 +103,12 @@ public class ManagedSessionContext extends AbstractCurrentSessionContext {
 	}
 
 	private static Session existingSession(SessionFactory factory) {
-		final Map sessionMap = sessionMap();
+		final Map<SessionFactory,Session> sessionMap = sessionMap();
 		if ( sessionMap == null ) {
 			return null;
 		}
 		else {
-			return (Session) sessionMap.get( factory );
+			return sessionMap.get( factory );
 		}
 	}
 
@@ -129,7 +129,7 @@ public class ManagedSessionContext extends AbstractCurrentSessionContext {
 		final Map<SessionFactory,Session> sessionMap = sessionMap( false );
 		if ( sessionMap != null ) {
 			if ( sessionMap.isEmpty() ) {
-				CONTEXT_TL.set( null );
+				CONTEXT_TL.remove();
 			}
 		}
 	}

@@ -100,7 +100,7 @@ so Hibernate requires a secondary select to ensure that the EAGER association is
 
 [IMPORTANT]
 ====
-If you forget to JOIN FETCH all EAGER associations, Hibernate is going to issue a secondary select for each and every one of those
+If you forget to JOIN FETCH all EAGER associations, Hibernate issues a secondary select for each and every one of those
 which, in turn, can lean to N+1 query issues.
 
 For this reason, you should prefer LAZY associations.
@@ -327,7 +327,7 @@ Besides the `FetchType.LAZY` or `FetchType.EAGER` JPA annotations,
 you can also use the Hibernate-specific `@Fetch` annotation that accepts one of the following `FetchMode(s)`:
 
 SELECT::
-	The association is going to be fetched lazily using a secondary select for each individual entity,
+	The association is fetched lazily using a secondary select for each individual entity,
 	collection, or join load.
 	It's equivalent to JPA `FetchType.LAZY` fetching strategy.
 JOIN::
@@ -391,7 +391,7 @@ include::{sourcedir}/FetchModeSubselectTest.java[tags=fetching-strategies-fetch-
 Now, we are going to fetch all `Department` entities that match a given filtering criteria
 and then navigate their `employees` collections.
 
-Hibernate is going to avoid the N+1 query issue by generating a single SQL statement to initialize all `employees` collections
+Hibernate avoids the N+1 query issue by generating a single SQL statement to initialize all `employees` collections
 for all `Department` entities that were previously fetched.
 Instead of using passing all entity identifiers, Hibernate simply reruns the previous query that fetched the `Department` entities.
 
@@ -439,7 +439,7 @@ Also, the `FetchMode.JOIN` acts as a `FetchType.EAGER` strategy.
 Even if we mark the association as `FetchType.LAZY`, the `FetchMode.JOIN` will load the association eagerly.
 ====
 
-Hibernate is going to avoid the secondary query by issuing an OUTER JOIN for the `employees` collection.
+Hibernate avoids the secondary query by issuing an OUTER JOIN for the `employees` collection.
 
 [[fetching-strategies-fetch-mode-join-example]]
 .`FetchMode.JOIN` mapping example

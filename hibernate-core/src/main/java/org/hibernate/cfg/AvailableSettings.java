@@ -786,7 +786,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String BATCH_VERSIONED_DATA = "hibernate.jdbc.batch_versioned_data";
 
 	/**
-	 * Default JDBC TimeZone. Unless specified, the JVM default TimeZone is going to be used by the underlying JDBC Driver.
+	 * Default JDBC TimeZone. Unless specified, the JVM default TimeZone is used by the underlying JDBC Driver.
 	 *
 	 * @since 5.2.3
 	 */

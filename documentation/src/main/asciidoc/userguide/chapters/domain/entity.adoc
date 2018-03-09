@@ -214,7 +214,7 @@ Specifically the outcome in this last example will depend on whether the `Book` 
 implemented equals/hashCode, and, if so, how.
 
 If the `Book` class did not override the default equals/hashCode,
-then the two `Book` object reference are not going to be equal since their references are different.
+then the two `Book` object references would not be equal since their references are different.
 
 Consider yet another case:
 
@@ -357,7 +357,7 @@ Hibernate will trigger a Persistence Context flush if there are pending `Account
 [[entity-proxy]]
 ==== Define a custom entity proxy
 
-By default, when it needs to use a proxy instead of the actual Pojo, Hibernate is going to use a Bytecode manipulation library like
+By default, when it needs to use a proxy instead of the actual Pojo, Hibernate uses a Bytecode manipulation library like
 http://jboss-javassist.github.io/javassist/[Javassist] or
 http://bytebuddy.net/[Byte Buddy].
 
@@ -376,7 +376,7 @@ include::{sourcedir-proxy}/ProxyInterfaceTest.java[tag=entity-proxy-interface-ma
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Proxy.html[`@Proxy`]
 annotation is used to specify a custom Proxy implementation for the current annotated entity.
 
-When loading the `Book` entity proxy, Hibernate is going to proxy the `Identifiable` interface instead as illustarted by the following example:
+When loading the `Book` entity proxy, Hibernate proxies the `Identifiable` interface instead as illustrated by the following example:
 
 [[entity-proxy-persist-mapping]]
 .Proxying the final entity class implementing the `Identifiable` interface
@@ -420,7 +420,7 @@ include::{sourcedir-proxy}/tuplizer/Country.java[tag=entity-tuplizer-entity-mapp
 The `@Tuplizer` instructs Hibernate to use the `DynamicEntityTuplizer` and `DynamicEmbeddableTuplizer` to handle
 the associated entity and embeddable object types.
 
-Both the `Cuising` entity and the `Country` embeddable types are going to be instantiated as Java dynamic proxies,
+Both the `Cuisine` entity and the `Country` embeddable types are instantiated as Java dynamic proxies,
 as you can see in the following `DynamicInstantiator` example:
 
 [[entity-tuplizer-instantiator]]

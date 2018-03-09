@@ -398,7 +398,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-api-stream-projection-example]
 ----
 ====
 
-When fetching a single result, like a `Person` entity, instead of a `Stream<Object[]>`, Hibernate is going to figure out the actual type, so the result is a `Stream<Person>`.
+When fetching a single result, like a `Person` entity, instead of a `Stream<Object[]>`, Hibernate figures out the actual type, so the result is a `Stream<Person>`.
 
 [[hql-api-stream-example]]
 .Hibernate `stream()` using an entity result type

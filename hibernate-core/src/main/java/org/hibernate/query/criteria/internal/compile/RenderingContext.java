@@ -60,7 +60,7 @@ public interface RenderingContext {
 	Dialect getDialect();
 
 	/**
-	 * How literals are going to be handled.
+	 * How literals are handled.
 	 *
 	 * @return literal handling strategy
 	 */

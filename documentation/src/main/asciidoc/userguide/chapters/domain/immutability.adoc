@@ -17,7 +17,7 @@ include::{sourcedir}/EntityImmutabilityTest.java[tags=entity-immutability-exampl
 ----
 ====
 
-Internally, Hibernate is going to perform several optimizations, such as:
+Internally, Hibernate performs several optimizations, such as:
 
 - reducing memory footprint since there is no need to retain the dehydrated state for the dirty checking mechanism
 - speeding-up the Persistence Context flushing phase since immutable entities can skip the dirty checking process

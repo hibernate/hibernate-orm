@@ -234,7 +234,7 @@ Hibernate cannot honor this request since it cannot know whether the association
 The only way to figure out whether there is an associated record on the child side is to fetch the child association using a secondary query.
 Because this can lead to N+1 query issues, it's much more efficient to use unidirectional `@OneToOne` associations with the `@MapsId` annotation in place.
 
-However, if you really need to use a bidirectional association and want to make sure that this is always going to be fetched lazily,
+However, if you really need to use a bidirectional association and want to make sure that this is always fetched lazily,
 then you need to enable lazy state initialization bytecode enhancement and use the
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyToOne.html[`@LazyToOne`] annotation as well.
 

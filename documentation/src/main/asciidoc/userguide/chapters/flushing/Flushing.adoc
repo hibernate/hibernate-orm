@@ -169,7 +169,7 @@ include::{extrasdir}/flushing-commit-flush-jpql-example.sql[]
 ----
 ====
 
-Because the JPA doesn't impose a strict rule on delaying flushing, when executing a native SQL query, the persistence context is going to be flushed.
+Because the JPA doesn't impose a strict rule on delaying flushing, when executing a native SQL query, the persistence context is flushed.
 
 [[flushing-commit-flush-sql-example]]
 .`COMMIT` flushing on SQL
@@ -264,7 +264,7 @@ include::{extrasdir}/flushing-order-example.sql[]
 ----
 ====
 
-Even if we removed the first entity and then persist a new one, Hibernate is going to execute the `DELETE` statement after the `INSERT`.
+Even if we remove the first entity and then persist a new one, Hibernate executes the `DELETE` statement after the `INSERT`.
 
 [TIP]
 ====

@@ -55,7 +55,7 @@ List<Event> events =
 .list();
 ----
 
-Hibernate is going to throw the following `MappingException`:
+Hibernate throws the following `MappingException`:
 
 [source,bash]
 ----

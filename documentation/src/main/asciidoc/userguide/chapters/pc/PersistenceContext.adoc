@@ -368,7 +368,7 @@ See the discussion of non-identifier <<chapters/domain/basic_types.adoc#mapping-
 Traditionally, Hibernate has been allowing detached entities to be refreshed.
 Unfortunately, JPA prohibits this practice and specifies that an `IllegalArgumentException` should be thrown instead.
 
-For this reason, when bootstrapping the Hibernate `SessionFactory` using the native API, the legacy detached entity refresh behavior is going to be preserved.
+For this reason, when bootstrapping the Hibernate `SessionFactory` using the native API, the legacy detached entity refresh behavior is preserved.
 On the other hand, when bootstrapping Hibernate through JPA `EntityManagerFactory` building process, detached entities are not allowed to be refreshed by default.
 
 However, this default behavior can be overwritten through the `hibernate.allow_refresh_detached_entity` configuration property.
@@ -833,7 +833,7 @@ include::{extrasdir}/pc-cascade-on-delete-mapping-example.sql[]
 ----
 ====
 
-Now, you can just remove the `Person` entity, and the associated `Phone` is going to be removed automatically.
+Now, you can just remove the `Person` entity, and the associated `Phone` will be removed automatically.
 
 [[pc-cascade-on-delete-example]]
 .`@OnDelete` example

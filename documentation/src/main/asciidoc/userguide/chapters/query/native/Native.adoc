@@ -159,7 +159,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-m
 ====
 
 This will allow the `Phone#person` to function properly since the `many-to-one` or `one-to-one`
-association is going to use a Proxy that will be initialized when being navigated for the first time.
+association uses a Proxy that will be initialized when being navigated for the first time.
 
 It is possible to eagerly join the `Phone` and the `Person` entities to avoid the possible extra roundtrip for initializing the `many-to-one` association.
 
@@ -579,7 +579,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-named-query-example]
 ----
 ====
 
-To join multiple entities, you need to use a `SqlResultSetMapping` for each entity the SQL query is going to fetch.
+To join multiple entities, you need to use a `SqlResultSetMapping` for each entity the SQL query fetches.
 
 [[sql-entity-associations-NamedNativeQuery-example]]
 .Joined-entities `NamedNativeQuery`
@@ -610,7 +610,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-associations_named-q
 
 Finally, if the association to a related entity involve a composite primary key, a `@FieldResult` element should be used for each foreign key column.
 The `@FieldResult` name is composed of the property name for the relationship, followed by a dot ("."), followed by the name or the field or property of the primary key.
-For this example, the following entities are going to be used:
+For this example, the following entities are used:
 
 [[sql-composite-key-entity-associations_named-query-example]]
 .Entity associations with composite keys and named native queries
@@ -686,7 +686,7 @@ So, when running the following native query:
 )
 ----
 
-Hibernate is going to resolve the `{h-domain}` placeholder according to the values of the default catalog and schema:
+Hibernate resolves the `{h-domain}` placeholder according to the values of the default catalog and schema:
 
 [source, SQL, indent=0]
 ----

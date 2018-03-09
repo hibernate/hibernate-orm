@@ -148,7 +148,7 @@ The `@ManyToMany` annotation is rarely a good choice because it treats both side
 
 For this reason, it's much better to map the link table as depicted in the <<chapters/domain/associations.adoc#associations-many-to-many-bidirectional-with-link-entity-lifecycle-example,Bidirectional many-to-many with link entity lifecycle>> section.
 Each `FOREIGN KEY` column will be mapped as a `@ManyToOne` association.
-On each parent-side, a bidirectional `@OneToMany` association is going to map to the aforementioned `@ManyToOne` relationship in the link entity.
+On each parent-side, a bidirectional `@OneToMany` association maps to the aforementioned `@ManyToOne` relationship in the link entity.
 
 [TIP]
 ====
@@ -197,7 +197,7 @@ Related to associations, there are two major fetch strategies:
 Prior to JPA, Hibernate used to have all associations as `LAZY` by default.
 However, when JPA 1.0 specification emerged, it was thought that not all providers would use Proxies. Hence, the `@ManyToOne` and the `@OneToOne` associations are now `EAGER` by default.
 
-The `EAGER` fetching strategy cannot be overwritten on a per query basis, so the association is always going to be retrieved even if you don't need it.
+The `EAGER` fetching strategy cannot be overwritten on a per query basis, so the association is always retrieved even if you don't need it.
 More, if you forget to `JOIN FETCH` an `EAGER` association in a JPQL query, Hibernate will initialize it with a secondary statement, which in turn can lead to N+1 query issues.
 ====
 

@@ -214,7 +214,7 @@ include::{extrasdir}/collections-unidirectional-bag-lifecycle-example.sql[]
 ----
 ====
 
-In the example above, once the parent entity is persisted, the child entities are going to be persisted as well.
+In the example above, once the parent entity is persisted, the child entities are persisted as well.
 
 [NOTE]
 ====
@@ -349,7 +349,7 @@ With the `order_id` column in place, Hibernate can order the list in-memory afte
 [[collections-bidirectional-ordered-list]]
 ===== Bidirectional ordered lists
 
-The mapping is similar with the <<collections-bidirectional-bag>> example, just that the parent side is going to be annotated with either `@OrderBy` or `@OrderColumn`.
+The mapping is similar with the <<collections-bidirectional-bag>> example, just that the parent side is annotated with either `@OrderBy` or `@OrderColumn`.
 
 [[collections-bidirectional-ordered-list-order-by-example]]
 .Bidirectional `@OrderBy` list
@@ -362,7 +362,7 @@ include::{sourcedir}/BidirectionalOrderByListTest.java[tags=collections-bidirect
 
 Just like with the unidirectional `@OrderBy` list, the `number` column is used to order the statement on the SQL level.
 
-When using the `@OrderColumn` annotation, the `order_id` column is going to be embedded in the child table:
+When using the `@OrderColumn` annotation, the `order_id` column is embedded in the child table:
 
 [[collections-bidirectional-ordered-list-order-column-example]]
 .Bidirectional `@OrderColumn` list
@@ -394,7 +394,7 @@ include::{sourcedir}/OrderColumnListIndexBaseTest.java[tags=collections-customiz
 ----
 ====
 
-When inserting two `Phone` records, Hibernate is going to start the List index from 100 this time.
+When inserting two `Phone` records, Hibernate starts the List index from 100 this time.
 
 [[collections-customizing-ordered-list-ordinal-persist-example]]
 .`@ListIndexBase` persist example

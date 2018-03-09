@@ -322,7 +322,7 @@ Allowable values include:
 By default both HBM, annotations, and JPA XML mappings are scanned.
 +
 When using JPA, to disable the automatic scanning of all entity classes, the `exclude-unlisted-classes` `persistence.xml` element must be set to true.
-Therefore, when setting `exclude-unlisted-classes` to true, only the classes that are explicitly declared in the `persistence.xml` configuration files are going to be taken into consideration.
+Therefore, when setting `exclude-unlisted-classes` to true, only the classes that are explicitly declared in the `persistence.xml` configuration files are taken into consideration.
 
 `*hibernate.mapping.precedence*` (e.g. `hbm,class` (default value))::
 Used to specify the order in which metadata sources should be processed.
@@ -341,7 +341,7 @@ Enable nationalized character support on all string / clob based attribute ( str
 Should we not use contextual LOB creation (aka based on `java.sql.Connection#createBlob()` et al)? The default value for HANA, H2, and PostgreSQL is `true`.
 
 `*hibernate.jdbc.time_zone*` (e.g. A `java.util.TimeZone`, a `java.time.ZoneId` or a `String` representation of a `ZoneId`)::
-Unless specified, the JDBC Driver uses the default JVM time zone. If a different time zone is configured via this setting, the JDBC https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-java.util.Calendar-[PreparedStatement#setTimestamp] is going to use a `Calendar` instance according to the specified time zone.
+Unless specified, the JDBC Driver uses the default JVM time zone. If a different time zone is configured via this setting, the JDBC https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-java.util.Calendar-[PreparedStatement#setTimestamp] uses a `Calendar` instance according to the specified time zone.
 
 `*hibernate.dialect.oracle.prefer_long_raw*` (e.g. `true` or `false` (default value))::
 This setting applies to Oracle Dialect only, and it specifies whether `byte[]` or `Byte[]` arrays should be mapped to the deprecated `LONG RAW` (when this configuration property value is `true`) or to a `BLOB` column type (when this configuration property value is `false`).

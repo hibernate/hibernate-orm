@@ -47,9 +47,9 @@ See the <<chapters/domain/basic_types.adoc#basic,Basic types>> chapter for more 
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/Cacheable.html[`@Cacheable`] annotation is used to specify whether an entity should be stored in the second-level cache.
 
-If the `persistence.xml` `shared-cache-mode` XML attribute is set to `ENABLE_SELECTIVE`, then only the entities annotated with the `@Cacheable` are going to be stored in the second-level cache.
+If the `persistence.xml` `shared-cache-mode` XML attribute is set to `ENABLE_SELECTIVE`, then only the entities annotated with the `@Cacheable` are stored in the second-level cache.
 
-If `shared-cache-mode` XML attribute value is `DISABLE_SELECTIVE`, then the entities marked with the `@Cacheable` annotation are not going to be stored in the second-level cache, while all the other entities are stored in the cache.
+If `shared-cache-mode` XML attribute value is `DISABLE_SELECTIVE`, then the entities marked with the `@Cacheable` annotation are not stored in the second-level cache, while all the other entities are stored in the cache.
 
 See the <<chapters/caching/Caching.adoc#caching,Caching>> chapter for more info.
 
@@ -86,7 +86,7 @@ See the <<chapters/query/native/Native.adoc#sql-multiple-scalar-values-dto-Named
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/Convert.html[`@Convert`] annotation is used to specify the http://docs.oracle.com/javaee/7/api/javax/persistence/AttributeConverter.html[`AttributeConverter`] implementation used to convert the current annotated basic attribute.
 
-If the `AttributeConverter` uses http://docs.oracle.com/javaee/7/api/javax/persistence/Converter.html#autoApply--[`autoApply`], then all entity attributes with the same target type are going to be converted automatically.
+If the `AttributeConverter` uses http://docs.oracle.com/javaee/7/api/javax/persistence/Converter.html#autoApply--[`autoApply`], then all entity attributes with the same target type are converted automatically.
 
 See the <<chapters/domain/basic_types.adoc#basic-enums-attribute-converter, `AttributeConverter`>> section for more info.
 
@@ -760,7 +760,7 @@ See the <<chapters/domain/inheritance.adoc#entity-inheritance-discriminator, Dis
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/DynamicInsert.html[`@DynamicInsert`] annotation is used to specify that the `INSERT` SQL statement should be generated whenever an entity is to be persisted.
 
 By default, Hibernate uses a cached `INSERT` statement that sets all table columns.
-When the entity is annotated with the `@DynamicInsert` annotation, the `PreparedStatement` is going to include only the non-null columns.
+When the entity is annotated with the `@DynamicInsert` annotation, the `PreparedStatement` includes only the non-null columns.
 
 See the <<chapters/domain/basic_types.adoc#mapping-generated-CreationTimestamp,`@CreationTimestamp` mapping>> section for more info on how `@DynamicInsert` works.
 
@@ -770,7 +770,7 @@ See the <<chapters/domain/basic_types.adoc#mapping-generated-CreationTimestamp,`
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/DynamicUpdate.html[`@DynamicUpdate`] annotation is used to specify that the `UPDATE` SQL statement should be generated whenever an entity is modified.
 
 By default, Hibernate uses a cached `UPDATE` statement that sets all table columns.
-When the entity is annotated with the `@DynamicUpdate` annotation, the `PreparedStatement` is going to include only the columns whose values have been changed.
+When the entity is annotated with the `@DynamicUpdate` annotation, the `PreparedStatement` includes only the columns whose values have been changed.
 
 See the <<chapters/pc/PersistenceContext.adoc#pc-managed-state-dynamic-update,`@DynamicUpdate`>> section for more info.
 

@@ -163,7 +163,7 @@ The `@DiscriminatorValue` defines the mapping between the result of the `@Discri
 
 Aside from the usual discriminator values assigned to each individual subclass type, the `@DiscriminatorValue` can take two additional values:
 
-`null`:: If the underlying discriminator column is null, the `null` discriminator mapping is going to be used.
+`null`:: If the underlying discriminator column is null, the `null` discriminator mapping is used.
 `not null`:: If the underlying discriminator column has a not-null value that is not explicitly mapped to any entity, the `not-null` discriminator mapping used.
 
 To understand how these two values work, consider the following entity mapping:
@@ -358,7 +358,7 @@ include::{sourcedir}/polymorphism/ExplicitPolymorphismTest.java[tags=entity-inhe
 ====
 
 We can now query against the `DomainModelEntity` interface,
-and Hibernate is going to fetch only the entities that are either mapped with
+and Hibernate will fetch only the entities that are either mapped with
 `@Polymorphism(type = PolymorphismType.IMPLICIT)`
 or they are not annotated at all with the `@Polymorphism` annotation (implying the IMPLICIT behavior):
 

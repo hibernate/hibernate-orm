@@ -212,6 +212,29 @@ public final class StringHelper {
 		return buf.toString();
 	}
 
+	/**
+	 * Used to find the ordinal parameters (e.g. '?1') in a string.
+	 */
+	public static int indexOfIdentifierWord(String str, String word) {
+		if ( str == null || str.length() == 0 || word == null ) {
+			return -1;
+		}
+
+		int position = 0;
+		while ( position < str.length() ) {
+			position = str.indexOf( word, position );
+			if (
+					( position == 0 || !Character.isJavaIdentifierPart( str.charAt( position - 1 ) ) ) &&
+					( position + word.length() == str.length() || !Character.isJavaIdentifierPart( str.charAt( position + word.length() ) ) )
+			) {
+				return position;
+			}
+			position = position + 1;
+		}
+
+		return -1;
+	}
+
 	public static char getLastNonWhitespaceCharacter(String str) {
 		if ( str != null && str.length() > 0 ) {
 			for ( int i = str.length() - 1; i >= 0; i-- ) {

@@ -152,9 +152,9 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			String[] formulaTemplates,
 			Mapping factory) {
 		Type existingType = typesByPropertyPath.get( path );
-		if ( existingType != null ) {
+		if ( existingType != null || typesByPropertyPath.containsKey( path ) ) {
 			// If types match or the new type is not an association type, there is nothing for us to do
-			if ( type == existingType || !( type instanceof AssociationType ) ) {
+			if ( type == existingType || existingType == null || !( type instanceof AssociationType ) ) {
 				logDuplicateRegistration(
 						path,
 						existingType,
@@ -173,12 +173,12 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 				return;
 			}
 
-			Type newType;
+			Type newType = null;
 			MetadataImplementor metadata = (MetadataImplementor) factory;
 
 			if ( type instanceof AnyType ) {
-				// TODO: not sure how to handle any types
-				throw new UnsupportedOperationException( "Not yet implemented!" );
+				// TODO: not sure how to handle any types. For now we just return and let the first type dictate what type the property has...
+				return;
 			}
 			else if ( type instanceof CollectionType ) {
 				Collection thisCollection = metadata.getCollectionBinding( ( (CollectionType) existingType ).getRole() );
@@ -193,7 +193,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 					return;
 				}
 
-				// When we discover incompatible types, we register "null" as property type to signal that the property is not resolvable on the parent type
+				// When we discover incompatible types, we use "null" as property type to signal that the property is not resolvable on the parent type
 				newType = null;
 				if ( LOG.isTraceEnabled() ) {
 					LOG.tracev(
@@ -219,9 +219,6 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 				}
 
 				newType = getCommonType( metadata, entityType1, entityType2 );
-			}
-			else {
-				throw new IllegalStateException( "Unexpected association type: " + type );
 			}
 
 			typesByPropertyPath.put( path, newType );

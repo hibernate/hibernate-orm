@@ -274,7 +274,7 @@ public class DetachedCriteria implements CriteriaSpecification, Serializable {
 	}
 
 	/**
-	 * Creates an nested DetachedCriteria representing the association path.
+	 * Creates a nested DetachedCriteria representing the association path.
 	 *
 	 * @param associationPath The association path
 	 * @param alias The alias to apply to that association path
@@ -286,7 +286,7 @@ public class DetachedCriteria implements CriteriaSpecification, Serializable {
 	}
 
 	/**
-	 * Creates an nested DetachedCriteria representing the association path.
+	 * Creates a nested DetachedCriteria representing the association path.
 	 *
 	 * @param associationPath The association path
 	 *
@@ -297,7 +297,7 @@ public class DetachedCriteria implements CriteriaSpecification, Serializable {
 	}
 
 	/**
-	 * Creates an nested DetachedCriteria representing the association path, specifying the type of join to use.
+	 * Creates a nested DetachedCriteria representing the association path, specifying the type of join to use.
 	 *
 	 * @param associationPath The association path
 	 * @param joinType The type of join to use
@@ -309,7 +309,7 @@ public class DetachedCriteria implements CriteriaSpecification, Serializable {
 	}
 
 	/**
-	 * Creates an nested DetachedCriteria representing the association path, specifying the type of join to use.
+	 * Creates a nested DetachedCriteria representing the association path, specifying the type of join to use.
 	 *
 	 * @param associationPath The association path
 	 * @param alias The alias to associate with this "join".
@@ -322,7 +322,7 @@ public class DetachedCriteria implements CriteriaSpecification, Serializable {
 	}
 
 	/**
-	 * Creates an nested DetachedCriteria representing the association path, specifying the type of join to use and
+	 * Creates a nested DetachedCriteria representing the association path, specifying the type of join to use and
 	 * an additional join restriction.
 	 *
 	 * @param associationPath The association path

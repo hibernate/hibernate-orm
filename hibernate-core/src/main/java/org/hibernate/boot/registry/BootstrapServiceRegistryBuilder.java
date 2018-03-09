@@ -156,7 +156,7 @@ public class BootstrapServiceRegistryBuilder {
 	/**
 	 * Applies one or more strategy selectors announced as available by the passed announcer.
 	 *
-	 * @param strategyRegistrationProvider An provider for one or more available selectors
+	 * @param strategyRegistrationProvider A provider for one or more available selectors
 	 *
 	 * @return {@code this}, for method chaining
 	 *

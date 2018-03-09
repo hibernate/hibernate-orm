@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Entity with an List of Embeddable Components that have ManyToOne relationships
+ * Entity with a List of Embeddable Components that have ManyToOne relationships
  *
  * @author Cankut Guven
  */

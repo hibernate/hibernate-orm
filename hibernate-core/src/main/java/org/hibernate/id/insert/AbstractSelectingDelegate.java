@@ -17,7 +17,7 @@ import org.hibernate.pretty.MessageHelper;
 
 /**
  * Abstract InsertGeneratedIdentifierDelegate implementation where the
- * underlying strategy requires an subsequent select after the insert
+ * underlying strategy requires a subsequent select after the insert
  * to determine the generated identifier.
  *
  * @author Steve Ebersole

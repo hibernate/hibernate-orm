@@ -505,7 +505,7 @@ joinElement! {
 	}
 	;
 
-// Returns an node type integer that represents the join type
+// Returns a node type integer that represents the join type
 // tokens.
 joinType returns [int j] {
 	j = INNER;

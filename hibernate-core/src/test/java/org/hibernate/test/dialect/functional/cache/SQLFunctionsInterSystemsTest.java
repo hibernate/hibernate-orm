@@ -72,7 +72,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		simple.setCount(2);
 		s.save( simple );
 
-		// Test to make sure allocating an specified object operates correctly.
+		// Test to make sure allocating a specified object operates correctly.
 		assertTrue(
 				s.createQuery( "select new org.hibernate.test.legacy.S(s.count, s.address) from Simple s" ).list().size() == 1
 		);

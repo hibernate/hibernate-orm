@@ -4,7 +4,7 @@
 :extrasdir: extras/collections
 
 Naturally Hibernate also allows to persist collections. 
-These persistent collections can contain almost any other Hibernate type, including: basic types, custom types, components and references to other entities. 
+These persistent collections can contain almost any other Hibernate type, including: basic types, custom types, embeddables and references to other entities.
 In this context, the distinction between value and reference semantics is very important. 
 An object in a collection might be handled with _value_ semantics (its life cycle being fully depends on the collection owner), 
 or it might be a reference to another entity with its own life cycle. 
@@ -465,7 +465,7 @@ include::{sourcedir}/UnidirectionalSetTest.java[tags=collections-unidirectional-
 ====
 
 The unidirectional set lifecycle is similar to that of the <<collections-unidirectional-bag>>, so it can be omitted.
-The only difference is that `Set` doesn't allow duplicates, but this constraint is enforced by the Java object contract rather then the database mapping.
+The only difference is that `Set` doesn't allow duplicates, but this constraint is enforced by the Java object contract rather than the database mapping.
 
 [NOTE]
 ====
@@ -540,7 +540,7 @@ include::{sourcedir}/UnidirectionalComparatorSortedSetTest.java[lines=75..77,ind
 [[collections-map]]
 ==== Maps
 
-A `java.util.Map` is ternary association because it required a parent entity a map key and a value.
+A `java.util.Map` is a ternary association because it requires a parent entity, a map key and a value.
 An entity can either be a map key or a map value, depending on the mapping.
 Hibernate allows using the following map keys:
 

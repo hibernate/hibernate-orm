@@ -319,7 +319,7 @@ class MetadataContext {
 				);
 			}
 		}
-		//an MappedSuperclass can have no identifier if the id is set below in the hierarchy
+		//a MappedSuperclass can have no identifier if the id is set below in the hierarchy
 		else if ( mappingType.getIdentifierMapper() != null ) {
 			@SuppressWarnings("unchecked")
 			Iterator<Property> propertyIterator = mappingType.getIdentifierMapper().getPropertyIterator();

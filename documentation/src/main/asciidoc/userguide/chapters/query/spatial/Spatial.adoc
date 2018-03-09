@@ -255,7 +255,7 @@ jts_geometry::
 geolatte_geometry::
 	Handled by `org.hibernate.spatial.GeolatteGeometryType`, it maps a database geometry column type to an `org.geolatte.geom.Geometry` entity property type.
 
-It suffices to declare a property as either a JTS or an Geolatte-geom `Geometry` and Hibernate Spatial will map it using the
+It suffices to declare a property as either a JTS or a Geolatte-geom `Geometry` and Hibernate Spatial will map it using the
 relevant type.
 
 Here is an example using JTS:

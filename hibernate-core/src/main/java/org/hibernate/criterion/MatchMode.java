@@ -7,7 +7,7 @@
 package org.hibernate.criterion;
 
 /**
- * Represents an strategy for matching strings using "like".
+ * Represents a strategy for matching strings using "like".
  *
  * @author Gavin King
  * @see Example#enableLike(MatchMode)

@@ -132,7 +132,7 @@ public class Property extends PropertyProjection {
 	}
 
 	/**
-	 * Creates an non-equality restriction.
+	 * Creates a non-equality restriction.
 	 *
 	 * @param value The value to check against
 	 *
@@ -145,7 +145,7 @@ public class Property extends PropertyProjection {
 	}
 
 	/**
-	 * Creates an non-equality restriction capable of also rendering as IS NOT NULL if the given value is {@code null}
+	 * Creates a non-equality restriction capable of also rendering as IS NOT NULL if the given value is {@code null}
 	 *
 	 * @param value The value to check against
 	 *
@@ -241,7 +241,7 @@ public class Property extends PropertyProjection {
 	}
 
 	/**
-	 * Creates an non-equality restriction between 2 properties
+	 * Creates a non-equality restriction between 2 properties
 	 *
 	 * @param other The other property to compare against
 	 *
@@ -255,7 +255,7 @@ public class Property extends PropertyProjection {
 	}
 
 	/**
-	 * Creates an non-equality restriction between 2 properties
+	 * Creates a non-equality restriction between 2 properties
 	 *
 	 * @param other The other property to compare against
 	 *
@@ -269,7 +269,7 @@ public class Property extends PropertyProjection {
 	}
 
 	/**
-	 * Creates an less-than-or-equal-to restriction between 2 properties
+	 * Creates a less-than-or-equal-to restriction between 2 properties
 	 *
 	 * @param other The other property to compare against
 	 *
@@ -283,7 +283,7 @@ public class Property extends PropertyProjection {
 	}
 
 	/**
-	 * Creates an less-than-or-equal-to restriction between 2 properties
+	 * Creates a less-than-or-equal-to restriction between 2 properties
 	 *
 	 * @param other The other property to compare against
 	 *
@@ -297,7 +297,7 @@ public class Property extends PropertyProjection {
 	}
 
 	/**
-	 * Creates an greater-than-or-equal-to restriction between 2 properties
+	 * Creates a greater-than-or-equal-to restriction between 2 properties
 	 *
 	 * @param other The other property to compare against
 	 *
@@ -311,7 +311,7 @@ public class Property extends PropertyProjection {
 	}
 
 	/**
-	 * Creates an greater-than-or-equal-to restriction between 2 properties
+	 * Creates a greater-than-or-equal-to restriction between 2 properties
 	 *
 	 * @param other The other property to compare against
 	 *
@@ -325,7 +325,7 @@ public class Property extends PropertyProjection {
 	}
 
 	/**
-	 * Creates an less-than restriction between 2 properties
+	 * Creates a less-than restriction between 2 properties
 	 *
 	 * @param other The other property to compare against
 	 *
@@ -339,7 +339,7 @@ public class Property extends PropertyProjection {
 	}
 
 	/**
-	 * Creates an less-than restriction between 2 properties
+	 * Creates a less-than restriction between 2 properties
 	 *
 	 * @param other The other property to compare against
 	 *
@@ -353,7 +353,7 @@ public class Property extends PropertyProjection {
 	}
 
 	/**
-	 * Creates an greater-than restriction between 2 properties
+	 * Creates a greater-than restriction between 2 properties
 	 *
 	 * @param other The other property to compare against
 	 *
@@ -367,7 +367,7 @@ public class Property extends PropertyProjection {
 	}
 
 	/**
-	 * Creates an greater-than restriction between 2 properties
+	 * Creates a greater-than restriction between 2 properties
 	 *
 	 * @param other The other property to compare against
 	 *

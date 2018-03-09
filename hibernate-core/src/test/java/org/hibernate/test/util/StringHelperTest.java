@@ -42,4 +42,16 @@ public class StringHelperTest extends BaseUnitTestCase {
 		assertEquals( STRING_HELPER_NAME, StringHelper.collapseQualifierBase( STRING_HELPER_NAME, BASE_PACKAGE ) );
 		assertEquals( "o.h.internal.util.StringHelper", StringHelper.collapseQualifierBase( STRING_HELPER_FQN, BASE_PACKAGE ) );
 	}
+
+	@Test
+	public void testFindIdentifierWord() {
+		assertEquals( StringHelper.indexOfIdentifierWord( "", "word" ), -1 );
+		assertEquals( StringHelper.indexOfIdentifierWord( null, "word" ), -1 );
+		assertEquals( StringHelper.indexOfIdentifierWord( "sentence", null ), -1 );
+		assertEquals( StringHelper.indexOfIdentifierWord( "where name=?13 and description=?1", "?1" ), 31 );
+		assertEquals( StringHelper.indexOfIdentifierWord( "where name=?13 and description=?1 and category_id=?4", "?1" ), 31 );
+		assertEquals( StringHelper.indexOfIdentifierWord( "?1", "?1" ), 0 );
+		assertEquals( StringHelper.indexOfIdentifierWord( "no identifier here", "?1" ), -1 );
+		assertEquals( StringHelper.indexOfIdentifierWord( "some text ?", "?" ), 10 );
+	}
 }

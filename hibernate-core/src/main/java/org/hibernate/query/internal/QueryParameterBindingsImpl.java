@@ -532,7 +532,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 				sourceToken = "?" + OrdinalParameterDescriptor.class.cast( sourceParam ).getPosition();
 			}
 
-			final int loc = queryString.indexOf( sourceToken );
+			final int loc = StringHelper.indexOfIdentifierWord( queryString, sourceToken );
 
 			if ( loc < 0 ) {
 				continue;

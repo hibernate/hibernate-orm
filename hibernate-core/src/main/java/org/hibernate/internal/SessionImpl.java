@@ -17,7 +17,6 @@ import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -181,7 +180,6 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
-import org.hibernate.type.Type;
 
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
@@ -210,16 +208,14 @@ public final class SessionImpl
 	private static final boolean TRACE_ENABLED = log.isTraceEnabled();
 
 
-	private static final List<String> ENTITY_MANAGER_SPECIFIC_PROPERTIES = new ArrayList<String>();
-
-	static {
-		ENTITY_MANAGER_SPECIFIC_PROPERTIES.add( JPA_LOCK_SCOPE );
-		ENTITY_MANAGER_SPECIFIC_PROPERTIES.add( JPA_LOCK_TIMEOUT );
-		ENTITY_MANAGER_SPECIFIC_PROPERTIES.add( AvailableSettings.FLUSH_MODE );
-		ENTITY_MANAGER_SPECIFIC_PROPERTIES.add( JPA_SHARED_CACHE_RETRIEVE_MODE );
-		ENTITY_MANAGER_SPECIFIC_PROPERTIES.add( JPA_SHARED_CACHE_STORE_MODE );
-		ENTITY_MANAGER_SPECIFIC_PROPERTIES.add( QueryHints.SPEC_HINT_TIMEOUT );
-	}
+	private static final String[] ENTITY_MANAGER_SPECIFIC_PROPERTIES = {
+			JPA_LOCK_SCOPE,
+			JPA_LOCK_TIMEOUT,
+			AvailableSettings.FLUSH_MODE,
+			JPA_SHARED_CACHE_RETRIEVE_MODE,
+			JPA_SHARED_CACHE_STORE_MODE,
+			QueryHints.SPEC_HINT_TIMEOUT
+	};
 
 	private transient SessionOwner sessionOwner;
 
@@ -312,10 +308,10 @@ public final class SessionImpl
 	}
 
 	private void applyEntityManagerSpecificProperties() {
+		final Map<String, Object> properties = getFactory().getProperties();
 		for ( String key : ENTITY_MANAGER_SPECIFIC_PROPERTIES ) {
-			final Map<String, Object> properties = getFactory().getProperties();
-			if ( getFactory().getProperties().containsKey( key ) ) {
-				this.properties.put( key, getFactory().getProperties().get( key ) );
+			if ( properties.containsKey( key ) ) {
+				this.properties.put( key, properties.get( key ) );
 			}
 		}
 	}

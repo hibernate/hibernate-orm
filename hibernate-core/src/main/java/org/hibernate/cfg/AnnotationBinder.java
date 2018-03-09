@@ -479,7 +479,7 @@ public final class AnnotationBinder {
 	 * @param clazzToProcess entity to bind as {@code XClass} instance
 	 * @param inheritanceStatePerClass Meta data about the inheritance relationships for all mapped classes
 	 *
-	 * @throws MappingException in case there is an configuration error
+	 * @throws MappingException in case there is a configuration error
 	 */
 	public static void bindClass(
 			XClass clazzToProcess,

@@ -51,7 +51,7 @@ public interface Type extends Serializable {
 	 * A {@link CollectionType} is additionally an {@link AssociationType}; so if this method returns true,
 	 * {@link #isAssociationType()} should also return true.
 	 *
-	 * @return True if this type is also an {@link CollectionType} implementor; false otherwise.
+	 * @return True if this type is also a {@link CollectionType} implementor; false otherwise.
 	 */
 	boolean isCollectionType();
 
@@ -82,7 +82,7 @@ public interface Type extends Serializable {
 	 * version of {@code (type instanceof CompositeType.class)}.  A component type may own collections or
 	 * associations and hence must provide certain extra functionality.
 	 *
-	 * @return True if this type is also an {@link CompositeType} implementor; false otherwise.
+	 * @return True if this type is also a {@link CompositeType} implementor; false otherwise.
 	 */
 	boolean isComponentType();
 

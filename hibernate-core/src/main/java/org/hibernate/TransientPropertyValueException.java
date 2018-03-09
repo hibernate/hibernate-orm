@@ -20,7 +20,7 @@ public class TransientPropertyValueException extends TransientObjectException {
 	private final String propertyName;
 
 	/**
-	 * Constructs an {@link TransientPropertyValueException} instance.
+	 * Constructs a {@link TransientPropertyValueException} instance.
 	 *
 	 * @param message - the exception message;
 	 * @param transientEntityName - the entity name for the transient entity

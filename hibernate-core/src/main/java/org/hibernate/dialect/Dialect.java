@@ -2671,7 +2671,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Return the limit that the underlying database places on the number elements in an {@code IN} predicate.
+	 * Return the limit that the underlying database places on the number of elements in an {@code IN} predicate.
 	 * If the database defines no such limits, simply return zero or less-than-zero.
 	 *
 	 * @return int The limit, or zero-or-less to indicate no limit.
@@ -2684,7 +2684,7 @@ public abstract class Dialect implements ConversionContext {
 	 * HHH-4635
 	 * Oracle expects all Lob values to be last in inserts and updates.
 	 *
-	 * @return boolean True of Lob values should be last, false if it
+	 * @return boolean True if Lob values should be last, false if it
 	 * does not matter.
 	 */
 	public boolean forceLobAsLastValue() {

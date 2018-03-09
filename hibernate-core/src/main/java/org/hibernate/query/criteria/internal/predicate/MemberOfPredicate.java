@@ -18,7 +18,7 @@ import org.hibernate.query.criteria.internal.expression.LiteralExpression;
 import org.hibernate.query.criteria.internal.path.PluralAttributePath;
 
 /**
- * Models an <tt>[NOT] MEMBER OF</tt> restriction
+ * Models a <tt>[NOT] MEMBER OF</tt> restriction
  *
  * @author Steve Ebersole
  */

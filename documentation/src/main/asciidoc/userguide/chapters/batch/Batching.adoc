@@ -245,7 +245,7 @@ include::{sourcedir}/BatchTest.java[tags=batch-bulk-hql-delete-example]
 
 Method `Query.executeUpdate()` returns an `int` value, which indicates the number of entities effected by the operation.
 This may or may not correlate to the number of rows effected in the database.
-An JPQL/HQL bulk operation might result in multiple SQL statements being executed, such as for joined-subclass.
+A JPQL/HQL bulk operation might result in multiple SQL statements being executed, such as for joined-subclass.
 In the example of joined-subclass, a `DELETE` against one of the subclasses may actually result in deletes in the tables underlying the join, or further down the inheritance hierarchy.
 
 ==== HQL syntax for INSERT

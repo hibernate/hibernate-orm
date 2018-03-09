@@ -448,7 +448,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void invalidOnDeleteAnnotation(String entityName);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Root entity should not hold an PrimaryKeyJoinColum(s), will be ignored: %s", id = 137)
+	@Message(value = "Root entity should not hold a PrimaryKeyJoinColum(s), will be ignored: %s", id = 137)
 	void invalidPrimaryKeyJoinColumnAnnotation(String className);
 
 	@LogMessage(level = WARN)

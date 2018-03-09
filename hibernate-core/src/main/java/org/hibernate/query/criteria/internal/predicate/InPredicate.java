@@ -25,7 +25,7 @@ import org.hibernate.query.criteria.internal.expression.ParameterExpressionImpl;
 import org.hibernate.type.Type;
 
 /**
- * Models an <tt>[NOT] IN</tt> restriction
+ * Models a <tt>[NOT] IN</tt> restriction
  *
  * @author Steve Ebersole
  */

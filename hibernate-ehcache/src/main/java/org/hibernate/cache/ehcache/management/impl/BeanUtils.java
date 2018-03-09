@@ -113,7 +113,7 @@ public class BeanUtils {
 			throw new NoSuchFieldException( propertyName );
 		}
 		else if ( !(o instanceof Number) ) {
-			throw new IllegalArgumentException( propertyName + " not an Number" );
+			throw new IllegalArgumentException( propertyName + " not a Number" );
 		}
 		return ((Number) o).longValue();
 	}

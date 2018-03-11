@@ -13,7 +13,6 @@ import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Generated;
 import javax.annotation.processing.FilerException;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -199,7 +198,7 @@ public final class ClassWriter {
 	private static String writeGeneratedAnnotation(MetaEntity entity, Context context) {
 		StringBuilder generatedAnnotation = new StringBuilder();
 		generatedAnnotation.append( "@" )
-				.append( entity.importType( Generated.class.getName() ) )
+				.append( entity.importType( "javax.annotation.Generated" ) )
 				.append( "(value = \"" )
 				.append( JPAMetaModelEntityProcessor.class.getName() );
 		if ( context.addGeneratedDate() ) {

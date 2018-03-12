@@ -247,4 +247,13 @@ public interface DeprecationLogger extends BasicLogger {
 					"5.3 in upgrading.  It will be removed in a later version."
 	)
 	void logUseOfDeprecatedZeroBasedJdbcStyleParams();
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000025,
+			value = "The legacy method org.hibernate.Session#getFlushMode() which used to return a org.hibernate.FlushMode has been removed, please" +
+					"replace usage with org.hibernate.Session#getHibernateFlushMode() if you need the Hibernate FlushMode or use the alternatives specified by JPA"
+	)
+	void logRemovedGetFlushModeMethodBeingUsed();
+
 }

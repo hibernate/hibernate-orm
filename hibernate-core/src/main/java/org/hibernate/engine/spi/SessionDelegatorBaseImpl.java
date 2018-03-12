@@ -359,6 +359,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public FlushMode getFlushMode$$bridge() {
+		return delegate.getFlushMode$$bridge();
+	}
+
+	@Override
 	public void lock(Object entity, LockModeType lockMode) {
 		delegate.lock( entity, lockMode );
 	}

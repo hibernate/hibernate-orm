@@ -20,6 +20,11 @@ configurations {
     tests {
         description = 'Configuration for the produced test jar'
     }
+    bridger {
+        description = "To run the JBoss Bridger instrumentation tool"
+        //We use this tool to help maintain binary backwards compatibility;
+        //see also https://github.com/dmlloyd/bridger
+    }
 }
 
 dependencies {
@@ -101,6 +106,21 @@ dependencies {
 
     testCompile libraries.jboss_ejb_spec_jar
     testCompile libraries.jboss_annotation_spec_jar
+
+    bridger( "org.jboss.bridger:bridger:1.5.Final" )
+}
+
+task instrument(type: JavaExec) {
+    classpath = configurations.bridger
+
+    main = 'org.jboss.bridger.Bridger'
+
+    // arguments to pass to Bridger:
+    args sourceSets.main.output.classesDirs
+}
+
+compileJava.doLast {
+    tasks.instrument.execute()
 }
 
 jar {

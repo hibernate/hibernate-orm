@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public abstract class AbstractDelegateSessionImplementor extends SessionDelegatorBaseImpl implements SessionImplementor {
+public abstract class AbstractDelegateSessionImplementor extends SessionDelegatorBaseImpl {
 	public AbstractDelegateSessionImplementor(SessionImplementor delegate) {
 		super( delegate );
 	}

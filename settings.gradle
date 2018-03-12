@@ -29,6 +29,7 @@ include 'hibernate-ehcache'
 include 'hibernate-infinispan'
 
 include 'hibernate-orm-modules'
+include 'compatibility-testing'
 
 include 'documentation'
 include 'release'

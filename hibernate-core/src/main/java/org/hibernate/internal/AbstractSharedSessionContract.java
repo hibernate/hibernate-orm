@@ -60,6 +60,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.jpa.spi.TupleBuilderTransformer;
@@ -543,6 +544,21 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public FlushMode getHibernateFlushMode() {
+		return flushMode;
+	}
+
+	/**
+	 * Method "FlushMode getFlushMode()" is the legacy contract, which can no longer be implemented with
+	 * normal Java source code as it has the same name of a method defined by the JPA specification, yet
+	 * having a different return type.
+	 * We include this specially named method to maintain binary compatibility:
+	 * using https://github.com/dmlloyd/bridger we can generate a bridge method after compilation which
+	 * will maintain compatibility with applications which have been compiled for Hibernate ORM 5.1 and
+	 * previous versions.
+	 */
+	public FlushMode getFlushMode$$bridge() {
+		DeprecationLogger.DEPRECATION_LOGGER.logRemovedGetFlushModeMethodBeingUsed();
+		checkTransactionSynchStatus();
 		return flushMode;
 	}
 

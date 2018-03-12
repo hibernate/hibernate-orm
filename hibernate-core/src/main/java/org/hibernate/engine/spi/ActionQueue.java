@@ -1091,9 +1091,20 @@ public class ActionQueue {
 			 */
 			boolean hasParent(BatchIdentifier batchIdentifier) {
 				return (
-					parent == batchIdentifier ||
-					( parent != null && parent.hasParent( batchIdentifier ) ) ||
-					( parentEntityNames.contains( batchIdentifier.getEntityName() ) )
+					parent == batchIdentifier
+					|| ( parentEntityNames.contains( batchIdentifier.getEntityName() ) )
+					|| parent != null && parent.hasParent( batchIdentifier, new ArrayList<>() )
+				);
+			}
+
+			private boolean hasParent(BatchIdentifier batchIdentifier, List<BatchIdentifier> stack) {
+				if ( !stack.contains( this ) && parent != null ) {
+					stack.add( this );
+					return parent.hasParent( batchIdentifier, stack );
+				}
+				return (
+					parent == batchIdentifier
+					|| parentEntityNames.contains( batchIdentifier.getEntityName() )
 				);
 			}
 		}

@@ -515,11 +515,6 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		final int inExprLimit = dialect.getInExpressionCountLimit();
 
 		for ( Map.Entry<QueryParameter, QueryParameterListBinding> entry : parameterListBindingMap.entrySet() ) {
-			final String sourceToken = getSourceToken( entry.getKey() );
-			queryString = StringHelper.replace( queryString, sourceToken, sourceToken + "_tmp", true );
-		}
-
-		for ( Map.Entry<QueryParameter, QueryParameterListBinding> entry : parameterListBindingMap.entrySet() ) {
 			final QueryParameter sourceParam = entry.getKey();
 			final Collection bindValues = entry.getValue().getBindValues();
 
@@ -531,9 +526,17 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 						bindValues.size()
 				);
 			}
-			final String sourceToken = getSourceToken( sourceParam ) + "_tmp";
+
+			final String sourceToken;
+			if ( sourceParam instanceof NamedParameterDescriptor ) {
+				sourceToken = ":" + NamedParameterDescriptor.class.cast( sourceParam ).getName();
+			}
+			else {
+				sourceToken = "?" + OrdinalParameterDescriptor.class.cast( sourceParam ).getPosition();
+			}
 
 			final int loc = queryString.indexOf( sourceToken );
+
 			if ( loc < 0 ) {
 				continue;
 			}
@@ -565,12 +568,12 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 					);
 				}
 				else {
-					TreeMap<QueryParameter, QueryParameterBinding> sortedPositionalParamBindingMap = getSortedPositionalParamBindingMap();
 					Integer nextPositionNumber;
 					if ( i == 0 ) {
 						nextPositionNumber = sourceParam.getPosition();
 					}
 					else {
+						TreeMap<QueryParameter, QueryParameterBinding> sortedPositionalParamBindingMap = getSortedPositionalParamBindingMap();
 						nextPositionNumber = sortedPositionalParamBindingMap.size() > 0
 								? sortedPositionalParamBindingMap.lastKey().getPosition() + 1
 								: 1;
@@ -607,16 +610,4 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 		return queryString;
 	}
-
-	private String getSourceToken(QueryParameter sourceParam) {
-		final String sourceToken;
-		if ( sourceParam instanceof NamedParameterDescriptor ) {
-			sourceToken = ":" + NamedParameterDescriptor.class.cast( sourceParam ).getName();
-		}
-		else {
-			sourceToken = "?" + OrdinalParameterDescriptor.class.cast( sourceParam ).getPosition();
-		}
-		return sourceToken;
-	}
-
 }

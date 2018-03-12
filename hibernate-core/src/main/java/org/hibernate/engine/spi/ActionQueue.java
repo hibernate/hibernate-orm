@@ -1028,6 +1028,8 @@ public class ActionQueue {
 
 		private static class BatchIdentifier {
 
+			private boolean hasParentBeenVisited;
+			private boolean hasParent;
 			private final String entityName;
 			private final String rootEntityName;
 
@@ -1101,10 +1103,15 @@ public class ActionQueue {
 			 * @return This {@link BatchIdentifier} has a parent matching the given {@link BatchIdentifier reference
 			 */
 			boolean hasParent(BatchIdentifier batchIdentifier) {
+				if ( parent != null && !hasParentBeenVisited ) {
+					hasParentBeenVisited = true;
+					hasParent = parent.hasParent( batchIdentifier );
+				}
+
 				return (
-					parent == batchIdentifier ||
-					( parent != null && parent.hasParent( batchIdentifier ) ) ||
-					( parentEntityNames.contains( batchIdentifier.getEntityName() ) )
+						parent == batchIdentifier
+								|| hasParent
+								|| ( parentEntityNames.contains( batchIdentifier.getEntityName() ) )
 				);
 			}
 		}

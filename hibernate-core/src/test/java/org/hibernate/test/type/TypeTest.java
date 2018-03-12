@@ -5,30 +5,12 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.type;
-import java.io.Serializable;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.Currency;
-import java.util.GregorianCalendar;
-import java.util.Locale;
-import java.util.SimpleTimeZone;
-import java.util.TimeZone;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.junit.Before;
-import org.junit.Test;
-
-import org.hibernate.EntityMode;
-import org.hibernate.Session;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BigDecimalType;
 import org.hibernate.type.BigIntegerType;
@@ -61,8 +43,19 @@ import org.hibernate.type.TimeZoneType;
 import org.hibernate.type.TimestampType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.YesNoType;
+import org.junit.Test;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Currency;
+import java.util.GregorianCalendar;
+import java.util.Locale;
+import java.util.SimpleTimeZone;
+import java.util.TimeZone;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -73,25 +66,6 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 public class TypeTest extends BaseUnitTestCase {
-	private SessionImplementor session;
-
-	@Before
-	public void setUp() throws Exception {
-		session = (SessionImplementor) Proxy.newProxyInstance(
-				getClass().getClassLoader(),
-				new Class[] { Session.class, SessionImplementor.class },
-				new SessionProxyHandler()
-		);
-	}
-
-	public static class SessionProxyHandler implements InvocationHandler {
-		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-			if ( "getEntityMode".equals( method.getName() ) ) {
-				return EntityMode.POJO;
-			}
-			throw new UnsupportedOperationException( "Unexpected method call : " + method.getName() );
-		}
-	}
 
 	@Test
 	public void testBigDecimalType() {
@@ -360,6 +334,7 @@ public class TypeTest extends BaseUnitTestCase {
 	}
 
 	protected <T> void runBasicTests(AbstractSingleColumnStandardBasicType<T> type, T original, T copy, T different) {
+		final SessionImpl session = null; //Not really used
 		final boolean nonCopyable = Class.class.isInstance( original ) || Currency.class.isInstance( original );
 		if ( ! nonCopyable ) {
 			// these checks exclude classes which cannot really be cloned (singetons/enums)

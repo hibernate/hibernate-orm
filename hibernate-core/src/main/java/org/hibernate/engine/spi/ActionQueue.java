@@ -1183,7 +1183,7 @@ public class ActionQueue {
 
 			boolean sorted = false;
 
-			long maxIterations = latestBatches.size() * 2;
+			long maxIterations = latestBatches.size() * latestBatches.size();
 			long iterations = 0;
 
 			sort:

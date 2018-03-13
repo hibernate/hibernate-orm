@@ -16,9 +16,8 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.cache.spi.OptimisticCacheSource;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -29,6 +28,7 @@ import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -48,10 +48,10 @@ import org.hibernate.type.VersionType;
  *         to be handled by the persister
  *     </li>
  *     <li>
- *         {@link EntityRegionAccessStrategy} - the second level caching strategy for this entity
+ *         {@link org.hibernate.cache.spi.access.EntityDataAccess} - the second level caching strategy for this entity
  *     </li>
  *     <li>
- *         {@link NaturalIdRegionAccessStrategy} - the second level caching strategy for the natural-id
+ *         {@link org.hibernate.cache.spi.access.NaturalIdDataAccess} - the second level caching strategy for the natural-id
  *         defined for this entity, if one
  *     </li>
  *     <li>
@@ -66,7 +66,7 @@ import org.hibernate.type.VersionType;
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
-public interface EntityPersister extends OptimisticCacheSource, EntityDefinition {
+public interface EntityPersister extends EntityDefinition {
 
 	/**
 	 * The property name of the "special" identifier property in HQL
@@ -97,6 +97,7 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	 */
 	SessionFactoryImplementor getFactory();
 
+	NavigableRole getNavigableRole();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // stuff that is persister-centric and/or EntityInfo-centric ~~~~~~~~~~~~~~
@@ -517,7 +518,7 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	/**
 	 * Get the cache (optional operation)
 	 */
-	EntityRegionAccessStrategy getCacheAccessStrategy();
+	EntityDataAccess getCacheAccessStrategy();
 	/**
 	 * Get the cache structure
 	 */
@@ -533,7 +534,7 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	/**
 	 * Get the NaturalId cache (optional operation)
 	 */
-	NaturalIdRegionAccessStrategy getNaturalIdCacheAccessStrategy();
+	NaturalIdDataAccess getNaturalIdCacheAccessStrategy();
 
 	/**
 	 * Get the user-visible metadata for the class (optional operation)

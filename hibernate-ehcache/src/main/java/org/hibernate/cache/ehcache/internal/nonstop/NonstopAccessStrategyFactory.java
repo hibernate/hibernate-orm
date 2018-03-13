@@ -11,9 +11,6 @@ import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheNaturalIdRegion;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 
 /**
  * Implementation of {@link org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory} that takes care of Nonstop cache exceptions using

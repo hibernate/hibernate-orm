@@ -11,7 +11,7 @@ import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Environment;
-import org.hibernate.stat.SecondLevelCacheStatistics;
+import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -62,8 +62,8 @@ public abstract class EhCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		SecondLevelCacheStatistics slcs = s.getSessionFactory().getStatistics()
-				.getSecondLevelCacheStatistics( Item.class.getName() );
+		CacheRegionStatistics slcs = s.getSessionFactory().getStatistics()
+				.getDomainDataRegionStatistics( Item.class.getName() );
 
 		assertEquals( slcs.getPutCount(), 1 );
 		assertEquals( slcs.getElementCountInMemory(), 1 );
@@ -104,7 +104,7 @@ public abstract class EhCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		sessionFactory().getCache().evictEntityRegion( Item.class.getName() );
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
-		SecondLevelCacheStatistics statistics = stats.getSecondLevelCacheStatistics( Item.class.getName() );
+		CacheRegionStatistics statistics = stats.getDomainDataRegionStatistics( Item.class.getName() );
 		Map cacheEntries = statistics.getEntries();
 		assertEquals( 0, cacheEntries.size() );
 	}
@@ -155,8 +155,8 @@ public abstract class EhCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 
 		// check the version value in the cache...
-		SecondLevelCacheStatistics slcs = sessionFactory().getStatistics()
-				.getSecondLevelCacheStatistics( VersionedItem.class.getName() );
+		CacheRegionStatistics slcs = sessionFactory().getStatistics()
+				.getDomainDataRegionStatistics( VersionedItem.class.getName() );
 
 		Object entry = slcs.getEntries().get( item.getId() );
 		Long cachedVersionValue;

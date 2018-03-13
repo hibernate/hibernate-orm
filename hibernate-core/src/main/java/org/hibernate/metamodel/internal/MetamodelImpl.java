@@ -8,6 +8,7 @@ package org.hibernate.metamodel.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -32,9 +33,12 @@ import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
+import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
+import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
@@ -50,6 +54,8 @@ import org.hibernate.jpa.graph.internal.SubgraphImpl;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -102,6 +108,8 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	public void initialize(MetadataImplementor mappingMetadata, JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
 		this.imports.putAll( mappingMetadata.getImports() );
 
+		primeSecondLevelCacheRegions( mappingMetadata );
+
 		final PersisterCreationContext persisterCreationContext = new PersisterCreationContext() {
 			@Override
 			public SessionFactoryImplementor getSessionFactory() {
@@ -117,13 +125,9 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		final PersisterFactory persisterFactory = sessionFactory.getServiceRegistry().getService( PersisterFactory.class );
 
 		for ( final PersistentClass model : mappingMetadata.getEntityBindings() ) {
-			final EntityRegionAccessStrategy accessStrategy = sessionFactory.getCache().determineEntityRegionAccessStrategy(
-					model
-			);
-
-			final NaturalIdRegionAccessStrategy naturalIdAccessStrategy = sessionFactory.getCache().determineNaturalIdRegionAccessStrategy(
-					model
-			);
+			final NavigableRole rootEntityRole = new NavigableRole( model.getRootClass().getEntityName() );
+			final EntityDataAccess accessStrategy = sessionFactory.getCache().getEntityRegionAccess( rootEntityRole );
+			final NaturalIdDataAccess naturalIdAccessStrategy = sessionFactory.getCache().getNaturalIdRegionAccess( rootEntityRole );
 
 			final EntityPersister cp = persisterFactory.createEntityPersister(
 					model,
@@ -164,9 +168,10 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		}
 
 		for ( final Collection model : mappingMetadata.getCollectionBindings() ) {
-			final CollectionRegionAccessStrategy accessStrategy = sessionFactory.getCache().determineCollectionRegionAccessStrategy(
-					model
-			);
+			final NavigableRole navigableRole = new NavigableRole( model.getRole() );
+
+			final CollectionDataAccess accessStrategy = sessionFactory.getCache().getCollectionRegionAccess(
+					navigableRole );
 
 			final CollectionPersister persister = persisterFactory.createCollectionPersister(
 					model,
@@ -227,6 +232,51 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			applyNamedEntityGraphs( mappingMetadata.getNamedEntityGraphs().values() );
 		}
 
+	}
+
+	private void primeSecondLevelCacheRegions(MetadataImplementor mappingMetadata) {
+		final Map<String, DomainDataRegionConfigImpl.Builder> regionConfigBuilders = new ConcurrentHashMap<>();
+
+		// todo : ultimately this code can be made more efficient when we have a better intrinsic understanding of the hierarchy as a whole
+
+		for ( PersistentClass bootEntityDescriptor : mappingMetadata.getEntityBindings() ) {
+			final AccessType accessType = AccessType.fromExternalName( bootEntityDescriptor.getCacheConcurrencyStrategy() );
+
+			if ( accessType != null ) {
+				if ( bootEntityDescriptor.isCached() ) {
+					regionConfigBuilders.computeIfAbsent( bootEntityDescriptor.getRootClass().getCacheRegionName(), DomainDataRegionConfigImpl.Builder::new )
+							.addEntityConfig( bootEntityDescriptor, accessType );
+				}
+
+				if ( RootClass.class.isInstance( bootEntityDescriptor )
+						&& bootEntityDescriptor.hasNaturalId()
+						&& bootEntityDescriptor.getNaturalIdCacheRegionName() != null ) {
+					regionConfigBuilders.computeIfAbsent( bootEntityDescriptor.getNaturalIdCacheRegionName(), DomainDataRegionConfigImpl.Builder::new )
+							.addNaturalIdConfig( (RootClass) bootEntityDescriptor, accessType );
+				}
+			}
+		}
+
+		for ( Collection collection : mappingMetadata.getCollectionBindings() ) {
+			final AccessType accessType = AccessType.fromExternalName( collection.getCacheConcurrencyStrategy() );
+			if ( accessType != null ) {
+				regionConfigBuilders.computeIfAbsent( collection.getCacheConcurrencyStrategy(), DomainDataRegionConfigImpl.Builder::new )
+						.addCollectionConfig( collection, accessType );
+			}
+		}
+
+		final Set<DomainDataRegionConfig> regionConfigs;
+		if ( regionConfigBuilders.isEmpty() ) {
+			regionConfigs = Collections.emptySet();
+		}
+		else {
+			regionConfigs = new HashSet<>();
+			for ( DomainDataRegionConfigImpl.Builder builder : regionConfigBuilders.values() ) {
+				regionConfigs.add( builder.build() );
+			}
+		}
+
+		getSessionFactory().getCache().prime( regionConfigs );
 	}
 
 	@SuppressWarnings("unchecked")

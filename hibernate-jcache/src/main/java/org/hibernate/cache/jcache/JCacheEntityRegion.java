@@ -13,10 +13,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.jcache.access.NonStrictEntityRegionAccessStrategy;
 import org.hibernate.cache.jcache.access.ReadOnlyEntityRegionAccessStrategy;
 import org.hibernate.cache.jcache.access.ReadWriteEntityRegionAccessStrategy;
-import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 
 /**
  * @author Alex Snaps

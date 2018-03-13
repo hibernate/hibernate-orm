@@ -102,7 +102,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 		postInsert();
 
 		if ( session.getFactory().getStatistics().isStatisticsEnabled() && !isVeto() ) {
-			session.getFactory().getStatisticsImplementor().insertEntity( getPersister().getEntityName() );
+			session.getFactory().getStatistics().insertEntity( getPersister().getEntityName() );
 		}
 
 		markExecuted();

@@ -2455,6 +2455,8 @@ public final class SessionImpl
 				managedClose();
 			}
 		}
+
+		super.afterTransactionCompletion( successful, delayed );
 	}
 
 	private static class LobHelperImpl implements LobHelper {
@@ -3193,6 +3195,12 @@ public final class SessionImpl
 		public Optional<T> loadOptional(Serializable naturalIdValue) {
 			return Optional.ofNullable( load( naturalIdValue ) );
 		}
+	}
+
+	@Override
+	public void startTransactionBoundary() {
+		checkOpenOrWaitingForAutoClose();
+		super.startTransactionBoundary();
 	}
 
 	@Override

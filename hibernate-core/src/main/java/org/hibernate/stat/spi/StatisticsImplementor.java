@@ -157,32 +157,23 @@ public interface StatisticsImplementor extends Statistics, Service {
 	
 	/**
 	 * Callback indicating a put into natural id cache.
-	 *
-	 * @param regionName The name of the cache region
 	 */
-	void naturalIdCachePut(String regionName);
+	void naturalIdCachePut(String rootEntityName);
 	
 	/**
 	 * Callback indicating a get from natural id cache resulted in a hit.
-	 *
-	 * @param regionName The name of the cache region
 	 */
-	void naturalIdCacheHit(String regionName);
+	void naturalIdCacheHit(String rootEntityName);
 	
 	/**
 	 * Callback indicating a get from natural id cache resulted in a miss.
-	 *
-	 * @param regionName The name of the cache region
 	 */
-	void naturalIdCacheMiss(String regionName);
+	void naturalIdCacheMiss(String rootEntityName);
 
 	/**
 	 * Callback indicating execution of a natural id query
-	 *
-	 * @param regionName The name of the cache region
-	 * @param time execution time
 	 */
-	void naturalIdQueryExecuted(String regionName, long time);
+	void naturalIdQueryExecuted(String rootEntityName, long executionTime);
 
 	/**
 	 * Callback indicating a put into the query cache.

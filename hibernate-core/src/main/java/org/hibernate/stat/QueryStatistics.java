@@ -14,15 +14,10 @@ import java.io.Serializable;
  * Note that for a cached query, the cache miss is equals to the db count
  *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public interface QueryStatistics extends Serializable {
 	long getExecutionCount();
-
-	long getCacheHitCount();
-
-	long getCachePutCount();
-
-	long getCacheMissCount();
 
 	long getExecutionRowCount();
 
@@ -35,4 +30,10 @@ public interface QueryStatistics extends Serializable {
 	long getExecutionTotalTime();
 
 	double getExecutionAvgTimeAsDouble();
+
+	long getCacheHitCount();
+
+	long getCachePutCount();
+
+	long getCacheMissCount();
 }

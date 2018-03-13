@@ -8,13 +8,13 @@
 <html>
 <body>
 <p>
-	Defines contracts for transactional and concurrent access to cached
-    {@link org.hibernate.cache.spi.access.EntityRegionAccessStrategy entity} and
-    {@link org.hibernate.cache.spi.access.CollectionRegionAccessStrategy collection} data.  Transactions pass in a
+    Defines contracts for transactional and concurrent access to cached
+    {@link org.hibernate.cache.spi.access.EntityDataAccess entity} and
+    {@link org.hibernate.cache.spi.access.CollectionDataAccess collection} data. Transactions pass in a
     timestamp indicating transaction start time which is then used to protect against concurrent access (exactly how
     that occurs is based on the actual access-strategy impl used). Two different implementation patterns are provided
     for:
-    <ul>
+<ul>
         <li>
             A transaction-aware cache implementation might be wrapped by a <i>synchronous</i> access strategy,
             where updates to the cache are written to the cache inside the transaction.

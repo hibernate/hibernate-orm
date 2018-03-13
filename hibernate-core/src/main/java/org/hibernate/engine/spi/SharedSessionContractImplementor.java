@@ -21,6 +21,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.ScrollMode;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
+import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.cfg.Environment;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreationContext;
@@ -151,9 +152,27 @@ public interface SharedSessionContractImplementor
 	void markForRollbackOnly();
 
 	/**
-	 * System time before the start of the transaction
+	 * A "timestamp" at or before the start of the current transaction.
+	 *
+	 * @apiNote This "timestamp" need not be related to timestamp in the Java Date/millisecond
+	 * sense.  It just needs to be an incrementing value.  See
+	 * {@link CacheTransactionSynchronization#getCurrentTransactionStartTimestamp()}
 	 */
-	long getTimestamp();
+	long getTransactionStartTimestamp();
+
+	/**
+	 * @deprecated (since 6.0) Use
+	 */
+	@Deprecated
+	default long getTimestamp() {
+		return getTransactionStartTimestamp();
+	}
+
+	/**
+	 * The current CacheTransactionContext associated with the Session.  This may
+	 * return {@code null} when the Session is not currently part of a transaction.
+	 */
+	CacheTransactionSynchronization getCacheTransactionSynchronization();
 
 	/**
 	 * Does this <tt>Session</tt> have an active Hibernate transaction

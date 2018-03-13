@@ -33,6 +33,14 @@ public interface JdbcSessionOwner {
 	TransactionCoordinator getTransactionCoordinator();
 
 	/**
+	 * Callback indicating recognition of entering into a transactional
+	 * context whether that is explicitly via the Hibernate
+	 * {@link org.hibernate.Transaction} API or via registration
+	 * of Hibernate's JTA Synchronization impl with a JTA Transaction
+	 */
+	void startTransactionBoundary();
+
+	/**
 	 * A after-begin callback from the coordinator to its owner.
 	 */
 	void afterTransactionBegin();

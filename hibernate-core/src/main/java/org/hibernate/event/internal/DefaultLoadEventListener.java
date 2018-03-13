@@ -14,7 +14,7 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.WrongClassException;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
@@ -384,7 +384,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			final SessionImplementor source) {
 		SoftLock lock = null;
 		final Object ck;
-		final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+		final EntityDataAccess cache = persister.getCacheAccessStrategy();
 		if ( persister.canWriteToCache() ) {
 			ck = cache.generateCacheKey(
 					event.getEntityId(),
@@ -640,7 +640,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		final LoadEvent event,
 		final EntityPersister persister,
 		SessionImplementor source ) {
-		final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+		final EntityDataAccess cache = persister.getCacheAccessStrategy();
 		final Object ck = cache.generateCacheKey(
 				event.getEntityId(),
 				persister,
@@ -651,12 +651,12 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		final Object ce = CacheHelper.fromSharedCache( source, ck, persister.getCacheAccessStrategy() );
 		if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
 			if ( ce == null ) {
-				source.getFactory().getStatisticsImplementor().secondLevelCacheMiss(
+				source.getFactory().getStatistics().secondLevelCacheMiss(
 						cache.getRegion().getName()
 				);
 			}
 			else {
-				source.getFactory().getStatisticsImplementor().secondLevelCacheHit(
+				source.getFactory().getStatistics().secondLevelCacheHit(
 						cache.getRegion().getName()
 				);
 			}

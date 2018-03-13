@@ -96,3 +96,39 @@ therefore, avoiding the need of updating any library dependency.
 ====
 The relocation pom may be dropped in a future release.
 ====
+
+
+=== 5.3 -> 6.0 compatibility changes
+
+The original driving force behind these series of changes is an effort to be as proactive as possible
+about designing compatibility between 5.3 and 6.0.
+
+
+==== Second-level cache provider SPI changes
+
+As a fix for a potentially nasty bug in caching, we needed to redesign the Second-level cache provider
+SPI.  Details can be seen on the https://hibernate.atlassian.net/browse/HHH-11356[HHH-11356] Jira issue.
+Originally slated for 6.0 - to avoid the SPI changes, it was decided to back-port it to 5.3 because the
+bug became really important.
+
+One manifestation of this is the clarification that a single second-level cache region
+may not be used to store both query-results and domain-data (entity, collection and natural-id).
+
+Care was taken to maintain backwards compatibility so that applications could continue unchanged,
+although the older access methods have been deprecated as described above.
+
+
+==== Statistics changes
+
+The change for HHH-11356 required changes in its consumers.  One such consumer is the Hibernate
+Statistics system....
+
+
+==== Cache regionName expectations in API and SPI calls
+
+prefixed v. un-prefixed
+
+
+==== Type system changes
+
+Use of NavigableRole, back-ported from 6.0

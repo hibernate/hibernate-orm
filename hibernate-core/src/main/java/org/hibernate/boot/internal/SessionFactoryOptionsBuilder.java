@@ -32,9 +32,9 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cache.internal.StandardQueryCacheFactory;
-import org.hibernate.cache.spi.QueryCacheFactory;
+import org.hibernate.cache.internal.StandardTimestampsRegionAccessFactory;
 import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.TimestampsRegionAccessFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -197,7 +197,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	// Caching
 	private boolean secondLevelCacheEnabled;
 	private boolean queryCacheEnabled;
-	private QueryCacheFactory queryCacheFactory;
+	private TimestampsRegionAccessFactory timestampsCacheFactory;
 	private String cacheRegionPrefix;
 	private boolean minimalPutsEnabled;
 	private boolean structuredCacheEntriesEnabled;
@@ -331,10 +331,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.secondLevelCacheEnabled = cfgService.getSetting( USE_SECOND_LEVEL_CACHE, BOOLEAN, true );
 		this.queryCacheEnabled = cfgService.getSetting( USE_QUERY_CACHE, BOOLEAN, false );
-		this.queryCacheFactory = strategySelector.resolveDefaultableStrategy(
-				QueryCacheFactory.class,
+		this.timestampsCacheFactory = strategySelector.resolveDefaultableStrategy(
+				TimestampsRegionAccessFactory.class,
 				configurationSettings.get( QUERY_CACHE_FACTORY ),
-				StandardQueryCacheFactory.INSTANCE
+				StandardTimestampsRegionAccessFactory.INSTANCE
 		);
 		this.cacheRegionPrefix = ConfigurationHelper.extractPropertyValue(
 				CACHE_REGION_PREFIX,
@@ -804,8 +804,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public QueryCacheFactory getQueryCacheFactory() {
-		return queryCacheFactory;
+	public TimestampsRegionAccessFactory getTimestampsRegionAccessFactory() {
+		return timestampsCacheFactory;
 	}
 
 	@Override
@@ -1102,8 +1102,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.queryCacheEnabled = enabled;
 	}
 
-	public void applyQueryCacheFactory(QueryCacheFactory factory) {
-		this.queryCacheFactory = factory;
+	public void applyTimestampsRegionAccessFactory(TimestampsRegionAccessFactory factory) {
+		this.timestampsCacheFactory = factory;
 	}
 
 	public void applyCacheRegionPrefix(String prefix) {

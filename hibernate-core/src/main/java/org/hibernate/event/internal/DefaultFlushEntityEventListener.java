@@ -669,7 +669,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			if ( snapshot == null ) {
 				//do we even really need this? the update will fail anyway....
 				if ( session.getFactory().getStatistics().isStatisticsEnabled() ) {
-					session.getFactory().getStatisticsImplementor()
+					session.getFactory().getStatistics()
 							.optimisticFailure( persister.getEntityName() );
 				}
 				throw new StaleObjectStateException( persister.getEntityName(), id );

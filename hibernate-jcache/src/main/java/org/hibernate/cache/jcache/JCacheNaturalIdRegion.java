@@ -13,10 +13,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.jcache.access.NonStrictNaturalIdRegionAccessStrategy;
 import org.hibernate.cache.jcache.access.ReadOnlyNaturalIdRegionAccessStrategy;
 import org.hibernate.cache.jcache.access.ReadWriteNaturalIdRegionAccessStrategy;
-import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 
 /**
  * @author Alex Snaps

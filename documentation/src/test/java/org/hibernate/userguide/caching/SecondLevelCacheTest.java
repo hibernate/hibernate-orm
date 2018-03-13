@@ -26,10 +26,9 @@ import org.hibernate.cache.ehcache.EhCacheRegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.stat.SecondLevelCacheStatistics;
+import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.FailureExpected;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -188,8 +187,8 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 			Session session = entityManager.unwrap( Session.class );
 			//tag::caching-statistics-example[]
 			Statistics statistics = session.getSessionFactory().getStatistics();
-			SecondLevelCacheStatistics secondLevelCacheStatistics =
-					statistics.getSecondLevelCacheStatistics( "query.cache.person" );
+			CacheRegionStatistics secondLevelCacheStatistics =
+					statistics.getDomainDataRegionStatistics( "query.cache.person" );
 			long hitCount = secondLevelCacheStatistics.getHitCount();
 			long missCount = secondLevelCacheStatistics.getMissCount();
 			double hitRatio = (double) hitCount / ( hitCount + missCount );

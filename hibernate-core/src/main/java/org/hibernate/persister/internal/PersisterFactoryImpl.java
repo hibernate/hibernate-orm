@@ -11,9 +11,9 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -39,8 +39,8 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	 */
 	public static final Class[] ENTITY_PERSISTER_CONSTRUCTOR_ARGS = new Class[] {
 			PersistentClass.class,
-			EntityRegionAccessStrategy.class,
-			NaturalIdRegionAccessStrategy.class,
+			EntityDataAccess.class,
+			NaturalIdDataAccess.class,
 			PersisterCreationContext.class
 	};
 
@@ -49,7 +49,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	 */
 	public static final Class[] COLLECTION_PERSISTER_CONSTRUCTOR_ARGS = new Class[] {
 			Collection.class,
-			CollectionRegionAccessStrategy.class,
+			CollectionDataAccess.class,
 			PersisterCreationContext.class
 	};
 
@@ -64,8 +64,8 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	@SuppressWarnings( {"unchecked"})
 	public EntityPersister createEntityPersister(
 			PersistentClass entityBinding,
-			EntityRegionAccessStrategy entityCacheAccessStrategy,
-			NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy,
+			EntityDataAccess entityCacheAccessStrategy,
+			NaturalIdDataAccess naturalIdCacheAccessStrategy,
 			PersisterCreationContext creationContext) throws HibernateException {
 		// If the metadata for the entity specified an explicit persister class, use it...
 		Class<? extends EntityPersister> persisterClass = entityBinding.getEntityPersisterClass();
@@ -87,8 +87,8 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	private EntityPersister createEntityPersister(
 			Class<? extends EntityPersister> persisterClass,
 			PersistentClass entityBinding,
-			EntityRegionAccessStrategy entityCacheAccessStrategy,
-			NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy,
+			EntityDataAccess entityCacheAccessStrategy,
+			NaturalIdDataAccess naturalIdCacheAccessStrategy,
 			PersisterCreationContext creationContext) {
 		try {
 			final Constructor<? extends EntityPersister> constructor = persisterClass.getConstructor( ENTITY_PERSISTER_CONSTRUCTOR_ARGS );
@@ -128,7 +128,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	@SuppressWarnings( {"unchecked"})
 	public CollectionPersister createCollectionPersister(
 			Collection collectionBinding,
-			CollectionRegionAccessStrategy cacheAccessStrategy,
+			CollectionDataAccess cacheAccessStrategy,
 			PersisterCreationContext creationContext) throws HibernateException {
 		// If the metadata for the collection specified an explicit persister class, use it
 		Class<? extends CollectionPersister> persisterClass = collectionBinding.getCollectionPersisterClass();
@@ -144,7 +144,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	private CollectionPersister createCollectionPersister(
 			Class<? extends CollectionPersister> persisterClass,
 			Collection collectionBinding,
-			CollectionRegionAccessStrategy cacheAccessStrategy,
+			CollectionDataAccess cacheAccessStrategy,
 			PersisterCreationContext creationContext) {
 		try {
 			Constructor<? extends CollectionPersister> constructor = persisterClass.getConstructor( COLLECTION_PERSISTER_CONSTRUCTOR_ARGS );

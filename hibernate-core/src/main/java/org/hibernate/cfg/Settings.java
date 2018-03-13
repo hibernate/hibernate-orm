@@ -16,8 +16,8 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.TimestampsRegionAccessFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
@@ -93,7 +93,7 @@ public final class Settings {
 
 			LOG.debugf( "Second-level cache: %s", enabledDisabled( sessionFactoryOptions.isSecondLevelCacheEnabled() ) );
 			LOG.debugf( "Second-level query cache: %s", enabledDisabled( sessionFactoryOptions.isQueryCacheEnabled() ) );
-			LOG.debugf( "Second-level query cache factory: %s", sessionFactoryOptions.getQueryCacheFactory() );
+			LOG.debugf( "Second-level query cache factory: %s", sessionFactoryOptions.getTimestampsRegionAccessFactory() );
 			LOG.debugf( "Second-level cache region prefix: %s", sessionFactoryOptions.getCacheRegionPrefix() );
 			LOG.debugf( "Optimize second-level cache for minimal puts: %s", enabledDisabled( sessionFactoryOptions.isMinimalPutsEnabled() ) );
 			LOG.debugf( "Structured second-level cache entries: %s", enabledDisabled( sessionFactoryOptions.isStructuredCacheEntriesEnabled() ) );
@@ -223,8 +223,8 @@ public final class Settings {
 		return sessionFactoryOptions.isQueryCacheEnabled();
 	}
 
-	public QueryCacheFactory getQueryCacheFactory() {
-		return sessionFactoryOptions.getQueryCacheFactory();
+	public TimestampsRegionAccessFactory getTimestampsRegionAccessFactory() {
+		return sessionFactoryOptions.getTimestampsRegionAccessFactory();
 	}
 
 	public String getCacheRegionPrefix() {

@@ -32,9 +32,9 @@ import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
 import org.hibernate.cache.spi.FilterKey;
-import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.QueryKey;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.QueryResultRegionAccess;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -67,7 +67,6 @@ import org.hibernate.internal.ScrollableResultsImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.spi.AfterLoadAction;
-import org.hibernate.param.ParameterBinder;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
@@ -1640,7 +1639,7 @@ public abstract class Loader {
 
 		// see if the entity defines reference caching, and if so use the cached reference (if one).
 		if ( session.getCacheMode().isGetEnabled() && persister.canUseReferenceCacheEntries() ) {
-			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final EntityDataAccess cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
 					key.getIdentifier(),
 					persister,
@@ -2513,7 +2512,7 @@ public abstract class Loader {
 			final Set<Serializable> querySpaces,
 			final Type[] resultTypes) {
 
-		QueryCache queryCache = factory.getCache().getQueryCache( queryParameters.getCacheRegion() );
+		QueryResultRegionAccess queryCache = factory.getCache().getQueryResultsRegionAccess( queryParameters.getCacheRegion() );
 
 		QueryKey key = generateQueryKey( session, queryParameters );
 
@@ -2590,7 +2589,7 @@ public abstract class Loader {
 			final QueryParameters queryParameters,
 			final Set<Serializable> querySpaces,
 			final Type[] resultTypes,
-			final QueryCache queryCache,
+			final QueryResultRegionAccess queryCache,
 			final QueryKey key) {
 		List result = null;
 
@@ -2618,9 +2617,8 @@ public abstract class Loader {
 			try {
 				result = queryCache.get(
 						key,
-						key.getResultTransformer().getCachedResultTypes( resultTypes ),
-						isImmutableNaturalKeyLookup,
 						querySpaces,
+						key.getResultTransformer().getCachedResultTypes( resultTypes ),
 						session
 				);
 			}
@@ -2649,15 +2647,14 @@ public abstract class Loader {
 			final SharedSessionContractImplementor session,
 			final QueryParameters queryParameters,
 			final Type[] resultTypes,
-			final QueryCache queryCache,
+			final QueryResultRegionAccess queryCache,
 			final QueryKey key,
 			final List result) {
 		if ( session.getCacheMode().isPutEnabled() ) {
 			boolean put = queryCache.put(
 					key,
-					key.getResultTransformer().getCachedResultTypes( resultTypes ),
 					result,
-					queryParameters.isNaturalKeyLookup(),
+					key.getResultTransformer().getCachedResultTypes( resultTypes ),
 					session
 			);
 			if ( put && factory.getStatistics().isStatisticsEnabled() ) {

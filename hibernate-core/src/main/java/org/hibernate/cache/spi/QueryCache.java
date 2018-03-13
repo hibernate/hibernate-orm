@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.cache.spi;
 
@@ -10,26 +10,25 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.Type;
 
 /**
- * Defines the contract for caches capable of storing query results.  These
- * caches should only concern themselves with storing the matching result ids.
- * The transactional semantics are necessarily less strict than the semantics
- * of an item cache.
- * 
- * @author Gavin King
+ * @author Steve Ebersole
+ *
+ * @deprecated Use {@link QueryResultRegionAccess} instead -
+ * {@link CacheImplementor#getQueryResultsRegionAccess} rather than
+ * {@link CacheImplementor#getQueryCache}
  */
+@Deprecated
 public interface QueryCache {
 	/**
 	 * Clear items from the query cache.
 	 *
 	 * @throws CacheException Indicates a problem delegating to the underlying cache.
 	 */
-	void clear() throws CacheException;
+	void clear();
 
 	/**
 	 * Put a result into the query cache.
@@ -41,15 +40,13 @@ public interface QueryCache {
 	 * @param session The originating session
 	 *
 	 * @return Whether the put actually happened.
-	 *
-	 * @throws HibernateException Indicates a problem delegating to the underlying cache.
 	 */
 	boolean put(
 			QueryKey key,
 			Type[] returnTypes,
 			List result,
 			boolean isNaturalKeyLookup,
-			SharedSessionContractImplementor session) throws HibernateException;
+			SharedSessionContractImplementor session);
 
 	/**
 	 * Get results from the cache.
@@ -61,15 +58,13 @@ public interface QueryCache {
 	 * @param session The originating session
 	 *
 	 * @return The cached results; may be null.
-	 *
-	 * @throws HibernateException Indicates a problem delegating to the underlying cache.
 	 */
 	List get(
 			QueryKey key,
 			Type[] returnTypes,
 			boolean isNaturalKeyLookup,
 			Set<Serializable> spaces,
-			SharedSessionContractImplementor session) throws HibernateException;
+			SharedSessionContractImplementor session);
 
 	/**
 	 * Destroy the cache.

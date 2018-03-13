@@ -397,7 +397,7 @@ public class ActionQueue {
 			beforeTransactionProcesses.register( executable.getBeforeTransactionCompletionProcess() );
 		}
 		if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
-			invalidateSpaces( executable.getPropertySpaces() );
+			invalidateSpaces( convertTimestampSpaces( executable.getPropertySpaces() ) );
 		}
 		if( executable.getAfterTransactionCompletionProcess() != null ) {
 			if( afterTransactionProcesses == null ) {
@@ -405,6 +405,10 @@ public class ActionQueue {
 			}
 			afterTransactionProcesses.register( executable.getAfterTransactionCompletionProcess() );
 		}
+	}
+
+	private static String[] convertTimestampSpaces(Serializable[] spaces) {
+		return (String[]) spaces;
 	}
 
 	/**
@@ -620,13 +624,17 @@ public class ActionQueue {
 				// Strictly speaking, only a subset of the list may have been processed if a RuntimeException occurs.
 				// We still invalidate all spaces. I don't see this as a big deal - after all, RuntimeExceptions are
 				// unexpected.
-				Set<Serializable> propertySpaces = list.getQuerySpaces();
-				invalidateSpaces( propertySpaces.toArray( new Serializable[propertySpaces.size()] ) );
+				Set propertySpaces = list.getQuerySpaces();
+				invalidateSpaces( convertTimestampSpaces( propertySpaces ) );
 			}
 		}
 
 		list.clear();
 		session.getJdbcCoordinator().executeBatch();
+	}
+
+	private static String[] convertTimestampSpaces(Set spaces) {
+		return (String[]) spaces.toArray( new String[ spaces.size() ] );
 	}
 
 	/**
@@ -646,7 +654,7 @@ public class ActionQueue {
 	 * 
 	 * @param spaces The spaces to invalidate
 	 */
-	private void invalidateSpaces(Serializable... spaces) {
+	private void invalidateSpaces(String... spaces) {
 		if ( spaces != null && spaces.length > 0 ) {
 			for ( Serializable s : spaces ) {
 				if( afterTransactionProcesses == null ) {
@@ -655,7 +663,7 @@ public class ActionQueue {
 				afterTransactionProcesses.addSpaceToInvalidate( (String) s );
 			}
 			// Performance win: If we are processing an ExecutableList, this will only be called once
-			session.getFactory().getUpdateTimestampsCache().preInvalidate( spaces, session );
+			session.getFactory().getCache().getTimestampsRegionAccess().preInvalidate( spaces, session );
 		}
 	}
 
@@ -984,7 +992,7 @@ public class ActionQueue {
 			}
 
 			if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
-				session.getFactory().getUpdateTimestampsCache().invalidate(
+				session.getFactory().getCache().getTimestampsRegionAccess().invalidate(
 						querySpacesToInvalidate.toArray( new String[querySpacesToInvalidate.size()] ),
 						session
 				);

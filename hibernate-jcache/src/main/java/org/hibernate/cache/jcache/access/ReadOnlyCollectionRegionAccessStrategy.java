@@ -9,7 +9,6 @@ package org.hibernate.cache.jcache.access;
 
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.jcache.JCacheCollectionRegion;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 

@@ -15,7 +15,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.jcache.JCacheMessageLogger;
 import org.hibernate.cache.jcache.JCacheTransactionalDataRegion;
-import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.jboss.logging.Logger;
 
@@ -277,7 +276,7 @@ abstract class AbstractReadWriteRegionAccessStrategy<R extends JCacheTransaction
 	/**
 	 * Wrapper type representing locked items.
 	 */
-	public static final class Lock implements Serializable, Lockable, SoftLock {
+	public static final class Lock implements Serializable, Lockable {
 		private static final long serialVersionUID = 2L;
 
 		private final UUID sourceUuid;

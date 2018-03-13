@@ -41,8 +41,6 @@ public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 		return new Class[] {
 			ReadWriteCacheableItem.class,
 			ReadWriteVersionedCacheableItem.class,
-			NonStrictReadWriteCacheableItem.class,
-			NonStrictReadWriteVersionedCacheableItem.class,
 		};
 	}
 
@@ -77,16 +75,6 @@ public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 		readWriteVersionedCacheableItem.getTags().add( "ORM" );
 		s.persist( readWriteVersionedCacheableItem );
 
-		NonStrictReadWriteCacheableItem nonStrictReadWriteCacheableItem = new NonStrictReadWriteCacheableItem( BEFORE );
-		nonStrictReadWriteCacheableItem.getTags().add( "Hibernate" );
-		nonStrictReadWriteCacheableItem.getTags().add( "ORM" );
-		s.persist( nonStrictReadWriteCacheableItem );
-
-		NonStrictReadWriteVersionedCacheableItem nonStrictReadWriteVersionedCacheableItem = new NonStrictReadWriteVersionedCacheableItem( BEFORE );
-		nonStrictReadWriteVersionedCacheableItem.getTags().add( "Hibernate" );
-		nonStrictReadWriteVersionedCacheableItem.getTags().add( "ORM" );
-		s.persist( nonStrictReadWriteVersionedCacheableItem );
-
 		s.getTransaction().commit();
 		s.close();
 
@@ -103,28 +91,14 @@ public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 		readWriteVersionedCacheableItem1.setName( AFTER );
 		readWriteVersionedCacheableItem1.getTags().remove("ORM");
 
-		NonStrictReadWriteCacheableItem nonStrictReadWriteCacheableItem1 = s1.get( NonStrictReadWriteCacheableItem.class, nonStrictReadWriteCacheableItem.getId() );
-		nonStrictReadWriteCacheableItem1.setName( AFTER );
-		nonStrictReadWriteCacheableItem1.getTags().remove("ORM");
-
-		NonStrictReadWriteVersionedCacheableItem nonStrictReadWriteVersionedCacheableItem1 = s1.get( NonStrictReadWriteVersionedCacheableItem.class, nonStrictReadWriteVersionedCacheableItem.getId() );
-		nonStrictReadWriteVersionedCacheableItem1.setName( AFTER );
-		nonStrictReadWriteVersionedCacheableItem1.getTags().remove("ORM");
-
 		s1.flush();
 		s1.refresh( readWriteCacheableItem1 );
 		s1.refresh( readWriteVersionedCacheableItem1 );
-		s1.refresh( nonStrictReadWriteCacheableItem1 );
-		s1.refresh( nonStrictReadWriteVersionedCacheableItem1 );
 
 		assertEquals( AFTER, readWriteCacheableItem1.getName() );
 		assertEquals( 1, readWriteCacheableItem1.getTags().size() );
 		assertEquals( AFTER, readWriteVersionedCacheableItem1.getName() );
 		assertEquals( 1, readWriteVersionedCacheableItem1.getTags().size() );
-		assertEquals( AFTER, nonStrictReadWriteCacheableItem1.getName() );
-		assertEquals( 1, nonStrictReadWriteCacheableItem1.getTags().size() );
-		assertEquals( AFTER, nonStrictReadWriteVersionedCacheableItem1.getName() );
-		assertEquals( 1, nonStrictReadWriteVersionedCacheableItem1.getTags().size() );
 
 		// open another session
 		Session s2 = sessionFactory().openSession();
@@ -132,20 +106,11 @@ public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 			s2.beginTransaction();
 			ReadWriteCacheableItem readWriteCacheableItem2 = s2.get( ReadWriteCacheableItem.class, readWriteCacheableItem.getId() );
 			ReadWriteVersionedCacheableItem readWriteVersionedCacheableItem2 = s2.get( ReadWriteVersionedCacheableItem.class, readWriteVersionedCacheableItem.getId() );
-			NonStrictReadWriteCacheableItem nonStrictReadWriteCacheableItem2 = s2.get( NonStrictReadWriteCacheableItem.class, nonStrictReadWriteCacheableItem.getId() );
-			NonStrictReadWriteVersionedCacheableItem nonStrictReadWriteVersionedCacheableItem2 = s2.get( NonStrictReadWriteVersionedCacheableItem.class, nonStrictReadWriteVersionedCacheableItem.getId() );
 
 			assertEquals( BEFORE, readWriteCacheableItem2.getName() );
 			assertEquals( 2, readWriteCacheableItem2.getTags().size() );
 			assertEquals( BEFORE, readWriteVersionedCacheableItem2.getName() );
 			assertEquals( 2, readWriteVersionedCacheableItem2.getTags().size() );
-
-			//READ_UNCOMMITTED because there is no locking to prevent collections from being cached in the first Session
-
-			assertEquals( BEFORE, nonStrictReadWriteCacheableItem2.getName() );
-			assertEquals( 1, nonStrictReadWriteCacheableItem2.getTags().size());
-			assertEquals( BEFORE, nonStrictReadWriteVersionedCacheableItem2.getName() );
-			assertEquals( 1, nonStrictReadWriteVersionedCacheableItem2.getTags().size() );
 
 			s2.getTransaction().commit();
 		}
@@ -163,8 +128,6 @@ public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		s.delete( readWriteCacheableItem );
 		s.delete( readWriteVersionedCacheableItem );
-		s.delete( nonStrictReadWriteCacheableItem );
-		s.delete( nonStrictReadWriteVersionedCacheableItem );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -232,93 +195,6 @@ public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public ReadWriteVersionedCacheableItem(String name) {
-			this.name = name;
-		}
-
-		public Long getId() {
-			return id;
-		}
-
-		public void setId(Long id) {
-			this.id = id;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		public List<String> getTags() {
-			return tags;
-		}
-	}
-
-	@Entity(name = "NonStrictReadWriteCacheableItem")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, region = "item")
-	public static class NonStrictReadWriteCacheableItem {
-
-		@Id
-		@GeneratedValue
-		private Long id;
-
-		private String name;
-
-		@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-		@ElementCollection
-		private List<String> tags = new ArrayList<>();
-
-		public NonStrictReadWriteCacheableItem() {
-		}
-
-		public NonStrictReadWriteCacheableItem(String name) {
-			this.name = name;
-		}
-
-		public Long getId() {
-			return id;
-		}
-
-		public void setId(Long id) {
-			this.id = id;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		public List<String> getTags() {
-			return tags;
-		}
-	}
-
-	@Entity(name = "NonStrictReadWriteVersionedCacheableItem")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, region = "item")
-	public static class NonStrictReadWriteVersionedCacheableItem {
-
-		@Id
-		@GeneratedValue
-		private Long id;
-
-		private String name;
-
-		@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-		@ElementCollection
-		private List<String> tags = new ArrayList<>();
-
-		@Version
-		private int version;
-
-		public NonStrictReadWriteVersionedCacheableItem() {
-		}
-
-		public NonStrictReadWriteVersionedCacheableItem(String name) {
 			this.name = name;
 		}
 

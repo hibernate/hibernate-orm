@@ -7,6 +7,8 @@
 package org.hibernate.stat.internal;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -32,6 +34,13 @@ public class ConcurrentStatisticsTest extends BaseCoreFunctionalTestCase {
 	public void setUp() {
 		sessionFactory = sessionFactory();
 		statistics = new ConcurrentStatisticsImpl( (SessionFactoryImplementor) sessionFactory );
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+
+		configuration.setProperty( AvailableSettings.CACHE_REGION_PREFIX, "my-app" );
 	}
 
 	@After

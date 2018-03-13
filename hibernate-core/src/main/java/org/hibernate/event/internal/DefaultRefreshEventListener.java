@@ -14,8 +14,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
@@ -152,7 +152,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				// multiple actions queued during the same flush
 				previousVersion = persister.getVersion( object );
 			}
-			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final EntityDataAccess cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
 					id,
 					persister,
@@ -160,13 +160,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 					source.getTenantIdentifier()
 			);
 			final SoftLock lock = cache.lockItem( source, ck, previousVersion );
-			source.getActionQueue().registerProcess( new AfterTransactionCompletionProcess() {
-				@Override
-				public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-					cache.unlockItem( session, ck, lock );
-				}
-			} );
 			cache.remove( source, ck );
+			source.getActionQueue().registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
 		}
 
 		evictCachedCollections( persister, id, source );
@@ -201,7 +196,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			if ( type.isCollectionType() ) {
 				CollectionPersister collectionPersister = source.getFactory().getMetamodel().collectionPersister( ( (CollectionType) type ).getRole() );
 				if ( collectionPersister.hasCache() ) {
-					final CollectionRegionAccessStrategy cache = collectionPersister.getCacheAccessStrategy();
+					final CollectionDataAccess cache = collectionPersister.getCacheAccessStrategy();
 					final Object ck = cache.generateCacheKey(
 						id,
 						collectionPersister,
@@ -209,13 +204,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 						source.getTenantIdentifier()
 					);
 					final SoftLock lock = cache.lockItem( source, ck, null );
-					source.getActionQueue().registerProcess( new AfterTransactionCompletionProcess() {
-						@Override
-						public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-							cache.unlockItem( session, ck, lock );
-						}
-					} );
 					cache.remove( source, ck );
+					source.getActionQueue().registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
 				}
 			}
 			else if ( type.isComponentType() ) {

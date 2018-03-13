@@ -86,7 +86,7 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 	private static StatisticsFactory DEFAULT_STATS_BUILDER = new StatisticsFactory() {
 		@Override
 		public StatisticsImplementor buildStatistics(SessionFactoryImplementor sessionFactory) {
-			return new ConcurrentStatisticsImpl( sessionFactory );
+			return new StatisticsImpl( sessionFactory );
 		}
 	};
 }

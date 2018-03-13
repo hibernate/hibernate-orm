@@ -13,10 +13,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.jcache.access.NonStrictCollectionRegionAccessStrategy;
 import org.hibernate.cache.jcache.access.ReadOnlyCollectionRegionAccessStrategy;
 import org.hibernate.cache.jcache.access.ReadWriteCollectionRegionAccessStrategy;
-import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 
 /**
  * @author Alex Snaps

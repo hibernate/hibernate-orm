@@ -48,6 +48,7 @@ import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.TypeHelper;
 import org.hibernate.UnknownProfileException;
+import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -335,6 +336,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public long getTransactionStartTimestamp() {
+		return delegate.getTransactionStartTimestamp();
+	}
+
+	@Override
 	public FlushModeType getFlushMode() {
 		return delegate.getFlushMode();
 	}
@@ -472,6 +478,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public Transaction getTransaction() {
 		return delegate.getTransaction();
+	}
+
+	@Override
+	public void startTransactionBoundary() {
+		delegate.startTransactionBoundary();
+	}
+
+	@Override
+	public CacheTransactionSynchronization getCacheTransactionSynchronization() {
+		return delegate.getCacheTransactionSynchronization();
 	}
 
 	@Override

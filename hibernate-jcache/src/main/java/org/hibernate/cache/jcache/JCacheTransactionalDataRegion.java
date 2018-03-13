@@ -11,8 +11,6 @@ import java.util.Set;
 import javax.cache.Cache;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.TransactionalDataRegion;
 import org.hibernate.cache.spi.access.AccessType;
 
 /**

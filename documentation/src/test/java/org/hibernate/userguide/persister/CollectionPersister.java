@@ -8,7 +8,6 @@ package org.hibernate.userguide.persister;
 
 import org.hibernate.MappingException;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.mapping.Collection;
 import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;

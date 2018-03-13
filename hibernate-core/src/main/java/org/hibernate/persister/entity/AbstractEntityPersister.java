@@ -38,8 +38,8 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeDescriptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
@@ -101,6 +101,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.internal.EntityIdentifierDefinitionHelper;
@@ -148,13 +149,15 @@ public abstract class AbstractEntityPersister
 
 	public static final String ENTITY_CLASS = "class";
 
+	private final NavigableRole navigableRole;
+
 	// moved up from AbstractEntityPersister ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private final SessionFactoryImplementor factory;
 	private final boolean canReadFromCache;
 	private final boolean canWriteToCache;
 	private final boolean invalidateCache;
-	private final EntityRegionAccessStrategy cacheAccessStrategy;
-	private final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy;
+	private final EntityDataAccess cacheAccessStrategy;
+	private final NaturalIdDataAccess naturalIdRegionAccessStrategy;
 	private final boolean isLazyPropertiesCacheable;
 	private final CacheEntryHelper cacheEntryHelper;
 	private final EntityMetamodel entityMetamodel;
@@ -511,12 +514,14 @@ public abstract class AbstractEntityPersister
 	@SuppressWarnings("UnnecessaryBoxing")
 	public AbstractEntityPersister(
 			final PersistentClass persistentClass,
-			final EntityRegionAccessStrategy cacheAccessStrategy,
-			final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
+			final EntityDataAccess cacheAccessStrategy,
+			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final PersisterCreationContext creationContext) throws HibernateException {
 
 		// moved up from AbstractEntityPersister ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		this.factory = creationContext.getSessionFactory();
+
+		this.navigableRole = new NavigableRole( persistentClass.getEntityName() );
 
 		if ( creationContext.getSessionFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
 			this.canWriteToCache = persistentClass.isCached();
@@ -1064,9 +1069,9 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( session.getCacheMode().isGetEnabled() && canReadFromCache() && isLazyPropertiesCacheable() ) {
-			final EntityRegionAccessStrategy cache = getCacheAccessStrategy();
-			final Object cacheKey = cache.generateCacheKey(id, this, session.getFactory(), session.getTenantIdentifier() );
-			final Object ce = CacheHelper.fromSharedCache( session, cacheKey, cache );
+			final EntityDataAccess cacheAccess = getCacheAccessStrategy();
+			final Object cacheKey = cacheAccess.generateCacheKey(id, this, session.getFactory(), session.getTenantIdentifier() );
+			final Object ce = CacheHelper.fromSharedCache( session, cacheKey, cacheAccess );
 			if ( ce != null ) {
 				final CacheEntry cacheEntry = (CacheEntry) getCacheEntryStructure().destructure( ce, factory );
 				final Object initializedValue = initializeLazyPropertiesFromCache( fieldName, entity, session, entry, cacheEntry );
@@ -1262,6 +1267,11 @@ public abstract class AbstractEntityPersister
 		return optimisticLockStyle() == OptimisticLockStyle.NONE
 				|| ( !isVersioned() && optimisticLockStyle() == OptimisticLockStyle.VERSION )
 				|| getFactory().getSessionFactoryOptions().isJdbcBatchVersionedData();
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
 	}
 
 	public Serializable[] getQuerySpaces() {
@@ -2471,8 +2481,7 @@ public abstract class AbstractEntityPersister
 		catch (StaleStateException e) {
 			if ( !isNullableTable( tableNumber ) ) {
 				if ( getFactory().getStatistics().isStatisticsEnabled() ) {
-					getFactory().getStatisticsImplementor()
-							.optimisticFailure( getEntityName() );
+					getFactory().getStatistics().optimisticFailure( getEntityName() );
 				}
 				throw new StaleObjectStateException( getEntityName(), id );
 			}
@@ -4404,7 +4413,7 @@ public abstract class AbstractEntityPersister
 		return canWriteToCache;
 	}
 
-	public EntityRegionAccessStrategy getCacheAccessStrategy() {
+	public EntityDataAccess getCacheAccessStrategy() {
 		return cacheAccessStrategy;
 	}
 
@@ -4422,7 +4431,7 @@ public abstract class AbstractEntityPersister
 		return naturalIdRegionAccessStrategy != null;
 	}
 
-	public NaturalIdRegionAccessStrategy getNaturalIdCacheAccessStrategy() {
+	public NaturalIdDataAccess getNaturalIdCacheAccessStrategy() {
 		return naturalIdRegionAccessStrategy;
 	}
 
@@ -4575,7 +4584,7 @@ public abstract class AbstractEntityPersister
 
 		// check to see if it is in the second-level cache
 		if ( session.getCacheMode().isGetEnabled() && canReadFromCache() ) {
-			final EntityRegionAccessStrategy cache = getCacheAccessStrategy();
+			final EntityDataAccess cache = getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey( id, this, session.getFactory(), session.getTenantIdentifier() );
 			final Object ce = CacheHelper.fromSharedCache( session, ck, getCacheAccessStrategy() );
 			if ( ce != null ) {

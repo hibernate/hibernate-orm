@@ -16,7 +16,6 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.nonstop.HibernateNonstopCacheExceptionHandler;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
-import org.hibernate.cache.spi.GeneralDataRegion;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.jboss.logging.Logger;

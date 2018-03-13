@@ -17,7 +17,7 @@ import java.util.Set;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -330,8 +330,8 @@ public class CollectionLoadContext {
 		}
 
 		final CollectionCacheEntry entry = new CollectionCacheEntry( lce.getCollection(), persister );
-		final CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-		final Object cacheKey = cache.generateCacheKey(
+		final CollectionDataAccess cacheAccess = persister.getCacheAccessStrategy();
+		final Object cacheKey = cacheAccess.generateCacheKey(
 				lce.getKey(),
 				persister,
 				session.getFactory(),
@@ -353,11 +353,10 @@ public class CollectionLoadContext {
 		if (isPutFromLoad) {
 			try {
 				session.getEventListenerManager().cachePutStart();
-				final boolean put = cache.putFromLoad(
+				final boolean put = cacheAccess.putFromLoad(
 						session,
 						cacheKey,
 						persister.getCacheEntryStructure().structure( entry ),
-						session.getTimestamp(),
 						version,
 						factory.getSessionFactoryOptions().isMinimalPutsEnabled() && session.getCacheMode()!= CacheMode.REFRESH
 				);

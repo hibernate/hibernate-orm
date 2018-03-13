@@ -9,8 +9,6 @@ package org.hibernate.cache.ehcache.internal.strategy;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheTransactionalDataRegion;
-import org.hibernate.cache.spi.access.RegionAccessStrategy;
-import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**

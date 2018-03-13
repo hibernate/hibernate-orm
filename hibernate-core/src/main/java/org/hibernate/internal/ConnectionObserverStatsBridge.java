@@ -25,7 +25,7 @@ public class ConnectionObserverStatsBridge implements ConnectionObserver, Serial
 	@Override
 	public void physicalConnectionObtained(Connection connection) {
 		if ( sessionFactory.getStatistics().isStatisticsEnabled() ) {
-			sessionFactory.getStatisticsImplementor().connect();
+			sessionFactory.getStatistics().connect();
 		}
 	}
 
@@ -40,7 +40,7 @@ public class ConnectionObserverStatsBridge implements ConnectionObserver, Serial
 	@Override
 	public void statementPrepared() {
 		if ( sessionFactory.getStatistics().isStatisticsEnabled() ) {
-			sessionFactory.getStatisticsImplementor().prepareStatement();
+			sessionFactory.getStatistics().prepareStatement();
 		}
 	}
 }

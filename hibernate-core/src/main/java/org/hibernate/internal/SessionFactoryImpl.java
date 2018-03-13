@@ -53,6 +53,7 @@ import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
@@ -73,7 +74,6 @@ import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.query.spi.ReturnMetadata;
-import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
@@ -644,11 +644,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public EntityGraph findEntityGraphByName(String name) {
 		return getMetamodel().findEntityGraphByName( name );
-	}
-
-	@Override
-	public Map getAllSecondLevelCacheRegions() {
-		return null;
 	}
 
 	@Override

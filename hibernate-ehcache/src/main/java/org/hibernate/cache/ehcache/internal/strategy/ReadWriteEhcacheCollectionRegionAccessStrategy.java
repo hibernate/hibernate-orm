@@ -9,8 +9,6 @@ package org.hibernate.cache.ehcache.internal.strategy;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
-import org.hibernate.cache.spi.CollectionRegion;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 

@@ -29,6 +29,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.QueryStatistics;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.Type;
 
@@ -182,11 +183,15 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testQueryCacheInvalidation() throws Exception {
-
 		sessionFactory().getCache().evictQueryRegions();
-		sessionFactory().getStatistics().clear();
+
+		final StatisticsImplementor statistics = sessionFactory().getStatistics();
+		statistics.clear();
 
 		final String queryString = "from Item i where i.name='widget'";
+
+		final QueryStatistics qs = statistics.getQueryStatistics( queryString );
+		final EntityStatistics es = statistics.getEntityStatistics( Item.class.getName() );
 
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -198,8 +203,27 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		QueryStatistics qs = s.getSessionFactory().getStatistics().getQueryStatistics( queryString );
-		EntityStatistics es = s.getSessionFactory().getStatistics().getEntityStatistics( Item.class.getName() );
+		// hit -> 0
+		// miss -> 1
+		// put -> 1
+
+		assertEquals( es.getInsertCount(), 1 );
+		assertEquals( es.getUpdateCount(), 0 );
+
+		assertEquals( statistics.getQueryCacheHitCount(), 0 );
+		assertEquals( qs.getCacheHitCount(), 0 );
+
+		assertEquals( statistics.getQueryCacheMissCount(), 1 );
+		assertEquals( qs.getCacheMissCount(), 1);
+
+		assertEquals( statistics.getQueryCachePutCount(), 1 );
+		assertEquals( qs.getCachePutCount(), 1);
+
+		assertEquals( statistics.getQueryExecutionCount(), 1 );
+		assertEquals( qs.getExecutionCount(), 1 );
+
+		assertEquals( statistics.getEntityFetchCount(), 0 );
+
 
 		Thread.sleep(200);
 
@@ -210,31 +234,95 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
+		// hit -> 0
+		// miss -> 2
+		// put -> 2
+
+		assertEquals( es.getInsertCount(), 1 );
+		assertEquals( es.getUpdateCount(), 0 );
+
+		assertEquals( statistics.getQueryCacheHitCount(), 0 );
 		assertEquals( qs.getCacheHitCount(), 0 );
 
+		assertEquals( statistics.getQueryCacheMissCount(), 2 );
+		assertEquals( qs.getCacheMissCount(), 2 );
+
+		assertEquals( statistics.getQueryCachePutCount(), 2 );
+		assertEquals( qs.getCachePutCount(), 2 );
+
+		assertEquals( statistics.getQueryExecutionCount(), 2 );
+		assertEquals( qs.getExecutionCount(), 2 );
+
+		assertEquals( statistics.getEntityFetchCount(), 0 );
+
+
 		s = openSession();
 		t = s.beginTransaction();
 		result = s.createQuery( queryString ).setCacheable(true).list();
 		assertEquals( result.size(), 1 );
 		t.commit();
 		s.close();
+
+		// hit -> 1
+		// miss -> 2
+		// put -> 2
+
+		assertEquals( es.getInsertCount(), 1 );
+		assertEquals( es.getUpdateCount(), 0 );
+
+		assertEquals( statistics.getQueryCacheHitCount(), 1 );
+		assertEquals( qs.getCacheHitCount(), 1);
+
+		assertEquals( statistics.getQueryCacheMissCount(), 2 );
+		assertEquals( qs.getCacheMissCount(), 2 );
+
+		assertEquals( statistics.getQueryCachePutCount(), 2 );
+		assertEquals( qs.getCachePutCount(), 2 );
+
+		assertEquals( statistics.getQueryExecutionCount(), 2 );
+		assertEquals( qs.getExecutionCount(), 2 );
+
+		assertEquals( statistics.getEntityFetchCount(), 0 );
+
 
 		assertEquals( qs.getCacheHitCount(), 1 );
-		assertEquals( s.getSessionFactory().getStatistics().getEntityFetchCount(), 0 );
+		assertEquals( statistics.getEntityFetchCount(), 0 );
 
 		s = openSession();
 		t = s.beginTransaction();
 		result = s.createQuery( queryString ).setCacheable(true).list();
 		assertEquals( result.size(), 1 );
-		assertTrue( Hibernate.isInitialized( result.get(0) ) );
 		i = (Item) result.get(0);
+		assertTrue( Hibernate.isInitialized( i ) );
+		assertTrue( s.contains( i ) );
 		i.setName("Widget");
+		s.flush();
 		t.commit();
 		s.close();
 
+		// hit -> 2
+		// miss -> 2
+		// put -> 2
+		//
+		// + another invalidation
+
+		assertEquals( es.getInsertCount(), 1 );
+		assertEquals( es.getUpdateCount(), 1 );
+
+		assertEquals( statistics.getQueryCacheHitCount(), 2 );
 		assertEquals( qs.getCacheHitCount(), 2 );
+
+		assertEquals( statistics.getQueryCacheMissCount(), 2 );
 		assertEquals( qs.getCacheMissCount(), 2 );
-		assertEquals( s.getSessionFactory().getStatistics().getEntityFetchCount(), 0 );
+
+		assertEquals( statistics.getQueryCachePutCount(), 2 );
+		assertEquals( qs.getCachePutCount(), 2 );
+
+		assertEquals( statistics.getQueryExecutionCount(), 2 );
+		assertEquals( qs.getExecutionCount(), 2 );
+
+		assertEquals( statistics.getEntityFetchCount(), 0 );
+
 
 		Thread.sleep(200);
 
@@ -246,6 +334,30 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.delete(i);
 		t.commit();
 		s.close();
+
+		// hit -> 2
+		// miss -> 3
+		// put -> 3
+
+
+		assertEquals( es.getInsertCount(), 1 );
+		assertEquals( es.getUpdateCount(), 1 );
+
+		assertEquals( statistics.getQueryCacheHitCount(), 2 );
+		assertEquals( qs.getCacheHitCount(), 2 );
+
+		assertEquals( statistics.getQueryCacheMissCount(), 3 );
+		assertEquals( qs.getCacheMissCount(), 3 );
+
+		assertEquals( statistics.getQueryCachePutCount(), 3);
+		assertEquals( qs.getCachePutCount(), 3 );
+
+		assertEquals( statistics.getQueryExecutionCount(), 3);
+		assertEquals( qs.getExecutionCount(), 3 );
+
+		assertEquals( statistics.getEntityFetchCount(), 0 );
+		assertEquals( es.getFetchCount(), 0 );
+
 
 		assertEquals( qs.getCacheHitCount(), 2 );
 		assertEquals( qs.getCacheMissCount(), 3 );

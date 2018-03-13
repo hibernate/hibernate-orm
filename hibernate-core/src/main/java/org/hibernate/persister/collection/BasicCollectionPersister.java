@@ -17,7 +17,7 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -54,7 +54,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	public BasicCollectionPersister(
 			Collection collectionBinding,
-			CollectionRegionAccessStrategy cacheAccessStrategy,
+			CollectionDataAccess cacheAccessStrategy,
 			PersisterCreationContext creationContext) throws MappingException, CacheException {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
 	}

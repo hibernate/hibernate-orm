@@ -6,19 +6,17 @@
  */
 package org.hibernate.test.naturalid.mutable.cached;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
-import java.io.Serializable;
-import java.util.Map;
-
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.NaturalIdCacheStatistics;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class CachedMutableNaturalIdStrictReadWriteTest extends
 		CachedMutableNaturalIdTest {
@@ -45,12 +43,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends
 				"hibernate.test." + AllCached.class.getName() + "##NaturalId"
 		);
 
-		final Map entries = stats.getEntries();
-		assertEquals( 1, entries.size() );
-		final Serializable[] cacheKey = (Serializable[]) entries.keySet().iterator().next();
-		assertEquals( 1, cacheKey.length );
-		assertEquals( it.getName(), cacheKey[0] );
-		assertNotNull( entries.get( cacheKey ) );
+		assertEquals( 1, stats.getPutCount() );
 	}
 	
 	@Test

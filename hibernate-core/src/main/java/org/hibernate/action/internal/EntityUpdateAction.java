@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.internal.Versioning;
@@ -128,7 +128,7 @@ public final class EntityUpdateAction extends EntityAction {
 		
 		final Object ck;
 		if ( persister.canWriteToCache() ) {
-			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final EntityDataAccess cache = persister.getCacheAccessStrategy();
 			ck = cache.generateCacheKey(
 					id, 
 					persister,
@@ -311,7 +311,7 @@ public final class EntityUpdateAction extends EntityAction {
 	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) throws CacheException {
 		final EntityPersister persister = getPersister();
 		if ( persister.canWriteToCache() ) {
-			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final EntityDataAccess cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
 					getId(),
 					persister,
@@ -337,7 +337,7 @@ public final class EntityUpdateAction extends EntityAction {
 		postCommitUpdate( success );
 	}
 
-	private boolean cacheAfterUpdate(EntityRegionAccessStrategy cache, Object ck) {
+	private boolean cacheAfterUpdate(EntityDataAccess cache, Object ck) {
 		final SharedSessionContractImplementor session = getSession();
 		SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		try {

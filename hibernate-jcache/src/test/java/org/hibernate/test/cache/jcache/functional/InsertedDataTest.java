@@ -64,7 +64,7 @@ public class InsertedDataTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
+		Map cacheMap = sessionFactory().getStatistics().getDomainDataRegionStatistics( "item" ).getEntries();
 		assertEquals( 1, cacheMap.size() );
 
 		s = openSession();
@@ -87,7 +87,7 @@ public class InsertedDataTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.getTransaction().rollback();
 		s.close();
 
-		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
+		Map cacheMap = sessionFactory().getStatistics().getDomainDataRegionStatistics( "item" ).getEntries();
 		assertEquals( 0, cacheMap.size() );
 	}
 
@@ -105,7 +105,7 @@ public class InsertedDataTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
+		Map cacheMap = sessionFactory().getStatistics().getDomainDataRegionStatistics( "item" ).getEntries();
 		assertEquals( 1, cacheMap.size() );
 
 		s = openSession();
@@ -129,7 +129,7 @@ public class InsertedDataTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.getTransaction().rollback();
 		s.close();
 
-		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
+		Map cacheMap = sessionFactory().getStatistics().getDomainDataRegionStatistics( "item" ).getEntries();
 		assertEquals( 0, cacheMap.size() );
 
 		s = openSession();
@@ -153,7 +153,7 @@ public class InsertedDataTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
+		Map cacheMap = sessionFactory().getStatistics().getDomainDataRegionStatistics( "item" ).getEntries();
 		assertEquals( 1, cacheMap.size() );
 
 		s = openSession();
@@ -177,7 +177,7 @@ public class InsertedDataTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.getTransaction().rollback();
 		s.close();
 
-		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
+		Map cacheMap = sessionFactory().getStatistics().getDomainDataRegionStatistics( "item" ).getEntries();
 		assertEquals( 1, cacheMap.size() );
 		Object lock = cacheMap.values().iterator().next();
 		assertEquals( "org.hibernate.cache.jcache.access.AbstractReadWriteRegionAccessStrategy$Lock", lock.getClass().getName() );
@@ -205,7 +205,7 @@ public class InsertedDataTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
+		Map cacheMap = sessionFactory().getStatistics().getDomainDataRegionStatistics( "item" ).getEntries();
 		assertEquals( 1, cacheMap.size() );
 
 		s = openSession();
@@ -230,7 +230,7 @@ public class InsertedDataTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.getTransaction().rollback();
 		s.close();
 
-		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
+		Map cacheMap = sessionFactory().getStatistics().getDomainDataRegionStatistics( "item" ).getEntries();
 		assertEquals( 0, cacheMap.size() );
 
 		s = openSession();

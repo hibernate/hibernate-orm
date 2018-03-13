@@ -18,8 +18,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class ConcurrentQueryStatisticsTest extends BaseUnitTestCase {
 
-	private ConcurrentQueryStatisticsImpl stats = new ConcurrentQueryStatisticsImpl(
-			"test" );
+	private QueryStatisticsImpl stats = new QueryStatisticsImpl( "test" );
 
 	@Test
 	public void testStats() {

@@ -20,8 +20,8 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
-import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.QueryKey;
+import org.hibernate.cache.spi.QueryResultRegionAccess;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -542,7 +542,7 @@ public class CustomLoader extends Loader {
 			final SharedSessionContractImplementor session,
 			final QueryParameters queryParameters,
 			final Type[] resultTypes,
-			final QueryCache queryCache,
+			final QueryResultRegionAccess queryCache,
 			final QueryKey key,
 			final List result) {
 		super.putResultInQueryCache( session, queryParameters, this.resultTypes, queryCache, key, result );

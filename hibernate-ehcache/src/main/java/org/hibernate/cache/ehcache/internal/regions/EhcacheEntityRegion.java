@@ -13,10 +13,7 @@ import net.sf.ehcache.Ehcache;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
-import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 
 /**
  * An entity region specific wrapper around an Ehcache instance.

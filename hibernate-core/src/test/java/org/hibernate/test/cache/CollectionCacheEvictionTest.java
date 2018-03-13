@@ -9,7 +9,7 @@ package org.hibernate.test.cache;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
 import org.hibernate.cache.internal.CollectionCacheInvalidator;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -92,9 +92,9 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		Session session = openSession();
 		SessionImplementor sessionImplementor = (SessionImplementor) session;
 
-		CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+		CollectionDataAccess cache = persister.getCacheAccessStrategy();
 		Object key = cache.generateCacheKey( 1, persister, sessionFactory(), session.getTenantIdentifier() );
-		Object cachedValue = cache.get( sessionImplementor, key, sessionImplementor.getTimestamp() );
+		Object cachedValue = cache.get( sessionImplementor, key );
 		assertNull( cachedValue );
 
 		Company company = session.get( Company.class, 1 );
@@ -105,7 +105,7 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		session = openSession();
 		sessionImplementor = (SessionImplementor) session;
 		key = cache.generateCacheKey( 1, persister, sessionFactory(), session.getTenantIdentifier() );
-		cachedValue = cache.get( sessionImplementor, key, sessionImplementor.getTimestamp() );
+		cachedValue = cache.get( sessionImplementor, key );
 		assertNotNull( "Collection wasn't cached", cachedValue );
 		session.close();
 	}

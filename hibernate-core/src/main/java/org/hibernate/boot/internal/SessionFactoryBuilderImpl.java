@@ -23,7 +23,7 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cache.spi.QueryCacheFactory;
+import org.hibernate.cache.spi.TimestampsRegionAccessFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
@@ -283,8 +283,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyQueryCacheFactory(QueryCacheFactory factory) {
-		this.optionsBuilder.applyQueryCacheFactory( factory );
+	public SessionFactoryBuilder applyTimestampsRegionAccessFactory(TimestampsRegionAccessFactory factory) {
+		this.optionsBuilder.applyTimestampsRegionAccessFactory( factory );
 		return this;
 	}
 

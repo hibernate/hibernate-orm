@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
@@ -116,7 +116,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 					session
 			);
 			cacheEntry = persister.getCacheEntryStructure().structure( ce );
-			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final EntityDataAccess cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
 
 			final boolean put = cacheInsert( persister, ck );
@@ -211,20 +211,20 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) throws HibernateException {
 		final EntityPersister persister = getPersister();
 		if ( success && isCachePutEnabled( persister, getSession() ) ) {
-			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final EntityDataAccess cache = persister.getCacheAccessStrategy();
 			SessionFactoryImplementor sessionFactoryImplementor = session.getFactory();
 			final Object ck = cache.generateCacheKey( getId(), persister, sessionFactoryImplementor, session.getTenantIdentifier() );
 			final boolean put = cacheAfterInsert( cache, ck );
 
 			if ( put && sessionFactoryImplementor.getStatistics().isStatisticsEnabled() ) {
-				sessionFactoryImplementor.getStatisticsImplementor()
+				sessionFactoryImplementor.getStatistics()
 						.secondLevelCachePut( cache.getRegion().getName() );
 			}
 		}
 		postCommitInsert( success );
 	}
 
-	private boolean cacheAfterInsert(EntityRegionAccessStrategy cache, Object ck) {
+	private boolean cacheAfterInsert(EntityDataAccess cache, Object ck) {
 		SharedSessionContractImplementor session = getSession();
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		try {

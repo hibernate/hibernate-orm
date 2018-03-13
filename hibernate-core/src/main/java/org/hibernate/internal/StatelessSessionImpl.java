@@ -24,7 +24,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
@@ -223,10 +223,18 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 //		}
 
 		if ( persister.canWriteToCache() ) {
-			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey( id, persister, getFactory(), getTenantIdentifier() );
-			cache.evict( ck );
+			final EntityDataAccess cacheAccess = persister.getCacheAccessStrategy();
+			if ( cacheAccess != null ) {
+				final Object ck = cacheAccess.generateCacheKey(
+						id,
+						persister,
+						getFactory(),
+						getTenantIdentifier()
+				);
+				cacheAccess.evict( ck );
+			}
 		}
+
 		String previousFetchProfile = this.getLoadQueryInfluencers().getInternalFetchProfile();
 		Object result = null;
 		try {

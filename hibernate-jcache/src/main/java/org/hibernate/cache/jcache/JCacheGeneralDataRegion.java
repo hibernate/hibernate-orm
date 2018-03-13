@@ -9,7 +9,6 @@ package org.hibernate.cache.jcache;
 import javax.cache.Cache;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.GeneralDataRegion;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**

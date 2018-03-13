@@ -7,9 +7,9 @@
 package org.hibernate.persister.spi;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -34,10 +34,10 @@ public interface PersisterFactory extends Service {
 	 *
 	 * @throws HibernateException Indicates a problem building the persister.
 	 */
-	public EntityPersister createEntityPersister(
+	EntityPersister createEntityPersister(
 			PersistentClass entityBinding,
-			EntityRegionAccessStrategy entityCacheAccessStrategy,
-			NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy,
+			EntityDataAccess entityCacheAccessStrategy,
+			NaturalIdDataAccess naturalIdCacheAccessStrategy,
 			PersisterCreationContext creationContext) throws HibernateException;
 
 	/**
@@ -51,9 +51,9 @@ public interface PersisterFactory extends Service {
 	 *
 	 * @throws HibernateException Indicates a problem building the persister.
 	 */
-	public CollectionPersister createCollectionPersister(
+	CollectionPersister createCollectionPersister(
 			Collection collectionBinding,
-			CollectionRegionAccessStrategy cacheAccessStrategy,
+			CollectionDataAccess cacheAccessStrategy,
 			PersisterCreationContext creationContext) throws HibernateException;
 
 }

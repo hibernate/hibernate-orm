@@ -127,6 +127,18 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		}
 	}
 
+	private void logIncompatibleRegistration(String path, Type existingType, Type type) {
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev(
+					"Skipped adding same named type incompatible property to base type [{0}] for property [{1}], existing type = [{2}], incoming type = [{3}]",
+					getEntityName(),
+					path,
+					existingType,
+					type
+			);
+		}
+	}
+
 	/**
 	 * Only kept around for compatibility reasons since this seems to be API.
 	 *
@@ -176,11 +188,11 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			Type newType = null;
 			MetadataImplementor metadata = (MetadataImplementor) factory;
 
-			if ( type instanceof AnyType ) {
+			if ( type instanceof AnyType && existingType instanceof AnyType ) {
 				// TODO: not sure how to handle any types. For now we just return and let the first type dictate what type the property has...
 				return;
 			}
-			else if ( type instanceof CollectionType ) {
+			else if ( type instanceof CollectionType && existingType instanceof CollectionType ) {
 				Collection thisCollection = metadata.getCollectionBinding( ( (CollectionType) existingType ).getRole() );
 				Collection otherCollection = metadata.getCollectionBinding( ( (CollectionType) type ).getRole() );
 
@@ -195,17 +207,9 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 
 				// When we discover incompatible types, we use "null" as property type to signal that the property is not resolvable on the parent type
 				newType = null;
-				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev(
-							"Skipped adding same named type incompatible property to base type [{0}] for property [{1}], existing type = [{2}], incoming type = [{3}]",
-							getEntityName(),
-							path,
-							existingType,
-							type
-					);
-				}
+				logIncompatibleRegistration(path, existingType, type);
 			}
-			else if ( type instanceof EntityType ) {
+			else if ( type instanceof EntityType && existingType instanceof EntityType ) {
 				EntityType entityType1 = (EntityType) existingType;
 				EntityType entityType2 = (EntityType) type;
 
@@ -219,6 +223,9 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 				}
 
 				newType = getCommonType( metadata, entityType1, entityType2 );
+			}
+			else {
+				logIncompatibleRegistration(path, existingType, type);
 			}
 
 			typesByPropertyPath.put( path, newType );

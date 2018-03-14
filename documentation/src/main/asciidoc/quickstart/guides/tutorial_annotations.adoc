@@ -97,7 +97,7 @@ any mapping information associated with `title`.
 === Take it further!
 
 .Practice Exercises
-- [ ] Add an association to the `Event` entity to model a message thread. Use the _Developer Guide_
+- [ ] Add an association to the `Event` entity to model a message thread. Use the _User Guide_
 as a guide.
 - [ ] Add a callback to receive notifications when an `Event` is created, updated or deleted.  Try the same with
-an event listener.  Use the _Developer Guide_ as a guide.
+an event listener.  Use the _User Guide_ as a guide.

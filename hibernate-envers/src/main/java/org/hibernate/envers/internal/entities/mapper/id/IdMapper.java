@@ -9,6 +9,7 @@ package org.hibernate.envers.internal.entities.mapper.id;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Session;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.service.ServiceRegistry;
 
@@ -20,6 +21,11 @@ public interface IdMapper {
 	ServiceRegistry getServiceRegistry();
 
 	void mapToMapFromId(Map<String, Object> data, Object obj);
+
+	default void mapToMapFromId(Session session, Map<String, Object> data, Object obj) {
+		// Delegate to the old behavior, allowing implementations to override.
+		mapToMapFromId( data, obj );
+	}
 
 	void mapToMapFromEntity(Map<String, Object> data, Object obj);
 

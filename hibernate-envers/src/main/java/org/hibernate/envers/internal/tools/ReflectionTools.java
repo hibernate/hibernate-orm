@@ -6,12 +6,15 @@
  */
 package org.hibernate.envers.internal.tools;
 
+import java.lang.reflect.Field;
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.internal.util.collections.ConcurrentReferenceHashMap;
@@ -24,6 +27,7 @@ import org.hibernate.service.ServiceRegistry;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public abstract class ReflectionTools {
 	private static final Map<Pair<Class, String>, Getter> GETTER_CACHE = new ConcurrentReferenceHashMap<>(
@@ -72,6 +76,42 @@ public abstract class ReflectionTools {
 		}
 
 		return value;
+	}
+
+	public static Field getField(Class cls, PropertyData propertyData) {
+		Field field = null;
+		Class<?> clazz = cls;
+		while ( clazz != null && field == null ) {
+			try {
+				field = clazz.getDeclaredField( propertyData.getName() );
+			}
+			catch ( Exception e ) {
+				// ignore
+			}
+			clazz = clazz.getSuperclass();
+		}
+		return field;
+	}
+
+	public static Class<?> getType(Class cls, PropertyData propertyData, ServiceRegistry serviceRegistry) {
+		final Setter setter = getSetter( cls, propertyData, serviceRegistry );
+		if ( setter.getMethod() != null && setter.getMethod().getParameterCount() > 0 ) {
+			return setter.getMethod().getParameterTypes()[0];
+		}
+
+		final Field field = getField( cls, propertyData );
+		if ( field != null ) {
+			return field.getType();
+		}
+
+		throw new AuditException(
+				String.format(
+						Locale.ROOT,
+						"Failed to determine type for field [%s] on class [%s].",
+						propertyData.getName(),
+						cls.getName()
+				)
+		);
 	}
 
 	/**

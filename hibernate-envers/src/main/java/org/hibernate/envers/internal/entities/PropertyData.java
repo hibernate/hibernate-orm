@@ -30,6 +30,7 @@ public class PropertyData {
 	// They're properties used for bookkeeping by Hibernate
 	private boolean synthetic;
 	private Type propertyType;
+	private Class<?> virtualReturnClass;
 
 	/**
 	 * Copies the given property data, except the name.
@@ -42,6 +43,12 @@ public class PropertyData {
 		this.beanName = propertyData.beanName;
 		this.accessType = propertyData.accessType;
 		this.store = propertyData.store;
+
+		this.usingModifiedFlag = propertyData.usingModifiedFlag;
+		this.modifiedFlagName = propertyData.modifiedFlagName;
+		this.synthetic = propertyData.synthetic;
+		this.propertyType = propertyData.propertyType;
+		this.virtualReturnClass = propertyData.virtualReturnClass;
 	}
 
 	/**
@@ -92,8 +99,22 @@ public class PropertyData {
 			String modifiedFlagName,
 			boolean synthetic,
 			Type propertyType) {
+		this( name, beanName, accessType, store, usingModifiedFlag, modifiedFlagName, synthetic, propertyType, null );
+	}
+
+	public PropertyData(
+			String name,
+			String beanName,
+			String accessType,
+			ModificationStore store,
+			boolean usingModifiedFlag,
+			String modifiedFlagName,
+			boolean synthetic,
+			Type propertyType,
+			Class<?> virtualReturnClass) {
 		this( name, beanName, accessType, store, usingModifiedFlag, modifiedFlagName, synthetic );
 		this.propertyType = propertyType;
+		this.virtualReturnClass = virtualReturnClass;
 	}
 
 	public String getName() {
@@ -130,6 +151,10 @@ public class PropertyData {
 
 	public Type getType() {
 		return propertyType;
+	}
+
+	public Class<?> getVirtualReturnClass() {
+		return virtualReturnClass;
 	}
 
 	@Override

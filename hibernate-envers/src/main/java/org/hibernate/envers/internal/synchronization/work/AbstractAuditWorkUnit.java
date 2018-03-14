@@ -15,12 +15,14 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.strategy.AuditStrategy;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Stephanie Pau at Markit Group Plc
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 	protected final SessionImplementor sessionImplementor;
@@ -52,7 +54,9 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 		final Map<String, Object> originalId = new HashMap<>();
 		originalId.put( entitiesCfg.getRevisionFieldName(), revision );
 
-		enversService.getEntitiesConfigurations().get( getEntityName() ).getIdMapper().mapToMapFromId( originalId, id );
+		final IdMapper idMapper = enversService.getEntitiesConfigurations().get( getEntityName() ).getIdMapper();
+		idMapper.mapToMapFromId( sessionImplementor, originalId, id );
+
 		data.put( entitiesCfg.getRevisionTypePropName(), revisionType );
 		data.put( entitiesCfg.getOriginalIdPropName(), originalId );
 	}

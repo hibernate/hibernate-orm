@@ -6,6 +6,8 @@
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.envers.exception.AuditException;
@@ -18,7 +20,7 @@ import org.hibernate.service.ServiceRegistry;
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public abstract class AbstractCompositeIdMapper extends AbstractIdMapper implements SimpleIdMapperBuilder {
+public abstract class AbstractCompositeIdMapper extends AbstractIdMapper implements SimpleIdMapperBuilder, CompositeIdMapper {
 	protected final Class compositeIdClass;
 
 	protected Map<PropertyData, SingleIdMapper> ids;
@@ -48,6 +50,7 @@ public abstract class AbstractCompositeIdMapper extends AbstractIdMapper impleme
 			throw new AuditException( e );
 		}
 
+
 		for ( SingleIdMapper mapper : ids.values() ) {
 			if ( !mapper.mapToEntityFromMap( ret, data ) ) {
 				return null;
@@ -55,5 +58,15 @@ public abstract class AbstractCompositeIdMapper extends AbstractIdMapper impleme
 		}
 
 		return ret;
+	}
+
+	@Override
+	public Iterable<Map.Entry<PropertyData, SingleIdMapper>> getIds() {
+		return Collections.unmodifiableMap( ids ).entrySet();
+	}
+
+	@Override
+	public Class getCompositeIdClass() {
+		return compositeIdClass;
 	}
 }

@@ -458,7 +458,10 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	protected final Object getIdentifier(Object value, SessionImplementor session) throws HibernateException {
-		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
+		if ( getIdentifierType( session.getFactory() ).getReturnedClass().isInstance( value ) ) { //allow for the assumption they may try to pass the identifier instead of the entity (used by Envers)
+			return value;
+		}
+		else if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
 			return ForeignKeys.getEntityIdentifierIfNotUnsaved(
 					getAssociatedEntityName(),
 					value,
@@ -507,6 +510,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			if ( value instanceof HibernateProxy ) {
 				HibernateProxy proxy = (HibernateProxy) value;
 				id = proxy.getHibernateLazyInitializer().getIdentifier();
+			}
+			else if ( persister.getIdentifierType().getReturnedClass().isInstance( value ) ) {
+				id = (Serializable)value;
 			}
 			else {
 				id = persister.getIdentifier( value );

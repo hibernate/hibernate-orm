@@ -42,6 +42,20 @@ public abstract class ReflectionTools {
 				.resolvePropertyAccessStrategy( cls, accessorType, null );
 	}
 
+	public static Class<?> getType(Class cls, PropertyData propertyData, ServiceRegistry serviceRegistry) {
+		return getType( cls, propertyData.getBeanName(), propertyData.getAccessType(), serviceRegistry );
+	}
+
+	public static Class<?> getType(Class cls, String propertyName, String accessorType, ServiceRegistry serviceRegistry) {
+		final Getter getter = getGetter( cls, propertyName, accessorType, serviceRegistry );
+		if (getter != null) {
+			return getter.getReturnType();
+		}
+		else {
+			throw new IllegalArgumentException( String.format( "No getter for property '{0}' of class '{1}'", propertyName, cls ) );
+		}
+	}
+
 	public static Getter getGetter(Class cls, PropertyData propertyData, ServiceRegistry serviceRegistry) {
 		return getGetter( cls, propertyData.getBeanName(), propertyData.getAccessType(), serviceRegistry );
 	}

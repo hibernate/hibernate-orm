@@ -8,6 +8,7 @@ package org.hibernate.envers.internal.entities;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,8 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
+import org.hibernate.envers.internal.entities.mapper.id.MultipleIdMapper;
+import org.hibernate.envers.internal.entities.mapper.id.SingleIdMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
@@ -60,17 +63,18 @@ public class EntityInstantiator {
 
 		// First mapping the primary key
 		final IdMapper idMapper = enversService.getEntitiesConfigurations().get( entityName ).getIdMapper();
-		final Map originalId = (Map) versionsEntity.get(
-				enversService.getAuditEntitiesConfiguration()
-						.getOriginalIdPropName()
-		);
+		final Map originalId = (Map) versionsEntity.get( enversService.getAuditEntitiesConfiguration().getOriginalIdPropName() );
 
 		// Fixes HHH-4751 issue (@IdClass with @ManyToOne relation mapping inside)
 		// Note that identifiers are always audited
 		// Replace identifier proxies if do not point to audit tables
-		replaceNonAuditIdProxies( versionsEntity, revision );
+		replaceNonAuditIdProxies(
+				originalId,
+				revision,
+				(RevisionType) versionsEntity.get( enversService.getAuditEntitiesConfiguration().getRevisionTypePropName() )
+		);
 
-		final Object primaryKey = idMapper.mapToIdFromMap( originalId );
+		final Object primaryKey = idMapper.mapToIdFromMap( replaceEntityIds( originalId , idMapper) );
 
 		// Checking if the entity is in cache
 		if ( versionsReader.getFirstLevelCache().contains( entityName, revision, primaryKey ) ) {
@@ -114,8 +118,7 @@ public class EntityInstantiator {
 	}
 
 	@SuppressWarnings({"unchecked"})
-	private void replaceNonAuditIdProxies(Map versionsEntity, Number revision) {
-		final Map originalId = (Map) versionsEntity.get( enversService.getAuditEntitiesConfiguration().getOriginalIdPropName() );
+	private void replaceNonAuditIdProxies(Map originalId, Number revision, RevisionType revisionType) {
 		for ( Object key : originalId.keySet() ) {
 			final Object value = originalId.get( key );
 			if ( value instanceof HibernateProxy ) {
@@ -135,9 +138,7 @@ public class EntityInstantiator {
 							entityId,
 							revision,
 							RevisionType.DEL.equals(
-									versionsEntity.get(
-											enversService.getAuditEntitiesConfiguration().getRevisionTypePropName()
-									)
+									revisionType
 							),
 							enversService
 					);
@@ -151,6 +152,37 @@ public class EntityInstantiator {
 				}
 			}
 		}
+	}
+
+	private Map replaceEntityIds( Map originalId, IdMapper idMapper ) {
+		final Map map;
+		//For composite identifiers where one of the identifiers is an entity (i..e @ManyToOne), the @IdClass is specified to use the primary key of that entity as the property type representing that identifier
+		//    Because of this we must unwrap the entities for those composite IDs
+		if ( idMapper instanceof MultipleIdMapper ) {  //Only for composite IDs and not for Embedded Ids
+			final Class<?> compositeClass = ( (MultipleIdMapper) idMapper ).getCompositeIdClass();
+			if ( compositeClass != null ) {
+				map = new HashMap( originalId.size() );
+				for ( final Map.Entry<PropertyData, SingleIdMapper> entry : ( (MultipleIdMapper) idMapper ).getIds() ) {
+					final Object value = entry.getValue().mapToIdFromMap( originalId );
+					final Class<?> propertyType = ReflectionTools.getType( compositeClass, entry.getKey(), enversService.getServiceRegistry() );
+					if ( !propertyType.isInstance( value ) && value instanceof HibernateProxy ) {
+						final String entityName = ( (HibernateProxy) value ).getHibernateLazyInitializer().getEntityName();
+						final Object entityId = enversService.getEntitiesConfigurations().get( entityName ).getIdMapper().mapToIdFromEntity( value );
+						entry.getValue().mapToMapFromId( map, entityId );
+					}
+					else {
+						entry.getValue().mapToMapFromId( map, value );
+					}
+				}
+			}
+			else {
+				map = originalId;
+			}
+		}
+		else {
+			map = originalId;
+		}
+		return map;
 	}
 
 	@SuppressWarnings({"unchecked"})

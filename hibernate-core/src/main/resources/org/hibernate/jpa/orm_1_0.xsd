@@ -46,7 +46,7 @@
             <xsd:annotation>
                 <xsd:documentation>
 
-                    The entity-mappings element is the root element of an mapping
+                    The entity-mappings element is the root element of a mapping
                     file. It contains the following four types of elements:
 
                     1. The persistence-unit-metadata element contains metadata

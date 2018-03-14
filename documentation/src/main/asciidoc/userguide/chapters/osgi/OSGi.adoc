@@ -162,7 +162,7 @@ Your bundle's manifest will need to import, at a minimum,
 * `org.osgi.framework`, necessary to discover the `SessionFactory` (described below)
 * `org.hibernate.*` packages, as necessary (ex: cfg, criterion, service, etc.)
 
-=== Obtaining an SessionFactory
+=== Obtaining a SessionFactory
 
 `hibernate-osgi` registers an OSGi service, using the `SessionFactory` interface name, that bootstraps and creates a `SessionFactory` specific for OSGi environments.
 

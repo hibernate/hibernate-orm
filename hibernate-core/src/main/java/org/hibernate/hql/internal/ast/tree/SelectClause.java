@@ -261,7 +261,7 @@ public class SelectClause extends SelectExpressionList {
 	}
 
 	private void initializeColumnNames() {
-		// Generate an 2d array of column names, the first dimension is parallel with the
+		// Generate a 2d array of column names, the first dimension is parallel with the
 		// return types array.  The second dimension is the list of column names for each
 		// type.
 

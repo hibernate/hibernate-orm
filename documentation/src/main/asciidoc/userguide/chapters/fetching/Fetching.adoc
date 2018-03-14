@@ -109,7 +109,7 @@ For this reason, you should prefer LAZY associations.
 [[fetching-strategies]]
 === Applying fetch strategies
 
-Let's consider these topics as it relates to an simple domain model and a few use cases.
+Let's consider these topics as it relates to a simple domain model and a few use cases.
 
 [[fetching-strategies-domain-model-example]]
 .Sample domain model

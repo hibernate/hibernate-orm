@@ -837,7 +837,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	<T> IdentifierLoadAccess<T> byId(Class<T> entityClass);
 
 	/**
-	 * Create an {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
+	 * Create a {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
 	 * its natural id.
 	 * 
 	 * @param entityName The entity name of the entity type to be retrieved
@@ -849,7 +849,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	NaturalIdLoadAccess byNaturalId(String entityName);
 
 	/**
-	 * Create an {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
+	 * Create a {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
 	 * its natural id.
 	 * 
 	 * @param entityClass The entity type to be retrieved
@@ -861,7 +861,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	<T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass);
 
 	/**
-	 * Create an {@link SimpleNaturalIdLoadAccess} instance to retrieve the specified entity by
+	 * Create a {@link SimpleNaturalIdLoadAccess} instance to retrieve the specified entity by
 	 * its natural id.
 	 *
 	 * @param entityName The entity name of the entity type to be retrieved
@@ -874,7 +874,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	SimpleNaturalIdLoadAccess bySimpleNaturalId(String entityName);
 
 	/**
-	 * Create an {@link SimpleNaturalIdLoadAccess} instance to retrieve the specified entity by
+	 * Create a {@link SimpleNaturalIdLoadAccess} instance to retrieve the specified entity by
 	 * its simple (single attribute) natural id.
 	 *
 	 * @param entityClass The entity type to be retrieved

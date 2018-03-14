@@ -46,7 +46,7 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 	private final CacheLockProvider lockProvider;
 
 	/**
-	 * Construct an transactional Hibernate cache region around the given Ehcache instance.
+	 * Construct a transactional Hibernate cache region around the given Ehcache instance.
 	 */
 	EhcacheTransactionalDataRegion(
 			EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache cache, SessionFactoryOptions settings,

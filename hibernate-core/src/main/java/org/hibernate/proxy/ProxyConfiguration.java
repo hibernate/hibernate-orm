@@ -58,7 +58,7 @@ public interface ProxyConfiguration {
 	}
 
 	/**
-	 * An static interceptor that guards against method calls before the interceptor is set.
+	 * A static interceptor that guards against method calls before the interceptor is set.
 	 */
 	class InterceptorDispatcher {
 

@@ -232,7 +232,7 @@ public class BatchFetchQueue {
 	// collection batch support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * If an CollectionEntry represents a batch loadable collection, add
+	 * If a CollectionEntry represents a batch loadable collection, add
 	 * it to the queue.
 	 */
 	public void addBatchLoadableCollection(PersistentCollection collection, CollectionEntry ce) {

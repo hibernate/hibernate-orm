@@ -6,7 +6,7 @@
 As a JPA provider, Hibernate can introspect both the entity attributes (instance fields) or the accessors (instance properties).
 By default, the placement of the `@Id` annotation gives the default access strategy.
 When placed on a field, Hibernate will assume field-based access.
-Place on the identifier getter, Hibernate will use property-based access.
+When placed on the identifier getter, Hibernate will use property-based access.
 
 [IMPORTANT]
 ====

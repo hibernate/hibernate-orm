@@ -62,11 +62,11 @@ public interface SpatialDialect extends Serializable {
 	public String getDWithinSQL(String columnName);
 
 	/**
-	 * Returns the SQL fragment when parsing an <code>HavingSridExpression</code>.
+	 * Returns the SQL fragment when parsing a <code>HavingSridExpression</code>.
 	 *
 	 * @param columnName The geometry column to test against
 	 *
-	 * @return The SQL fragment for an <code>HavingSridExpression</code>.
+	 * @return The SQL fragment for a <code>HavingSridExpression</code>.
 	 */
 	public String getHavingSridSQL(String columnName);
 

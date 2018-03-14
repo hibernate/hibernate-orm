@@ -1767,7 +1767,7 @@ public class FooBarTest extends LegacyTestCase {
 
 		try {
 			q.setParameterList("nameList", (Collection)null);
-			fail("Should throw an queryexception when passing a null!");
+			fail("Should throw a QueryException when passing a null!");
 		}
 		catch (IllegalArgumentException qe) {
 			//should happen

@@ -310,9 +310,9 @@ Please note that the alias names in the result are simply examples, each alias w
 
 |A collection key |`{[aliasname].key}` |`ORGID as {coll.key}`
 
-|The id of an collection |`{[aliasname].id}` |`EMPID as {coll.id}`
+|The id of a collection |`{[aliasname].id}` |`EMPID as {coll.id}`
 
-|The element of an collection |`{[aliasname].element}`
+|The element of a collection |`{[aliasname].element}`
 |`XID as {coll.element}`
 
 |property of the element in the collection

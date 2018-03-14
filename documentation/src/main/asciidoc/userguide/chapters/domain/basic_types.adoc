@@ -439,7 +439,7 @@ include::{modeldir}/PhoneType.java[tags=hql-examples-domain-model-example]
 ----
 ====
 
-In the ORDINAL example, the `phone_type` column is defined as an (nullable) INTEGER type and would hold:
+In the ORDINAL example, the `phone_type` column is defined as a (nullable) INTEGER type and would hold:
 
 `NULL`:: For null values
 `0`:: For the `LAND_LINE` enum
@@ -1610,7 +1610,7 @@ include::{sourcedir}/basic/WhereTest.java[tags=mapping-where-example]
 If the database contains the following entities:
 
 [[mapping-where-persistence-example]]
-.Persisting an fetching entities with a `@Where` mapping
+.Persisting and fetching entities with a `@Where` mapping
 ====
 [source, JAVA, indent=0]
 ----
@@ -1717,7 +1717,7 @@ include::{sourcedir}/basic/FilterTest.java[tags=mapping-filter-example]
 If the database contains the following entities:
 
 [[mapping-filter-persistence-example]]
-.Persisting an fetching entities with a `@Filter` mapping
+.Persisting and fetching entities with a `@Filter` mapping
 ====
 [source, JAVA, indent=0]
 ----
@@ -1821,7 +1821,7 @@ include::{sourcedir}/basic/FilterJoinTableTest.java[tags=mapping-filter-join-tab
 If the database contains the following entities:
 
 [[mapping-filter-join-table-persistence-example]]
-.Persisting an fetching entities with a `@FilterJoinTable` mapping
+.Persisting and fetching entities with a `@FilterJoinTable` mapping
 ====
 [source, JAVA, indent=0]
 ----

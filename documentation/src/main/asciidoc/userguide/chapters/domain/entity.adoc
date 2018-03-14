@@ -376,7 +376,7 @@ include::{sourcedir-proxy}/ProxyInterfaceTest.java[tag=entity-proxy-interface-ma
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Proxy.html[`@Proxy`]
 annotation is used to specify a custom Proxy implementation for the current annotated entity.
 
-When loading the `Book` entity proxy, Hibernate is going to proxy the `Identifiable` interface instead as illustarted by the following example:
+When loading the `Book` entity proxy, Hibernate is going to proxy the `Identifiable` interface instead as illustrated by the following example:
 
 [[entity-proxy-persist-mapping]]
 .Proxying the final entity class implementing the `Identifiable` interface
@@ -420,7 +420,7 @@ include::{sourcedir-proxy}/tuplizer/Country.java[tag=entity-tuplizer-entity-mapp
 The `@Tuplizer` instructs Hibernate to use the `DynamicEntityTuplizer` and `DynamicEmbeddableTuplizer` to handle
 the associated entity and embeddable object types.
 
-Both the `Cuising` entity and the `Country` embeddable types are going to be instantiated as Java dynamic proxies,
+Both the `Cuisine` entity and the `Country` embeddable types are going to be instantiated as Java dynamic proxies,
 as you can see in the following `DynamicInstantiator` example:
 
 [[entity-tuplizer-instantiator]]
@@ -486,5 +486,5 @@ include::{sourcedir-persister}/Book.java[tag=entity-persister-mapping,indent=0]
 ----
 ====
 
-By providing you own `EntityPersister` and `CollectionPersister` implementations,
+By providing your own `EntityPersister` and `CollectionPersister` implementations,
 you can control how entities and collections are persisted in to the database.

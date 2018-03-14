@@ -107,11 +107,11 @@ public class PostgisPG9Dialect extends PostgreSQL9Dialect implements SpatialDial
 	}
 
 	/**
-	 * Returns the SQL fragment when parsing an <code>HavingSridExpression</code>.
+	 * Returns the SQL fragment when parsing a <code>HavingSridExpression</code>.
 	 *
 	 * @param columnName The geometry column to test against
 	 *
-	 * @return The SQL fragment for an <code>HavingSridExpression</code>.
+	 * @return The SQL fragment for a <code>HavingSridExpression</code>.
 	 */
 	@Override
 	public String getHavingSridSQL(String columnName) {

@@ -40,6 +40,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
@@ -115,13 +116,12 @@ public class MetadataBuildingProcess {
 			final ManagedResources managedResources,
 			final BootstrapContext bootstrapContext,
 			final MetadataBuildingOptions options) {
-		final BasicTypeRegistry basicTypeRegistry = handleTypes( bootstrapContext, options );
-
 		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl(
 				bootstrapContext,
-				options,
-				new TypeResolver( basicTypeRegistry, new TypeFactory() )
+				options
 		);
+
+		handleTypes( bootstrapContext, options );
 
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 
@@ -136,6 +136,9 @@ public class MetadataBuildingProcess {
 					converterInfo.toConverterDescriptor( rootMetadataBuildingContext )
 			);
 		}
+
+		bootstrapContext.getTypeConfiguration().scope( rootMetadataBuildingContext );
+
 
 		final IndexView jandexView = bootstrapContext.getJandexView();
 
@@ -266,7 +269,7 @@ public class MetadataBuildingProcess {
 		processor.processFilterDefinitions();
 		processor.processFetchProfiles();
 
-		final Set<String> processedEntityNames = new HashSet<String>();
+		final Set<String> processedEntityNames = new HashSet<>();
 		processor.prepareForEntityHierarchyProcessing();
 		processor.processEntityHierarchies( processedEntityNames );
 		processor.postProcessEntityHierarchies();
@@ -311,6 +314,7 @@ public class MetadataBuildingProcess {
 		return metadataCollector.buildMetadataInstance( rootMetadataBuildingContext );
 	}
 
+//	todo (7.0) : buildJandexInitializer
 //	private static JandexInitManager buildJandexInitializer(
 //			MetadataBuildingOptions options,
 //			ClassLoaderAccess classLoaderAccess) {
@@ -323,33 +327,34 @@ public class MetadataBuildingProcess {
 //		return new JandexInitManager( options.getJandexView(), classLoaderAccess, autoIndexMembers );
 //	}
 
-
-	private static BasicTypeRegistry handleTypes(BootstrapContext bootstrapContext, MetadataBuildingOptions options) {
+	private static void handleTypes(BootstrapContext bootstrapContext, MetadataBuildingOptions options) {
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
-
-		// ultimately this needs to change a little bit to account for HHH-7792
-		final BasicTypeRegistry basicTypeRegistry = new BasicTypeRegistry();
 
 		final TypeContributions typeContributions = new TypeContributions() {
 			@Override
 			public void contributeType(org.hibernate.type.BasicType type) {
-				basicTypeRegistry.register( type );
+				getBasicTypeRegistry().register( type );
 			}
 
 			@Override
 			public void contributeType(BasicType type, String... keys) {
-				basicTypeRegistry.register( type, keys );
+				getBasicTypeRegistry().register( type, keys );
 			}
 
 			@Override
 			public void contributeType(UserType type, String[] keys) {
-				basicTypeRegistry.register( type, keys );
+				getBasicTypeRegistry().register( type, keys );
 			}
 
 			@Override
 			public void contributeType(CompositeUserType type, String[] keys) {
-				basicTypeRegistry.register( type, keys );
+				getBasicTypeRegistry().register( type, keys );
 			}
+
+			final BasicTypeRegistry getBasicTypeRegistry() {
+				return bootstrapContext.getTypeConfiguration().getBasicTypeRegistry();
+			}
+
 		};
 
 		// add Dialect contributed types
@@ -363,13 +368,13 @@ public class MetadataBuildingProcess {
 
 		// add explicit application registered types
 		for ( BasicTypeRegistration basicTypeRegistration : options.getBasicTypeRegistrations() ) {
-			basicTypeRegistry.register(
+			bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register(
 					basicTypeRegistration.getBasicType(),
 					basicTypeRegistration.getRegistrationKeys()
 			);
 		}
-
-		return basicTypeRegistry;
 	}
+
+
 
 }

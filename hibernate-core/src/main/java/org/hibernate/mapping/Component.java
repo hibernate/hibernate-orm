@@ -214,7 +214,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 				this,
 				getMetadata().getMetadataBuildingOptions()
 		);
-		final TypeFactory factory = getMetadata().getTypeResolver().getTypeFactory();
+		final TypeFactory factory = getMetadata().getTypeConfiguration().getTypeResolver().getTypeFactory();
 		return isEmbedded() ? factory.embeddedComponent( metamodel ) : factory.component( metamodel );
 	}
 

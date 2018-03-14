@@ -9,4 +9,4 @@ from
 where
     a.person_id = ?
 order by
-    CHAR_LENGTH(a.name) desc
+    CHAR_LENGTH(a.content) desc

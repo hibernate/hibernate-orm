@@ -418,7 +418,8 @@ http://docs.oracle.com/javaee/7/api/javax/persistence/OrderBy.html[`@OrderBy`] a
 when fetching the current annotated collection, the Hibernate specific
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OrderBy.html[`@OrderBy`] annotation is used to specify a *SQL* clause instead.
 
-In the following example, the `@OrderBy` annotations uses the `CHAR_LENGTH` SQL function to order the `Article` entities by the size of their contents.
+In the following example, the `@OrderBy` annotations uses the `CHAR_LENGTH` SQL function to order the `Article` entities
+by the number of characters of the `name` attribute.
 
 [[collections-customizing-ordered-by-sql-clause-mapping-example]]
 .`@OrderBy` mapping example

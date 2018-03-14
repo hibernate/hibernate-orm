@@ -466,7 +466,7 @@ public class SimpleValue implements KeyValue {
 			createParameterImpl();
 		}
 
-		Type result = getMetadata().getTypeResolver().heuristicType( typeName, typeParameters );
+		Type result = getMetadata().getTypeConfiguration().getTypeResolver().heuristicType( typeName, typeParameters );
 		// if this is a byte[] version/timestamp, then we need to use RowVersionType
 		// instead of BinaryType (HHH-10413)
 		if ( isVersion && BinaryType.class.isInstance( result ) ) {

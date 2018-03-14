@@ -106,6 +106,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * The implementation of the in-flight Metadata collector contract.
@@ -121,6 +122,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	private final BootstrapContext bootstrapContext;
 	private final MetadataBuildingOptions options;
+	private final TypeConfiguration typeConfiguration;
+
 	private final TypeResolver typeResolver;
 
 	private final AttributeConverterManager attributeConverterManager = new AttributeConverterManager();
@@ -169,11 +172,22 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	public InFlightMetadataCollectorImpl(
 			BootstrapContext bootstrapContext,
+			MetadataBuildingOptions options) {
+		this( bootstrapContext, options, bootstrapContext.getTypeConfiguration().getTypeResolver() );
+	}
+
+	/**
+	 * @deprecated Use {@link InFlightMetadataCollectorImpl#InFlightMetadataCollectorImpl(BootstrapContext, MetadataBuildingOptions)} instead.
+	 */
+	@Deprecated
+	public InFlightMetadataCollectorImpl(
+			BootstrapContext bootstrapContext,
 			MetadataBuildingOptions options,
 			TypeResolver typeResolver) {
 		this.bootstrapContext = bootstrapContext;
 		this.uuid = UUID.randomUUID();
 		this.options = options;
+		this.typeConfiguration = bootstrapContext.getTypeConfiguration();
 		this.typeResolver = typeResolver;
 
 		this.identifierGeneratorFactory = options.getServiceRegistry().getService( MutableIdentifierGeneratorFactory.class );
@@ -203,6 +217,11 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public BootstrapContext getBootstrapContext() {
 		return bootstrapContext;
+	}
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return typeConfiguration;
 	}
 
 	@Override
@@ -2231,7 +2250,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return new MetadataImpl(
 					uuid,
 					options,
-					typeResolver,
+					typeConfiguration,
 					identifierGeneratorFactory,
 					entityBindingMap,
 					mappedSuperClasses,

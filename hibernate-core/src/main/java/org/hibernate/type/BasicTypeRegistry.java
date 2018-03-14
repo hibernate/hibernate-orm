@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
@@ -25,8 +26,14 @@ public class BasicTypeRegistry implements Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BasicTypeRegistry.class );
 
 	// TODO : analyze these sizing params; unfortunately this seems to be the only way to give a "concurrencyLevel"
-	private Map<String, BasicType> registry = new ConcurrentHashMap<String, BasicType>( 100, .75f, 1 );
+	private Map<String, BasicType> registry = new ConcurrentHashMap<>( 100, .75f, 1 );
 	private boolean locked;
+	private TypeConfiguration typeConfiguration;
+
+	public BasicTypeRegistry(TypeConfiguration typeConfiguration){
+		this();
+		this.typeConfiguration = typeConfiguration;
+	}
 
 	public BasicTypeRegistry() {
 		register( BooleanType.INSTANCE );

@@ -6,17 +6,27 @@
  */
 package org.hibernate.test.jpa.ql;
 
+import org.hibernate.hql.internal.ast.QuerySyntaxException;
+import org.hibernate.query.Query;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.test.jpa.AbstractJPATest;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for various JPAQL compliance issues
  *
  * @author Steve Ebersole
  */
-public class JPAQLComplianceTest extends AbstractJPATest {
+	public class JPAQLComplianceTest extends AbstractJPATest {
 	@Test
 	public void testAliasNameSameAsUnqualifiedEntityName() {
 		Session s = openSession();
@@ -60,5 +70,76 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 		s.createQuery( "select c.name as myname FROM Item c ORDER BY myname" ).list();
 		s.createQuery( "select p.name as name, p.stockNumber as stockNo, p.unitPrice as uPrice FROM Part p ORDER BY name, abs( p.unitPrice ), stockNo" ).list();
 		s.close();
-	}	
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12290")
+	public void testParameterCollectionPositional() {
+		Session s = openSession();
+		Query q = s.createQuery( "select item from Item item where item.id in (?1) and item.name = ?2" );
+		List params = new ArrayList();
+		params.add( Long.valueOf( 0 ) );
+		params.add( Long.valueOf( 1 ) );
+		q.setParameter( 1, params );
+		q.setParameter( 2, "name" );
+		q.list();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12290")
+	public void testParametersMixturePositionalAndNamed() {
+		Session s = openSession();
+		try {
+			s.createQuery( "select item from Item item where item.id = ?1 and item.name = :name" ).list();
+			fail( "Expecting QuerySyntaxException because of named and positional parameters mixture" );
+		} catch ( IllegalArgumentException e ) {
+			assertNotNull( e.getCause() );
+			assertTyping( QuerySyntaxException.class, e.getCause() );
+		} finally {
+			s.close();
+		}
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12290")
+	public void testParametersMixtureNamedAndPositional() {
+		Session s = openSession();
+		try {
+			s.createQuery( "select item from Item item where item.id = :id and item.name = ?1" ).list();
+			fail( "Expecting QuerySyntaxException because of named and positional parameters mixture" );
+		} catch ( IllegalArgumentException e ) {
+			assertNotNull( e.getCause() );
+			assertTyping( QuerySyntaxException.class, e.getCause() );
+		} finally {
+			s.close();
+		}
+	}
+
+	/**
+	 * Positional collection parameter is expanded to the list of named parameters. In spite of this fact, initial query
+	 * query is wrong in terms of JPA and exception must be thrown
+	 */
+	@Test
+	@TestForIssue(jiraKey = "HHH-12290")
+	public void testParametersMixtureNamedCollectionAndPositional() {
+		Session s = openSession();
+		try {
+			Query q = s.createQuery( "select item from Item item where item.id in (?1) and item.name = :name" );
+			List<Long> params = new ArrayList();
+			params.add( Long.valueOf( 0 ) );
+			params.add( Long.valueOf( 1 ) );
+			q.setParameter( 1, params );
+			q.setParameter( "name", "name" );
+			q.list();
+			fail( "Expecting QuerySyntaxException because of named and positional parameters mixture" );
+		}
+		catch (IllegalArgumentException e) {
+			assertNotNull( e.getCause() );
+			assertTyping( QuerySyntaxException.class, e.getCause() );
+		}
+		finally {
+			s.close();
+		}
+	}
 }

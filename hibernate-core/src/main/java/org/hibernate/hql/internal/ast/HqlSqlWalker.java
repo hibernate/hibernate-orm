@@ -1089,9 +1089,9 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	@Override
 	protected AST generatePositionalParameter(AST delimiterNode, AST numberNode) throws SemanticException {
 		// todo : we check this multiple times
-		if ( namedParameters != null ) {
+		if (  getSessionFactoryHelper().isStrictJPAQLComplianceEnabled() && namedParameters != null ) {
 			throw new SemanticException(
-					"Cannot define positional and named parameterSpecs : " + queryTranslatorImpl.getQueryString()
+					"Cannot mix positional and named parameters: " + queryTranslatorImpl.getQueryString()
 			);
 		}
 
@@ -1151,6 +1151,11 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	@Override
 	protected AST generateNamedParameter(AST delimiterNode, AST nameNode) throws SemanticException {
+		if ( getSessionFactoryHelper().isStrictJPAQLComplianceEnabled() && positionalParameters != null ) {
+			throw new SemanticException(
+					"Cannot mix positional and named parameters: " + queryTranslatorImpl.getQueryString()
+			);
+		}
 		final String name = nameNode.getText();
 		trackNamedParameterPositions( name );
 

@@ -6,16 +6,6 @@
  */
 package org.hibernate.query.internal;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
-import javax.persistence.Parameter;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.QueryException;
@@ -39,6 +29,10 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterListBinding;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.Type;
+
+import javax.persistence.Parameter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Manages the group of QueryParameterBinding for a particular query.
@@ -513,7 +507,11 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 		// HHH-1123
 		// Some DBs limit number of IN expressions.  For now, warn...
-		final Dialect dialect = session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getJdbcEnvironment().getDialect();
+		final Dialect dialect = session.getFactory()
+				.getServiceRegistry()
+				.getService( JdbcServices.class )
+				.getJdbcEnvironment()
+				.getDialect();
 		final int inExprLimit = dialect.getInExpressionCountLimit();
 
 		for ( Map.Entry<QueryParameter, QueryParameterListBinding> entry : parameterListBindingMap.entrySet() ) {
@@ -521,7 +519,12 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			final Collection bindValues = entry.getValue().getBindValues();
 
 			if ( inExprLimit > 0 && bindValues.size() > inExprLimit ) {
-				log.tooManyInExpressions( dialect.getClass().getName(), inExprLimit, sourceParam.getName(), bindValues.size() );
+				log.tooManyInExpressions(
+						dialect.getClass().getName(),
+						inExprLimit,
+						sourceParam.getName(),
+						bindValues.size()
+				);
 			}
 
 			final String sourceToken;
@@ -541,21 +544,6 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			final String beforePlaceholder = queryString.substring( 0, loc );
 			final String afterPlaceholder = queryString.substring( loc + sourceToken.length() );
 
-			// check if placeholder is already immediately enclosed in parentheses
-			// (ignoring whitespace)
-			boolean isEnclosedInParens =
-					StringHelper.getLastNonWhitespaceCharacter( beforePlaceholder ) == '(' &&
-							StringHelper.getFirstNonWhitespaceCharacter( afterPlaceholder ) == ')';
-
-			if ( bindValues.size() == 1 && isEnclosedInParens ) {
-				// short-circuit for performance when only 1 value and the
-				// placeholder is already enclosed in parentheses...
-				final QueryParameterBinding syntheticBinding = makeBinding( entry.getValue().getBindType() );
-				syntheticBinding.setBindValue( bindValues.iterator().next() );
-				parameterBindingMap.put( sourceParam, syntheticBinding );
-				continue;
-			}
-
 			StringBuilder expansionList = new StringBuilder();
 
 			int i = 0;
@@ -568,21 +556,37 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 				//		1) create a synthetic named parameter
 				//		2) expand the queryString to include each synthetic named param in place of the original
 				//		3) create a new synthetic binding for just that single value under the synthetic name
-				final String syntheticName;
+				final QueryParameter syntheticParam;
 				if ( sourceParam instanceof NamedParameterDescriptor ) {
-					syntheticName = NamedParameterDescriptor.class.cast( sourceParam ).getName() + '_' + i;
+					String syntheticName = NamedParameterDescriptor.class.cast( sourceParam ).getName() + '_' + i;
+					expansionList.append( ":" ).append( syntheticName );
+
+					syntheticParam = new NamedParameterDescriptor(
+							syntheticName,
+							sourceParam.getType(),
+							sourceParam.getSourceLocations()
+					);
 				}
 				else {
-					syntheticName = "x" + OrdinalParameterDescriptor.class.cast( sourceParam ).getPosition() + '_' + i;
+					Integer nextPositionNumber;
+					if ( i == 0 ) {
+						nextPositionNumber = sourceParam.getPosition();
+					}
+					else {
+						TreeMap<QueryParameter, QueryParameterBinding> sortedPositionalParamBindingMap = getSortedPositionalParamBindingMap();
+						nextPositionNumber = sortedPositionalParamBindingMap.size() > 0
+								? sortedPositionalParamBindingMap.lastKey().getPosition() + 1
+								: 1;
+					}
+					expansionList.append( "?" ).append( nextPositionNumber );
+
+					syntheticParam = new OrdinalParameterDescriptor(
+							nextPositionNumber,
+							nextPositionNumber - 1,
+							sourceParam.getType(),
+							sourceParam.getSourceLocations()
+					);
 				}
-
-				expansionList.append( ":" ).append( syntheticName );
-
-				final QueryParameter syntheticParam = new NamedParameterDescriptor(
-						syntheticName,
-						sourceParam.getType(),
-						sourceParam.getSourceLocations()
-				);
 
 				final QueryParameterBinding syntheticBinding = makeBinding( entry.getValue().getBindType() );
 				syntheticBinding.setBindValue( bindValue );

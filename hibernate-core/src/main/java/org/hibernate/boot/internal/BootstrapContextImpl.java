@@ -36,6 +36,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
@@ -49,6 +50,8 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private static final Logger log = Logger.getLogger( BootstrapContextImpl.class );
 
 	private final StandardServiceRegistry serviceRegistry;
+
+	private final TypeConfiguration typeConfiguration;
 
 	private final ClassLoaderAccessImpl classLoaderAccess;
 
@@ -102,11 +105,17 @@ public class BootstrapContextImpl implements BootstrapContext {
 				ArchiveDescriptorFactory.class,
 				configService.getSettings().get( AvailableSettings.SCANNER_ARCHIVE_INTERPRETER )
 		);
+		this.typeConfiguration = new TypeConfiguration();
 	}
 
 	@Override
 	public StandardServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
+	}
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return typeConfiguration;
 	}
 
 	@Override

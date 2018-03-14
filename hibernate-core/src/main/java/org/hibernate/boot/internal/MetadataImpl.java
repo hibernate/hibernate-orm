@@ -50,6 +50,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -61,8 +62,8 @@ import org.hibernate.type.TypeResolver;
 public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final UUID uuid;
 	private final MetadataBuildingOptions metadataBuildingOptions;
+	private final BootstrapContext bootstrapContext;
 
-	private final TypeResolver typeResolver;
 	private final IdentifierGeneratorFactory identifierGeneratorFactory;
 
 	private final Map<String,PersistentClass> entityBindingMap;
@@ -81,12 +82,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, SQLFunction> sqlFunctionMap;
 	private final java.util.Collection<DomainDataRegionConfigImpl.Builder> cacheRegionConfigBuilders;
 	private final Database database;
-	private final BootstrapContext bootstrapContext;
 
-	public MetadataImpl(
+	MetadataImpl(
 			UUID uuid,
 			MetadataBuildingOptions metadataBuildingOptions,
-			TypeResolver typeResolver,
 			MutableIdentifierGeneratorFactory identifierGeneratorFactory,
 			Map<String, PersistentClass> entityBindingMap,
 			Map<Class, MappedSuperclass> mappedSuperclassMap,
@@ -107,7 +106,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			BootstrapContext bootstrapContext) {
 		this.uuid = uuid;
 		this.metadataBuildingOptions = metadataBuildingOptions;
-		this.typeResolver = typeResolver;
 		this.identifierGeneratorFactory = identifierGeneratorFactory;
 		this.entityBindingMap = entityBindingMap;
 		this.mappedSuperclassMap = mappedSuperclassMap;
@@ -134,8 +132,13 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return bootstrapContext.getTypeConfiguration();
+	}
+
+	@Override
 	public TypeResolver getTypeResolver() {
-		return typeResolver;
+		return bootstrapContext.getTypeConfiguration().getTypeResolver();
 	}
 
 	@Override
@@ -318,7 +321,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	}
 
-	public Map<String, ProcedureCallMemento> buildProcedureCallMementos(SessionFactoryImpl sessionFactory) {
+	private Map<String, ProcedureCallMemento> buildProcedureCallMementos(SessionFactoryImpl sessionFactory) {
 		final Map<String, ProcedureCallMemento> rtn = new HashMap<>();
 		if ( namedProcedureCallMap != null ) {
 			for ( NamedProcedureCallDefinition procedureCallDefinition : namedProcedureCallMap.values() ) {

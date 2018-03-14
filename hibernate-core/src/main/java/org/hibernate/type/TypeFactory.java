@@ -10,15 +10,13 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Properties;
 
-import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.tuple.component.ComponentMetamodel;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
@@ -41,47 +39,24 @@ public final class TypeFactory implements Serializable {
 
 	private final TypeScopeImpl typeScope = new TypeScopeImpl();
 
-	public static interface TypeScope extends Serializable {
-		public SessionFactoryImplementor resolveFactory();
+	public interface TypeScope extends Serializable {
+		SessionFactoryImplementor resolveFactory();
+	}
+
+	private final TypeConfiguration typeConfiguration;
+
+	public TypeFactory(TypeConfiguration typeConfiguration) {
+		this.typeConfiguration = typeConfiguration;
 	}
 
 	private static class TypeScopeImpl implements TypeFactory.TypeScope {
 		private transient SessionFactoryImplementor factory;
-		private String sessionFactoryName;
-		private String sessionFactoryUuid;
 
 		public void injectSessionFactory(SessionFactoryImplementor factory) {
-			if ( this.factory != null ) {
-				LOG.scopingTypesToSessionFactoryAfterAlreadyScoped( this.factory, factory );
-			}
-			else {
-				LOG.tracev( "Scoping types to session factory {0}", factory );
-				sessionFactoryUuid = factory.getUuid();
-				String sfName = factory.getSettings().getSessionFactoryName();
-				if ( sfName == null ) {
-					final CfgXmlAccessService cfgXmlAccessService = factory.getServiceRegistry()
-							.getService( CfgXmlAccessService.class );
-					if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
-						sfName = cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
-					}
-				}
-				sessionFactoryName = sfName;
-			}
 			this.factory = factory;
 		}
 
 		public SessionFactoryImplementor resolveFactory() {
-			if ( factory == null ) {
-				factory = (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
-						sessionFactoryUuid,
-						sessionFactoryName
-				);
-				if ( factory == null ) {
-					throw new HibernateException(
-							"Could not find a SessionFactory [uuid=" + sessionFactoryUuid + ",name=" + sessionFactoryName + "]"
-					);
-				}
-			}
 			return factory;
 		}
 	}
@@ -91,7 +66,7 @@ public final class TypeFactory implements Serializable {
 	}
 
 	public SessionFactoryImplementor resolveSessionFactory() {
-		return typeScope.resolveFactory();
+		return typeConfiguration.getSessionFactory();
 	}
 
 	public Type byClass(Class clazz, Properties parameters) {

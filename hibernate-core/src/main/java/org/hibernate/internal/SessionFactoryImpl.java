@@ -127,6 +127,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -252,8 +253,9 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		for ( SessionFactoryObserver sessionFactoryObserver : options.getSessionFactoryObservers() ) {
 			this.observer.addObserver( sessionFactoryObserver );
 		}
-
-		this.typeResolver = metadata.getTypeResolver().scope( this );
+		TypeConfiguration typeConfiguration = metadata.getTypeConfiguration();
+		typeConfiguration.scope( this );
+		this.typeResolver = typeConfiguration.getTypeResolver();
 		this.typeHelper = new TypeLocatorImpl( typeResolver );
 
 		this.filters = new HashMap<>();

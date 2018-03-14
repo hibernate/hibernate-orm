@@ -706,6 +706,113 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-12290")
+	public void testParameterCollectionAndPositional() {
+		final Item item = new Item( "Mouse", "Microsoft mouse" );
+		final Item item2 = new Item( "Computer", "Dell computer" );
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			em.persist( item );
+			em.persist( item2 );
+			assertTrue( em.contains( item ) );
+			em.getTransaction().commit();
+
+			em.getTransaction().begin();
+			Query q = em.createQuery( "select item from Item item where item.name in ?1 and item.descr = ?2" );
+			List params = new ArrayList();
+			params.add( item.getName() );
+			params.add( item2.getName() );
+			q.setParameter( 1, params );
+			q.setParameter( 2, item2.getDescr() );
+			List result = q.getResultList();
+			assertNotNull( result );
+			assertEquals( 1, result.size() );
+		}
+		catch (Exception e){
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			throw e;
+		}
+		finally {
+			em.close();
+		}
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12290")
+	public void testParameterCollectionParenthesesAndPositional() {
+		final Item item = new Item( "Mouse", "Microsoft mouse" );
+		final Item item2 = new Item( "Computer", "Dell computer" );
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			em.persist( item );
+			em.persist( item2 );
+			assertTrue( em.contains( item ) );
+			em.getTransaction().commit();
+
+			em.getTransaction().begin();
+			Query q = em.createQuery( "select item from Item item where item.name in (?1) and item.descr = ?2" );
+			List params = new ArrayList();
+			params.add( item.getName() );
+			params.add( item2.getName() );
+			q.setParameter( 1, params );
+			q.setParameter( 2, item2.getDescr() );
+			List result = q.getResultList();
+			assertNotNull( result );
+			assertEquals( 1, result.size() );
+		}
+		catch (Exception e){
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			throw e;
+		}
+		finally {
+			em.close();
+		}
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12290")
+	public void testParameterCollectionSingletonParenthesesAndPositional() {
+		final Item item = new Item( "Mouse", "Microsoft mouse" );
+		final Item item2 = new Item( "Computer", "Dell computer" );
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			em.persist( item );
+			em.persist( item2 );
+			assertTrue( em.contains( item ) );
+			em.getTransaction().commit();
+
+			em.getTransaction().begin();
+			Query q = em.createQuery( "select item from Item item where item.name in (?1) and item.descr = ?2" );
+			List params = new ArrayList();
+			params.add( item2.getName() );
+			q.setParameter( 1, params );
+			q.setParameter( 2, item2.getDescr() );
+			List result = q.getResultList();
+			assertNotNull( result );
+			assertEquals( 1, result.size() );
+		}
+		catch (Exception e){
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			throw e;
+		}
+		finally {
+			em.close();
+		}
+	}
+
+	@Test
 	public void testParameterList() throws Exception {
 		final Item item = new Item( "Mouse", "Micro$oft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );

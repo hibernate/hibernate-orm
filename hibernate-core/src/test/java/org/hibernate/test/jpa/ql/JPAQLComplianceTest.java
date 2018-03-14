@@ -6,10 +6,21 @@
  */
 package org.hibernate.test.jpa.ql;
 
-import org.junit.Test;
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.Session;
+import org.hibernate.hql.internal.ast.QuerySyntaxException;
+import org.hibernate.query.Query;
 import org.hibernate.test.jpa.AbstractJPATest;
+import org.hibernate.test.jpa.Item;
+import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 /**
  * Tests for various JPAQL compliance issues
@@ -60,5 +71,105 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 		s.createQuery( "select c.name as myname FROM Item c ORDER BY myname" ).list();
 		s.createQuery( "select p.name as name, p.stockNumber as stockNo, p.unitPrice as uPrice FROM Part p ORDER BY name, abs( p.unitPrice ), stockNo" ).list();
 		s.close();
-	}	
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12290")
+	public void testParametersMixturePositionalAndNamed() {
+		Session s = openSession();
+		try {
+			s.createQuery( "select item from Item item where item.id = ?1 and item.name = :name" ).list();
+			fail( "Expecting QuerySyntaxException because of named and positional parameters mixture" );
+		} catch ( IllegalArgumentException e ) {
+			assertNotNull( e.getCause() );
+			assertTyping( QuerySyntaxException.class, e.getCause() );
+		} finally {
+			s.close();
+		}
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12290")
+	public void testParametersMixtureNamedAndPositional() {
+		Session s = openSession();
+		try {
+			s.createQuery( "select item from Item item where item.id = :id and item.name = ?1" ).list();
+			fail( "Expecting QuerySyntaxException because of named and positional parameters mixture" );
+		} catch ( IllegalArgumentException e ) {
+			assertNotNull( e.getCause() );
+			assertTyping( QuerySyntaxException.class, e.getCause() );
+		} finally {
+			s.close();
+		}
+	}
+
+	/**
+	 * Positional collection parameter is expanded to the list of named parameters. In spite of this fact, initial query
+	 * query is wrong in terms of JPA and exception must be thrown
+	 */
+	@Test
+	@TestForIssue(jiraKey = "HHH-12290")
+	public void testParametersMixtureNamedCollectionAndPositional() {
+		Session s = openSession();
+		try {
+			Query q = s.createQuery( "select item from Item item where item.id in (?1) and item.name = :name" );
+			List<Long> params = new ArrayList<>();
+			params.add( 0L );
+			params.add( 1L );
+			q.setParameter( 1, params );
+			q.setParameter( "name", "name" );
+			q.list();
+			fail( "Expecting QuerySyntaxException because of named and positional parameters mixture" );
+		}
+		catch (IllegalArgumentException e) {
+			assertNotNull( e.getCause() );
+			assertTyping( QuerySyntaxException.class, e.getCause() );
+		}
+		finally {
+			s.close();
+		}
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12290")
+	public void testParameterCollectionParenthesesAndPositional() {
+		final Item item = new Item( "Mouse" );
+		item.setId( 1L );
+		final Item item2 = new Item( "Computer" );
+		item2.setId( 2L );
+
+		Session s = openSession();
+		try {
+			s.getTransaction().begin();
+			s.save( item );
+			s.save( item2 );
+			s.getTransaction().commit();
+
+			s.getTransaction().begin();
+			Query q = s.createQuery( "select item from Item item where item.id in(?1) and item.name in (?2) and item.id in(?1)" );
+
+			List<Long> idParams = new ArrayList<>();
+			idParams.add( item.getId() );
+			idParams.add( item2.getId() );
+			q.setParameter( 1, idParams );
+
+			List<String> nameParams = new ArrayList<>();
+			nameParams.add( item.getName() );
+			nameParams.add( item2.getName() );
+			q.setParameter( 2, nameParams );
+
+			List result = q.getResultList();
+			assertNotNull( result );
+			assertEquals( 2, result.size() );
+		}
+		catch (Exception e){
+			if ( s.getTransaction() != null && s.getTransaction().isActive() ) {
+				s.getTransaction().rollback();
+			}
+			throw e;
+		}
+		finally {
+			s.close();
+		}
+	}
 }

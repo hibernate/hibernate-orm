@@ -6,18 +6,30 @@
  */
 package org.hibernate.test.resource.transaction.jdbc.autocommit;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.Entity;
+import javax.persistence.EntityTransaction;
 import javax.persistence.Id;
 import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.transaction.spi.TransactionImplementor;
+import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.transaction.TransactionUtil2;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -30,10 +42,17 @@ import static org.mockito.Mockito.verify;
 /**
  * @author Vlad Mihalcea
  */
-public abstract class AbstractSkipAutoCommitTest extends BaseEntityManagerFunctionalTestCase {
+public abstract class AbstractSkipAutoCommitTest extends BaseUnitTestCase {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider =
-		new PreparedStatementSpyConnectionProvider() {
+	private PreparedStatementSpyConnectionProvider connectionProvider;
+	private DataSource dataSource;
+	private SessionFactoryImplementor emf;
+
+	@Before
+	public void createEntityManagerFactory() {
+		Map<String,Object> config = new HashMap<>();
+
+		connectionProvider = new PreparedStatementSpyConnectionProvider() {
 			@Override
 			protected Connection actualConnection() throws SQLException {
 				Connection connection = super.actualConnection();
@@ -42,51 +61,93 @@ public abstract class AbstractSkipAutoCommitTest extends BaseEntityManagerFuncti
 			}
 		};
 
-	@Override
-	protected Map getConfig() {
-		Map config = super.getConfig();
+		dataSource = dataSource();
 
-		config.put( AvailableSettings.DATASOURCE, dataSource() );
-		config.put( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, Boolean.TRUE );
 		config.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
+		config.put( AvailableSettings.DATASOURCE, dataSource );
+		config.put( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, Boolean.TRUE );
+		config.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 
-		return config;
+		config.put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "false" );
+
+		emf =  Bootstrap.getEntityManagerFactoryBuilder(
+				new BaseEntityManagerFunctionalTestCase.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ) {
+					@Override
+					public List<String> getManagedClassNames() {
+						return Collections.singletonList( City.class.getName() );
+					}
+				},
+				config
+		).build().unwrap( SessionFactoryImplementor.class );
+		if ( emf == null ) {
+			throw new RuntimeException( "Could not build EMF" );
+		}
 	}
 
 	protected abstract DataSource dataSource();
 
-	@Override
+	@After
 	public void releaseResources() {
-		super.releaseResources();
-		connectionProvider.stop();
+		if ( connectionProvider != null ) {
+			connectionProvider.stop();
+		}
+
+		// todo : somewhay to stop/close DataSource if not Closeable?
+		if ( dataSource instanceof Closeable ) {
+			try {
+				( (Closeable) dataSource ).close();
+			}
+			catch (IOException e) {
+				log.debugf( "Unable to release DataSource : %s", dataSource );
+			}
+
+			if ( emf != null ) {
+				emf.close();
+			}
+		}
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			City.class,
-		};
+	@Test
+	public void testRollbackOnNonJtaDataSourceWithAutoCommitConnection() {
+		TransactionUtil2.inEntityManager(
+				emf,
+				entityManager -> {
+					final EntityTransaction txn = entityManager.getTransaction();
+//					txn.begin();
+
+					final TransactionImplementor hibernateTxn = (TransactionImplementor) txn;
+					hibernateTxn.markRollbackOnly();
+
+					txn.rollback();
+				}
+		);
 	}
 
 	@Test
 	public void test() {
 		connectionProvider.clear();
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			City city = new City();
-			city.setId( 1L );
-			city.setName( "Cluj-Napoca" );
-			entityManager.persist( city );
+		doInJPA(
+				() -> emf,
+				entityManager -> {
+					City city = new City();
+					city.setId( 1L );
+					city.setName( "Cluj-Napoca" );
+					entityManager.persist( city );
 
-			assertTrue( connectionProvider.getAcquiredConnections().isEmpty() );
-			assertTrue( connectionProvider.getReleasedConnections().isEmpty() );
-		} );
+					assertTrue( connectionProvider.getAcquiredConnections().isEmpty() );
+					assertTrue( connectionProvider.getReleasedConnections().isEmpty() );
+				}
+		);
 		verifyConnections();
 
 		connectionProvider.clear();
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			City city = entityManager.find( City.class, 1L );
-			assertEquals( "Cluj-Napoca", city.getName() );
-		} );
+		doInJPA(
+				() -> emf,
+				entityManager -> {
+					City city = entityManager.find( City.class, 1L );
+					assertEquals( "Cluj-Napoca", city.getName() );
+				}
+		);
 		verifyConnections();
 	}
 

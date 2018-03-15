@@ -7,6 +7,9 @@
 package org.hibernate.testing.transaction;
 
 import java.util.function.Consumer;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 
 import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -34,6 +37,18 @@ public class TransactionUtil2 {
 		}
 	}
 
+	public static void inEntityManager(EntityManagerFactory emf, Consumer<EntityManager> action) {
+		log.trace( "#inEntityManager(EMF,action)" );
+
+		try (SessionImplementor session = (SessionImplementor) emf.createEntityManager()) {
+			log.trace( "EntityManager opened, calling action" );
+			action.accept( session );
+			log.trace( "called action" );
+		}
+		finally {
+			log.trace( "EntityManager closed (AutoCloseable)" );
+		}
+	}
 
 	public static void inTransaction(SessionFactoryImplementor factory, Consumer<SessionImplementor> action) {
 		log.trace( "#inTransaction(factory, action)");
@@ -44,6 +59,67 @@ public class TransactionUtil2 {
 					inTransaction( session, action );
 				}
 		);
+	}
+
+	public static void inEntityTransaction(EntityManagerFactory factory, Consumer<EntityManager> action) {
+		log.trace( "#inEntityTransaction(factory, action)");
+
+		inEntityManager(
+				factory,
+				session -> {
+					inEntityTransaction( session, action );
+				}
+		);
+	}
+
+	public static void inEntityTransaction(EntityManager entityManager, Consumer<EntityManager> action) {
+		log.trace( "#inTransaction(factory, action)");
+
+		final EntityTransaction txn = entityManager.getTransaction();
+		txn.begin();
+		log.trace( "Started transaction" );
+
+		try {
+			log.trace( "Calling action in txn" );
+			action.accept( entityManager );
+			log.trace( "Called action - in txn" );
+
+			if ( !txn.isActive() ) {
+				throw new TransactionManagementException( ACTION_COMPLETED_TXN );
+			}
+		}
+		catch (Exception e) {
+			// an error happened in the action
+			if ( ! txn.isActive() ) {
+				log.warn( ACTION_COMPLETED_TXN, e );
+			}
+			else {
+				log.trace( "Rolling back transaction due to action error" );
+				try {
+					txn.rollback();
+					log.trace( "Rolled back transaction due to action error" );
+				}
+				catch (Exception inner) {
+					log.trace( "Rolling back transaction due to action error failed; throwing original error" );
+				}
+			}
+
+			throw e;
+		}
+
+		// action completed with no errors - attempt to commit the transaction allowing
+		// 		any RollbackException to propagate.  Note that when we get here we know the
+		//		txn is active
+
+		log.trace( "Committing transaction after successful action execution" );
+		try {
+			txn.commit();
+			log.trace( "Committing transaction after successful action execution - success" );
+		}
+		catch (Exception e) {
+			log.trace( "Committing transaction after successful action execution - failure" );
+			throw e;
+		}
 	}
 
 	public static void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action) {

@@ -71,6 +71,15 @@ public class HibernatePersistenceProviderAdaptor implements PersistenceProviderA
         if (!pu.getProperties().containsKey(AvailableSettings.SESSION_FACTORY_NAME)) {
             putPropertyIfAbsent(pu, properties, AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, Boolean.FALSE);
         }
+        // the following properties were added to Hibernate ORM 5.3, for JPA 2.2 spec compliance.
+        putPropertyIfAbsent(pu, properties, AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, true);
+        putPropertyIfAbsent(pu, properties, AvailableSettings.JPA_TRANSACTION_COMPLIANCE, true);
+        putPropertyIfAbsent(pu, properties, AvailableSettings.JPA_CLOSED_COMPLIANCE, true);
+        putPropertyIfAbsent(pu, properties, AvailableSettings.JPA_QUERY_COMPLIANCE, true);
+        putPropertyIfAbsent(pu, properties, AvailableSettings.JPA_LIST_COMPLIANCE, true);
+        putPropertyIfAbsent(pu, properties, AvailableSettings.JPA_CACHING_COMPLIANCE, true);
+        // end of properties added for JPA 2.2 spec compliance.
+
     }
 
     @Override

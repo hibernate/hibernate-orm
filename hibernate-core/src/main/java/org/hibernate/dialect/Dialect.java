@@ -2985,7 +2985,7 @@ public abstract class Dialect implements ConversionContext {
 		if ( parameters.getQueryHints() != null && parameters.getQueryHints().size() > 0 ) {
 			sql = getQueryHintString( sql, parameters.getQueryHints() );
 		}
-		else if ( commentsEnabled && parameters.getComment() != null ){
+		if ( commentsEnabled && parameters.getComment() != null ){
 			sql = prependComment( sql, parameters.getComment() );
 		}
 

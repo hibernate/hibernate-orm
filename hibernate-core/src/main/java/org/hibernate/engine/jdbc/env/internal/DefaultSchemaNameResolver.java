@@ -34,33 +34,34 @@ public class DefaultSchemaNameResolver implements SchemaNameResolver {
 	}
 
 	private void determineAppropriateResolverDelegate(Connection connection) {
-		if ( delegate == null ) {
-			// unfortunately Connection#getSchema is only available in Java 1.7 and above
-			// and Hibernate still baselines on 1.6.  So for now, use reflection and
-			// leverage the Connection#getSchema method if it is available.
-			try {
-				final Class<? extends Connection> jdbcConnectionClass = connection.getClass();
-				final Method getSchemaMethod = jdbcConnectionClass.getMethod( "getSchema" );
-				if ( getSchemaMethod != null && getSchemaMethod.getReturnType().equals( String.class ) ) {
-					try {
-						// If the JDBC driver does not implement the Java 7 spec, but the JRE is Java 7
-						// then the getSchemaMethod is not null but the call to getSchema() throws an java.lang.AbstractMethodError
-						connection.getSchema();
-						delegate = new SchemaNameResolverJava17Delegate( );
-					}
-					catch (java.lang.AbstractMethodError e) {
-						log.debugf( "Unable to use Java 1.7 Connection#getSchema" );
-						delegate = SchemaNameResolverFallbackDelegate.INSTANCE;
-					}
+		// unfortunately Connection#getSchema is only available in Java 1.7 and above
+		// and Hibernate still baselines on 1.6.  So for now, use reflection and
+		// leverage the Connection#getSchema method if it is available.
+		try {
+			final Class<? extends Connection> jdbcConnectionClass = connection.getClass();
+			final Method getSchemaMethod = jdbcConnectionClass.getMethod( "getSchema" );
+			if ( getSchemaMethod != null && getSchemaMethod.getReturnType().equals( String.class ) ) {
+				try {
+					// If the JDBC driver does not implement the Java 7 spec, but the JRE is Java 7
+					// then the getSchemaMethod is not null but the call to getSchema() throws an java.lang.AbstractMethodError
+					connection.getSchema();
+					delegate = new SchemaNameResolverJava17Delegate();
 				}
-				else {
+				catch (java.lang.AbstractMethodError e) {
 					log.debugf( "Unable to use Java 1.7 Connection#getSchema" );
 					delegate = SchemaNameResolverFallbackDelegate.INSTANCE;
 				}
 			}
-			catch (Exception ignore) {
-				log.debugf( "Unable to resolve connection default schema : " + ignore.getMessage() );
+			else {
+				log.debugf( "Unable to use Java 1.7 Connection#getSchema" );
+				delegate = SchemaNameResolverFallbackDelegate.INSTANCE;
 			}
+		}
+		catch (Exception ignore) {
+			log.debugf(
+					"Unable to use Java 1.7 Connection#getSchema : An error occurred trying to resolve the connection default schema resolver: "
+							+ ignore.getMessage() );
+			delegate = SchemaNameResolverFallbackDelegate.INSTANCE;
 		}
 	}
 

@@ -122,9 +122,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	private final BootstrapContext bootstrapContext;
 	private final MetadataBuildingOptions options;
-	private final TypeConfiguration typeConfiguration;
-
-	private final TypeResolver typeResolver;
 
 	private final AttributeConverterManager attributeConverterManager = new AttributeConverterManager();
 
@@ -173,24 +170,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	public InFlightMetadataCollectorImpl(
 			BootstrapContext bootstrapContext,
 			MetadataBuildingOptions options) {
-		this( bootstrapContext, options, bootstrapContext.getTypeConfiguration().getTypeResolver() );
-	}
-
-	/**
-	 * @deprecated Use {@link InFlightMetadataCollectorImpl#InFlightMetadataCollectorImpl(BootstrapContext, MetadataBuildingOptions)} instead.
-	 */
-	@Deprecated
-	public InFlightMetadataCollectorImpl(
-			BootstrapContext bootstrapContext,
-			MetadataBuildingOptions options,
-			TypeResolver typeResolver) {
 		this.bootstrapContext = bootstrapContext;
 		this.uuid = UUID.randomUUID();
 		this.options = options;
-		this.typeConfiguration = bootstrapContext.getTypeConfiguration();
-		this.typeResolver = typeResolver;
 
-		this.identifierGeneratorFactory = options.getServiceRegistry().getService( MutableIdentifierGeneratorFactory.class );
+		this.identifierGeneratorFactory = options.getServiceRegistry()
+				.getService( MutableIdentifierGeneratorFactory.class );
 
 		for ( Map.Entry<String, SQLFunction> sqlFunctionEntry : bootstrapContext.getSqlFunctions().entrySet() ) {
 			if ( sqlFunctionMap == null ) {
@@ -221,12 +206,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
-		return typeConfiguration;
+		return bootstrapContext.getTypeConfiguration();
 	}
 
 	@Override
 	public TypeResolver getTypeResolver() {
-		return typeResolver;
+		return bootstrapContext.getTypeConfiguration().getTypeResolver();
 	}
 
 	@Override
@@ -2250,7 +2235,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return new MetadataImpl(
 					uuid,
 					options,
-					typeConfiguration,
 					identifierGeneratorFactory,
 					entityBindingMap,
 					mappedSuperClasses,

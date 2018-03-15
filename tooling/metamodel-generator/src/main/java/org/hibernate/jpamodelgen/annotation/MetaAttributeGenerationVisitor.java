@@ -45,6 +45,8 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 	 */
 	private static final String ORG_HIBERNATE_ANNOTATIONS_TYPE = "org.hibernate.annotations.Type";
 
+	private static final String ORG_HIBERNATE_ANNOTATIONS_MANY_TO_ANY = "org.hibernate.annotations.ManyToAny";
+
 	private final AnnotationMetaEntity entity;
 	private final Context context;
 
@@ -55,7 +57,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 
 	@Override
 	public AnnotationMetaAttribute visitPrimitive(PrimitiveType t, Element element) {
-		return new AnnotationMetaSingleAttribute( entity, element, TypeUtils.toTypeString( t ) );
+		return new AnnotationMetaSingleAttribute(entity, element, TypeUtils.toTypeString(t));
 	}
 
 	@Override
@@ -77,14 +79,14 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 //				}
 //			}
 //			return attribute;
-		return new AnnotationMetaSingleAttribute( entity, element, TypeUtils.toTypeString( t ) );
+		return new AnnotationMetaSingleAttribute(entity, element, TypeUtils.toTypeString(t));
 	}
 
 	@Override
 	public AnnotationMetaAttribute visitTypeVariable(TypeVariable t, Element element) {
 		// METAGEN-29 - for a type variable we use the upper bound
 		TypeMirror mirror = t.getUpperBound();
-		TypeMirror erasedType = context.getTypeUtils().erasure( mirror );
+		TypeMirror erasedType = context.getTypeUtils().erasure(mirror);
 		return new AnnotationMetaSingleAttribute(
 				entity, element, erasedType.toString()
 		);
@@ -93,38 +95,39 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 	@Override
 	public AnnotationMetaAttribute visitDeclared(DeclaredType declaredType, Element element) {
 		AnnotationMetaAttribute metaAttribute = null;
-		TypeElement returnedElement = (TypeElement) context.getTypeUtils().asElement( declaredType );
+		TypeElement returnedElement = (TypeElement) context.getTypeUtils().asElement(declaredType);
 		// WARNING: .toString() is necessary here since Name equals does not compare to String
 		String fqNameOfReturnType = returnedElement.getQualifiedName().toString();
-		String collection = Constants.COLLECTIONS.get( fqNameOfReturnType );
-		String targetEntity = getTargetEntity( element.getAnnotationMirrors() );
-		if ( collection != null ) {
+		String collection = Constants.COLLECTIONS.get(fqNameOfReturnType);
+		String targetEntity = getTargetEntity(element.getAnnotationMirrors());
+		if (collection != null) {
 			return createMetaCollectionAttribute(
 					declaredType, element, fqNameOfReturnType, collection, targetEntity
 			);
 		}
-		else if ( isBasicAttribute( element, returnedElement ) ) {
+		else if (isBasicAttribute(element, returnedElement)) {
 			String type = targetEntity != null ? targetEntity : returnedElement.getQualifiedName().toString();
-			return new AnnotationMetaSingleAttribute( entity, element, type );
+			return new AnnotationMetaSingleAttribute(entity, element, type);
 		}
 		return metaAttribute;
 	}
 
 	private AnnotationMetaAttribute createMetaCollectionAttribute(DeclaredType declaredType, Element element, String fqNameOfReturnType, String collection, String targetEntity) {
-		if ( TypeUtils.containsAnnotation( element, Constants.ELEMENT_COLLECTION ) ) {
-			String explicitTargetEntity = getTargetEntity( element.getAnnotationMirrors() );
+		boolean isCollection = isCollectionAttribute(element.getAnnotationMirrors());
+		if (TypeUtils.containsAnnotation(element, Constants.ELEMENT_COLLECTION)) {
+			String explicitTargetEntity = getTargetEntity(element.getAnnotationMirrors());
 			TypeMirror collectionElementType = TypeUtils.getCollectionElementType(
 					declaredType, fqNameOfReturnType, explicitTargetEntity, context
 			);
 			final TypeElement collectionElement = (TypeElement) context.getTypeUtils()
-					.asElement( collectionElementType );
+					.asElement(collectionElementType);
 			AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo(
-					collectionElementType.toString() );
-			if ( accessTypeInfo == null ) {
+					collectionElementType.toString());
+			if (accessTypeInfo == null) {
 				AccessType explicitAccessType = null;
-				if ( collectionElement != null ) {
+				if (collectionElement != null) {
 					explicitAccessType = TypeUtils.determineAnnotationSpecifiedAccessType(
-						collectionElement
+							collectionElement
 					);
 				}
 				accessTypeInfo = new AccessTypeInformation(
@@ -132,58 +135,63 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 						explicitAccessType,
 						entity.getEntityAccessTypeInfo().getAccessType()
 				);
-				context.addAccessTypeInformation( collectionElementType.toString(), accessTypeInfo );
+				context.addAccessTypeInformation(collectionElementType.toString(), accessTypeInfo);
 			}
 			else {
-				accessTypeInfo.setDefaultAccessType( entity.getEntityAccessTypeInfo().getAccessType() );
+				accessTypeInfo.setDefaultAccessType(entity.getEntityAccessTypeInfo().getAccessType());
 			}
 		}
-		if ( collection.equals( "javax.persistence.metamodel.MapAttribute" ) ) {
-			return createAnnotationMetaAttributeForMap( declaredType, element, collection, targetEntity );
+		if (collection.equals("javax.persistence.metamodel.MapAttribute")) {
+			return createAnnotationMetaAttributeForMap(declaredType, element, collection, targetEntity);
 		}
 		else {
-			return new AnnotationMetaCollection(
-					entity, element, collection, getElementType( declaredType, targetEntity )
-			);
+			if (isCollection) {
+				return new AnnotationMetaCollection(
+						entity, element, collection, getElementType(declaredType, targetEntity)
+				);
+			}
+			else {
+				return new AnnotationMetaSingleAttribute(entity, element, TypeUtils.toTypeString(declaredType));
+			}
 		}
 	}
 
 	@Override
 	public AnnotationMetaAttribute visitExecutable(ExecutableType t, Element p) {
-		if ( !p.getKind().equals( ElementKind.METHOD ) ) {
+		if (!p.getKind().equals(ElementKind.METHOD)) {
 			return null;
 		}
 
 		String string = p.getSimpleName().toString();
-		if ( !StringUtil.isProperty( string, TypeUtils.toTypeString( t.getReturnType() ) ) ) {
+		if (!StringUtil.isProperty(string, TypeUtils.toTypeString(t.getReturnType()))) {
 			return null;
 		}
 
 		TypeMirror returnType = t.getReturnType();
-		return returnType.accept( this, p );
+		return returnType.accept(this, p);
 	}
 
 	private boolean isBasicAttribute(Element element, Element returnedElement) {
-		if ( TypeUtils.containsAnnotation( element, Constants.BASIC )
-				|| TypeUtils.containsAnnotation( element, Constants.ONE_TO_ONE )
-				|| TypeUtils.containsAnnotation( element, Constants.MANY_TO_ONE )
-				|| TypeUtils.containsAnnotation( element, Constants.EMBEDDED_ID )
-				|| TypeUtils.containsAnnotation( element, Constants.ID ) ) {
+		if (TypeUtils.containsAnnotation(element, Constants.BASIC)
+				|| TypeUtils.containsAnnotation(element, Constants.ONE_TO_ONE)
+				|| TypeUtils.containsAnnotation(element, Constants.MANY_TO_ONE)
+				|| TypeUtils.containsAnnotation(element, Constants.EMBEDDED_ID)
+				|| TypeUtils.containsAnnotation(element, Constants.ID)) {
 			return true;
 		}
 
 		// METAGEN-28
-		if ( TypeUtils.getAnnotationMirror( element, ORG_HIBERNATE_ANNOTATIONS_TYPE ) != null ) {
+		if (TypeUtils.getAnnotationMirror(element, ORG_HIBERNATE_ANNOTATIONS_TYPE) != null) {
 			return true;
 		}
 
-		BasicAttributeVisitor basicVisitor = new BasicAttributeVisitor( context );
-		return returnedElement.asType().accept( basicVisitor, returnedElement );
+		BasicAttributeVisitor basicVisitor = new BasicAttributeVisitor(context);
+		return returnedElement.asType().accept(basicVisitor, returnedElement);
 	}
 
 	private AnnotationMetaAttribute createAnnotationMetaAttributeForMap(DeclaredType declaredType, Element element, String collection, String targetEntity) {
 		String keyType;
-		if ( TypeUtils.containsAnnotation( element, Constants.MAP_KEY_CLASS ) ) {
+		if (TypeUtils.containsAnnotation(element, Constants.MAP_KEY_CLASS)) {
 			TypeMirror typeMirror = (TypeMirror) TypeUtils.getAnnotationValue(
 					TypeUtils.getAnnotationMirror(
 							element, Constants.MAP_KEY_CLASS
@@ -192,33 +200,33 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 			keyType = typeMirror.toString();
 		}
 		else {
-			keyType = TypeUtils.getKeyType( declaredType, context );
+			keyType = TypeUtils.getKeyType(declaredType, context);
 		}
 		return new AnnotationMetaMap(
 				entity,
 				element,
 				collection,
 				keyType,
-				getElementType( declaredType, targetEntity )
+				getElementType(declaredType, targetEntity)
 		);
 	}
 
 	private String getElementType(DeclaredType declaredType, String targetEntity) {
-		if ( targetEntity != null ) {
+		if (targetEntity != null) {
 			return targetEntity;
 		}
 		final List<? extends TypeMirror> mirrors = declaredType.getTypeArguments();
-		if ( mirrors.size() == 1 ) {
-			final TypeMirror type = mirrors.get( 0 );
-			return TypeUtils.extractClosestRealTypeAsString( type, context );
+		if (mirrors.size() == 1) {
+			final TypeMirror type = mirrors.get(0);
+			return TypeUtils.extractClosestRealTypeAsString(type, context);
 		}
-		else if ( mirrors.size() == 2 ) {
-			return TypeUtils.extractClosestRealTypeAsString( mirrors.get( 1 ), context );
+		else if (mirrors.size() == 2) {
+			return TypeUtils.extractClosestRealTypeAsString(mirrors.get(1), context);
 		}
 		else {
 			//for 0 or many
 			//0 is expected, many is not
-			if ( mirrors.size() > 2 ) {
+			if (mirrors.size() > 2) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING, "Unable to find the closest solid type" + declaredType
 				);
@@ -229,26 +237,41 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 
 	/**
 	 * @param annotations list of annotation mirrors.
-	 *
 	 * @return target entity class name as string or {@code null} if no targetEntity is here or if equals to void
 	 */
 	private String getTargetEntity(List<? extends AnnotationMirror> annotations) {
 		String fullyQualifiedTargetEntityName = null;
-		for ( AnnotationMirror mirror : annotations ) {
-			if ( TypeUtils.isAnnotationMirrorOfType( mirror, Constants.ELEMENT_COLLECTION ) ) {
-				fullyQualifiedTargetEntityName = getFullyQualifiedClassNameOfTargetEntity( mirror, "targetClass" );
+		for (AnnotationMirror mirror : annotations) {
+			if (TypeUtils.isAnnotationMirrorOfType(mirror, Constants.ELEMENT_COLLECTION)) {
+				fullyQualifiedTargetEntityName = getFullyQualifiedClassNameOfTargetEntity(mirror, "targetClass");
 			}
-			else if ( TypeUtils.isAnnotationMirrorOfType( mirror, Constants.ONE_TO_MANY )
-					|| TypeUtils.isAnnotationMirrorOfType( mirror, Constants.MANY_TO_MANY )
-					|| TypeUtils.isAnnotationMirrorOfType( mirror, Constants.MANY_TO_ONE )
-					|| TypeUtils.isAnnotationMirrorOfType( mirror, Constants.ONE_TO_ONE ) ) {
-				fullyQualifiedTargetEntityName = getFullyQualifiedClassNameOfTargetEntity( mirror, "targetEntity" );
+			else if (TypeUtils.isAnnotationMirrorOfType(mirror, Constants.ONE_TO_MANY)
+					|| TypeUtils.isAnnotationMirrorOfType(mirror, Constants.MANY_TO_MANY)
+					|| TypeUtils.isAnnotationMirrorOfType(mirror, Constants.MANY_TO_ONE)
+					|| TypeUtils.isAnnotationMirrorOfType(mirror, Constants.ONE_TO_ONE)
+					|| TypeUtils.isAnnotationMirrorOfType(mirror, ORG_HIBERNATE_ANNOTATIONS_MANY_TO_ANY)) {
+				fullyQualifiedTargetEntityName = getFullyQualifiedClassNameOfTargetEntity(mirror, "targetEntity");
 			}
-			else if ( TypeUtils.isAnnotationMirrorOfType( mirror, ORG_HIBERNATE_ANNOTATIONS_TARGET ) ) {
-				fullyQualifiedTargetEntityName = getFullyQualifiedClassNameOfTargetEntity( mirror, "value" );
+			else if (TypeUtils.isAnnotationMirrorOfType(mirror, ORG_HIBERNATE_ANNOTATIONS_TARGET)) {
+				fullyQualifiedTargetEntityName = getFullyQualifiedClassNameOfTargetEntity(mirror, "value");
 			}
 		}
 		return fullyQualifiedTargetEntityName;
+	}
+
+	private boolean isCollectionAttribute(List<? extends AnnotationMirror> annotations) {
+		for (AnnotationMirror mirror : annotations) {
+			if (TypeUtils.isAnnotationMirrorOfType(mirror, Constants.ELEMENT_COLLECTION)
+					|| TypeUtils.isAnnotationMirrorOfType(mirror, Constants.ONE_TO_MANY)
+					|| TypeUtils.isAnnotationMirrorOfType(mirror, Constants.MANY_TO_MANY)
+					|| TypeUtils.isAnnotationMirrorOfType(mirror, Constants.MANY_TO_ONE)
+					|| TypeUtils.isAnnotationMirrorOfType(mirror, Constants.ONE_TO_ONE)
+					|| TypeUtils.isAnnotationMirrorOfType(mirror, ORG_HIBERNATE_ANNOTATIONS_MANY_TO_ANY)
+					|| TypeUtils.isAnnotationMirrorOfType(mirror, ORG_HIBERNATE_ANNOTATIONS_TARGET)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private String getFullyQualifiedClassNameOfTargetEntity(AnnotationMirror mirror, String parameterName) {
@@ -256,10 +279,10 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 		assert parameterName != null;
 
 		String targetEntityName = null;
-		Object parameterValue = TypeUtils.getAnnotationValue( mirror, parameterName );
-		if ( parameterValue != null ) {
+		Object parameterValue = TypeUtils.getAnnotationValue(mirror, parameterName);
+		if (parameterValue != null) {
 			TypeMirror parameterType = (TypeMirror) parameterValue;
-			if ( !parameterType.getKind().equals( TypeKind.VOID ) ) {
+			if (!parameterType.getKind().equals(TypeKind.VOID)) {
 				targetEntityName = parameterType.toString();
 			}
 		}
@@ -287,29 +310,29 @@ class BasicAttributeVisitor extends SimpleTypeVisitor6<Boolean, Element> {
 	@Override
 	public Boolean visitArray(ArrayType t, Element element) {
 		TypeMirror componentMirror = t.getComponentType();
-		TypeElement componentElement = (TypeElement) context.getTypeUtils().asElement( componentMirror );
+		TypeElement componentElement = (TypeElement) context.getTypeUtils().asElement(componentMirror);
 
-		return Constants.BASIC_ARRAY_TYPES.contains( componentElement.getQualifiedName().toString() );
+		return Constants.BASIC_ARRAY_TYPES.contains(componentElement.getQualifiedName().toString());
 	}
 
 	@Override
 	public Boolean visitDeclared(DeclaredType declaredType, Element element) {
-		if ( ElementKind.ENUM.equals( element.getKind() ) ) {
+		if (ElementKind.ENUM.equals(element.getKind())) {
 			return Boolean.TRUE;
 		}
 
-		if ( ElementKind.CLASS.equals( element.getKind() ) || ElementKind.INTERFACE.equals( element.getKind() ) ) {
-			TypeElement typeElement = ( (TypeElement) element );
+		if (ElementKind.CLASS.equals(element.getKind()) || ElementKind.INTERFACE.equals(element.getKind())) {
+			TypeElement typeElement = ((TypeElement) element);
 			String typeName = typeElement.getQualifiedName().toString();
-			if ( Constants.BASIC_TYPES.contains( typeName ) ) {
+			if (Constants.BASIC_TYPES.contains(typeName)) {
 				return Boolean.TRUE;
 			}
-			if ( TypeUtils.containsAnnotation( element, Constants.EMBEDDABLE ) ) {
+			if (TypeUtils.containsAnnotation(element, Constants.EMBEDDABLE)) {
 				return Boolean.TRUE;
 			}
-			for ( TypeMirror mirror : typeElement.getInterfaces() ) {
-				TypeElement interfaceElement = (TypeElement) context.getTypeUtils().asElement( mirror );
-				if ( "java.io.Serializable".equals( interfaceElement.getQualifiedName().toString() ) ) {
+			for (TypeMirror mirror : typeElement.getInterfaces()) {
+				TypeElement interfaceElement = (TypeElement) context.getTypeUtils().asElement(mirror);
+				if ("java.io.Serializable".equals(interfaceElement.getQualifiedName().toString())) {
 					return Boolean.TRUE;
 				}
 			}

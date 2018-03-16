@@ -19,7 +19,7 @@ import org.hibernate.query.criteria.internal.FromImplementor;
 import org.hibernate.query.criteria.internal.JoinImplementor;
 import org.hibernate.query.criteria.internal.PathSource;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
-import org.hibernate.query.criteria.internal.predicate.AbstractPredicateImpl;
+import org.hibernate.query.criteria.internal.predicate.PredicateImplementor;
 
 /**
  * Convenience base class for various {@link javax.persistence.criteria.Join} implementations.
@@ -83,7 +83,7 @@ public abstract class AbstractJoinImpl<Z, X>
 				.append( getAlias() );
 		if ( suppliedJoinCondition != null ) {
 			tableExpression.append( " with " )
-					.append( ( (AbstractPredicateImpl) suppliedJoinCondition ).render( renderingContext ) );
+					.append( ( (PredicateImplementor) suppliedJoinCondition ).render( renderingContext ) );
 		}
 		return tableExpression.toString();
 	}

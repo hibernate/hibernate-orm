@@ -15,6 +15,7 @@ package org.hibernate.test.jpa;
 public class MyEntity {
 	private Long id;
 	private String name;
+	private String surname;
 	private MyEntity other;
 
 	public Long getId() {
@@ -31,6 +32,14 @@ public class MyEntity {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getSurname() {
+		return surname;
+	}
+
+	public void setSurname(String surname) {
+		this.surname = surname;
 	}
 
 	public MyEntity getOther() {

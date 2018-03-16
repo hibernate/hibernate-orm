@@ -116,10 +116,10 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 		TransactionUtil2.inTransaction(
 				sessionFactory(),
 				session -> {
-					Query q = session.createQuery( "select item from Item item where item.id in (:values) or item.name in (:values)" );
-					List<Long> params = new ArrayList<>();
-					params.add( 0L );
-					params.add( 1L );
+					Query q = session.createQuery( "select e from MyEntity e where e.surname in (:values) or e.name in (:values)" );
+					List<String> params = new ArrayList<>();
+					params.add( "name" );
+					params.add( "other" );
 					q.setParameter( "values", params );
 					q.list();
 				}
@@ -132,10 +132,10 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 		TransactionUtil2.inTransaction(
 				sessionFactory(),
 				session -> {
-					Query q = session.createQuery( "select item from Item item where item.id in (?1) or item.name in (?1)" );
-					List<Long> params = new ArrayList<>();
-					params.add( 0L );
-					params.add( 1L );
+					Query q = session.createQuery( "select e from MyEntity e where e.name in (?1) or e.surname in (?1)" );
+					List<String> params = new ArrayList<>();
+					params.add( "name" );
+					params.add( "other" );
 					q.setParameter( 1, params );
 					q.list();
 				}

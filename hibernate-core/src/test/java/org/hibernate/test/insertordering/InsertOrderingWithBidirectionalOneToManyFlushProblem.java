@@ -80,9 +80,9 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
 	@Test
 	@TestForIssue(jiraKey = "HHH-12086")
 	public void testBatchingWithFlush2() {
-		doInHibernate(
-			this::sessionFactory,
-			session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 				TopEntity top1 = new TopEntity();
 
 				session.persist( top1 );
@@ -122,8 +122,9 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
 				// when the attempt to insert middle2 before top2 is made.
 				//
 				// correct ordering is: [top2,middle1,middle2,bottom1,bottom2]
-			}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Override

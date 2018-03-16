@@ -21,21 +21,21 @@ public interface JtaTransactionAdapter {
 	/**
 	 * Call begin on the underlying transaction object
 	 */
-	public void begin();
+	void begin();
 
 	/**
 	 * Call commit on the underlying transaction object
 	 */
-	public void commit();
+	void commit();
 
 	/**
 	 * Call rollback on the underlying transaction object
 	 */
-	public void rollback();
+	void rollback();
 
-	public TransactionStatus getStatus();
+	TransactionStatus getStatus();
 
-	public void markRollbackOnly();
+	void markRollbackOnly();
 
-	public void setTimeOut(int seconds);
+	void setTimeOut(int seconds);
 }

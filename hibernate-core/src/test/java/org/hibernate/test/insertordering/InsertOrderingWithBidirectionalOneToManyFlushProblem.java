@@ -17,6 +17,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 
+import org.hibernate.Session;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -25,7 +27,6 @@ import static javax.persistence.CascadeType.PERSIST;
 import static javax.persistence.GenerationType.SEQUENCE;
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 @TestForIssue(jiraKey = "HHH-12074")
 public class InsertOrderingWithBidirectionalOneToManyFlushProblem
@@ -33,9 +34,9 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
 
 	@Test
 	public void testBatchingWithFlush() {
-		doInHibernate(
-			this::sessionFactory,
-			session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 				Top top1 = new Top();
 
 				session.persist( top1 );
@@ -71,8 +72,9 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
 				// when the attempt to insert middle2 before top2 is made.
 				//
 				// correct ordering is: [top2,middle1,middle2,bottom1,bottom2]
-			}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Override

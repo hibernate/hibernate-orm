@@ -7,7 +7,6 @@
 package org.hibernate.test.insertordering;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 import javax.persistence.CascadeType;
@@ -21,20 +20,21 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 
+import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.cfg.Configuration;
+
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  *
  * @author Chris Cranford
  */
 @TestForIssue(jiraKey = "HHH-12355")
-public class InsertOrderingWithCompositeTypeAssociation extends BaseEntityManagerFunctionalTestCase {
+public class InsertOrderingWithCompositeTypeAssociation extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "Book")
 	public static class Book {
@@ -122,10 +122,10 @@ public class InsertOrderingWithCompositeTypeAssociation extends BaseEntityManage
 	}
 
 	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( AvailableSettings.ORDER_INSERTS, "true" );
-		options.put( AvailableSettings.ORDER_UPDATES, "true" );
+	protected void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( AvailableSettings.ORDER_INSERTS, "true" );
+		cfg.setProperty( AvailableSettings.ORDER_UPDATES, "true" );
 	}
 
 	@Test
@@ -138,7 +138,9 @@ public class InsertOrderingWithCompositeTypeAssociation extends BaseEntityManage
 		//
 		// The associated ActionQueue fix makes sure that regardless of the order of operations, the Comment
 		// entity associated in the embeddable takes insert priority over the parent Book entity.
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 			Book bookNoComment = new Book();
 			bookNoComment.setId( UUID.randomUUID().toString() );
 
@@ -146,8 +148,10 @@ public class InsertOrderingWithCompositeTypeAssociation extends BaseEntityManage
 			bookWithComment.setId( UUID.randomUUID().toString() );
 			bookWithComment.setIntermediateObject( new IntermediateObject( new Comment( "This is a comment" ) ) );
 
-			entityManager.persist( bookNoComment );
-			entityManager.persist( bookWithComment );
-		} );
+			session.persist( bookNoComment );
+			session.persist( bookWithComment );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 }

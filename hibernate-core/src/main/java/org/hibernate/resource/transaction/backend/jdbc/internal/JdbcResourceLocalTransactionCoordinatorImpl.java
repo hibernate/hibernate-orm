@@ -245,10 +245,15 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 		@Override
 		public void rollback() {
-			if ( rollbackOnly || getStatus() == TransactionStatus.ACTIVE ) {
+			try {
+				TransactionStatus status = jdbcResourceTransaction.getStatus();
+				if ( ( rollbackOnly && status != TransactionStatus.NOT_ACTIVE ) || status == TransactionStatus.ACTIVE ) {
+					jdbcResourceTransaction.rollback();
+					JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( false );
+				}
+			}
+			finally {
 				rollbackOnly = false;
-				jdbcResourceTransaction.rollback();
-				JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( false );
 			}
 
 			// no-op otherwise.

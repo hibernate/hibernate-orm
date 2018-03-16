@@ -23,7 +23,7 @@ ext {
     weldVersion = '3.0.0.Final'
 
     javassistVersion = '3.22.0-GA'
-    byteBuddyVersion = '1.7.10' // Now with JDK10 compatibility
+    byteBuddyVersion = '1.8.0' // Now with JDK10 compatibility and preliminary support for JDK11
 
     // Wildfly version targeted by module ZIP; Arquillian/Shrinkwrap versions used for CDI testing and testing the module ZIP
     wildflyVersion = '12.0.0.Final'

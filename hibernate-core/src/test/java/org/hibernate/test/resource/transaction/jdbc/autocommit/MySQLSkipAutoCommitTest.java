@@ -10,7 +10,6 @@ import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 
@@ -27,7 +26,7 @@ public class MySQLSkipAutoCommitTest extends AbstractSkipAutoCommitTest {
 	@Override
 	protected DataSource dataSource() {
 		DataSource dataSource = ReflectionUtil.newInstance( "com.mysql.cj.jdbc.MysqlDataSource" );
-		if ( Dialect.getDialect() instanceof MariaDBDialect ) {
+		if ( getDialect() instanceof MariaDBDialect ) {
 			dataSource = ReflectionUtil.newInstance( "org.mariadb.jdbc.MariaDbDataSource" );
 		}
 		ReflectionUtil.setProperty( dataSource, "url", Environment.getProperties().getProperty( AvailableSettings.URL ) );

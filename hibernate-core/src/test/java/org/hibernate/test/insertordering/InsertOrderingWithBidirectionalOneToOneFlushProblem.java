@@ -20,9 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Session;
+
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 @TestForIssue(jiraKey = "HHH-12105")
 public class InsertOrderingWithBidirectionalOneToOneFlushProblem
@@ -30,9 +31,9 @@ public class InsertOrderingWithBidirectionalOneToOneFlushProblem
 
 	@Test
 	public void testInsertSortingWithFlushPersistLeftBeforeRight() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 					TopEntity top1 = new TopEntity();
 
 					session.persist(top1);
@@ -51,18 +52,19 @@ public class InsertOrderingWithBidirectionalOneToOneFlushProblem
 					right.left = left;
 
 					// If you persist right before left the problem goes away
-					session.persist(left);
-					session.persist(right);
-					session.persist(top2);
-				}
-		);
+					session.persist( left );
+					session.persist( right );
+					session.persist( top2 );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	public void testInsertSortingWithFlushPersistRightBeforeLeft() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 					TopEntity top1 = new TopEntity();
 
 					session.persist(top1);
@@ -84,8 +86,9 @@ public class InsertOrderingWithBidirectionalOneToOneFlushProblem
 					session.persist(right);
 					session.persist(left);
 					session.persist(top2);
-				}
-		);
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Override

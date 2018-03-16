@@ -43,6 +43,7 @@ import junit.framework.Assert;
 
 import static junit.framework.Assert.assertNull;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -711,16 +712,14 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		final Item item = new Item( "Mouse", "Microsoft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( item );
-			em.persist( item2 );
-			assertTrue( em.contains( item ) );
-			em.getTransaction().commit();
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.persist( item );
+			entityManager.persist( item2 );
+			assertTrue( entityManager.contains( item ) );
+		} );
 
-			em.getTransaction().begin();
-			Query q = em.createQuery( "select item from Item item where item.name in ?1 and item.descr = ?2" );
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Query q = entityManager.createQuery( "select item from Item item where item.name in ?1 and item.descr = ?2" );
 			List params = new ArrayList();
 			params.add( item.getName() );
 			params.add( item2.getName() );
@@ -729,16 +728,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			List result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 1, result.size() );
-		}
-		catch (Exception e){
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+		} );
+
 	}
 
 	@Test
@@ -747,16 +738,15 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		final Item item = new Item( "Mouse", "Microsoft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( item );
-			em.persist( item2 );
-			assertTrue( em.contains( item ) );
-			em.getTransaction().commit();
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.persist( item );
+			entityManager.persist( item2 );
+			assertTrue( entityManager.contains( item ) );
+		} );
 
-			em.getTransaction().begin();
-			Query q = em.createQuery( "select item from Item item where item.name in (?1) and item.descr = ?2" );
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Query q = entityManager.createQuery(
+					"select item from Item item where item.name in (?1) and item.descr = ?2" );
 			List params = new ArrayList();
 			params.add( item.getName() );
 			params.add( item2.getName() );
@@ -765,16 +755,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			List result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 1, result.size() );
-		}
-		catch (Exception e){
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Test
@@ -783,16 +764,15 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		final Item item = new Item( "Mouse", "Microsoft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		try {
-			em.persist( item );
-			em.persist( item2 );
-			assertTrue( em.contains( item ) );
-			em.getTransaction().commit();
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.persist( item );
+			entityManager.persist( item2 );
+			assertTrue( entityManager.contains( item ) );
+		} );
 
-			em.getTransaction().begin();
-			Query q = em.createQuery( "select item from Item item where item.name in (?1) and item.descr = ?2" );
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Query q = entityManager.createQuery(
+					"select item from Item item where item.name in (?1) and item.descr = ?2" );
 			List params = new ArrayList();
 			params.add( item2.getName() );
 			q.setParameter( 1, params );
@@ -800,16 +780,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			List result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 1, result.size() );
-		}
-		catch (Exception e){
-			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Test

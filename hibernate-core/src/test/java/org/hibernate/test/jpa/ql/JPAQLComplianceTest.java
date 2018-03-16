@@ -178,38 +178,40 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 		final Item item2 = new Item( "Computer" );
 		item2.setId( 2L );
 
-		Session s = openSession();
-		try {
-			s.getTransaction().begin();
-			s.save( item );
-			s.save( item2 );
-			s.getTransaction().commit();
+		TransactionUtil2.inTransaction(
+				sessionFactory(),
+				s -> {
+					s.save( item );
+					s.save( item2 );
+				}
+		);
 
-			s.getTransaction().begin();
-			Query q = s.createQuery( "select item from Item item where item.id in(?1) and item.name in (?2) and item.id in(?1)" );
+		TransactionUtil2.inTransaction(
+				sessionFactory(),
+				s -> {
+					Query q = s.createQuery(
+							"select item from Item item where item.id in(?1) and item.name in (?2) and item.id in(?1)" );
 
-			List<Long> idParams = new ArrayList<>();
-			idParams.add( item.getId() );
-			idParams.add( item2.getId() );
-			q.setParameter( 1, idParams );
+					List<Long> idParams = new ArrayList<>();
+					idParams.add( item.getId() );
+					idParams.add( item2.getId() );
+					q.setParameter( 1, idParams );
 
-			List<String> nameParams = new ArrayList<>();
-			nameParams.add( item.getName() );
-			nameParams.add( item2.getName() );
-			q.setParameter( 2, nameParams );
+					List<String> nameParams = new ArrayList<>();
+					nameParams.add( item.getName() );
+					nameParams.add( item2.getName() );
+					q.setParameter( 2, nameParams );
 
-			List result = q.getResultList();
-			assertNotNull( result );
-			assertEquals( 2, result.size() );
-		}
-		catch (Exception e){
-			if ( s.getTransaction() != null && s.getTransaction().isActive() ) {
-				s.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			s.close();
-		}
+					List result = q.getResultList();
+					assertNotNull( result );
+					assertEquals( 2, result.size() );
+				}
+		);
+
+		TransactionUtil2.inTransaction(
+				sessionFactory(),
+				s -> s.createQuery( "from Item" ).list().forEach( result -> s.delete( result ) )
+		);
+
 	}
 }

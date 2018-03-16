@@ -16,6 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.jcache.internal.JCacheRegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 
 import static java.util.Collections.EMPTY_MAP;

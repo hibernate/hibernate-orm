@@ -74,6 +74,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		this.sessionFactory = sessionFactory;
 
 		this.regionFactory = getSessionFactory().getSessionFactoryOptions().getServiceRegistry().getService( RegionFactory.class );
+		this.regionFactory.start( sessionFactory.getSessionFactoryOptions(), sessionFactory.getProperties() );
 
 		if ( getSessionFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
 			final TimestampsRegion timestampsRegion = regionFactory.buildTimestampsRegion(

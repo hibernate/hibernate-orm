@@ -6,14 +6,11 @@
  */
 package org.hibernate.cache.spi;
 
-import org.hibernate.cache.spi.support.StorageAccess;
-
 /**
- * Specialized Region whose data is accessed directly - not requiring
- * key wrapping, e.g.
- *
  * @author Steve Ebersole
  */
-public interface DirectAccessRegion extends Region {
-	StorageAccess getStorageAccess();
+public class StandardCacheTransactionSynchronization extends AbstractCacheTransactionSynchronization {
+	public StandardCacheTransactionSynchronization(RegionFactory regionFactory) {
+		super( regionFactory );
+	}
 }

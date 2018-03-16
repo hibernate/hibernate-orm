@@ -12,6 +12,6 @@ package org.hibernate.cache.spi;
 public interface TimestampsRegion extends DirectAccessRegion {
 	@Override
 	default void clear() {
-		getAccess().clearCache();
+		getStorageAccess().clearCache();
 	}
 }

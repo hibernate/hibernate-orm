@@ -48,6 +48,11 @@ public class NoCachingRegionFactory implements RegionFactory {
 	}
 
 	@Override
+	public String qualify(String regionName) {
+		return regionName;
+	}
+
+	@Override
 	public boolean isMinimalPutsEnabledByDefault() {
 		return false;
 	}
@@ -59,7 +64,7 @@ public class NoCachingRegionFactory implements RegionFactory {
 
 	@Override
 	public long nextTimestamp() {
-		return System.currentTimeMillis() / 100;
+		return System.currentTimeMillis();
 	}
 
 	@Override

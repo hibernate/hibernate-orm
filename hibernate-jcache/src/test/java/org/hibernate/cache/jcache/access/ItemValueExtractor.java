@@ -6,8 +6,6 @@
  */
 package org.hibernate.cache.jcache.access;
 
-import org.hibernate.cache.jcache.JCacheTransactionalDataRegion;
-
 
 /**
  * @author Alex Snaps

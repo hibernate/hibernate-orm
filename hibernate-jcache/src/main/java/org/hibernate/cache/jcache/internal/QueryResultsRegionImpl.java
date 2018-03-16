@@ -4,19 +4,23 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.testing.cache;
+package org.hibernate.cache.jcache.internal;
 
-import org.hibernate.cache.spi.QueryResultsRegion;
-import org.hibernate.cache.spi.RegionFactory;
+import javax.cache.Cache;
+
 import org.hibernate.cache.spi.support.AbstractRegion;
+import org.hibernate.cache.spi.QueryResultsRegion;
 
 /**
+ * @author Chris Dennis
+ * @author Alex Snaps
  * @author Steve Ebersole
  */
 public class QueryResultsRegionImpl extends AbstractRegion implements QueryResultsRegion {
 	public QueryResultsRegionImpl(
 			String name,
-			RegionFactory regionFactory) {
-		super( name, regionFactory, new StorageAcccessImpl() );
+			JCacheRegionFactory regionFactory,
+			Cache cache) {
+		super( name, regionFactory, new JCacheAccessImpl( cache ) );
 	}
 }

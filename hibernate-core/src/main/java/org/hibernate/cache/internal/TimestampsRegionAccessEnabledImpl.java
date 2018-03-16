@@ -57,7 +57,7 @@ public class TimestampsRegionAccessEnabledImpl implements TimestampsRegionAccess
 
 				//put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
-				timestampsRegion.getAccess().addToCache( space, ts );
+				timestampsRegion.getStorageAccess().putIntoCache( space, ts );
 			}
 			finally {
 				session.getEventListenerManager().cachePutEnd();
@@ -84,7 +84,7 @@ public class TimestampsRegionAccessEnabledImpl implements TimestampsRegionAccess
 
 			try {
 				session.getEventListenerManager().cachePutStart();
-				timestampsRegion.getAccess().addToCache( space, ts );
+				timestampsRegion.getStorageAccess().putIntoCache( space, ts );
 			}
 			finally {
 				session.getEventListenerManager().cachePutEnd();
@@ -135,7 +135,7 @@ public class TimestampsRegionAccessEnabledImpl implements TimestampsRegionAccess
 		Long ts = null;
 		try {
 			session.getEventListenerManager().cacheGetStart();
-			ts = (Long) timestampsRegion.getAccess().getFromCache( space );
+			ts = (Long) timestampsRegion.getStorageAccess().getFromCache( space );
 		}
 		finally {
 			session.getEventListenerManager().cacheGetEnd( ts != null );

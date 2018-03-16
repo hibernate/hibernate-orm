@@ -7,13 +7,16 @@
 package org.hibernate.jpa.test.criteria;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.SetJoin;
 import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.dialect.H2Dialect;
@@ -62,7 +65,9 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 				Phone.class,
 				Product.class,
 				ShelfLife.class,
-				Spouse.class
+				Spouse.class,
+				Book.class,
+				Store.class
 		};
 	}
 
@@ -309,6 +314,37 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 			);
 
 			em.createQuery( criteria ).getResultList();
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12314")
+	public void testJoinUsingNegatedPredicate() {
+		// Write test data
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			final Store store = new Store();
+			store.setName( "Acme Books" );
+			store.setAddress( "123 Main St" );
+			entityManager.persist( store );
+
+			final Book book = new Book();
+			book.setStores( new HashSet<>( Arrays.asList( store ) ) );
+			entityManager.persist( book );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			final CriteriaQuery<Book> query = cb.createQuery( Book.class );
+			final Root<Book> bookRoot = query.from( Book.class );
+
+			SetJoin<Book, Store> storeJoin = bookRoot.join( Book_.stores );
+			storeJoin.on( cb.isNotNull( storeJoin.get( Store_.address ) ) );
+
+			// Previously failed due to ClassCastException
+			// org.hibernate.query.criteria.internal.predicate.NegatedPredicateWrapper
+			//   cannot be cast to
+			// org.hibernate.query.criteria.internal.predicate.AbstractPredicateImpl
+			entityManager.createQuery( query ).getResultList();
 		} );
 	}
 }

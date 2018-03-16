@@ -7,7 +7,9 @@
 package org.hibernate.persister.entity;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
@@ -17,7 +19,8 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.mapping.*;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.sql.Template;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
@@ -37,11 +40,12 @@ import org.hibernate.type.Type;
 public abstract class AbstractPropertyMapping implements PropertyMapping {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractPropertyMapping.class );
 
-	private final Map<String, Type> typesByPropertyPath = new HashMap<String, Type>();
-	private final Map<String, String[]> columnsByPropertyPath = new HashMap<String, String[]>();
-	private final Map<String, String[]> columnReadersByPropertyPath = new HashMap<String, String[]>();
-	private final Map<String, String[]> columnReaderTemplatesByPropertyPath = new HashMap<String, String[]>();
-	private final Map<String, String[]> formulaTemplatesByPropertyPath = new HashMap<String, String[]>();
+	private final Map<String, Type> typesByPropertyPath = new HashMap<>();
+	private final Set<String> duplicateIncompatiblePaths = new HashSet<>();
+	private final Map<String, String[]> columnsByPropertyPath = new HashMap<>();
+	private final Map<String, String[]> columnReadersByPropertyPath = new HashMap<>();
+	private final Map<String, String[]> columnReaderTemplatesByPropertyPath = new HashMap<>();
+	private final Map<String, String[]> formulaTemplatesByPropertyPath = new HashMap<>();
 
 	public String[] getIdentifierColumnNames() {
 		throw new UnsupportedOperationException( "one-to-one is not supported here" );
@@ -130,7 +134,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 	private void logIncompatibleRegistration(String path, Type existingType, Type type) {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
-					"Skipped adding same named type incompatible property to base type [{0}] for property [{1}], existing type = [{2}], incoming type = [{3}]",
+					"Skipped adding attribute [{1}] to base-type [{0}] as more than one sub-type defined the attribute using incompatible types (strictly speaking the attributes are not inherited); existing type = [{2}], incoming type = [{3}]",
 					getEntityName(),
 					path,
 					existingType,
@@ -164,88 +168,76 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			String[] formulaTemplates,
 			Mapping factory) {
 		Type existingType = typesByPropertyPath.get( path );
-		if ( existingType != null || typesByPropertyPath.containsKey( path ) ) {
+		if ( existingType != null || duplicateIncompatiblePaths.contains( path ) ) {
 			// If types match or the new type is not an association type, there is nothing for us to do
 			if ( type == existingType || existingType == null || !( type instanceof AssociationType ) ) {
-				logDuplicateRegistration(
-						path,
-						existingType,
-						type
-				);
-				return;
+				logDuplicateRegistration( path, existingType, type );
 			}
-
-			// Workaround for org.hibernate.cfg.annotations.PropertyBinder.bind() adding a component for *ToOne ids
-			if ( !( existingType instanceof AssociationType ) ) {
-				logDuplicateRegistration(
-						path,
-						existingType,
-						type
-				);
-				return;
-			}
-
-			Type newType = null;
-			MetadataImplementor metadata = (MetadataImplementor) factory;
-
-			if ( type instanceof AnyType && existingType instanceof AnyType ) {
-				// TODO: not sure how to handle any types. For now we just return and let the first type dictate what type the property has...
-				return;
-			}
-			else if ( type instanceof CollectionType && existingType instanceof CollectionType ) {
-				Collection thisCollection = metadata.getCollectionBinding( ( (CollectionType) existingType ).getRole() );
-				Collection otherCollection = metadata.getCollectionBinding( ( (CollectionType) type ).getRole() );
-
-				if ( thisCollection.isSame( otherCollection ) ) {
-					logDuplicateRegistration(
-							path,
-							existingType,
-							type
-					);
-					return;
-				}
-
-				// When we discover incompatible types, we use "null" as property type to signal that the property is not resolvable on the parent type
-				newType = null;
-				logIncompatibleRegistration(path, existingType, type);
-			}
-			else if ( type instanceof EntityType && existingType instanceof EntityType ) {
-				EntityType entityType1 = (EntityType) existingType;
-				EntityType entityType2 = (EntityType) type;
-
-				if ( entityType1.getAssociatedEntityName().equals( entityType2.getAssociatedEntityName() ) ) {
-					logDuplicateRegistration(
-							path,
-							existingType,
-							type
-					);
-					return;
-				}
-
-				newType = getCommonType( metadata, entityType1, entityType2 );
+			else if ( !( existingType instanceof AssociationType ) ) {
+				// Workaround for org.hibernate.cfg.annotations.PropertyBinder.bind() adding a component for *ToOne ids
+				logDuplicateRegistration( path, existingType, type );
 			}
 			else {
-				logIncompatibleRegistration(path, existingType, type);
-			}
+				if ( type instanceof AnyType && existingType instanceof AnyType ) {
+					// TODO: not sure how to handle any types. For now we just return and let the first type dictate what type the property has...
+				}
+				else {
+					Type commonType = null;
+					MetadataImplementor metadata = (MetadataImplementor) factory;
+					if ( type instanceof CollectionType && existingType instanceof CollectionType ) {
+						Collection thisCollection = metadata.getCollectionBinding( ( (CollectionType) existingType ).getRole() );
+						Collection otherCollection = metadata.getCollectionBinding( ( (CollectionType) type ).getRole() );
 
-			typesByPropertyPath.put( path, newType );
-			// Set everything to empty to signal action has to be taken!
-			// org.hibernate.hql.internal.ast.tree.DotNode.dereferenceEntityJoin() is reacting to this
-			String[] empty = new String[0];
-			columnsByPropertyPath.put( path, empty );
-			columnReadersByPropertyPath.put( path, empty );
-			columnReaderTemplatesByPropertyPath.put( path, empty );
-			if ( formulaTemplates != null ) {
-				formulaTemplatesByPropertyPath.put( path, empty );
+						if ( thisCollection.isSame( otherCollection ) ) {
+							logDuplicateRegistration( path, existingType, type );
+							return;
+						}
+						else {
+							logIncompatibleRegistration( path, existingType, type );
+						}
+					}
+					else if ( type instanceof EntityType && existingType instanceof EntityType ) {
+						EntityType entityType1 = (EntityType) existingType;
+						EntityType entityType2 = (EntityType) type;
+
+						if ( entityType1.getAssociatedEntityName().equals( entityType2.getAssociatedEntityName() ) ) {
+							logDuplicateRegistration( path, existingType, type );
+							return;
+						}
+						else {
+							commonType = getCommonType( metadata, entityType1, entityType2 );
+						}
+					}
+					else {
+						logIncompatibleRegistration( path, existingType, type );
+					}
+					if ( commonType == null ) {
+						duplicateIncompatiblePaths.add( path );
+						typesByPropertyPath.remove( path );
+						// Set everything to empty to signal action has to be taken!
+						// org.hibernate.hql.internal.ast.tree.DotNode.dereferenceEntityJoin() is reacting to this
+						String[] empty = new String[0];
+						columnsByPropertyPath.put( path, empty );
+						columnReadersByPropertyPath.put( path, empty );
+						columnReaderTemplatesByPropertyPath.put( path, empty );
+						if ( formulaTemplates != null ) {
+							formulaTemplatesByPropertyPath.put( path, empty );
+						}
+					}
+					else {
+						typesByPropertyPath.put( path, commonType );
+					}
+				}
 			}
-			return;
 		}
-		typesByPropertyPath.put( path, type );
-		columnsByPropertyPath.put( path, columns );
-		columnReadersByPropertyPath.put( path, columnReaders );
-		columnReaderTemplatesByPropertyPath.put( path, columnReaderTemplates );
-		if ( formulaTemplates != null ) {
-			formulaTemplatesByPropertyPath.put( path, formulaTemplates );
+		else {
+			typesByPropertyPath.put( path, type );
+			columnsByPropertyPath.put( path, columns );
+			columnReadersByPropertyPath.put( path, columnReaders );
+			columnReaderTemplatesByPropertyPath.put( path, columnReaderTemplates );
+			if ( formulaTemplates != null ) {
+				formulaTemplatesByPropertyPath.put( path, formulaTemplates );
+			}
 		}
 	}
 

@@ -19,5 +19,5 @@ public interface JdbcResourceTransactionAccess {
 	 *
 	 * @return The resource-local transaction
 	 */
-	public JdbcResourceTransaction getResourceLocalTransaction();
+	JdbcResourceTransaction getResourceLocalTransaction();
 }

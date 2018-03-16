@@ -17,17 +17,17 @@ public interface JdbcResourceTransaction {
 	/**
 	 * Begin the resource transaction
 	 */
-	public void begin();
+	void begin();
 
 	/**
 	 * Commit the resource transaction
 	 */
-	public void commit();
+	void commit();
 
 	/**
 	 * Rollback the resource transaction
 	 */
-	public void rollback();
+	void rollback();
 
-	public TransactionStatus getStatus();
+	TransactionStatus getStatus();
 }

@@ -16,6 +16,7 @@
         </id>
         <discriminator column="`TYPE`" />
         <property name="name" type="string"/>
+        <property name="surname" type="string"/>
         <many-to-one name="other" class="MyEntity" />
         <subclass name="MySubclassEntity" discriminator-value="S">
             <property name="someSubProperty"/>
